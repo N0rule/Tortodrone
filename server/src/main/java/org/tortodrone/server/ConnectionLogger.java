@@ -7,12 +7,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.time.Instant;
+import java.nio.file.Path;
+import java.security.PrivateKey;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 
-/** Initial TCP observation only: sends no response and performs no authentication. */
+/** Loopback observation, optionally advancing one secure-handshake step. */
 public final class ConnectionLogger {
     // Verified in the installed client's config.jar/deployment.properties.
     private static final int DEFAULT_PORT = 47624;
@@ -21,13 +23,16 @@ public final class ConnectionLogger {
     public static void main(String[] args) throws Exception {
         String bind = "127.0.0.1";
         int port = DEFAULT_PORT;
+        Path keyPath = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--bind") && i + 1 < args.length) {
                 bind = args[++i];
             } else if (args[i].equals("--port") && i + 1 < args.length) {
                 port = Integer.parseInt(args[++i]);
+            } else if (args[i].equals("--handshake-key") && i + 1 < args.length) {
+                keyPath = Path.of(args[++i]);
             } else {
-                throw new IllegalArgumentException("Usage: ConnectionLogger [--bind loopback-address] [--port 0..65535]");
+                throw new IllegalArgumentException("Usage: ConnectionLogger [--bind loopback-address] [--port 0..65535] [--handshake-key local-private.pk8]");
             }
         }
         InetAddress address = InetAddress.getByName(bind);
@@ -35,6 +40,7 @@ public final class ConnectionLogger {
             throw new IllegalArgumentException("Use a loopback address and port 0..65535");
         }
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
+        PrivateKey key = keyPath == null ? null : HandshakeKeys.load(keyPath);
         Semaphore slots = new Semaphore(16);
         AtomicLong ids = new AtomicLong();
         try (ServerSocket listener = new ServerSocket()) {
@@ -46,7 +52,8 @@ public final class ConnectionLogger {
                 }
             }, "listener-shutdown"));
             log("Listening on " + address.getHostAddress() + ":" + listener.getLocalPort()
-                + " (TCP; receive only; 64 KiB/connection; 15 s idle timeout)");
+                + (key == null ? " (TCP; receive only; 64 KiB/connection; 15 s idle timeout)"
+                    : " (TCP; secure handshake only; 64 KiB/frame; 15 s idle timeout; no payload logging)"));
             while (!listener.isClosed()) {
                 Socket client;
                 try {
@@ -64,7 +71,7 @@ public final class ConnectionLogger {
                 clients.add(client);
                 new Thread(() -> {
                     try {
-                        receive(client, id);
+                        receive(client, id, key);
                     } finally {
                         clients.remove(client);
                         slots.release();
@@ -74,11 +81,15 @@ public final class ConnectionLogger {
         }
     }
 
-    private static void receive(Socket client, long id) {
+    private static void receive(Socket client, long id, PrivateKey key) {
         int total = 0;
         log("Connection #" + id + " from " + client.getRemoteSocketAddress());
         try (client) {
             client.setSoTimeout(15000);
+            if (key != null) {
+                SecureHandshake.run(client, key, message -> log("Connection #" + id + " " + message));
+                return;
+            }
             byte[] buffer = new byte[4096];
             while (total < MAX_BYTES) {
                 int count = client.getInputStream().read(buffer, 0, Math.min(buffer.length, MAX_BYTES - total));
@@ -91,8 +102,11 @@ public final class ConnectionLogger {
             log("Connection #" + id + " idle timeout");
         } catch (IOException e) {
             log("Connection #" + id + " I/O: " + e.getClass().getSimpleName());
+        } catch (Exception e) {
+            log("Connection #" + id + " handshake rejected: " + e.getClass().getSimpleName());
         } finally {
-            log("Connection #" + id + " disconnected; received " + total + " bytes");
+            log("Connection #" + id + (key == null ? " disconnected; received " + total + " bytes"
+                : " handshake connection closed"));
         }
     }
 

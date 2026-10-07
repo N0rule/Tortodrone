@@ -14,14 +14,17 @@ classes produced the same message type and length.
 
 CONFIRMED by code (HIGH, N1, C1): the secure branch waits for `SecureResponse`,
 constructs `AESAuthRequest`, then waits for authentication and bootstrap.
-UNKNOWN: a working TortodroneServer implementation of these responses.
+CONFIRMED (HIGH, R2): TortodroneServer now sends the secure response and the
+installed client follows with `AESAuthRequest`. Its body and a subsequent
+authentication response remain unimplemented.
 
 ## Transport
 
 CONFIRMED (HIGH): initial TCP, custom Narya/Presents serialization. No initial
 TLS record, HTTP request, or WebSocket upgrade was observed. Later UDP is
 configured but was not exercised. TCP reads may fragment or combine frames;
-the server deliberately labels its output as read chunks.
+receive-only mode labels its output as read chunks. Secure-handshake mode
+accumulates bounded frames across reads.
 
 ## Message framing
 
@@ -100,14 +103,32 @@ CONFIRMED by source and matching methods (HIGH): `SecureResponse` places a
 hex representation of a server secret XORed with the client secret in response
 data. `AESAuthRequest` uses the recovered shared secret for the subsequent
 authentication payload; the AES helper uses `AES/CBC/PKCS5Padding`.
-Details of every response field and its serialized layout still need a local
-round-trip test before implementing the response.
+The initial response layout has now been checked with the installed serializer
+and exercised against the full client (R2).
 
 The official private key is neither available nor needed for our project.
-The next experiment should generate a local keypair, replace only `key.public`
-in the ignored deployment overlay, retain the private key under ignored local
-research, and implement only the compatible secure response. Keep synthetic
-credentials and network isolation. Do not attempt to decrypt production traffic.
+The handshake experiment generates a fresh local keypair and replaces only
+`key.public` in the ignored deployment overlay. RSA uses `RSA/ECB/PKCS1Padding`;
+the decrypted 20 bytes contain the 16-byte client secret followed by the
+four-byte salt, which the server validates. No production traffic is decrypted.
+
+### SecureResponse implemented subset
+
+CONFIRMED (HIGH, R2): this first downstream frame is 139 bytes for a 16-byte
+server secret. Its independent class mapping starts with `SecureResponse`, then
+`AuthResponseData`. Fields are the request's 16-bit message ID, response data's
+32-bit object ID (zero here), a non-null string marker, and a modified-UTF string
+containing 32 lowercase hexadecimal characters: server secret XOR client secret.
+
+The request parser supports only secure version 1, 2048-bit RSA ciphertext,
+four-byte salt, non-null version/timezone, and an empty bootstrap-group array.
+It validates field boundaries and rejects unsupported layouts. Mapping codes
+are connection-local; this is not a general-purpose Narya deserializer.
+
+CONFIRMED (HIGH, R2): the full client responded with a 348-byte frame whose top
+level type is `AESAuthRequest`. Only that type is identified. The payload is
+neither decoded nor logged, and the server closes the connection at this
+boundary. This does not demonstrate successful account authentication.
 
 UNKNOWN: whether/how individual post-authentication message classes use
 encryption or compression. No evidence here supports describing the entire
@@ -136,5 +157,6 @@ Raw hex logs and extracted frame data stay under `local/research/` and
 `local/research/client-run-*` directory. These are never commit material.
 Only short structural bytes and field summaries are documented here.
 
-The receive-only milestone is complete. Secure response, account authentication,
-character selection, and zone entry remain unimplemented.
+Receive-only and initial secure-response milestones are complete. Authentication
+payload decoding, authentication responses, character selection, and zone entry
+remain unimplemented.

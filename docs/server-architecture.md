@@ -17,10 +17,10 @@ just because its top-level project declares Apache-2.0.
 
 ## Implemented scope
 
-`server/src/main/java/org/tortodrone/server/ConnectionLogger.java` is the entire
-server. It binds `127.0.0.1:47624`, accepts concurrent connections, assigns IDs,
+`server/src/main/java/org/tortodrone/server/ConnectionLogger.java` is the server
+entry point. It binds `127.0.0.1:47624`, accepts concurrent connections, assigns IDs,
 and logs UTC timestamps, peer addresses, byte counts, stream offsets, hex, and
-printable ASCII. It sends no response. EOF, reset, and idle timeout close a
+printable ASCII. By default it sends no response. EOF, reset, and idle timeout close a
 connection cleanly. Shutdown closes active sockets.
 
 For this observation tool, binding is restricted to loopback; there are at
@@ -64,21 +64,31 @@ server implementation. The original Spiral Knights client remains the protocol
 peer. Python prepares the isolated test environment; the server uses Java.
 See [launcher instructions](knightlauncher.md).
 
-The first milestone is complete: full client -> local listener -> protocol
-bytes. The current receive-only server intentionally leaves the client waiting
-for its secure response. Advancing requires a local authentication key and a
-compatible serialized response, not character/world scaffolding.
+The client connection and initial secure-response milestones are complete.
+`--handshake-key <private.pk8>` enables one secure exchange. `HandshakeCodec`
+under `protocol/` reads bounded frames and the verified request subset;
+`SecureHandshake` validates the RSA secret/salt and sends the minimal response.
+It identifies the following `AESAuthRequest`, then closes without logging its
+payload. No game libraries are linked. `HandshakeKeys` generates per-run local
+2048-bit RSA keys with private filesystem permissions; the wrapper stores them
+under ignored `local/research/` and overlays the public key only.
 
-Next implement only: bounded TCP frame accumulation, the observed secure-request
-subset, and `SecureResponse` with a local test keypair. Verify it causes the
-client to send `AESAuthRequest` before implementing session behavior. Keep the
-client build/version and dynamic class mappings explicit; do not freeze the
-observed 437-byte size or mapping code into a universal packet format.
+The frame limit is 64 KiB and the socket idle timeout remains 15 seconds. The
+codec handles fragmented and coalesced TCP data, rejects invalid lengths and
+unexpected fields, and maintains incoming class mappings per connection.
+It supports only the observed handshake schema, not arbitrary Narya objects.
 
-Later `protocol/` can house the independently implemented codec. Login/session,
-redirect, characters, and zone components should be introduced only as observed
-traffic requires them. No database, service cluster, game simulation, or future
-packet registry is justified yet.
+Validation: synthetic tests cover truncated/oversized frames, fragmentation,
+coalescing, RSA exchange, invalid salt, response correlation, and next-message
+identification. The real KnightLauncher Play path also passed: 437-byte request,
+139-byte response, 348-byte `AESAuthRequest`. See R2 in the source register.
+
+Next implement only: inspect and decode the synthetic `AESAuthRequest` with the
+negotiated secret, determine the minimum compatible authentication response,
+and verify the client's next message. The current server discards its per-run
+secret when the connection ends; a follow-up implementation must retain it only
+for the connection lifetime. Account persistence, character lists, zones, and
+other game systems remain outside this milestone.
 
 ## Reuse and provenance
 

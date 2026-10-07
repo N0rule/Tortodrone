@@ -272,3 +272,26 @@ or zone entry was claimed. No real user credentials/session were supplied.
 Notes: bubblewrap enforced read-only installation access and isolated networking.
 Only loopback was available to the experiment. Runtime logs and generated
 configuration remain ignored. The experiment cleans up its client and listener.
+
+## R2 — Secure-response round trip (2026-10-07)
+
+Sources: public Narya `SecureResponse`, `PublicKeyCredentials`, `SecureUtil`,
+`AuthResponseData`, `DObject`, `FieldMarshaller`, `Streamer`, and `ArrayMask`;
+installed client serializer and full application.
+
+What was learned: non-null final fields use a boolean marker; empty final arrays
+include a zero-length null mask. The secure response carries the correlated
+message ID, response-data object ID, and XOR-masked secret as hexadecimal text.
+RSA plaintext is the client secret followed by verification salt.
+
+Verified against official client: YES. An ignored `ResponseProbe.java` serialized
+and deserialized a synthetic response with the installed classes. The independently
+written server then sent its own response through the local KnightLauncher test.
+The real client advanced to `AESAuthRequest`. Confidence: HIGH for this boundary;
+its authentication payload and subsequent server response remain UNKNOWN.
+
+Evidence: `local/research/probe/response.bin` (synthetic probe), and
+`local/research/client-run-20261007T041806362428Z/listener.log` (437/139/348-byte
+exchange). Runtime mode logs no raw authentication payload. Keys and generated
+research stay ignored. No proprietary or upstream implementation was copied into
+the server; the tracked codec is an independent, limited protocol implementation.

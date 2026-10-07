@@ -8,7 +8,8 @@ The installed Linux client (build `20261006114613`) has connected to our
 loopback TCP listener on port `47624` and sent its 437-byte initial
 `SecureRequest`. This was tested with the full `ProjectXApp`, synthetic inputs,
 a read-only installation, and isolated networking. Authentication and gameplay
-are not implemented; the server currently sends no responses.
+are not implemented. Receive-only mode sends no responses; optional secure-handshake
+mode now sends `SecureResponse` and observes the client's next `AESAuthRequest`.
 
 ## Build and test
 
@@ -41,6 +42,12 @@ To open the prepared local KnightLauncher variant and launch manually:
 
 ```sh
 python3 tools/knight_launcher.py
+```
+
+To test the next handshake step, use:
+
+```sh
+python3 tools/knight_launcher.py --secure-handshake
 ```
 
 Click **Play locally**. Close KnightLauncher to stop the client and listener.
@@ -87,5 +94,6 @@ Initial milestones:
 Original Spiral Knights client files, assets, extracted code, packet captures,
 credentials, and other proprietary material are not stored in this repository.
 The local installation is research input only. Never modify `local/client`,
-stage `local/`, or publish raw protocol logs. The next milestone is a compatible
-secure response using our own local test keypair, before account/session work.
+stage `local/`, or publish raw protocol logs. The next milestone is decoding the
+synthetic authentication request and determining the minimum authentication
+response, before account/session implementation.

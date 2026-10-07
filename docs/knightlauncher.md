@@ -20,7 +20,7 @@ game process and the listener. No separate `make run` is needed.
 
 The game uses fixed synthetic test inputs. It currently reaches the initial
 handshake and then waits for a response. A login/connection error is expected:
-the server still only receives bytes and closes idle connections after 15 seconds.
+the default mode only receives bytes and closes idle connections after 15 seconds.
 The launcher remains open until you close it. Close the game before using Play
 again. Real account credentials are unnecessary.
 
@@ -55,9 +55,12 @@ writable scratch directory, isolated loopback network, and PID namespace.
 KnightLauncher, the game, and the listener run inside it. Desktop access uses
 the existing X11/XWayland session.
 
-The original public key is retained for this receive-only test. A local test
-key and secure response are the next server milestone; authentication is not
-implemented by this launcher integration.
+By default the original public key is retained for the receive-only test.
+Use `python3 tools/knight_launcher.py --secure-handshake` to generate a fresh
+local keypair, overlay its public key, send the secure response, and observe
+`AESAuthRequest`. The server then closes deliberately; login still cannot finish.
+Handshake mode logs message types/sizes only, not authentication payloads.
+Private keys remain in the ignored run directory with restrictive permissions.
 
 ## Local source and build
 
@@ -121,7 +124,7 @@ to received traffic. Manual mode omits `--smoke` and stays open.
 CONFIRMED (HIGH): the Maven package build and upstream test passed. The local
 Play path launched `ProjectXApp`, which sent a complete 437-byte `SecureRequest`
 to `127.0.0.1:47624`. The direct observation tool also passed after the shared
-wrapper changes. Neither test reached authentication or gameplay.
+wrapper changes. Neither test completed authentication or reached gameplay.
 
 ## Maintaining the integration
 
@@ -131,3 +134,13 @@ and patch, apply it to a separate updated checkout, review conflicts, rebuild,
 and repeat the smoke test. Keep the read-only client mount and configuration
 overlay even if upstream launch paths change. No catalog service or game files
 need to be hosted for this local integration.
+
+CONFIRMED (HIGH): the following passed against the full client:
+
+```sh
+python3 tools/knight_launcher.py --smoke --secure-handshake --seconds 40
+```
+
+It observed a 437-byte secure request, 139-byte
+response, and 348-byte `AESAuthRequest`. This tests the next protocol step through
+the same Play button; it does not establish an account/session.
