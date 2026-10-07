@@ -118,7 +118,8 @@ an installation rewrite. Maven packaging and its upstream test passed.
 
 Verified against official client: YES. The actual Play path launched
 `ProjectXApp` and the listener received its 437-byte initial request.
-Confidence: HIGH for this connection test; authentication remains unimplemented.
+Confidence: HIGH for this connection test. Authentication was unimplemented at
+this stage; R3 below records the later synthetic authentication test.
 
 Notes: smoke evidence is under
 `local/research/client-run-20261007T035528856736Z/`. The upstream reference
@@ -295,3 +296,34 @@ Evidence: `local/research/probe/response.bin` (synthetic probe), and
 exchange). Runtime mode logs no raw authentication payload. Keys and generated
 research stay ignored. No proprietary or upstream implementation was copied into
 the server; the tracked codec is an independent, limited protocol implementation.
+
+## R3 — External Temurin runtime and synthetic authentication (2026-10-07)
+
+Sources: official Adoptium API package metadata/checksums; public Narya
+`AESAuthRequest`, `SecureUtil`, `Communicator`, `BlockingCommunicator`, and
+`AuthCodes`; installed `ProjectXCredentials`, `ProjectXAuthResponseData`,
+`AESAuthRequest`, and base communicator `com.threerings.presents.client.u`.
+
+What was learned: `ProjectXApp` class-file major 69 requires Java 25. External
+Adoptium Temurin 25.0.4.1 runs the server, launcher, and game successfully.
+Temurin 21 was installed first and is available separately; default Java tools
+now point to 25. See [Java setup](java-setup.md) for versions and provenance.
+
+An ignored `AuthProbe.java` used the installed serializer to produce synthetic
+credential/envelope/response fixtures. Credentials have an independent mapping
+stream, legacy fixed-IV AES-CBC encryption, inherited username/password-transform
+fields, and current ProjectX platform/session fields. The test password transform
+matches MD5. The error code `m.invalid_password` comes from public `AuthCodes`.
+
+Verified against official client: YES. The local KnightLauncher smoke test with
+`--local-auth --seconds 40` passed. Independently written server code decoded the
+348-byte request, accepted only synthetic credentials, sent a 232-byte success
+response, and received the client's 49-byte `PingRequest`. Installed/public
+communicator code confirms writer startup occurs after successful authentication.
+Confidence: HIGH for this boundary; bootstrap and full login remain UNKNOWN.
+
+Evidence: `local/research/client-run-20261007T043332780956Z/listener.log`, ignored
+synthetic fixtures under `local/research/probe/`, and targeted bytecode notes
+under `local/research/javap/`. No credentials, identity values, session IDs, or
+raw authentication payloads were added to documentation or server logs.
+No third-party/proprietary implementation source was copied into tracked code.

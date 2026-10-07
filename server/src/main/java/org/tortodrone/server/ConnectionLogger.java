@@ -24,6 +24,7 @@ public final class ConnectionLogger {
         String bind = "127.0.0.1";
         int port = DEFAULT_PORT;
         Path keyPath = null;
+        boolean localAuth = false;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--bind") && i + 1 < args.length) {
                 bind = args[++i];
@@ -31,8 +32,10 @@ public final class ConnectionLogger {
                 port = Integer.parseInt(args[++i]);
             } else if (args[i].equals("--handshake-key") && i + 1 < args.length) {
                 keyPath = Path.of(args[++i]);
+            } else if (args[i].equals("--local-auth")) {
+                localAuth = true;
             } else {
-                throw new IllegalArgumentException("Usage: ConnectionLogger [--bind loopback-address] [--port 0..65535] [--handshake-key local-private.pk8]");
+                throw new IllegalArgumentException("Usage: ConnectionLogger [--bind loopback-address] [--port 0..65535] [--handshake-key local-private.pk8] [--local-auth]");
             }
         }
         InetAddress address = InetAddress.getByName(bind);
@@ -41,6 +44,8 @@ public final class ConnectionLogger {
         }
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
         PrivateKey key = keyPath == null ? null : HandshakeKeys.load(keyPath);
+        if (localAuth && key == null) throw new IllegalArgumentException("--local-auth requires --handshake-key");
+        final boolean authenticate = localAuth;
         Semaphore slots = new Semaphore(16);
         AtomicLong ids = new AtomicLong();
         try (ServerSocket listener = new ServerSocket()) {
@@ -53,7 +58,8 @@ public final class ConnectionLogger {
             }, "listener-shutdown"));
             log("Listening on " + address.getHostAddress() + ":" + listener.getLocalPort()
                 + (key == null ? " (TCP; receive only; 64 KiB/connection; 15 s idle timeout)"
-                    : " (TCP; secure handshake only; 64 KiB/frame; 15 s idle timeout; no payload logging)"));
+                    : " (TCP; " + (authenticate ? "synthetic local authentication" : "secure handshake only")
+                        + "; 64 KiB/frame; 15 s idle timeout; no payload logging)"));
             while (!listener.isClosed()) {
                 Socket client;
                 try {
@@ -71,7 +77,7 @@ public final class ConnectionLogger {
                 clients.add(client);
                 new Thread(() -> {
                     try {
-                        receive(client, id, key);
+                        receive(client, id, key, authenticate);
                     } finally {
                         clients.remove(client);
                         slots.release();
@@ -81,13 +87,13 @@ public final class ConnectionLogger {
         }
     }
 
-    private static void receive(Socket client, long id, PrivateKey key) {
+    private static void receive(Socket client, long id, PrivateKey key, boolean localAuth) {
         int total = 0;
         log("Connection #" + id + " from " + client.getRemoteSocketAddress());
         try (client) {
             client.setSoTimeout(15000);
             if (key != null) {
-                SecureHandshake.run(client, key, message -> log("Connection #" + id + " " + message));
+                SecureHandshake.run(client, key, message -> log("Connection #" + id + " " + message), localAuth);
                 return;
             }
             byte[] buffer = new byte[4096];

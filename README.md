@@ -7,14 +7,17 @@ Experimental clean-room server emulator for Spiral Knights.
 The installed Linux client (build `20261006114613`) has connected to our
 loopback TCP listener on port `47624` and sent its 437-byte initial
 `SecureRequest`. This was tested with the full `ProjectXApp`, synthetic inputs,
-a read-only installation, and isolated networking. Authentication and gameplay
-are not implemented. Receive-only mode sends no responses; optional secure-handshake
-mode now sends `SecureResponse` and observes the client's next `AESAuthRequest`.
+a read-only installation, and isolated networking. Optional local-authentication
+mode now decrypts the synthetic credentials, sends a success response, and
+observes the client's first authenticated `PingRequest`. Bootstrap, character
+selection, and gameplay remain unimplemented.
 
 ## Build and test
 
 Requires a JDK 17+ and GNU make; tests/tools also need Python 3.9+.
-Set `JAVA_HOME` if the JDK is not on `PATH`.
+Adoptium Temurin 25 is installed on this workstation and supports the server,
+launcher, and current game client. Set `JAVA_HOME` if the JDK is not on `PATH`.
+See [Java setup](docs/java-setup.md).
 
 ```sh
 make test
@@ -32,7 +35,7 @@ make build
 python3 tools/observe_client.py
 ```
 
-This requires `local/client`, its bundled Java runtime, `bubblewrap`, and an
+This requires `local/client`, an external Java 25 JDK, `bubblewrap`, and an
 active X11/XWayland desktop. It opens the client briefly, starts the listener
 inside the same isolated network namespace, saves evidence under `local/`,
 and stops both processes after receiving bytes. See the
@@ -44,19 +47,21 @@ To open the prepared local KnightLauncher variant and launch manually:
 python3 tools/knight_launcher.py
 ```
 
-To test the next handshake step, use:
+To test local authentication with the synthetic account, use:
 
 ```sh
-python3 tools/knight_launcher.py --secure-handshake
+python3 tools/knight_launcher.py --local-auth
 ```
 
 Click **Play locally**. Close KnightLauncher to stop the client and listener.
-This is still a connection test; login is not implemented. The experimental
+The client accepts synthetic authentication, then the experiment closes before
+bootstrap; login cannot yet reach character selection. The experimental
 launcher source and build stay under ignored `local/`. See
 [KnightLauncher setup and rebuilding](docs/knightlauncher.md).
 
 ## Research
 
+- [External Java setup](docs/java-setup.md)
 - [Client startup](docs/client-startup.md)
 - [Network architecture](docs/network-architecture.md)
 - [Protocol and observed handshake](docs/protocol.md)
@@ -94,6 +99,6 @@ Initial milestones:
 Original Spiral Knights client files, assets, extracted code, packet captures,
 credentials, and other proprietary material are not stored in this repository.
 The local installation is research input only. Never modify `local/client`,
-stage `local/`, or publish raw protocol logs. The next milestone is decoding the
-synthetic authentication request and determining the minimum authentication
-response, before account/session implementation.
+stage `local/`, or publish raw protocol logs. The next milestone is understanding the
+bootstrap notification and required services that follow authentication, before
+character selection.

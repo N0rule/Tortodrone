@@ -15,8 +15,10 @@ classes produced the same message type and length.
 CONFIRMED by code (HIGH, N1, C1): the secure branch waits for `SecureResponse`,
 constructs `AESAuthRequest`, then waits for authentication and bootstrap.
 CONFIRMED (HIGH, R2): TortodroneServer now sends the secure response and the
-installed client follows with `AESAuthRequest`. Its body and a subsequent
-authentication response remain unimplemented.
+installed client follows with `AESAuthRequest`.
+CONFIRMED (HIGH, R3): local-authentication mode decrypts the synthetic credential
+envelope and sends success; the client then transmits `PingRequest` while
+bootstrap is pending.
 
 ## Transport
 
@@ -126,9 +128,54 @@ It validates field boundaries and rejects unsupported layouts. Mapping codes
 are connection-local; this is not a general-purpose Narya deserializer.
 
 CONFIRMED (HIGH, R2): the full client responded with a 348-byte frame whose top
-level type is `AESAuthRequest`. Only that type is identified. The payload is
-neither decoded nor logged, and the server closes the connection at this
-boundary. This does not demonstrate successful account authentication.
+level type is `AESAuthRequest`. Secure-handshake-only mode identifies that type
+and closes. Local-authentication mode now continues as described below.
+
+### AESAuthRequest implemented subset
+
+CONFIRMED (HIGH, R3): the outer object contains a 16-bit message ID, null outer
+credentials, version and timezone strings, bootstrap-group array, then a 32-bit
+ciphertext length and ciphertext. The full client requested four bootstrap
+groups. Strings use modified UTF; the final string array uses its null bitmask.
+
+The encrypted payload is an independent Narya stream with fresh class mappings.
+AES uses the negotiated 16-byte server secret, `AES/CBC/PKCS5Padding`, and the
+legacy protocol IV consisting of bytes 1 through 8 repeated twice. This IV is
+verified in public source and installed bytecode. No IV travels in this message.
+
+The supported credential type is `ProjectXCredentials`: inherited username
+(`Name`) and password transform, then ident, language, sessionId, ticket,
+segaPass, steamClient, siteId, invite, and region in the verified wire order.
+The synthetic password transform matches MD5 hexadecimal output from the
+installed constructor. This is compatibility research, not a proposed password
+storage design. Identity and credential values are not logged.
+
+The implementation accepts only the fixed synthetic username/password used by
+the test wrapper, with no official session, Steam ticket, or partner flags.
+Other passwords receive the verified `m.invalid_password` response code.
+Unsupported credential shapes are rejected. Per-frame and ciphertext bounds
+are implementation limits rather than official protocol limits.
+
+### Authentication response and next observed message
+
+CONFIRMED (HIGH, R3): the server replies with `AuthResponse`, the correlated
+message ID, and `ProjectXAuthResponseData`. Its fields are object ID, code,
+ident, sessionId, and authName (`Name`). Incoming and outgoing mapping tables
+are independent and survive between frames. After the initial secure response,
+this response introduces outgoing codes 3, 4, and 5; these are stream mappings,
+not universal packet IDs.
+
+The experiment generates a transient local session ID and returns `success`
+only for the synthetic account. It stores no account or session record.
+The client accepted a 232-byte response and sent a 49-byte `PingRequest` about
+five seconds later. Public `BlockingCommunicator.logonSucceeded` and matching
+installed bytecode show that its network writer starts only after `success`.
+This confirms authentication response acceptance, not completion of full login.
+
+Bootstrap remains UNKNOWN for the current game-specific service/object schema.
+The server closes after identifying the first authenticated ping. No bootstrap,
+character list, or zone data is sent. Decrypted credential buffers and negotiated
+secrets are cleared when the experiment finishes.
 
 UNKNOWN: whether/how individual post-authentication message classes use
 encryption or compression. No evidence here supports describing the entire
@@ -157,6 +204,6 @@ Raw hex logs and extracted frame data stay under `local/research/` and
 `local/research/client-run-*` directory. These are never commit material.
 Only short structural bytes and field summaries are documented here.
 
-Receive-only and initial secure-response milestones are complete. Authentication
-payload decoding, authentication responses, character selection, and zone entry
-remain unimplemented.
+Receive-only, secure-response, and synthetic authentication-response milestones
+are complete. Bootstrap, persistent accounts/sessions, character selection, and
+zone entry remain unimplemented.

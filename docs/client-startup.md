@@ -52,6 +52,11 @@ OpenJDK `25.0.1` JDK was found at
 `/home/n0rule/.local/share/PrismLauncher/java/java-runtime-epsilon`.
 It is an environment convenience, not a hardcoded build dependency.
 
+CONFIRMED (HIGH, R3): our launcher experiment now uses separately installed
+Adoptium Temurin 25 for all JVMs. The current `ProjectXApp` has class-file major
+69 (Java 25); Java 21 cannot load it. This does not change Steam's original
+entry point or bundled runtime. See [Java setup](java-setup.md).
+
 ## JVM arguments
 
 CONFIRMED (HIGH, S1): Linux-relevant options in this installation's

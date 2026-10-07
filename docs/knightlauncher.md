@@ -26,7 +26,7 @@ again. Real account credentials are unnecessary.
 
 The terminal prints a fresh `local/research/client-run-*` directory containing:
 
-- `listener.log`: incoming protocol bytes.
+- `listener.log`: raw bytes in default mode; message types/sizes in handshake/authentication modes.
 - `launcher/knightlauncher.log`: launcher-ready/client-started markers.
 - `launcher-console.log`: launcher JVM diagnostics.
 - `console.log` and `app/projectx.log`: game diagnostics.
@@ -62,6 +62,38 @@ local keypair, overlay its public key, send the secure response, and observe
 Handshake mode logs message types/sizes only, not authentication payloads.
 Private keys remain in the ignored run directory with restrictive permissions.
 
+## Local authentication test
+
+```sh
+make build
+python3 tools/knight_launcher.py --local-auth
+```
+
+Click **Play locally**. This also enables the secure handshake with a fresh local
+keypair. Only the wrapper's fixed synthetic account is accepted. The server
+parses the AES-encrypted `ProjectXCredentials`, verifies the test password
+transform, and sends a correlated `AuthResponse` containing local response data.
+No real account, Steam ticket, or official session is required.
+
+CONFIRMED (HIGH, R3): the full client accepted the success response and sent its
+first `PingRequest`. Its network writer starts after successful authentication.
+The experiment closes at that point: no bootstrap is sent, so the game cannot
+reach character selection. A connection error after this test is expected.
+Private keys, credentials, identity fields, and session IDs are never printed
+by the authentication server. Credentials are not stored in a database.
+
+For an automatic test:
+
+```sh
+python3 tools/knight_launcher.py --smoke --local-auth --seconds 40
+```
+
+This reports success only after the post-authentication message arrives. The
+server, launcher, and game all run on external Adoptium Temurin 25; see
+[Java setup](java-setup.md). Neither the game-bundled runtime nor PrismLauncher
+is needed by this setup. Normal receive-only and secure-handshake-only modes
+remain available.
+
 ## Local source and build
 
 The untouched reference is `local/upstream/KnightLauncher` at commit
@@ -95,7 +127,7 @@ contains no `com/threerings/projectx/` classes. Keep research artifacts local.
 To rebuild the existing experimental checkout:
 
 ```sh
-export JAVA_HOME=/home/n0rule/.local/share/PrismLauncher/java/java-runtime-epsilon
+export JAVA_HOME="$HOME/.local/share/java/temurin-25"
 local/tools/apache-maven-3.9.11/bin/mvn -B -ntp \
   -f local/experiments/KnightLauncher/pom.xml \
   -Dmaven.repo.local="$PWD/local/tools/m2" validate

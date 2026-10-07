@@ -71,20 +71,23 @@ this first integration.
 
 Requirements: Linux, Python 3.9+, GNU make, JDK 17+ for compilation,
 `bubblewrap` (`bwrap`), an active X11/XWayland desktop, and this installed client
-with its Java 25 runtime. The listener itself has no client dependency.
+and an external Java 25 JDK. The listener itself has no client dependency.
 
 From the repository root:
 
 ```sh
 # Set JAVA_HOME to an installed JDK if javac is not on PATH.
-export JAVA_HOME=/home/n0rule/.local/share/PrismLauncher/java/java-runtime-epsilon
+export JAVA_HOME="$HOME/.local/share/java/temurin-25"
 make test
 python3 tools/observe_client.py
 ```
 
-The JDK path above is the one found on this machine; another JDK 17+ works for
-the emulator. The observation tool uses `local/client/java_vm/bin/java` at
-runtime. It prints the ignored directory containing the evidence and reports
+The JDK path above is the external Adoptium installation on this machine;
+another JDK 17+ works for the emulator. The full current client requires Java 25.
+The observation tool selects external Java using `--java-home`, `JAVA_HOME`, or
+`PATH`; `--client-java-home` / `SK_CLIENT_JAVA_HOME` can select a separate client
+JDK. It checks the `ProjectXApp` class-file version and refuses an incompatible
+or game-bundled runtime. It prints the ignored directory containing the evidence and reports
 success only after the real app sends bytes to our listener.
 
 CONFIRMED (HIGH): the tool performs these operations:
@@ -104,6 +107,8 @@ CONFIRMED (HIGH): the tool performs these operations:
   fixed synthetic credentials with a fresh preference home.
 - Stops the client and listener after bytes arrive or the deadline expires.
   Both processes are cleaned up; no server is left running on the host.
+  With `--local-auth`, success requires the client to send a post-authentication
+  `PingRequest`, rather than merely sending initial bytes.
 
 No Steam launch options, hosts files, game JARs, or installed configuration are
 changed. The tool refuses to fall back to an unprotected launch when bubblewrap

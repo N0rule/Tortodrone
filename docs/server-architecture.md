@@ -50,7 +50,8 @@ normal disconnects, no unexpected responses, and rejection of public binding.
 Tests choose an ephemeral port and clean up their process. Python 3.9+ is
 needed for the research tools; Java 17+ and make are sufficient for the server.
 
-CONFIRMED (HIGH): compilation and integration tests passed using JDK 25.0.1,
+CONFIRMED (HIGH): compilation and integration tests passed using Adoptium
+Temurin 25.0.4.1 (earlier milestones used JDK 25.0.1),
 with Java 17 target classes. The full installed app also connected and sent
 its initial handshake using `tools/observe_client.py`. Neither test requires
 real game credentials. Java 17 runtime execution itself was not separately
@@ -68,8 +69,11 @@ The client connection and initial secure-response milestones are complete.
 `--handshake-key <private.pk8>` enables one secure exchange. `HandshakeCodec`
 under `protocol/` reads bounded frames and the verified request subset;
 `SecureHandshake` validates the RSA secret/salt and sends the minimal response.
-It identifies the following `AESAuthRequest`, then closes without logging its
-payload. No game libraries are linked. `HandshakeKeys` generates per-run local
+By default it identifies the following `AESAuthRequest`, then closes.
+With `--local-auth`, it decrypts that request, validates only the synthetic
+test account, sends the authentication response, and observes the first
+post-authentication ping before closing. Payloads and secrets are never logged.
+No game libraries are linked. `HandshakeKeys` generates per-run local
 2048-bit RSA keys with private filesystem permissions; the wrapper stores them
 under ignored `local/research/` and overlays the public key only.
 
@@ -83,12 +87,16 @@ coalescing, RSA exchange, invalid salt, response correlation, and next-message
 identification. The real KnightLauncher Play path also passed: 437-byte request,
 139-byte response, 348-byte `AESAuthRequest`. See R2 in the source register.
 
-Next implement only: inspect and decode the synthetic `AESAuthRequest` with the
-negotiated secret, determine the minimum compatible authentication response,
-and verify the client's next message. The current server discards its per-run
-secret when the connection ends; a follow-up implementation must retain it only
-for the connection lifetime. Account persistence, character lists, zones, and
-other game systems remain outside this milestone.
+Authentication validation: synthetic tests cover correct/wrong passwords,
+AES credential envelopes, response correlation and persistent mappings, and
+absence of sensitive values in logs. The real full client through KnightLauncher
+passed using only external Temurin 25: 437-byte request, 139-byte secure response,
+348-byte authentication request, 232-byte success response, 49-byte ping.
+
+Next implement only: determine the current `BootstrapNotification` data and the
+minimum required services/client object after authentication. Verify the next
+client action before character-list work. The local session ID is transient;
+account/session persistence and game simulation remain unimplemented.
 
 ## Reuse and provenance
 

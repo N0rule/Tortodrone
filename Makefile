@@ -15,3 +15,4 @@ test: build
 	python3 tools/test_listener.py "$(JAVA)"
 	"$(JAVAC)" --release 17 -cp $(CLASSES) -d build/test-classes $$(find server/src/test/java -name '*.java')
 	"$(JAVA)" -cp $(CLASSES):build/test-classes org.tortodrone.server.HandshakeTest
+	"$(JAVA)" -cp $(CLASSES):build/test-classes org.tortodrone.server.LocalAuthenticationTest

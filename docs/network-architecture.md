@@ -5,7 +5,7 @@ See [research-sources.md](research-sources.md) for evidence identifiers.
 
 ## High-level flow
 
-CONFIRMED (HIGH, S1, C1, N1, R1):
+CONFIRMED (HIGH, S1, C1, N1, R1–R3):
 
 ```text
 Getdown updates/resources (HTTP; bypassed in local experiment)
@@ -13,13 +13,17 @@ Getdown updates/resources (HTTP; bypassed in local experiment)
     -> resolve configured server_host
     -> initial TCP connection to server_ports
     -> SecureRequest containing PublicKeyCredentials
-    -> wait for server response             <-- current experiment stops here
+    -> SecureResponse with local shared secret
+    -> AESAuthRequest with synthetic credentials
+    -> AuthResponse success
+    -> first authenticated PingRequest
+    -> wait for bootstrap                   <-- current experiment stops here
 ```
 
-CONFIRMED by code, not yet exercised against TortodroneServer (HIGH, C1, N1):
-the secure path expects `SecureResponse`, then sends an `AESAuthRequest`;
-authentication response/bootstrap supply session and distributed-object data.
-UDP setup is deferred until bootstrap. The client has redirection handlers.
+CONFIRMED (HIGH, R2, R3): the secure response and synthetic authentication
+response have been exercised against TortodroneServer. CONFIRMED by code
+(HIGH, C1, N1): subsequent bootstrap supplies distributed-object and service
+data, and UDP setup is deferred until then. The client has redirection handlers.
 
 LIKELY (MEDIUM): the configured entry server can route clients to another
 node according to authentication/region/session state. UNKNOWN: the live
@@ -65,8 +69,10 @@ TCP, not an initial TLS handshake. It does not establish encryption of all
 later traffic.
 
 CONFIRMED (HIGH, C1): game-specific credentials include session and Steam
-ticket fields. UNKNOWN: minimum valid local authentication response and all
-required bootstrap objects. No authentication has been implemented or tested.
+ticket fields. CONFIRMED (HIGH, R3): our minimal `ProjectXAuthResponseData`
+with success and transient local session/name data is accepted for the synthetic
+account. The client's first authenticated ping verifies this boundary. UNKNOWN:
+all required bootstrap objects and a complete login/session implementation.
 
 ## Initial backend connection and transport
 
