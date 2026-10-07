@@ -99,7 +99,7 @@ public final class AccountStoreTest {
     static AccountStore.Account login(AccountStore accounts,String username,String password) throws IOException {
         char[] hash = AccountStore.transform(password.toCharArray()); try { return accounts.authenticate(username,hash); } finally { Arrays.fill(hash,'\0'); }
     }
-    static Knight choices(String name) { return new Knight(0,name,"helm","armor",null,null,"costume",1,2,0,0); }
+    static Knight choices(String name) { return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0); }
     static void refused(Operation operation) throws Exception { try { operation.run(); throw new AssertionError("Invalid operation accepted"); } catch (IOException expected) { } }
     @FunctionalInterface interface Operation { void run() throws Exception; }
 }

@@ -9,6 +9,7 @@ import java.util.*;
 import org.tortodrone.account.Passwords;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
+import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
@@ -24,13 +25,13 @@ public final class Database {
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
-        if (Files.exists(file)) { int version = version(); if (version == 1) return; if (version != 0) throw new IOException("Unsupported database version; database was not replaced"); }
+        if (Files.exists(file)) { int version = version(); if (version == 2) return; if (version != 0 && version != 1) throw new IOException("Unsupported database version; database was not replaced"); }
         if (deploymentLocked) initialize(directory);
         else {
             try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  var lock = channel.tryLock()) {
                 if (lock == null) throw new IOException("Stop the server once before initializing or migrating the database");
-                if (!Files.exists(file) || version() != 1) initialize(directory);
+                if (!Files.exists(file) || version() != 2) initialize(directory);
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
     }
@@ -62,6 +63,20 @@ public final class Database {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
     }
     private void initialize(Path directory) throws IOException {
+        if (Files.exists(file) && version() == 2) return;
+        if (Files.exists(file) && version() == 1) {
+            write(c -> {
+                try (Statement statement = c.createStatement(); ResultSet r = statement.executeQuery("PRAGMA user_version")) {
+                    r.next(); if (r.getInt(1) == 2) return null;
+                    if (r.getInt(1) != 1) throw new IOException("Unsupported database version; database was not replaced");
+                }
+                WorldProfiles.initialize(c);
+                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version=2"); }
+                return null;
+            });
+            return;
+        }
+        if (Files.exists(file) && version() != 0) throw new IOException("Unsupported database version; database was not replaced");
         if (!Files.exists(file)) Files.createFile(file);
         read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
             r.next(); if (r.getInt(1) != 0) throw new IOException("Unsupported database schema; database was not replaced");
@@ -80,7 +95,8 @@ public final class Database {
                 s.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL)");
             }
             migrate(connection, directory);
-            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version=1"); }
+            WorldProfiles.initialize(connection);
+            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version=2"); }
             return null;
         });
     }
@@ -213,12 +229,31 @@ public final class Database {
     public List<Knight> roster(int id) throws IOException {
         return read(c -> { List<Knight> result = new ArrayList<>();
             try (PreparedStatement s = c.prepareStatement("SELECT * FROM knights WHERE account_id=? ORDER BY id")) {
-                s.setInt(1,id); try (ResultSet r = s.executeQuery()) { while (r.next()) result.add(new Knight(r.getInt("id"),r.getString("name"),r.getString("helm"),r.getString("armor"),r.getString("helm_accessory"),r.getString("armor_accessory"),r.getString("costume"),r.getInt("color"),r.getInt("height"),r.getInt("eye"),r.getLong("created_at"))); }
+                s.setInt(1,id); try (ResultSet r = s.executeQuery()) { while (r.next()) result.add(knight(r)); }
             } return List.copyOf(result);
         });
     }
+    static Knight knight(Connection c,int accountId,int knightId) throws SQLException, IOException {
+        try (PreparedStatement s = c.prepareStatement("SELECT * FROM knights WHERE account_id=? AND id=?")) {
+            s.setInt(1,accountId); s.setInt(2,knightId);
+            try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("Missing character during migration"); return knight(r); }
+        }
+    }
+    private static Knight knight(ResultSet r) throws SQLException {
+        return new Knight(r.getInt("id"),r.getString("name"),r.getString("helm"),r.getString("armor"),r.getString("helm_accessory"),r.getString("armor_accessory"),r.getString("costume"),r.getInt("color"),r.getInt("height"),r.getInt("eye"),r.getLong("created_at"));
+    }
+    public WorldProfile worldProfile(int accountId,int knightId,long authRevision) throws IOException {
+        return read(c -> {
+            c.setAutoCommit(false); // One read snapshot for identity and inventory, even during deletion.
+            var profile = WorldProfiles.load(c,accountId,knightId,authRevision); c.commit(); return profile;
+        });
+    }
     public void saveRoster(int id,List<Knight> knights,int next,long revision) throws IOException {
-        write(c -> { replaceRoster(c,id,knights,next,revision); return null; });
+        write(c -> {
+            replaceRoster(c,id,knights,next,revision);
+            for (Knight knight : knights) { WorldProfiles.ensure(c,id,knight); WorldProfiles.appearance(c,id,knight); }
+            return null;
+        });
     }
     private static void replaceRoster(Connection c,int id,List<Knight> knights,int next,long revision) throws IOException, SQLException {
         try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET next_knight_id=? WHERE id=?" + (revision >= 0 ? " AND auth_revision=?" : ""))) {

@@ -1,0 +1,128 @@
+# Verified configuration references only; no game assets. See docs/research/starter-equipment.md.
+# category|configuration|player-model-argument|model-reference|typed model arguments
+ARMOR|Gear/Armor/Spiral Brigandine (Blue)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818
+ARMOR|Gear/Armor/Spiral Brigandine (Gold)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817
+ARMOR|Gear/Armor/Spiral Brigandine (Green)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821
+ARMOR|Gear/Armor/Spiral Brigandine (Heavy)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823
+ARMOR|Gear/Armor/Spiral Brigandine (Pink)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819
+ARMOR|Gear/Armor/Spiral Brigandine (Purple)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822
+ARMOR|Gear/Armor/Spiral Brigandine (Red)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820
+ARMOR|Gear/Armor/Spiral Cuirass (Blue)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818
+ARMOR|Gear/Armor/Spiral Cuirass (Gold)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817
+ARMOR|Gear/Armor/Spiral Cuirass (Green)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821
+ARMOR|Gear/Armor/Spiral Cuirass (Heavy)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823
+ARMOR|Gear/Armor/Spiral Cuirass (Pink)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819
+ARMOR|Gear/Armor/Spiral Cuirass (Purple)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822
+ARMOR|Gear/Armor/Spiral Cuirass (Red)|Armor|item/gear/armor/rivet/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820
+ARMOR|Gear/Armor/Spiral Culet (Blue)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818
+ARMOR|Gear/Armor/Spiral Culet (Gold)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817
+ARMOR|Gear/Armor/Spiral Culet (Green)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821
+ARMOR|Gear/Armor/Spiral Culet (Heavy)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823
+ARMOR|Gear/Armor/Spiral Culet (Pink)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819
+ARMOR|Gear/Armor/Spiral Culet (Purple)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822
+ARMOR|Gear/Armor/Spiral Culet (Red)|Armor|item/gear/armor/rearpouch/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820
+ARMOR|Gear/Armor/Spiral Draped Armor (Blue)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Gold)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Green)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Heavy)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Pink)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Purple)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Draped Armor (Red)|Armor|item/gear/armor/hybrid/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Blue)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Gold)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Green)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Heavy)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Pink)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Purple)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+ARMOR|Gear/Armor/Spiral Flak Jacket (Red)|Armor|item/gear/armor/coat/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Blue|helm_back|item/gear/accessory/helm/ploom/model_ploom-blu.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Gold|helm_back|item/gear/accessory/helm/ploom/model_ploom-gld.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Green|helm_back|item/gear/accessory/helm/ploom/model_ploom-grn.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Heavy|helm_back|item/gear/accessory/helm/ploom/model_ploom-hvy.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Pink|helm_back|item/gear/accessory/helm/ploom/model_ploom-pnk.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Purple|helm_back|item/gear/accessory/helm/ploom/model_ploom-prp.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Plume/Plume, Red|helm_back|item/gear/accessory/helm/ploom/model_ploom-red.dat|Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Blue|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Gold|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Green|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Heavy|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Pink|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Purple|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Back/Ribbon/Ribbon, Red|helm_back|item/gear/accessory/helm/scarf/model_ribbon-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Blue|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Gold|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Green|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Heavy|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Pink|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Purple|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Com Unit/Com Unit, Red|helm_side|item/gear/accessory/helm/sides/model_com-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Blue|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Gold|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Green|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Heavy|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Pink|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Purple|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+BACK_ACCESSORY|Helm/Side/Mecha Wings/Mecha Wings, Red|helm_side|item/gear/accessory/helm/sides/model_mechburns-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Blue|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Gold|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Green|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Heavy|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Pink|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Purple|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Front/Power Scanner/Power Scanner, Red|helm_front|item/gear/accessory/helm/visors/model_scannervision-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Blue|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Gold|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Green|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Heavy|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Pink|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Purple|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Bolted Vee/Bolted Vee, Red|helm_brow|item/gear/accessory/helm/tops/model_headcrest-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Blue|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Gold|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Green|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Heavy|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Pink|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Purple|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Headband/Headband, Red|helm_top|item/gear/accessory/helm/tops/model_hairband-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Blue|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:blu;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Gold|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:gld;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Green|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:grn;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Heavy|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:hvy;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Pink|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:pnk;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Purple|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:prp;Colorization=PLAYER_COLOR
+HELM_ACCESSORY|Helm/Top/Maid Headband/Maid Headband, Red|helm_top|item/gear/accessory/helm/tops/model_maidband-preset.dat|Color=S:red;Colorization=PLAYER_COLOR
+HELM|Gear/Helm/Spiral Crescent Helm (Blue)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818
+HELM|Gear/Helm/Spiral Crescent Helm (Gold)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817
+HELM|Gear/Helm/Spiral Crescent Helm (Green)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821
+HELM|Gear/Helm/Spiral Crescent Helm (Heavy)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823
+HELM|Gear/Helm/Spiral Crescent Helm (Pink)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819
+HELM|Gear/Helm/Spiral Crescent Helm (Purple)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822
+HELM|Gear/Helm/Spiral Crescent Helm (Red)|Helmet|item/gear/helm/nose/model-recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820
+HELM|Gear/Helm/Spiral Pith Helm (Blue)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Gold)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Green)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Heavy)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Pink)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Purple)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+HELM|Gear/Helm/Spiral Pith Helm (Red)|Helmet|item/gear/helm/pith/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Blue)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Gold)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Green)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Heavy)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Pink)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Purple)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+HELM|Gear/Helm/Spiral Round Helm (Red)|Helmet|item/gear/helm/valkyrie/model_v2-recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Blue)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Gold)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Green)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Heavy)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Pink)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Purple)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+HELM|Gear/Helm/Spiral Sallet (Red)|Helmet|item/gear/helm/samurai/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Blue)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Gold)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Green)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3333;Colorization=PLAYER_COLOR;Green=C:3077;Red=C:2821;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Heavy)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3335;Colorization=PLAYER_COLOR;Green=C:3079;Red=C:2823;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Pink)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3331;Colorization=PLAYER_COLOR;Green=C:3075;Red=C:2819;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Purple)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3334;Colorization=PLAYER_COLOR;Green=C:3078;Red=C:2822;Texture=S:Proto
+HELM|Gear/Helm/Spiral Tailed Helm (Red)|Helmet|item/gear/helm/doubleploom/model_recolor.dat|Blue=C:3332;Colorization=PLAYER_COLOR;Green=C:3076;Red=C:2820;Texture=S:Proto

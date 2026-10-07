@@ -62,14 +62,31 @@ final class ServerConsole implements AutoCloseable {
         String command = words[0].toLowerCase(Locale.ROOT);
         if (words.length == 1 && command.equals("help")) {
             log.info("Commands: help | status | stop | account list | account create <username> [admin]");
+            log.info("knight list <username> | knight info <username> <knight-name>");
             log.info("account password <username> | account check <username> | account admin <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
         } else if (words.length == 1 && command.equals("stop")) {
             log.info("Stopping server…"); stop.run();
+        } else if (command.equals("knight")) {
+            knight(words);
         } else if (command.equals("account")) {
             account(words);
         } else throw new IOException("Unknown command or arguments. Type help for commands.");
+    }
+
+    private void knight(String[] words) throws IOException {
+        if (words.length == 3 && words[1].equals("list")) {
+            var knights = accounts.knights(words[2]);
+            log.info("ID | Knight");
+            for (var knight : knights) log.info(knight.id() + " | " + knight.name());
+            log.info("Knights: " + knights.size());
+        } else if (words.length == 4 && words[1].equals("info")) {
+            var profile = accounts.worldProfile(words[2],words[3]);
+            log.info("Knight " + words[3] + ": account=" + profile.accountId() + ", roster ID=" + profile.knightId() + ", world ID=" + profile.worldId());
+            for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config()
+                + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat());
+        } else throw new IOException("Invalid knight command. Type help for commands.");
     }
 
     private void account(String[] words) throws IOException {

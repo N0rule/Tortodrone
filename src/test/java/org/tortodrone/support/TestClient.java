@@ -139,7 +139,7 @@ public final class TestClient {
             writer.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3); out.writeInt(1); out.writeByte(5);
             out.writeBoolean(true); out.writeInt(14); out.writeShort(0);
             writer.type(out, "com.threerings.util.Name"); string(out, "x");
-            for (String asset : List.of("helm", "armor", "shield", "weapon", "sprite")) {
+            for (String asset : List.of("Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", "shield", "weapon", "sprite")) {
                 writer.type(out, "java.lang.String"); out.writeUTF(asset);
             }
             writer.type(out, "java.lang.Integer"); out.writeInt(1);

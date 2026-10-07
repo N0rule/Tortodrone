@@ -22,6 +22,7 @@ public final class MultiSessionScenario {
             a.save("First-Knight", "Renamed-Knight", (short) 51);
             a.changed(List.of("Renamed-Knight")); a.confirmed((short) 51, "Knight updated.");
             b.changed(List.of("Renamed-Knight")); b.ping(); bob.ping();
+            bob.select("Renamed-Knight",(short)60); bob.confirmed((short)60,"No such knight");
             bob.delete("Renamed-Knight", (short) 52); bob.confirmed((short) 52, "No such knight");
             a.ping(); b.ping();
             b.unsubscribe();
@@ -86,6 +87,14 @@ public final class MultiSessionScenario {
             writer.send(socket.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 40); out.writeInt(oid); });
             return wire.snapshot(wire.frame(socket.getInputStream()), (short) 40, oid);
         }
+        void select(String name,short callback) throws IOException {
+            writer.send(socket.getOutputStream(),out -> {
+                writer.message(out,"ForwardEventRequest",40); writer.type(out,TestWire.DOB+"InvocationRequestEvent");
+                out.writeInt(3); out.writeInt(1); out.writeByte(4); out.writeBoolean(true); out.writeInt(3);
+                writer.type(out,"com.threerings.util.Name"); out.writeBoolean(true); out.writeUTF(name);
+                out.writeShort(0); writer.type(out,TestWire.INV+"ConfirmMarshaller"); out.writeShort(callback);
+            });
+        }
         void subscribe(List<String> expected) throws Exception { names(snapshot().get("availableKnights"), expected); }
         void unsubscribe() throws Exception {
             writer.send(socket.getOutputStream(), out -> { writer.message(out, "UnsubscribeRequest", 41); out.writeInt(oid); });
@@ -102,8 +111,8 @@ public final class MultiSessionScenario {
         void save(String oldName, String name, short callback) throws Exception {
             writer.send(socket.getOutputStream(), out -> {
                 invocation(out, 5, 14); name(out, oldName); name(out, name);
-                for (String asset : List.of("helm", "armor")) { writer.type(out, "java.lang.String"); out.writeUTF(asset); }
-                out.writeShort(0); out.writeShort(0); writer.type(out, "java.lang.String"); out.writeUTF("costume");
+                for (String asset : List.of("Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)")) { writer.type(out, "java.lang.String"); out.writeUTF(asset); }
+                out.writeShort(0); out.writeShort(0); writer.type(out, "java.lang.String"); out.writeUTF("Blue");
                 writer.type(out, "java.lang.Integer"); out.writeInt(1);
                 writer.type(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight"); out.writeByte(2);
                 writer.type(out, "com.threerings.projectx.data.ProjectXCodes$EyeType"); out.writeByte(0);

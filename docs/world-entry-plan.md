@@ -16,6 +16,20 @@ Version `0.5.0` adds SQLite account/character persistence, local desktop account
 administration, running-server terminal commands and stored Admin flags. These
 foundations do not acknowledge character selection or mark introductory missions complete.
 
+## Completed character foundation (0.6.0)
+
+The installed selection request is Knight service method 4 with a knight name,
+optional string and Confirm listener. The server now validates arguments and
+ownership before returning an explicit world-entry-unavailable response.
+
+Schema 2 adds globally unique world character IDs alongside existing roster IDs
+and durable IDs for a small development starter kit. Migration preserves saved
+identities/appearance, grants once, and rolls back on failure. Creator edits,
+restart and deletion preserve the required ownership/identity rules. Helm/armor,
+costume recolors, both creator accessory choices, and all 47 eyes were checked
+against the installed client's reader and model builder. No game assets are
+bundled or client code changed. See [verification](research/starter-equipment.md).
+
 ## Next: selection and one starting area
 
 1. Verify the installed client's selection path and the full selected-player,
@@ -23,10 +37,10 @@ foundations do not acknowledge character selection or mark introductory missions
    synthetic fixtures. Do not make the client advance by reporting selection
    success before the required objects/events exist.
 2. Establish globally unique world character identities before sharing a scene;
-   current knight counters are account-local. Define migration and save recovery
-   before exposing existing characters to other accounts. Then implement the
-   selected character's identity, saved appearance and minimum
-   starter inventory. Preserve account ownership and reject selection of a missing
+   the account-local roster counters remain preserved while world identities
+   are global. The identity migration and starter inventory are complete. Wire
+   the selected character's identity, appearance and starter inventory into
+   verified player-object events. Preserve account ownership and reject selection of a missing
    or other account's character.
 3. Implement a single compatible starting scene and the subscriptions/transitions
    needed to enter it. Use existing game resources through server references;

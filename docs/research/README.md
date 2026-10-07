@@ -16,6 +16,7 @@ Use the [README](../../README.md), [development guide](../development.md),
 
 - [Source references](research-sources.md)
 - [Protocol observations](protocol.md)
+- [Starter equipment and preview verification](starter-equipment.md)
 - [Network architecture observations](network-architecture.md)
 - [Client startup investigation](client-startup.md)
 - [Client input investigation](client-input-fix.md)

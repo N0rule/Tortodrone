@@ -143,14 +143,13 @@ final class ClientSession {
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
-            if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 5 || invocation.method() == 6)) {
+            if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
                 characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision);
                 return;
             }
             for (Object argument : invocation.arguments()) {
                 if (argument instanceof SessionDecoder.Listener listener) {
-                    String reason = invocation.service() == 1 && invocation.method() == 4
-                        ? "World entry is not available yet" : "Server operation not implemented yet";
+                    String reason = "Server operation not implemented yet";
                     output.send(() -> outgoing.invocationFailure(clientOid, listener.requestId(), reason));
                 }
             }
@@ -168,6 +167,15 @@ final class ClientSession {
         if (invocation.method() == 3) {
             failure = args.size() == 2 && args.get(0) instanceof String name
                 ? characters.nameFailure(name) : "Invalid name validation request";
+        } else if (invocation.method() == 4) {
+            if (args.size() != 3 || !(args.get(0) instanceof String name) || !optionalString(args.get(1))) {
+                failure = "Invalid character selection request";
+            } else if (characters.roster().stream().noneMatch(knight -> knight.name().equalsIgnoreCase(name))) {
+                failure = "No such knight";
+            } else {
+                // No success or selected-player mutation until scene subscriptions are implemented.
+                failure = "World entry is not available yet";
+            }
         } else if (invocation.method() == 6) {
             if (args.size() != 2 || !(args.get(0) instanceof String name)) {
                 failure = "Invalid character deletion request";

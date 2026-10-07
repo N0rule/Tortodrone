@@ -8,6 +8,8 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.Comparator;
 import java.util.concurrent.*;
 import org.tortodrone.storage.Database;
+import org.tortodrone.character.CharacterStore;
+import org.tortodrone.character.Knight;
 import org.tortodrone.support.TestClient;
 import static org.tortodrone.support.TestWire.check;
 
@@ -28,6 +30,11 @@ public final class ConsoleIntegrationTest {
                 server.send("account create Alice admin\nconsole-password\nconsole-password\n"); server.await("Account created: Alice");
                 check(db.identity("Alice").admin(),"create with Admin true persists role");
                 server.send("account list\n"); server.await("1 | Alice | true | 0"); server.await("Accounts: 1");
+                new CharacterStore(db,1,"Alice").create(new Knight(0,"Console-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+                server.send("knight list Alice\nknight info Alice Console-Knight\n");
+                server.await("1 | Console-Knight"); server.await("roster ID=1, world ID=1"); server.await("Weapon/Sword/Proto Sword");
+                server.send("knight info Alice Missing-Knight\n"); server.await("No such knight");
+                check(db.worldProfile(1,1,1).items().size()==5,"console inspection does not modify or regrant inventory");
                 server.send("account create ALICE\nother-password\nother-password\n"); server.await("already exists");
                 server.send("account password Alice\nmismatch-one\nmismatch-two\n"); server.await("Passwords do not match");
                 server.send("account check Alice\nconsole-password\n"); server.await("Password matches.");

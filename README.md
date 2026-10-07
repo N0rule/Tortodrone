@@ -6,7 +6,8 @@ KnightLauncher are separate projects; Steam and guest login are unsupported.
 
 The server supports secure exchange, persistent accounts, heartbeat, character
 creation/editing/deletion, and live saved-roster updates across an account's
-sessions. A separate desktop account manager and commands in the running server
+sessions. Knights also have durable global identities and starter inventories, with
+equipment and appearance applied to roster previews. A separate desktop account manager and commands in the running server
 terminal administer accounts. **World entry and gameplay are not implemented.**
 
 ## Build on a fresh install
@@ -82,6 +83,8 @@ Type these into the **running server terminal**, without restarting it:
 | `status` | Show status and account count |
 | `stop` | Close the listener and clients, then exit |
 | `account list` | List IDs, usernames, Admin flags and character counts |
+| `knight list Alice` | List Alice’s saved knights and roster IDs |
+| `knight info Alice Saved-Knight` | Inspect global identity and starter item IDs, configurations and heat |
 | `account create Alice` | Create an account; prompt for a password twice |
 | `account create Alice admin` | Create with Admin enabled |
 | `account password Alice` | Change/reset the password; prompt twice |
@@ -157,10 +160,10 @@ There is no `data-directory` or `client-host` setting. `--config /path/to/server
 selects a settings file without moving state. First startup creates missing
 configuration and keys; existing configuration and identity are preserved.
 
-Startup displays the version bundled from `VERSION`, currently `0.5.2`:
+Startup displays the version bundled from `VERSION`, currently `0.6.0`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.2
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.6.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
@@ -179,9 +182,17 @@ payloads. Timestamps use local machine time. `--version` shows either JAR's rele
 
 ## Upgrade and back up
 
-Stop the old server before the first 0.5.0 startup or opening the account manager.
-The first open automatically imports `data/accounts/users.properties` and the
-account profiles into SQLite in one transaction. Account IDs, password verifiers,
+Stop the old server before upgrading to 0.6.0 or opening the new account manager.
+Schema version 2 adds global character identities and a starter inventory to every
+saved knight in one transaction. Existing account/roster IDs, credentials,
+appearance and timestamps are preserved. The new character and item IDs are
+global and never reused after deletion. Opening the database again does not grant
+another kit. Keep both JARs on the same release; do not run an older release
+against the upgraded database.
+
+For pre-SQLite installations, the first open automatically imports
+`data/accounts/users.properties` and the account profiles into SQLite in one
+transaction. Account IDs, password verifiers,
 knight IDs, appearance, timestamps and next-ID counters are preserved; imported
 accounts have Admin=false. The older 0.2.0 profile-only installation retains its
 fixed `tortodrone` / `tortodrone` login. New installations do not create that login.
@@ -220,8 +231,17 @@ of at most 64 pending frames; a stalled recipient is disconnected.
 
 Creation/editing currently reports a saved/unavailable message; reconnect to view
 the roster. Selecting a knight fails until world entry is implemented. The preview
-applies color and height; equipment, accessories and eyes are saved but not fully
-applied to the preview. Intro missions and gameplay remain future work.
+applies color, height, eyes, the chosen starter helmet/armor, their costume
+colors, and creator accessories. New choices are checked against the verified
+starter catalog. Unknown choices in older saves remain stored; the preview
+omits equipment it cannot resolve. Intro missions and gameplay remain future work.
+
+Each knight receives its chosen helmet/armor and a Proto Sword, Proto Gun and
+Proto Shield. This is a small development starter kit, not mission rewards.
+Inventory is stored in SQLite and can be inspected with `knight info`; it is not
+yet sent to a selected player or usable in gameplay. Edits preserve character
+and item IDs while updating chosen starter appearance. Deleting a knight or
+account removes its owned inventory atomically.
 
 ## Contribute
 

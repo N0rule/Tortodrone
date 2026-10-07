@@ -6,6 +6,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.character.CharacterStore;
+import org.tortodrone.character.Knight;
+import org.tortodrone.character.WorldProfile;
 import org.tortodrone.storage.Database;
 
 /** Shared account service for the game server and local administration application. */
@@ -36,6 +38,22 @@ public final class AccountStore implements AutoCloseable {
         if (database != null) return database.list().stream().map(a -> new Summary(a.id(),a.username(),a.admin(),a.knights(),a.createdAt())).toList();
         return memory.values().stream().map(a -> new Summary(a.id(),a.username(),a.admin(),a.characters().roster().size(),0)).sorted(Comparator.comparingInt(Summary::id)).toList();
     }
+    /** Read-only local administration, without authenticating or changing session privileges. */
+    public synchronized List<Knight> knights(String username) throws IOException {
+        return charactersForAdministration(username).roster();
+    }
+    public synchronized WorldProfile worldProfile(String username,String knight) throws IOException {
+        try { return charactersForAdministration(username).worldProfile(knight,-1); }
+        catch (CharacterStore.Refused refused) { throw new IOException(refused.getMessage()); }
+    }
+    private CharacterStore charactersForAdministration(String username) throws IOException {
+        validateUsername(username);
+        if (database == null) return require(username,-1).characters();
+        var identity = database.identity(username);
+        if (identity == null) throw new IOException("No such account");
+        return new CharacterStore(database,identity.id(),identity.username());
+    }
+
     public void create(String username,char[] password) throws IOException { create(username,password,false); }
     public synchronized void create(String username,char[] password,boolean admin) throws IOException {
         validateUsername(username);

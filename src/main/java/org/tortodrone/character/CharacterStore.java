@@ -117,7 +117,7 @@ public final class CharacterStore {
     public synchronized Knight create(Knight choices, long authRevision) throws IOException, Refused {
         String error = nameFailure(choices.name());
         if (error != null) throw new Refused(error);
-        try { validate(choices); }
+        try { validate(choices); if (!StarterCatalog.accepts(choices)) throw new IllegalArgumentException(); }
         catch (IllegalArgumentException e) { throw new Refused("Invalid character appearance"); }
         if (knights.size() >= MAX_KNIGHTS) throw new Refused("All three knight slots are occupied");
         if (nextId == Integer.MAX_VALUE) throw new IOException("Character ID space exhausted");
@@ -139,7 +139,7 @@ public final class CharacterStore {
         if (index < 0) throw new Refused("No such knight");
         String error = nameError(choices.name());
         if (error != null) throw new Refused(error);
-        try { validate(choices); }
+        try { validate(choices); if (!StarterCatalog.accepts(choices)) throw new IllegalArgumentException(); }
         catch (IllegalArgumentException e) { throw new Refused("Invalid character appearance"); }
         Knight previous = knights.get(index);
         for (Knight knight : knights) {
@@ -170,6 +170,14 @@ public final class CharacterStore {
         save(roster, nextId, authRevision);
         knights = List.copyOf(roster);
         notifyListeners();
+    }
+
+    /** Resolves only an owned character. Loading this foundation does not acknowledge world entry. */
+    public synchronized WorldProfile worldProfile(String name,long authRevision) throws IOException, Refused {
+        int index = indexOf(name);
+        if (index < 0) throw new Refused("No such knight");
+        if (database == null) throw new IOException("World profiles require SQLite storage");
+        return database.worldProfile(accountId,knights.get(index).id(),authRevision);
     }
 
     private int indexOf(String name) {

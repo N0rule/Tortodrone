@@ -18,6 +18,11 @@ final class CommandHistory extends DefaultHistory {
         String[] words = line.split("\\s+");
         String command = words[0].toLowerCase(Locale.ROOT);
         if (words.length == 1) return command.equals("help") || command.equals("status") || command.equals("stop");
+        if (command.equals("knight")) {
+            return words.length >= 3 && words[2].matches("[A-Za-z][A-Za-z0-9_-]{2,31}")
+                && (words.length == 3 && words[1].equals("list")
+                    || words.length == 4 && words[1].equals("info") && words[3].matches("[A-Za-z]+(?:-[A-Za-z]+)*") && words[3].length() <= 16);
+        }
         if (!command.equals("account")) return false;
         if (words.length == 2) return words[1].equals("list");
         if (!words[2].matches("[A-Za-z][A-Za-z0-9_-]{2,31}")) return false;

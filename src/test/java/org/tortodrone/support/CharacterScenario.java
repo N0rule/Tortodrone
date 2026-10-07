@@ -35,6 +35,16 @@ public final class CharacterScenario {
             out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(46);
         });
         confirmation(peer, wire, oid, (short) 46, "World entry is not available yet");
+        writer.send(peer.getOutputStream(), out -> {
+            invocation(writer, out, 4, 3); writer.type(out, "com.threerings.util.Name"); string(out, "Missing-Knight");
+            out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(48);
+        });
+        confirmation(peer, wire, oid, (short) 48, "No such knight");
+        writer.send(peer.getOutputStream(), out -> {
+            invocation(writer, out, 4, 2); writer.type(out, "java.lang.Integer"); out.writeInt(1);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(49);
+        });
+        confirmation(peer, wire, oid, (short) 49, "Invalid character selection request");
         writer.send(peer.getOutputStream(), out -> writer.message(out, "LogoffRequest", 47));
     }
 
@@ -123,8 +133,8 @@ public final class CharacterScenario {
             invocation(writer, out, 5, 14);
             if (oldName == null) out.writeShort(0); else { writer.type(out, "com.threerings.util.Name"); string(out, oldName); }
             writer.type(out, "com.threerings.util.Name"); string(out, name);
-            for (String asset : List.of("helm", "armor")) { writer.type(out, "java.lang.String"); out.writeUTF(asset); }
-            out.writeShort(0); out.writeShort(0); writer.type(out, "java.lang.String"); out.writeUTF("costume");
+            for (String asset : List.of("Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)")) { writer.type(out, "java.lang.String"); out.writeUTF(asset); }
+            out.writeShort(0); out.writeShort(0); writer.type(out, "java.lang.String"); out.writeUTF("Blue");
             writer.type(out, "java.lang.Integer"); out.writeInt(1);
             writer.type(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight"); out.writeByte(2);
             writer.type(out, "com.threerings.projectx.data.ProjectXCodes$EyeType"); out.writeByte(0);

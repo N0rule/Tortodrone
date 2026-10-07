@@ -89,6 +89,7 @@ public final class TestWire {
         return switch (name) {
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Integer" -> in.readInt();
+            case "com.threerings.opengl.renderer.config.ColorizationConfig$Normal" -> Map.of("colorization",in.readInt());
             case "com.threerings.util.Name" -> string(in);
             case "com.threerings.presents.client.InvocationReceiver$Registration" -> Map.of("code", string(in), "id", in.readShort());
             case "com.threerings.presents.dobj.DSet" -> {

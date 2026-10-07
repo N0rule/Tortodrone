@@ -19,17 +19,17 @@ public final class CharacterManagementStoreTest {
             Knight first = store.create(choices("First-Knight"));
             store.create(choices("Other-Knight"));
             store.create(choices("Third-Knight"));
-            Knight edited = store.update("first-knight", new Knight(999, "Renamed-Knight", "new-helm", "new-armor",
-                "hat", "cape", "new-costume", 17, 4, 46, 999));
+            Knight edited = store.update("first-knight", new Knight(999, "Renamed-Knight", "Gear/Helm/Spiral Round Helm (Red)", "Gear/Armor/Spiral Flak Jacket (Red)",
+                "Helm/Top/Headband/Headband", "Helm/Back/Plume/Plume", "Red", 17, 4, 46, 999));
             TestWire.check(edited.id() == first.id() && edited.createdAt() == first.createdAt(), "edit retains server identity and timestamp");
-            TestWire.check(edited.color() == 17 && edited.eye() == 46 && edited.helmAccessory().equals("hat"), "appearance choices are editable");
+            TestWire.check(edited.color() == 17 && edited.eye() == 46 && edited.helmAccessory().equals("Helm/Top/Headband/Headband"), "appearance choices are editable");
             TestWire.check(new CharacterStore(directory).roster().equals(store.roster()), "edited appearance persists at full slot capacity");
             Path profile = directory.resolve("accounts/1.properties");
             byte[] saved = Files.readAllBytes(profile);
             refused(() -> store.update("Renamed-Knight", choices("other-knight")), "already in use");
             refused(() -> store.update("Missing-Knight", choices("New-Knight")), "No such knight");
             refused(() -> store.update("Renamed-Knight", choices("x")), "three letters");
-            refused(() -> store.update("Renamed-Knight", new Knight(0, "Renamed-Knight", "../bad", "armor", null, null, "costume", 1, 2, 0, 0)), "appearance");
+            refused(() -> store.update("Renamed-Knight", new Knight(0, "Renamed-Knight", "../bad", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0)), "appearance");
             refused(() -> store.delete("Missing-Knight"), "No such knight");
             refused(() -> store.delete(null), "No such knight");
             TestWire.check(Arrays.equals(saved, Files.readAllBytes(profile)), "refused operations preserve the saved profile");
@@ -70,7 +70,7 @@ public final class CharacterManagementStoreTest {
             }
         }
     }
-    private static Knight choices(String name) { return new Knight(0, name, "helm", "armor", null, null, "costume", 1, 2, 0, 0); }
+    private static Knight choices(String name) { return new Knight(0, name, "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0); }
     private static void refused(Operation operation, String reason) throws Exception {
         try { operation.run(); throw new AssertionError("Refused operation succeeded"); }
         catch (CharacterStore.Refused expected) { TestWire.check(expected.getMessage().contains(reason), "useful refusal reason"); }

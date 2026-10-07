@@ -71,21 +71,23 @@ Both JARs default to `data/` beside themselves. Keep them together or use the
 manager's `--data` option. Server `--config` chooses settings only, never state.
 Configuration defaults are bundled in `src/main/resources/server.properties`;
 existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
-and used by startup and each JAR's `--version`; the current release is `0.5.2`.
+and used by startup and each JAR's `--version`; the current release is `0.6.0`.
 
 `build/.build/` contains disposable classes and packaging output; `build/deps/`
 caches the driver. Git ignores all build/runtime output. Upgrades replace both
 JARs and keep data. Stop the server and close the manager before a simple copy
 backup of the whole data directory; copying only a live DB can omit WAL changes.
 
-SQLite schema version 1 imports legacy registries and profiles transactionally on
+SQLite schema version 2 imports legacy registries and profiles transactionally on
 first open. Keep account/knight IDs, protected verifiers, appearance, creation
 times and next-ID counters. Imported Admin is false. Profile-only 0.2 deployments
 retain their original fixed login. Fresh deployments start empty. Source files
 remain untouched; once migrated, they are backups, not a second active store.
 Missing owners, corrupt files and unknown schema versions fail without replacing
 identity. Initial schema creation/migration requires the deployment lock; stop the
-old server once before upgrading. No database server or remote admin endpoint exists.
+old server once before upgrading. Upgrading a version 1 SQLite deployment adds
+global character IDs and five starter item IDs per knight in the same transaction,
+without changing roster IDs or credentials. No database server or remote admin endpoint exists.
 
 ## Transactions and session identity
 
@@ -164,3 +166,28 @@ See [architecture](server-architecture.md), [connection guidance](client-redirec
 and [world entry plan](world-entry-plan.md). Old paths and client modification
 experiments in [historical research](research/README.md) are not current instructions.
 Ignored `local/` files are not build dependencies.
+
+
+## Character foundation (0.6.0)
+
+`WorldProfile` holds a global character ID alongside its preserved account-local
+roster ID and five starter items. `WorldProfiles` assigns monotonic global IDs,
+grants the starter kit, and removes owned inventory through foreign-key cascades.
+Roster creation and kit creation share one transaction; failures publish nothing.
+Creator edits change chosen helm/armor references without replacing item IDs or
+resetting heat. No inventory/equip gameplay service or selected-player state is
+exposed yet. Before gameplay, replace creator-only gear edits with appropriate
+ownership and progression rules.
+
+`StarterCatalog` limits new saves to the verified creator references and composes
+preview models from `starter-models.txt`. Saved legacy unknown references stay
+intact; previews omit unresolved equipment. The standard `make test` needs no
+game installation. Optional compatibility inspection reads installed resources:
+
+```sh
+scripts/check-client-previews.sh "/path/to/Spiral Knights"
+```
+
+This fixture loads unchanged client serialization/configuration classes and
+compares server previews to the client's model builder. It does not launch or
+modify the client. See [verification evidence](research/starter-equipment.md).

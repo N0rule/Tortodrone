@@ -140,9 +140,10 @@ update. Unsubscribe and disconnect detach observers.
 
 The `AvailableKnight` wire schema includes a non-null model reference. Its
 configuration names and argument keys use a separate connection-local intern
-table. The basic preview applies color and height. Equipment, accessories, and
-eye choices persist, but their preview configuration and inventory reconstruction
-are future work. The creator displays the saved/unavailable result; reconnecting
+table. The preview uses verified starter helmet/armor and accessory references,
+with saved costume recolors, height and eye/blink textures. New saves must match
+the starter catalog. Unknown legacy equipment stays saved and is omitted from
+the preview. The creator displays the saved/unavailable result; reconnecting
 shows the saved roster. Character selection still fails explicitly because zone/world
 objects do not exist yet.
 
@@ -259,3 +260,34 @@ The codec and `SessionOutput` queue share a serialization lock; the writer sends
 frames in that same order. Network I/O runs outside the character-store lock.
 A queue is limited to 64 pending frames, each at most 64 KiB. A failed or stalled
 recipient is closed and removed from publication without undoing a saved change.
+
+
+## Global character identities and starter equipment (0.6.0)
+
+SQLite schema 2 retains `(account_id, id)` as the roster key and adds a unique
+`world_id` in `world_characters`. This keeps existing roster references stable
+while giving future shared scenes a globally unique identity. The new identity
+is server-owned; the unselected `PlayerObject.knightId` stays zero. Roster IDs
+are still sent in `AvailableKnight`; they must not be used as shared actor IDs.
+
+`inventory_items` contains five durable items per knight: chosen helm/armor,
+Proto Sword, Proto Gun and Proto Shield. It records globally unique item IDs,
+creator accessories, starter slots and heat. This is the development starter
+kit policy, not verified introductory-mission rewards or a general equipment
+system. Creation, kit assignment and sequence increments share `BEGIN IMMEDIATE`.
+Kit failure rolls back the roster as well as both sequences. Creator edits update
+starter appearance without replacing IDs or heat. Deletion cascades through the
+owned world profile and items; sequences are never reset.
+
+The schema upgrade holds the deployment lock and runs DDL, deterministic
+backfill and `user_version=2` in one transaction. Reopening schema 2 does not
+regrant items. Failed upgrades remain at schema 1 and can be retried. Reads use
+one transaction snapshot for identity and items and can check the account's
+authentication revision. Incomplete inventories are rejected without regranting.
+Local `knight list` / `knight info` commands inspect this state without logging
+credentials or changing account/session privileges.
+
+Selection RPC method 4 validates its three arguments and character ownership.
+An owned knight still receives the unavailable response; no success, world
+transition, selected-player mutation or guessed tutorial-completion flag is sent.
+Scene and location subscriptions are the next protocol milestone.

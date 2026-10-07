@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.tortodrone.character.Knight;
+import org.tortodrone.character.StarterCatalog;
 
 /** Downstream session messages after the secure and authentication responses. */
 public final class SessionCodec {
@@ -218,13 +219,25 @@ public final class SessionCodec {
             type(out, "com.threerings.projectx.data.AvailableKnight");
             out.writeInt(knight.id()); type(out, "com.threerings.util.Name"); string(out, knight.name());
             out.writeInt(0); string(out, null); out.writeInt(0); // rank, guild, session seconds
-            type(out, "com.threerings.config.ConfigReference"); intern(out, "character/pc/model_level.dat");
-            type(out, "com.threerings.config.ArgumentMap"); out.writeInt(2);
-            intern(out, "Colorization"); type(out, "java.lang.Integer"); out.writeInt((1 << 8) | knight.color());
-            intern(out, "Height"); type(out, "java.lang.String");
-            out.writeUTF(new String[] {"-2", "-1", "0", "+1", "+2"}[knight.height()]);
+            value(out, StarterCatalog.preview(knight));
             emptyCollection(out); // Typed Set<Name>, no mail senders.
         }
+    }
+
+    private void value(DataOutputStream out,Object value) throws IOException {
+        if (value instanceof StarterCatalog.Model model) {
+            type(out,"com.threerings.config.ConfigReference"); intern(out,model.name());
+            type(out,"com.threerings.config.ArgumentMap"); out.writeInt(model.arguments().size());
+            for (var argument : new java.util.TreeMap<>(model.arguments()).entrySet()) {
+                intern(out,argument.getKey()); value(out,argument.getValue());
+            }
+        } else if (value instanceof StarterCatalog.Colorization color) {
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal"); out.writeInt(color.value());
+        } else if (value instanceof Integer number) {
+            type(out,"java.lang.Integer"); out.writeInt(number);
+        } else if (value instanceof String text) {
+            type(out,"java.lang.String"); out.writeUTF(text);
+        } else throw new IOException("Unsupported preview argument");
     }
 
     private void intern(DataOutputStream out, String value) throws IOException {

@@ -19,7 +19,7 @@ public final class CharacterStoreTest {
             byte[] saved = Files.readAllBytes(profile);
             refused(() -> store.create(choices("saved-knight")), "already in use");
             refused(() -> store.create(choices("x")), "three letters");
-            refused(() -> store.create(new Knight(0, "Bad-Choice", "../helm", "armor", null, null, "costume", 1, 2, 0, 0)), "appearance");
+            refused(() -> store.create(new Knight(0, "Bad-Choice", "../helm", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0)), "appearance");
             TestWire.check(Arrays.equals(saved, Files.readAllBytes(profile)), "rejections preserve existing save");
             // Renaming the login must preserve profiles created with the previous test account.
             Files.writeString(profile, Files.readString(profile).replace("username=tortodrone\n", "username=tortodrone-local-probe\n"));
@@ -66,7 +66,7 @@ public final class CharacterStoreTest {
             }
         }
     }
-    static Knight choices(String name) { return new Knight(0, name, "helm", "armor", null, null, "costume", 1, 2, 0, 0); }
+    static Knight choices(String name) { return new Knight(0, name, "Gear/Helm/Spiral Sallet (Blue)", "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0); }
     private static void refused(Operation operation, String reason) throws Exception {
         try { operation.run(); throw new AssertionError("Invalid creation accepted"); }
         catch (CharacterStore.Refused expected) { TestWire.check(expected.getMessage().contains(reason), "useful refusal reason"); }
