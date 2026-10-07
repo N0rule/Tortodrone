@@ -1,0 +1,9 @@
+# Local SK research files
+/local/
+
+# Logstouch
+*.log
+/logs/
+
+# Secrets / config
+.env
