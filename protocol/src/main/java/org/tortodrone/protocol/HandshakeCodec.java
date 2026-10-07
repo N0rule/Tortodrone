@@ -8,15 +8,18 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
-/** Deliberately limited to the verified initial Presents handshake schema. */
+/** Verified Presents handshake and connection-local mappings for the bounded session decoder. */
 public final class HandshakeCodec {
     public static final int MAX_FRAME = 65536;
+    public static final String TEST_USERNAME = "tortodrone";
+    private static final String TEST_PASSWORD = "tortodrone";
     private static final String PREFIX = "com.threerings.presents.net.";
     private final Map<Integer, String> classes = new HashMap<>();
 
     public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
                           String version, String timezone) { }
     public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) { }
+    public record SessionRequest(String type, short messageId, int objectId, SessionDecoder.Event event) { }
 
     /** Returns a frame body, or null on clean EOF. Partial frames are errors. */
     public static byte[] readFrame(InputStream source) throws IOException {
@@ -99,8 +102,8 @@ public final class HandshakeCodec {
         require(in.available() == 0, "Unexpected credential fields");
         try {
             String expected = HexFormat.of().formatHex(MessageDigest.getInstance("MD5")
-                .digest("synthetic-unused".getBytes(StandardCharsets.UTF_8)));
-            return username.equals("tortodrone-local-probe") && session == null && !sega && !steam
+                .digest(TEST_PASSWORD.getBytes(StandardCharsets.UTF_8)));
+            return username.equals(TEST_USERNAME) && session == null && !sega && !steam
                 && site == 0 && invite == null && MessageDigest.isEqual(
                     passwordHash.getBytes(StandardCharsets.UTF_8), expected.getBytes(StandardCharsets.UTF_8));
         } catch (NoSuchAlgorithmException e) {
@@ -112,6 +115,18 @@ public final class HandshakeCodec {
         return type(new DataInputStream(new ByteArrayInputStream(body)));
     }
 
+    /** Verified post-authentication request subset, preserving the incoming mapping table. */
+    public SessionRequest sessionRequest(byte[] body) throws IOException {
+        var requests = sessionRequests(body);
+        require(requests.size() == 1, "Expected a single session request");
+        return requests.get(0);
+    }
+
+    public java.util.List<SessionRequest> sessionRequests(byte[] body) throws IOException {
+        require(body.length <= MAX_FRAME - 4, "Session frame too large");
+        return new SessionDecoder(this::nullableType).decode(body);
+    }
+
     private static String nullableString(DataInputStream in) throws IOException {
         int present = in.readUnsignedByte();
         require(present == 0 || present == 1, "Invalid string presence flag");
@@ -119,8 +134,16 @@ public final class HandshakeCodec {
     }
 
     private String type(DataInputStream in) throws IOException {
+        String name = nullableType(in);
+        require(name != null, "Missing class mapping");
+        return name;
+    }
+
+    private String nullableType(DataInputStream in) throws IOException {
         int code = in.readShort();
+        if (code == 0) return null;
         if (code < 0) {
+            require(classes.size() < 256, "Too many class mappings");
             require(code != Short.MIN_VALUE && -code == classes.size() + 1,
                     "Invalid class mapping");
             String name = in.readUTF();
@@ -182,7 +205,7 @@ public final class HandshakeCodec {
         out.writeBoolean(accepted);
         if (accepted) out.writeUTF(sessionId);
         out.writeShort(-5); out.writeUTF("com.threerings.util.Name");
-        out.writeBoolean(true); out.writeUTF("tortodrone-local-probe");
+        out.writeBoolean(true); out.writeUTF(TEST_USERNAME);
         ByteArrayOutputStream frame = new ByteArrayOutputStream();
         DataOutputStream framed = new DataOutputStream(frame);
         framed.writeInt(body.size() + 4);
@@ -191,6 +214,6 @@ public final class HandshakeCodec {
     }
 
     private static void require(boolean condition, String message) throws IOException {
-        if (!condition) throw new IOException(message);
+        if (!condition) throw new SessionDecoder.Rejected(message);
     }
 }

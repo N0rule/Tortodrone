@@ -19,6 +19,16 @@ final class SecureHandshake {
     }
 
     static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth) throws Exception {
+        run(socket, key, log, localAuth, 1, socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
+    }
+
+    static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth,
+            int connectionId, String host, int port) throws Exception {
+        run(socket, key, log, localAuth, connectionId, host, port, new CharacterStore());
+    }
+
+    static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth,
+            int connectionId, String host, int port, CharacterStore characters) throws Exception {
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
@@ -66,18 +76,14 @@ final class SecureHandshake {
                 accepted ? UUID.randomUUID().toString() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.accept("AuthResponse sent; result=" + (accepted ? "success (synthetic account only)" : "rejected")
+            log.accept("AuthResponse sent; result=" + (accepted ? "success (synthetic account only)"
+                : "rejected (use the local test account; guest login unsupported)")
                 + "; frame=" + authResponse.length + " bytes");
             if (!accepted) return;
-            // The client's writer starts only once it processes a successful AuthResponse.
-            body = HandshakeCodec.readFrame(socket.getInputStream());
-            if (body == null) throw new IOException("Client disconnected after authentication response");
-            String next = codec.nextMessageType(body);
-            if (!next.equals("com.threerings.presents.net.PingRequest")) {
-                throw new IOException("Unexpected post-authentication message");
-            }
-            log.accept("Authentication accepted by client; PingRequest received; frame="
-                + (body.length + 4) + " bytes; stopping before bootstrap");
+            // Do not retain negotiated secrets for the unencrypted distributed-object session.
+            Arrays.fill(plain, (byte) 0);
+            Arrays.fill(secret, (byte) 0);
+            ClientSession.run(socket, codec, connectionId, host, port, log, characters);
         } finally {
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);

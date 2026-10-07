@@ -1,154 +1,106 @@
-# Client Redirection
+# Connecting a Separate KnightLauncher
 
-## Preferred approach
+The server runs on the host network. Start it with `make server` or
+`java -jar build/tortodrone-server.jar`, wait for `Listening on ...`, then start
+the KnightLauncher fork from its own installation. Server startup needs no game
+files, launcher, Python, Maven, bubblewrap, or nsenter.
 
-Project direction: use KnightLauncher as the user-facing launcher and
-keep TortodroneServer focused on the server. KnightLauncher starts the original
-Spiral Knights client; it does not replace the game client or its protocol.
-The existing Python launcher remains a development observation tool.
+## Address, port, and key
 
-The implemented integration is a small, local KnightLauncher adaptation under
-`local/`: an explicit TortodroneServer entry, separate scratch preferences/logs,
-and the verified configuration overlay below. Its Play path has reached the
-local listener with the full client. See [knightlauncher.md](knightlauncher.md)
-for the manual launch command, source location, and build instructions.
+For this computer, the launcher needs `127.0.0.1`, port `47624`, and the entire
+public key value from `data/keys/public.txt`. The public key format is a
+hexadecimal RSA modulus followed by `#` and a hexadecimal exponent. Paste the
+value, not a filename, PEM header, or private key.
 
-CONFIRMED (HIGH, R1): put a separate `deployment.properties` resource before
-the installed `config.jar` on the classpath. Copy the installed resource only
-under ignored `local/extracted/`, change `server_host` to `127.0.0.1`, and
-retain its confirmed TCP/UDP port `47624`. No JAR patching is required.
+| KnightLauncher property | Game deployment property | Server source |
+| --- | --- | --- |
+| `game.endpoint` | `server_host` | `client-host` in server.properties |
+| `game.port` | `server_ports`, `datagram_ports` | `server-port` in server.properties |
+| `game.publicKey` | `key.public` | data/keys/public.txt |
 
-The full `ProjectXApp` has been launched this way and sent its 437-byte
-`SecureRequest` to TortodroneServer. A separate property-only test showed
-that `-Dserver_host` and `-Dserver_ports` do **not** override this loader.
-Evidence and pinned upstream references: [research-sources.md](research-sources.md).
+For another computer, use this server's reachable address in `client-host` and
+in the launcher. `127.0.0.1` always refers to the computer running the game;
+`0.0.0.0` is the server's bind address and is not a destination for players.
+Remote connections also require a reachable TCP port through your network's
+firewall/router. Changing `client-host` changes the exported connection values;
+it does not configure a router or a firewall.
 
-## KnightLauncher support
+`data/client-connection.properties` exports the game deployment keys above and
+`anonymous_allowed=false`. A launcher may merge these values into the client's
+complete `deployment.properties`. **This export is not a complete deployment
+resource**: preserve the client's other build/content/region settings.
+A separate complete deployment resource before `config.jar` on the game
+classpath is the historically verified overlay approach. Simple
+`-Dserver_host`/`-Dserver_ports` JVM flags do not override the client's resource
+loader.
 
-CONFIRMED (HIGH, K1): there are two distinct mechanisms:
+The inspected fork at `../KnightLauncherCustom` saves advanced connection
+settings and applies them to `code/config.jar` through its settings manager
+when the Official selection applies game settings. Its `game.getdownURL` and
+`game.getdownFullURL` are content/updater settings; they are not the game socket
+address. This server does not host Getdown resources. Client launching and
+resource modification belong to the separate launcher project.
 
-1. Advanced connection settings: `game.endpoint`, `game.port`,
-   `game.publicKey`, `game.getdownURL`, and `game.getdownFullURL`.
-   `SettingsEventHandler.saveConnectionSettings()` saves them;
-   `SettingsManager.applyConnectionSettings()` modifies deployment values,
-   writes a temporary properties file, then invokes `jar uf code/config.jar`.
-   It is called for the Official selection while applying game settings.
-   The method explicitly notes that the JAR tool is no longer bundled.
-2. Third-party catalog/install support: `FlamingoManager` obtains server
-   metadata from its configured `/server-list/` service. `Server` models
-   deployment URLs/methods, versions, enablement, beta/access metadata, and
-   presentation data; the model itself has no game host/port fields.
-   Installations use `thirdparty/<sanitized-name>/`. Non-official launch
-   paths invoke `ProjectXApp` using those installations.
+## Test login and the expected limit
 
-The README states a policy of withholding third-party support while official
-servers remain online absent permission/legal allowance. Source nonetheless
-contains catalog and launch machinery, with availability also controlled by
-service metadata, enabled state, and beta selection. We did not enable hidden
-features, contact the catalog, or equate code existence with an available
-public service.
+Use the normal username/password form:
 
-CONFIRMED (HIGH): KnightLauncher is a useful research reference but its
-in-place connection-setting writer is unsuitable for the read-only Steam
-installation. Some direct launch branches also retain older `java/bin/java`
-paths and LWJGL 2-era classpaths, despite other branches being updated.
-Do not assume all branches support the current Java 25/LWJGL 3 installation.
-
-CONFIRMED (HIGH): the copy under `local/experiments/KnightLauncher` now uses
-the same configuration-overlay approach. The standalone research launcher
-remains useful for protocol tests.
-
-CONFIRMED (HIGH, K1): the server switcher's Add Server icon is explicitly hidden
-with `setVisible(false)`, and its click handler only displays an informational
-dialog. Revealing that icon alone will not provide local server registration.
-The current third-party catalog comes from Flamingo, and its installation path
-expects downloadable client bundles. A local entry needs an actual local launch
-path that uses the user's installed files without downloading/distributing a
-proprietary bundle. Serving a replacement Flamingo catalog is unnecessary for
-this first integration.
-
-## Required configuration and exact steps
-
-Requirements: Linux, Python 3.9+, GNU make, JDK 17+ for compilation,
-`bubblewrap` (`bwrap`), an active X11/XWayland desktop, and this installed client
-and an external Java 25 JDK. The listener itself has no client dependency.
-
-From the repository root:
-
-```sh
-# Set JAVA_HOME to an installed JDK if javac is not on PATH.
-export JAVA_HOME="$HOME/.local/share/java/temurin-25"
-make test
-python3 tools/observe_client.py
+```text
+Username: tortodrone
+Password: tortodrone
 ```
 
-The JDK path above is the external Adoptium installation on this machine;
-another JDK 17+ works for the emulator. The full current client requires Java 25.
-The observation tool selects external Java using `--java-home`, `JAVA_HOME`, or
-`PATH`; `--client-java-home` / `SK_CLIENT_JAVA_HOME` can select a separate client
-JDK. It checks the `ProjectXApp` class-file version and refuses an incompatible
-or game-bundled runtime. It prints the ignored directory containing the evidence and reports
-success only after the real app sends bytes to our listener.
+Guest login uses a different credential shape/account and is unsupported;
+Steam tickets and official account sessions are unsupported too. Only this
+fixed synthetic account is currently accepted. Other passwords receive a login
+rejection. The exported `anonymous_allowed=false` can disable the guest option
+when your launcher applies it to deployment configuration.
 
-CONFIRMED (HIGH): the tool performs these operations:
+Successful progress appears in `data/logs/latest.log` as `SecureRequest`,
+`SecureResponse`, `AESAuthRequest`, an authentication result,
+`BootstrapNotification sent`, `PongResponse sent`, and a `SubscribeRequest`
+marked `client bootstrap accepted`, followed by `PlayerObject snapshot sent`,
+receiver registrations, and `ServerObject snapshot sent`. The client now accepts
+the character roster and reports itself logged on. The session timeout is
+60 seconds after authentication, allowing normal heartbeats.
 
-- Reads the installed deployment resource and ordered Linux Getdown code entries.
-- Creates the overlay under `local/extracted/client-run-*`, with the game host
-  changed to loopback. The original public key is retained for this receive-only run.
-- Creates a fresh scratch application and preference home under
-  `local/research/client-run-*`; code/resources/native links point to read-only
-  installed files. The copied Getdown descriptor and scratch marker stay local.
-- Starts bubblewrap with the host filesystem read-only, a writable scratch
-  mount and temporary directory, and a new network namespace with loopback.
-  The listener and client run together inside that namespace; neither can
-  reach production servers through the host network.
-- Launches the main class directly, bypasses Getdown, disables native Steam
-  initialization, removes inherited Steam/Java injection variables, and uses
-  fixed synthetic credentials with a fresh preference home.
-- Stops the client and listener after bytes arrive or the deadline expires.
-  Both processes are cleaned up; no server is left running on the host.
-  With `--local-auth`, success requires the client to send a post-authentication
-  `PingRequest`, rather than merely sending initial bytes.
+Name validation and new non-Steam character creation are implemented. Successful
+creation logs `Character saved` and writes `data/accounts/1.properties` before
+sending the roster update and result. The result explicitly says the knight was
+saved and world entry is unavailable, clearing the creator's busy state. Restart
+the game and log in to see saved knights.
+Other supported calls with listeners receive `Server operation not implemented yet`; unknown object
+subscriptions receive `No such object`. A request outside the verified bounded
+schema closes the connection and records a fixed diagnostic, without its values.
 
-No Steam launch options, hosts files, game JARs, or installed configuration are
-changed. The tool refuses to fall back to an unprotected launch when bubblewrap
-or the desktop prerequisite is missing. It opens a brief game window.
+## Troubleshooting
 
-## Expected destination
+- No server connection log: check the server is listening, the actual client
+  destination, the port, and network reachability.
+- Secure exchange fails: verify that the launcher applied the public key from
+  this server's `data/keys/public.txt` and restart the game after changing it.
+- Authentication rejected: use the test account through the username/password
+  form, with guest/Steam authentication disabled.
+- Character creation fails: check name rules (3–16 letters/hyphens), duplicate
+  names, the three-slot limit, and `Character save failed` in the server log.
+- Creation reports "Knight saved": reconnect to see the saved roster. World
+  entry remains the next server milestone. Earlier server builds sent a success
+  callback that left the stock client stuck at "Creating knight"; use the rebuilt JAR.
+- A saved knight appears but selection fails: selection and world entry are
+  not implemented yet; changing launcher settings cannot enable them.
+- Session closes with a protocol diagnostic: that request is outside the current
+  protocol subset; use the server log to identify the remaining protocol boundary.
 
-CONFIRMED (HIGH): TCP `127.0.0.1:47624` inside the experiment's network
-namespace. A separately started host listener will not receive this isolated
-client. UDP `47624` remains in the overlay but is never reached before bootstrap.
-
-For synthetic tests of the standalone listener only:
-
-```sh
-make run
-```
-
-This binds the host's loopback address. It is not the command used by the
-isolated full-client observation tool.
-
-## Limitations
-
-- CONFIRMED: changing the destination is sufficient to receive the initial
-  request; it is insufficient to finish secure authentication with the official key.
-- UNKNOWN: a complete local authentication/bootstrap response. Next use a locally
-  generated keypair and overlay public key, never an official account/session.
-- CONFIRMED: the tool is deliberately tied to the verified `47624` deployment
-  and refuses a changed configured TCP port until it is reviewed.
-- UNKNOWN: operation on headless Linux or a desktop without XWayland. This
-  experiment passed on the supplied desktop and current installed build.
-- Logs include raw protocol data and stay ignored, even with synthetic inputs.
-
-## Alternatives evaluated
-
-| Option | Result |
-| --- | --- |
-| Upstream KnightLauncher environment/settings | Rewrites `config.jar`; not used. Our local adaptation uses the separate overlay instead |
-| JVM endpoint properties | Tested; no effect on deployment accessors |
-| Separate client configuration | **Verified:** classpath resource overlay |
-| Main-class command-line endpoint | No general host/port option confirmed; `+connect=` not assumed equivalent |
-| Launcher dependency injection | Possible but unnecessary; would add client-version coupling |
-| Hosts-file redirection | Unnecessary, machine-wide, and cannot solve the key mismatch |
-| Proprietary binary patch | Unnecessary; no client class or JAR was modified |
+The previous `make server` used an isolated loopback network namespace. A game
+started normally could not reach that listener even with `127.0.0.1:47624` and
+matching keys. The installed client's log showed that exact destination, and
+its saved public key matched the preserved server keypair. The new standalone
+server removes this namespace barrier. The full installed `ProjectXApp` was
+then verified against the new server on the host network with temporary client
+settings and the preserved keypair: secure exchange, test authentication,
+bootstrap, ping/pong, player and server snapshots, and receiver registration
+succeeded. A temporary probe also confirmed the logged-on character creation
+state, name validation, and character creation with the real creator's choices.
+These checks used temporary client settings and account data; the game
+installation was unchanged. The separate fork's Play button was not automated;
+the user confirmed the rendered creator.

@@ -1,5 +1,9 @@
 # Spiral Knights Network Architecture
 
+Historical client observations. The isolated experiments described here are no
+longer the server's runtime workflow. See [client configuration](../client-redirection.md)
+for the standalone host-network server.
+
 Scope: installed build `20261006114613`, inspected 2026-10-07.
 See [research-sources.md](research-sources.md) for evidence identifiers.
 

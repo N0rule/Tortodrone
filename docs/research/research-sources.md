@@ -1,5 +1,12 @@
 # Research Sources
 
+Historical research register. The earlier launcher/Python workflow was removed
+from the active project. The cited `local/` trees and observation tools were
+moved to an external recovery folder during the server cleanup. A focused subset
+has since been restored under ignored `local/`; older paths describe original
+evidence locations, not current setup requirements. Current
+operation is documented in [server architecture](../server-architecture.md).
+
 Inspected on 2026-10-07. `CONFIRMED` is scoped to the named evidence;
 `LIKELY` is an inference; `UNKNOWN` has not been established. Confidence is
 HIGH/MEDIUM/LOW. No upstream source is copied into the tracked implementation.
@@ -123,7 +130,7 @@ this stage; R3 below records the later synthetic authentication test.
 
 Notes: smoke evidence is under
 `local/research/client-run-20261007T035528856736Z/`. The upstream reference
-checkout remains unchanged. See [local launcher instructions](knightlauncher.md).
+checkout remains unchanged. See [local launcher instructions](../client-redirection.md).
 
 ## H1 — Headless client
 
@@ -307,7 +314,7 @@ Sources: official Adoptium API package metadata/checksums; public Narya
 What was learned: `ProjectXApp` class-file major 69 requires Java 25. External
 Adoptium Temurin 25.0.4.1 runs the server, launcher, and game successfully.
 Temurin 21 was installed first and is available separately; default Java tools
-now point to 25. See [Java setup](java-setup.md) for versions and provenance.
+now point to 25. See [Java setup](../server-architecture.md) for versions and provenance.
 
 An ignored `AuthProbe.java` used the installed serializer to produce synthetic
 credential/envelope/response fixtures. Credentials have an independent mapping
@@ -327,3 +334,98 @@ synthetic fixtures under `local/research/probe/`, and targeted bytecode notes
 under `local/research/javap/`. No credentials, identity values, session IDs, or
 raw authentication payloads were added to documentation or server logs.
 No third-party/proprietary implementation source was copied into tracked code.
+
+## R4 — Separate startup and guest-login behavior (2026-10-07)
+
+Sources: installed deployment accessor `com.threerings.projectx.util.a.abq`,
+login controller `com.threerings.projectx.client.bN`, `ProjectXPrefs.HK`,
+and `ProjectXCredentials`; Linux `nsfs.h` and local bubblewrap/nsenter behavior.
+
+What was learned: `anonymous_allowed` controls the guest login option.
+`anonymous_logon` preferences default to enabled with a blank remembered name.
+The guest branch constructs anonymous credentials with a random password;
+it cannot match our synthetic account. The new overlay disables the guest
+option, and the manual launch command omits automatic-login JVM properties.
+
+Verified against official client: YES for the independent KnightLauncher Play
+path and authentication; guest behavior and its controlling key were verified
+against installed bytecode. Confidence: HIGH for those findings. The actual
+interactive form remains the user-facing way to supply test credentials.
+
+The server and client can be started by independent processes sharing an
+isolated loopback network. The network's owning user namespace must be obtained
+with Linux `NS_GET_USERNS`, rather than assuming bubblewrap's final user namespace
+owns it. Separate-process tests confirmed live console/file logs, disconnect
+independence, duplicate startup refusal, shutdown cleanup, and persistent keys.
+
+Evidence: `local/research/interactive-client-20261007T045654092229Z/`,
+`local/server/logs/server-20261007T044816225510Z.log`, ignored bytecode notes,
+and the synthetic workflow regression test. Server logs contain types/sizes and
+results only. See [workflow instructions](../server-architecture.md).
+
+## R5 — Standalone bootstrap and authenticated sessions (2026-10-07)
+
+Research references: pinned public Narya `BootstrapData`, `BootstrapNotification`,
+`Client.gotBootstrap`, `InvocationDirector`, `PresentsSession`, and ping/pong
+classes; the pinned headless client's service/OID usage; SKapsule's classloader
+and original `ProjectXApp` entry point; KnightLauncher's connection-setting path.
+The launcher projects clarify client startup, while Narya and the headless client
+clarify distributed-object initialization. No reference code was imported.
+
+The headless client's game bootstrap layout includes `nodePulseOid`, which the
+installed build does not have. Current field layout and typed-list/array encodings
+were verified with installed class metadata and standalone synthetic serializer
+probes, then independently implemented. The probes and generated binary fixtures
+were originally under `/tmp/tortodrone-bootstrap-research/` and are now under
+ignored `local/research/bootstrap/`.
+
+Verified against the full installed client: YES. Host-network evidence under
+`/tmp/tortodrone-host-client-gaIdkE/` and `data/logs/latest.log` shows authentication,
+bootstrap, ping/pong, and subscription to the server-advertised client object.
+The client's temporary log confirms its handling of the explicit missing-player
+subscription response. Synthetic Java tests additionally cover repeated mappings,
+correlation, request bounds/truncation, logoff, reconnects, and independent IDs.
+Confidence: HIGH for this boundary. Distributed player snapshots, required game
+services, and character selection remain unimplemented.
+
+## R6 — Player snapshots, receivers and login observers (2026-10-07)
+
+References: Narya's DObject/DSet streamers, CompoundEvent, InvocationDirector,
+InvocationMarshaller and listener callback IDs; headless-client initialization;
+the installed build's inherited field metadata and serializer. SKapsule bootstrap
+sources and KnightLauncher remain startup/configuration research references.
+Optional research has been restored to `local/upstream/` (about 15 MB total);
+SKapsule includes only focused sources and notices, without its Android/native
+toolchains or Git history. No upstream code was imported into tracked sources.
+
+CONFIRMED: independent player/server/configuration snapshots deserialize through
+the installed client serializer. ObjectResponse includes the current inherited
+PlayerObject field order, empty collections, nullable strings/objects and final
+array null masks. Current EyeType has 47 ordinal values and KnightHeight has 5.
+The generic friend list in a creation call maps as `java.util.List`, even when
+the sender constructs an ArrayList. Synthetic non-Steam creation envelopes are
+decoded, while creation operations still return an unimplemented callback.
+
+CONFIRMED: stock ProjectXApp accepts the player snapshot, forwards a receiver
+transaction (IDs start at zero), submits initial statistics through Knight
+method 10, and receives ServerObject. Evidence: `/tmp/tortodrone-host-client-suRM4s/`.
+A temporary subclass probe kept the connection open past the old timeout,
+observed `Client.isLoggedOn()` and the introduction/character creation states,
+and skipped the introduction with the existing client method. Evidence:
+`/tmp/tortodrone-host-client-dWe36l/`, `/tmp/tortodrone-host-client-uPHW7i/`.
+Captured frames were black; visual scene rendering remains UNKNOWN. These probes
+do not establish successful character creation, character persistence, or Play
+through the user's separate launcher fork.
+
+Final client probe evidence: `/tmp/tortodrone-host-client-uH24yF/` reports
+the character creation panel's `isAdded()` and `isShowing()` as true, and the
+installed invocation director dispatches the independently encoded failure
+callback for Knight method 3. The connection stays open afterward. This verifies
+UI component activation and callback compatibility while pixel rendering remains
+unverified.
+
+Java regressions independently read all snapshot fields, verify receiver state
+on resubscription, response correlation and batched mappings, and reject foreign
+object writes, unrelated fields, duplicate receivers, excessive collections or
+nesting, invalid ordinals, unsupported types and malformed/trailing fields.
+Confidence: HIGH for the implemented object/session boundary.

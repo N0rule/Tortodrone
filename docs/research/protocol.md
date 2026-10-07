@@ -1,5 +1,10 @@
 # Spiral Knights Protocol Research
 
+Historical observations, retained for protocol development. Launcher tools and
+`local/` evidence directories referenced below are no longer part of the active
+project. See [server architecture](../server-architecture.md) for current runtime
+behavior and setup.
+
 Build `20261006114613`; observations on 2026-10-07. This is a partial protocol
 description, not a complete codec specification. Evidence IDs are defined in
 [research-sources.md](research-sources.md).
@@ -207,3 +212,75 @@ Only short structural bytes and field summaries are documented here.
 Receive-only, secure-response, and synthetic authentication-response milestones
 are complete. Bootstrap, persistent accounts/sessions, character selection, and
 zone entry remain unimplemented.
+
+## Initial bootstrap/session subset (2026-10-07; superseded by R6)
+
+The active server now sends `BootstrapNotification` immediately after a successful
+`AuthResponse`. Downstream mappings 1–5 remain from authentication; the notification
+and `ProjectXBootstrapData` introduce mappings 6 and 7. Notification message ID is
+-1 because it is unsolicited. Fields, in the verified current-build order:
+
+| Field | Wire encoding / current value |
+| --- | --- |
+| connectionId, clientOid | Two positive 32-bit integers, transient per connection |
+| services | Presence byte 1, 32-bit count 0; typed list, no class mapping |
+| dconfigOid | 32-bit integer 0, distributed configuration unavailable |
+| hostname | Presence byte 1 and modified UTF string |
+| ports | Presence byte 1, 32-bit count 1, TCP port integer |
+| datagramPorts | Presence byte 1, 32-bit count 0 |
+| serverOid through clientTimingsOid | Ten 32-bit integers, currently all 0 |
+
+The optional IDs are server, exchange, PvP, PvP game info, mission, open hall,
+admin, status, place browser, and client timings. The older headless client's
+additional `nodePulseOid` is absent from the installed build and must not be
+serialized. A localhost notification is 196 bytes including its length header.
+
+`PingRequest` serializes only its type and 16-bit message ID: its pack/unpack
+timestamps are transient. The old synthetic test's extra timestamp was removed.
+`PongResponse` has the correlated message ID, 64-bit server pack timestamp, and
+32-bit processing delay. The first pong introduces its type mapping; later pongs
+reuse it. Per-direction class tables remain independent for the session lifetime.
+
+`SubscribeRequest` and `UnsubscribeRequest` carry message ID and 32-bit object ID.
+`LogoffRequest` carries only the message ID. Unknown requests and unexpected
+trailing fields are rejected. The current player subscription receives a
+`FailureResponse` containing the correlated ID, object ID, and failure string;
+no player object or game service is implemented yet.
+
+CONFIRMED: the installed full `ProjectXApp` accepted the independently encoded
+notification, sent pings, and requested the advertised client object. Its log
+then reported the explicit subscription failure. This verifies the envelope
+and next request; it does not establish successful player initialization.
+
+## Current object/session subset (R6, 2026-10-07)
+
+Bootstrap now advertises eight login service handles, configuration OID 2 and
+server OID 1. Each handle encodes its class then invocation OID 3 and a unique
+service code. Client OIDs start at 1001. Other optional OIDs remain zero.
+See [active architecture and roadmap](../server-architecture.md) for the scope.
+
+ObjectResponse carries the request ID and a distributed object's class and full
+current-build fields. PlayerObject begins with inherited OID, Name username,
+DSet receivers, location/status/away message and pawn ID before player fields.
+It supplies a non-null empty AvailableKnight array and initialized collections.
+Inherited metadata and standalone serializer probes verified all field order.
+
+ForwardEventRequest contains message ID and a typed DEvent; each event starts
+with its target OID. CompoundEvent contains a StreamableArrayList (32-bit count,
+typed events). Receiver reset/add/update/remove operations name `receivers` and
+carry a typed value; Registration has nullable-string receiverCode and short ID.
+Only the caller's own receiver set is writable. CompoundUpstreamMessage contains
+message ID, typed-list presence/count and nested upstream objects, sharing the
+connection's class map. Recursion and collection/node counts are bounded.
+
+InvocationRequestEvent has target OID, integer service code, byte method ID,
+Object-array presence/count and typed arguments. ListenerMarshaller subclasses
+carry a short requestId. A failure reply is an unsolicited EventNotification
+with InvocationResponseEvent: caller OID, correlated listener requestId, byte
+method 0, Object-array presence/count 1 and a typed String reason.
+Supported unimplemented invocations return this callback, keeping the session
+usable. Unknown schemas are rejected; there is no generic Java deserialization.
+
+Character creation envelopes include Name/null, strings, Integer, ordinal
+KnightHeight/EyeType, a generic `java.util.List`, null and ConfirmMarshaller.
+Decoding this envelope is distinct from implementing creation and persistence.

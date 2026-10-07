@@ -1,108 +1,173 @@
-# TortodroneServer Architecture
+# Server Architecture
 
-## Language choice
+TortodroneServer runs as one Java process on the host network. Its executable
+JAR has no third-party dependencies and targets Java 17. The launcher lives in
+its own repository and connects through the ordinary TCP socket interface.
 
-Decision: Java, initially targeting Java 17+. The installed client needs Java
-25, but the receive-only emulator uses only JDK networking and can target 17.
-Kotlin would interoperate with the same libraries, but would add a compiler,
-runtime dependency, and build plugin before providing a benefit to this small
-listener. Reconsider if later project needs warrant it.
+## Runtime
 
-CONFIRMED (HIGH): Narya/Presents is a Java object/streaming protocol, and public
-Java implementations expose its primitives. Java makes future compatibility
-experiments straightforward. No third-party or proprietary implementation is
-linked into the emulator. The headless project's original API code is useful
-research; its game-specific `core/` files are not assumed independently licensed
-just because its top-level project declares Apache-2.0.
-
-## Implemented scope
-
-`server/src/main/java/org/tortodrone/server/ConnectionLogger.java` is the server
-entry point. It binds `127.0.0.1:47624`, accepts concurrent connections, assigns IDs,
-and logs UTC timestamps, peer addresses, byte counts, stream offsets, hex, and
-printable ASCII. By default it sends no response. EOF, reset, and idle timeout close a
-connection cleanly. Shutdown closes active sockets.
-
-For this observation tool, binding is restricted to loopback; there are at
-most 16 simultaneous clients, a 15-second idle timeout, and a 64 KiB capture
-limit per connection. These are local experiment limits, **not protocol constants**.
-Reads are reported as chunks, never claimed to be frames. `--port 0` is
-available for collision-free synthetic testing, and `--bind` accepts loopback
-addresses only. The production-derived default is documented in
-[network-architecture.md](network-architecture.md).
-
-The server builds without any file in `local/` and without network dependency
-resolution. `Makefile` invokes `javac --release 17`; Gradle/Maven would add no
-value to this dependency-free milestone. Build output lives under ignored
-`build/`. JARs are intentionally not globally ignored.
-
-## Build and validation
+`org.tortodrone.server.Server` is the entry point. It loads `server.properties`,
+binds the configured address/port, loads or creates a persistent 2048-bit RSA
+identity, exports launcher connection values, then accepts concurrent clients.
+Missing configuration is generated from the defaults bundled in the JAR.
+Connection values are written to a temporary file and replaced after closing it,
+so clients do not read a partially written endpoint or public key during startup.
 
 ```sh
-make build
-make test
-make run
+java -jar build/tortodrone-server.jar
+java -jar build/tortodrone-server.jar --config /path/to/server.properties
 ```
 
-Set `JAVA_HOME` to a JDK if needed. `make test` uses synthetic local sockets to
-check two simultaneous clients, binary/ASCII logging, byte totals, empty and
-normal disconnects, no unexpected responses, and rejection of public binding.
-Tests choose an ephemeral port and clean up their process. Python 3.9+ is
-needed for the research tools; Java 17+ and make are sufficient for the server.
+The working directory contains the default configuration. With `--config`, the
+data-directory path is relative to that configuration file, even when the server
+is started from another directory. Unknown property names and invalid values
+fail startup with an error so a misspelling does not silently change behavior.
 
-CONFIRMED (HIGH): compilation and integration tests passed using Adoptium
-Temurin 25.0.4.1 (earlier milestones used JDK 25.0.1),
-with Java 17 target classes. The full installed app also connected and sent
-its initial handshake using `tools/observe_client.py`. Neither test requires
-real game credentials. Java 17 runtime execution itself was not separately
-tested on this machine.
+| Setting | Default | Purpose |
+| --- | --- | --- |
+| `server-ip` | `0.0.0.0` | Interface/address to listen on; empty also means all IPv4 interfaces |
+| `server-port` | `47624` | TCP port; `0` selects an ephemeral port for tests |
+| `client-host` | `127.0.0.1` | Reachable address exported for launchers |
+| `data-directory` | `data` | Persistent runtime files, relative to the configuration |
 
-## Next implementation boundary
+Change settings while the server is stopped, then restart it. Ctrl+C closes the
+listener and active sockets. A data-directory lock prevents concurrent servers
+from creating or using the same identity. The OS also rejects an occupied port.
 
-The user-facing launcher is a tested local KnightLauncher integration for
-TortodroneServer. Its adaptation stays under ignored `local/`, outside the
-server implementation. The original Spiral Knights client remains the protocol
-peer. Python prepares the isolated test environment; the server uses Java.
-See [launcher instructions](knightlauncher.md).
+`HandshakeKeys` keeps `data/keys/private.pk8` and `public.txt` across restarts.
+It validates that they match, refuses an incomplete identity with a missing
+private key, and can recover a missing public file from the existing private
+key. POSIX private-key and key-directory permissions are restricted to the owner.
+Back up this directory; moving it with the JAR preserves the server identity.
 
-The client connection and initial secure-response milestones are complete.
-`--handshake-key <private.pk8>` enables one secure exchange. `HandshakeCodec`
-under `protocol/` reads bounded frames and the verified request subset;
-`SecureHandshake` validates the RSA secret/salt and sends the minimal response.
-By default it identifies the following `AESAuthRequest`, then closes.
-With `--local-auth`, it decrypts that request, validates only the synthetic
-test account, sends the authentication response, and observes the first
-post-authentication ping before closing. Payloads and secrets are never logged.
-No game libraries are linked. `HandshakeKeys` generates per-run local
-2048-bit RSA keys with private filesystem permissions; the wrapper stores them
-under ignored `local/research/` and overlays the public key only.
+Logs go to the console and `data/logs/latest.log`. They record message types,
+sizes, connection lifecycle, and authentication results without credentials,
+private keys, session IDs, or raw authentication payloads.
 
-The frame limit is 64 KiB and the socket idle timeout remains 15 seconds. The
-codec handles fragmented and coalesced TCP data, rejects invalid lengths and
-unexpected fields, and maintains incoming class mappings per connection.
-It supports only the observed handshake schema, not arbitrary Narya objects.
+## Protocol boundary
 
-Validation: synthetic tests cover truncated/oversized frames, fragmentation,
-coalescing, RSA exchange, invalid salt, response correlation, and next-message
-identification. The real KnightLauncher Play path also passed: 437-byte request,
-139-byte response, 348-byte `AESAuthRequest`. See R2 in the source register.
+`HandshakeCodec` handles bounded length-framed messages, modified UTF strings,
+and connection-local class mappings for the verified handshake schema.
+`SecureHandshake` performs RSA secret/salt validation, sends `SecureResponse`,
+decrypts `AESAuthRequest`, validates the fixed synthetic account, and sends
+`AuthResponse`. It clears negotiated secrets and hands the connection to
+`ClientSession` after successful authentication.
 
-Authentication validation: synthetic tests cover correct/wrong passwords,
-AES credential envelopes, response correlation and persistent mappings, and
-absence of sensitive values in logs. The real full client through KnightLauncher
-passed using only external Temurin 25: 437-byte request, 139-byte secure response,
-348-byte authentication request, 232-byte success response, 49-byte ping.
+`SessionCodec` preserves outgoing mappings from authentication. The current-build
+`ProjectXBootstrapData` supplies a connection ID, private client object ID, eight
+service handles required by login observers, TCP endpoint, and no UDP endpoints.
+Server/configuration object IDs are 1/2, invocation routing uses 3, and client
+object IDs begin at 1001. Other optional game OIDs remain zero.
 
-Next implement only: determine the current `BootstrapNotification` data and the
-minimum required services/client object after authentication. Verify the next
-client action before character-list work. The local session ID is transient;
-account/session persistence and game simulation remain unimplemented.
+Subscriptions return correlated `ObjectResponse` snapshots for the requesting
+connection's `PlayerObject`, shared empty `ServerObject`, and `DConfigObject`.
+The player has a non-null saved knight roster and initialized collections;
+configuration editing is unavailable. Unknown/other-client OIDs receive
+`FailureResponse`. Object identities and receivers are connection-local; character
+profiles persist in the data directory.
 
-## Reuse and provenance
+`SessionDecoder` accepts bounded `CompoundUpstreamMessage` batches and
+`ForwardEventRequest` envelopes using the same incoming class map as the
+handshake. It explicitly parses receiver transactions and invocation arguments;
+it never reflects over or loads a class named by the client. Receiver writes
+are allowed only to the connection's own `receivers` field. Zero-based 16-bit
+receiver IDs are preserved, checked for uniqueness, and included in subsequent
+player snapshots. Arbitrary object/field writes are rejected.
 
-CONFIRMED: the implementation uses only the JDK. Public projects were read as
-references; no source was copied into the tracked server or tools. Bytecode
-disassembly and experimental probes remain under `local/`. Public Narya uses
-LGPL-2.1; KnightLauncher declares GPL-3.0; SKapsule/bootstrap declare MIT.
-Any future actual reuse needs a separate file-level license/provenance decision.
-See [research-sources.md](research-sources.md).
+The service handles are Knight, Location, Chat, Scene, Zone, ProjectXScene,
+ProjectXZone, and Body marshallers. They let observers bind their client services;
+they do not imply gameplay support. Initial Knight hardware statistics are
+discarded without logging their values. Knight method 3 validates names and
+method 5 saves a new non-Steam character. Name validation uses Confirm listener
+method 1 with null arguments for success. Creation sends an `availableKnights`
+attribute update after the save, then uses the correlated method-zero callback
+with "Knight saved. Reconnect to view it; world entry is not available yet."
+The stock creator's success handler waits for world events and leaves its busy
+state active; its failure handler clears that state and displays the result.
+Once world entry is implemented, creation can use the success callback again.
+Literal callback messages carry the client's `~` prefix so they display directly
+instead of being looked up as missing translation keys.
+Other supported invocations with
+listeners receive the standard method-zero failure callback through
+`EventNotification`/`InvocationResponseEvent`. Creation validates the fourteen
+arguments, including nulls, height/eye ordinals, and the non-Steam empty friend
+list. Existing-character edits, Steam fields, and unknown operations are refused.
+
+`CharacterStore` shares one synchronized store across connections for the fixed
+test account. It persists up to three knights in `data/accounts/1.properties`,
+including stable IDs, names, creation times, and appearance choices. Writes use
+a flushed temporary file and atomic replacement; an I/O failure neither publishes
+the character nor consumes an ID. Invalid profiles stop startup without changing
+the file. Name checks are advisory; creation rechecks uniqueness under the same
+lock. Other already-connected sessions see changes on resubscription/reconnect.
+
+The `AvailableKnight` wire schema includes a non-null model reference. Its
+configuration names and argument keys use a separate connection-local intern
+table. The basic preview applies color and height. Equipment, accessories, and
+eye choices persist, but their preview configuration and inventory reconstruction
+are future work. The creator displays the saved/unavailable result; reconnecting
+shows the saved roster. Character selection still fails explicitly because zone/world
+objects do not exist yet.
+
+The session answers pings, acknowledges unsubscribe, and closes on EOF/logoff.
+Limits are 16 clients, 64 KiB/frame, 15 seconds idle during authentication,
+60 seconds idle after authentication, 256 incoming class mappings, eight nested
+levels, 128 elements per collection, and 512 parsed nodes per session frame.
+Malformed or unsupported schemas are rejected with fixed diagnostics, never
+argument values. UDP is not implemented.
+
+## Roadmap
+
+- [x] Independent executable JAR, persistent keys, configuration and host networking.
+- [x] Secure exchange, fixed test login, bootstrap and heartbeat.
+- [x] Current player, server and configuration snapshots.
+- [x] Login service handles, receiver registration and invocation failure callbacks.
+- [x] Installed client reports logged on and enters the character creation state.
+- [x] Rendered character creator confirmed by the user.
+- [x] Persist test-account characters; name validation, creation and roster updates.
+- [ ] Add separate persistent accounts and account authentication.
+- [ ] Apply saved appearance to previews and reconstruct starter inventory.
+- [ ] Implement character selection, minimal inventory, zone entry and world state.
+
+The temporary UI probe skipped the introductory sequence through the client's
+existing method. Captured frames were black; the user subsequently confirmed
+the rendered creator. A further installed-client probe used its real appearance
+choices and received name-validation success and the updated saved roster.
+The original success callback left the stock creation UI busy; the revised
+result uses its existing failure handler to clear that state. A stock-handler
+probe reproduced "Creating knight", then verified the controls were re-enabled
+and the saved/world-unavailable message appeared without a missing-translation
+warning. On reconnect,
+the installed client naturally opened its saved
+character picker; the probe checked that it was added/showing and its preview
+had an idle animation. Automated tests also verify roster restoration after
+restarting the packaged JAR. Selection and world entry remain separate checkpoints.
+Investigation of the disappearing picker traced an unmapped-controller event to
+the client's window dismissal. A temporary input filter preserved the picker and
+passed actual slot-click checks; see the [client input investigation](research/client-input-fix.md).
+
+## Build and tests
+
+`make build` compiles with `javac --release 17` and packages the executable JAR
+with `jar`. `make test` runs Java protocol tests and launches the JAR in a
+separate process with temporary configuration and state. Tests cover host-network
+connections, full synthetic authentication, bootstrap service routing, complete
+snapshot schemas, receiver resets/registration, zero-based IDs, batched requests,
+invocation callback correlation, character creation, duplicate names, slot limits,
+malformed profiles, failed writes, concurrent creation, persistent rosters,
+object ownership, repeated ping/pong, unknown
+subscriptions, clean logoff, wrong passwords, malformed/nested frames,
+independent/reconnecting clients, saved logs, shutdown/restart, stable keys,
+duplicate startup, and invalid configuration.
+No client files are needed.
+
+Optional ignored research under `local/` contains small Narya/samskivert/headless
+references, focused SKapsule bootstrap sources, and compatibility probes against
+the installed client. Those probes verified that the client serializer reads
+the independently encoded snapshots and that its creation invocation is decoded.
+KnightLauncher is researched in the separate repository. None is a server
+dependency, and no upstream implementation is compiled into the JAR.
+
+The earlier Python/bubblewrap launcher workflow and Maven toolchain were removed.
+Historical experiments remain under `docs/research/`; their old commands and
+paths are historical evidence, not current runtime requirements.

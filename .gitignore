@@ -1,4 +1,6 @@
-# Local SK research files
+# Server state and legacy research (never commit private keys)
+/data/
+/server.properties
 /local/
 
 # Captures and logs

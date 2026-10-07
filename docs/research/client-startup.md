@@ -1,5 +1,9 @@
 # Spiral Knights Client Startup
 
+Historical client research. Earlier launcher commands and `local/` artifacts
+are no longer active project requirements. The client/launcher is maintained
+separately; see [client configuration](../client-redirection.md).
+
 Research date: 2026-10-07. Installed build: `20261006114613`.
 `CONFIRMED` means source, bytecode, configuration, or observation supports the
 specific claim; it does not imply a successful official-server login.
@@ -38,7 +42,7 @@ update endpoints, not the binary login server.
 CONFIRMED (HIGH, R1): Invoking `ProjectXApp` directly with the installed code
 and resources works on this Linux desktop and reaches the local TCP listener.
 Our experiment bypasses Getdown, places writes in a separate app directory,
-and prevents external network access. See [client-redirection.md](client-redirection.md).
+and prevents external network access. See [client-redirection.md](../client-redirection.md).
 
 ## Java runtime
 
@@ -55,7 +59,7 @@ It is an environment convenience, not a hardcoded build dependency.
 CONFIRMED (HIGH, R3): our launcher experiment now uses separately installed
 Adoptium Temurin 25 for all JVMs. The current `ProjectXApp` has class-file major
 69 (Java 25); Java 21 cannot load it. This does not change Steam's original
-entry point or bundled runtime. See [Java setup](java-setup.md).
+entry point or bundled runtime. See [Java setup](../server-architecture.md).
 
 ## JVM arguments
 

@@ -1,0 +1,7 @@
+# Address to listen on. 0.0.0.0 accepts connections through all IPv4 interfaces.
+server-ip=0.0.0.0
+server-port=47624
+# Address given to launchers. Use your LAN/public IP for players on other computers.
+client-host=127.0.0.1
+# Relative to this configuration file. Keep this directory across server restarts.
+data-directory=data
