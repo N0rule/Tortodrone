@@ -4,4 +4,4 @@ server-port=47624
 # Address given to launchers. Use your LAN/public IP for players on other computers.
 client-host=127.0.0.1
 # Relative to this configuration file. Keep this directory across server restarts.
-data-directory=data
+data-directory=../data

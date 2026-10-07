@@ -17,6 +17,7 @@
 # Build output and editors (JARs are not globally ignored)
 .gradle/
 build/
+.build/
 out/
 target/
 .idea/

@@ -26,11 +26,11 @@ KnightLauncher fork normally; there is no server-side client launch command.
 For deployment, copy just `build/tortodrone-server.jar` into an empty directory
 and run `java -jar tortodrone-server.jar`. A Java 17+ runtime is sufficient;
 make and a compiler are only needed to build it. The server creates its
-configuration, keypair, connection details, and logs on first start:
+configuration, keypair, connection details, and logs under `build/` on first start:
 
 ```text
-server.properties                 editable server settings
-data/
+build/settings/server.properties editable server settings
+build/data/
   keys/private.pk8                persistent private key; keep secret
   keys/public.txt                 public key to copy into KnightLauncher
   client-connection.properties    host, port, public key for client configuration
@@ -47,9 +47,9 @@ With the server and game on this computer, use:
 | --- | --- |
 | Server address (`game.endpoint`) | `127.0.0.1` |
 | Port (`game.port`) | `47624` |
-| Public key (`game.publicKey`) | Entire value from `data/keys/public.txt` |
+| Public key (`game.publicKey`) | Entire value from `build/data/keys/public.txt` |
 
-For players on another computer, set `client-host` in `server.properties` to
+For players on another computer, set `client-host` in `build/settings/server.properties` to
 this server's reachable LAN/public address and use that address in the launcher.
 The default `server-ip=0.0.0.0` listens on all IPv4 interfaces; it is a bind
 address, not an address to enter in the launcher. The current listener is TCP.
@@ -59,7 +59,7 @@ Use the normal username/password form with `tortodrone` /
 must apply the matching public key as well as the address and port. See
 [client configuration and troubleshooting](docs/client-redirection.md).
 
-Keep `data/keys/` across restarts and deployments. Replacing its keypair requires
+Keep `build/data/keys/` across restarts and deployments. Replacing its keypair requires
 updating every launcher's public key. The existing local server keypair was
 preserved during the cleanup.
 
@@ -68,7 +68,7 @@ preserved during the cleanup.
 Use the creator with the test account. Names contain 3–16 characters: letters
 with optional single hyphens. Names are unique without regard to case, and the
 account has three slots. The server saves the chosen appearance and assigned
-character ID before reporting the result. Back up `data/` to preserve both your
+character ID before reporting the result. Back up `build/data/` to preserve both your
 characters and server identity. An invalid profile stops startup rather than
 silently replacing your save.
 
@@ -105,11 +105,12 @@ was not automated; the user confirmed reaching the rendered creator. On reconnec
 the installed-client probe found the saved-character picker added/showing with
 an available idle animation for the basic preview.
 
-- `server/` — server startup, connections, keys, authentication, and Java tests.
-- `protocol/` — the implemented subset of the client wire protocol.
+- `src/main/java/org/tortodrone/server/` — server startup, connections, keys, and authentication.
+- `src/test/java/org/tortodrone/server/` — Java tests.
+- `src/main/java/org/tortodrone/protocol/` — the implemented subset of the client wire protocol.
 - `docs/` — current setup/architecture and historical protocol research.
 - `server.properties.example` — defaults bundled in the JAR.
-- `data/` — ignored runtime state, created on first start.
+- `build/data/` — ignored runtime state, created on first start.
 - `local/` — optional ignored upstream references and protocol probes; never a build dependency.
 
 See [server architecture](docs/server-architecture.md) for the current boundary

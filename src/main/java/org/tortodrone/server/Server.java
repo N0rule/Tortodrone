@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class Server {
     public static void main(String[] args) {
         try {
-            Path config = Path.of("server.properties");
+            Path config = Path.of("build/settings/server.properties");
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone-server.jar [--config path/to/server.properties]");
                 return;

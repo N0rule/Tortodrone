@@ -6,7 +6,7 @@ its own repository and connects through the ordinary TCP socket interface.
 
 ## Runtime
 
-`org.tortodrone.server.Server` is the entry point. It loads `server.properties`,
+`org.tortodrone.server.Server` is the entry point. It loads `build/settings/server.properties`,
 binds the configured address/port, loads or creates a persistent 2048-bit RSA
 identity, exports launcher connection values, then accepts concurrent clients.
 Missing configuration is generated from the defaults bundled in the JAR.
@@ -28,19 +28,19 @@ fail startup with an error so a misspelling does not silently change behavior.
 | `server-ip` | `0.0.0.0` | Interface/address to listen on; empty also means all IPv4 interfaces |
 | `server-port` | `47624` | TCP port; `0` selects an ephemeral port for tests |
 | `client-host` | `127.0.0.1` | Reachable address exported for launchers |
-| `data-directory` | `data` | Persistent runtime files, relative to the configuration |
+| `data-directory` | `../data` | Persistent runtime files, relative to the configuration |
 
 Change settings while the server is stopped, then restart it. Ctrl+C closes the
 listener and active sockets. A data-directory lock prevents concurrent servers
 from creating or using the same identity. The OS also rejects an occupied port.
 
-`HandshakeKeys` keeps `data/keys/private.pk8` and `public.txt` across restarts.
+`HandshakeKeys` keeps `build/data/keys/private.pk8` and `public.txt` across restarts.
 It validates that they match, refuses an incomplete identity with a missing
 private key, and can recover a missing public file from the existing private
 key. POSIX private-key and key-directory permissions are restricted to the owner.
 Back up this directory; moving it with the JAR preserves the server identity.
 
-Logs go to the console and `data/logs/latest.log`. They record message types,
+Logs go to the console and `build/data/logs/latest.log`. They record message types,
 sizes, connection lifecycle, and authentication results without credentials,
 private keys, session IDs, or raw authentication payloads.
 
@@ -94,7 +94,7 @@ arguments, including nulls, height/eye ordinals, and the non-Steam empty friend
 list. Existing-character edits, Steam fields, and unknown operations are refused.
 
 `CharacterStore` shares one synchronized store across connections for the fixed
-test account. It persists up to three knights in `data/accounts/1.properties`,
+test account. It persists up to three knights in `build/data/accounts/1.properties`,
 including stable IDs, names, creation times, and appearance choices. Writes use
 a flushed temporary file and atomic replacement; an I/O failure neither publishes
 the character nor consumes an ID. Invalid profiles stop startup without changing
