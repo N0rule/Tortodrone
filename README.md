@@ -5,9 +5,9 @@ builds the server; the game and KnightLauncher are separate projects. Only norma
 username/password login is supported. Steam and guest login are outside the scope
 of the project.
 
-The current server supports secure exchange, the fixed test account, bootstrap,
+The current server supports secure exchange, persistent normal accounts, bootstrap,
 TCP heartbeat, name validation, character creation/editing/deletion, and a saved
-character roster. **World entry, gameplay, and additional accounts are not implemented.** Characters survive server restarts. Unsupported operations
+character roster. **World entry and gameplay are not implemented.** Characters survive server restarts. Unsupported operations
 return explicit failures.
 
 ## Fresh install
@@ -53,7 +53,8 @@ Tortodrone/
       server.properties          editable settings
       keys/private.pk8           private server identity; keep secret
       keys/public.txt            public key for launcher settings
-      accounts/1.properties      saved knights, created when a knight is saved
+      accounts/users.properties  account IDs and protected password verifiers
+      accounts/<id>.properties   each account’s saved knights
       logs/latest.log            server output, appended across restarts
       server.lock                prevents concurrent use of the same data
 ```
@@ -93,11 +94,11 @@ never overwrites an existing configuration.
 The startup banner includes the release version from `VERSION`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.2.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.3.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
-[19:30:01] [ServerMain/INFO]: Loading saved characters
+[19:30:01] [ServerMain/INFO]: Loading normal accounts and saved characters
 [19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
 [19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
 [19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)
@@ -112,6 +113,39 @@ or raw client payloads. Timestamps use the machine's local time.
 ```sh
 java -jar build/tortodrone.jar --version
 ```
+
+## Normal accounts
+
+The initial development account remains `tortodrone` / `tortodrone`, preserving
+existing characters under account ID `1`. Each additional account has its own
+three character slots. Usernames are case insensitive; character rosters and
+mutations are limited to the authenticated account.
+
+Stop the server, then create an account or change a password:
+
+```sh
+java -jar build/tortodrone.jar --create-account Alice
+java -jar build/tortodrone.jar --set-password tortodrone
+java -jar build/tortodrone.jar --list-accounts
+```
+
+Creation and password changes prompt twice without echoing the password. Usernames
+need 3–32 characters, starting with a letter and using ASCII letters, digits,
+underscores or hyphens. Passwords need 8–128 characters. For automation without a
+terminal, supply the password and confirmation as two complete UTF-8 lines on
+standard input; passwords are never command-line arguments.
+
+Restart the server and use the account in the normal game login form. Registration
+is administered through these server commands; in-game registration is not
+implemented. The commands share the server's deployment lock and refuse to modify
+a running deployment. Back up the complete `data/accounts/` directory: the
+registry owns the identities associated with the character profiles.
+
+Password storage uses a separate random salt for each account and PBKDF2-HMAC-SHA256
+with 600,000 iterations. The legacy client's MD5 password transform is applied
+before derivation for compatibility; neither plaintext passwords nor that reusable
+transform are saved. Password changes retain account IDs and characters. Steam,
+guest and official-service sessions remain unsupported.
 
 ## Connect and create a knight
 
@@ -128,7 +162,7 @@ For another computer, use the server's reachable address and `server-port`.
 See [connection guidance](docs/client-redirection.md).
 
 Names contain 3–16 letters with optional single hyphens. Names are unique without
-regard to case, and the test account has three slots. The server saves appearance
+regard to case within an account, and each account has three slots. The server saves appearance
 choices and stable character IDs before reporting the result. The save operation
 also accepts an existing knight name to update its name and appearance while
 preserving its ID and creation time. Updates still work when all three slots are

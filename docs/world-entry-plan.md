@@ -6,6 +6,13 @@ It does not begin the introductory missions or enter a game world. Version
 slot reuse and persistence. The installed client's networking classes accepted
 these operations; graphical/world behavior remains a separate check.
 
+## LAN foundations before world entry
+
+Version `0.3.0` adds persistent normal accounts and separate saved rosters so LAN
+players have their own identities. The next account/session milestone is live
+roster updates across connections belonging to the same account. These changes
+do not acknowledge character selection or mark introductory missions complete.
+
 ## Next: selection and one starting area
 
 1. Verify the installed client's selection path and the full selected-player,

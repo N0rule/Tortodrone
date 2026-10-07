@@ -52,6 +52,7 @@ public final class ServerIntegrationTest {
             check(Files.exists(generated), "first-start configuration generation");
             defaultWorkflow(jar, directory.resolve("default-start"));
             managementWorkflow(jar, directory.resolve("management-start"));
+            accountWorkflow(jar, directory.resolve("account-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
             Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
@@ -216,6 +217,77 @@ public final class ServerIntegrationTest {
         String log = Files.readString(data.resolve("logs/latest.log"));
         check(log.contains("/INFO]: Character deleted"), "deletions appear in normal logs");
         checkLogFormat(log);
+    }
+
+    private static void accountWorkflow(Path sourceJar, Path directory) throws Exception {
+        Files.createDirectories(directory);
+        Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        Path data = directory.resolve("data");
+        String password = "alice-test-password";
+        accountCommand(jar, directory, "--create-account", "Alice", password + "\n" + password + "\n", true, "Account created.");
+        accountCommand(jar, directory, "--list-accounts", null, "", true, "2\tAlice");
+        byte[] registry = Files.readAllBytes(data.resolve("accounts/users.properties"));
+        accountCommand(jar, directory, "--create-account", "ALICE", password + "\n" + password + "\n", false, "already exists");
+        accountCommand(jar, directory, "--set-password", "Alice", "mismatch-one\nmismatch-two\n", false, "Passwords do not match");
+        accountCommand(jar, directory, "--set-password", "Alice", "", false, "Password input ended");
+        check(Arrays.equals(registry, Files.readAllBytes(data.resolve("accounts/users.properties"))), "failed account commands preserve passwords");
+        Path config = data.resolve("server.properties");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        byte[] profile;
+        byte[] keyBytes;
+        try (Running server = new Running(jar, config, directory)) {
+            int port = server.ready();
+            PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
+            try (Socket peer = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(peer, key, "Alice", password, true,
+                    (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
+            }
+            profile = Files.readAllBytes(data.resolve("accounts/2.properties"));
+            keyBytes = Files.readAllBytes(data.resolve("keys/public.txt"));
+            check(!Files.exists(data.resolve("accounts/1.properties")), "new account does not save into default profile");
+            accountCommand(jar, directory, "--set-password", "Alice", password + "\n" + password + "\n", false, "Another server");
+            try (Socket peer = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(peer, key, "Alice", "incorrect-password", false, (a, b, c) -> {});
+            }
+        }
+        String changed = "changed-test-password";
+        accountCommand(jar, directory, "--set-password", "alice", changed + "\n" + changed + "\n", true, "Password changed.");
+        check(Arrays.equals(profile, Files.readAllBytes(data.resolve("accounts/2.properties"))), "password reset preserves knights");
+        try (Running server = new Running(jar, config, directory)) {
+            int port = server.ready(); PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
+            try (Socket old = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(old, key, "Alice", password, false, (a, b, c) -> {});
+            }
+            try (Socket peer = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(peer, key, "alice", changed, true, (socket, wire, oid) -> {
+                    var writer = new org.tortodrone.support.TestWire.Writer(org.tortodrone.support.TestWire.NET + "SecureRequest",
+                        org.tortodrone.support.TestWire.NET + "PublicKeyCredentials", "[Ljava.lang.String;", org.tortodrone.support.TestWire.NET + "AESAuthRequest");
+                    writer.send(socket.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 40); out.writeInt(oid); });
+                    var player = wire.snapshot(wire.frame(socket.getInputStream()), (short) 40, oid);
+                    check(player.get("username").equals("Alice") && player.get("playerId").equals(2), "server-owned account identity in player snapshot");
+                    check(((java.util.List<?>) player.get("availableKnights")).size() == 1, "account roster restored");
+                    writer.send(socket.getOutputStream(), out -> writer.message(out, "LogoffRequest", 41));
+                });
+            }
+        }
+        check(Arrays.equals(keyBytes, Files.readAllBytes(data.resolve("keys/public.txt"))), "account administration preserves server identity");
+        String log = Files.readString(data.resolve("logs/latest.log"));
+        check(!log.contains(password) && !log.contains(changed) && !log.contains(TestClient.passwordHash(password)), "account secrets absent from logs");
+    }
+
+    private static void accountCommand(Path jar, Path directory, String command, String username,
+            String input, boolean success, String expected) throws Exception {
+        ProcessBuilder builder = command(jar, null, directory);
+        builder.command().add(command);
+        if (username != null) builder.command().add(username);
+        Process process = builder.start();
+        try {
+            try (var stdin = process.getOutputStream()) { stdin.write(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
+            check(process.waitFor(15, TimeUnit.SECONDS), "account command timeout");
+            String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            check((process.exitValue() == 0) == success && output.contains(expected), "account command result: " + output);
+            check(!output.contains("alice-test-password") && !output.contains("changed-test-password"), "password prompt does not echo stdin");
+        } finally { process.destroyForcibly(); process.waitFor(); }
     }
 
     private static void checkLogFormat(String log) {

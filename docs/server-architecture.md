@@ -66,7 +66,7 @@ read this packaged release identity; moving the JAR does not affect it.
 `HandshakeCodec` handles bounded length-framed messages, modified UTF strings,
 and connection-local class mappings for the verified handshake schema.
 `SecureHandshake` performs RSA secret/salt validation, sends `SecureResponse`,
-decrypts `AESAuthRequest`, validates the fixed synthetic account, and sends
+decrypts `AESAuthRequest`, resolves and verifies a registered normal account, and sends
 `AuthResponse`. It clears negotiated secrets and hands the connection to
 `ClientSession` after successful authentication.
 
@@ -123,8 +123,8 @@ while world entry is unavailable. Deletion accepts a Name and Confirm listener,
 saves the reduced roster, emits its update, then sends a success confirmation.
 Steam fields, missing characters, duplicate names and unknown operations are refused.
 
-`CharacterStore` shares one synchronized store across connections for the fixed
-test account. It persists up to three knights in `data/accounts/1.properties`,
+`CharacterStore` shares one synchronized store across connections for each
+authenticated account. It persists up to three knights in `data/accounts/<id>.properties`,
 including stable IDs, names, creation times, and appearance choices. Writes use
 a flushed temporary file and atomic replacement; an I/O failure neither publishes
 the character nor consumes an ID. Edits and deletions use the same atomic
@@ -151,14 +151,14 @@ argument values. UDP is not implemented.
 ## Roadmap
 
 - [x] Independent executable JAR, persistent keys, configuration and host networking.
-- [x] Secure exchange, fixed test login, bootstrap and heartbeat.
+- [x] Secure exchange, normal login, bootstrap and heartbeat.
 - [x] Current player, server and configuration snapshots.
 - [x] Login service handles, receiver registration and invocation failure callbacks.
 - [x] Installed client reports logged on and enters the character creation state.
 - [x] Rendered character creator confirmed by the user.
 - [x] Persist test-account characters; name validation, creation and roster updates.
 - [x] Edit saved names/appearance; delete knights and reuse slots without recycling IDs.
-- [ ] Add separate persistent accounts with normal username/password authentication.
+- [x] Separate persistent accounts, offline account creation and password changes.
 - [ ] Apply saved appearance to previews and reconstruct starter inventory.
 - [ ] Implement character selection, minimal inventory, zone entry and world state.
 
@@ -195,3 +195,16 @@ current server work.
 The earlier Python/bubblewrap launcher workflow and Maven toolchain were removed.
 Historical experiments remain under `docs/research/`; their old commands and
 paths are historical evidence, not current runtime requirements.
+
+## Account ownership (0.3.0)
+
+`AccountStore` owns stable account IDs, protected password verifiers and separate
+character stores. The normal credential decoder supplies only a username and
+client password transform; it does not authorize a player. Authentication resolves
+the account, and the PlayerObject snapshot uses that account's ID and canonical
+username. All character invocations use its shared store; another account's
+characters and distributed player objects are inaccessible.
+
+The initial development account and version 0.2 profile remain ID 1. Account
+creation and password changes are offline, atomically saved administrative
+commands. Runtime state remains beside the JAR, and keys are unaffected.

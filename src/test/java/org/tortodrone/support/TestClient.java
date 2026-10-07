@@ -21,7 +21,12 @@ public final class TestClient {
     @FunctionalInterface public interface Session { void run(Socket peer, TestWire wire, int oid) throws Exception; }
 
     public static int authenticate(Socket peer, PublicKey publicKey, boolean valid, Session session) throws Exception {
-        peer.setSoTimeout(3000);
+        return authenticate(peer, publicKey, "tortodrone", valid ? "tortodrone" : "wrong-synthetic-password", valid, session);
+    }
+
+    public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
+            boolean valid, Session session) throws Exception {
+        peer.setSoTimeout(8000);
         byte[] plain = new byte[20];
         new SecureRandom().nextBytes(plain);
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -42,12 +47,14 @@ public final class TestClient {
         secure.readShort(); secure.readUTF(); secure.readInt(); secure.readBoolean();
         byte[] shared = HexFormat.of().parseHex(secure.readUTF());
         for (int i = 0; i < 16; i++) shared[i] ^= plain[i];
-        byte[] credentials = credentials(valid);
-        check(HandshakeCodec.matchesSyntheticAccount(credentials) == valid, "credential policy");
+        byte[] credentials = credentials(username, password);
+        try (var decoded = HandshakeCodec.credentials(credentials)) {
+            check(decoded.normalLogin() && decoded.username().equals(username), "normal credential envelope");
+        }
         // Unknown fields must not be silently ignored in a credential envelope.
         byte[] trailing = Arrays.copyOf(credentials, credentials.length + 1);
         try {
-            HandshakeCodec.matchesSyntheticAccount(trailing);
+            HandshakeCodec.credentials(trailing);
             throw new AssertionError("Trailing credential fields accepted");
         } catch (IOException expected) { }
         Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
@@ -71,8 +78,10 @@ public final class TestClient {
         check(!response.readBoolean(), "accepted and rejected logins preserve the client's installation ident");
         check(response.readBoolean() == valid, "session presence");
         if (valid) UUID.fromString(response.readUTF());
-        check(response.readShort() == -5 && response.readUTF().equals("com.threerings.util.Name"), "name mapping");
-        check(response.readBoolean() && response.readUTF().equals("tortodrone"), "test account name");
+        if (valid) {
+            check(response.readShort() == -5 && response.readUTF().equals("com.threerings.util.Name"), "name mapping");
+            check(response.readBoolean() && response.readUTF().equalsIgnoreCase(username), "authenticated account name");
+        } else check(response.readShort() == 0, "rejected authentication has no account name");
         check(response.available() == 0, "response boundary");
         int clientOid = 0;
         if (valid) {
@@ -174,12 +183,12 @@ public final class TestClient {
         check(pong.readLong() > 0 && pong.readInt() >= 0, "pong timestamp"); TestWire.end(pong);
     }
 
-    private static byte[] credentials(boolean valid) throws Exception {
+    private static byte[] credentials(String username, String password) throws Exception {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(bytes);
         out.writeShort(-1); out.writeUTF("com.threerings.projectx.data.ProjectXCredentials");
-        out.writeShort(-2); out.writeUTF("com.threerings.util.Name"); string(out, "tortodrone");
-        string(out, passwordHash(valid ? "tortodrone" : "wrong-synthetic-password"));
+        out.writeShort(-2); out.writeUTF("com.threerings.util.Name"); string(out, username);
+        string(out, passwordHash(password));
         string(out, "private-test-ident"); string(out, "en");
         out.writeBoolean(false); // session
         out.writeBoolean(false); // ticket

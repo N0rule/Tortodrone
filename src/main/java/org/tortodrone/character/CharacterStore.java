@@ -1,25 +1,37 @@
 package org.tortodrone.character;
 
 import java.io.*;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.protocol.HandshakeCodec;
+import org.tortodrone.account.AccountStore;
+import org.tortodrone.storage.AtomicProperties;
 
 /** One small, atomically replaced profile for the currently supported test account. */
 public final class CharacterStore {
-    public static final String USERNAME = HandshakeCodec.TEST_USERNAME;
+    public static final String USERNAME = AccountStore.DEFAULT_USERNAME;
     static final int MAX_KNIGHTS = 3;
     private final Path file;
+    private final String username;
+    private final int accountId;
     private List<Knight> knights = List.of();
     private int nextId = 1;
 
     /** In-memory store for isolated wire tests. Production always uses the data directory. */
-    public CharacterStore() { file = null; }
+    public CharacterStore() { this(1, USERNAME); }
+
+    public CharacterStore(int accountId, String username) {
+        if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
+        file = null; this.username = username; this.accountId = accountId;
+    }
 
     public CharacterStore(Path dataDirectory) throws IOException {
-        file = dataDirectory.resolve("accounts/1.properties");
+        this(dataDirectory, 1, USERNAME);
+    }
+
+    public CharacterStore(Path dataDirectory, int accountId, String username) throws IOException {
+        if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
+        this.username = username; this.accountId = accountId;
+        file = dataDirectory.resolve("accounts/" + accountId + ".properties");
         if (!Files.exists(file)) return;
         if (Files.size(file) > 32768) throw new IOException("Character profile exceeds size limit");
         Properties properties = new Properties();
@@ -28,7 +40,8 @@ public final class CharacterStore {
             String savedUsername = properties.getProperty("username");
             // The renamed test account retains account ID 1 and its saved characters.
             if (!"1".equals(properties.getProperty("schema"))
-                    || (!USERNAME.equals(savedUsername) && !"tortodrone-local-probe".equals(savedUsername))) {
+                    || (!username.equals(savedUsername) && !(accountId == 1 && USERNAME.equals(username)
+                        && "tortodrone-local-probe".equals(savedUsername)))) {
                 throw new IllegalArgumentException();
             }
             int count = Integer.parseInt(properties.getProperty("knights"));
@@ -56,6 +69,9 @@ public final class CharacterStore {
             throw new IOException("Invalid character profile; saved characters were not modified", e);
         }
     }
+
+    public String username() { return username; }
+    public int accountId() { return accountId; }
 
     public synchronized List<Knight> roster() { return knights; }
 
@@ -125,7 +141,7 @@ public final class CharacterStore {
         if (file == null) return;
         Files.createDirectories(file.getParent());
         Properties properties = new Properties();
-        properties.setProperty("schema", "1"); properties.setProperty("username", USERNAME);
+        properties.setProperty("schema", "1"); properties.setProperty("username", username);
         properties.setProperty("next-id", String.valueOf(next)); properties.setProperty("knights", String.valueOf(updated.size()));
         for (int i = 0; i < updated.size(); i++) {
             String prefix = "knight." + i + "."; Knight knight = updated.get(i);
@@ -140,17 +156,7 @@ public final class CharacterStore {
             properties.setProperty(prefix + "eye", String.valueOf(knight.eye()));
             properties.setProperty(prefix + "created-at", String.valueOf(knight.createdAt()));
         }
-        StringWriter text = new StringWriter(); properties.store(text, "Tortodrone test account character profile");
-        byte[] encoded = text.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        Path temporary = Files.createTempFile(file.getParent(), ".profile-", ".tmp");
-        try {
-            try (FileChannel channel = FileChannel.open(temporary, StandardOpenOption.WRITE)) {
-                ByteBuffer bytes = ByteBuffer.wrap(encoded);
-                while (bytes.hasRemaining()) channel.write(bytes);
-                channel.force(true);
-            }
-            Files.move(temporary, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-        } finally { Files.deleteIfExists(temporary); }
+        AtomicProperties.save(file, properties, "Tortodrone character profile");
     }
 
     private static void validate(Knight knight) {

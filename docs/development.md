@@ -9,8 +9,9 @@ Read [the contributor rules](../AGENTS.md) before making changes.
 Develop the server and support normal username/password authentication only.
 Do not add Steam or guest login, change clients or launchers, patch game archives,
 or install client workarounds. Verify compatibility through server code and
-synthetic clients. The current fixed test account will eventually be replaced by
-persistent normal accounts; gameplay and world entry remain future work.
+synthetic clients. Normal accounts and their character profiles are persistent; gameplay and
+world entry remain future work. Account creation and password changes use offline
+server commands, with no client or launcher changes.
 
 ## Where code belongs
 
@@ -18,6 +19,8 @@ Packages live under `src/main/java/org/tortodrone/`:
 
 | Package | Responsibility | Starting points |
 | --- | --- | --- |
+| `account` | Normal account identities and password verification | `AccountStore` |
+| `storage` | Atomic private properties writes | `AtomicProperties` |
 | `character` | Character choices, validation, atomic profile persistence | `Knight`, `CharacterStore` |
 | `config` | Load defaults and validate listener and logging settings | `ServerSettings` |
 | `protocol` | Encode and decode verified wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
@@ -55,16 +58,19 @@ wire helpers belong in `src/test/java/org/tortodrone/support/`.
 
 Integration tests copy the JAR into temporary deployments, choose ephemeral ports,
 and check normal/debug logging, release identification, JAR-relative state,
-custom configuration, authentication, creation/editing/deletion, freed slots,
+custom configuration, authentication, account migration/isolation, offline account
+commands and password changes, creation/editing/deletion, freed slots,
 identity preservation, restarts, keys, and startup errors.
-Do not run tests against real saved characters or client installations.
+Run tests against temporary deployments, never real saved characters. A read-only
+compatibility harness may load installed networking classes with disposable
+server state and preferences; do not modify or launch the user’s game installation.
 
 ## Version and logging
 
 `VERSION` is the single release-version source. The build bundles it as
 `version.txt`; startup and `--version` read that packaged value. Update `VERSION`
 when preparing a release and rebuild. Moving the executable does not change its
-version. The current release version is `0.2.0`.
+version. The current release version is `0.3.0`.
 
 `ServerLog` formats console and file output as
 `[HH:mm:ss] [thread/LEVEL]: message`. Main startup uses `ServerMain`; connection
@@ -96,7 +102,7 @@ modification instructions. Ignored files under `local/` are not build dependenci
 
 ## Installed client compatibility check
 
-Version `0.2.0` was checked with the installed game's unmodified networking
+Version `0.3.0` was checked with the installed game's unmodified networking
 classes against a disposable server deployment and temporary client home. Its
 actual `Client` completed RSA/AES normal login, bootstrap and PlayerObject
 subscription, and reported itself logged on. Its Knight service marshaller sent
@@ -111,3 +117,25 @@ across process restarts. See the [world entry plan](world-entry-plan.md).
 
 Testing may start temporary servers. After changes, rebuild the executable and
 leave the server stopped so the user can start it when they want to test.
+
+## Account persistence
+
+`AccountStore` loads `accounts/users.properties` and one shared `CharacterStore`
+per account. Authentication returns server-owned account ID, canonical username
+and its character store; the session must never trust an account ID supplied by
+a client. The registry and profile files use flushed temporary files and atomic
+replacement before publishing the new state. Registry corruption or a missing
+registry with additional saved profiles fails startup instead of reassigning
+identities. Version 0.2 profiles migrate to the initial account without rewriting
+the saved knights. New files have owner-only permissions on POSIX filesystems.
+
+Normal credentials are decoded separately from their verification. Reject
+platform flags/tickets, session credentials and unexpected fields. The account
+registry stores PBKDF2 verifiers of the client's MD5 password transform. Keep
+plaintexts, transforms, salts and verifiers out of logging and command arguments.
+Account administration and server startup must share the same deployment lock.
+
+A disposable check using the unchanged installed networking classes verified
+login as an additional normal account, correct account identity, independent
+rosters, refusal to delete another account's knight, and create/edit/delete
+callbacks. This does not establish graphical world behavior.

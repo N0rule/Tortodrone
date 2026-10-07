@@ -44,8 +44,9 @@ Username: tortodrone
 Password: tortodrone
 ```
 
-Only this fixed test account is currently accepted. Normal persistent accounts
-are future server work. Steam, guest and official-account login will not be added.
+This is the initial development account. Additional persistent normal accounts
+can be created with the server's offline account commands. Steam and guest login
+remain unsupported.
 
 The creator validates names and saves new knights. After saving, it reports
 "Knight saved. Reconnect to view it; world entry is not available yet." Reconnect
@@ -66,7 +67,7 @@ snapshots and receiver registration. It still excludes secrets and raw payloads.
   TCP port, and network reachability.
 - Secure exchange fails: verify the launcher uses this server's public key and
   restart the game after changing its connection settings.
-- Login rejected: use the test account through the normal login form.
+- Login rejected: use a registered server account through the normal login form.
 - Startup rejects an obsolete setting: compare the editable configuration with
   `src/main/resources/server.properties` and remove unused properties.
 - Startup rejects keys or saved characters: restore the corresponding files from
@@ -80,3 +81,11 @@ snapshots and receiver registration. It still excludes secrets and raw payloads.
 
 [Historical research](research/README.md) records earlier experiments. Current
 work changes server behavior and does not patch clients or launchers.
+
+## Additional normal accounts
+
+The server owner can create separate accounts with
+`java -jar build/tortodrone.jar --create-account username` while the server is
+stopped. Use the prompted password in the existing normal login form; the
+endpoint and public key stay the same for every account. See the
+[account commands](../README.md#normal-accounts).

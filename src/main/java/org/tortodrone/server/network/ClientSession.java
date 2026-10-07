@@ -46,7 +46,7 @@ final class ClientSession {
                             + (request.objectId() == clientOid ? "; client bootstrap accepted" : ""));
                         if (request.objectId() == clientOid) {
                             var roster = characters.roster();
-                            send(socket, outgoing.player(request.messageId(), clientOid, 1, CharacterStore.USERNAME, receivers, roster));
+                            send(socket, outgoing.player(request.messageId(), clientOid, characters.accountId(), characters.username(), receivers, roster));
                             log.debug("PlayerObject snapshot sent; available knights=" + roster.size());
                         } else if (request.objectId() == SessionCodec.SERVER_OID) {
                             send(socket, outgoing.server(request.messageId()));

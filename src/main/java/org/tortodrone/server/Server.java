@@ -16,7 +16,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
-import org.tortodrone.character.CharacterStore;
+import org.tortodrone.account.AccountStore;
 import org.tortodrone.config.ServerSettings;
 import org.tortodrone.server.network.SecureHandshake;
 import org.tortodrone.server.network.SessionLog;
@@ -31,6 +31,7 @@ public final class Server {
         try {
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone.jar [--config path/to/server.properties | --version | --help]");
+                System.out.println("Accounts (server must be stopped): --list-accounts | --create-account username | --set-password username");
                 return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
@@ -40,15 +41,17 @@ public final class Server {
             Path location = Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
+            boolean accountCommand = AccountCommands.matches(args);
             Path config;
             if (args.length == 2 && args[0].equals("--config")) config = Path.of(args[1]);
-            else if (args.length == 0) config = dataDirectory.resolve("server.properties");
-            else throw new IOException("Use --config path/to/server.properties, --version or --help");
+            else if (args.length == 0 || accountCommand) config = dataDirectory.resolve("server.properties");
+            else throw new IOException("Use --help for server and account commands");
             Files.createDirectories(dataDirectory);
             try (FileChannel channel = FileChannel.open(dataDirectory.resolve("server.lock"),
                     StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  FileLock lock = channel.tryLock()) {
-                if (lock == null) throw new IOException("Another server is using this JAR's data directory");
+                if (lock == null) throw new IOException("Another server or account command is using this JAR's data directory");
+                if (accountCommand) { AccountCommands.run(args, dataDirectory); return; }
                 log = new ServerLog(dataDirectory.resolve("logs"));
                 log.info("Starting Tortodrone server version " + version());
                 log.info("Loading properties");
@@ -85,19 +88,20 @@ public final class Server {
             Path keys = dataDirectory.resolve("keys");
             log.info(Files.exists(keys.resolve("private.pk8")) ? "Loading server keypair" : "Generating server keypair");
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
-            log.info("Loading saved characters");
-            CharacterStore characters = new CharacterStore(dataDirectory);
+            log.info("Loading normal accounts and saved characters");
+            AccountStore accounts = new AccountStore(dataDirectory);
+            log.info("Loaded accounts: " + accounts.list().size());
             listener.bind(new InetSocketAddress(address, settings.port()));
             log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
                 + ":" + listener.getLocalPort());
             log.debug("Public key: " + keys.resolve("public.txt"));
             log.info("Normal login and saved characters available; world entry is not implemented.");
-            accept(listener, key, log, characters);
+            accept(listener, key, log, accounts);
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            CharacterStore characters)
+            AccountStore accounts)
             throws IOException {
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
         Semaphore slots = new Semaphore(16);
@@ -135,7 +139,7 @@ public final class Server {
                 clients.add(client);
                 new Thread(() -> {
                     try {
-                        receive(client, id, key, listener.getLocalPort(), log, characters);
+                        receive(client, id, key, listener.getLocalPort(), log, accounts);
                     } finally {
                         clients.remove(client);
                         slots.release();
@@ -152,7 +156,7 @@ public final class Server {
     }
 
     private static void receive(Socket client, long id, PrivateKey key, int port,
-            ServerLog log, CharacterStore characters) {
+            ServerLog log, AccountStore accounts) {
         log.info("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
             client.setSoTimeout(15000);
@@ -163,7 +167,7 @@ public final class Server {
             };
             // A wildcard listener uses the concrete local interface of this connection.
             SecureHandshake.run(client, key, sessionLog, true,
-                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, characters);
+                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, accounts);
         } catch (SocketTimeoutException e) {
             log.debug("Client idle timeout");
         } catch (java.security.GeneralSecurityException e) {

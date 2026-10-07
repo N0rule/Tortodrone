@@ -3,22 +3,20 @@ package org.tortodrone.protocol;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 
 /** Verified Presents handshake and connection-local mappings for the bounded session decoder. */
 public final class HandshakeCodec {
     public static final int MAX_FRAME = 65536;
-    public static final String TEST_USERNAME = "tortodrone";
-    private static final String TEST_PASSWORD = "tortodrone";
     private static final String PREFIX = "com.threerings.presents.net.";
     private final Map<Integer, String> classes = new HashMap<>();
 
     public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
                           String version, String timezone) { }
     public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) { }
+    public record Credentials(String username, char[] passwordHash, boolean normalLogin) implements AutoCloseable {
+        @Override public void close() { java.util.Arrays.fill(passwordHash, '\0'); }
+        @Override public String toString() { return "Credentials[redacted]"; }
+    }
     public record SessionRequest(String type, short messageId, int objectId, SessionDecoder.Event event) { }
 
     /** Returns a frame body, or null on clean EOF. Partial frames are errors. */
@@ -82,7 +80,8 @@ public final class HandshakeCodec {
     }
 
     /** Uses a fresh mapping stream, as verified inside the encrypted credential envelope. */
-    public static boolean matchesSyntheticAccount(byte[] plaintext) throws IOException {
+    public static Credentials credentials(byte[] plaintext) throws IOException {
+        require(plaintext.length <= 4096, "Credential envelope exceeds size limit");
         HandshakeCodec nested = new HandshakeCodec();
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(plaintext));
         require(nested.type(in).equals("com.threerings.projectx.data.ProjectXCredentials"), "Unsupported credentials");
@@ -92,7 +91,7 @@ public final class HandshakeCodec {
         nullableString(in); // installation ident; deliberately neither retained nor logged
         nullableString(in); // language
         String session = nullableString(in);
-        // Platform tickets and sessions are unsupported in this synthetic local experiment.
+        // Only normal username/password authentication is supported.
         require(in.readUnsignedByte() == 0, "Platform ticket not supported");
         boolean sega = in.readBoolean();
         boolean steam = in.readBoolean();
@@ -100,15 +99,8 @@ public final class HandshakeCodec {
         String invite = nullableString(in);
         nullableString(in); // region
         require(in.available() == 0, "Unexpected credential fields");
-        try {
-            String expected = HexFormat.of().formatHex(MessageDigest.getInstance("MD5")
-                .digest(TEST_PASSWORD.getBytes(StandardCharsets.UTF_8)));
-            return username.equals(TEST_USERNAME) && session == null && !sega && !steam
-                && site == 0 && invite == null && MessageDigest.isEqual(
-                    passwordHash.getBytes(StandardCharsets.UTF_8), expected.getBytes(StandardCharsets.UTF_8));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IOException("Client password transform unavailable", e);
-        }
+        return new Credentials(username, passwordHash.toCharArray(),
+            session == null && !sega && !steam && site == 0 && invite == null);
     }
 
     public String nextMessageType(byte[] body) throws IOException {
@@ -190,7 +182,7 @@ public final class HandshakeCodec {
     }
 
     /** Second downstream frame, after response(): preserve mappings 1 and 2. */
-    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId) throws IOException {
+    public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username) throws IOException {
         ByteArrayOutputStream body = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(body);
         out.writeShort(-3);
@@ -206,8 +198,11 @@ public final class HandshakeCodec {
         out.writeBoolean(false);
         out.writeBoolean(accepted);
         if (accepted) out.writeUTF(sessionId);
-        out.writeShort(-5); out.writeUTF("com.threerings.util.Name");
-        out.writeBoolean(true); out.writeUTF(TEST_USERNAME);
+        if (username == null) out.writeShort(0);
+        else {
+            out.writeShort(-5); out.writeUTF("com.threerings.util.Name");
+            out.writeBoolean(true); out.writeUTF(username);
+        }
         ByteArrayOutputStream frame = new ByteArrayOutputStream();
         DataOutputStream framed = new DataOutputStream(frame);
         framed.writeInt(body.size() + 4);

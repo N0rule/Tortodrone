@@ -10,9 +10,10 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.tortodrone.character.CharacterStore;
+import org.tortodrone.account.AccountStore;
 import org.tortodrone.protocol.HandshakeCodec;
 
-/** Secure exchange, optionally authenticating only the fixed synthetic local account. */
+/** Secure exchange and normal authentication against server-owned accounts. */
 public final class SecureHandshake {
     static void run(Socket socket, PrivateKey key, SessionLog log) throws Exception {
         run(socket, key, log, false);
@@ -29,6 +30,11 @@ public final class SecureHandshake {
 
     public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
             int connectionId, String host, int port, CharacterStore characters) throws Exception {
+        run(socket, key, log, localAuth, connectionId, host, port, new AccountStore(characters));
+    }
+
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+            int connectionId, String host, int port, AccountStore accounts) throws Exception {
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
@@ -66,28 +72,29 @@ public final class SecureHandshake {
             aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"), new IvParameterSpec(
                 new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());
-            boolean accepted;
-            try {
-                accepted = HandshakeCodec.matchesSyntheticAccount(credentials);
+            AccountStore.Account account;
+            try (var decoded = HandshakeCodec.credentials(credentials)) {
+                account = decoded.normalLogin() ? accounts.authenticate(decoded.username(), decoded.passwordHash()) : null;
             } finally {
                 Arrays.fill(credentials, (byte) 0);
             }
+            boolean accepted = account != null;
             byte[] authResponse = HandshakeCodec.authenticationResponse(auth.messageId(), accepted,
-                accepted ? UUID.randomUUID().toString() : null);
+                accepted ? UUID.randomUUID().toString() : null, accepted ? account.username() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.debug("AuthResponse sent; result=" + (accepted ? "success (synthetic account only)"
-                : "rejected (use the local test account; guest login unsupported)")
+            log.debug("AuthResponse sent; result=" + (accepted ? "success"
+                : "rejected")
                 + "; frame=" + authResponse.length + " bytes");
             if (!accepted) {
                 log.warn("Normal login rejected");
                 return;
             }
-            log.info("Normal login accepted");
+            log.info("Normal login accepted; accountId=" + account.id());
             // Do not retain negotiated secrets for the unencrypted distributed-object session.
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
-            ClientSession.run(socket, codec, connectionId, host, port, log, characters);
+            ClientSession.run(socket, codec, connectionId, host, port, log, account.characters());
         } finally {
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
