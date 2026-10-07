@@ -11,10 +11,8 @@ will not be implemented. Compatibility work belongs in the server, without clien
 `org.tortodrone.server.Server` is the entry point. It locates its JAR, locks its
 adjacent `data/` directory, starts logging, loads `data/server.properties`, loads
 or creates a persistent 2048-bit RSA identity and the saved character roster,
-binds the configured address/port, exports connection values, then accepts clients.
+binds the configured address/port, then accepts clients.
 Missing configuration is generated from the defaults bundled in the JAR.
-Connection values are written to a temporary file and replaced after closing it,
-so clients do not read a partially written endpoint or public key during startup.
 
 ```sh
 cd build
@@ -35,12 +33,12 @@ fail startup with an error so a misspelling does not silently change behavior.
 | --- | --- | --- |
 | `server-ip` | `0.0.0.0` | Interface/address to listen on; empty also means all IPv4 interfaces |
 | `server-port` | `47624` | TCP port; `0` selects an ephemeral port for tests |
-| `client-host` | `127.0.0.1` | Reachable address exported for launchers |
 | `log-mode` | `normal` | Basic operational logs; `debug` adds protocol details |
 
-The bind address and advertised address are separate. A listener may bind all
-interfaces (`0.0.0.0`) while advertising a reachable LAN/public address. With NAT,
-the public address need not be an address the server can bind locally.
+`server-ip` and `server-port` configure the listener. Bootstrap uses the accepted
+connection's concrete local interface address and the actual listening port, so
+a wildcard bind (`0.0.0.0`) does not send an unusable address to clients. Public
+keys remain in `data/keys/public.txt`; no connection settings file is exported.
 
 Change settings while the server is stopped, then restart it. Ctrl+C closes the
 listener and active sockets. A data directory lock prevents concurrent servers

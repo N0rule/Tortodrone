@@ -53,19 +53,14 @@ public final class ServerIntegrationTest {
             defaultWorkflow(jar, directory.resolve("default-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
-            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nclient-host=192.0.2.25\nlog-mode=debug\n");
+            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
             Path state = directory.resolve("data");
             byte[] identity;
             byte[] publicBytes;
             try (Running server = new Running(jar, config, directory)) {
                 int port = server.ready();
-                Properties connection = properties(state.resolve("client-connection.properties"));
-                check(connection.getProperty("server_host").equals("192.0.2.25"), "advertised host");
-                check(connection.getProperty("server_ports").equals(String.valueOf(port)), "bound port export");
-                check(connection.getProperty("datagram_ports").equals(String.valueOf(port)), "datagram config export");
-                check(connection.getProperty("anonymous_allowed").equals("false"), "guest disabled");
+                check(!Files.exists(state.resolve("client-connection.properties")), "no connection export is generated");
                 String publicValue = Files.readString(state.resolve("keys/public.txt")).trim();
-                check(connection.getProperty("key.public").equals(publicValue), "public key export");
                 PublicKey key = publicKey(publicValue);
                 // Two independent host-network clients, including full secure/AES authentication.
                 int firstClientOid;
@@ -130,8 +125,6 @@ public final class ServerIntegrationTest {
             rejected(jar, config, directory, "server-port", "invalid port");
             Files.writeString(config, "server-prt=47624\n");
             rejected(jar, config, directory, "Unknown server property", "configuration typo");
-            Files.writeString(config, "client-host=0.0.0.0\n");
-            rejected(jar, config, directory, "client-host", "unusable advertised host");
             Files.writeString(config, "log-mode=verbose\n");
             rejected(jar, config, directory, "log-mode must be normal or debug", "invalid log mode");
             Files.writeString(config, "data-directory=elsewhere\n");
@@ -165,7 +158,7 @@ public final class ServerIntegrationTest {
         // Start from outside the deployment: state must follow the JAR, not the shell.
         try (Running server = new Running(directory.relativize(deployedJar), null, directory)) {
             int port = server.ready();
-            for (String file : new String[] {"keys/private.pk8", "keys/public.txt", "client-connection.properties",
+            for (String file : new String[] {"keys/private.pk8", "keys/public.txt",
                     "logs/latest.log", "server.lock"}) {
                 check(Files.isRegularFile(data.resolve(file)), "default startup generates " + file);
             }
@@ -186,6 +179,7 @@ public final class ServerIntegrationTest {
             check(Arrays.equals(identity, Files.readAllBytes(data.resolve("keys/private.pk8"))), "default restart keeps identity");
         }
         check(Files.readString(config).equals(settings), "default startup preserves edited settings");
+        check(!Files.exists(data.resolve("client-connection.properties")), "startup and restart never export connection settings");
         String log = Files.readString(data.resolve("logs/latest.log"));
         checkLogFormat(log);
         check(log.contains("[ServerMain/INFO]: Starting Tortodrone server version ")

@@ -6,8 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/** Editable listener, advertised endpoint and logging settings. */
-public record ServerSettings(String bind, int port, String clientHost, LogMode logMode) {
+/** Editable listener and logging settings. */
+public record ServerSettings(String bind, int port, LogMode logMode) {
     public enum LogMode { NORMAL, DEBUG }
     public static ServerSettings load(Path file) throws IOException {
         file = file.toAbsolutePath().normalize();
@@ -37,17 +37,12 @@ public record ServerSettings(String bind, int port, String clientHost, LogMode l
             throw new IOException("server-port must be an integer from 0 to 65535");
         }
         if (port < 0 || port > 65535) throw new IOException("server-port must be from 0 to 65535");
-        String clientHost = value(settings, "client-host");
-        if (clientHost.isEmpty() || clientHost.equals("0.0.0.0") || clientHost.equals("::")
-                || clientHost.chars().anyMatch(Character::isWhitespace)) {
-            throw new IOException("client-host must be an address players can connect to");
-        }
         LogMode logMode = switch (value(settings, "log-mode")) {
             case "normal" -> LogMode.NORMAL;
             case "debug" -> LogMode.DEBUG;
             default -> throw new IOException("log-mode must be normal or debug");
         };
-        return new ServerSettings(bind, port, clientHost, logMode);
+        return new ServerSettings(bind, port, logMode);
     }
 
     private static String value(Properties settings, String name) {

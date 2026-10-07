@@ -57,6 +57,10 @@ public final class TestWire {
     }
 
     public int bootstrap(DataInputStream in, int port) throws IOException {
+        return bootstrap(in, port, null);
+    }
+
+    public int bootstrap(DataInputStream in, int port, String expectedHost) throws IOException {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
@@ -68,7 +72,10 @@ public final class TestWire {
         }
         check(services.size() == 8 && services.contains("com.threerings.projectx.data.KnightMarshaller"), "distinct login services");
         check(in.readInt() == 2, "configuration identity");
-        check(in.readBoolean() && !in.readUTF().isEmpty(), "advertised host");
+        check(in.readBoolean(), "bootstrap host present");
+        String host = in.readUTF();
+        check(!host.isEmpty() && !host.equals("0.0.0.0") && !host.equals("::"), "bootstrap uses a concrete server address");
+        if (expectedHost != null) check(host.equals(expectedHost), "bootstrap host matches connected server interface");
         check(in.readBoolean() && in.readInt() == 1 && in.readInt() == port, "advertised TCP port");
         check(in.readBoolean() && in.readInt() == 0, "no UDP endpoints");
         check(in.readInt() == 1, "server object identity");

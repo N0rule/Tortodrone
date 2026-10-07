@@ -77,7 +77,7 @@ public final class TestClient {
         int clientOid = 0;
         if (valid) {
             TestWire wire = new TestWire();
-            clientOid = wire.bootstrap(wire.frame(peer.getInputStream()), peer.getPort());
+            clientOid = wire.bootstrap(wire.frame(peer.getInputStream()), peer.getPort(), peer.getInetAddress().getHostAddress());
             session.run(peer, wire, clientOid);
         }
         check(peer.getInputStream().read() == -1, valid ? "clean logoff" : "rejected authentication closes connection");

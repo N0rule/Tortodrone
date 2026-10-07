@@ -19,7 +19,7 @@ Packages live under `src/main/java/org/tortodrone/`:
 | Package | Responsibility | Starting points |
 | --- | --- | --- |
 | `character` | Character choices, validation, atomic profile persistence | `Knight`, `CharacterStore` |
-| `config` | Load defaults and validate listener, endpoint and logging settings | `ServerSettings` |
+| `config` | Load defaults and validate listener and logging settings | `ServerSettings` |
 | `protocol` | Encode and decode verified wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
 | `server` | Process startup, fixed runtime paths, listener and logging | `Server`, `ServerLog` |
 | `server.network` | Secure exchange, normal authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionLog` |
@@ -32,9 +32,9 @@ client to compensate for a missing server feature.
 
 `src/main/resources/server.properties` contains bundled defaults. First startup
 copies them to `data/server.properties` beside the JAR. Existing configuration is
-preserved. Settings do not choose where data lives: keys, accounts, logs, locks,
-and connection exports always use the JAR's adjacent `data/` directory, even when
-`--config` points elsewhere.
+preserved. Settings do not choose where data lives: keys, accounts, logs, and
+locks always use the JAR's adjacent `data/` directory, even when `--config` points
+elsewhere.
 
 ## Build and verify
 
@@ -63,7 +63,7 @@ Do not run tests against real saved characters or client installations.
 `VERSION` is the single release-version source. The build bundles it as
 `version.txt`; startup and `--version` read that packaged value. Update `VERSION`
 when preparing a release and rebuild. Moving the executable does not change its
-version. The current initial release is `0.1.0`.
+version. The current release version is `0.1.1`.
 
 `ServerLog` formats console and file output as
 `[HH:mm:ss] [thread/LEVEL]: message`. Main startup uses `ServerMain`; connection
@@ -77,7 +77,7 @@ Never log secrets, raw packets, or client argument values.
 
 `build/.build/` contains disposable compiled production/test classes and the
 bundled version. `build/tortodrone.jar` is the distributable executable.
-`build/data/` holds persistent settings, keys, profiles, connection exports, logs,
+`build/data/` holds persistent settings, keys, profiles, logs,
 and the lock. These locations are ignored by Git. `make clean` also removes old
 root `.build/` output and the old `tortodrone-server.jar`, but preserves data.
 

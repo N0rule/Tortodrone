@@ -34,7 +34,7 @@ java -jar build/tortodrone.jar
 beside the JAR: running `java -jar build/tortodrone.jar` from the repository root
 uses `build/data/`, too.
 
-The server creates its configuration, keys, connection export, and log on first
+The server creates its configuration, keys, and log on first
 start. No game installation is required to run it. For deployment, copy only
 `tortodrone.jar` into a directory and run `java -jar tortodrone.jar` with Java 17+.
 Keep its `data/` directory across restarts and upgrades.
@@ -54,7 +54,6 @@ Tortodrone/
       server.properties          editable settings
       keys/private.pk8           private server identity; keep secret
       keys/public.txt            public key for launcher settings
-      client-connection.properties
       accounts/1.properties      saved knights, created when a knight is saved
       logs/latest.log            server output, appended across restarts
       server.lock                prevents concurrent use of the same data
@@ -65,7 +64,6 @@ Stop the server before editing `build/data/server.properties`, then restart:
 ```properties
 server-ip=0.0.0.0
 server-port=47624
-client-host=127.0.0.1
 log-mode=normal
 ```
 
@@ -73,17 +71,16 @@ log-mode=normal
 | --- | --- |
 | `server-ip` | Local interface to listen on. `0.0.0.0` accepts connections on all IPv4 interfaces. |
 | `server-port` | TCP listening port. Default: `47624`. |
-| `client-host` | Reachable address advertised to clients. Use `127.0.0.1` for local play or the server's LAN/public address for remote players. |
 | `log-mode` | `normal` for basic operational messages; `debug` for those messages plus protocol details. |
 
-`server-ip` and `client-host` serve different purposes. For example, a server may
-listen on `0.0.0.0` and advertise `192.168.1.50`. A server behind a router may
-advertise a public address that does not belong to any local network interface.
-Clients cannot connect to `0.0.0.0`.
+`server-ip` and `server-port` configure the listener. Clients need the server's
+reachable address, that TCP port, and the public key from `data/keys/public.txt`.
+For the default `server-ip=0.0.0.0`, use `127.0.0.1` on this computer or the
+server's LAN/public address from another computer.
 
 There is no `data-directory` setting. All runtime state stays in `data/` beside the
 JAR. `--config /path/to/server.properties` selects another settings file without
-moving keys, characters, connection exports, or logs.
+moving keys, characters, or logs.
 
 If upgrading an older installation, remove `data-directory` from the editable
 configuration. If its data is still in the repository root, stop the server and
@@ -97,13 +94,12 @@ never overwrites an existing configuration.
 The startup banner includes the release version from `VERSION`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.1.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.1.1
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
 [19:30:01] [ServerMain/INFO]: Loading saved characters
 [19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
-[19:30:01] [ServerMain/INFO]: Client endpoint: 127.0.0.1:47624
 [19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
 [19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)
 ```
@@ -129,8 +125,8 @@ Start the separately maintained KnightLauncher normally and configure:
 | `game.publicKey` | Entire value from `build/data/keys/public.txt` |
 
 Log in through the normal username/password form with `tortodrone` / `tortodrone`.
-For another computer, use the server's reachable address and configure
-`client-host` accordingly. See [connection guidance](docs/client-redirection.md).
+For another computer, use the server's reachable address and `server-port`.
+See [connection guidance](docs/client-redirection.md).
 
 Names contain 3–16 letters with optional single hyphens. Names are unique without
 regard to case, and the test account has three slots. The server saves appearance

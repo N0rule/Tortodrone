@@ -8,13 +8,10 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.PrivateKey;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
@@ -93,39 +90,13 @@ public final class Server {
             listener.bind(new InetSocketAddress(address, settings.port()));
             log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
                 + ":" + listener.getLocalPort());
-            exportConnection(settings, listener.getLocalPort(), keys, dataDirectory);
             log.debug("Public key: " + keys.resolve("public.txt"));
-            log.debug("Launcher configuration: " + dataDirectory.resolve("client-connection.properties"));
-            log.info("Client endpoint: " + settings.clientHost() + ":" + listener.getLocalPort());
             log.info("Normal login and saved characters available; world entry is not implemented.");
-            accept(listener, key, settings, log, characters);
+            accept(listener, key, log, characters);
         }
     }
 
-    private static void exportConnection(ServerSettings settings, int port, Path keys, Path dataDirectory) throws IOException {
-        Properties connection = new Properties();
-        connection.setProperty("server_host", settings.clientHost());
-        connection.setProperty("server_ports", String.valueOf(port));
-        connection.setProperty("datagram_ports", String.valueOf(port));
-        connection.setProperty("key.public", Files.readString(keys.resolve("public.txt")).trim());
-        connection.setProperty("anonymous_allowed", "false");
-        Path target = dataDirectory.resolve("client-connection.properties");
-        Path temporary = Files.createTempFile(dataDirectory, "connection-", ".tmp");
-        try {
-            try (var writer = Files.newBufferedWriter(temporary)) {
-                connection.store(writer, "Launcher connection values; merge into the client's deployment.properties");
-            }
-            try {
-                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            } catch (AtomicMoveNotSupportedException e) {
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
-            }
-        } finally {
-            Files.deleteIfExists(temporary);
-        }
-    }
-
-    private static void accept(ServerSocket listener, PrivateKey key, ServerSettings settings, ServerLog log,
+    private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
             CharacterStore characters)
             throws IOException {
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
@@ -164,7 +135,7 @@ public final class Server {
                 clients.add(client);
                 new Thread(() -> {
                     try {
-                        receive(client, id, key, settings, listener.getLocalPort(), log, characters);
+                        receive(client, id, key, listener.getLocalPort(), log, characters);
                     } finally {
                         clients.remove(client);
                         slots.release();
@@ -180,7 +151,7 @@ public final class Server {
         }
     }
 
-    private static void receive(Socket client, long id, PrivateKey key, ServerSettings settings, int port,
+    private static void receive(Socket client, long id, PrivateKey key, int port,
             ServerLog log, CharacterStore characters) {
         log.info("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
@@ -190,8 +161,9 @@ public final class Server {
                 @Override public void info(String message) { log.info(message); }
                 @Override public void warn(String message) { log.warn(message); }
             };
+            // A wildcard listener uses the concrete local interface of this connection.
             SecureHandshake.run(client, key, sessionLog, true,
-                Math.toIntExact(id), settings.clientHost(), port, characters);
+                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, characters);
         } catch (SocketTimeoutException e) {
             log.debug("Client idle timeout");
         } catch (java.security.GeneralSecurityException e) {
