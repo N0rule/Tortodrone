@@ -1,7 +1,7 @@
 # Server Architecture
 
 Tortodrone runs as one Java process on the host network. Its executable
-JAR bundles SQLite JDBC and targets Java 17. A separate desktop administration
+JAR bundles SQLite JDBC and JLine and targets Java 17. A separate desktop administration
 JAR shares the local SQLite database. The launcher lives in
 its own repository and connects through the ordinary TCP socket interface.
 Only normal username/password login is in scope; Steam and guest authentication
@@ -226,6 +226,11 @@ uses data beside its JAR, or an explicit `--data` directory. It opens no network
 endpoint. Once initialized, the manager and server use short database transactions
 concurrently. Backups should stop both processes before copying the whole data
 folder, including keys; a live database can have uncheckpointed WAL changes.
+
+`ConsoleInput` provides JLine editing in interactive terminals and plain input
+for redirected stdin. Its 100-command memory history excludes sensitive prompts
+and rejected command syntax. Passwords and confirmations use a separate reader
+without history; log output redraws above whichever prompt is active.
 
 `ServerConsole` reads commands on a daemon thread while the listener handles
 connections. `help`, `status`, `stop` and `account` commands use the same account

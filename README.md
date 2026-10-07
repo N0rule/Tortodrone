@@ -13,9 +13,9 @@ terminal administer accounts. **World entry and gameplay are not implemented.**
 
 Install Git, GNU Make, JDK 17 or newer, `curl`, and `sha256sum` (GNU coreutils).
 The JDK must provide `java`, `javac`, and `jar` on `PATH`. No Maven, Gradle, game
-installation, or database server is needed. The first build downloads a pinned,
-checksum-verified SQLite JDBC driver from Maven Central; later builds use the
-cached copy in `build/deps/`. Both executable JARs bundle that dependency.
+installation, or database server is needed. The first build downloads pinned,
+checksum-verified SQLite JDBC and JLine terminal libraries from Maven Central.
+Later builds use cached copies in `build/deps/`. Both executable JARs bundle those dependencies.
 
 Clone using the repository's actual URL, or enter your existing checkout:
 
@@ -89,6 +89,12 @@ Type these into the **running server terminal**, without restarting it:
 | `account admin Alice true` | Enable Admin (`false` disables it) |
 | `account delete Alice` | Delete the account and its characters after typing its exact username |
 
+In an interactive terminal, **Up/Down** recall the last **100 commands**. You can
+edit a recalled command before pressing Enter. History is kept in memory for the
+current server run; consecutive duplicates are skipped. Passwords, deletion
+confirmations and unrecognized input are excluded. Logs redraw above the prompt
+without losing the command you are typing.
+
 A leading `/` is optional. Passwords are entered at the separate prompts and are
 hidden in a real terminal. They are never command arguments or log messages.
 Redirected stdin can supply complete UTF-8 lines for commands and prompts. Closing
@@ -151,10 +157,10 @@ There is no `data-directory` or `client-host` setting. `--config /path/to/server
 selects a settings file without moving state. First startup creates missing
 configuration and keys; existing configuration and identity are preserved.
 
-Startup displays the version bundled from `VERSION`, currently `0.5.1`:
+Startup displays the version bundled from `VERSION`, currently `0.5.2`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.1
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.2
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair

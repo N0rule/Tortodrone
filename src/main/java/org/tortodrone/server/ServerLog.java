@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalTime;
+import java.util.function.Consumer;
 import java.time.format.DateTimeFormatter;
 
 /** Message types and lifecycle only; authentication payloads are never logged. */
@@ -14,6 +15,9 @@ final class ServerLog implements AutoCloseable {
     private final PrintWriter file;
     private boolean debugEnabled;
     private boolean closed;
+    private Consumer<String> consoleOutput;
+
+    synchronized void setConsoleOutput(Consumer<String> output) { consoleOutput = output; }
 
     ServerLog(Path directory) throws IOException {
         Files.createDirectories(directory);
@@ -36,7 +40,8 @@ final class ServerLog implements AutoCloseable {
     private synchronized void write(String level, String message) {
         if (closed) return;
         String line = format(level, message);
-        System.out.println(line);
+        if (consoleOutput == null) System.out.println(line);
+        else consoleOutput.accept(line);
         file.println(line);
         if (file.checkError()) startupError("Could not write the server log");
     }

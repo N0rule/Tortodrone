@@ -106,7 +106,11 @@ public final class Server {
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
         Semaphore slots = new Semaphore(16);
         AtomicLong ids = new AtomicLong();
+        ServerConsole console = new ServerConsole(accounts, log, () -> {
+            try { listener.close(); } catch (IOException ignored) { }
+        }, () -> !listener.isClosed());
         Thread shutdown = new Thread(() -> {
+            console.close();
             // The main thread may finish as soon as the listener closes. Keep its
             // log cleanup waiting until the shutdown message has been written.
             synchronized (log) {
@@ -123,9 +127,7 @@ public final class Server {
             log.debug("Limits: 16 clients; 64 KiB/frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             log.info("Type help for server commands.");
-            new ServerConsole(accounts, log, () -> {
-                try { listener.close(); } catch (IOException ignored) { }
-            }, () -> !listener.isClosed()).start();
+            console.start();
             while (!listener.isClosed()) {
                 Socket client;
                 try {
@@ -151,6 +153,7 @@ public final class Server {
                 }, "Client-" + id).start();
             }
         } finally {
+            console.close();
             for (Socket client : clients) {
                 try { client.close(); } catch (IOException ignored) { }
             }

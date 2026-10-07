@@ -1,8 +1,8 @@
 # Development guide
 
 Tortodrone targets Java 17 and builds two executable JARs with GNU Make, `javac`
-and `jar` from `PATH`. The SQLite JDBC dependency is downloaded once, verified by
-SHA-256 and bundled in both JARs. Read [AGENTS.md](../AGENTS.md) before changing code.
+and `jar` from `PATH`. SQLite JDBC and JLine are downloaded once, verified by SHA-256 and bundled in
+both JARs. Read [AGENTS.md](../AGENTS.md) before changing code.
 
 ## Scope and layout
 
@@ -44,8 +44,9 @@ make test-integration  # disposable packaged-JAR deployments
 make clean             # preserve data and cached dependencies
 ```
 
-First build needs network access, `curl` and `sha256sum`. Driver version and digest
-are pinned in the Makefile and `scripts/fetch-sqlite.sh`; update both together.
+First build needs network access, `curl` and `sha256sum`. Dependency versions and digests
+are pinned in the Makefile and `scripts/fetch-sqlite.sh` / `scripts/fetch-jline.sh`;
+update the matching entries together.
 Bundled native libraries make a separate SQLite installation unnecessary.
 Sources/resources are discovered recursively. Tests have a `main` method and names
 ending in `Test`. Unit tests exclude the integration package; reusable synthetic
@@ -70,7 +71,7 @@ Both JARs default to `data/` beside themselves. Keep them together or use the
 manager's `--data` option. Server `--config` chooses settings only, never state.
 Configuration defaults are bundled in `src/main/resources/server.properties`;
 existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
-and used by startup and each JAR's `--version`; the current release is `0.5.1`.
+and used by startup and each JAR's `--version`; the current release is `0.5.2`.
 
 `build/.build/` contains disposable classes and packaging output; `build/deps/`
 caches the driver. Git ignores all build/runtime output. Upgrades replace both
@@ -139,10 +140,19 @@ acquiring another character store. Preserve this lock order.
 
 ## Terminal and logs
 
+Interactive input uses JLine through `ConsoleInput`, with 100 in-memory command
+history entries, Up/Down navigation and a prompt that survives asynchronous logs.
+`CommandHistory` admits recognized command syntax only. A separate reader with
+history disabled handles passwords and deletion confirmations, so no prompt
+input can enter command recall. No history file is configured. Consecutive duplicate
+commands are ignored. Parsing preserves literal quotes, backslashes and exclamation
+marks. Closing the terminal restores its attributes; Ctrl+C stops the server.
+
 The running server reads stdin on a daemon `ServerConsole` thread; networking stays
 active during prompts/hashing. EOF disables terminal input without stopping the
 service. `stop` closes the listener and active sockets. Password prompts use
-`Console.readPassword` on a terminal or bounded UTF-8 stdin lines otherwise;
+a hidden JLine reader (plain `Console.readPassword` if editing is unavailable), or
+bounded UTF-8 stdin lines otherwise;
 commands never take password arguments. Old account startup options are removed.
 
 `ServerLog` writes `[HH:mm:ss] [thread/LEVEL]: message` to console and latest.log.

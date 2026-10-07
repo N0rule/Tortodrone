@@ -2,6 +2,7 @@ CLASSES := build/.build/classes
 TEST_CLASSES := build/.build/test-classes
 PACKAGE := build/.build/package
 SQLITE := build/deps/sqlite-jdbc-3.53.4.0.jar
+JLINE := build/deps/jline-4.4.7-jdk11.jar
 SERVER_JAR := build/tortodrone.jar
 ADMIN_JAR := build/tortodrone-admin.jar
 SOURCES := $(sort $(shell find src/main/java -name '*.java'))
@@ -18,23 +19,29 @@ build-admin: $(ADMIN_JAR)
 $(SQLITE): scripts/fetch-sqlite.sh
 	sh scripts/fetch-sqlite.sh $@
 
-build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE)
+$(JLINE): scripts/fetch-jline.sh
+	sh scripts/fetch-jline.sh $@
+
+build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE) $(JLINE)
 	rm -rf $(CLASSES) $(PACKAGE)
 	mkdir -p $(CLASSES) $(PACKAGE)
-	javac --release 17 -d $(CLASSES) $(SOURCES)
+	javac --release 17 -cp $(JLINE) -d $(CLASSES) $(SOURCES)
 	cp VERSION $(CLASSES)/version.txt
 	cp -R $(CLASSES)/. $(PACKAGE)/
 	cp -R src/main/resources/. $(PACKAGE)/
 	cd $(PACKAGE) && jar --extract --file ../../deps/sqlite-jdbc-3.53.4.0.jar
+	cd $(PACKAGE) && jar --extract --file ../../deps/jline-4.4.7-jdk11.jar
 	rm -f $(PACKAGE)/META-INF/MANIFEST.MF $(PACKAGE)/module-info.class
 	printf 'Enable-Native-Access: ALL-UNNAMED\n' > build/.build/native-access.mf
 	touch $@
 
 $(SERVER_JAR): build/.build/package.stamp
-	jar --create --file $@ --main-class org.tortodrone.server.Server --manifest build/.build/native-access.mf -C $(PACKAGE) .
+	jar --create --file $@.tmp --main-class org.tortodrone.server.Server --manifest build/.build/native-access.mf -C $(PACKAGE) .
+	mv $@.tmp $@
 
 $(ADMIN_JAR): build/.build/package.stamp
-	jar --create --file $@ --main-class org.tortodrone.admin.AdminApplication --manifest build/.build/native-access.mf -C $(PACKAGE) .
+	jar --create --file $@.tmp --main-class org.tortodrone.admin.AdminApplication --manifest build/.build/native-access.mf -C $(PACKAGE) .
+	mv $@.tmp $@
 
 run server: build-server
 	cd build && java -jar $(notdir $(SERVER_JAR))
@@ -60,4 +67,4 @@ test-integration: test-compile
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ConsoleIntegrationTest $(SERVER_JAR)
 
 clean:
-	rm -rf $(SERVER_JAR) $(ADMIN_JAR) build/tortodrone-server.jar build/.build .build
+	rm -rf $(SERVER_JAR) $(ADMIN_JAR) $(SERVER_JAR).tmp $(ADMIN_JAR).tmp build/tortodrone-server.jar build/.build .build

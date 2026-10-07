@@ -1,43 +1,61 @@
 package org.tortodrone.server;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import org.tortodrone.account.AccountStore;
+import org.jline.reader.EndOfFileException;
+import org.jline.reader.UserInterruptException;
 
 /** Local server terminal. Commands never accept passwords as arguments or echo input to logs. */
-final class ServerConsole {
+final class ServerConsole implements AutoCloseable {
     private final AccountStore accounts;
     private final ServerLog log;
     private final Runnable stop;
     private final BooleanSupplier running;
-    private final Console terminal = System.console();
-    private final BufferedReader input = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
+    private final ConsoleInput input;
+    private boolean closed;
 
     ServerConsole(AccountStore accounts, ServerLog log, Runnable stop, BooleanSupplier running) {
         this.accounts = accounts; this.log = log; this.stop = stop; this.running = running;
+        input = new ConsoleInput(log);
     }
 
     void start() {
+        log.setConsoleOutput(input::printAbove);
         Thread thread = new Thread(this::readCommands, "ServerConsole");
         thread.setDaemon(true); thread.start();
     }
 
     private void readCommands() {
-        while (running.getAsBoolean()) {
-            try {
-                String line = line(4096);
-                if (line == null) { log.debug("Terminal input closed; server remains running"); return; }
-                if (!running.getAsBoolean()) return;
-                line = line.trim(); if (line.isEmpty()) continue;
-                if (line.startsWith("/")) line = line.substring(1);
-                execute(line.split("\\s+"));
-            } catch (IOException failure) {
-                log.warn(failure.getMessage());
+        try {
+            while (running.getAsBoolean()) {
+                try {
+                    String line = input.command();
+                    if (line == null) { log.debug("Terminal input closed; server remains running"); return; }
+                    if (!running.getAsBoolean()) return;
+                    line = line.trim(); if (line.isEmpty()) continue;
+                    if (line.startsWith("/")) line = line.substring(1);
+                    execute(line.split("\\s+"));
+                } catch (IOException failure) {
+                    log.warn(failure.getMessage());
+                }
             }
-        }
+        } catch (UserInterruptException interrupted) {
+            log.info("Stopping server…"); stop.run();
+        } catch (EndOfFileException ended) {
+            log.debug("Terminal input closed; server remains running");
+        } catch (IOError failed) {
+            log.warn("Terminal input failed; server remains running");
+        } finally { close(); }
+    }
+
+    @Override public synchronized void close() {
+        if (closed) return;
+        closed = true;
+        log.setConsoleOutput(null);
+        input.close();
     }
 
     private void execute(String[] words) throws IOException {
@@ -68,7 +86,7 @@ final class ServerConsole {
         if (words[1].equals("delete") && words.length == 3) {
             var selected = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account"));
             log.info("Delete " + selected.username() + " and " + selected.knights() + " character(s)? Type the exact username to confirm:");
-            if (!selected.username().equals(line(32))) throw new IOException("Deletion confirmation did not match");
+            if (!selected.username().equals(input.confirmation(32))) throw new IOException("Deletion confirmation did not match");
             if (!running.getAsBoolean()) return;
             accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
         }
@@ -79,13 +97,13 @@ final class ServerConsole {
         // Capture the selected identity before prompting; deletion/recreation must not redirect a reset.
         int expectedId = -1;
         if (!create) expectedId = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account")).id();
-        char[] password = password("Password: "), confirmation = null;
+        char[] password = input.password("Password: ",log), confirmation = null;
         try {
             if (check) {
                 if (running.getAsBoolean()) log.info(accounts.checkPassword(name, password) ? "Password matches." : "Password does not match.");
                 return;
             }
-            confirmation = password("Confirm password: ");
+            confirmation = input.password("Confirm password: ",log);
             if (!Arrays.equals(password, confirmation)) throw new IOException("Passwords do not match");
             if (!running.getAsBoolean()) return;
             if (create) accounts.create(name, password, words.length == 4);
@@ -98,39 +116,4 @@ final class ServerConsole {
 
     private IOException usage() { return new IOException("Invalid account command. Type help for commands."); }
 
-    private char[] password(String prompt) throws IOException {
-        if (terminal != null) {
-            char[] value = terminal.readPassword("%s", prompt);
-            if (value == null) throw new IOException("Password input ended");
-            return value;
-        }
-        // Redirected stdin supplies complete lines; terminal passwords use Console.readPassword above.
-        log.info(prompt.trim());
-        char[] buffer = new char[129]; int length = 0; boolean overflow = false;
-        try {
-            int value;
-            while ((value = input.read()) != -1 && value != '\n') {
-                if (value == '\r') continue;
-                if (length == 128) overflow = true; else buffer[length++] = (char)value;
-            }
-            if (value == -1) throw new IOException("Password input ended; supply complete lines");
-            if (overflow) throw new IOException("Password exceeds 128 characters");
-            return Arrays.copyOf(buffer, length);
-        } finally { Arrays.fill(buffer, '\0'); }
-    }
-
-    private String line(int limit) throws IOException {
-        if (terminal != null) {
-            String value = terminal.readLine();
-            if (value != null && value.length() > limit) throw new IOException("Terminal input is too long");
-            return value;
-        }
-        StringBuilder value = new StringBuilder(); boolean overflow = false; int character;
-        while ((character = input.read()) != -1 && character != '\n') {
-            if (character == '\r') continue;
-            if (value.length() == limit) overflow = true; else value.append((char)character);
-        }
-        if (overflow) throw new IOException("Terminal input is too long");
-        return character == -1 && value.isEmpty() ? null : value.toString();
-    }
 }
