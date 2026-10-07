@@ -1,9 +1,26 @@
 # Local SK research files
 /local/
 
-# Logstouch
+# Captures and logs
+*.pcap
+*.pcapng
+*.cap
 *.log
 /logs/
 
 # Secrets / config
 .env
+.env.*
+
+# Build output and editors (JARs are not globally ignored)
+.gradle/
+build/
+out/
+target/
+.idea/
+.vscode/
+*.class
+__pycache__/
+*~
+*.swp
+*.swo
