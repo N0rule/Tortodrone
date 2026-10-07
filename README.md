@@ -6,9 +6,8 @@ username/password login is supported. Steam and guest login are outside the scop
 of the project.
 
 The current server supports secure exchange, the fixed test account, bootstrap,
-TCP heartbeat, name validation, character creation, and a saved character roster.
-**World entry, gameplay, character editing/deletion, and additional accounts are
-not implemented.** Characters survive server restarts. Unsupported operations
+TCP heartbeat, name validation, character creation/editing/deletion, and a saved
+character roster. **World entry, gameplay, and additional accounts are not implemented.** Characters survive server restarts. Unsupported operations
 return explicit failures.
 
 ## Fresh install
@@ -94,7 +93,7 @@ never overwrites an existing configuration.
 The startup banner includes the release version from `VERSION`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.1.1
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.2.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
@@ -130,9 +129,13 @@ See [connection guidance](docs/client-redirection.md).
 
 Names contain 3–16 letters with optional single hyphens. Names are unique without
 regard to case, and the test account has three slots. The server saves appearance
-choices and stable character IDs before reporting the result. After creating a
-knight, reconnect to view the saved roster. Selecting a knight returns a failure
-until world entry is implemented. The basic roster preview applies color and
+choices and stable character IDs before reporting the result. The save operation
+also accepts an existing knight name to update its name and appearance while
+preserving its ID and creation time. Updates still work when all three slots are
+full. Creation/editing reports the saved result without entering the world;
+reconnect to view it. Deletion updates the roster, frees a slot, and survives
+restarts. Missing knights and duplicate names are rejected. Selecting a knight
+returns a failure until world entry is implemented. The basic roster preview applies color and
 height; equipment, accessories, and eyes are saved but are not yet applied to it.
 Back up `data/` to preserve characters and server identity.
 
@@ -159,6 +162,6 @@ through the repository's hosting service. Include what changed and which checks
 passed. Never commit build output, runtime data, private keys, or game assets.
 
 See [server architecture](docs/server-architecture.md) for implementation details
-and the next milestones. [Historical research](docs/research/README.md) records
+and the [world entry plan](docs/world-entry-plan.md) for the next milestones. [Historical research](docs/research/README.md) records
 past observations; its old paths and client experiments are not current setup or
 contribution instructions.

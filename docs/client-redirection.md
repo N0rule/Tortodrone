@@ -50,7 +50,9 @@ are future server work. Steam, guest and official-account login will not be adde
 The creator validates names and saves new knights. After saving, it reports
 "Knight saved. Reconnect to view it; world entry is not available yet." Reconnect
 to see the saved roster. Selecting a knight fails explicitly because world entry
-is not implemented. Character editing and deletion are unavailable.
+is not implemented. The server also supports editing saved names/appearance
+through the existing save request and deletion through the picker's Delete action.
+Edits preserve character IDs; deletion frees a slot. Both persist across restarts.
 
 ## Logs and troubleshooting
 

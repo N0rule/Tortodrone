@@ -102,7 +102,8 @@ The service handles are Knight, Location, Chat, Scene, Zone, ProjectXScene,
 ProjectXZone, and Body marshallers. They let observers bind their client services;
 they do not imply gameplay support. Initial Knight hardware statistics are
 discarded without logging their values. Knight method 3 validates names and
-method 5 saves a new non-Steam character. Name validation uses Confirm listener
+method 5 creates or updates a normal-account character, and method 6 deletes
+a character by name. Name validation uses Confirm listener
 method 1 with null arguments for success. Creation sends an `availableKnights`
 attribute update after the save, then uses the correlated method-zero callback
 with "Knight saved. Reconnect to view it; world entry is not available yet."
@@ -115,14 +116,21 @@ Other supported invocations with
 listeners receive the standard method-zero failure callback through
 `EventNotification`/`InvocationResponseEvent`. Creation validates the fourteen
 arguments, including nulls, height/eye ordinals, and the non-Steam empty friend
-list. Existing-character edits, Steam fields, and unknown operations are refused.
+list. A null previous name creates a new character; an existing previous name
+updates that account's character. Editing preserves its ID and creation time and
+uses the same save/roster-update flow, with the explicit "Knight updated" result
+while world entry is unavailable. Deletion accepts a Name and Confirm listener,
+saves the reduced roster, emits its update, then sends a success confirmation.
+Steam fields, missing characters, duplicate names and unknown operations are refused.
 
 `CharacterStore` shares one synchronized store across connections for the fixed
 test account. It persists up to three knights in `data/accounts/1.properties`,
 including stable IDs, names, creation times, and appearance choices. Writes use
 a flushed temporary file and atomic replacement; an I/O failure neither publishes
-the character nor consumes an ID. Invalid profiles stop startup without changing
-the file. Name checks are advisory; creation rechecks uniqueness under the same
+the character nor consumes an ID. Edits and deletions use the same atomic
+replacement and publish only after it succeeds. Deleting a knight frees a slot
+but never recycles its ID; editing keeps its ID and original creation timestamp.
+Invalid profiles stop startup without changing the file. Name checks are advisory; creation rechecks uniqueness under the same
 lock. Other already-connected sessions see changes on resubscription/reconnect.
 
 The `AvailableKnight` wire schema includes a non-null model reference. Its
@@ -149,6 +157,7 @@ argument values. UDP is not implemented.
 - [x] Installed client reports logged on and enters the character creation state.
 - [x] Rendered character creator confirmed by the user.
 - [x] Persist test-account characters; name validation, creation and roster updates.
+- [x] Edit saved names/appearance; delete knights and reuse slots without recycling IDs.
 - [ ] Add separate persistent accounts with normal username/password authentication.
 - [ ] Apply saved appearance to previews and reconstruct starter inventory.
 - [ ] Implement character selection, minimal inventory, zone entry and world state.
@@ -158,7 +167,8 @@ roster. Their details, including temporary client probes and input workarounds,
 remain [historical research](research/README.md). Current development verifies
 the server with synthetic fixtures and does not modify clients. Automated tests
 check roster restoration after restarting the packaged JAR. Selection and world
-entry remain separate checkpoints.
+entry remain separate checkpoints. The [world entry plan](world-entry-plan.md)
+keeps a minimal starting scene separate from introductory missions.
 
 ## Build and tests
 
@@ -167,7 +177,8 @@ with `jar`. `make test` runs Java protocol tests and launches the JAR in a
 separate process with temporary configuration and state. Tests cover host-network
 connections, full synthetic authentication, bootstrap service routing, complete
 snapshot schemas, receiver resets/registration, zero-based IDs, batched requests,
-invocation callback correlation, character creation, duplicate names, slot limits,
+invocation callback correlation, character creation/editing/deletion, duplicate
+names, full-slot edits, slot reuse, identity preservation,
 malformed profiles, failed writes, concurrent creation, persistent rosters,
 object ownership, repeated ping/pong, unknown
 subscriptions, clean logoff, wrong passwords, malformed/nested frames,

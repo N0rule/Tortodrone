@@ -81,6 +81,46 @@ public final class CharacterStore {
         return created;
     }
 
+    public synchronized Knight update(String oldName, Knight choices) throws IOException, Refused {
+        int index = indexOf(oldName);
+        if (index < 0) throw new Refused("No such knight");
+        String error = nameError(choices.name());
+        if (error != null) throw new Refused(error);
+        try { validate(choices); }
+        catch (IllegalArgumentException e) { throw new Refused("Invalid character appearance"); }
+        Knight previous = knights.get(index);
+        for (Knight knight : knights) {
+            if (knight.id() != previous.id() && canonical(knight.name()).equals(canonical(choices.name()))) {
+                throw new Refused("That knight name is already in use");
+            }
+        }
+        Knight updated = new Knight(previous.id(), choices.name(), choices.helm(), choices.armor(),
+            choices.helmAccessory(), choices.armorAccessory(), choices.costume(), choices.color(),
+            choices.height(), choices.eye(), previous.createdAt());
+        List<Knight> roster = new ArrayList<>(knights);
+        roster.set(index, updated);
+        save(roster, nextId);
+        knights = List.copyOf(roster);
+        return updated;
+    }
+
+    public synchronized void delete(String name) throws IOException, Refused {
+        int index = indexOf(name);
+        if (index < 0) throw new Refused("No such knight");
+        List<Knight> roster = new ArrayList<>(knights);
+        roster.remove(index);
+        save(roster, nextId);
+        knights = List.copyOf(roster);
+    }
+
+    private int indexOf(String name) {
+        if (name == null) return -1;
+        for (int i = 0; i < knights.size(); i++) {
+            if (canonical(knights.get(i).name()).equals(canonical(name))) return i;
+        }
+        return -1;
+    }
+
     private void save(List<Knight> updated, int next) throws IOException {
         if (file == null) return;
         Files.createDirectories(file.getParent());

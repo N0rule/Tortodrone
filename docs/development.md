@@ -55,7 +55,8 @@ wire helpers belong in `src/test/java/org/tortodrone/support/`.
 
 Integration tests copy the JAR into temporary deployments, choose ephemeral ports,
 and check normal/debug logging, release identification, JAR-relative state,
-custom configuration, authentication, saves, restarts, keys, and startup errors.
+custom configuration, authentication, creation/editing/deletion, freed slots,
+identity preservation, restarts, keys, and startup errors.
 Do not run tests against real saved characters or client installations.
 
 ## Version and logging
@@ -63,7 +64,7 @@ Do not run tests against real saved characters or client installations.
 `VERSION` is the single release-version source. The build bundles it as
 `version.txt`; startup and `--version` read that packaged value. Update `VERSION`
 when preparing a release and rebuild. Moving the executable does not change its
-version. The current release version is `0.1.1`.
+version. The current release version is `0.2.0`.
 
 `ServerLog` formats console and file output as
 `[HH:mm:ss] [thread/LEVEL]: message`. Main startup uses `ServerMain`; connection
@@ -92,3 +93,21 @@ Current behavior is described in [connection guidance](client-redirection.md)
 and [server architecture](server-architecture.md). [Historical research](research/README.md)
 records earlier experiments and must not be followed as current build/client
 modification instructions. Ignored files under `local/` are not build dependencies.
+
+## Installed client compatibility check
+
+Version `0.2.0` was checked with the installed game's unmodified networking
+classes against a disposable server deployment and temporary client home. Its
+actual `Client` completed RSA/AES normal login, bootstrap and PlayerObject
+subscription, and reported itself logged on. Its Knight service marshaller sent
+creation, edit and deletion requests; the client accepted roster updates and the
+correlated callbacks, including an empty roster after deletion. No game archives,
+launcher files, real account data or client preferences were changed.
+
+This checks the actual networking implementation and serializers. It does not
+establish that the graphical picker, editor, intro missions, or world entry are
+playable. The automated server suites independently check saves and restoration
+across process restarts. See the [world entry plan](world-entry-plan.md).
+
+Testing may start temporary servers. After changes, rebuild the executable and
+leave the server stopped so the user can start it when they want to test.

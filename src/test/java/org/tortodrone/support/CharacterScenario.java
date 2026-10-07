@@ -23,7 +23,7 @@ public final class CharacterScenario {
         creation(peer, writer, "saved-knight", null, (short) 43);
         confirmation(peer, wire, oid, (short) 43, "That knight name is already in use");
         creation(peer, writer, "Bad-Request", "old-knight", (short) 44);
-        confirmation(peer, wire, oid, (short) 44, "Only new non-Steam characters are supported");
+        confirmation(peer, wire, oid, (short) 44, "No such knight");
         writer.send(peer.getOutputStream(), out -> {
             invocation(writer, out, 3, 2); writer.type(out, "com.threerings.util.Name"); string(out, "saved-knight");
             writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(45);
@@ -36,6 +36,86 @@ public final class CharacterScenario {
         });
         confirmation(peer, wire, oid, (short) 46, "World entry is not available yet");
         writer.send(peer.getOutputStream(), out -> writer.message(out, "LogoffRequest", 47));
+    }
+
+    /** Full slots, edits, deletion, slot reuse and restoration through real wire messages. */
+    public static void management(Socket peer, TestWire wire, int oid, boolean create) throws Exception {
+        TestWire.Writer writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
+            "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
+        if (create) {
+            String[] names = {"Saved-Knight", "Other-Knight", "Third-Knight"};
+            for (int i = 0; i < names.length; i++) {
+                short callback = (short) (60 + i);
+                creation(peer, writer, names[i], null, callback);
+                changedRoster(peer, wire, oid, Arrays.asList(names).subList(0, i + 1));
+                confirmation(peer, wire, oid, callback, "Knight saved. Reconnect to view it; world entry is not available yet.");
+            }
+            creation(peer, writer, "Fourth-Knight", null, (short) 63);
+            confirmation(peer, wire, oid, (short) 63, "All three knight slots are occupied");
+            creation(peer, writer, "Renamed-Knight", "saved-knight", (short) 64);
+            changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Other-Knight", "Third-Knight"));
+            confirmation(peer, wire, oid, (short) 64, "Knight updated. Reconnect to view it; world entry is not available yet.");
+            creation(peer, writer, "other-knight", "Renamed-Knight", (short) 65);
+            confirmation(peer, wire, oid, (short) 65, "That knight name is already in use");
+            creation(peer, writer, "Changed-Knight", "Missing-Knight", (short) 66);
+            confirmation(peer, wire, oid, (short) 66, "No such knight");
+            creation(peer, writer, "x", "Renamed-Knight", (short) 67);
+            confirmation(peer, wire, oid, (short) 67, "Knight names need at least three letters");
+            deletion(peer, writer, "Missing-Knight", (short) 68);
+            confirmation(peer, wire, oid, (short) 68, "No such knight");
+            writer.send(peer.getOutputStream(), out -> {
+                invocation(writer, out, 6, 2); writer.type(out, "java.lang.Integer"); out.writeInt(1);
+                writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(69);
+            });
+            confirmation(peer, wire, oid, (short) 69, "Invalid character deletion request");
+            deletion(peer, writer, "other-knight", (short) 70);
+            changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Third-Knight"));
+            confirmation(peer, wire, oid, (short) 70, null);
+            deletion(peer, writer, "Other-Knight", (short) 71);
+            confirmation(peer, wire, oid, (short) 71, "No such knight");
+            creation(peer, writer, "Next-Knight", null, (short) 72);
+            changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
+            confirmation(peer, wire, oid, (short) 72, "Knight saved. Reconnect to view it; world entry is not available yet.");
+        }
+        writer.send(peer.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 73); out.writeInt(oid); });
+        var player = wire.snapshot(wire.frame(peer.getInputStream()), (short) 73, oid);
+        List<?> roster = checkRoster(player.get("availableKnights"), List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
+        for (int i = 0; i < roster.size(); i++) {
+            TestWire.check(((Map<?, ?>) roster.get(i)).get("id").equals(new int[] {1, 3, 4}[i]), "edits preserve IDs and deleted IDs are not reused");
+        }
+        if (!create) {
+            String[] names = {"Renamed-Knight", "Third-Knight", "Next-Knight"};
+            for (int i = 0; i < names.length; i++) {
+                short callback = (short) (74 + i);
+                deletion(peer, writer, names[i], callback);
+                changedRoster(peer, wire, oid, Arrays.asList(names).subList(i + 1, names.length));
+                confirmation(peer, wire, oid, callback, null);
+            }
+        }
+        writer.send(peer.getOutputStream(), out -> writer.message(out, "LogoffRequest", 77));
+    }
+
+    private static void deletion(Socket peer, TestWire.Writer writer, String name, short callback) throws IOException {
+        writer.send(peer.getOutputStream(), out -> {
+            invocation(writer, out, 6, 2); writer.type(out, "com.threerings.util.Name"); string(out, name);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(callback);
+        });
+    }
+
+    private static void changedRoster(Socket peer, TestWire wire, int oid, List<String> names) throws IOException {
+        DataInputStream update = event(peer, wire, oid, "AttributeChangedEvent");
+        TestWire.check(TestWire.string(update).equals("availableKnights"), "management updates the roster before its callback");
+        checkRoster(wire.object(update), names);
+        TestWire.end(update);
+    }
+
+    private static List<?> checkRoster(Object value, List<String> names) {
+        TestWire.check(value instanceof List<?> knights && knights.size() == names.size(), "roster size");
+        List<?> knights = (List<?>) value;
+        for (int i = 0; i < knights.size(); i++) {
+            TestWire.check(((Map<?, ?>) knights.get(i)).get("name").equals(names.get(i)), "roster names");
+        }
+        return knights;
     }
 
     private static void creation(Socket peer, TestWire.Writer writer, String name, String oldName, short callback) throws IOException {

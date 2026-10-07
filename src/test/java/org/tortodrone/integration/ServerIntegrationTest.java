@@ -51,6 +51,7 @@ public final class ServerIntegrationTest {
             check(ServerSettings.load(generated).port() == 47624, "default port");
             check(Files.exists(generated), "first-start configuration generation");
             defaultWorkflow(jar, directory.resolve("default-start"));
+            managementWorkflow(jar, directory.resolve("management-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
             Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
@@ -190,6 +191,31 @@ public final class ServerIntegrationTest {
         try (var entries = Files.list(deployment)) {
             check(entries.count() == 2, "deployment contains only the JAR and data directory");
         }
+    }
+
+    private static void managementWorkflow(Path jar, Path directory) throws Exception {
+        Files.createDirectories(directory);
+        Path deployed = directory.resolve("tortodrone.jar");
+        Files.copy(jar, deployed);
+        Path data = directory.resolve("data");
+        Files.createDirectories(data);
+        Path config = data.resolve("server.properties");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\n");
+        for (boolean create : new boolean[] {true, false}) {
+            try (Running server = new Running(deployed, null, directory)) {
+                int port = server.ready();
+                try (Socket peer = new Socket("127.0.0.1", port)) {
+                    TestClient.authenticate(peer, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()), true,
+                        (socket, wire, oid) -> CharacterScenario.management(socket, wire, oid, create));
+                }
+                Properties profile = properties(data.resolve("accounts/1.properties"));
+                check(profile.getProperty("knights").equals(create ? "3" : "0"), "management callbacks follow persisted mutations");
+                check(profile.getProperty("next-id").equals("5"), "editing/deleting does not reset character identities");
+            }
+        }
+        String log = Files.readString(data.resolve("logs/latest.log"));
+        check(log.contains("/INFO]: Character deleted"), "deletions appear in normal logs");
+        checkLogFormat(log);
     }
 
     private static void checkLogFormat(String log) {

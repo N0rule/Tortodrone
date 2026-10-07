@@ -14,6 +14,7 @@ import org.tortodrone.protocol.SessionDecoder;
 /** Authenticated objects, receiver registration, and limited invocation handling. */
 final class ClientSession {
     static final String SAVED_WITHOUT_WORLD = "Knight saved. Reconnect to view it; world entry is not available yet.";
+    static final String UPDATED_WITHOUT_WORLD = "Knight updated. Reconnect to view it; world entry is not available yet.";
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log) throws Exception {
         run(socket, incoming, connectionId, host, port, log, new CharacterStore());
@@ -118,7 +119,7 @@ final class ClientSession {
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
-            if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 5)) {
+            if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 5 || invocation.method() == 6)) {
                 characterRequest(socket, outgoing, invocation, clientOid, log, characters);
                 return;
             }
@@ -143,19 +144,38 @@ final class ClientSession {
         if (invocation.method() == 3) {
             failure = args.size() == 2 && args.get(0) instanceof String name
                 ? characters.nameFailure(name) : "Invalid name validation request";
+        } else if (invocation.method() == 6) {
+            if (args.size() != 2 || !(args.get(0) instanceof String name)) {
+                failure = "Invalid character deletion request";
+            } else {
+                try {
+                    characters.delete(name);
+                } catch (CharacterStore.Refused e) {
+                    failure = e.getMessage();
+                } catch (IOException e) {
+                    log.warn("Character deletion failed; " + e.getClass().getSimpleName());
+                    failure = "Character could not be deleted; try again";
+                }
+                if (failure == null) {
+                    send(socket, outgoing.rosterChanged(clientOid, characters.roster()));
+                    log.info("Character deleted; available knights=" + characters.roster().size());
+                }
+            }
         } else {
-            if (args.size() != 14 || args.get(0) != null || !(args.get(1) instanceof String)
+            if (args.size() != 14 || !optionalString(args.get(0)) || !(args.get(1) instanceof String)
                     || !(args.get(2) instanceof String) || !(args.get(3) instanceof String)
                     || !optionalString(args.get(4)) || !optionalString(args.get(5)) || !(args.get(6) instanceof String)
                     || !(args.get(7) instanceof Integer) || !enumeration(args.get(8), "KnightHeight")
                     || !enumeration(args.get(9), "EyeType") || args.get(10) != null
                     || !(args.get(11) instanceof List<?> friends) || !friends.isEmpty() || args.get(12) != null) {
-                failure = "Only new non-Steam characters are supported";
+                failure = "Invalid character save request";
             } else {
                 try {
-                    characters.create(new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
+                    Knight choices = new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),
-                        ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0));
+                        ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0);
+                    if (args.get(0) == null) characters.create(choices);
+                    else characters.update((String) args.get(0), choices);
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {
@@ -168,7 +188,7 @@ final class ClientSession {
                     // The stock creator's success handler leaves its busy state active,
                     // expecting selected-character/world events that we cannot provide yet.
                     // Its failure handler clears that state and displays this explicit result.
-                    failure = SAVED_WITHOUT_WORLD;
+                    failure = args.get(0) == null ? SAVED_WITHOUT_WORLD : UPDATED_WITHOUT_WORLD;
                 }
             }
         }
