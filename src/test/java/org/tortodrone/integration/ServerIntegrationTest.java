@@ -1,8 +1,8 @@
-package org.tortodrone.server;
+package org.tortodrone.integration;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.Socket;
 import java.nio.file.Files;
@@ -17,20 +17,44 @@ import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import org.tortodrone.config.ServerSettings;
+import org.tortodrone.support.CharacterScenario;
+import org.tortodrone.support.TestClient;
 
 /** Starts the distributable JAR; needs only Java, with no launcher or game files. */
 public final class ServerIntegrationTest {
     public static void main(String[] args) throws Exception {
-        Path jar = Path.of(args[0]).toAbsolutePath();
+        Path sourceJar = Path.of(args[0]).toAbsolutePath();
         Path directory = Files.createTempDirectory("tortodrone-server-test-");
         try {
+            // Each deployment owns data beside its JAR, including custom-config runs.
+            Path jar = directory.resolve("tortodrone.jar");
+            Files.copy(sourceJar, jar);
+            Process version = command(jar, null, directory).command(
+                Path.of(System.getProperty("java.home"), "bin", "java").toString(),
+                "-jar", jar.toString(), "--version").start();
+            try {
+                check(version.waitFor(10, TimeUnit.SECONDS), "version command timeout");
+                String output = new String(version.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).trim();
+                String expected;
+                try (var resource = ServerIntegrationTest.class.getResourceAsStream("/version.txt")) {
+                    expected = new String(resource.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8).trim();
+                }
+                check(version.exitValue() == 0 && output.equals("Tortodrone " + expected), "packaged release version");
+                check(!Files.exists(directory.resolve("data")), "version command does not create runtime state");
+            } finally {
+                version.destroyForcibly();
+                version.waitFor();
+            }
             // With no configuration, the JAR produces its documented defaults.
             Path generated = directory.resolve("generated/server.properties");
             check(ServerSettings.load(generated).port() == 47624, "default port");
             check(Files.exists(generated), "first-start configuration generation");
-            Path config = directory.resolve("server.properties");
-            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nclient-host=192.0.2.25\ndata-directory=state\n");
-            Path state = directory.resolve("state");
+            defaultWorkflow(jar, directory.resolve("default-start"));
+            Path config = directory.resolve("external-settings/server.properties");
+            Files.createDirectories(config.getParent());
+            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nclient-host=192.0.2.25\nlog-mode=debug\n");
+            Path state = directory.resolve("data");
             byte[] identity;
             byte[] publicBytes;
             try (Running server = new Running(jar, config, directory)) {
@@ -47,8 +71,8 @@ public final class ServerIntegrationTest {
                 int firstClientOid;
                 try (Socket valid = new Socket("127.0.0.1", port);
                      Socket invalid = new Socket("127.0.0.1", port)) {
-                    firstClientOid = LocalAuthenticationTest.authenticate(valid, key, true);
-                    LocalAuthenticationTest.authenticate(invalid, key, false);
+                    firstClientOid = TestClient.authenticate(valid, key, true);
+                    TestClient.authenticate(invalid, key, false);
                 }
                 try (Socket empty = new Socket("127.0.0.1", port)) { }
                 try (Socket malformed = new Socket("127.0.0.1", port)) {
@@ -58,16 +82,17 @@ public final class ServerIntegrationTest {
                 }
                 // Client disconnects and invalid packets leave the listener running.
                 try (Socket reconnect = new Socket("127.0.0.1", port)) {
-                    check(LocalAuthenticationTest.authenticate(reconnect, key, true) != firstClientOid,
+                    check(TestClient.authenticate(reconnect, key, true) != firstClientOid,
                         "reconnecting clients have independent bootstrap identities");
                 }
                 check(server.process.isAlive(), "server survives clients");
                 try (Socket creator = new Socket("127.0.0.1", port)) {
-                    LocalAuthenticationTest.authenticate(creator, key, true,
-                        (socket, wire, oid) -> CharacterCreationTest.session(socket, wire, oid, true));
+                    TestClient.authenticate(creator, key, true,
+                        (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
                 }
                 check(properties(state.resolve("accounts/1.properties")).getProperty("knights").equals("1"), "creation persisted before acknowledgement");
-                rejected(jar, config, directory, "Another server", "duplicate data-directory");
+                check(!Files.exists(config.getParent().resolve("data")), "custom configuration cannot relocate runtime state");
+                rejected(jar, config, directory, "Another server", "duplicate deployment");
                 identity = Files.readAllBytes(state.resolve("keys/private.pk8"));
                 publicBytes = Files.readAllBytes(state.resolve("keys/public.txt"));
                 if (Files.getFileStore(state).supportsFileAttributeView("posix")) {
@@ -78,16 +103,19 @@ public final class ServerIntegrationTest {
             String log = Files.readString(state.resolve("logs/latest.log"));
             check(log.contains("Authentication accepted by client") && log.contains("result=rejected"), "saved authentication logs");
             check(log.contains("client bootstrap accepted") && log.contains("PongResponse sent"), "saved bootstrap and session logs");
+            check(log.contains("/DEBUG]: SecureRequest") && log.contains("/WARN]: Normal login rejected"), "debug detail and warning levels");
+            check(log.contains("[ServerMain/INFO]: Starting Tortodrone server version "), "versioned startup banner");
+            checkLogFormat(log);
             check(log.contains("Server stopped."), "clean shutdown log");
-            check(!log.contains("password=") && !log.contains(LocalAuthenticationTest.passwordHash("tortodrone")) && !log.contains("private-test-ident")
+            check(!log.contains("password=") && !log.contains(TestClient.passwordHash("tortodrone")) && !log.contains("private-test-ident")
                 && !log.contains("BEGIN PRIVATE KEY"), "no sensitive payloads in logs");
             try (Running server = new Running(jar, config, directory)) {
                 int port = server.ready();
                 check(Arrays.equals(identity, Files.readAllBytes(state.resolve("keys/private.pk8"))), "stable private key");
                 check(Arrays.equals(publicBytes, Files.readAllBytes(state.resolve("keys/public.txt"))), "stable public key");
                 try (Socket returning = new Socket("127.0.0.1", port)) {
-                    LocalAuthenticationTest.authenticate(returning, publicKey(new String(publicBytes).trim()), true,
-                        (socket, wire, oid) -> CharacterCreationTest.session(socket, wire, oid, false));
+                    TestClient.authenticate(returning, publicKey(new String(publicBytes).trim()), true,
+                        (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, false));
                 }
             }
             // Reject mismatched and incomplete keys without replacing the server's identity.
@@ -104,7 +132,14 @@ public final class ServerIntegrationTest {
             rejected(jar, config, directory, "Unknown server property", "configuration typo");
             Files.writeString(config, "client-host=0.0.0.0\n");
             rejected(jar, config, directory, "client-host", "unusable advertised host");
-            System.out.println("PASS: runnable JAR, host-network clients, authentication/reconnect, logs, shutdown/restart, persistent keys, invalid configuration");
+            Files.writeString(config, "log-mode=verbose\n");
+            rejected(jar, config, directory, "log-mode must be normal or debug", "invalid log mode");
+            Files.writeString(config, "data-directory=elsewhere\n");
+            rejected(jar, config, directory, "Unknown server property: data-directory", "removed data-directory setting");
+            check(!Files.exists(directory.resolve("elsewhere")), "removed setting cannot relocate state");
+            String failures = Files.readString(state.resolve("logs/latest.log"));
+            check(failures.contains("[ServerMain/ERROR]: Server startup failed:"), "startup failures use the log format");
+            System.out.println("PASS: JAR-relative state, release version, normal/debug logs, host-network clients, authentication/reconnect, shutdown/restart, persistent keys, invalid configuration");
         } finally {
             try (var paths = Files.walk(directory)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -112,10 +147,67 @@ public final class ServerIntegrationTest {
         }
     }
 
+    private static void defaultWorkflow(Path jar, Path directory) throws Exception {
+        Files.createDirectories(directory);
+        Path deployment = directory.resolve("deployment with spaces");
+        Files.createDirectories(deployment);
+        Path deployedJar = deployment.resolve("tortodrone.jar");
+        Files.copy(jar, deployedJar);
+        Path data = deployment.resolve("data");
+        Path config = data.resolve("server.properties");
+        ServerSettings defaults = ServerSettings.load(config);
+        check(defaults.logMode() == ServerSettings.LogMode.NORMAL, "default logs use normal mode");
+        check(!properties(config).containsKey("data-directory"), "generated settings omit data-directory");
+        // Use an ephemeral port so this scenario can run alongside a real server.
+        String settings = Files.readString(config).replace("server-port=47624", "server-port=0");
+        Files.writeString(config, settings);
+        byte[] identity;
+        // Start from outside the deployment: state must follow the JAR, not the shell.
+        try (Running server = new Running(directory.relativize(deployedJar), null, directory)) {
+            int port = server.ready();
+            for (String file : new String[] {"keys/private.pk8", "keys/public.txt", "client-connection.properties",
+                    "logs/latest.log", "server.lock"}) {
+                check(Files.isRegularFile(data.resolve(file)), "default startup generates " + file);
+            }
+            try (Socket creator = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(creator, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()), true,
+                    (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
+            }
+            check(Files.isRegularFile(data.resolve("accounts/1.properties")), "default character save stays under data");
+            identity = Files.readAllBytes(data.resolve("keys/private.pk8"));
+            check(!Files.exists(directory.resolve("data")), "startup does not create data in the working directory");
+        }
+        try (Running server = new Running(deployedJar, null, deployment)) {
+            int port = server.ready();
+            try (Socket returning = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(returning, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()), true,
+                    (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, false));
+            }
+            check(Arrays.equals(identity, Files.readAllBytes(data.resolve("keys/private.pk8"))), "default restart keeps identity");
+        }
+        check(Files.readString(config).equals(settings), "default startup preserves edited settings");
+        String log = Files.readString(data.resolve("logs/latest.log"));
+        checkLogFormat(log);
+        check(log.contains("[ServerMain/INFO]: Starting Tortodrone server version ")
+            && log.contains("/INFO]: Normal login accepted") && log.contains("/INFO]: Character saved"), "normal lifecycle and save logs");
+        check(!log.contains("/DEBUG]") && !log.contains("SecureRequest") && !log.contains("PongResponse")
+            && !log.contains("snapshot sent") && !log.contains("InvocationRequestEvent"), "normal mode suppresses verbose protocol logs");
+        check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
+        try (var entries = Files.list(deployment)) {
+            check(entries.count() == 2, "deployment contains only the JAR and data directory");
+        }
+    }
+
+    private static void checkLogFormat(String log) {
+        check(log.lines().allMatch(line -> line.matches(
+            "\\[\\d{2}:\\d{2}:\\d{2}\\] \\[[^/\\]]+/(INFO|DEBUG|WARN|ERROR)\\]: .+")), "time/thread/level log format");
+    }
+
     private static ProcessBuilder command(Path jar, Path config, Path directory) {
-        String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-        return new ProcessBuilder(java, "-jar", jar.toString(), "--config", config.toString())
-            .directory(directory.toFile()).redirectErrorStream(true);
+        String javaExecutable = Path.of(System.getProperty("java.home"), "bin", "java").toString();
+        ProcessBuilder process = new ProcessBuilder(javaExecutable, "-jar", jar.toString());
+        if (config != null) process.command().addAll(java.util.List.of("--config", config.toString()));
+        return process.directory(directory.toFile()).redirectErrorStream(true);
     }
 
     private static void rejected(Path jar, Path config, Path directory, String reason, String label) throws Exception {

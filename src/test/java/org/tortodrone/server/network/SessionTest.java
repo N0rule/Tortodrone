@@ -1,4 +1,4 @@
-package org.tortodrone.server;
+package org.tortodrone.server.network;
 
 import java.io.*;
 import java.net.*;
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionDecoder;
+import org.tortodrone.support.TestWire;
 
 /** Untrusted post-login frames and object ownership, independent of game files. */
 public final class SessionTest {

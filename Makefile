@@ -1,35 +1,43 @@
-JAVA := $(if $(JAVA_HOME),$(JAVA_HOME)/bin/java,java)
-JAVAC := $(if $(JAVA_HOME),$(JAVA_HOME)/bin/javac,javac)
-JAR := $(if $(JAVA_HOME),$(JAVA_HOME)/bin/jar,jar)
-CLASSES := .build/classes
-TEST_CLASSES := .build/test-classes
-SERVER_JAR := build/tortodrone-server.jar
-SOURCES := $(shell find src/main/java -name '*.java')
-TEST_SOURCES := $(shell find src/test/java -name '*.java')
+CLASSES := build/.build/classes
+TEST_CLASSES := build/.build/test-classes
+SERVER_JAR := build/tortodrone.jar
+MAIN_CLASS := org.tortodrone.server.Server
+SOURCE_DIR := src/main/java
+RESOURCE_DIR := src/main/resources
+TEST_SOURCE_DIR := src/test/java
+SOURCES := $(sort $(shell find $(SOURCE_DIR) -name '*.java'))
+RESOURCES := $(sort $(shell find $(RESOURCE_DIR) -type f))
+TEST_SOURCES := $(sort $(shell find $(TEST_SOURCE_DIR) -name '*.java'))
+UNIT_TEST_SOURCES := $(filter-out $(TEST_SOURCE_DIR)/org/tortodrone/integration/%, $(filter %Test.java,$(TEST_SOURCES)))
+UNIT_TESTS := $(subst /,.,$(patsubst $(TEST_SOURCE_DIR)/%.java,%,$(UNIT_TEST_SOURCES)))
 
-.PHONY: build run server test clean
+.PHONY: build run server test test-unit test-integration test-compile clean
 build: $(SERVER_JAR)
 
-$(SERVER_JAR): $(SOURCES) server.properties.example Makefile
+$(SERVER_JAR): $(SOURCES) $(RESOURCES) VERSION Makefile
 	rm -rf $(CLASSES)
-	mkdir -p $(CLASSES) build/resources
-	"$(JAVAC)" --release 17 -d $(CLASSES) $(SOURCES)
-	cp server.properties.example build/resources/server.properties
-	"$(JAR)" --create --file $(SERVER_JAR) --main-class org.tortodrone.server.Server -C $(CLASSES) . -C build/resources server.properties
+	mkdir -p $(CLASSES) build
+	javac --release 17 -d $(CLASSES) $(SOURCES)
+	cp VERSION $(CLASSES)/version.txt
+	jar --create --file $(SERVER_JAR) --main-class $(MAIN_CLASS) -C $(CLASSES) . -C $(RESOURCE_DIR) .
 
 run server: build
-	"$(JAVA)" -jar $(SERVER_JAR)
+	cd build && java -jar $(notdir $(SERVER_JAR))
 
-test: build
+test: test-unit test-integration
+
+test-compile: build
+	rm -rf $(TEST_CLASSES)
 	mkdir -p $(TEST_CLASSES)
-	"$(JAVAC)" --release 17 -cp $(SERVER_JAR) -d $(TEST_CLASSES) $(TEST_SOURCES)
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.HandshakeTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.BootstrapTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.SessionTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.LocalAuthenticationTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.CharacterStoreTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.CharacterCreationTest
-	"$(JAVA)" -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.server.ServerIntegrationTest $(SERVER_JAR)
+	javac --release 17 -cp $(SERVER_JAR) -d $(TEST_CLASSES) $(TEST_SOURCES)
+
+test-unit: test-compile
+	@set -e; for suite in $(UNIT_TESTS); do \
+		java -cp $(SERVER_JAR):$(TEST_CLASSES) "$$suite"; \
+	done
+
+test-integration: test-compile
+	java -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ServerIntegrationTest $(SERVER_JAR)
 
 clean:
-	rm -rf build/resources build/tortodrone-server.jar .build
+	rm -rf build/resources $(SERVER_JAR) build/tortodrone-server.jar build/.build .build

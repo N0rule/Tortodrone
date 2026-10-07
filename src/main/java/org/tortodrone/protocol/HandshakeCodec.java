@@ -201,7 +201,9 @@ public final class HandshakeCodec {
         out.writeInt(0);
         out.writeBoolean(true);
         out.writeUTF(accepted ? "success" : "m.invalid_password");
-        out.writeBoolean(true); out.writeUTF("tortodrone-local");
+        // The stock login observer persists a non-null ident outside the game
+        // directory. Preserve the client's installation identity on every result.
+        out.writeBoolean(false);
         out.writeBoolean(accepted);
         if (accepted) out.writeUTF(sessionId);
         out.writeShort(-5); out.writeUTF("com.threerings.util.Name");

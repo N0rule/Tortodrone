@@ -1,4 +1,4 @@
-package org.tortodrone.server;
+package org.tortodrone.server.security;
 
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;

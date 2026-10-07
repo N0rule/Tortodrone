@@ -1,10 +1,10 @@
-package org.tortodrone.server;
+package org.tortodrone.character;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
-import org.tortodrone.protocol.Knight;
+import org.tortodrone.support.TestWire;
 
 /** Persistence failures and competing creations must never lose or duplicate characters. */
 public final class CharacterStoreTest {

@@ -1,33 +1,12 @@
-package org.tortodrone.server;
+package org.tortodrone.support;
 
 import java.io.*;
-import java.net.*;
-import java.security.*;
+import java.net.Socket;
 import java.util.*;
-import java.util.concurrent.*;
 
-/** Independent client verifies the complete creation RPC and its subsequent object update. */
-public final class CharacterCreationTest {
-    public static void main(String[] args) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA"); generator.initialize(2048);
-        KeyPair key = generator.generateKeyPair(); CharacterStore store = new CharacterStore();
-        ExecutorService worker = Executors.newSingleThreadExecutor();
-        try (ServerSocket listener = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
-            var completed = worker.submit(() -> {
-                try (Socket socket = listener.accept()) {
-                    SecureHandshake.run(socket, key.getPrivate(), ignored -> {}, true, 1, "127.0.0.1", listener.getLocalPort(), store);
-                } return null;
-            });
-            try (Socket peer = new Socket(listener.getInetAddress(), listener.getLocalPort())) {
-                LocalAuthenticationTest.authenticate(peer, key.getPublic(), true, (socket, wire, oid) -> session(socket, wire, oid, true));
-            }
-            completed.get(5, TimeUnit.SECONDS);
-            TestWire.check(store.roster().size() == 1, "only one character created");
-            System.out.println("PASS: creation RPC, confirmation, roster updates, invalid requests and duplicate names");
-        } finally { worker.shutdownNow(); }
-    }
-
-    static void session(Socket peer, TestWire wire, int oid, boolean create) throws Exception {
+/** Creation, saved roster, and failure callback checks reusable across server restarts. */
+public final class CharacterScenario {
+    public static void session(Socket peer, TestWire wire, int oid, boolean create) throws Exception {
         TestWire.Writer writer = new TestWire.Writer(TestWire.NET + "SecureRequest", TestWire.NET + "PublicKeyCredentials",
             "[Ljava.lang.String;", TestWire.NET + "AESAuthRequest");
         if (create) {

@@ -1,25 +1,24 @@
-package org.tortodrone.server;
+package org.tortodrone.character;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.protocol.Knight;
 import org.tortodrone.protocol.HandshakeCodec;
 
 /** One small, atomically replaced profile for the currently supported test account. */
-final class CharacterStore {
-    static final String USERNAME = HandshakeCodec.TEST_USERNAME;
+public final class CharacterStore {
+    public static final String USERNAME = HandshakeCodec.TEST_USERNAME;
     static final int MAX_KNIGHTS = 3;
     private final Path file;
     private List<Knight> knights = List.of();
     private int nextId = 1;
 
     /** In-memory store for isolated wire tests. Production always uses the data directory. */
-    CharacterStore() { file = null; }
+    public CharacterStore() { file = null; }
 
-    CharacterStore(Path dataDirectory) throws IOException {
+    public CharacterStore(Path dataDirectory) throws IOException {
         file = dataDirectory.resolve("accounts/1.properties");
         if (!Files.exists(file)) return;
         if (Files.size(file) > 32768) throw new IOException("Character profile exceeds size limit");
@@ -58,16 +57,16 @@ final class CharacterStore {
         }
     }
 
-    synchronized List<Knight> roster() { return knights; }
+    public synchronized List<Knight> roster() { return knights; }
 
-    synchronized String nameFailure(String name) {
+    public synchronized String nameFailure(String name) {
         String error = nameError(name);
         if (error != null) return error;
         return knights.stream().anyMatch(knight -> canonical(knight.name()).equals(canonical(name)))
             ? "That knight name is already in use" : null;
     }
 
-    synchronized Knight create(Knight choices) throws IOException, Refused {
+    public synchronized Knight create(Knight choices) throws IOException, Refused {
         String error = nameFailure(choices.name());
         if (error != null) throw new Refused(error);
         try { validate(choices); }
@@ -136,5 +135,5 @@ final class CharacterStore {
         if (!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*")) return "Use letters with optional single hyphens in the knight name";
         return null;
     }
-    static final class Refused extends Exception { Refused(String message) { super(message); } }
+    public static final class Refused extends Exception { Refused(String message) { super(message); } }
 }

@@ -1,4 +1,4 @@
-package org.tortodrone.server;
+package org.tortodrone.config;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -6,9 +6,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
 
-/** Editable server configuration; paths are relative to the configuration file. */
-record ServerSettings(String bind, int port, String clientHost, Path dataDirectory) {
-    static ServerSettings load(Path file) throws IOException {
+/** Editable listener, advertised endpoint and logging settings. */
+public record ServerSettings(String bind, int port, String clientHost, LogMode logMode) {
+    public enum LogMode { NORMAL, DEBUG }
+    public static ServerSettings load(Path file) throws IOException {
         file = file.toAbsolutePath().normalize();
         Properties defaults = new Properties();
         try (InputStream source = ServerSettings.class.getResourceAsStream("/server.properties")) {
@@ -41,9 +42,12 @@ record ServerSettings(String bind, int port, String clientHost, Path dataDirecto
                 || clientHost.chars().anyMatch(Character::isWhitespace)) {
             throw new IOException("client-host must be an address players can connect to");
         }
-        String directory = value(settings, "data-directory");
-        if (directory.isEmpty()) throw new IOException("data-directory must not be empty");
-        return new ServerSettings(bind, port, clientHost, file.getParent().resolve(directory).normalize());
+        LogMode logMode = switch (value(settings, "log-mode")) {
+            case "normal" -> LogMode.NORMAL;
+            case "debug" -> LogMode.DEBUG;
+            default -> throw new IOException("log-mode must be normal or debug");
+        };
+        return new ServerSettings(bind, port, clientHost, logMode);
     }
 
     private static String value(Properties settings, String name) {

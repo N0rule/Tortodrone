@@ -1,39 +1,39 @@
-package org.tortodrone.server;
+package org.tortodrone.server.network;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.security.*;
 import java.util.Arrays;
 import java.util.HexFormat;
-import java.util.function.Consumer;
+import java.util.UUID;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.util.UUID;
+import org.tortodrone.character.CharacterStore;
 import org.tortodrone.protocol.HandshakeCodec;
 
 /** Secure exchange, optionally authenticating only the fixed synthetic local account. */
-final class SecureHandshake {
-    static void run(Socket socket, PrivateKey key, Consumer<String> log) throws Exception {
+public final class SecureHandshake {
+    static void run(Socket socket, PrivateKey key, SessionLog log) throws Exception {
         run(socket, key, log, false);
     }
 
-    static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth) throws Exception {
+    static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth) throws Exception {
         run(socket, key, log, localAuth, 1, socket.getLocalAddress().getHostAddress(), socket.getLocalPort());
     }
 
-    static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth,
+    static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
             int connectionId, String host, int port) throws Exception {
         run(socket, key, log, localAuth, connectionId, host, port, new CharacterStore());
     }
 
-    static void run(Socket socket, PrivateKey key, Consumer<String> log, boolean localAuth,
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
             int connectionId, String host, int port, CharacterStore characters) throws Exception {
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
         HandshakeCodec.Request request = codec.request(body);
-        log.accept("SecureRequest decoded; frame=" + (body.length + 4) + " bytes; messageId=" + request.messageId());
+        log.debug("SecureRequest decoded; frame=" + (body.length + 4) + " bytes; messageId=" + request.messageId());
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsa.init(Cipher.DECRYPT_MODE, key);
         byte[] plain = rsa.doFinal(request.encryptedSecret());
@@ -48,18 +48,18 @@ final class SecureHandshake {
             byte[] response = HandshakeCodec.response(request.messageId(), HexFormat.of().formatHex(masked));
             socket.getOutputStream().write(response);
             socket.getOutputStream().flush();
-            log.accept("SecureResponse sent; frame=" + response.length + " bytes");
+            log.debug("SecureResponse sent; frame=" + response.length + " bytes");
             body = HandshakeCodec.readFrame(socket.getInputStream());
             if (body == null) throw new IOException("Client disconnected before authentication request");
             if (!localAuth) {
                 if (!codec.isAuthRequest(body)) throw new IOException("Unexpected next request type");
-                log.accept("AESAuthRequest received; frame=" + (body.length + 4)
+                log.debug("AESAuthRequest received; frame=" + (body.length + 4)
                     + " bytes; body not decoded; stopping before authentication");
                 return;
             }
             HandshakeCodec.Authentication auth = codec.authentication(body);
             if (!auth.version().equals(request.version())) throw new IOException("Authentication build changed");
-            log.accept("AESAuthRequest decoded; frame=" + (body.length + 4)
+            log.debug("AESAuthRequest decoded; frame=" + (body.length + 4)
                 + " bytes; bootstrap groups=" + auth.groupCount());
             Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
             // Verified legacy protocol IV; this is wire compatibility, not a new encryption design.
@@ -76,10 +76,14 @@ final class SecureHandshake {
                 accepted ? UUID.randomUUID().toString() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.accept("AuthResponse sent; result=" + (accepted ? "success (synthetic account only)"
+            log.debug("AuthResponse sent; result=" + (accepted ? "success (synthetic account only)"
                 : "rejected (use the local test account; guest login unsupported)")
                 + "; frame=" + authResponse.length + " bytes");
-            if (!accepted) return;
+            if (!accepted) {
+                log.warn("Normal login rejected");
+                return;
+            }
+            log.info("Normal login accepted");
             // Do not retain negotiated secrets for the unencrypted distributed-object session.
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);

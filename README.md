@@ -1,119 +1,168 @@
-# TortodroneServer
+# Tortodrone
 
-A standalone Java server emulator for Spiral Knights. The server and KnightLauncher
-are separate projects. This repository builds one executable JAR; it needs no game
-installation, launcher, Python, Maven, or network namespace tools.
+Tortodrone is a standalone Java server emulator for Spiral Knights. This project
+builds the server; the game and KnightLauncher are separate projects. Only normal
+username/password login is supported. Steam and guest login are outside the scope
+of the project.
 
-The current server implements secure exchange, a fixed test account, bootstrap,
-player/server/configuration snapshots, receiver registration, TCP ping/pong,
-name validation, character creation, and a saved character roster. The character
-creator renders correctly, confirmed by the user. Characters survive server
-restarts. **World entry, gameplay, and additional accounts remain unimplemented.**
-Unsupported operations receive failure callbacks.
+The current server supports secure exchange, the fixed test account, bootstrap,
+TCP heartbeat, name validation, character creation, and a saved character roster.
+**World entry, gameplay, character editing/deletion, and additional accounts are
+not implemented.** Characters survive server restarts. Unsupported operations
+return explicit failures.
 
-## Build and start
+## Fresh install
 
-Build with a JDK 17+ and GNU make:
+Install Git, GNU Make, and a JDK 17 or newer. The JDK must provide `java`, `javac`,
+and `jar` on your system's `PATH`. There are no Maven, Gradle, game-file, or launcher
+build dependencies.
+
+Clone the repository using its actual URL, then enter `Tortodrone/`:
 
 ```sh
+git clone <repository-url> Tortodrone
+cd Tortodrone
+java -version
+javac -version
+make --version
 make build
-java -jar build/tortodrone-server.jar
+java -jar build/tortodrone.jar
 ```
 
-`make server` runs the same JAR. Press Ctrl+C to stop it. Start your separate
-KnightLauncher fork normally; there is no server-side client launch command.
+`make build` only compiles. `make server` builds and starts the same JAR from
+`build/`. Press Ctrl+C to stop the server. The default data directory is always
+beside the JAR: running `java -jar build/tortodrone.jar` from the repository root
+uses `build/data/`, too.
 
-For deployment, copy just `build/tortodrone-server.jar` into an empty directory
-and run `java -jar tortodrone-server.jar`. A Java 17+ runtime is sufficient;
-make and a compiler are only needed to build it. The server creates its
-configuration, keypair, connection details, and logs under `build/` on first start:
+The server creates its configuration, keys, connection export, and log on first
+start. No game installation is required to run it. For deployment, copy only
+`tortodrone.jar` into a directory and run `java -jar tortodrone.jar` with Java 17+.
+Keep its `data/` directory across restarts and upgrades.
+
+## Files and settings
 
 ```text
-build/settings/server.properties editable server settings
-build/data/
-  keys/private.pk8                persistent private key; keep secret
-  keys/public.txt                 public key to copy into KnightLauncher
-  client-connection.properties    host, port, public key for client configuration
-  accounts/1.properties           saved characters for the fixed test account
-  logs/latest.log                 console output, appended across restarts
-  server.lock                     prevents two servers using the same data
+Tortodrone/
+  AGENTS.md                      contributor rules
+  VERSION                        release version bundled into the JAR
+  src/                           server sources, resources, and tests
+  docs/                          current guides and historical research
+  build/
+    tortodrone.jar                executable server
+    .build/                      disposable production and test classes
+    data/
+      server.properties          editable settings
+      keys/private.pk8           private server identity; keep secret
+      keys/public.txt            public key for launcher settings
+      client-connection.properties
+      accounts/1.properties      saved knights, created when a knight is saved
+      logs/latest.log            server output, appended across restarts
+      server.lock                prevents concurrent use of the same data
 ```
 
-## Configure the launcher
+Stop the server before editing `build/data/server.properties`, then restart:
 
-With the server and game on this computer, use:
+```properties
+server-ip=0.0.0.0
+server-port=47624
+client-host=127.0.0.1
+log-mode=normal
+```
 
-| KnightLauncher setting | Value |
+| Setting | Meaning |
 | --- | --- |
-| Server address (`game.endpoint`) | `127.0.0.1` |
-| Port (`game.port`) | `47624` |
-| Public key (`game.publicKey`) | Entire value from `build/data/keys/public.txt` |
+| `server-ip` | Local interface to listen on. `0.0.0.0` accepts connections on all IPv4 interfaces. |
+| `server-port` | TCP listening port. Default: `47624`. |
+| `client-host` | Reachable address advertised to clients. Use `127.0.0.1` for local play or the server's LAN/public address for remote players. |
+| `log-mode` | `normal` for basic operational messages; `debug` for those messages plus protocol details. |
 
-For players on another computer, set `client-host` in `build/settings/server.properties` to
-this server's reachable LAN/public address and use that address in the launcher.
-The default `server-ip=0.0.0.0` listens on all IPv4 interfaces; it is a bind
-address, not an address to enter in the launcher. The current listener is TCP.
+`server-ip` and `client-host` serve different purposes. For example, a server may
+listen on `0.0.0.0` and advertise `192.168.1.50`. A server behind a router may
+advertise a public address that does not belong to any local network interface.
+Clients cannot connect to `0.0.0.0`.
 
-Use the normal username/password form with `tortodrone` /
-`tortodrone`. Guest and Steam authentication are unsupported. Your launcher
-must apply the matching public key as well as the address and port. See
-[client configuration and troubleshooting](docs/client-redirection.md).
+There is no `data-directory` setting. All runtime state stays in `data/` beside the
+JAR. `--config /path/to/server.properties` selects another settings file without
+moving keys, characters, connection exports, or logs.
 
-Keep `build/data/keys/` across restarts and deployments. Replacing its keypair requires
-updating every launcher's public key. The existing local server keypair was
-preserved during the cleanup.
+If upgrading an older installation, remove `data-directory` from the editable
+configuration. If its data is still in the repository root, stop the server and
+move the whole directory to `build/data/` only if that destination does not already
+exist. If both directories exist, back them up and choose which state to keep.
+Preserve the complete keypair and account profiles. Changing bundled defaults
+never overwrites an existing configuration.
 
-## Characters
+## Logs and version
 
-Use the creator with the test account. Names contain 3–16 characters: letters
-with optional single hyphens. Names are unique without regard to case, and the
-account has three slots. The server saves the chosen appearance and assigned
-character ID before reporting the result. Back up `build/data/` to preserve both your
-characters and server identity. An invalid profile stops startup rather than
-silently replacing your save.
+The startup banner includes the release version from `VERSION`:
 
-After creating a knight, restart the game and log in again to see the saved
-roster. Creation clears the busy state and reports "Knight saved. Reconnect to
-view it; world entry is not available yet." Automatic entry into the game world
-is not implemented. The roster uses a basic preview with
-color and height; selected equipment, accessories, and eyes are saved but are
-not yet applied to that preview. Selecting a knight returns an explicit failure
-until world entry is implemented. Character editing and deletion are unavailable.
+```text
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.1.0
+[19:30:01] [ServerMain/INFO]: Loading properties
+[19:30:01] [ServerMain/INFO]: Log mode: normal
+[19:30:01] [ServerMain/INFO]: Generating server keypair
+[19:30:01] [ServerMain/INFO]: Loading saved characters
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
+[19:30:01] [ServerMain/INFO]: Client endpoint: 127.0.0.1:47624
+[19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
+[19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)
+```
 
-## Development
+Normal mode includes startup, connection/login events, character saves, warnings,
+errors, and shutdown. Debug mode adds handshake/frame diagnostics, bootstrap,
+snapshots, receiver registration, and invocation routing. Both console and
+`data/logs/latest.log` use the same format and filtering. Neither mode logs secrets
+or raw client payloads. Timestamps use the machine's local time.
 
 ```sh
-make test
-make clean
+java -jar build/tortodrone.jar --version
 ```
 
-The Java tests exercise the packaged JAR, host-network connections, RSA/AES
-exchange, authentication acceptance/rejection, complete object schemas, receiver
-registration, batched requests, invocation failure callbacks, malformed messages,
-object ownership, creation and roster callbacks, duplicate names, character
-slots, failed saves, concurrent creation, character restoration after restart,
-logoff, reconnects, logs, shutdown, configuration errors, and key persistence.
-They use temporary directories and
-synthetic clients; they need no game files. `make clean` removes build output.
+## Connect and create a knight
 
-The installed `ProjectXApp` was also tested on the host network: it completed
-test login, registered its receivers, and accepted player and server snapshots.
-A temporary client probe also completed name validation and saved a character
-using the real creator's choices. The installed serializer independently accepted
-the saved roster and update event. The separate fork's Play button
-was not automated; the user confirmed reaching the rendered creator. On reconnect,
-the installed-client probe found the saved-character picker added/showing with
-an available idle animation for the basic preview.
+Start the separately maintained KnightLauncher normally and configure:
 
-- `src/main/java/org/tortodrone/server/` — server startup, connections, keys, and authentication.
-- `src/test/java/org/tortodrone/server/` — Java tests.
-- `src/main/java/org/tortodrone/protocol/` — the implemented subset of the client wire protocol.
-- `docs/` — current setup/architecture and historical protocol research.
-- `server.properties.example` — defaults bundled in the JAR.
-- `build/data/` — ignored runtime state, created on first start.
-- `local/` — optional ignored upstream references and protocol probes; never a build dependency.
+| Launcher setting | Value for this computer |
+| --- | --- |
+| `game.endpoint` | `127.0.0.1` |
+| `game.port` | `47624` |
+| `game.publicKey` | Entire value from `build/data/keys/public.txt` |
 
-See [server architecture](docs/server-architecture.md) for the current boundary
-and next milestone. Earlier protocol observations and pinned source references
-remain under [docs/research/](docs/research/research-sources.md). Original game
-assets, extracted code, private keys, and raw captures are not tracked here.
+Log in through the normal username/password form with `tortodrone` / `tortodrone`.
+For another computer, use the server's reachable address and configure
+`client-host` accordingly. See [connection guidance](docs/client-redirection.md).
+
+Names contain 3–16 letters with optional single hyphens. Names are unique without
+regard to case, and the test account has three slots. The server saves appearance
+choices and stable character IDs before reporting the result. After creating a
+knight, reconnect to view the saved roster. Selecting a knight returns a failure
+until world entry is implemented. The basic roster preview applies color and
+height; equipment, accessories, and eyes are saved but are not yet applied to it.
+Back up `data/` to preserve characters and server identity.
+
+## Contribute
+
+Read [AGENTS.md](AGENTS.md) and the [development guide](docs/development.md).
+Keep changes focused on the server and normal login. Client and launcher changes,
+Steam authentication, and guest authentication are outside this repository's scope.
+
+Create a branch, make the change, and run the relevant checks:
+
+```sh
+git switch -c describe-your-change
+make test
+```
+
+`make test-unit` runs character, protocol, and socket/session tests.
+`make test-integration` starts temporary copies of the packaged JAR. Tests use
+synthetic clients and need no game files or external services. `make clean`
+removes compiled output and the JAR while preserving runtime data.
+
+Review `git diff`, commit the files you changed, and submit your branch for review
+through the repository's hosting service. Include what changed and which checks
+passed. Never commit build output, runtime data, private keys, or game assets.
+
+See [server architecture](docs/server-architecture.md) for implementation details
+and the next milestones. [Historical research](docs/research/README.md) records
+past observations; its old paths and client experiments are not current setup or
+contribution instructions.

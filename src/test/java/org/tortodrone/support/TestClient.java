@@ -1,59 +1,26 @@
-package org.tortodrone.server;
+package org.tortodrone.support;
 
 import java.io.*;
-import java.net.*;
+import java.net.Socket;
 import java.security.*;
 import java.util.*;
-import java.util.concurrent.*;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import org.tortodrone.protocol.HandshakeCodec;
 
-/** End-to-end synthetic authentication; never reads game files or saved credentials. */
-public final class LocalAuthenticationTest {
+/** Synthetic authentication and session client shared by socket and packaged-JAR tests. */
+public final class TestClient {
     private static final String PREFIX = "com.threerings.presents.net.";
 
-    public static void main(String[] args) throws Exception {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(2048);
-        KeyPair key = generator.generateKeyPair();
-        exchange(key, true);
-        exchange(key, false);
-        System.out.println("PASS: authentication, snapshots, receivers, batched requests, invocation failure callbacks, logoff, secret-free logs");
-    }
-
-    private static void exchange(KeyPair key, boolean valid) throws Exception {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        try (ServerSocket listener = new ServerSocket(0, 1, InetAddress.getLoopbackAddress())) {
-            Future<List<String>> result = executor.submit(() -> {
-                List<String> logs = new ArrayList<>();
-                try (Socket peer = listener.accept()) {
-                    peer.setSoTimeout(3000);
-                    SecureHandshake.run(peer, key.getPrivate(), logs::add, true);
-                }
-                return logs;
-            });
-            try (Socket peer = new Socket(listener.getInetAddress(), listener.getLocalPort())) {
-                authenticate(peer, key.getPublic(), valid);
-            }
-            List<String> logs = result.get(5, TimeUnit.SECONDS);
-            check(logs.stream().anyMatch(s -> s.contains(valid ? "Authentication accepted by client" : "result=rejected")), "completion evidence");
-            check(logs.stream().noneMatch(s -> s.contains("password=") || s.contains("private-test-ident")
-                || s.contains(passwordHash("tortodrone"))), "secret-free logs");
-        } finally {
-            executor.shutdownNow();
-        }
-    }
-
     /** The same synthetic client also exercises the packaged server in another process. */
-    static int authenticate(Socket peer, PublicKey publicKey, boolean valid) throws Exception {
-        return authenticate(peer, publicKey, valid, LocalAuthenticationTest::session);
+    public static int authenticate(Socket peer, PublicKey publicKey, boolean valid) throws Exception {
+        return authenticate(peer, publicKey, valid, TestClient::session);
     }
 
-    @FunctionalInterface interface Session { void run(Socket peer, TestWire wire, int oid) throws Exception; }
+    @FunctionalInterface public interface Session { void run(Socket peer, TestWire wire, int oid) throws Exception; }
 
-    static int authenticate(Socket peer, PublicKey publicKey, boolean valid, Session session) throws Exception {
+    public static int authenticate(Socket peer, PublicKey publicKey, boolean valid, Session session) throws Exception {
         peer.setSoTimeout(3000);
         byte[] plain = new byte[20];
         new SecureRandom().nextBytes(plain);
@@ -101,7 +68,7 @@ public final class LocalAuthenticationTest {
         check(response.readShort() == -4 && response.readUTF().endsWith("ProjectXAuthResponseData"), "game auth data");
         check(response.readInt() == 0 && response.readBoolean(), "auth data fields");
         check(response.readUTF().equals(valid ? "success" : "m.invalid_password"), "auth result");
-        check(response.readBoolean() && response.readUTF().equals("tortodrone-local"), "local ident");
+        check(!response.readBoolean(), "accepted and rejected logins preserve the client's installation ident");
         check(response.readBoolean() == valid, "session presence");
         if (valid) UUID.fromString(response.readUTF());
         check(response.readShort() == -5 && response.readUTF().equals("com.threerings.util.Name"), "name mapping");
@@ -221,7 +188,7 @@ public final class LocalAuthenticationTest {
         return bytes.toByteArray();
     }
 
-    static String passwordHash(String password) {
+    public static String passwordHash(String password) {
         try {
             return HexFormat.of().formatHex(MessageDigest.getInstance("MD5").digest(
                 password.getBytes(java.nio.charset.StandardCharsets.UTF_8)));

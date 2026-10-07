@@ -1,14 +1,14 @@
-package org.tortodrone.server;
+package org.tortodrone.support;
 
 import java.io.*;
 import java.util.*;
 import org.tortodrone.protocol.HandshakeCodec;
 
 /** Independent reader for the current client schema, also usable against the packaged server. */
-final class TestWire {
-    static final String NET = "com.threerings.presents.net.";
-    static final String DOB = "com.threerings.presents.dobj.";
-    static final String INV = "com.threerings.presents.data.InvocationMarshaller$";
+public final class TestWire {
+    public static final String NET = "com.threerings.presents.net.";
+    public static final String DOB = "com.threerings.presents.dobj.";
+    public static final String INV = "com.threerings.presents.data.InvocationMarshaller$";
     private static final String PLAYER = """
         _oid:i username:o receivers:o location:o status:b awayMessage:s pawnId:i
         playerId:i machineIdent:s region:s tokens:o siteId:i playerCreated:l sessions:i
@@ -35,18 +35,18 @@ final class TestWire {
     private final Map<Integer, String> classes = new HashMap<>();
     private final Map<Integer, String> interns = new HashMap<>();
 
-    TestWire() {
+    public TestWire() {
         String[] names = {NET + "SecureResponse", NET + "AuthResponseData", NET + "AuthResponse",
             "com.threerings.projectx.data.ProjectXAuthResponseData", "com.threerings.util.Name"};
         for (int i = 0; i < names.length; i++) classes.put(i + 1, names[i]);
     }
 
-    DataInputStream frame(InputStream source) throws IOException {
+    public DataInputStream frame(InputStream source) throws IOException {
         return new DataInputStream(new ByteArrayInputStream(Objects.requireNonNull(HandshakeCodec.readFrame(source))));
     }
-    DataInputStream frame(byte[] frame) throws IOException { return frame(new ByteArrayInputStream(frame)); }
+    public DataInputStream frame(byte[] frame) throws IOException { return frame(new ByteArrayInputStream(frame)); }
 
-    String type(DataInputStream in) throws IOException {
+    public String type(DataInputStream in) throws IOException {
         int code = in.readShort();
         if (code == 0) return null;
         if (code < 0) {
@@ -56,7 +56,7 @@ final class TestWire {
         String name = classes.get(code); check(name != null, "known downstream class mapping"); return name;
     }
 
-    int bootstrap(DataInputStream in, int port) throws IOException {
+    public int bootstrap(DataInputStream in, int port) throws IOException {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
@@ -76,7 +76,7 @@ final class TestWire {
         end(in); return oid;
     }
 
-    Object object(DataInputStream in) throws IOException {
+    public Object object(DataInputStream in) throws IOException {
         String name = type(in);
         if (name == null) return null;
         return switch (name) {
@@ -140,31 +140,31 @@ final class TestWire {
     }
 
     @SuppressWarnings("unchecked")
-    Map<String, Object> snapshot(DataInputStream in, short id, int oid) throws IOException {
+    public Map<String, Object> snapshot(DataInputStream in, short id, int oid) throws IOException {
         check(type(in).equals(NET + "ObjectResponse") && in.readShort() == id, "object response correlation");
         Map<String, Object> fields = (Map<String, Object>) object(in);
         check(fields.get("_oid").equals(oid), "object response identity"); end(in); return fields;
     }
-    static String string(DataInputStream in) throws IOException { return in.readBoolean() ? in.readUTF() : null; }
-    static void end(DataInputStream in) throws IOException { check(in.available() == 0, "complete current schema boundary"); }
-    static void check(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
+    public static String string(DataInputStream in) throws IOException { return in.readBoolean() ? in.readUTF() : null; }
+    public static void end(DataInputStream in) throws IOException { check(in.available() == 0, "complete current schema boundary"); }
+    public static void check(boolean condition, String message) { if (!condition) throw new AssertionError(message); }
 
     /** Synthetic client encoder, independent from the server decoder. */
-    static final class Writer {
+    public static final class Writer {
         private final Map<String, Integer> classes = new HashMap<>();
-        Writer(String... initial) { for (String name : initial) classes.put(name, classes.size() + 1); }
-        void type(DataOutputStream out, String name) throws IOException {
+        public Writer(String... initial) { for (String name : initial) classes.put(name, classes.size() + 1); }
+        public void type(DataOutputStream out, String name) throws IOException {
             Integer code = classes.get(name);
             if (code == null) { code = classes.size() + 1; classes.put(name, code); out.writeShort(-code); out.writeUTF(name); }
             else out.writeShort(code);
         }
-        byte[] body(Encoder encoder) throws IOException {
+        public byte[] body(Encoder encoder) throws IOException {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream(); encoder.write(new DataOutputStream(bytes)); return bytes.toByteArray();
         }
-        void send(OutputStream output, Encoder encoder) throws IOException {
+        public void send(OutputStream output, Encoder encoder) throws IOException {
             byte[] body = body(encoder); new DataOutputStream(output).writeInt(body.length + 4); output.write(body); output.flush();
         }
-        void message(DataOutputStream out, String name, int id) throws IOException { type(out, NET + name); out.writeShort(id); }
+        public void message(DataOutputStream out, String name, int id) throws IOException { type(out, NET + name); out.writeShort(id); }
     }
-    @FunctionalInterface interface Encoder { void write(DataOutputStream out) throws IOException; }
+    @FunctionalInterface public interface Encoder { void write(DataOutputStream out) throws IOException; }
 }

@@ -4,8 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import org.tortodrone.character.Knight;
 
 /** Downstream session messages after the secure and authentication responses. */
 public final class SessionCodec {

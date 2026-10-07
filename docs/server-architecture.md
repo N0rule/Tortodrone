@@ -1,26 +1,34 @@
 # Server Architecture
 
-TortodroneServer runs as one Java process on the host network. Its executable
+Tortodrone runs as one Java process on the host network. Its executable
 JAR has no third-party dependencies and targets Java 17. The launcher lives in
 its own repository and connects through the ordinary TCP socket interface.
+Only normal username/password login is in scope; Steam and guest authentication
+will not be implemented. Compatibility work belongs in the server, without client patches.
 
 ## Runtime
 
-`org.tortodrone.server.Server` is the entry point. It loads `build/settings/server.properties`,
-binds the configured address/port, loads or creates a persistent 2048-bit RSA
-identity, exports launcher connection values, then accepts concurrent clients.
+`org.tortodrone.server.Server` is the entry point. It locates its JAR, locks its
+adjacent `data/` directory, starts logging, loads `data/server.properties`, loads
+or creates a persistent 2048-bit RSA identity and the saved character roster,
+binds the configured address/port, exports connection values, then accepts clients.
 Missing configuration is generated from the defaults bundled in the JAR.
 Connection values are written to a temporary file and replaced after closing it,
 so clients do not read a partially written endpoint or public key during startup.
 
 ```sh
-java -jar build/tortodrone-server.jar
-java -jar build/tortodrone-server.jar --config /path/to/server.properties
+cd build
+java -jar tortodrone.jar
+java -jar tortodrone.jar --config /path/to/server.properties
+java -jar tortodrone.jar --version
 ```
 
-The working directory contains the default configuration. With `--config`, the
-data-directory path is relative to that configuration file, even when the server
-is started from another directory. Unknown property names and invalid values
+By default, the server generates `data/server.properties` and all runtime state
+under `data/` beside the JAR, regardless of the working directory. Copying the JAR
+into an empty directory and running it needs no setup files. Both `make server`
+and `java -jar build/tortodrone.jar` use `build/data/`. `--config` selects a settings
+file only: state always stays beside the JAR. There is no `data-directory` setting.
+Unknown property names and invalid values
 fail startup with an error so a misspelling does not silently change behavior.
 
 | Setting | Default | Purpose |
@@ -28,21 +36,32 @@ fail startup with an error so a misspelling does not silently change behavior.
 | `server-ip` | `0.0.0.0` | Interface/address to listen on; empty also means all IPv4 interfaces |
 | `server-port` | `47624` | TCP port; `0` selects an ephemeral port for tests |
 | `client-host` | `127.0.0.1` | Reachable address exported for launchers |
-| `data-directory` | `../data` | Persistent runtime files, relative to the configuration |
+| `log-mode` | `normal` | Basic operational logs; `debug` adds protocol details |
+
+The bind address and advertised address are separate. A listener may bind all
+interfaces (`0.0.0.0`) while advertising a reachable LAN/public address. With NAT,
+the public address need not be an address the server can bind locally.
 
 Change settings while the server is stopped, then restart it. Ctrl+C closes the
-listener and active sockets. A data-directory lock prevents concurrent servers
+listener and active sockets. A data directory lock prevents concurrent servers
 from creating or using the same identity. The OS also rejects an occupied port.
 
-`HandshakeKeys` keeps `build/data/keys/private.pk8` and `public.txt` across restarts.
+`HandshakeKeys` keeps `data/keys/private.pk8` and `public.txt` across restarts.
 It validates that they match, refuses an incomplete identity with a missing
 private key, and can recover a missing public file from the existing private
 key. POSIX private-key and key-directory permissions are restricted to the owner.
 Back up this directory; moving it with the JAR preserves the server identity.
 
-Logs go to the console and `build/data/logs/latest.log`. They record message types,
-sizes, connection lifecycle, and authentication results without credentials,
-private keys, session IDs, or raw authentication payloads.
+Logs go to the console and `data/logs/latest.log`, using
+`[HH:mm:ss] [thread/LEVEL]: message` with local timestamps. Normal mode prints
+startup, connection/login events, character saves, warnings, errors, and shutdown.
+Debug mode adds protocol message types, sizes, bootstrap, snapshots, receiver
+registration, and invocation routing. `SessionLog` routes operational events at
+INFO/WARN and protocol diagnostics at DEBUG. Neither mode exposes credentials,
+password hashes, private keys, session identifiers, raw packets, or argument values.
+
+`VERSION` is bundled as `version.txt` by the Makefile. Startup and `--version`
+read this packaged release identity; moving the JAR does not affect it.
 
 ## Protocol boundary
 
@@ -52,6 +71,13 @@ and connection-local class mappings for the verified handshake schema.
 decrypts `AESAuthRequest`, validates the fixed synthetic account, and sends
 `AuthResponse`. It clears negotiated secrets and hands the connection to
 `ClientSession` after successful authentication.
+
+`ProjectXAuthResponseData.ident` is null for both successful and rejected logins.
+The stock client persists a non-null value in its installation identifier outside
+the game directory, shared with official-server login. A private server must
+leave this identifier unchanged. Earlier builds supplied `tortodrone-local`,
+which could break official authentication even after reinstalling the game; see
+the [identifier repair investigation](research/official-login-repair.md).
 
 `SessionCodec` preserves outgoing mappings from authentication. The current-build
 `ProjectXBootstrapData` supplies a connection ID, private client object ID, eight
@@ -94,7 +120,7 @@ arguments, including nulls, height/eye ordinals, and the non-Steam empty friend
 list. Existing-character edits, Steam fields, and unknown operations are refused.
 
 `CharacterStore` shares one synchronized store across connections for the fixed
-test account. It persists up to three knights in `build/data/accounts/1.properties`,
+test account. It persists up to three knights in `data/accounts/1.properties`,
 including stable IDs, names, creation times, and appearance choices. Writes use
 a flushed temporary file and atomic replacement; an I/O failure neither publishes
 the character nor consumes an ID. Invalid profiles stop startup without changing
@@ -125,26 +151,16 @@ argument values. UDP is not implemented.
 - [x] Installed client reports logged on and enters the character creation state.
 - [x] Rendered character creator confirmed by the user.
 - [x] Persist test-account characters; name validation, creation and roster updates.
-- [ ] Add separate persistent accounts and account authentication.
+- [ ] Add separate persistent accounts with normal username/password authentication.
 - [ ] Apply saved appearance to previews and reconstruct starter inventory.
 - [ ] Implement character selection, minimal inventory, zone entry and world state.
 
-The temporary UI probe skipped the introductory sequence through the client's
-existing method. Captured frames were black; the user subsequently confirmed
-the rendered creator. A further installed-client probe used its real appearance
-choices and received name-validation success and the updated saved roster.
-The original success callback left the stock creation UI busy; the revised
-result uses its existing failure handler to clear that state. A stock-handler
-probe reproduced "Creating knight", then verified the controls were re-enabled
-and the saved/world-unavailable message appeared without a missing-translation
-warning. On reconnect,
-the installed client naturally opened its saved
-character picker; the probe checked that it was added/showing and its preview
-had an idle animation. Automated tests also verify roster restoration after
-restarting the packaged JAR. Selection and world entry remain separate checkpoints.
-Investigation of the disappearing picker traced an unmapped-controller event to
-the client's window dismissal. A temporary input filter preserved the picker and
-passed actual slot-click checks; see the [client input investigation](research/client-input-fix.md).
+Earlier installed-client experiments confirmed the rendered creator and saved
+roster. Their details, including temporary client probes and input workarounds,
+remain [historical research](research/README.md). Current development verifies
+the server with synthetic fixtures and does not modify clients. Automated tests
+check roster restoration after restarting the packaged JAR. Selection and world
+entry remain separate checkpoints.
 
 ## Build and tests
 
@@ -158,15 +174,14 @@ malformed profiles, failed writes, concurrent creation, persistent rosters,
 object ownership, repeated ping/pong, unknown
 subscriptions, clean logoff, wrong passwords, malformed/nested frames,
 independent/reconnecting clients, saved logs, shutdown/restart, stable keys,
-duplicate startup, and invalid configuration.
+duplicate startup, invalid configuration, release identification, JAR-relative
+state from other working directories, and normal/debug log filtering and format.
 No client files are needed.
 
-Optional ignored research under `local/` contains small Narya/samskivert/headless
-references, focused SKapsule bootstrap sources, and compatibility probes against
-the installed client. Those probes verified that the client serializer reads
-the independently encoded snapshots and that its creation invocation is decoded.
-KnightLauncher is researched in the separate repository. None is a server
-dependency, and no upstream implementation is compiled into the JAR.
+Optional ignored research under `local/` contains historical source references
+and probes. None is a server dependency, and no upstream implementation is
+compiled into the JAR. Do not run old client modification probes as part of
+current server work.
 
 The earlier Python/bubblewrap launcher workflow and Maven toolchain were removed.
 Historical experiments remain under `docs/research/`; their old commands and

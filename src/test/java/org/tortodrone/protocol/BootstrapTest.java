@@ -1,4 +1,4 @@
-package org.tortodrone.server;
+package org.tortodrone.protocol;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
+import org.tortodrone.support.TestWire;
 
 /** Independent structural checks for the verified session wire subset. */
 public final class BootstrapTest {

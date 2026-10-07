@@ -1,30 +1,30 @@
-package org.tortodrone.server;
+package org.tortodrone.server.network;
 
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
+import org.tortodrone.character.CharacterStore;
+import org.tortodrone.character.Knight;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionCodec;
 import org.tortodrone.protocol.SessionDecoder;
-import org.tortodrone.protocol.Knight;
 
 /** Authenticated objects, receiver registration, and limited invocation handling. */
 final class ClientSession {
     static final String SAVED_WITHOUT_WORLD = "Knight saved. Reconnect to view it; world entry is not available yet.";
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
-            Consumer<String> log) throws Exception {
+            SessionLog log) throws Exception {
         run(socket, incoming, connectionId, host, port, log, new CharacterStore());
     }
 
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
-            Consumer<String> log, CharacterStore characters) throws Exception {
+            SessionLog log, CharacterStore characters) throws Exception {
         SessionCodec outgoing = new SessionCodec();
         int clientOid = Math.addExact(1000, connectionId);
         send(socket, outgoing.bootstrap(connectionId, clientOid, host, port));
-        log.accept("BootstrapNotification sent; clientOid=" + clientOid + "; services=" + SessionCodec.SERVICES.size());
+        log.debug("BootstrapNotification sent; clientOid=" + clientOid + "; services=" + SessionCodec.SERVICES.size());
         socket.setSoTimeout(60000); // Current client heartbeat period exceeds the handshake timeout.
         Map<String, Short> receivers = new HashMap<>();
         boolean firstPing = true;
@@ -36,32 +36,32 @@ final class ClientSession {
                     case "PingRequest" -> {
                         send(socket, outgoing.pong(request.messageId(), receivedAt));
                         if (firstPing) {
-                            log.accept("Authentication accepted by client; PingRequest received; PongResponse sent");
+                            log.debug("Authentication accepted by client; PingRequest received; PongResponse sent");
                             firstPing = false;
                         }
                     }
                     case "SubscribeRequest" -> {
-                        log.accept("SubscribeRequest received; oid=" + request.objectId()
+                        log.debug("SubscribeRequest received; oid=" + request.objectId()
                             + (request.objectId() == clientOid ? "; client bootstrap accepted" : ""));
                         if (request.objectId() == clientOid) {
                             var roster = characters.roster();
                             send(socket, outgoing.player(request.messageId(), clientOid, 1, CharacterStore.USERNAME, receivers, roster));
-                            log.accept("PlayerObject snapshot sent; available knights=" + roster.size());
+                            log.debug("PlayerObject snapshot sent; available knights=" + roster.size());
                         } else if (request.objectId() == SessionCodec.SERVER_OID) {
                             send(socket, outgoing.server(request.messageId()));
-                            log.accept("ServerObject snapshot sent");
+                            log.debug("ServerObject snapshot sent");
                         } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                             send(socket, outgoing.configuration(request.messageId()));
-                            log.accept("DConfigObject snapshot sent");
+                            log.debug("DConfigObject snapshot sent");
                         } else {
                             send(socket, outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
-                            log.accept("Subscription to unknown object rejected");
+                            log.debug("Subscription to unknown object rejected");
                         }
                     }
                     case "UnsubscribeRequest" -> send(socket,
                         outgoing.unsubscribe(request.messageId(), request.objectId()));
                     case "LogoffRequest" -> {
-                        log.accept("Client logged off");
+                        log.debug("Client logged off");
                         return;
                     }
                     case "ForwardEventRequest" -> handleEvent(socket, outgoing, request.event(), clientOid, receivers, log, characters);
@@ -69,11 +69,11 @@ final class ClientSession {
                 }
             }
         }
-        log.accept("Client disconnected");
+        log.debug("Client disconnected");
     }
 
     private static void handleEvent(Socket socket, SessionCodec outgoing, SessionDecoder.Event event,
-            int clientOid, Map<String, Short> receivers, Consumer<String> log, CharacterStore characters) throws IOException {
+            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters) throws IOException {
         if (event instanceof SessionDecoder.Compound compound) {
             if (compound.oid() != clientOid) throw new SessionDecoder.Rejected("Invalid compound event target");
             for (var child : compound.events()) handleEvent(socket, outgoing, child, clientOid, receivers, log, characters);
@@ -101,7 +101,7 @@ final class ClientSession {
                         }
                     }
                     receivers.put(registration.code(), registration.id());
-                    log.accept("Invocation receiver registered; count=" + receivers.size());
+                    log.debug("Invocation receiver registered; count=" + receivers.size());
                 }
                 case "EntryRemovedEvent" -> {
                     if (!(mutation.value() instanceof String code)) throw new SessionDecoder.Rejected("Invalid receiver removal");
@@ -114,7 +114,7 @@ final class ClientSession {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
-            log.accept("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
+            log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
@@ -133,7 +133,7 @@ final class ClientSession {
     }
 
     private static void characterRequest(Socket socket, SessionCodec outgoing, SessionDecoder.Invocation invocation,
-            int clientOid, Consumer<String> log, CharacterStore characters) throws IOException {
+            int clientOid, SessionLog log, CharacterStore characters) throws IOException {
         var args = invocation.arguments();
         if (args.isEmpty() || !(args.get(args.size() - 1) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith("$ConfirmMarshaller")) {
@@ -159,12 +159,12 @@ final class ClientSession {
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {
-                    log.accept("Character save failed; " + e.getClass().getSimpleName());
+                    log.warn("Character save failed; " + e.getClass().getSimpleName());
                     failure = "Character could not be saved; try again";
                 }
                 if (failure == null) {
                     send(socket, outgoing.rosterChanged(clientOid, characters.roster()));
-                    log.accept("Character saved; available knights=" + characters.roster().size());
+                    log.info("Character saved; available knights=" + characters.roster().size());
                     // The stock creator's success handler leaves its busy state active,
                     // expecting selected-character/world events that we cannot provide yet.
                     // Its failure handler clears that state and displays this explicit result.
