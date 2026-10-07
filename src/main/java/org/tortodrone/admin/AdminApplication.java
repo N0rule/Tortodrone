@@ -12,6 +12,7 @@ import org.tortodrone.account.AccountStore;
 public final class AdminApplication {
     public static void main(String[] args) {
         try {
+            String[] launchArguments = args.clone();
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone-admin.jar [--data path/to/server/data] [command]");
                 System.out.println("No command opens the desktop account manager.");
@@ -26,6 +27,8 @@ public final class AdminApplication {
             Path directory = (Files.isDirectory(location) ? location : location.getParent()).resolve("data");
             if (args.length >= 2 && args[0].equals("--data")) { directory = Path.of(args[1]); args = Arrays.copyOfRange(args,2,args.length); }
             if (args.length == 0) {
+                Integer desktopExit = DesktopBootstrap.relaunchIfNeeded(location,launchArguments);
+                if (desktopExit != null) { if (desktopExit != 0) System.exit(desktopExit); return; }
                 if (GraphicsEnvironment.isHeadless()) throw new IOException("A graphical desktop is required. Run on the server PC's desktop, or use --help for terminal commands.");
                 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
                 Path data = directory;

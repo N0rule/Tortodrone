@@ -66,6 +66,9 @@ server's existing data directory:
 java -jar /path/to/tortodrone-admin.jar --data /path/to/server/data
 ```
 
+On niri, the manager automatically applies Java's window-manager compatibility
+setting before opening the desktop window. No desktop configuration changes are needed.
+
 The manager runs locally on the server PC and opens no remote administration port.
 Once the database is initialized, it can manage accounts while the server runs.
 
@@ -148,10 +151,10 @@ There is no `data-directory` or `client-host` setting. `--config /path/to/server
 selects a settings file without moving state. First startup creates missing
 configuration and keys; existing configuration and identity are preserved.
 
-Startup displays the version bundled from `VERSION`, currently `0.5.0`:
+Startup displays the version bundled from `VERSION`, currently `0.5.1`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.1
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair

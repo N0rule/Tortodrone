@@ -70,7 +70,7 @@ Both JARs default to `data/` beside themselves. Keep them together or use the
 manager's `--data` option. Server `--config` chooses settings only, never state.
 Configuration defaults are bundled in `src/main/resources/server.properties`;
 existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
-and used by startup and each JAR's `--version`; the current release is `0.5.0`.
+and used by startup and each JAR's `--version`; the current release is `0.5.1`.
 
 `build/.build/` contains disposable classes and packaging output; `build/deps/`
 caches the driver. Git ignores all build/runtime output. Upgrades replace both
@@ -99,6 +99,11 @@ One server per deployment holds `server.lock` for its lifetime. Once initialized
 local admin processes use SQLite concurrently, without taking that lifetime lock.
 This database is for processes on the same PC, not a shared network drive.
 The UI uses Swing workers so hashing and SQL never block its event thread.
+`DesktopBootstrap` detects niri and relaunches only the GUI with
+`_JAVA_AWT_WM_NONREPARENTING=1` before AWT initializes, preserving JVM options and
+application arguments. Existing overrides are respected. CLI operations bypass it.
+Display checks must map an actual window: an offscreen Swing paint does not test
+window-manager configuration or compositor rendering.
 Changes made elsewhere appear on Refresh. A mutation from a selected row includes
 its expected ID so a deleted/re-created username cannot redirect a stale action.
 
