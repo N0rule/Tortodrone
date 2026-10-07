@@ -9,8 +9,9 @@ these operations; graphical/world behavior remains a separate check.
 ## LAN foundations before world entry
 
 Version `0.3.0` adds persistent normal accounts and separate saved rosters so LAN
-players have their own identities. The next account/session milestone is live
-roster updates across connections belonging to the same account. These changes
+players have their own identities. Version `0.4.0` adds live
+roster updates across connections belonging to the same account, ordered output
+queues and subscription cleanup. These changes
 do not acknowledge character selection or mark introductory missions complete.
 
 ## Next: selection and one starting area
@@ -19,7 +20,10 @@ do not acknowledge character selection or mark introductory missions complete.
    inventory, location and scene schemas using read-only class inspection and
    synthetic fixtures. Do not make the client advance by reporting selection
    success before the required objects/events exist.
-2. Implement the selected character's identity, saved appearance and minimum
+2. Establish globally unique world character identities before sharing a scene;
+   current knight counters are account-local. Define migration and save recovery
+   before exposing existing characters to other accounts. Then implement the
+   selected character's identity, saved appearance and minimum
    starter inventory. Preserve account ownership and reject selection of a missing
    or other account's character.
 3. Implement a single compatible starting scene and the subscriptions/transitions

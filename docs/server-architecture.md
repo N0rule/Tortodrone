@@ -10,7 +10,8 @@ will not be implemented. Compatibility work belongs in the server, without clien
 
 `org.tortodrone.server.Server` is the entry point. It locates its JAR, locks its
 adjacent `data/` directory, starts logging, loads `data/server.properties`, loads
-or creates a persistent 2048-bit RSA identity and the saved character roster,
+or creates a persistent 2048-bit RSA identity, loads normal accounts and their
+saved character rosters,
 binds the configured address/port, then accepts clients.
 Missing configuration is generated from the defaults bundled in the JAR.
 
@@ -131,7 +132,9 @@ the character nor consumes an ID. Edits and deletions use the same atomic
 replacement and publish only after it succeeds. Deleting a knight frees a slot
 but never recycles its ID; editing keeps its ID and original creation timestamp.
 Invalid profiles stop startup without changing the file. Name checks are advisory; creation rechecks uniqueness under the same
-lock. Other already-connected sessions see changes on resubscription/reconnect.
+lock. All subscribed sessions on that account receive live updates. Snapshot publication
+and subscription registration use the mutation lock, preventing stale snapshots
+from overtaking a newer update. Unsubscribe and disconnect detach the observer.
 
 The `AvailableKnight` wire schema includes a non-null model reference. Its
 configuration names and argument keys use a separate connection-local intern
@@ -156,9 +159,10 @@ argument values. UDP is not implemented.
 - [x] Login service handles, receiver registration and invocation failure callbacks.
 - [x] Installed client reports logged on and enters the character creation state.
 - [x] Rendered character creator confirmed by the user.
-- [x] Persist test-account characters; name validation, creation and roster updates.
+- [x] Persist account-owned characters; name validation, creation and roster updates.
 - [x] Edit saved names/appearance; delete knights and reuse slots without recycling IDs.
 - [x] Separate persistent accounts, offline account creation and password changes.
+- [x] Account-scoped live roster updates and bounded ordered downstream queues.
 - [ ] Apply saved appearance to previews and reconstruct starter inventory.
 - [ ] Implement character selection, minimal inventory, zone entry and world state.
 
@@ -208,3 +212,17 @@ characters and distributed player objects are inaccessible.
 The initial development account and version 0.2 profile remain ID 1. Account
 creation and password changes are offline, atomically saved administrative
 commands. Runtime state remains beside the JAR, and keys are unaffected.
+
+## Downstream publication (0.4.0)
+
+A session registers one account-local roster observer when subscribing to its
+PlayerObject. Committed character mutations queue `availableKnights` updates
+addressed to each recipient's own client OID, before the originating invocation
+callback. Sessions that have not subscribed retain the existing direct roster
+reply to their own mutation. Subscriptions to server/configuration objects do
+not change account-local roster registration.
+
+The codec and `SessionOutput` queue share a serialization lock; the writer sends
+frames in that same order. Network I/O runs outside the character-store lock.
+A queue is limited to 64 pending frames, each at most 64 KiB. A failed or stalled
+recipient is closed and removed from publication without undoing a saved change.

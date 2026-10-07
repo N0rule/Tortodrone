@@ -89,3 +89,23 @@ The server owner can create separate accounts with
 stopped. Use the prompted password in the existing normal login form; the
 endpoint and public key stay the same for every account. See the
 [account commands](../README.md#normal-accounts).
+
+## LAN reachability
+
+Wait for the server's `Done! Listening` message, then use its LAN address rather
+than `0.0.0.0` in the launcher. From a Windows client, check the TCP connection:
+
+```powershell
+Test-NetConnection 192.168.0.141 -Port 47624
+```
+
+Substitute the server's actual address and port. If ping works but TCP fails,
+check the server listener and firewall before troubleshooting login or keys.
+For an enabled UFW firewall, allow the server port from your actual LAN subnet:
+
+```sh
+sudo ufw allow from 192.168.0.0/24 to any port 47624 proto tcp
+```
+
+Use your subnet and configured port. Connections on the same LAN do not require
+router port forwarding.

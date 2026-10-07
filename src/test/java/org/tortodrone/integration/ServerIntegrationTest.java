@@ -53,6 +53,7 @@ public final class ServerIntegrationTest {
             defaultWorkflow(jar, directory.resolve("default-start"));
             managementWorkflow(jar, directory.resolve("management-start"));
             accountWorkflow(jar, directory.resolve("account-start"));
+            multiSessionWorkflow(jar, directory.resolve("multi-session-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
             Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
@@ -134,7 +135,7 @@ public final class ServerIntegrationTest {
             check(!Files.exists(directory.resolve("elsewhere")), "removed setting cannot relocate state");
             String failures = Files.readString(state.resolve("logs/latest.log"));
             check(failures.contains("[ServerMain/ERROR]: Server startup failed:"), "startup failures use the log format");
-            System.out.println("PASS: JAR-relative state, release version, normal/debug logs, host-network clients, authentication/reconnect, shutdown/restart, persistent keys, invalid configuration");
+            System.out.println("PASS: packaged JAR, normal accounts and password commands, isolated live rosters, concurrent clients, version/logs, restart, keys and invalid configuration");
         } finally {
             try (var paths = Files.walk(directory)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -273,6 +274,21 @@ public final class ServerIntegrationTest {
         check(Arrays.equals(keyBytes, Files.readAllBytes(data.resolve("keys/public.txt"))), "account administration preserves server identity");
         String log = Files.readString(data.resolve("logs/latest.log"));
         check(!log.contains(password) && !log.contains(changed) && !log.contains(TestClient.passwordHash(password)), "account secrets absent from logs");
+    }
+
+    private static void multiSessionWorkflow(Path sourceJar, Path directory) throws Exception {
+        Files.createDirectories(directory); Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        accountCommand(jar, directory, "--create-account", "Alice", "alice-password\nalice-password\n", true, "Account created.");
+        accountCommand(jar, directory, "--create-account", "Bob", "bob-password\nbob-password\n", true, "Account created.");
+        Path data = directory.resolve("data"), config = data.resolve("server.properties");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        try (Running server = new Running(jar, config, directory)) {
+            int port = server.ready(); PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
+            org.tortodrone.support.MultiSessionScenario.run(port, key);
+        }
+        check(properties(data.resolve("accounts/2.properties")).getProperty("knights").equals("1"), "concurrent account roster persisted");
+        check(!Files.exists(data.resolve("accounts/3.properties")), "foreign-account operations never write its profile");
+        check(properties(data.resolve("accounts/2.properties")).getProperty("knight.0.name").equals("Parallel-Two"), "final subscribed roster matches saved state");
     }
 
     private static void accountCommand(Path jar, Path directory, String command, String username,

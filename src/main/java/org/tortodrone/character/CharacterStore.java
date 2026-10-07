@@ -6,7 +6,7 @@ import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.AtomicProperties;
 
-/** One small, atomically replaced profile for the currently supported test account. */
+/** One atomically replaced character profile for an authenticated normal account. */
 public final class CharacterStore {
     public static final String USERNAME = AccountStore.DEFAULT_USERNAME;
     static final int MAX_KNIGHTS = 3;
@@ -15,6 +15,25 @@ public final class CharacterStore {
     private final int accountId;
     private List<Knight> knights = List.of();
     private int nextId = 1;
+    private final Set<RosterListener> listeners = new LinkedHashSet<>();
+
+    @FunctionalInterface public interface RosterListener { void receive(List<Knight> roster) throws IOException; }
+    @FunctionalInterface public interface Subscription extends AutoCloseable { @Override void close(); }
+
+    /** Snapshot and registration share the mutation lock, so an update cannot overtake its snapshot. */
+    public synchronized Subscription subscribe(RosterListener initial, RosterListener updates) throws IOException {
+        initial.receive(knights);
+        listeners.add(updates);
+        return () -> { synchronized (CharacterStore.this) { listeners.remove(updates); } };
+    }
+
+    /** Listeners enqueue bounded downstream frames; they must not block on network I/O. */
+    private void notifyListeners() {
+        for (var iterator = listeners.iterator(); iterator.hasNext();) {
+            try { iterator.next().receive(knights); }
+            catch (IOException e) { iterator.remove(); } // A failed peer must not invalidate a committed save.
+        }
+    }
 
     /** In-memory store for isolated wire tests. Production always uses the data directory. */
     public CharacterStore() { this(1, USERNAME); }
@@ -94,6 +113,7 @@ public final class CharacterStore {
         List<Knight> updated = new ArrayList<>(knights); updated.add(created);
         save(updated, nextId + 1); // Acknowledge only after persistence succeeds.
         knights = List.copyOf(updated); nextId++;
+        notifyListeners();
         return created;
     }
 
@@ -117,6 +137,7 @@ public final class CharacterStore {
         roster.set(index, updated);
         save(roster, nextId);
         knights = List.copyOf(roster);
+        notifyListeners();
         return updated;
     }
 
@@ -127,6 +148,7 @@ public final class CharacterStore {
         roster.remove(index);
         save(roster, nextId);
         knights = List.copyOf(roster);
+        notifyListeners();
     }
 
     private int indexOf(String name) {

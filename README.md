@@ -7,8 +7,9 @@ of the project.
 
 The current server supports secure exchange, persistent normal accounts, bootstrap,
 TCP heartbeat, name validation, character creation/editing/deletion, and a saved
-character roster. **World entry and gameplay are not implemented.** Characters survive server restarts. Unsupported operations
-return explicit failures.
+character roster with live updates across the account’s connected sessions.
+**World entry and gameplay are not implemented.** Characters survive server
+restarts. Unsupported operations return explicit failures.
 
 ## Fresh install
 
@@ -89,16 +90,31 @@ exist. If both directories exist, back them up and choose which state to keep.
 Preserve the complete keypair and account profiles. Changing bundled defaults
 never overwrites an existing configuration.
 
+## Connected sessions
+
+Creating, editing or deleting a knight sends the updated roster to every connected
+session subscribed to that account's PlayerObject. Other accounts receive none
+of those updates. Disconnecting or unsubscribing removes the subscription;
+resubscribing receives a fresh snapshot. Changes are saved before updates and
+callbacks are sent.
+
+Each connection has an ordered queue limited to 64 pending frames. A stalled
+connection is closed when its queue fills, allowing other sessions to continue.
+These are roster updates; selecting a character and entering a scene are still
+unavailable. The creator's explicit saved/unavailable message remains until the
+world transition is implemented.
+
 ## Logs and version
 
 The startup banner includes the release version from `VERSION`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.3.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.4.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
 [19:30:01] [ServerMain/INFO]: Loading normal accounts and saved characters
+[19:30:01] [ServerMain/INFO]: Loaded accounts: 1
 [19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
 [19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
 [19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)

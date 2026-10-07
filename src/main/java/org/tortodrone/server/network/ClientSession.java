@@ -22,62 +22,81 @@ final class ClientSession {
 
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters) throws Exception {
+        try (SessionOutput output = new SessionOutput(socket)) {
+            run(socket, incoming, connectionId, host, port, log, characters, output);
+        }
+    }
+
+    private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
+            SessionLog log, CharacterStore characters, SessionOutput output) throws Exception {
         SessionCodec outgoing = new SessionCodec();
         int clientOid = Math.addExact(1000, connectionId);
-        send(socket, outgoing.bootstrap(connectionId, clientOid, host, port));
+        output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
         log.debug("BootstrapNotification sent; clientOid=" + clientOid + "; services=" + SessionCodec.SERVICES.size());
         socket.setSoTimeout(60000); // Current client heartbeat period exceeds the handshake timeout.
         Map<String, Short> receivers = new HashMap<>();
         boolean firstPing = true;
-        byte[] body;
-        while ((body = HandshakeCodec.readFrame(socket.getInputStream())) != null) {
-            long receivedAt = System.currentTimeMillis();
-            for (HandshakeCodec.SessionRequest request : incoming.sessionRequests(body)) {
-                switch (request.type()) {
-                    case "PingRequest" -> {
-                        send(socket, outgoing.pong(request.messageId(), receivedAt));
-                        if (firstPing) {
-                            log.debug("Authentication accepted by client; PingRequest received; PongResponse sent");
-                            firstPing = false;
+        CharacterStore.Subscription subscription = null;
+        try {
+            byte[] body;
+            while ((body = HandshakeCodec.readFrame(socket.getInputStream())) != null) {
+                long receivedAt = System.currentTimeMillis();
+                for (HandshakeCodec.SessionRequest request : incoming.sessionRequests(body)) {
+                    switch (request.type()) {
+                        case "PingRequest" -> {
+                            output.send(() -> outgoing.pong(request.messageId(), receivedAt));
+                            if (firstPing) {
+                                log.debug("Authentication accepted by client; PingRequest received; PongResponse sent");
+                                firstPing = false;
+                            }
                         }
-                    }
-                    case "SubscribeRequest" -> {
-                        log.debug("SubscribeRequest received; oid=" + request.objectId()
-                            + (request.objectId() == clientOid ? "; client bootstrap accepted" : ""));
-                        if (request.objectId() == clientOid) {
-                            var roster = characters.roster();
-                            send(socket, outgoing.player(request.messageId(), clientOid, characters.accountId(), characters.username(), receivers, roster));
-                            log.debug("PlayerObject snapshot sent; available knights=" + roster.size());
-                        } else if (request.objectId() == SessionCodec.SERVER_OID) {
-                            send(socket, outgoing.server(request.messageId()));
-                            log.debug("ServerObject snapshot sent");
-                        } else if (request.objectId() == SessionCodec.CONFIG_OID) {
-                            send(socket, outgoing.configuration(request.messageId()));
-                            log.debug("DConfigObject snapshot sent");
-                        } else {
-                            send(socket, outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
-                            log.debug("Subscription to unknown object rejected");
+                        case "SubscribeRequest" -> {
+                            log.debug("SubscribeRequest received; oid=" + request.objectId()
+                                + (request.objectId() == clientOid ? "; client bootstrap accepted" : ""));
+                            if (request.objectId() == clientOid) {
+                                if (subscription != null) subscription.close();
+                                subscription = characters.subscribe(
+                                    roster -> output.send(() -> outgoing.player(request.messageId(), clientOid,
+                                        characters.accountId(), characters.username(), receivers, roster)),
+                                    roster -> output.send(() -> outgoing.rosterChanged(clientOid, roster)));
+                                log.debug("PlayerObject snapshot sent; available knights=" + characters.roster().size());
+                            } else if (request.objectId() == SessionCodec.SERVER_OID) {
+                                output.send(() -> outgoing.server(request.messageId()));
+                                log.debug("ServerObject snapshot sent");
+                            } else if (request.objectId() == SessionCodec.CONFIG_OID) {
+                                output.send(() -> outgoing.configuration(request.messageId()));
+                                log.debug("DConfigObject snapshot sent");
+                            } else {
+                                output.send(() -> outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
+                                log.debug("Subscription to unknown object rejected");
+                            }
                         }
+                        case "UnsubscribeRequest" -> {
+                            if (request.objectId() == clientOid && subscription != null) {
+                                subscription.close(); subscription = null;
+                            }
+                            output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
+                        }
+                        case "LogoffRequest" -> {
+                            log.debug("Client logged off");
+                            return;
+                        }
+                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null);
+                        default -> throw new IllegalStateException("Unsupported session request");
                     }
-                    case "UnsubscribeRequest" -> send(socket,
-                        outgoing.unsubscribe(request.messageId(), request.objectId()));
-                    case "LogoffRequest" -> {
-                        log.debug("Client logged off");
-                        return;
-                    }
-                    case "ForwardEventRequest" -> handleEvent(socket, outgoing, request.event(), clientOid, receivers, log, characters);
-                    default -> throw new IllegalStateException("Unsupported session request");
                 }
             }
+            log.debug("Client disconnected");
+        } finally {
+            if (subscription != null) subscription.close();
         }
-        log.debug("Client disconnected");
     }
 
-    private static void handleEvent(Socket socket, SessionCodec outgoing, SessionDecoder.Event event,
-            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters) throws IOException {
+    private static void handleEvent(SessionOutput output, SessionCodec outgoing, SessionDecoder.Event event,
+            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed) throws IOException {
         if (event instanceof SessionDecoder.Compound compound) {
             if (compound.oid() != clientOid) throw new SessionDecoder.Rejected("Invalid compound event target");
-            for (var child : compound.events()) handleEvent(socket, outgoing, child, clientOid, receivers, log, characters);
+            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed);
         } else if (event instanceof SessionDecoder.Mutation mutation) {
             if (mutation.oid() != clientOid || !"receivers".equals(mutation.field())) {
                 throw new SessionDecoder.Rejected("Unauthorized object mutation");
@@ -120,21 +139,21 @@ final class ClientSession {
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
             if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 5 || invocation.method() == 6)) {
-                characterRequest(socket, outgoing, invocation, clientOid, log, characters);
+                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed);
                 return;
             }
             for (Object argument : invocation.arguments()) {
                 if (argument instanceof SessionDecoder.Listener listener) {
                     String reason = invocation.service() == 1 && invocation.method() == 4
                         ? "World entry is not available yet" : "Server operation not implemented yet";
-                    send(socket, outgoing.invocationFailure(clientOid, listener.requestId(), reason));
+                    output.send(() -> outgoing.invocationFailure(clientOid, listener.requestId(), reason));
                 }
             }
         }
     }
 
-    private static void characterRequest(Socket socket, SessionCodec outgoing, SessionDecoder.Invocation invocation,
-            int clientOid, SessionLog log, CharacterStore characters) throws IOException {
+    private static void characterRequest(SessionOutput output, SessionCodec outgoing, SessionDecoder.Invocation invocation,
+            int clientOid, SessionLog log, CharacterStore characters, boolean subscribed) throws IOException {
         var args = invocation.arguments();
         if (args.isEmpty() || !(args.get(args.size() - 1) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith("$ConfirmMarshaller")) {
@@ -157,7 +176,10 @@ final class ClientSession {
                     failure = "Character could not be deleted; try again";
                 }
                 if (failure == null) {
-                    send(socket, outgoing.rosterChanged(clientOid, characters.roster()));
+                    if (!subscribed) {
+                        var roster = characters.roster();
+                        output.send(() -> outgoing.rosterChanged(clientOid, roster));
+                    }
                     log.info("Character deleted; available knights=" + characters.roster().size());
                 }
             }
@@ -183,7 +205,10 @@ final class ClientSession {
                     failure = "Character could not be saved; try again";
                 }
                 if (failure == null) {
-                    send(socket, outgoing.rosterChanged(clientOid, characters.roster()));
+                    if (!subscribed) {
+                        var roster = characters.roster();
+                        output.send(() -> outgoing.rosterChanged(clientOid, roster));
+                    }
                     log.info("Character saved; available knights=" + characters.roster().size());
                     // The stock creator's success handler leaves its busy state active,
                     // expecting selected-character/world events that we cannot provide yet.
@@ -192,18 +217,14 @@ final class ClientSession {
                 }
             }
         }
-        send(socket, failure == null ? outgoing.invocationConfirmed(clientOid, listener.requestId())
-            : outgoing.invocationFailure(clientOid, listener.requestId(), failure));
+        String result = failure;
+        output.send(() -> result == null ? outgoing.invocationConfirmed(clientOid, listener.requestId())
+            : outgoing.invocationFailure(clientOid, listener.requestId(), result));
     }
 
     private static boolean optionalString(Object value) { return value == null || value instanceof String; }
     private static boolean enumeration(Object value, String name) {
         return value instanceof SessionDecoder.EnumValue enumeration
             && enumeration.type().equals("com.threerings.projectx.data.ProjectXCodes$" + name);
-    }
-
-    private static void send(Socket socket, byte[] frame) throws java.io.IOException {
-        socket.getOutputStream().write(frame);
-        socket.getOutputStream().flush();
     }
 }

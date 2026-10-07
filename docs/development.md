@@ -25,7 +25,7 @@ Packages live under `src/main/java/org/tortodrone/`:
 | `config` | Load defaults and validate listener and logging settings | `ServerSettings` |
 | `protocol` | Encode and decode verified wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
 | `server` | Process startup, fixed runtime paths, listener and logging | `Server`, `ServerLog` |
-| `server.network` | Secure exchange, normal authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionLog` |
+| `server.network` | Secure exchange, normal authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionOutput`, `SessionLog` |
 | `server.security` | Create, validate and preserve the RSA identity | `HandshakeKeys` |
 
 For a new client operation, add its verified encoding/decoding to `protocol`,
@@ -70,7 +70,7 @@ server state and preferences; do not modify or launch the user’s game installa
 `VERSION` is the single release-version source. The build bundles it as
 `version.txt`; startup and `--version` read that packaged value. Update `VERSION`
 when preparing a release and rebuild. Moving the executable does not change its
-version. The current release version is `0.3.0`.
+version. The current release version is `0.4.0`.
 
 `ServerLog` formats console and file output as
 `[HH:mm:ss] [thread/LEVEL]: message`. Main startup uses `ServerMain`; connection
@@ -139,3 +139,26 @@ A disposable check using the unchanged installed networking classes verified
 login as an additional normal account, correct account identity, independent
 rosters, refusal to delete another account's knight, and create/edit/delete
 callbacks. This does not establish graphical world behavior.
+
+## Live roster subscriptions (0.4.0)
+
+`CharacterStore.subscribe` queues the initial snapshot and installs the observer
+under the same lock used by mutations. A committed save then publishes an
+immutable roster to the account's observers in mutation order. Refused or failed
+writes publish no changes. Repeated subscriptions replace the old observer, and
+unsubscribe, logoff and disconnect remove it. Failed observers are detached
+without invalidating a successful save.
+
+`SessionOutput` serializes frame encoding and queue insertion together, preserving
+each connection's class/intern mapping order even when another session publishes
+a roster update. One writer thread performs socket I/O. The bounded queue holds
+at most 64 pending frames; encoding failures, socket failures and queue overflow
+close that connection. Roster observers only enqueue, never perform socket I/O
+or acquire another character store. This lock order is part of the contract.
+
+Three-client socket and packaged-JAR scenarios cover live create/edit/delete,
+private account boundaries, duplicate subscription prevention, unsubscribe,
+concurrent saves and disconnect cleanup. Deterministic output tests cover slow
+readers and failed encoders. A second unchanged installed-client connection
+accepted live edits and deletions without reconnecting; graphical UI behavior
+was not tested.
