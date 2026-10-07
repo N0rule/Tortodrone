@@ -94,7 +94,9 @@ public final class SecureHandshake {
             // Do not retain negotiated secrets for the unencrypted distributed-object session.
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
-            ClientSession.run(socket, codec, connectionId, host, port, log, account.characters());
+            try (var session = accounts.attach(account,socket)) {
+                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision());
+            }
         } finally {
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);

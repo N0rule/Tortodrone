@@ -1,164 +1,151 @@
 # Development guide
 
-Tortodrone builds one executable Java 17 JAR with no external dependencies. GNU
-Make, `javac`, and `jar` are the build toolchain; Java tools come from `PATH`.
-Read [the contributor rules](../AGENTS.md) before making changes.
+Tortodrone targets Java 17 and builds two executable JARs with GNU Make, `javac`
+and `jar` from `PATH`. The SQLite JDBC dependency is downloaded once, verified by
+SHA-256 and bundled in both JARs. Read [AGENTS.md](../AGENTS.md) before changing code.
 
-## Project scope
+## Scope and layout
 
-Develop the server and support normal username/password authentication only.
-Do not add Steam or guest login, change clients or launchers, patch game archives,
-or install client workarounds. Verify compatibility through server code and
-synthetic clients. Normal accounts and their character profiles are persistent; gameplay and
-world entry remain future work. Account creation and password changes use offline
-server commands, with no client or launcher changes.
+Develop the server and local administration tools. Support normal username/password
+login only. Do not develop or patch the client/launcher or add Steam or guest
+login. World entry and gameplay remain future work.
 
-## Where code belongs
-
-Packages live under `src/main/java/org/tortodrone/`:
+Packages under `src/main/java/org/tortodrone/`:
 
 | Package | Responsibility | Starting points |
 | --- | --- | --- |
-| `account` | Normal account identities and password verification | `AccountStore` |
-| `storage` | Atomic private properties writes | `AtomicProperties` |
-| `character` | Character choices, validation, atomic profile persistence | `Knight`, `CharacterStore` |
-| `config` | Load defaults and validate listener and logging settings | `ServerSettings` |
-| `protocol` | Encode and decode verified wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
-| `server` | Process startup, fixed runtime paths, listener and logging | `Server`, `ServerLog` |
-| `server.network` | Secure exchange, normal authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionOutput`, `SessionLog` |
-| `server.security` | Create, validate and preserve the RSA identity | `HandshakeKeys` |
+| `account` | Shared identities, roles, password verification and session revocation | `AccountStore`, `Passwords` |
+| `admin` | Desktop account UI and optional local CLI | `AdminApplication`, `AdminWindow`, `AccountTableModel` |
+| `storage` | SQLite transactions, schema, migration; legacy atomic files | `Database`, `AtomicProperties` |
+| `character` | Account-owned choices, validation, persistence and observers | `Knight`, `CharacterStore` |
+| `config` | Listener/log settings and defaults | `ServerSettings` |
+| `protocol` | Verified bounded wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
+| `server` | Startup, terminal commands, listener and logging | `Server`, `ServerConsole`, `ServerLog` |
+| `server.network` | Authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionOutput` |
+| `server.security` | Persistent RSA identity | `HandshakeKeys` |
 
-For a new client operation, add its verified encoding/decoding to `protocol`,
-route it in `ClientSession`, and keep behavior and persistence with the relevant
-feature. Keep wire-specific parsing in codecs and sessions. Do not change the
-client to compensate for a missing server feature.
+Add verified wire parsing to codecs, route operations in `ClientSession`, and keep
+persistence with its feature service. Never trust a client-supplied account ID.
+The desktop and server terminal call the same `AccountStore`; future in-game
+commands should use it too, with permissions checked against current stored Admin
+status. Admin is currently a stored flag, with no client commands implemented.
 
-`src/main/resources/server.properties` contains bundled defaults. First startup
-copies them to `data/server.properties` beside the JAR. Existing configuration is
-preserved. Settings do not choose where data lives: keys, accounts, logs, and
-locks always use the JAR's adjacent `data/` directory, even when `--config` points
-elsewhere.
-
-## Build and verify
+## Build and test
 
 ```sh
-make build             # build/tortodrone.jar
-make server            # build and start inside build/
+make build             # both build/tortodrone.jar and build/tortodrone-admin.jar
+make build-server      # only server JAR
+make build-admin       # only account manager JAR
+make server            # build/start server from build/
+make admin             # build/open desktop manager
 make test              # all checks
-make test-unit         # character, protocol and socket/session checks
-make test-integration  # temporary packaged-JAR deployments
-make clean             # remove compiled output and JAR; preserve runtime data
+make test-unit         # storage, UI table, protocol and socket checks
+make test-integration  # disposable packaged-JAR deployments
+make clean             # preserve data and cached dependencies
 ```
 
-Sources and resources are discovered recursively, so new packages need no build
-list changes. Test classes have a `main` method and names ending in `Test`;
-`make test-unit` discovers these outside the integration package. Tests mirror the
-production package layout. Shared synthetic clients, character scenarios, and
-wire helpers belong in `src/test/java/org/tortodrone/support/`.
+First build needs network access, `curl` and `sha256sum`. Driver version and digest
+are pinned in the Makefile and `scripts/fetch-sqlite.sh`; update both together.
+Bundled native libraries make a separate SQLite installation unnecessary.
+Sources/resources are discovered recursively. Tests have a `main` method and names
+ending in `Test`. Unit tests exclude the integration package; reusable synthetic
+wire scenarios belong under `src/test/java/org/tortodrone/support/`.
 
-Integration tests copy the JAR into temporary deployments, choose ephemeral ports,
-and check normal/debug logging, release identification, JAR-relative state,
-custom configuration, authentication, account migration/isolation, offline account
-commands and password changes, creation/editing/deletion, freed slots,
-identity preservation, restarts, keys, and startup errors.
-Run tests against temporary deployments, never real saved characters. A read-only
-compatibility harness may load installed networking classes with disposable
-server state and preferences; do not modify or launch the user’s game installation.
+Tests cover migrations and rollback, account CRUD and Admin, safe password storage,
+stale selections, failed writes, deletion cascades, concurrent uniqueness,
+headless Swing table search/sorting, packaged admin commands on a live server,
+session revocation, running-server stdin commands and clean stop, protocol/frame
+limits, character management, private live rosters, shutdown/restart, keys, logs,
+configuration and runtime paths. Use temporary deployments, never real saved data.
+Testing may start servers; leave them stopped afterward.
 
-## Version and logging
+A read-only harness may load installed client networking classes against temporary
+server state/preferences. This verifies actual serializers without modifying or
+launching the user's game installation. It does not establish graphical world
+entry or playable intro missions.
 
-`VERSION` is the single release-version source. The build bundles it as
-`version.txt`; startup and `--version` read that packaged value. Update `VERSION`
-when preparing a release and rebuild. Moving the executable does not change its
-version. The current release version is `0.4.0`.
+## Runtime and upgrades
 
-`ServerLog` formats console and file output as
-`[HH:mm:ss] [thread/LEVEL]: message`. Main startup uses `ServerMain`; connection
-threads use `Client-<number>` and shutdown uses `ServerShutdown`. Normal mode
-prints operational INFO, WARN, and ERROR events. Debug mode includes DEBUG
-protocol diagnostics. `SessionLog` keeps protocol details separate from normal
-login/save events and warnings, while allowing synthetic tests to capture both.
-Never log secrets, raw packets, or client argument values.
+Both JARs default to `data/` beside themselves. Keep them together or use the
+manager's `--data` option. Server `--config` chooses settings only, never state.
+Configuration defaults are bundled in `src/main/resources/server.properties`;
+existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
+and used by startup and each JAR's `--version`; the current release is `0.5.0`.
 
-## Generated files and upgrades
+`build/.build/` contains disposable classes and packaging output; `build/deps/`
+caches the driver. Git ignores all build/runtime output. Upgrades replace both
+JARs and keep data. Stop the server and close the manager before a simple copy
+backup of the whole data directory; copying only a live DB can omit WAL changes.
 
-`build/.build/` contains disposable compiled production/test classes and the
-bundled version. `build/tortodrone.jar` is the distributable executable.
-`build/data/` holds persistent settings, keys, profiles, logs,
-and the lock. These locations are ignored by Git. `make clean` also removes old
-root `.build/` output and the old `tortodrone-server.jar`, but preserves data.
+SQLite schema version 1 imports legacy registries and profiles transactionally on
+first open. Keep account/knight IDs, protected verifiers, appearance, creation
+times and next-ID counters. Imported Admin is false. Profile-only 0.2 deployments
+retain their original fixed login. Fresh deployments start empty. Source files
+remain untouched; once migrated, they are backups, not a second active store.
+Missing owners, corrupt files and unknown schema versions fail without replacing
+identity. Initial schema creation/migration requires the deployment lock; stop the
+old server once before upgrading. No database server or remote admin endpoint exists.
 
-Upgrade by replacing the JAR while keeping `data/` beside it. Back up that directory.
-For an old editable configuration, remove `data-directory` and add
-`log-mode=normal` if desired; missing log-mode uses the bundled default. A custom
-`--config` selects a settings file only. If old data lives elsewhere, stop the
-server and move the complete directory beside the JAR without overwriting an
-existing data directory. Preserve both keys and all account profiles.
+## Transactions and session identity
 
-Current behavior is described in [connection guidance](client-redirection.md)
-and [server architecture](server-architecture.md). [Historical research](research/README.md)
-records earlier experiments and must not be followed as current build/client
-modification instructions. Ignored files under `local/` are not build dependencies.
+`Database` opens a connection per operation, enables foreign keys and a five-second
+busy timeout, and uses WAL for readers alongside short writes. Mutations use
+`BEGIN IMMEDIATE`, commit or rollback as a unit. Password derivation runs outside
+SQL transactions. IDs come from persistent monotonic counters, not row counts.
+Deleting an account cascades its knights without recycling the account ID.
+Account metadata changes are recorded in `account_events`, without credentials.
 
-## Installed client compatibility check
+One server per deployment holds `server.lock` for its lifetime. Once initialized,
+local admin processes use SQLite concurrently, without taking that lifetime lock.
+This database is for processes on the same PC, not a shared network drive.
+The UI uses Swing workers so hashing and SQL never block its event thread.
+Changes made elsewhere appear on Refresh. A mutation from a selected row includes
+its expected ID so a deleted/re-created username cannot redirect a stale action.
 
-Version `0.3.0` was checked with the installed game's unmodified networking
-classes against a disposable server deployment and temporary client home. Its
-actual `Client` completed RSA/AES normal login, bootstrap and PlayerObject
-subscription, and reported itself logged on. Its Knight service marshaller sent
-creation, edit and deletion requests; the client accepted roster updates and the
-correlated callbacks, including an empty roster after deletion. No game archives,
-launcher files, real account data or client preferences were changed.
+Authentication resolves server-owned ID, canonical username and authentication
+revision. The handshake rechecks revision after password derivation and when
+attaching its socket. Password reset increments it; deletion removes identity.
+The server polls attached sessions every 250 ms and closes invalid sessions.
+Character saves also verify account existence and revision in the save transaction,
+so stale sessions cannot write after reset/delete or resurrect an account.
+Admin changes do not reset passwords or disconnect sessions. Future permission
+checks must read the current role rather than a login-time snapshot.
 
-This checks the actual networking implementation and serializers. It does not
-establish that the graphical picker, editor, intro missions, or world entry are
-playable. The automated server suites independently check saves and restoration
-across process restarts. See the [world entry plan](world-entry-plan.md).
+Normal credentials reject platform flags/tickets, session credentials and unexpected
+fields. PBKDF2-HMAC-SHA256 derives a verifier from the client's MD5 transform with
+600,000 iterations and random salt. Keep plaintexts, transforms, salts and verifiers
+out of logs and arguments. Forgotten passwords are reset, never recovered.
+The in-memory fixed account constructor and legacy property storage exist only for
+isolated wire tests and migration; production uses SQLite.
 
-Testing may start temporary servers. After changes, rebuild the executable and
-leave the server stopped so the user can start it when they want to test.
+## Publication and lock order
 
-## Account persistence
-
-`AccountStore` loads `accounts/users.properties` and one shared `CharacterStore`
-per account. Authentication returns server-owned account ID, canonical username
-and its character store; the session must never trust an account ID supplied by
-a client. The registry and profile files use flushed temporary files and atomic
-replacement before publishing the new state. Registry corruption or a missing
-registry with additional saved profiles fails startup instead of reassigning
-identities. Version 0.2 profiles migrate to the initial account without rewriting
-the saved knights. New files have owner-only permissions on POSIX filesystems.
-
-Normal credentials are decoded separately from their verification. Reject
-platform flags/tickets, session credentials and unexpected fields. The account
-registry stores PBKDF2 verifiers of the client's MD5 password transform. Keep
-plaintexts, transforms, salts and verifiers out of logging and command arguments.
-Account administration and server startup must share the same deployment lock.
-
-A disposable check using the unchanged installed networking classes verified
-login as an additional normal account, correct account identity, independent
-rosters, refusal to delete another account's knight, and create/edit/delete
-callbacks. This does not establish graphical world behavior.
-
-## Live roster subscriptions (0.4.0)
-
-`CharacterStore.subscribe` queues the initial snapshot and installs the observer
-under the same lock used by mutations. A committed save then publishes an
-immutable roster to the account's observers in mutation order. Refused or failed
-writes publish no changes. Repeated subscriptions replace the old observer, and
-unsubscribe, logoff and disconnect remove it. Failed observers are detached
-without invalidating a successful save.
+`AccountStore` shares one `CharacterStore` per authenticated account in the server.
+A character mutation commits its database transaction before replacing the in-memory
+roster and notifying observers. Subscription queues the initial snapshot and installs
+its observer under that same mutation lock. No failed save publishes or consumes an
+ID. Resubscribe replaces the observer; unsubscribe/logoff/disconnect detach it.
 
 `SessionOutput` serializes frame encoding and queue insertion together, preserving
-each connection's class/intern mapping order even when another session publishes
-a roster update. One writer thread performs socket I/O. The bounded queue holds
-at most 64 pending frames; encoding failures, socket failures and queue overflow
-close that connection. Roster observers only enqueue, never perform socket I/O
-or acquire another character store. This lock order is part of the contract.
+connection-local class/intern mappings. One writer performs socket I/O outside the
+character-store lock. Its queue holds at most 64 frames. Encoding/socket failures
+or overflow close only that connection. Observers enqueue without socket I/O or
+acquiring another character store. Preserve this lock order.
 
-Three-client socket and packaged-JAR scenarios cover live create/edit/delete,
-private account boundaries, duplicate subscription prevention, unsubscribe,
-concurrent saves and disconnect cleanup. Deterministic output tests cover slow
-readers and failed encoders. A second unchanged installed-client connection
-accepted live edits and deletions without reconnecting; graphical UI behavior
-was not tested.
+## Terminal and logs
+
+The running server reads stdin on a daemon `ServerConsole` thread; networking stays
+active during prompts/hashing. EOF disables terminal input without stopping the
+service. `stop` closes the listener and active sockets. Password prompts use
+`Console.readPassword` on a terminal or bounded UTF-8 stdin lines otherwise;
+commands never take password arguments. Old account startup options are removed.
+
+`ServerLog` writes `[HH:mm:ss] [thread/LEVEL]: message` to console and latest.log.
+Normal prints operational INFO/WARN/ERROR; debug adds protocol diagnostics.
+Do not log raw input, credentials or payloads. Startup is `ServerMain`, console
+commands `ServerConsole`, connections `Client-<number>`, shutdown `ServerShutdown`.
+
+See [architecture](server-architecture.md), [connection guidance](client-redirection.md)
+and [world entry plan](world-entry-plan.md). Old paths and client modification
+experiments in [historical research](research/README.md) are not current instructions.
+Ignored `local/` files are not build dependencies.

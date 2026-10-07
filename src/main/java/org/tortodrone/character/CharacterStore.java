@@ -5,12 +5,14 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.AtomicProperties;
+import org.tortodrone.storage.Database;
 
-/** One atomically replaced character profile for an authenticated normal account. */
+/** Account-owned roster with transactional SQLite saves; legacy files support migration and tests. */
 public final class CharacterStore {
     public static final String USERNAME = AccountStore.DEFAULT_USERNAME;
     static final int MAX_KNIGHTS = 3;
     private final Path file;
+    private final Database database;
     private final String username;
     private final int accountId;
     private List<Knight> knights = List.of();
@@ -35,12 +37,12 @@ public final class CharacterStore {
         }
     }
 
-    /** In-memory store for isolated wire tests. Production always uses the data directory. */
+    /** In-memory store for isolated wire tests. Production uses SQLite. */
     public CharacterStore() { this(1, USERNAME); }
 
     public CharacterStore(int accountId, String username) {
         if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
-        file = null; this.username = username; this.accountId = accountId;
+        file = null; database = null; this.username = username; this.accountId = accountId;
     }
 
     public CharacterStore(Path dataDirectory) throws IOException {
@@ -49,7 +51,7 @@ public final class CharacterStore {
 
     public CharacterStore(Path dataDirectory, int accountId, String username) throws IOException {
         if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
-        this.username = username; this.accountId = accountId;
+        this.username = username; this.accountId = accountId; database = null;
         file = dataDirectory.resolve("accounts/" + accountId + ".properties");
         if (!Files.exists(file)) return;
         if (Files.size(file) > 32768) throw new IOException("Character profile exceeds size limit");
@@ -89,6 +91,13 @@ public final class CharacterStore {
         }
     }
 
+    public CharacterStore(Database database, int accountId, String username) throws IOException {
+        this.database = database; this.file = null; this.accountId = accountId; this.username = username;
+        knights = database.roster(accountId); nextId = database.nextKnight(accountId);
+    }
+
+    public synchronized int nextId() { return nextId; }
+
     public String username() { return username; }
     public int accountId() { return accountId; }
 
@@ -102,6 +111,10 @@ public final class CharacterStore {
     }
 
     public synchronized Knight create(Knight choices) throws IOException, Refused {
+        return create(choices, -1);
+    }
+
+    public synchronized Knight create(Knight choices, long authRevision) throws IOException, Refused {
         String error = nameFailure(choices.name());
         if (error != null) throw new Refused(error);
         try { validate(choices); }
@@ -111,13 +124,17 @@ public final class CharacterStore {
         Knight created = new Knight(nextId, choices.name(), choices.helm(), choices.armor(), choices.helmAccessory(),
             choices.armorAccessory(), choices.costume(), choices.color(), choices.height(), choices.eye(), System.currentTimeMillis());
         List<Knight> updated = new ArrayList<>(knights); updated.add(created);
-        save(updated, nextId + 1); // Acknowledge only after persistence succeeds.
+        save(updated, nextId + 1, authRevision); // Acknowledge only after persistence succeeds.
         knights = List.copyOf(updated); nextId++;
         notifyListeners();
         return created;
     }
 
     public synchronized Knight update(String oldName, Knight choices) throws IOException, Refused {
+        return update(oldName, choices, -1);
+    }
+
+    public synchronized Knight update(String oldName, Knight choices, long authRevision) throws IOException, Refused {
         int index = indexOf(oldName);
         if (index < 0) throw new Refused("No such knight");
         String error = nameError(choices.name());
@@ -135,18 +152,22 @@ public final class CharacterStore {
             choices.height(), choices.eye(), previous.createdAt());
         List<Knight> roster = new ArrayList<>(knights);
         roster.set(index, updated);
-        save(roster, nextId);
+        save(roster, nextId, authRevision);
         knights = List.copyOf(roster);
         notifyListeners();
         return updated;
     }
 
     public synchronized void delete(String name) throws IOException, Refused {
+        delete(name, -1);
+    }
+
+    public synchronized void delete(String name, long authRevision) throws IOException, Refused {
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         List<Knight> roster = new ArrayList<>(knights);
         roster.remove(index);
-        save(roster, nextId);
+        save(roster, nextId, authRevision);
         knights = List.copyOf(roster);
         notifyListeners();
     }
@@ -159,7 +180,8 @@ public final class CharacterStore {
         return -1;
     }
 
-    private void save(List<Knight> updated, int next) throws IOException {
+    private void save(List<Knight> updated, int next, long authRevision) throws IOException {
+        if (database != null) { database.saveRoster(accountId, updated, next, authRevision); return; }
         if (file == null) return;
         Files.createDirectories(file.getParent());
         Properties properties = new Properties();

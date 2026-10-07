@@ -37,16 +37,10 @@ firewall/router. The current server does not implement UDP.
 
 ## Normal login and current limits
 
-Use the normal username/password form:
-
-```text
-Username: tortodrone
-Password: tortodrone
-```
-
-This is the initial development account. Additional persistent normal accounts
-can be created with the server's offline account commands. Steam and guest login
-remain unsupported.
+Use the normal username/password form with an account created in the local desktop
+manager (`make admin`) or the running server terminal (`account create Alice`).
+Fresh installations have no default login. Upgrades preserve existing credentials.
+Steam and guest login remain unsupported. See [accounts](../README.md#server-terminal-commands).
 
 The creator validates names and saves new knights. After saving, it reports
 "Knight saved. Reconnect to view it; world entry is not available yet." Reconnect
@@ -84,11 +78,12 @@ work changes server behavior and does not patch clients or launchers.
 
 ## Additional normal accounts
 
-The server owner can create separate accounts with
-`java -jar build/tortodrone.jar --create-account username` while the server is
-stopped. Use the prompted password in the existing normal login form; the
-endpoint and public key stay the same for every account. See the
-[account commands](../README.md#normal-accounts).
+The server owner can create and administer accounts with `tortodrone-admin.jar`
+on the server PC, or with `account` commands in the running server terminal.
+The manager can stay open while the server runs once SQLite is initialized;
+stop an older server once before the first migration. Endpoint and public key
+stay the same for all accounts. Password reset/deletion disconnects existing
+sessions. See [account management](../README.md#create-an-account-then-start-the-server).
 
 ## LAN reachability
 

@@ -11,8 +11,10 @@ these operations; graphical/world behavior remains a separate check.
 Version `0.3.0` adds persistent normal accounts and separate saved rosters so LAN
 players have their own identities. Version `0.4.0` adds live
 roster updates across connections belonging to the same account, ordered output
-queues and subscription cleanup. These changes
-do not acknowledge character selection or mark introductory missions complete.
+queues and subscription cleanup.
+Version `0.5.0` adds SQLite account/character persistence, local desktop account
+administration, running-server terminal commands and stored Admin flags. These
+foundations do not acknowledge character selection or mark introductory missions complete.
 
 ## Next: selection and one starting area
 

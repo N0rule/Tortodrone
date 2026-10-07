@@ -1,7 +1,8 @@
 # Server Architecture
 
 Tortodrone runs as one Java process on the host network. Its executable
-JAR has no third-party dependencies and targets Java 17. The launcher lives in
+JAR bundles SQLite JDBC and targets Java 17. A separate desktop administration
+JAR shares the local SQLite database. The launcher lives in
 its own repository and connects through the ordinary TCP socket interface.
 Only normal username/password login is in scope; Steam and guest authentication
 will not be implemented. Compatibility work belongs in the server, without client patches.
@@ -12,7 +13,7 @@ will not be implemented. Compatibility work belongs in the server, without clien
 adjacent `data/` directory, starts logging, loads `data/server.properties`, loads
 or creates a persistent 2048-bit RSA identity, loads normal accounts and their
 saved character rosters,
-binds the configured address/port, then accepts clients.
+binds the configured address/port, then accepts clients and terminal commands.
 Missing configuration is generated from the defaults bundled in the JAR.
 
 ```sh
@@ -41,7 +42,7 @@ connection's concrete local interface address and the actual listening port, so
 a wildcard bind (`0.0.0.0`) does not send an unusable address to clients. Public
 keys remain in `data/keys/public.txt`; no connection settings file is exported.
 
-Change settings while the server is stopped, then restart it. Ctrl+C closes the
+Change settings while the server is stopped, then restart it. `stop` or Ctrl+C closes the
 listener and active sockets. A data directory lock prevents concurrent servers
 from creating or using the same identity. The OS also rejects an occupied port.
 
@@ -125,16 +126,17 @@ saves the reduced roster, emits its update, then sends a success confirmation.
 Steam fields, missing characters, duplicate names and unknown operations are refused.
 
 `CharacterStore` shares one synchronized store across connections for each
-authenticated account. It persists up to three knights in `data/accounts/<id>.properties`,
-including stable IDs, names, creation times, and appearance choices. Writes use
-a flushed temporary file and atomic replacement; an I/O failure neither publishes
-the character nor consumes an ID. Edits and deletions use the same atomic
-replacement and publish only after it succeeds. Deleting a knight frees a slot
-but never recycles its ID; editing keeps its ID and original creation timestamp.
-Invalid profiles stop startup without changing the file. Name checks are advisory; creation rechecks uniqueness under the same
-lock. All subscribed sessions on that account receive live updates. Snapshot publication
-and subscription registration use the mutation lock, preventing stale snapshots
-from overtaking a newer update. Unsubscribe and disconnect detach the observer.
+authenticated account. It persists up to three knights per account in
+`data/tortodrone.db`, including stable IDs, names, creation times and appearance.
+A transaction verifies the account's authentication revision and commits before
+publishing the roster. Failed writes publish nothing and consume no ID. Deleting
+a knight frees a slot without recycling IDs; edits retain IDs and creation times.
+Legacy property files are read only during initial migration.
+
+Name checks are advisory; creation rechecks uniqueness under the mutation lock.
+All subscribed sessions on that account receive live updates. Snapshot publication
+and subscription registration use that lock so snapshots cannot overtake a newer
+update. Unsubscribe and disconnect detach observers.
 
 The `AvailableKnight` wire schema includes a non-null model reference. Its
 configuration names and argument keys use a separate connection-local intern
@@ -161,7 +163,8 @@ argument values. UDP is not implemented.
 - [x] Rendered character creator confirmed by the user.
 - [x] Persist account-owned characters; name validation, creation and roster updates.
 - [x] Edit saved names/appearance; delete knights and reuse slots without recycling IDs.
-- [x] Separate persistent accounts, offline account creation and password changes.
+- [x] Separate persistent accounts and protected password verification.
+- [x] SQLite persistence, desktop account manager, live terminal commands and Admin flags.
 - [x] Account-scoped live roster updates and bounded ordered downstream queues.
 - [ ] Apply saved appearance to previews and reconstruct starter inventory.
 - [ ] Implement character selection, minimal inventory, zone entry and world state.
@@ -176,7 +179,7 @@ keeps a minimal starting scene separate from introductory missions.
 
 ## Build and tests
 
-`make build` compiles with `javac --release 17` and packages the executable JAR
+`make build` compiles with `javac --release 17` and packages both executable JARs with a bundled SQLite JDBC driver
 with `jar`. `make test` runs Java protocol tests and launches the JAR in a
 separate process with temporary configuration and state. Tests cover host-network
 connections, full synthetic authentication, bootstrap service routing, complete
@@ -200,7 +203,7 @@ The earlier Python/bubblewrap launcher workflow and Maven toolchain were removed
 Historical experiments remain under `docs/research/`; their old commands and
 paths are historical evidence, not current runtime requirements.
 
-## Account ownership (0.3.0)
+## Account ownership and administration (0.5.0)
 
 `AccountStore` owns stable account IDs, protected password verifiers and separate
 character stores. The normal credential decoder supplies only a username and
@@ -209,9 +212,34 @@ the account, and the PlayerObject snapshot uses that account's ID and canonical
 username. All character invocations use its shared store; another account's
 characters and distributed player objects are inaccessible.
 
-The initial development account and version 0.2 profile remain ID 1. Account
-creation and password changes are offline, atomically saved administrative
-commands. Runtime state remains beside the JAR, and keys are unaffected.
+Production accounts and knights live in one SQLite database with foreign keys,
+transactional saves, WAL and a busy timeout. Fresh installations have no accounts.
+The first open migrates existing property registries/profiles in one transaction,
+retaining IDs, counters and protected verifiers. Source files remain untouched;
+imported Admin flags are false. Profile-only 0.2 installs retain their fixed login.
+The initial migration needs the deployment lock; stop an old server once first.
+
+`AdminApplication` opens a local Swing account window, with database/hash work on
+background workers. It has create/list/check/reset/delete/role actions, searching
+and manual refresh, and optional CLI commands for headless hosts. By default it
+uses data beside its JAR, or an explicit `--data` directory. It opens no network
+endpoint. Once initialized, the manager and server use short database transactions
+concurrently. Backups should stop both processes before copying the whole data
+folder, including keys; a live database can have uncheckpointed WAL changes.
+
+`ServerConsole` reads commands on a daemon thread while the listener handles
+connections. `help`, `status`, `stop` and `account` commands use the same account
+service as the desktop. Passwords use separate hidden terminal prompts rather
+than command arguments, and account deletion requires typing the username. EOF
+leaves the service running. Old server account startup options are removed.
+
+Passwords cannot be recovered: candidate checks and reset are supported. A reset
+increments the account's authentication revision; deletion removes it. Login
+checks that revision after hashing and when attaching its socket. A 250 ms watcher
+closes stale sessions, and character saves guard identity/revision in their SQL
+transaction. Roles are stored separately and must be read fresh for future command
+permissions. No in-game admin commands exist yet. Keys are unaffected by account
+administration.
 
 ## Downstream publication (0.4.0)
 

@@ -1,63 +1,133 @@
 # Tortodrone
 
-Tortodrone is a standalone Java server emulator for Spiral Knights. This project
-builds the server; the game and KnightLauncher are separate projects. Only normal
-username/password login is supported. Steam and guest login are outside the scope
-of the project.
+Tortodrone is a standalone Java server emulator for Spiral Knights. Development
+is limited to the server and normal username/password login. The game and
+KnightLauncher are separate projects; Steam and guest login are unsupported.
 
-The current server supports secure exchange, persistent normal accounts, bootstrap,
-TCP heartbeat, name validation, character creation/editing/deletion, and a saved
-character roster with live updates across the account’s connected sessions.
-**World entry and gameplay are not implemented.** Characters survive server
-restarts. Unsupported operations return explicit failures.
+The server supports secure exchange, persistent accounts, heartbeat, character
+creation/editing/deletion, and live saved-roster updates across an account's
+sessions. A separate desktop account manager and commands in the running server
+terminal administer accounts. **World entry and gameplay are not implemented.**
 
-## Fresh install
+## Build on a fresh install
 
-Install Git, GNU Make, and a JDK 17 or newer. The JDK must provide `java`, `javac`,
-and `jar` on your system's `PATH`. There are no Maven, Gradle, game-file, or launcher
-build dependencies.
+Install Git, GNU Make, JDK 17 or newer, `curl`, and `sha256sum` (GNU coreutils).
+The JDK must provide `java`, `javac`, and `jar` on `PATH`. No Maven, Gradle, game
+installation, or database server is needed. The first build downloads a pinned,
+checksum-verified SQLite JDBC driver from Maven Central; later builds use the
+cached copy in `build/deps/`. Both executable JARs bundle that dependency.
 
-Clone the repository using its actual URL, then enter `Tortodrone/`:
+Clone using the repository's actual URL, or enter your existing checkout:
 
 ```sh
-git clone <repository-url> Tortodrone
-cd Tortodrone
-java -version
-javac -version
-make --version
+cd ~/Projects/Tortodrone
 make build
+```
+
+This creates:
+
+| File | Purpose |
+| --- | --- |
+| `build/tortodrone.jar` | Game server, including terminal commands |
+| `build/tortodrone-admin.jar` | Local desktop account manager |
+
+To build only one, use `make build-server` or `make build-admin`.
+
+## Create an account, then start the server
+
+On the server PC's desktop:
+
+```sh
+java -jar build/tortodrone-admin.jar
+```
+
+Click **Create account**, enter a username and password, optionally enable
+**Admin**, and save. Fresh installations have no automatic account or default
+password. The manager shows IDs, usernames, Admin flags, character counts and
+creation times. It also supports searching, changing passwords, checking a
+supplied password, deleting accounts and refreshing the list.
+
+Then run:
+
+```sh
 java -jar build/tortodrone.jar
 ```
 
-`make build` only compiles. `make server` builds and starts the same JAR from
-`build/`. Press Ctrl+C to stop the server. The default data directory is always
-beside the JAR: running `java -jar build/tortodrone.jar` from the repository root
-uses `build/data/`, too.
+`make admin` builds and opens the manager; `make server` builds and starts the
+server from `build/`. `make build` only compiles. Stop the server with `stop` in
+its terminal or Ctrl+C. No game installation is required to run either JAR.
 
-The server creates its configuration, keys, and log on first
-start. No game installation is required to run it. For deployment, copy only
-`tortodrone.jar` into a directory and run `java -jar tortodrone.jar` with Java 17+.
-Keep its `data/` directory across restarts and upgrades.
+For deployment, copy both JARs into the same directory. They use `data/` beside
+their own JAR, regardless of the shell's current directory. Keep this directory
+when replacing the JARs. If the manager is stored elsewhere, point it at the
+server's existing data directory:
+
+```sh
+java -jar /path/to/tortodrone-admin.jar --data /path/to/server/data
+```
+
+The manager runs locally on the server PC and opens no remote administration port.
+Once the database is initialized, it can manage accounts while the server runs.
+
+## Server terminal commands
+
+Type these into the **running server terminal**, without restarting it:
+
+| Command | Action |
+| --- | --- |
+| `help` | Show available commands |
+| `status` | Show status and account count |
+| `stop` | Close the listener and clients, then exit |
+| `account list` | List IDs, usernames, Admin flags and character counts |
+| `account create Alice` | Create an account; prompt for a password twice |
+| `account create Alice admin` | Create with Admin enabled |
+| `account password Alice` | Change/reset the password; prompt twice |
+| `account check Alice` | Check a supplied password |
+| `account admin Alice true` | Enable Admin (`false` disables it) |
+| `account delete Alice` | Delete the account and its characters after typing its exact username |
+
+A leading `/` is optional. Passwords are entered at the separate prompts and are
+hidden in a real terminal. They are never command arguments or log messages.
+Redirected stdin can supply complete UTF-8 lines for commands and prompts. Closing
+stdin leaves the server running, useful when starting it as a background service.
+The server JAR's old `--create-account`, `--set-password`, and `--list-accounts`
+options have been removed.
+
+A forgotten password cannot be recovered: **Check password** verifies a candidate;
+**Change password** sets a replacement. Password changes preserve characters.
+Password reset or account deletion disconnects existing sessions, checked every
+250 ms. Character saves also check the account's authentication revision inside
+their database transaction. Admin defaults to false, is stored on the server, and
+is reserved for future permissions and in-game commands; setting it does not
+unlock gameplay or commands in the client.
+
+Usernames need 3–32 ASCII characters: a letter first, then letters, digits,
+underscores or hyphens. They are case insensitive. Passwords need 8–128 characters.
+Storage uses a random salt and PBKDF2-HMAC-SHA256 with 600,000 iterations, applied
+to the legacy client's password transform. Neither plaintext passwords nor the
+reusable client transform are saved.
+
+For a PC without a desktop, the **admin JAR** also offers terminal actions listed
+by `java -jar build/tortodrone-admin.jar --help`. These operate on the same local
+database. Password prompts are hidden with a terminal; without one, supply the
+password and confirmation as two complete stdin lines (one line for a check).
 
 ## Files and settings
 
 ```text
-Tortodrone/
-  AGENTS.md                      contributor rules
-  VERSION                        release version bundled into the JAR
-  src/                           server sources, resources, and tests
-  docs/                          current guides and historical research
-  build/
-    tortodrone.jar                executable server
-    .build/                      disposable production and test classes
-    data/
-      server.properties          editable settings
-      keys/private.pk8           private server identity; keep secret
-      keys/public.txt            public key for launcher settings
-      accounts/users.properties  account IDs and protected password verifiers
-      accounts/<id>.properties   each account’s saved knights
-      logs/latest.log            server output, appended across restarts
-      server.lock                prevents concurrent use of the same data
+build/
+  tortodrone.jar
+  tortodrone-admin.jar
+  .build/                       disposable classes and packaging output
+  deps/                         cached build dependency
+  data/
+    server.properties           server settings
+    tortodrone.db               accounts, Admin flags and saved knights
+    tortodrone.db-wal/-shm       transient SQLite files when in use
+    keys/private.pk8            private server identity; keep secret
+    keys/public.txt             public key for launcher settings
+    logs/latest.log             appended server output
+    server.lock                 prevents two servers using this deployment
 ```
 
 Stop the server before editing `build/data/server.properties`, then restart:
@@ -70,46 +140,18 @@ log-mode=normal
 
 | Setting | Meaning |
 | --- | --- |
-| `server-ip` | Local interface to listen on. `0.0.0.0` accepts connections on all IPv4 interfaces. |
-| `server-port` | TCP listening port. Default: `47624`. |
-| `log-mode` | `normal` for basic operational messages; `debug` for those messages plus protocol details. |
+| `server-ip` | Local listening interface; `0.0.0.0` accepts all IPv4 interfaces |
+| `server-port` | TCP port, default `47624` |
+| `log-mode` | `normal` for operational messages; `debug` adds protocol diagnostics |
 
-`server-ip` and `server-port` configure the listener. Clients need the server's
-reachable address, that TCP port, and the public key from `data/keys/public.txt`.
-For the default `server-ip=0.0.0.0`, use `127.0.0.1` on this computer or the
-server's LAN/public address from another computer.
+There is no `data-directory` or `client-host` setting. `--config /path/to/server.properties`
+selects a settings file without moving state. First startup creates missing
+configuration and keys; existing configuration and identity are preserved.
 
-There is no `data-directory` setting. All runtime state stays in `data/` beside the
-JAR. `--config /path/to/server.properties` selects another settings file without
-moving keys, characters, or logs.
-
-If upgrading an older installation, remove `data-directory` from the editable
-configuration. If its data is still in the repository root, stop the server and
-move the whole directory to `build/data/` only if that destination does not already
-exist. If both directories exist, back them up and choose which state to keep.
-Preserve the complete keypair and account profiles. Changing bundled defaults
-never overwrites an existing configuration.
-
-## Connected sessions
-
-Creating, editing or deleting a knight sends the updated roster to every connected
-session subscribed to that account's PlayerObject. Other accounts receive none
-of those updates. Disconnecting or unsubscribing removes the subscription;
-resubscribing receives a fresh snapshot. Changes are saved before updates and
-callbacks are sent.
-
-Each connection has an ordered queue limited to 64 pending frames. A stalled
-connection is closed when its queue fills, allowing other sessions to continue.
-These are roster updates; selecting a character and entering a scene are still
-unavailable. The creator's explicit saved/unavailable message remains until the
-world transition is implemented.
-
-## Logs and version
-
-The startup banner includes the release version from `VERSION`:
+Startup displays the version bundled from `VERSION`, currently `0.5.0`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.4.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.5.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
@@ -118,100 +160,81 @@ The startup banner includes the release version from `VERSION`:
 [19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
 [19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
 [19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)
+[19:30:01] [ServerMain/INFO]: Type help for server commands.
 ```
 
-Normal mode includes startup, connection/login events, character saves, warnings,
-errors, and shutdown. Debug mode adds handshake/frame diagnostics, bootstrap,
-snapshots, receiver registration, and invocation routing. Both console and
-`data/logs/latest.log` use the same format and filtering. Neither mode logs secrets
-or raw client payloads. Timestamps use the machine's local time.
+Normal mode includes startup, connection/login events, character saves, commands,
+warnings, errors and shutdown. Debug adds protocol diagnostics. Console and
+`data/logs/latest.log` share the format and filtering. Neither logs secrets or raw
+payloads. Timestamps use local machine time. `--version` shows either JAR's release.
 
-```sh
-java -jar build/tortodrone.jar --version
-```
+## Upgrade and back up
 
-## Normal accounts
+Stop the old server before the first 0.5.0 startup or opening the account manager.
+The first open automatically imports `data/accounts/users.properties` and the
+account profiles into SQLite in one transaction. Account IDs, password verifiers,
+knight IDs, appearance, timestamps and next-ID counters are preserved; imported
+accounts have Admin=false. The older 0.2.0 profile-only installation retains its
+fixed `tortodrone` / `tortodrone` login. New installations do not create that login.
 
-The initial development account remains `tortodrone` / `tortodrone`, preserving
-existing characters under account ID `1`. Each additional account has its own
-three character slots. Usernames are case insensitive; character rosters and
-mutations are limited to the authenticated account.
+Legacy files stay untouched as backups, and are no longer read or written after
+a successful migration. Do not switch back to an older server against those
+stale files. Invalid migration sources stop migration instead of assigning new
+identities; correct/restore them and retry.
 
-Stop the server, then create an account or change a password:
-
-```sh
-java -jar build/tortodrone.jar --create-account Alice
-java -jar build/tortodrone.jar --set-password tortodrone
-java -jar build/tortodrone.jar --list-accounts
-```
-
-Creation and password changes prompt twice without echoing the password. Usernames
-need 3–32 characters, starting with a letter and using ASCII letters, digits,
-underscores or hyphens. Passwords need 8–128 characters. For automation without a
-terminal, supply the password and confirmation as two complete UTF-8 lines on
-standard input; passwords are never command-line arguments.
-
-Restart the server and use the account in the normal game login form. Registration
-is administered through these server commands; in-game registration is not
-implemented. The commands share the server's deployment lock and refuse to modify
-a running deployment. Back up the complete `data/accounts/` directory: the
-registry owns the identities associated with the character profiles.
-
-Password storage uses a separate random salt for each account and PBKDF2-HMAC-SHA256
-with 600,000 iterations. The legacy client's MD5 password transform is applied
-before derivation for compatibility; neither plaintext passwords nor that reusable
-transform are saved. Password changes retain account IDs and characters. Steam,
-guest and official-service sessions remain unsupported.
+For a simple backup, stop the server and close the manager, then copy the complete
+`data/` directory. Do not copy only a live database while its WAL may contain
+uncheckpointed changes. Keep the keypair as well as the database. Older runtime
+data at the repository root must be moved beside the JAR while stopped, without
+overwriting an existing deployment. Remove obsolete `data-directory` settings.
 
 ## Connect and create a knight
 
-Start the separately maintained KnightLauncher normally and configure:
+Configure the separately maintained KnightLauncher:
 
-| Launcher setting | Value for this computer |
+| Setting | This computer |
 | --- | --- |
 | `game.endpoint` | `127.0.0.1` |
 | `game.port` | `47624` |
 | `game.publicKey` | Entire value from `build/data/keys/public.txt` |
 
-Log in through the normal username/password form with `tortodrone` / `tortodrone`.
-For another computer, use the server's reachable address and `server-port`.
-See [connection guidance](docs/client-redirection.md).
+On another computer, use the server's reachable LAN/public address. Log in through
+the normal username/password form using an account you created. All accounts use
+the same endpoint and public key. See [connection guidance](docs/client-redirection.md).
 
-Names contain 3–16 letters with optional single hyphens. Names are unique without
-regard to case within an account, and each account has three slots. The server saves appearance
-choices and stable character IDs before reporting the result. The save operation
-also accepts an existing knight name to update its name and appearance while
-preserving its ID and creation time. Updates still work when all three slots are
-full. Creation/editing reports the saved result without entering the world;
-reconnect to view it. Deletion updates the roster, frees a slot, and survives
-restarts. Missing knights and duplicate names are rejected. Selecting a knight
-returns a failure until world entry is implemented. The basic roster preview applies color and
-height; equipment, accessories, and eyes are saved but are not yet applied to it.
-Back up `data/` to preserve characters and server identity.
+Each account has three character slots. Names contain 3–16 letters with optional
+single hyphens and must be unique within that account, ignoring case. Create,
+edit and delete save before publishing roster updates to that account's sessions.
+Edits preserve IDs and creation times; deletion frees a slot without reusing IDs.
+Other accounts cannot receive or alter the roster. Connections have ordered queues
+of at most 64 pending frames; a stalled recipient is disconnected.
+
+Creation/editing currently reports a saved/unavailable message; reconnect to view
+the roster. Selecting a knight fails until world entry is implemented. The preview
+applies color and height; equipment, accessories and eyes are saved but not fully
+applied to the preview. Intro missions and gameplay remain future work.
 
 ## Contribute
 
 Read [AGENTS.md](AGENTS.md) and the [development guide](docs/development.md).
-Keep changes focused on the server and normal login. Client and launcher changes,
-Steam authentication, and guest authentication are outside this repository's scope.
-
-Create a branch, make the change, and run the relevant checks:
+Create a branch, change the server, and run checks against disposable data:
 
 ```sh
 git switch -c describe-your-change
 make test
 ```
 
-`make test-unit` runs character, protocol, and socket/session tests.
-`make test-integration` starts temporary copies of the packaged JAR. Tests use
-synthetic clients and need no game files or external services. `make clean`
-removes compiled output and the JAR while preserving runtime data.
+`make test-unit` covers storage, desktop table behavior, protocol and sessions.
+`make test-integration` starts temporary copies of the JARs and checks live
+administration and server commands. No game files or external services are needed
+once the driver is cached. `make clean` removes compiled output and both JARs,
+preserving runtime data and cached dependencies. Leave test servers stopped.
 
-Review `git diff`, commit the files you changed, and submit your branch for review
-through the repository's hosting service. Include what changed and which checks
-passed. Never commit build output, runtime data, private keys, or game assets.
+Review `git diff`, commit your changes and submit the branch for review through
+the repository's hosting service. Include what changed and which checks passed.
+Never commit build output, runtime data, passwords, private keys or game assets.
 
-See [server architecture](docs/server-architecture.md) for implementation details
-and the [world entry plan](docs/world-entry-plan.md) for the next milestones. [Historical research](docs/research/README.md) records
-past observations; its old paths and client experiments are not current setup or
-contribution instructions.
+See [server architecture](docs/server-architecture.md), the
+[world entry plan](docs/world-entry-plan.md), and [dependency notices](docs/dependencies.md).
+[Historical research](docs/research/README.md) is evidence of past experiments,
+not current setup or client modification instructions.

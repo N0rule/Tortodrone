@@ -22,13 +22,18 @@ final class ClientSession {
 
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters) throws Exception {
+        run(socket,incoming,connectionId,host,port,log,characters,-1);
+    }
+
+    static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
+            SessionLog log, CharacterStore characters, long authRevision) throws Exception {
         try (SessionOutput output = new SessionOutput(socket)) {
-            run(socket, incoming, connectionId, host, port, log, characters, output);
+            run(socket, incoming, connectionId, host, port, log, characters, output, authRevision);
         }
     }
 
     private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
-            SessionLog log, CharacterStore characters, SessionOutput output) throws Exception {
+            SessionLog log, CharacterStore characters, SessionOutput output, long authRevision) throws Exception {
         SessionCodec outgoing = new SessionCodec();
         int clientOid = Math.addExact(1000, connectionId);
         output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
@@ -81,7 +86,7 @@ final class ClientSession {
                             log.debug("Client logged off");
                             return;
                         }
-                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null);
+                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null, authRevision);
                         default -> throw new IllegalStateException("Unsupported session request");
                     }
                 }
@@ -93,10 +98,10 @@ final class ClientSession {
     }
 
     private static void handleEvent(SessionOutput output, SessionCodec outgoing, SessionDecoder.Event event,
-            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed) throws IOException {
+            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision) throws IOException {
         if (event instanceof SessionDecoder.Compound compound) {
             if (compound.oid() != clientOid) throw new SessionDecoder.Rejected("Invalid compound event target");
-            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed);
+            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed, authRevision);
         } else if (event instanceof SessionDecoder.Mutation mutation) {
             if (mutation.oid() != clientOid || !"receivers".equals(mutation.field())) {
                 throw new SessionDecoder.Rejected("Unauthorized object mutation");
@@ -139,7 +144,7 @@ final class ClientSession {
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
             if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 5 || invocation.method() == 6)) {
-                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed);
+                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision);
                 return;
             }
             for (Object argument : invocation.arguments()) {
@@ -153,7 +158,7 @@ final class ClientSession {
     }
 
     private static void characterRequest(SessionOutput output, SessionCodec outgoing, SessionDecoder.Invocation invocation,
-            int clientOid, SessionLog log, CharacterStore characters, boolean subscribed) throws IOException {
+            int clientOid, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision) throws IOException {
         var args = invocation.arguments();
         if (args.isEmpty() || !(args.get(args.size() - 1) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith("$ConfirmMarshaller")) {
@@ -168,7 +173,7 @@ final class ClientSession {
                 failure = "Invalid character deletion request";
             } else {
                 try {
-                    characters.delete(name);
+                    characters.delete(name,authRevision);
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {
@@ -196,8 +201,8 @@ final class ClientSession {
                     Knight choices = new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),
                         ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0);
-                    if (args.get(0) == null) characters.create(choices);
-                    else characters.update((String) args.get(0), choices);
+                    if (args.get(0) == null) characters.create(choices,authRevision);
+                    else characters.update((String) args.get(0), choices,authRevision);
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {

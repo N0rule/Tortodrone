@@ -31,7 +31,7 @@ public final class Server {
         try {
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone.jar [--config path/to/server.properties | --version | --help]");
-                System.out.println("Accounts (server must be stopped): --list-accounts | --create-account username | --set-password username");
+                System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for desktop account management.");
                 return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
@@ -41,17 +41,15 @@ public final class Server {
             Path location = Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
-            boolean accountCommand = AccountCommands.matches(args);
             Path config;
             if (args.length == 2 && args[0].equals("--config")) config = Path.of(args[1]);
-            else if (args.length == 0 || accountCommand) config = dataDirectory.resolve("server.properties");
-            else throw new IOException("Use --help for server and account commands");
+            else if (args.length == 0) config = dataDirectory.resolve("server.properties");
+            else throw new IOException("Use --help for server options; type help in the running server terminal");
             Files.createDirectories(dataDirectory);
             try (FileChannel channel = FileChannel.open(dataDirectory.resolve("server.lock"),
                     StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  FileLock lock = channel.tryLock()) {
-                if (lock == null) throw new IOException("Another server or account command is using this JAR's data directory");
-                if (accountCommand) { AccountCommands.run(args, dataDirectory); return; }
+                if (lock == null) throw new IOException("Another server is using this JAR's data directory");
                 log = new ServerLog(dataDirectory.resolve("logs"));
                 log.info("Starting Tortodrone server version " + version());
                 log.info("Loading properties");
@@ -89,14 +87,16 @@ public final class Server {
             log.info(Files.exists(keys.resolve("private.pk8")) ? "Loading server keypair" : "Generating server keypair");
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
             log.info("Loading normal accounts and saved characters");
-            AccountStore accounts = new AccountStore(dataDirectory);
-            log.info("Loaded accounts: " + accounts.list().size());
-            listener.bind(new InetSocketAddress(address, settings.port()));
-            log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
-                + ":" + listener.getLocalPort());
-            log.debug("Public key: " + keys.resolve("public.txt"));
-            log.info("Normal login and saved characters available; world entry is not implemented.");
-            accept(listener, key, log, accounts);
+            try (AccountStore accounts = new AccountStore(dataDirectory,true)) {
+                accounts.watchSessions();
+                log.info("Loaded accounts: " + accounts.list().size());
+                listener.bind(new InetSocketAddress(address, settings.port()));
+                log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
+                    + ":" + listener.getLocalPort());
+                log.debug("Public key: " + keys.resolve("public.txt"));
+                log.info("Normal login and saved characters available; world entry is not implemented.");
+                accept(listener, key, log, accounts);
+            }
         }
     }
 
@@ -122,6 +122,10 @@ public final class Server {
         try {
             log.debug("Limits: 16 clients; 64 KiB/frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
+            log.info("Type help for server commands.");
+            new ServerConsole(accounts, log, () -> {
+                try { listener.close(); } catch (IOException ignored) { }
+            }, () -> !listener.isClosed()).start();
             while (!listener.isClosed()) {
                 Socket client;
                 try {
@@ -150,8 +154,10 @@ public final class Server {
             for (Socket client : clients) {
                 try { client.close(); } catch (IOException ignored) { }
             }
-            try { Runtime.getRuntime().removeShutdownHook(shutdown); }
-            catch (IllegalStateException ignored) { /* JVM is already shutting down. */ }
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdown);
+                log.info("Server stopped.");
+            } catch (IllegalStateException ignored) { /* The shutdown hook owns the final message. */ }
         }
     }
 

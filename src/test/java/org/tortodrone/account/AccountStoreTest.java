@@ -1,10 +1,12 @@
 package org.tortodrone.account;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.*;
+import java.util.concurrent.*;
 import org.tortodrone.character.*;
+import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
 
 public final class AccountStoreTest {
@@ -13,69 +15,91 @@ public final class AccountStoreTest {
         try {
             CharacterStore legacy = new CharacterStore(directory);
             Knight knight = legacy.create(choices("Legacy-Knight"));
-            byte[] oldProfile = Files.readAllBytes(directory.resolve("accounts/1.properties"));
-            AccountStore accounts = new AccountStore(directory);
-            var first = login(accounts, "TORTODRONE", "tortodrone");
-            check(first.id() == 1 && first.username().equals("tortodrone") && first.characters().roster().equals(List.of(knight)), "legacy identity and knights survive account migration");
-            check(Arrays.equals(oldProfile, Files.readAllBytes(directory.resolve("accounts/1.properties"))), "migration does not rewrite profile");
-            accounts.create("Alice", "alice-password".toCharArray());
-            accounts.create("Bob", "bob-password".toCharArray());
-            var alice = login(accounts, "alice", "alice-password");
-            var bob = login(accounts, "Bob", "bob-password");
-            check(alice.id() == 2 && bob.id() == 3 && alice.characters() != bob.characters(), "independent stable account IDs and stores");
-            alice.characters().create(choices("Alice-Knight"));
-            check(bob.characters().roster().isEmpty() && first.characters().roster().size() == 1, "rosters are isolated");
-            try { bob.characters().delete("Alice-Knight"); throw new AssertionError("foreign knight deleted"); }
-            catch (CharacterStore.Refused expected) { }
-            check(login(accounts, "Alice", "wrong-password") == null && login(accounts, "Missing", "alice-password") == null, "generic rejection for wrong or missing account");
-            byte[] registry = Files.readAllBytes(directory.resolve("accounts/users.properties"));
-            refused(() -> accounts.create("ALICE", "another-password".toCharArray()));
-            refused(() -> accounts.create("../bad", "another-password".toCharArray()));
-            refused(() -> accounts.create("Short", "short".toCharArray()));
-            refused(() -> accounts.setPassword("Missing", "another-password".toCharArray()));
-            check(Arrays.equals(registry, Files.readAllBytes(directory.resolve("accounts/users.properties"))), "refused commands preserve registry");
-            check(!new String(registry).contains("alice-password") && !new String(registry).contains(new String(AccountStore.transform("alice-password".toCharArray()))), "neither plaintext nor reusable client transform stored");
-            if (Files.getFileStore(directory).supportsFileAttributeView("posix")) check(Files.getPosixFilePermissions(directory.resolve("accounts/users.properties")).equals(PosixFilePermissions.fromString("rw-------")), "registry permissions");
-            accounts.setPassword("ALICE", "changed-password".toCharArray());
-            check(login(accounts, "Alice", "alice-password") == null && login(accounts, "Alice", "changed-password").id() == 2, "password change preserves identity");
-            AccountStore restored = new AccountStore(directory);
-            check(login(restored, "Alice", "changed-password").characters().roster().equals(alice.characters().roster()), "accounts and characters persist across restart");
-            restored.create("Charlie", "charlie-password".toCharArray());
-            check(login(restored, "Charlie", "charlie-password").id() == 4, "account IDs continue after restart");
-
-            Path registryPath = directory.resolve("accounts/users.properties");
-            byte[] complete = Files.readAllBytes(registryPath);
-            Files.delete(registryPath); Files.createDirectory(registryPath);
-            refused(() -> restored.create("Retry", "retry-password".toCharArray()));
-            check(login(restored, "Retry", "retry-password") == null && restored.list().size() == 4, "failed registry save does not publish account");
-            refused(() -> restored.setPassword("Bob", "changed-password".toCharArray()));
-            check(login(restored, "Bob", "bob-password") != null, "failed password save preserves old password");
-            Files.delete(registryPath); Files.write(registryPath, complete);
-            restored.create("Retry", "retry-password".toCharArray());
-            check(login(restored, "Retry", "retry-password").id() == 5, "failed save does not consume ID");
-            complete = Files.readAllBytes(registryPath);
-            Files.writeString(registryPath, "schema=broken\n");
-            byte[] corrupt = Files.readAllBytes(registryPath);
-            refused(() -> new AccountStore(directory));
-            check(Arrays.equals(corrupt, Files.readAllBytes(registryPath)), "invalid registry never reset");
-            Files.write(registryPath, complete);
-            Files.delete(registryPath);
-            refused(() -> new AccountStore(directory));
-            check(!Files.exists(registryPath), "missing registry with additional profiles refuses identity reassignment");
-            System.out.println("PASS: normal account migration, password protection/reset, stable IDs, isolated profiles, restart and failed writes");
-        } finally {
-            try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); }
+            Path profile = directory.resolve("accounts/1.properties"); byte[] oldProfile = Files.readAllBytes(profile);
+            legacyRegistry(directory);
+            Path registry = directory.resolve("accounts/users.properties"); byte[] oldRegistry = Files.readAllBytes(registry);
+            try (AccountStore accounts = new AccountStore(directory)) {
+                var first = login(accounts,"TORTODRONE","tortodrone");
+                check(first.id() == 1 && !first.admin() && first.characters().roster().equals(List.of(knight)),"migration preserves identity, verifier and appearance; Admin defaults false");
+                check(Arrays.equals(oldProfile,Files.readAllBytes(profile)) && Arrays.equals(oldRegistry,Files.readAllBytes(registry)),"legacy files remain untouched");
+                accounts.create("Alice","alice-password".toCharArray(),true); accounts.create("Bob","bob-password".toCharArray());
+                var alice = login(accounts,"alice","alice-password"); var bob = login(accounts,"Bob","bob-password");
+                check(alice.id() == 2 && bob.id() == 3 && alice.admin() && !bob.admin(),"separate stable identities and Admin flag");
+                alice.characters().create(choices("Alice-Knight")); check(bob.characters().roster().isEmpty(),"private character rosters");
+                refused(() -> accounts.create("ALICE","new-password".toCharArray()));
+                refused(() -> accounts.create("../bad","new-password".toCharArray()));
+                refused(() -> accounts.create("Short","short".toCharArray()));
+                check(accounts.checkPassword("Alice","alice-password".toCharArray()) && !accounts.checkPassword("Alice","wrong-password".toCharArray()),"password verification");
+                accounts.setPassword("ALICE","changed-password".toCharArray());
+                refused(() -> alice.characters().create(choices("Stale-Revision"),alice.authRevision()));
+                check(!accounts.current(alice) && login(accounts,"Alice","alice-password") == null,"reset invalidates old credentials and session revisions");
+                check(login(accounts,"Alice","changed-password").characters().roster().size() == 1,"reset preserves characters");
+                accounts.setAdmin("Alice",false); check(!accounts.isAdmin(alice.id()),"Admin changes read current database state");
+                Path file = accounts.databaseFile(), backup = directory.resolve("saved.db");
+                Files.move(file,backup); Files.createDirectory(file);
+                refused(() -> accounts.create("Retry","retry-password".toCharArray()));
+                refused(() -> accounts.setPassword("Bob","changed-password".toCharArray()));
+                Files.delete(file); Files.move(backup,file);
+                check(login(accounts,"Bob","bob-password") != null,"failed write preserves old password");
+                accounts.create("Retry","retry-password".toCharArray()); check(login(accounts,"Retry","retry-password").id() == 4,"failed write does not consume identity");
+                accounts.delete("Alice",alice.id()); check(login(accounts,"Alice","changed-password") == null,"deleted account cannot authenticate");
+                check(new Database(directory,false).roster(alice.id()).isEmpty(),"account deletion removes owned characters atomically");
+                try { alice.characters().create(choices("Stale-Knight")); throw new AssertionError("deleted account resurrected"); } catch (IOException expected) { }
+                accounts.create("Alice","replacement-password".toCharArray()); check(login(accounts,"Alice","replacement-password").id() == 5,"deleted identities never recycled");
+                refused(() -> accounts.delete("Alice",alice.id())); refused(() -> accounts.setPassword("Alice","new-password".toCharArray(),alice.id()));
+                check(login(accounts,"Alice","replacement-password") != null,"stale GUI selection cannot modify replacement account");
+                if (Files.getFileStore(file).supportsFileAttributeView("posix")) check(Files.getPosixFilePermissions(file).equals(PosixFilePermissions.fromString("rw-------")),"database is owner-only");
+            }
+            try (AccountStore restored = new AccountStore(directory)) {
+                check(login(restored,"Alice","replacement-password").id() == 5 && !login(restored,"Alice","replacement-password").admin(),"database restart preserves account and role");
+            }
+            Path fresh = directory.resolve("fresh");
+            try (AccountStore accounts = new AccountStore(fresh)) { check(accounts.list().isEmpty(),"fresh database has no automatic development login"); accounts.create("First","first-password".toCharArray()); accounts.delete("First"); }
+            try (AccountStore accounts = new AccountStore(fresh)) { check(accounts.list().isEmpty(),"deleting last account does not recreate a default login"); }
+            Path corrupt = directory.resolve("corrupt"); Files.createDirectories(corrupt); Files.writeString(corrupt.resolve("tortodrone.db"),"not a database");
+            byte[] malformed = Files.readAllBytes(corrupt.resolve("tortodrone.db")); refused(() -> new AccountStore(corrupt));
+            check(Arrays.equals(malformed,Files.readAllBytes(corrupt.resolve("tortodrone.db"))),"corrupt database never replaced");
+            Path failed = directory.resolve("bad-migration"); legacyRegistry(failed); Files.writeString(failed.resolve("accounts/1.properties"),"broken profile");
+            refused(() -> new AccountStore(failed)); check(Files.readString(failed.resolve("accounts/1.properties")).equals("broken profile"),"failed migration preserves source");
+            Files.delete(failed.resolve("accounts/1.properties"));
+            try (AccountStore repaired = new AccountStore(failed)) { check(repaired.list().size() == 1,"failed migration rolled back entire schema and can retry"); }
+            Path profileOnly = directory.resolve("version-02");
+            Knight oldKnight = new CharacterStore(profileOnly).create(choices("Old-Knight"));
+            byte[] source = Files.readAllBytes(profileOnly.resolve("accounts/1.properties"));
+            try (AccountStore accounts = new AccountStore(profileOnly)) {
+                var account = login(accounts,"tortodrone","tortodrone");
+                check(account.id() == 1 && account.characters().roster().equals(List.of(oldKnight)),"version 0.2 profile migration retains characters and fixed login");
+                check(Arrays.equals(source,Files.readAllBytes(profileOnly.resolve("accounts/1.properties"))),"profile-only migration leaves source untouched");
+            }
+            Path orphan = directory.resolve("orphan"); legacyRegistry(orphan); new CharacterStore(orphan,2,"Orphan").create(choices("Lost-Knight"));
+            refused(() -> new AccountStore(orphan));
+            Path unsupported = directory.resolve("unsupported");
+            Database future = new Database(unsupported,false); future.write(c -> { try (var statement = c.createStatement()) { statement.execute("PRAGMA user_version=99"); } return null; });
+            refused(() -> new AccountStore(unsupported));
+            concurrent(directory.resolve("concurrent"));
+            System.out.println("PASS: SQLite migration, admin roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
+        } finally { try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); } }
+    }
+    public static void legacyRegistry(Path directory) throws IOException {
+        Files.createDirectories(directory.resolve("accounts")); var password = Passwords.protect("tortodrone".toCharArray()); Properties p = new Properties();
+        p.setProperty("schema","1"); p.setProperty("algorithm","PBKDF2WithHmacSHA256"); p.setProperty("iterations",String.valueOf(Passwords.ITERATIONS)); p.setProperty("accounts","1"); p.setProperty("next-id","2");
+        p.setProperty("account.0.id","1"); p.setProperty("account.0.username","tortodrone"); p.setProperty("account.0.salt",HexFormat.of().formatHex(password.salt())); p.setProperty("account.0.verifier",HexFormat.of().formatHex(password.verifier()));
+        try (Writer writer = Files.newBufferedWriter(directory.resolve("accounts/users.properties"))) { p.store(writer,"Synthetic legacy migration fixture"); }
+    }
+    private static void concurrent(Path directory) throws Exception {
+        try (AccountStore one = new AccountStore(directory); AccountStore two = new AccountStore(directory)) {
+            ExecutorService workers = Executors.newFixedThreadPool(2);
+            try {
+                Callable<Boolean> first = () -> { try { one.create("SameUser","first-password".toCharArray()); return true; } catch (IOException expected) { return false; } };
+                Callable<Boolean> second = () -> { try { two.create("sameuser","other-password".toCharArray()); return true; } catch (IOException expected) { return false; } };
+                var results = workers.invokeAll(List.of(first,second)); check(results.get(0).get() != results.get(1).get() && one.list().size() == 1,"two processes share case-insensitive uniqueness transaction");
+            } finally { workers.shutdownNow(); }
         }
     }
-    static AccountStore.Account login(AccountStore accounts, String username, String password) throws IOException {
-        char[] hash = AccountStore.transform(password.toCharArray());
-        try { return accounts.authenticate(username, hash); }
-        finally { Arrays.fill(hash, '\0'); }
+    static AccountStore.Account login(AccountStore accounts,String username,String password) throws IOException {
+        char[] hash = AccountStore.transform(password.toCharArray()); try { return accounts.authenticate(username,hash); } finally { Arrays.fill(hash,'\0'); }
     }
-    static Knight choices(String name) { return new Knight(0, name, "helm", "armor", null, null, "costume", 1, 2, 0, 0); }
-    static void refused(Operation operation) throws Exception {
-        try { operation.run(); throw new AssertionError("Invalid or failed account write accepted"); }
-        catch (IOException expected) { }
-    }
+    static Knight choices(String name) { return new Knight(0,name,"helm","armor",null,null,"costume",1,2,0,0); }
+    static void refused(Operation operation) throws Exception { try { operation.run(); throw new AssertionError("Invalid operation accepted"); } catch (IOException expected) { } }
     @FunctionalInterface interface Operation { void run() throws Exception; }
 }

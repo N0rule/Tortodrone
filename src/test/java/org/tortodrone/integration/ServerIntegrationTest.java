@@ -51,6 +51,7 @@ public final class ServerIntegrationTest {
             check(ServerSettings.load(generated).port() == 47624, "default port");
             check(Files.exists(generated), "first-start configuration generation");
             defaultWorkflow(jar, directory.resolve("default-start"));
+            rejected(jar, null, directory, "Use --help", "removed account startup option", "--list-accounts");
             managementWorkflow(jar, directory.resolve("management-start"));
             accountWorkflow(jar, directory.resolve("account-start"));
             multiSessionWorkflow(jar, directory.resolve("multi-session-start"));
@@ -58,6 +59,7 @@ public final class ServerIntegrationTest {
             Files.createDirectories(config.getParent());
             Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
             Path state = directory.resolve("data");
+            seed(jar,directory);
             byte[] identity;
             byte[] publicBytes;
             try (Running server = new Running(jar, config, directory)) {
@@ -88,7 +90,7 @@ public final class ServerIntegrationTest {
                     TestClient.authenticate(creator, key, true,
                         (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
                 }
-                check(properties(state.resolve("accounts/1.properties")).getProperty("knights").equals("1"), "creation persisted before acknowledgement");
+                check(database(state).roster(1).size() == 1, "creation persisted before acknowledgement");
                 check(!Files.exists(config.getParent().resolve("data")), "custom configuration cannot relocate runtime state");
                 rejected(jar, config, directory, "Another server", "duplicate deployment");
                 identity = Files.readAllBytes(state.resolve("keys/private.pk8"));
@@ -135,7 +137,7 @@ public final class ServerIntegrationTest {
             check(!Files.exists(directory.resolve("elsewhere")), "removed setting cannot relocate state");
             String failures = Files.readString(state.resolve("logs/latest.log"));
             check(failures.contains("[ServerMain/ERROR]: Server startup failed:"), "startup failures use the log format");
-            System.out.println("PASS: packaged JAR, normal accounts and password commands, isolated live rosters, concurrent clients, version/logs, restart, keys and invalid configuration");
+            System.out.println("PASS: packaged JAR, normal accounts and password changes, isolated live rosters, concurrent clients, version/logs, restart, keys and invalid configuration");
         } finally {
             try (var paths = Files.walk(directory)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -149,6 +151,7 @@ public final class ServerIntegrationTest {
         Files.createDirectories(deployment);
         Path deployedJar = deployment.resolve("tortodrone.jar");
         Files.copy(jar, deployedJar);
+        seed(deployedJar,deployment);
         Path data = deployment.resolve("data");
         Path config = data.resolve("server.properties");
         ServerSettings defaults = ServerSettings.load(config);
@@ -169,7 +172,7 @@ public final class ServerIntegrationTest {
                 TestClient.authenticate(creator, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()), true,
                     (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
             }
-            check(Files.isRegularFile(data.resolve("accounts/1.properties")), "default character save stays under data");
+            check(Files.isRegularFile(data.resolve("tortodrone.db")), "default character save stays under data");
             identity = Files.readAllBytes(data.resolve("keys/private.pk8"));
             check(!Files.exists(directory.resolve("data")), "startup does not create data in the working directory");
         }
@@ -199,6 +202,7 @@ public final class ServerIntegrationTest {
         Files.createDirectories(directory);
         Path deployed = directory.resolve("tortodrone.jar");
         Files.copy(jar, deployed);
+        seed(deployed,directory);
         Path data = directory.resolve("data");
         Files.createDirectories(data);
         Path config = data.resolve("server.properties");
@@ -210,9 +214,9 @@ public final class ServerIntegrationTest {
                     TestClient.authenticate(peer, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()), true,
                         (socket, wire, oid) -> CharacterScenario.management(socket, wire, oid, create));
                 }
-                Properties profile = properties(data.resolve("accounts/1.properties"));
-                check(profile.getProperty("knights").equals(create ? "3" : "0"), "management callbacks follow persisted mutations");
-                check(profile.getProperty("next-id").equals("5"), "editing/deleting does not reset character identities");
+                var database = database(data);
+                check(database.roster(1).size() == (create ? 3 : 0), "management callbacks follow persisted mutations");
+                check(database.nextKnight(1) == 5, "editing/deleting does not reset character identities");
             }
         }
         String log = Files.readString(data.resolve("logs/latest.log"));
@@ -223,18 +227,19 @@ public final class ServerIntegrationTest {
     private static void accountWorkflow(Path sourceJar, Path directory) throws Exception {
         Files.createDirectories(directory);
         Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        seed(jar,directory);
         Path data = directory.resolve("data");
         String password = "alice-test-password";
         accountCommand(jar, directory, "--create-account", "Alice", password + "\n" + password + "\n", true, "Account created.");
         accountCommand(jar, directory, "--list-accounts", null, "", true, "2\tAlice");
-        byte[] registry = Files.readAllBytes(data.resolve("accounts/users.properties"));
+        var before = database(data).list();
         accountCommand(jar, directory, "--create-account", "ALICE", password + "\n" + password + "\n", false, "already exists");
         accountCommand(jar, directory, "--set-password", "Alice", "mismatch-one\nmismatch-two\n", false, "Passwords do not match");
         accountCommand(jar, directory, "--set-password", "Alice", "", false, "Password input ended");
-        check(Arrays.equals(registry, Files.readAllBytes(data.resolve("accounts/users.properties"))), "failed account commands preserve passwords");
+        check(before.equals(database(data).list()), "failed account commands preserve accounts");
         Path config = data.resolve("server.properties");
         Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
-        byte[] profile;
+        java.util.List<org.tortodrone.character.Knight> profile;
         byte[] keyBytes;
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready();
@@ -243,17 +248,16 @@ public final class ServerIntegrationTest {
                 TestClient.authenticate(peer, key, "Alice", password, true,
                     (socket, wire, oid) -> CharacterScenario.session(socket, wire, oid, true));
             }
-            profile = Files.readAllBytes(data.resolve("accounts/2.properties"));
+            profile = database(data).roster(2);
             keyBytes = Files.readAllBytes(data.resolve("keys/public.txt"));
-            check(!Files.exists(data.resolve("accounts/1.properties")), "new account does not save into default profile");
-            accountCommand(jar, directory, "--set-password", "Alice", password + "\n" + password + "\n", false, "Another server");
+            check(database(data).roster(1).isEmpty(), "new account does not save into default profile");
             try (Socket peer = new Socket("127.0.0.1", port)) {
                 TestClient.authenticate(peer, key, "Alice", "incorrect-password", false, (a, b, c) -> {});
             }
         }
         String changed = "changed-test-password";
         accountCommand(jar, directory, "--set-password", "alice", changed + "\n" + changed + "\n", true, "Password changed.");
-        check(Arrays.equals(profile, Files.readAllBytes(data.resolve("accounts/2.properties"))), "password reset preserves knights");
+        check(profile.equals(database(data).roster(2)), "password reset preserves knights");
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready(); PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
             try (Socket old = new Socket("127.0.0.1", port)) {
@@ -278,6 +282,7 @@ public final class ServerIntegrationTest {
 
     private static void multiSessionWorkflow(Path sourceJar, Path directory) throws Exception {
         Files.createDirectories(directory); Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        seed(jar,directory);
         accountCommand(jar, directory, "--create-account", "Alice", "alice-password\nalice-password\n", true, "Account created.");
         accountCommand(jar, directory, "--create-account", "Bob", "bob-password\nbob-password\n", true, "Account created.");
         Path data = directory.resolve("data"), config = data.resolve("server.properties");
@@ -286,24 +291,33 @@ public final class ServerIntegrationTest {
             int port = server.ready(); PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
             org.tortodrone.support.MultiSessionScenario.run(port, key);
         }
-        check(properties(data.resolve("accounts/2.properties")).getProperty("knights").equals("1"), "concurrent account roster persisted");
-        check(!Files.exists(data.resolve("accounts/3.properties")), "foreign-account operations never write its profile");
-        check(properties(data.resolve("accounts/2.properties")).getProperty("knight.0.name").equals("Parallel-Two"), "final subscribed roster matches saved state");
+        check(database(data).roster(2).size() == 1, "concurrent account roster persisted");
+        check(database(data).roster(3).isEmpty(), "foreign-account operations never write its profile");
+        check(database(data).roster(2).get(0).name().equals("Parallel-Two"), "final subscribed roster matches saved state");
     }
 
     private static void accountCommand(Path jar, Path directory, String command, String username,
             String input, boolean success, String expected) throws Exception {
-        ProcessBuilder builder = command(jar, null, directory);
-        builder.command().add(command);
-        if (username != null) builder.command().add(username);
-        Process process = builder.start();
-        try {
-            try (var stdin = process.getOutputStream()) { stdin.write(input.getBytes(java.nio.charset.StandardCharsets.UTF_8)); }
-            check(process.waitFor(15, TimeUnit.SECONDS), "account command timeout");
-            String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
-            check((process.exitValue() == 0) == success && output.contains(expected), "account command result: " + output);
-            check(!output.contains("alice-test-password") && !output.contains("changed-test-password"), "password prompt does not echo stdin");
-        } finally { process.destroyForcibly(); process.waitFor(); }
+        // Seed and inspect disposable deployments through the shared service, not removed server options.
+        String result;
+        boolean succeeded = true;
+        try (var accounts = new org.tortodrone.account.AccountStore(directory.resolve("data"))) {
+            if (command.equals("--list-accounts")) result = accounts.list().stream().map(a -> a.id()+"\t"+a.username()).collect(java.util.stream.Collectors.joining("\n"));
+            else {
+                String[] lines = input.split("\n", -1);
+                if (lines.length < 3) throw new IOException("Password input ended");
+                if (!lines[0].equals(lines[1])) throw new IOException("Passwords do not match");
+                if (command.equals("--create-account")) accounts.create(username,lines[0].toCharArray());
+                else accounts.setPassword(username,lines[0].toCharArray());
+                result = command.equals("--create-account") ? "Account created." : "Password changed.";
+            }
+        } catch (IOException failure) { succeeded = false; result = failure.getMessage(); }
+        check(succeeded == success && result.contains(expected), "account service result: " + result);
+    }
+
+    private static org.tortodrone.storage.Database database(Path data) throws IOException { return new org.tortodrone.storage.Database(data,false); }
+    private static void seed(Path jar,Path directory) throws Exception {
+        accountCommand(jar,directory,"--create-account","tortodrone","tortodrone\ntortodrone\n",true,"Account created.");
     }
 
     private static void checkLogFormat(String log) {
@@ -318,8 +332,9 @@ public final class ServerIntegrationTest {
         return process.directory(directory.toFile()).redirectErrorStream(true);
     }
 
-    private static void rejected(Path jar, Path config, Path directory, String reason, String label) throws Exception {
-        Process process = command(jar, config, directory).start();
+    private static void rejected(Path jar, Path config, Path directory, String reason, String label, String... options) throws Exception {
+        ProcessBuilder builder = command(jar, config, directory); builder.command().addAll(java.util.List.of(options));
+        Process process = builder.start();
         try {
             check(process.waitFor(10, TimeUnit.SECONDS), label + " timeout");
             String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
@@ -342,7 +357,7 @@ public final class ServerIntegrationTest {
             new BigInteger(parts[0], 16), new BigInteger(parts[1], 16)));
     }
 
-    private static final class Running implements AutoCloseable {
+    static final class Running implements AutoCloseable {
         final Process process;
         private final BlockingQueue<String> lines = new LinkedBlockingQueue<>();
 
@@ -371,6 +386,23 @@ public final class ServerIntegrationTest {
                 }
             }
             throw new AssertionError("Server did not become ready: " + output);
+        }
+
+        void send(String input) throws IOException {
+            process.getOutputStream().write(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            process.getOutputStream().flush();
+        }
+
+        void await(String expected) throws Exception {
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(15);
+            StringBuilder output = new StringBuilder();
+            while (System.nanoTime() < deadline) {
+                String line = lines.poll(Math.max(1, deadline-System.nanoTime()),TimeUnit.NANOSECONDS);
+                if (line == null || line.equals("<process ended>")) break;
+                output.append(line).append('\n');
+                if (line.contains(expected)) return;
+            }
+            throw new AssertionError("Missing console result " + expected + ": " + output);
         }
 
         @Override public void close() throws Exception {
