@@ -1,5 +1,8 @@
 # Spiral Knights Protocol Research
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 Historical observations, retained for protocol development. Launcher tools and
 `local/` evidence directories referenced below are no longer part of the active
 project. See [server architecture](../server-architecture.md) for current runtime

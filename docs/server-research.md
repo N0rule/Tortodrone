@@ -6,9 +6,10 @@ Vilya/Whirled for scene and zone transitions**. The scene archive supplies layou
 The other listed projects mostly explain dependencies, game data or client tools.
 They do not supply a verified drop-in implementation of today's game server.
 
-This review began at clean commit `d1e57ac`, version 0.7.0. The concrete result is
-the [0.7.1 TCP entry correction](town-entry-investigation.md). Graphical confirmation
-remains pending. The [checkpoint plan](world-entry-plan.md) defines the next work;
+This dated review began at `d1e57ac`, version 0.7.0. It contributed to the
+[0.7.1 entry fixes](town-entry-investigation.md), now checked graphically and merged.
+Availability findings below are from 2026-10-08, not a live directory.
+The [checkpoint plan](world-entry-plan.md) defines current acceptance and next work;
 the [historical register](research/research-sources.md) retains earlier experiments.
 
 ## Verification method and limits
@@ -163,8 +164,9 @@ tests are detailed in the [entry investigation](town-entry-investigation.md).
 
 ## Feature order and evidence required
 
-First confirm the graphical entry symptom. Then persist server-computed town
-position as its own small storage/session milestone, with migration, validation,
+Graphical creation/reconnect checks passed for 0.7.1; repeat them when relevant
+behavior changes. Next, persist server-computed town position as its own small
+storage/session milestone, with migration, validation,
 revocation and restart tests. A clean picker return should be a separate verified
 transition. For portals, inspect one archived adjacent scene, its configurations
 and portal destination, then implement one round trip with occupant removal/addition

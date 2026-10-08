@@ -1,5 +1,8 @@
 # Spiral Knights Network Architecture
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 Historical client observations. The isolated experiments described here are no
 longer the server's runtime workflow. See [client configuration](../client-redirection.md)
 for the standalone host-network server.

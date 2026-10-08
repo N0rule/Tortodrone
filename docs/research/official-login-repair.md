@@ -1,5 +1,8 @@
 # Official authentication after private-server login
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 On 2026-10-07, the official client reported "A server error caused authentication
 to fail" after using the private server. Reinstalling the game did not resolve it.
 The reinstalled `code/config.jar` matched the recorded official SHA-256 exactly,

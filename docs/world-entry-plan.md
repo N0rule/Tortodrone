@@ -1,71 +1,66 @@
-# Town checkpoint and next milestones
+# Current checkpoint and next milestones
 
-## Completed in 0.7.0
+This is the authoritative feature/acceptance handoff. Read `VERSION` and Git for
+the exact checkout; update this file when a milestone changes behavior or limits.
+
+## Checkpoint: 0.7.1, schema 3
 
 Normal login → create/select a saved knight → Haven Town Square → movement and
-mouse facing → starter inventory equip/unequip → persistent crowns and energy.
-Intro missions are skipped through the verified zone/scene transition. The server
-sends no tutorial-completion flags and grants no introductory-mission rewards.
+mouse facing → persistent starter equip/unequip and per-knight crowns/energy.
+Different knights share the town and see peer movement. Intro missions are
+skipped; no tutorial completion flags or rewards are invented.
 
-The town is scene 1 from the [Spiral Knights Scene Archive](https://github.com/reference-source/SpiralKnightsSceneArchive).
-The first build fetches its pinned original layout; see [provenance](dependencies.md).
-The installed client supplies its own meshes, textures and audio. Server code,
-protocol serializers, collision samples and tests run without a game installation.
+The scene is archived town 1, bundled with a derived static collision mask; see
+[provenance](dependencies.md). Stock clients provide rendering assets. Entry
+publishes selected state, zone/scene callbacks, occupant metadata and scene object
+10. Actors update at 20 Hz after `enteredPlace`. The server computes position
+from timestamped input and collision, not client coordinates. Only one session
+controls a global knight ID; disconnect releases it.
 
-Selection sends the owned world ID, appearance, actual item set, equipment,
-balances and home town before forcing the stock zone receiver to town. Zone and
-scene callbacks return the layout and explicit scene object. Scene subscriptions
-receive occupant metadata; actor updates start after `enteredPlace` and continue
-at 20 Hz. In 0.7.1, reliable TCP deltas reference the preceding queued snapshot,
-retaining actor/model identity even while loading delays input acknowledgements. Client input
-provides direction/facing only; the server computes position and checks a sampled
-static collision map. Empty acknowledgement batches and the normal ProjectX input
-extension are supported. Future input is queued until due, and elapsed scene time
-controls movement speed. A verified movement limit permits client prediction;
-unchanged actor model configurations are retained across ordinary updates. Inventory
-activity and its closing duration are synchronized with stable start times; actor
-deltas explicitly replace predicted activity fields. Combat actions are ignored in this town checkpoint.
+The 0.7.1 fixes are merged into `main` (`32629e2`): TCP deltas reference the prior
+queued snapshot, retain unchanged models, and explicitly synchronize inventory
+activity/start times. Inventory closing lasts 889 ms before movement resumes.
+See [cause and evidence](town-entry-investigation.md).
 
-Only one connection can control a given knight. Disconnect releases it. Different
-knights can share town; actor identity is global, while roster IDs stay local to
-an account. Equip requests check authentication revision, item ownership and slot
-compatibility in their database transaction. Local currency changes are polled
-into an online character within about 250 ms.
+## Acceptance and limits
 
-## Present limits
+- `make build test`: 22 unit and three packaged integration checks passed.
+- Java installed-client fixture: creation/reconnect, delayed acknowledgements,
+  predictor/activity timing, model retention, gear/currency and multiplayer passed.
+- Isolated stock graphical client: fresh creation, stop/start/reverse movement,
+  mouse facing, inventory closing and reconnect showed animated walking.
+- Graphical simultaneous two-window animation and equip/unequip were not separately
+  accepted; their networking checks passed. Desktop vsync/gamepad accommodations
+  are recorded in the investigation. Do not treat one accepted run as proof that
+  every intermittent symptom is impossible; repeat relevant checks after changes.
+- One town/spawn; position resets on entry. Reconnect to switch characters.
+- Sampled static collision only; no dynamic scenery physics.
+- Five starter items only; no drops, trade, crafting, loadouts or costume equipment.
+- Currencies start at zero; no economy/regeneration. Admin is local only.
+- NPCs/portals may be visible but have no gameplay. No combat, quests or shops.
+- News/social feeds are empty; unsupported services fail explicitly.
 
-- One scene and one spawn; positions are not persisted.
-- Static collision is sampled on a quarter-unit grid, with simple wall sliding.
-  There is no server physics simulation for dynamic scenery.
-- Five starter items only; no drops, crafting, trade, loadouts or costume equipment.
-- Crowns and energy are per knight and start at zero. No regeneration or economy.
-- News and social feeds are empty. Their handles let the stock town HUD initialize.
-  Mail sending, social actions and other unsupported operations return failure.
-- Reconnect to switch characters. Online knights cannot be edited/deleted in the picker.
-- Visual NPCs/portals have no dialogue or travel implementation. No combat or quests.
+## Next milestone: town position persistence
 
-## Next priorities
+Persist server-computed town coordinates and facing, with ownership and account
+authentication-revision guards. Add a transactional schema upgrade and spawn
+defaults for existing knights. Validate finite, walkable positions; unknown scenes
+or invalid positions must fall back to the known town spawn. Checkpoint during play
+and flush on disconnect/clean shutdown without overwriting currency/equipment edits.
 
-The TCP actor replacement and leaked inventory activity defects are fixed and
-regression-tested in 0.7.1. Mapped-window reruns show animated walking after creation
-and reconnect. Keep graphical entry checks alongside network checks as new gameplay
-is added. See [investigation and acceptance checks](town-entry-investigation.md).
+Acceptance: disposable migration/reopen, logout/reconnect, clean server restart,
+invalid state, revocation/deletion and concurrent currency/equipment checks; then
+stock-client entry at the saved location with working prediction/animation. Keep
+this separate from returning to the picker or portal travel.
 
-1. Persist position and support clean return to the character picker.
-2. Implement one additional connected scene and verified portal transitions.
-3. Generalize item instances beyond the starter kit, then add item grants and
-   weapon selection with ownership checks and persistence.
-4. Add a small combat test area: one enemy, damage, death and reconnect behavior.
-5. Add one mission with persisted steps and once-only rewards before attempting
-   the full introduction. NPC dialogue and scripted events belong to that work.
-6. Expose a limited set of in-game admin commands using the current database role.
+## Later milestones
 
-## Verification
+1. Verified clean return to the character picker.
+2. One additional scene and a verified portal round trip with subscription cleanup.
+3. General item instances, owned item grants and weapon selection.
+4. A small combat area: one enemy, damage, death and reconnect behavior.
+5. One persisted mission with idempotent rewards before broader introductions.
+6. Limited in-game admin commands checking the current stored role.
 
-`make test` uses disposable state and requires no game files. Optional
-`java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"` checks the stock reader
-and its movement predictor, plus real networking/marshaller classes against a temporary localhost server, covering both creation and reconnect. It
-requires a JDK and a build made with `make build`, reads installed game JARs,
-checks delayed acknowledgements, model retention, equipment changes and two-account
-multiplayer, and stops its server on completion. Graphical testing is a separate check because
-headless network success cannot prove that the client renders the scene and HUD.
+Follow [AGENTS.md](../AGENTS.md) and [development workflow](development.md).
+Primary protocol references are linked in [resource research](server-research.md).

@@ -1,5 +1,8 @@
 # Starter equipment and preview verification
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 Verified on 2026-10-07 against the locally installed Spiral Knights networking
 and configuration classes. This is protocol/reference evidence; no client
 implementation or game assets are copied into the server.

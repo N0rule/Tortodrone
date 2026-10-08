@@ -1,112 +1,54 @@
-# Connecting a separate KnightLauncher
+# Connecting the separate game installation
 
-Start Tortodrone with `make server` or `java -jar build/tortodrone.jar`, wait for
-`Done! Listening on ...`, then start your separately maintained KnightLauncher.
-The server does not launch, patch, or install the game.
+Tortodrone neither installs nor patches the client/launcher. Start the server and
+wait for `Done! Listening`, then use your separately maintained KnightLauncher.
 
-## Address, port, and public key
+## Connection settings
 
-Clients need three connection values: the server's reachable address, its TCP
-port, and its public key. The server listener is configured through `server-ip`
-and `server-port` in `data/server.properties` beside the JAR.
-
-For this computer with the default settings:
-
-| KnightLauncher setting | Value |
+| Launcher setting | Default local deployment |
 | --- | --- |
 | `game.endpoint` | `127.0.0.1` |
 | `game.port` | `47624` |
 | `game.publicKey` | Entire value from `build/data/keys/public.txt` |
 
-The default `server-ip=0.0.0.0` listens on all IPv4 interfaces. Use `127.0.0.1`
-for a client on this computer, or this server's LAN/public address for a client
-on another computer. For a specific interface, set `server-ip` to that interface's
-address. Use `server-port` for the client port.
+For another computer, use the server's reachable LAN/public address. `0.0.0.0`
+is a listening interface, not a destination. The configured port is TCP only;
+remote connections need firewall/router reachability. Same-LAN connections need
+no port forwarding.
 
-The public key is a hexadecimal RSA modulus followed by `#` and a hexadecimal
-exponent. Paste the value into the launcher; do not use a filename, PEM header,
-or private key. Keep `data/keys/` across restarts and deployments, since changing
-the keypair requires updating the public key in clients.
+A deployed JAR uses its own adjacent `data/keys/public.txt`. The key value is a
+hexadecimal RSA modulus, `#`, then a hexadecimal exponent: paste the value, not a
+filename/PEM header/private key. Preserve `data/keys/` across deployments. Restart
+the game after changing connection settings. All accounts share endpoint/key.
 
-All runtime data lives beside the JAR. With the built JAR, the public key is
-`build/data/keys/public.txt`. A deployed `tortodrone.jar` uses its own adjacent
-`data/keys/public.txt`. No additional client connection file is generated.
+Use the normal username/password form with a locally created account; there is
+no default login on fresh installations. Steam/guest login is unsupported. Create
+or select a knight to enter Haven directly. Equipment and balances persist;
+position resets to spawn. Reconnect to change characters. See
+[current gameplay limits](world-entry-plan.md) and [administration](administration.md).
 
-Remote connections require a reachable TCP port through the network's
-firewall/router. The current server does not implement UDP.
+## Troubleshooting
 
-## Normal login and current limits
+Logs are in the server terminal and `data/logs/latest.log`. Stop the server before
+setting `log-mode=debug` in its adjacent `data/server.properties`, then restart.
+Debug adds protocol diagnostics while excluding secrets/raw payloads.
 
-Use the normal username/password form with an account created in the local desktop
-manager (`make admin`) or the running server terminal (`account create Alice`).
-Fresh installations have no default login. Upgrades preserve existing credentials.
-Steam and guest login remain unsupported. See [accounts](../README.md#server-terminal-commands).
+| Symptom | Check |
+| --- | --- |
+| No connection log | Listener, destination/port, firewall and TCP reachability |
+| Secure exchange fails | This deployment's public key; restart client after settings changes |
+| Login rejected | Registered normal account; password check/reset in local manager |
+| Invalid setting at startup | Compare `src/main/resources/server.properties`; remove obsolete settings |
+| Invalid keys/saved state | Inspect error and restore backup; do not generate replacement identities |
+| Character creation fails | Name rules, duplicates, three-slot limit and save warnings |
+| Knight already online | Disconnect its controlling session before selecting it |
+| Scene remains loading | Server/client logs, current JAR and bundled town resource |
+| Animation/input stutters | Recheck fresh entry vs reconnect; see entry investigation and isolated graphical workflow |
 
-The creator saves and selects a knight, then loads Haven Town Square directly.
-Selecting a saved knight enters the same town. Introductory missions are skipped.
-Use the existing movement controls and mouse facing; open Arsenal to equip or
-unequip owned starter items. Balances and equipment are saved; position currently
-resets to the town spawn on reconnect. Reconnect to switch characters.
+On Windows, `Test-NetConnection SERVER_ADDRESS -Port 47624` checks TCP reachability.
+Use your actual address/port. If ping works but TCP fails, investigate listener
+and firewall before login/keys. On a host using UFW, allow the configured TCP port
+from the intended subnet; do not assume the example network is your network.
 
-Crowns and energy start at zero. The server owner can give or withdraw them through
-**Currency** in the local manager or `currency` commands in the server terminal.
-Combat, NPC dialogue, shops and portal travel are not implemented. See the
-[town checkpoint](world-entry-plan.md) for limits and next milestones.
-
-## Logs and troubleshooting
-
-Normal mode records startup, connection/login events, character saves, warnings,
-errors and shutdown in the console and `data/logs/latest.log`. For protocol
-investigation, stop the server, set `log-mode=debug`, and restart. Debug mode adds
-secure exchange, authentication results, bootstrap, ping/pong, subscriptions,
-snapshots and receiver registration. It still excludes secrets and raw payloads.
-
-- No connection message: check the server is listening, the client's address and
-  TCP port, and network reachability.
-- Secure exchange fails: verify the launcher uses this server's public key and
-  restart the game after changing its connection settings.
-- Login rejected: use a registered server account through the normal login form.
-- Startup rejects an obsolete setting: compare the editable configuration with
-  `src/main/resources/server.properties` and remove unused properties.
-- Startup rejects keys or saved characters: restore the corresponding files from
-  backup. The server refuses to silently replace an incomplete identity or corrupt save.
-- Character creation fails: check name rules, duplicate names, the three-slot limit,
-  and save warnings in the server log.
-- Selection says the knight is online: disconnect its other session before selecting
-  it again. Scene-receiver errors indicate an incomplete client initialization.
-- A scene remains loading: inspect both the client log and server debug log. Confirm
-  the server was rebuilt with its pinned Town Square resource.
-- A protocol diagnostic closes the session: investigate the remaining server
-  protocol boundary using debug logs and synthetic fixtures.
-
-[Historical research](research/README.md) records earlier experiments. Current
-work changes server behavior and does not patch clients or launchers.
-
-## Additional normal accounts
-
-The server owner can create and administer accounts with `tortodrone-admin.jar`
-on the server PC, or with `account` commands in the running server terminal.
-The manager can stay open while the server runs once SQLite is initialized;
-stop an older server once before the first migration. Endpoint and public key
-stay the same for all accounts. Password reset/deletion disconnects existing
-sessions. See [account management](../README.md#create-an-account-then-start-the-server).
-
-## LAN reachability
-
-Wait for the server's `Done! Listening` message, then use its LAN address rather
-than `0.0.0.0` in the launcher. From a Windows client, check the TCP connection:
-
-```powershell
-Test-NetConnection 192.168.0.141 -Port 47624
-```
-
-Substitute the server's actual address and port. If ping works but TCP fails,
-check the server listener and firewall before troubleshooting login or keys.
-For an enabled UFW firewall, allow the server port from your actual LAN subnet:
-
-```sh
-sudo ufw allow from 192.168.0.0/24 to any port 47624 proto tcp
-```
-
-Use your subnet and configured port. Connections on the same LAN do not require
-router port forwarding.
+[Graphical testing](development.md#isolated-graphical-checks) uses disposable state.
+[Historical research](research/README.md) is evidence, not client modification guidance.

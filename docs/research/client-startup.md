@@ -1,5 +1,8 @@
 # Spiral Knights Client Startup
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 Historical client research. Earlier launcher commands and `local/` artifacts
 are no longer active project requirements. The client/launcher is maintained
 separately; see [client configuration](../client-redirection.md).

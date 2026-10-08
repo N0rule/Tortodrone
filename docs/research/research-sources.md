@@ -1,5 +1,8 @@
 # Research Sources
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 Historical research register. The earlier launcher/Python workflow was removed
 from the active project. The cited `local/` trees and observation tools were
 moved to an external recovery folder during the server cleanup. A focused subset

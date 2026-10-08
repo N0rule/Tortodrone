@@ -1,5 +1,8 @@
 # Character picker disappearing after login
 
+> Historical evidence. For current behavior and workflow, read [the research index](README.md)
+> and [AGENTS.md](../../AGENTS.md). Past client experiments are not current instructions.
+
 The installed October 2026 client enumerates the laptop touchpads and `keyd
 virtual pointer` as joysticks. Its GUI polls both mapped gamepads and raw
 joysticks. GUI navigation binds controller button 1 to Escape unconditionally.
