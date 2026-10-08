@@ -86,6 +86,14 @@ public final class TownMovementTest {
         inventory.resetInput(1200);
         check(inventory.activity()==0 && inventory.activityStarted()==1200 && inventory.flags()==0,
             "re-entry clears inventory activity");
+        var peaceful=new TownMovement();peaceful.resetInput(100);
+        check(peaceful.accept(100,1,0,4|8|16|32,100,1000),"combat input remains bounded input");
+        peaceful.advance(150,1050);
+        check(peaceful.activity()==0&&peaceful.flags()==0&&peaceful.x()==0,"combat input cannot start town actions");
+        check(peaceful.accept(150,1,0,1|4|8|16|32,150,1050),"move with combat bits accepted");
+        peaceful.advance(200,1100);
+        check(peaceful.activity()==0&&peaceful.flags()==2&&Math.abs(peaceful.x()-.25f)<.00001,
+            "combat bits neither block walking nor become actor flags");
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }

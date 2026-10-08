@@ -174,8 +174,13 @@ the server. Verified normal equipment, costumes, trinkets and plain inventory re
 unsupported/internal/expiring types remain indexed. Catalogue v2 retains v1 reading
 and resolves unique nonzero stock IDs to canonical references.
 `StarterCatalog.equipped` composes the verified catalogue arguments with knight
-appearance and original accessories. The lowest equipped weapon slot is visible;
-unchanged inventory additions preserve the actor's model reference on the client.
+appearance and original accessories for the equipment preview. The lowest equipped
+weapon slot is visible there. Town actors use `StarterCatalog.town`: skip weapon
+arguments and set the stock string choice `Shield Away` to `True`. The shield or
+shield costume stays equipped and renders on the back; weapons stay in their saved
+slots. Weapon-only changes and unchanged inventory additions preserve the town
+actor's model reference on the client. All currently supported maps are towns;
+combat/action inputs remain ignored by the authoritative simulation.
 
 Schema-5 inventory supports multiple instances per type, a unique occupied equipment
 slot, and five marked starter rows. Appearance edits touch only marked cosmetics.
@@ -189,5 +194,17 @@ Stack merges retain instance IDs and publish EntryUpdatedEvent. Normal-chat `!it
 SystemMessage results; they share the chat rate budget and never broadcast command
 text. Console/CLI use the same syntax/service with a local trusted actor. Profile
 polling sends stock EntryAddedEvent/EntryUpdatedEvent for item changes so Arsenal
-SetListeners are notified. Equipment and loadout attributes follow in the compound
-event. See [game data reference](game-data.md) for deployment and limits.
+SetListeners are notified. Changed equipment slots then receive stock
+`ElementUpdatedEvent` records, followed by one `EntryUpdatedEvent` for the current
+loadout (key `""`) when slots changed. The open LoadoutPanel's slot icons and model
+listen for element events; replacing the whole array updates stored state without
+refreshing that panel. Inventory-only grants/stack changes publish no equipment or
+loadout events. Initial selection still sends complete attributes. These ordered
+events share one compound publication after storage commits and before the RPC
+confirmation. See [game data reference](game-data.md) for deployment and limits.
+
+Wire evidence for 0.11.1: upstream Narya `ElementUpdatedEvent`/`EntryUpdatedEvent`
+and the installed stock event reader; stock `LoadoutPanel$j` equipment element
+listener and `client.bi` loadout set listener. The installed player's town model
+builder `PlayerObject.a(manager,true,true,-1,true,false,Boolean.TRUE)` independently
+matches the server's unarmed model, including costume/shield precedence.

@@ -25,7 +25,7 @@ public final class WorldCompatibility {
             new WorldProfile.Item(4,WorldProfile.Slot.GUN,"Weapon/Handgun/Proto Gun",null,0,7),
             new WorldProfile.Item(5,WorldProfile.Slot.SHIELD,"Gear/Shield/Proto Shield",null,0,2));
         var profile=new WorldProfile(10,1,1,120,34,1,items);
-        var model=StarterCatalog.equipped(knight,profile);
+        var model=StarterCatalog.town(knight,profile,ItemCatalog.starter());
         var state=new ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,
             new StarterCatalog.Model("Character/PC/Default",Map.of("Model",model,"Height",model.arguments().get("Height"))));
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
@@ -87,9 +87,11 @@ public final class WorldCompatibility {
             .getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");
         manager.init();
-        // The server's equipped model must match the stock player's builder, including weapon/shield.
-        var stock=player.n(manager);
+        // Stock town builder: include shield, carry it away, omit weapon, use level model/costumes.
+        var stock=player.a(manager,true,true,-1,true,false,Boolean.TRUE);
         if(!stock.equals(reference(model)))throw new AssertionError("Equipped model differs: "+stock+" vs "+model);
+        if(!stock.kW().get("Shield Away").equals("True")||stock.kW().containsKey("Weapon")
+                ||stock.kW().containsKey("Weapon Idle"))throw new AssertionError("Town stance is armed");
         // Exercise the actual client predictor, not just the reader: a zero maxStep used to
         // clamp every local substep, forcing movement to depend on server correction packets.
         actor.init(manager);

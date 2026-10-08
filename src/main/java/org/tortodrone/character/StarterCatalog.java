@@ -51,11 +51,20 @@ public final class StarterCatalog {
         return new Model("character/pc/model_level.dat", args);
     }
 
-    /** Town model includes the held starter weapon and shield as well as equipped cosmetics. */
+    /** Equipment preview includes the lowest occupied weapon slot and equipped cosmetics. */
     public static Model equipped(Knight knight,WorldProfile profile) {
         return equipped(knight,profile,ItemCatalog.starter());
     }
     public static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog) {
+        return equipped(knight,profile,catalog,false);
+    }
+
+    /** Peaceful town appearance: empty hands and the equipped shield carried on the back. */
+    public static Model town(Knight knight,WorldProfile profile,ItemCatalog catalog) {
+        return equipped(knight,profile,catalog,true);
+    }
+
+    private static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog,boolean town) {
         var visible=new Knight(knight.id(),knight.name(),null,null,null,null,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
         var args=new TreeMap<>(preview(visible).arguments());int color=256|knight.color();
         // Apply armor/helm before accessories; use the lowest occupied weapon slot.
@@ -65,11 +74,12 @@ public final class StarterCatalog {
             if(item.slot()==WorldProfile.Slot.HELM && profile.equipment()[3]!=0
                 || item.slot()==WorldProfile.Slot.ARMOR && profile.equipment()[4]!=0
                 || item.slot()==WorldProfile.Slot.SHIELD && profile.equipment()[15]!=0)continue;
-            if(item.slot().weapon()) {if(weapon)continue;weapon=true;}
+            if(item.slot().weapon()) {if(town||weapon)continue;weapon=true;}
             var entry=catalog.find(item.config());
             if(entry!=null)args.putAll(entry.arguments(color));
             if(item.accessory()!=null)add(args,item.accessory()+", "+knight.costume(),color);
         }
+        if(town)args.put("Shield Away","True");
         return new Model("character/pc/model_level.dat",args);
     }
 

@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.11.0, schema 7
+## Checkpoint: 0.11.1, schema 7
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -46,7 +46,7 @@ them on live revocation. Its own nameplate follows the stock client's visibility
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory
 closing and reconnect passed isolated graphical checks. Graphical two-window
-animation and unequip remain unchecked; the single-window item grant/equip
+animation remains unchecked; single-window item grant/equip and live unequip
 acceptance is recorded below. Repeat relevant checks when changing scene/movement behavior. See
 [entry evidence and desktop limitations](town-entry-investigation.md).
 Accepted samples do not rule out recurrence of the previously intermittent
@@ -139,6 +139,30 @@ icons, accepted permanent and equip-time binding, displayed a live Brimstone sta
 increase to 10, and rendered both costumes while moving after closing inventory.
 These samples do not accept every item animation or resolve the earlier intermittent
 fresh-creation issue. Test clients/servers were stopped.
+
+## Peaceful town characters and live loadout (0.11.1)
+
+Town Square and Bazaar actors have empty hands and carry their equipped shield or
+shield costume on the back using the stock `Shield Away=True` model choice.
+Weapons remain equipped/persistent and appear in the equipment preview. Town
+combat inputs stay ignored; movement, facing and inventory activities are unchanged.
+
+Equip/unequip and displacement publish individual equipment element events and
+one current-loadout entry update, after item/binding events and before confirmation.
+The open stock LoadoutPanel listens for these event types; whole-array/set
+replacement left its slots/model stale. Inventory-only grants and stack changes
+leave equipment/loadout observers and town actor models alone. No schema changes.
+
+Acceptance: `make build test` passed all 33 unit and three integration checks.
+Unchanged installed readers/builders matched peaceful town and costume composition;
+network checks passed fresh entry/reconnect, equip/unequip, source/destination
+displacement events, rejection without publication, current-loadout notifications
+before confirmation, model retention and ignored combat inputs. The isolated
+graphical client reproduced the previous stale open shield slot/preview, then
+updated both immediately on unequip and re-equip with the fix. The town character
+rendered empty hands and a shield on the back, and walked/stopped/reversed after
+closing the panels. These samples do not accept every item animation or resolve
+the earlier intermittent fresh-creation symptom. Test clients/servers were stopped.
 
 ## Current limits and later work
 

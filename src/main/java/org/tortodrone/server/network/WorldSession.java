@@ -414,7 +414,7 @@ final class WorldSession implements AutoCloseable {
 
     private synchronized ActorState actor(SceneRegistry.Instance place) {
         if (closed || !selected() || scene!=place) return null;
-        var model = StarterCatalog.equipped(knight, profile,characters.catalog());
+        var model = StarterCatalog.town(knight, profile,characters.catalog());
         var config = new StarterCatalog.Model("Character/PC/Default",
             Map.of("Model", model, "Height", model.arguments().get("Height")));
         return new ActorState(profile.worldId(), oid, knight.name(), 256 | knight.color(), created,

@@ -33,11 +33,11 @@ public final class ItemGrantConnectionCheck {
                 var granted=new ArrayList<Item>();for(var item:player.player.items)if(item.Vx().getName().equals(sword))granted.add(item);
                 if(granted.size()!=2||granted.stream().anyMatch(Item::Cs)||granted.get(0).VA()==granted.get(1).VA())throw new AssertionError("Distinct unbound LevelItems missing");
                 var service=player.client.bU(com.threerings.projectx.item.client.L.class);var reply=new WorldConnectionCheck.Reply();
-                var initial=player.actor.Mv();service.a(granted.get(0).VA(),6,reply);WorldConnectionCheck.waitFor(()->reply.done&&player.actor.Mv()!=initial);
+                var initial=player.actor.Mv();service.a(granted.get(0).VA(),6,reply);WorldConnectionCheck.waitFor(()->reply.done);
                 if(reply.reason!=null||player.player.equipment[6]!=granted.get(0).VA()||!WorldConnectionCheck.bound(player.player,granted.get(0).VA()))throw new AssertionError("Granted equipment failed Arsenal RPC/binding");
-                var level=(com.threerings.config.ConfigReference<?>)player.actor.Mv().kW().get("Model");
-                var weapon=(com.threerings.config.ConfigReference<?>)level.kW().get("Weapon");
-                if(!weapon.getName().contains("calibur"))throw new AssertionError("Granted weapon still renders Proto model");
+                WorldConnectionCheck.peaceful((com.threerings.projectx.data.actor.Knight)player.actor);
+                if(player.actor.Mv()!=initial||player.player.loadouts.f("").equipment[6]!=granted.get(0).VA())
+                    throw new AssertionError("Weapon equip reset peaceful town model or missed current loadout");
                 // Catalogue-only types and bad references refuse without changing the target.
                 int heard=feedback.size();staff.scene.speakService.a("!giveitem ItemPlayer Grant-Knight 1 Weapon/Bomb/Parts/Base",(byte)0);
                 WorldConnectionCheck.waitFor(()->feedback.size()>heard);if(player.player.items.size()!=7)throw new AssertionError("Unsupported item granted");

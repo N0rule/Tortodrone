@@ -31,6 +31,24 @@ public final class StarterCatalogTest {
         var store=new CharacterStore();
         try {store.create(unknown);throw new AssertionError("Unsupported equipment granted");}catch(CharacterStore.Refused expected){}
         check(store.roster().isEmpty(),"rejected choices cannot grant items or consume slots");
+        var knight=store.create(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)",
+            "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+        var profile=new WorldProfile(1,1,knight.id(),0,0,1,List.of(
+            new WorldProfile.Item(1,WorldProfile.Slot.HELM,knight.helm(),null,0,0),
+            new WorldProfile.Item(2,WorldProfile.Slot.ARMOR,knight.armor(),null,0,1),
+            new WorldProfile.Item(3,WorldProfile.Slot.SHIELD,"Gear/Shield/Proto Shield",null,0,2),
+            new WorldProfile.Item(4,WorldProfile.Slot.SWORD,"Weapon/Sword/Proto Sword",null,0,6),
+            new WorldProfile.Item(5,WorldProfile.Slot.GUN,"Weapon/Handgun/Proto Gun",null,0,7)));
+        var town=StarterCatalog.town(knight,profile,ItemCatalog.starter());
+        check(town.arguments().get("Shield Away").equals("True") && town.arguments().containsKey("Shield")
+            && !town.arguments().containsKey("Weapon") && !town.arguments().containsKey("Weapon Idle"),
+            "town carries shield on back with empty hands");
+        check(StarterCatalog.equipped(knight,profile).arguments().containsKey("Weapon")
+            && profile.equipment()[6]!=0 && profile.equipment()[7]!=0,"peaceful stance preserves equipped weapons and preview");
+        var withoutShield=new WorldProfile(1,1,knight.id(),0,0,2,
+            profile.items().stream().filter(i->i.slot()!=WorldProfile.Slot.SHIELD).toList());
+        check(!StarterCatalog.town(knight,withoutShield,ItemCatalog.starter()).arguments().containsKey("Shield"),
+            "town model removes unequipped shield");
         System.out.println("PASS: verified starter equipment, costume validation, nested wire preview, accessories, 47 eyes and blink textures");
     }
 }

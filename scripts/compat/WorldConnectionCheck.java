@@ -57,6 +57,7 @@ public class WorldConnectionCheck {
    if(last.aej()[0] instanceof com.threerings.tudey.data.actor.Mobile mobile && mobile.aeb()<=0)throw new AssertionError("Movement prediction limit is zero");
    if(!((com.threerings.projectx.data.actor.Knight)last.aej()[0]).Np())throw new AssertionError("Spawn activity blocks controls");
    if(player.loadouts.isEmpty())throw new AssertionError("Current loadout missing");
+   peaceful(controlled(player));
    System.out.println("PASS: zone callback loads original Town Square, scene subscription and controlled actor");
    // Loading can postpone input/acknowledgement for longer than the old 40-snapshot history.
    waitFor(()->deltas>=45);
@@ -79,20 +80,52 @@ public class WorldConnectionCheck {
    if(controlled(player).adV()!=closingStarted+org.tortodrone.world.TownMovement.INVENTORY_END_MILLIS)
        throw new AssertionError("Inventory closing activity did not finish at its deadline");
    System.out.println("PASS: inventory blocks movement, retains its animation start and closes into idle");
+   var slotUpdates=new ArrayList<Integer>();int[] loadoutUpdates={0};
+   player.a(new j(){public void a(ElementUpdatedEvent e){if(e.getName().equals("equipment"))slotUpdates.add(e.pN());}});
+   player.a(new com.threerings.presents.dobj.s<Loadout>(){public void a(EntryAddedEvent<Loadout> e){}public void a(EntryRemovedEvent<Loadout> e){}
+    public void a(EntryUpdatedEvent<Loadout> e){if(e.getName().equals("loadouts"))loadoutUpdates[0]++;}});
    var beforeEquipment=actor.Mv();
    long helm=player.equipment[0];var itemService=client.bU(com.threerings.projectx.item.client.L.class);Reply equip=new Reply();itemService.a(helm,ItemCodes.Location.ARSENAL,0,equip);waitFor(()->equip.done);if(equip.reason!=null||player.equipment[0]!=0)throw new AssertionError("Unequip failed: "+equip.reason);
    if(!bound(player,helm))throw new AssertionError("Unequip lost binding");
+   if(!slotUpdates.equals(List.of(0))||loadoutUpdates[0]!=1||player.loadouts.f("").equipment[0]!=0)
+    throw new AssertionError("Open equipment/loadout observers missed unequip before confirmation");
    waitFor(()->controlled(player).Mv()!=beforeEquipment);
    var withoutHelm=controlled(player).Mv();
    Reply re=new Reply();itemService.a(helm,0,re);waitFor(()->re.done);if(re.reason!=null||player.equipment[0]!=helm||!bound(player,helm))throw new AssertionError("Arsenal equip failed or lost binding: "+re.reason);System.out.println("PASS: real Arsenal equip RPC re-equips the bound helm after unequipping");
+   if(!slotUpdates.equals(List.of(0,0))||loadoutUpdates[0]!=2||player.loadouts.f("").equipment[0]!=helm)
+    throw new AssertionError("Open equipment/loadout observers missed re-equip before confirmation");
    waitFor(()->controlled(player).Mv()!=withoutHelm);
    var withHelm=controlled(player).Mv();int afterEquip=deltas;waitFor(()->deltas>=afterEquip+10);
    if(controlled(player).Mv()!=withHelm)throw new AssertionError("Equipped model replaced on unchanged ticks");
    System.out.println("PASS: equipment changes update the actor model once and retain it afterward");
+   int eventCount=slotUpdates.size(),loadoutCount=loadoutUpdates[0];
+   Reply denied=new Reply();itemService.a(helm,7,denied);waitFor(()->denied.done);
+   if(denied.reason==null||slotUpdates.size()!=eventCount||loadoutUpdates[0]!=loadoutCount)
+    throw new AssertionError("Rejected equip published equipment/loadout updates");
+   long sword=player.equipment[6],gun=player.equipment[7];Reply swap=new Reply();
+   itemService.a(sword,7,swap);waitFor(()->swap.done);
+   if(swap.reason!=null||player.equipment[6]!=0||player.equipment[7]!=sword
+       ||!slotUpdates.subList(eventCount,slotUpdates.size()).equals(List.of(6,7))||loadoutUpdates[0]!=loadoutCount+1
+       ||player.loadouts.f("").equipment[6]!=0||player.loadouts.f("").equipment[7]!=sword)
+    throw new AssertionError("Weapon displacement missed source/destination slot or current-loadout events");
+   Reply restoreSword=new Reply();itemService.a(sword,6,restoreSword);waitFor(()->restoreSword.done);
+   Reply restoreGun=new Reply();itemService.a(gun,7,restoreGun);waitFor(()->restoreGun.done);
+   if(restoreSword.reason!=null||restoreGun.reason!=null||controlled(player).Mv()!=withHelm)
+    throw new AssertionError("Weapon edits reset peaceful town appearance");
+   peaceful(controlled(player));
+   int combatCount=deltas;scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,4|8|16|32,0)});
+   waitFor(()->deltas>=combatCount+4);
+   if(controlled(player).adU()!=0||controlled(player).bR(2))throw new AssertionError("Town combat input changed activity/movement");
+   System.out.println("PASS: peaceful town stance, ignored combat inputs and live equipment/loadout observer updates");
    if(fresh)try(var accounts=new org.tortodrone.account.AccountStore(Path.of(args[1]).getParent().getParent())){accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100,-1,-1);accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,25,-1,-1);}
    waitFor(()->player.crowns==100&&player.energy==25);System.out.println("PASS: local administration changes live crowns and energy counters");
    multiplayer(args,queue,fresh,player,client);
   }finally{client.Q(false);}
+ }
+ static void peaceful(com.threerings.projectx.data.actor.Knight actor) {
+  var model=(com.threerings.config.ConfigReference<?>)actor.Mv().kW().get("Model");
+  if(!"True".equals(model.kW().get("Shield Away"))||model.kW().containsKey("Weapon")||model.kW().containsKey("Weapon Idle"))
+   throw new AssertionError("Town actor carries combat equipment in its hands");
  }
  static Zone moveScene(Client client,int sceneId)throws Exception {
   if(scene!=null&&primarySubscription!=null)client.xb().b(scene.xL(),primarySubscription);

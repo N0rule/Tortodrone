@@ -53,7 +53,8 @@ Use a JDK that can read the installed JARs (the tested installation requires Jav
 25). The world harness copies both server JARs into temporary storage, creates
 disposable accounts/preferences and stops its server on exit. It checks the stock
 reader/predictor, creation/reconnect, delayed acknowledgements, activity timing,
-model retention, equipment, currency, scene round trips, separate-instance isolation
+model retention, peaceful town models, ignored combat inputs, equipment element/current-loadout
+observer callbacks before confirmation, currency, scene round trips, separate-instance isolation
 and two-account actor synchronization. It also checks same-account knight takeover
 and rapid reconnect using stock login/selection readers. Picker validation and creation
 reject names owned by another account, including case variants. Maps are copied into every test deployment.

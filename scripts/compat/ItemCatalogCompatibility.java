@@ -65,6 +65,9 @@ public final class ItemCatalogCompatibility {
         var profile=new WorldProfile(10,1,1,0,0,1,equipped);var player=readSelected(knight,profile);
         if(!player.n(manager).equals(WorldCompatibility.reference(StarterCatalog.equipped(knight,profile,catalog))))
             throw new AssertionError("Stock costume/trinket composition differs:\nstock="+player.n(manager)+"\nserver="+StarterCatalog.equipped(knight,profile,catalog));
+        if(!player.a(manager,true,true,-1,true,false,Boolean.TRUE).equals(
+                WorldCompatibility.reference(StarterCatalog.town(knight,profile,catalog))))
+            throw new AssertionError("Peaceful costume/shield composition differs from stock town builder");
         // Read the rendered actor too: this exercises TransNormal fields on the wire.
         var codec=new org.tortodrone.protocol.SessionCodec();var model=StarterCatalog.equipped(knight,profile,catalog);
         var state=new org.tortodrone.world.ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,
@@ -111,13 +114,22 @@ public final class ItemCatalogCompatibility {
         var selected=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)in.qe()).yj();
         for(var event:selected.xE())event.b(player);
         var changes=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)in.qe()).yj();
-        int added=0,updated=0;for(var event:changes.xE()) {
+        int added=0,updated=0,loadouts=0,equipment=0;for(var event:changes.xE()) {
             if(event instanceof com.threerings.presents.dobj.EntryAddedEvent)added++;
-            if(event instanceof com.threerings.presents.dobj.EntryUpdatedEvent)updated++;
+            if(event instanceof com.threerings.presents.dobj.EntryUpdatedEvent update) {
+                if(update.getName().equals("loadouts"))loadouts++;else updated++;
+            }
+            if(event instanceof com.threerings.presents.dobj.ElementUpdatedEvent update) {
+                if(!update.getName().equals("equipment")||update.pN()!=6||update.xY()!=6)
+                    throw new AssertionError("Wrong equipment slot/value event");
+                equipment++;
+            }
             if(!event.b(player))throw new AssertionError("Stock rejected item change");
         }
         if(added!=2||updated!=1||player.items.size()!=7||player.equipment[6]!=6||in.available()!=0)
             throw new AssertionError("Concurrent grant/equip skipped item entry events");
+        if(loadouts!=1||equipment!=1||player.loadouts.f("").equipment[6]!=6)
+            throw new AssertionError("Open loadout menu receives no current-loadout entry update");
         if(!player.n(manager).equals(WorldCompatibility.reference(StarterCatalog.equipped(knight,after,catalog))))
             throw new AssertionError("Stock held model differs after concurrent grant/equip");
         System.out.println("PASS: stock reader applies coalesced grant/equip with two additions, starter displacement and correct held model");

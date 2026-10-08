@@ -3,6 +3,7 @@ package org.tortodrone.protocol;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -318,27 +319,24 @@ public final class SessionCodec {
             attribute(out,oid,"crowns",o->value(o,profile.crowns()));attribute(out,oid,"energy",o->value(o,profile.energy())); });
     }
 
-    public byte[] equipped(int oid,Knight knight,WorldProfile profile) throws IOException {
-        return frame(out -> {
-            eventHeader(out,"CompoundEvent",oid);
-            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);
-            attribute(out,oid,"items",o -> items(o,knight,profile));
-            attribute(out,oid,"equipment",o -> longs(o,profile.equipment()));
-            attribute(out,oid,"loadouts",o -> currentLoadout(o,profile));
-        });
-    }
-    /** Notify stock Arsenal SetListeners as well as updating its stored DSet. */
+    /** Item entry, equipment element and loadout entry events notify the open stock panels. */
     public byte[] itemChanges(int oid,Knight knight,WorldProfile before,WorldProfile after)throws IOException {
         var old=new HashMap<Long,WorldProfile.Item>();for(var item:before.items())old.put(item.id(),item);
         var changed=after.items().stream().filter(i->!i.equals(old.get(i.id()))).toList();
+        long[] oldEquipment=before.equipment(),equipment=after.equipment();
+        var slots=new ArrayList<Integer>();
+        for(int slot=0;slot<equipment.length;slot++)if(oldEquipment[slot]!=equipment[slot])slots.add(slot);
         return frame(out->{
-            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+2);
+            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+slots.size()+(slots.isEmpty()?0:1));
             for(var item:changed) {
                 type(out,"com.threerings.presents.dobj."+(old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent"));
                 out.writeInt(oid);string(out,"items");item(out,knight,after.worldId(),item);
             }
-            attribute(out,oid,"equipment",o->longs(o,after.equipment()));
-            attribute(out,oid,"loadouts",o->currentLoadout(o,after));
+            for(int slot:slots) {
+                type(out,"com.threerings.presents.dobj.ElementUpdatedEvent");out.writeInt(oid);string(out,"equipment");
+                value(out,equipment[slot]);out.writeInt(slot);
+            }
+            if(!slots.isEmpty())loadoutUpdated(out,oid,after);
         });
     }
 
@@ -496,6 +494,13 @@ public final class SessionCodec {
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
+        loadout(out,profile);
+    }
+    private void loadoutUpdated(DataOutputStream out,int oid,WorldProfile profile)throws IOException {
+        type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(oid);string(out,"loadouts");
+        loadout(out,profile);
+    }
+    private void loadout(DataOutputStream out,WorldProfile profile)throws IOException {
         type(out,"com.threerings.projectx.data.Loadout");
         // Loadout equipment is indexed by ItemCodes.bwt, not the full equipment slot array.
         int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};long[] equipment=profile.equipment();
