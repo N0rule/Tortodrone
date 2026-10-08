@@ -28,3 +28,26 @@ bounded command history; its native terminal libraries are included.
 JLine uses the BSD 3-Clause license, included in each JAR as `licenses/jline.txt`.
 `scripts/fetch-jline.sh` verifies and caches the pinned artifact. CLI automation
 with redirected stdin uses plain input and does not require a native terminal.
+
+## Haven Town Square layout
+
+Both JARs currently package the original compressed scene 1 export from
+[reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive).
+The layout references client resources; it does not include game meshes, textures
+or audio. The archive's static index identifies it as Haven Town Square.
+
+- Archive commit: `ae49faf06788dd83b35a959306c9fe4c25688004`
+- Path: `Master/Static/1`
+- Scene revision: `1702968117`
+- SHA-256: `045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f`
+- Fetch/cache: `scripts/fetch-town-square.sh`, `build/deps/town-square.dat`
+- Packaged resource: `/scenes/town-square.dat`
+
+The archive provides no repository license file at the pinned revision. The
+layout is attributed here; no additional licensing claim is made for it.
+`town-walkability.gz` is a server collision mask derived from that scene using
+read-only installed client configurations: default PC circle radius 1/3 and
+collision mask 43, samples spaced 0.25 units over x=[-35,34.75], y=[-32,43.75].
+The optional `scripts/compat/TownCollisionExport.java` records the derivation.
+Update the scene pin, checksum, collision mask and compatibility fixtures together
+when changing this layout.

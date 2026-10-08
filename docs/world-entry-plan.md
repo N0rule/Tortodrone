@@ -1,64 +1,62 @@
-# World entry in small milestones
+# Town checkpoint and next milestones
 
-Character creation currently saves a knight and returns to a reconnectable roster.
-It does not begin the introductory missions or enter a game world. Version
-`0.2.0` completes the server's saved-character management: create, edit, delete,
-slot reuse and persistence. The installed client's networking classes accepted
-these operations; graphical/world behavior remains a separate check.
+## Completed in 0.7.0
 
-## LAN foundations before world entry
+Normal login → create/select a saved knight → Haven Town Square → movement and
+mouse facing → starter inventory equip/unequip → persistent crowns and energy.
+Intro missions are skipped through the verified zone/scene transition. The server
+sends no tutorial-completion flags and grants no introductory-mission rewards.
 
-Version `0.3.0` adds persistent normal accounts and separate saved rosters so LAN
-players have their own identities. Version `0.4.0` adds live
-roster updates across connections belonging to the same account, ordered output
-queues and subscription cleanup.
-Version `0.5.0` adds SQLite account/character persistence, local desktop account
-administration, running-server terminal commands and stored Admin flags. These
-foundations do not acknowledge character selection or mark introductory missions complete.
+The town is scene 1 from the [Spiral Knights Scene Archive](https://github.com/reference-source/SpiralKnightsSceneArchive).
+The first build fetches its pinned original layout; see [provenance](dependencies.md).
+The installed client supplies its own meshes, textures and audio. Server code,
+protocol serializers, collision samples and tests run without a game installation.
 
-## Completed character foundation (0.6.0)
+Selection sends the owned world ID, appearance, actual item set, equipment,
+balances and home town before forcing the stock zone receiver to town. Zone and
+scene callbacks return the layout and explicit scene object. Scene subscriptions
+receive occupant metadata; actor updates start after `enteredPlace` and continue
+at 20 Hz relative to acknowledged snapshots. Client input
+provides direction/facing only; the server computes position and checks a sampled
+static collision map. Empty acknowledgement batches and the normal ProjectX input
+extension are supported. Future input is queued until due, and elapsed scene time
+controls movement speed. A verified movement limit permits client prediction;
+unchanged actor model configurations are retained across ordinary updates. Combat actions are ignored in this town checkpoint.
 
-The installed selection request is Knight service method 4 with a knight name,
-optional string and Confirm listener. The server now validates arguments and
-ownership before returning an explicit world-entry-unavailable response.
+Only one connection can control a given knight. Disconnect releases it. Different
+knights can share town; actor identity is global, while roster IDs stay local to
+an account. Equip requests check authentication revision, item ownership and slot
+compatibility in their database transaction. Local currency changes are polled
+into an online character within about 250 ms.
 
-Schema 2 adds globally unique world character IDs alongside existing roster IDs
-and durable IDs for a small development starter kit. Migration preserves saved
-identities/appearance, grants once, and rolls back on failure. Creator edits,
-restart and deletion preserve the required ownership/identity rules. Helm/armor,
-costume recolors, both creator accessory choices, and all 47 eyes were checked
-against the installed client's reader and model builder. No game assets are
-bundled or client code changed. See [verification](research/starter-equipment.md).
+## Present limits
 
-## Next: selection and one starting area
+- One scene and one spawn; positions are not persisted.
+- Static collision is sampled on a quarter-unit grid, with simple wall sliding.
+  There is no server physics simulation for dynamic scenery.
+- Five starter items only; no drops, crafting, trade, loadouts or costume equipment.
+- Crowns and energy are per knight and start at zero. No regeneration or economy.
+- News and social feeds are empty. Their handles let the stock town HUD initialize.
+  Mail sending, social actions and other unsupported operations return failure.
+- Reconnect to switch characters. Online knights cannot be edited/deleted in the picker.
+- Visual NPCs/portals have no dialogue or travel implementation. No combat or quests.
 
-1. Verify the installed client's selection path and the full selected-player,
-   inventory, location and scene schemas using read-only class inspection and
-   synthetic fixtures. Do not make the client advance by reporting selection
-   success before the required objects/events exist.
-2. Establish globally unique world character identities before sharing a scene;
-   the account-local roster counters remain preserved while world identities
-   are global. The identity migration and starter inventory are complete. Wire
-   the selected character's identity, appearance and starter inventory into
-   verified player-object events. Preserve account ownership and reject selection of a missing
-   or other account's character.
-3. Implement a single compatible starting scene and the subscriptions/transitions
-   needed to enter it. Use existing game resources through server references;
-   do not copy game assets into this repository or patch the client.
-4. Verify entry, disconnect/reconnect, and returning to the same character/location
-   before adding movement, combat or mission progression.
+## Next priorities
 
-The first world checkpoint should be one small starting area. Introduction
-missions need scripted events, NPCs, combat, rewards and persisted progress, so
-implementing the entire sequence alongside first world entry would obscure
-protocol and state failures. Investigate a server-controlled development spawn
-using the client's existing selection/location flow. Any route around the intro
-must use verified server state; no client patches or guessed mission flags.
+1. Persist position and support clean return to the character picker.
+2. Implement one additional connected scene and verified portal transitions.
+3. Generalize item instances beyond the starter kit, then add item grants and
+   weapon selection with ownership checks and persistence.
+4. Add a small combat test area: one enemy, damage, death and reconnect behavior.
+5. Add one mission with persisted steps and once-only rewards before attempting
+   the full introduction. NPC dialogue and scripted events belong to that work.
+6. Expose a limited set of in-game admin commands using the current database role.
 
-## Later: introductory missions
+## Verification
 
-Add one mission at a time after the scene and progression protocol are verified.
-Define how completed steps, rewards and reconnects are persisted before claiming
-that a mission is playable. Keep normal account authentication as the only login
-path. Intro missions, tutorial bypass, world entry and gameplay are not yet
-implemented in this release.
+`make test` uses disposable state and requires no game files. Optional
+`scripts/check-client-world.py "/path/to/Spiral Knights"` checks the stock reader
+and its movement predictor, plus real networking/marshaller classes against a temporary localhost server, covering both creation and reconnect. It
+requires Python 3 and a build made with `make build`, reads installed game JARs,
+and stops its server on completion. Graphical testing is a separate check because
+headless network success cannot prove that the client renders the scene and HUD.

@@ -22,7 +22,7 @@ public final class WorldProfileTest {
             alice.create(choices("Alice-Knight")); bob.create(choices("Bob-Knight"));
             // Reconstruct a real v1 deployment with colliding account-local knight IDs.
             db.write(c -> { try (var s = c.createStatement()) {
-                s.execute("DROP TABLE inventory_items"); s.execute("DROP TABLE world_characters");
+                s.execute("DROP TABLE currency_events"); s.execute("DROP TABLE inventory_items"); s.execute("DROP TABLE world_characters");
                 s.execute("DELETE FROM metadata WHERE key IN('next-world-id','next-item-id')"); s.execute("PRAGMA user_version=1");
             } return null; });
             db.write(c -> { try(var s=c.createStatement()) { s.execute("UPDATE knights SET helm='unknown-legacy-helm' WHERE account_id=1"); } return null; });
@@ -36,7 +36,7 @@ public final class WorldProfileTest {
                 refused(() -> new Database(home,false)); check(version(db)==1,"migration requires stopped deployment");
             }
             db=new Database(home,false);
-            check(version(db)==2 && db.roster(1).equals(savedAlice) && db.roster(2).equals(savedBob),"upgrade preserves every saved appearance field and local ID");
+            check(version(db)==3 && db.roster(1).equals(savedAlice) && db.roster(2).equals(savedBob),"upgrade preserves every saved appearance field and local ID");
             check(Arrays.equals(salt,db.identity("Alice").salt()) && Arrays.equals(verifier,db.identity("Alice").verifier()),"upgrade preserves password verifiers");
             var a=db.worldProfile(1,1,1); var b=db.worldProfile(2,1,1);
             check(a.worldId()!=b.worldId() && a.knightId()==b.knightId(),"colliding roster IDs receive distinct global identities");

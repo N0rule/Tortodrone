@@ -25,13 +25,13 @@ public final class Database {
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
-        if (Files.exists(file)) { int version = version(); if (version == 2) return; if (version != 0 && version != 1) throw new IOException("Unsupported database version; database was not replaced"); }
+        if (Files.exists(file)) { int version = version(); if (version == 3) return; if (version != 0 && version != 1 && version != 2) throw new IOException("Unsupported database version; database was not replaced"); }
         if (deploymentLocked) initialize(directory);
         else {
             try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  var lock = channel.tryLock()) {
                 if (lock == null) throw new IOException("Stop the server once before initializing or migrating the database");
-                if (!Files.exists(file) || version() != 2) initialize(directory);
+                if (!Files.exists(file) || version() != 3) initialize(directory);
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
     }
@@ -63,20 +63,24 @@ public final class Database {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
     }
     private void initialize(Path directory) throws IOException {
-        if (Files.exists(file) && version() == 2) return;
-        if (Files.exists(file) && version() == 1) {
+        int existing = Files.exists(file) ? version() : 0;
+        if (existing == 3) return;
+        if (existing == 1 || existing == 2) {
             write(c -> {
+                int current;
                 try (Statement statement = c.createStatement(); ResultSet r = statement.executeQuery("PRAGMA user_version")) {
-                    r.next(); if (r.getInt(1) == 2) return null;
-                    if (r.getInt(1) != 1) throw new IOException("Unsupported database version; database was not replaced");
+                    r.next(); current=r.getInt(1);
                 }
-                WorldProfiles.initialize(c);
-                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version=2"); }
+                if (current==3) return null;
+                if (current!=1 && current!=2) throw new IOException("Unsupported database version; database was not replaced");
+                if (current==1) WorldProfiles.initialize(c);
+                WorldProfiles.upgrade(c);
+                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version=3"); }
                 return null;
             });
             return;
         }
-        if (Files.exists(file) && version() != 0) throw new IOException("Unsupported database version; database was not replaced");
+        if (existing != 0) throw new IOException("Unsupported database version; database was not replaced");
         if (!Files.exists(file)) Files.createFile(file);
         read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
             r.next(); if (r.getInt(1) != 0) throw new IOException("Unsupported database schema; database was not replaced");
@@ -96,7 +100,8 @@ public final class Database {
             }
             migrate(connection, directory);
             WorldProfiles.initialize(connection);
-            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version=2"); }
+            WorldProfiles.upgrade(connection);
+            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version=3"); }
             return null;
         });
     }
@@ -248,10 +253,56 @@ public final class Database {
             var profile = WorldProfiles.load(c,accountId,knightId,authRevision); c.commit(); return profile;
         });
     }
+    public WorldProfile currency(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.Currency currency,long delta) throws IOException {
+        if (delta==0 || delta<-Integer.MAX_VALUE || delta>Integer.MAX_VALUE) throw new IOException("Amount must be between 1 and 2147483647");
+        return write(c -> {
+            int accountId=requireId(c,username);
+            if (expectedAccount>=0 && accountId!=expectedAccount) throw new IOException("Account changed; refresh the account list");
+            int knightId;
+            try (PreparedStatement s=c.prepareStatement("SELECT id FROM knights WHERE account_id=? AND name_key=?")) {
+                s.setInt(1,accountId);s.setString(2,knightName.toLowerCase(Locale.ROOT));
+                try(ResultSet r=s.executeQuery()){if(!r.next())throw new IOException("No such knight");knightId=r.getInt(1);}
+            }
+            var profile=WorldProfiles.load(c,accountId,knightId,-1);
+            if(expectedWorld>=0 && profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh the character list");
+            long balance=(currency==org.tortodrone.character.Currency.CROWNS?profile.crowns():profile.energy())+delta;
+            if(balance<0)throw new IOException("Insufficient "+currency.name().toLowerCase(Locale.ROOT));
+            if(balance>Integer.MAX_VALUE)throw new IOException("Balance exceeds the supported limit");
+            String column=currency==org.tortodrone.character.Currency.CROWNS?"crowns":"energy";
+            try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET "+column+"=?,state_revision=state_revision+1 WHERE world_id=?")) {
+                s.setLong(1,balance);s.setInt(2,profile.worldId());s.executeUpdate();
+            }
+            try(PreparedStatement s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) VALUES(?,?,?,?,?)")) {
+                s.setInt(1,profile.worldId());s.setString(2,column);s.setLong(3,delta);s.setLong(4,balance);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
+            }
+            return WorldProfiles.load(c,accountId,knightId,-1);
+        });
+    }
+    public WorldProfile equip(int accountId,int knightId,long revision,long itemId,Integer slot) throws IOException {
+        return write(c -> {
+            var profile=WorldProfiles.load(c,accountId,knightId,revision);
+            var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
+            if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
+            if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
+            try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=? WHERE world_id=? AND item_id=?")){
+                if(slot==null)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
+                s.setInt(2,profile.worldId());s.setLong(3,itemId);s.executeUpdate();
+            }
+            try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
+            return WorldProfiles.load(c,accountId,knightId,revision);
+        });
+    }
     public void saveRoster(int id,List<Knight> knights,int next,long revision) throws IOException {
         write(c -> {
             replaceRoster(c,id,knights,next,revision);
-            for (Knight knight : knights) { WorldProfiles.ensure(c,id,knight); WorldProfiles.appearance(c,id,knight); }
+            for (Knight knight : knights) { boolean fresh;
+                try(PreparedStatement statement=c.prepareStatement("SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?")) {
+                    statement.setInt(1,id);statement.setInt(2,knight.id());try(ResultSet r=statement.executeQuery()){fresh=!r.next();}
+                }
+                WorldProfiles.ensure(c,id,knight);
+                if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
+                WorldProfiles.appearance(c,id,knight); }
             return null;
         });
     }

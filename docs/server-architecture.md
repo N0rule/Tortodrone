@@ -100,30 +100,21 @@ are allowed only to the connection's own `receivers` field. Zero-based 16-bit
 receiver IDs are preserved, checked for uniqueness, and included in subsequent
 player snapshots. Arbitrary object/field writes are rejected.
 
-The service handles are Knight, Location, Chat, Scene, Zone, ProjectXScene,
-ProjectXZone, and Body marshallers. They let observers bind their client services;
-they do not imply gameplay support. Initial Knight hardware statistics are
-discarded without logging their values. Knight method 3 validates names and
-method 5 creates or updates a normal-account character, and method 6 deletes
-a character by name. Name validation uses Confirm listener
-method 1 with null arguments for success. Creation sends an `availableKnights`
-attribute update after the save, then uses the correlated method-zero callback
-with "Knight saved. Reconnect to view it; world entry is not available yet."
-The stock creator's success handler waits for world events and leaves its busy
-state active; its failure handler clears that state and displays the result.
-Once world entry is implemented, creation can use the success callback again.
-Literal callback messages carry the client's `~` prefix so they display directly
-instead of being looked up as missing translation keys.
-Other supported invocations with
-listeners receive the standard method-zero failure callback through
-`EventNotification`/`InvocationResponseEvent`. Creation validates the fourteen
-arguments, including nulls, height/eye ordinals, and the non-Steam empty friend
-list. A null previous name creates a new character; an existing previous name
-updates that account's character. Editing preserves its ID and creation time and
-uses the same save/roster-update flow, with the explicit "Knight updated" result
-while world entry is unavailable. Deletion accepts a Name and Confirm listener,
-saves the reduced roster, emits its update, then sends a success confirmation.
-Steam fields, missing characters, duplicate names and unknown operations are refused.
+The bootstrap supplies Knight, Location, Chat, Scene, Zone, ProjectXScene,
+ProjectXZone, Body, Item, Uplink and Feed marshallers. Handles allow stock observers
+to bind services; each operation is explicitly supported or refused. Empty news
+and feed results support town HUD initialization. Initial hardware statistics
+are discarded without logging their values.
+
+Knight method 3 validates names, 4 selects, 5 creates/edits and 6 deletes. Create
+commits and publishes the roster before selection/world events and its success
+callback. A fixture without a scene receiver can save a knight but gets an explicit
+saved result instead of attempting world entry. Confirm callbacks use method 1
+with null arguments for success; failures use method 0 with a literal `~` reason.
+Character save validates all fourteen arguments, including nulls, height/eye
+ordinals and the empty normal-account friend list. Missing characters, duplicate
+names, platform fields and unknown operations are refused. Online knights cannot
+be edited/deleted. Other sessions on the same account receive roster changes.
 
 `CharacterStore` shares one synchronized store across connections for each
 authenticated account. It persists up to three knights per account in
@@ -143,12 +134,11 @@ configuration names and argument keys use a separate connection-local intern
 table. The preview uses verified starter helmet/armor and accessory references,
 with saved costume recolors, height and eye/blink textures. New saves must match
 the starter catalog. Unknown legacy equipment stays saved and is omitted from
-the preview. The creator displays the saved/unavailable result; reconnecting
-shows the saved roster. Character selection still fails explicitly because zone/world
-objects do not exist yet.
+the preview. Selected state uses the persisted equipment set, not the roster
+preview. Town callbacks and subscriptions supply the world objects and actors.
 
 The session answers pings, acknowledges unsubscribe, and closes on EOF/logoff.
-Limits are 16 clients, 64 KiB/frame, 15 seconds idle during authentication,
+Limits are 16 clients, 64 KiB upstream / 1 MiB downstream per frame, 15 seconds idle during authentication,
 60 seconds idle after authentication, 256 incoming class mappings, eight nested
 levels, 128 elements per collection, and 512 parsed nodes per session frame.
 Malformed or unsupported schemas are rejected with fixed diagnostics, never
@@ -167,15 +157,14 @@ argument values. UDP is not implemented.
 - [x] Separate persistent accounts and protected password verification.
 - [x] SQLite persistence, desktop account manager, live terminal commands and Admin flags.
 - [x] Account-scoped live roster updates and bounded ordered downstream queues.
-- [ ] Apply saved appearance to previews and reconstruct starter inventory.
-- [ ] Implement character selection, minimal inventory, zone entry and world state.
+- [x] Apply saved appearance to previews and reconstruct starter inventory.
+- [x] Character selection, starter equipment, Haven entry, town movement and currency counters.
 
 Earlier installed-client experiments confirmed the rendered creator and saved
 roster. Their details, including temporary client probes and input workarounds,
 remain [historical research](research/README.md). Current development verifies
 the server with synthetic fixtures and does not modify clients. Automated tests
-check roster restoration after restarting the packaged JAR. Selection and world
-entry remain separate checkpoints. The [world entry plan](world-entry-plan.md)
+check roster restoration after restarting the packaged JAR. Town rendering remains a separate graphical verification from network fixtures. The [world entry plan](world-entry-plan.md)
 keeps a minimal starting scene separate from introductory missions.
 
 ## Build and tests
@@ -258,7 +247,7 @@ not change account-local roster registration.
 
 The codec and `SessionOutput` queue share a serialization lock; the writer sends
 frames in that same order. Network I/O runs outside the character-store lock.
-A queue is limited to 64 pending frames, each at most 64 KiB. A failed or stalled
+A queue is limited to 64 pending frames, up to 1 MiB downstream (64 KiB upstream). A failed or stalled
 recipient is closed and removed from publication without undoing a saved change.
 
 
@@ -287,7 +276,36 @@ authentication revision. Incomplete inventories are rejected without regranting.
 Local `knight list` / `knight info` commands inspect this state without logging
 credentials or changing account/session privileges.
 
-Selection RPC method 4 validates its three arguments and character ownership.
-An owned knight still receives the unavailable response; no success, world
-transition, selected-player mutation or guessed tutorial-completion flag is sent.
-Scene and location subscriptions are the next protocol milestone.
+## Haven town and character state (0.7.0)
+
+Selection RPC method 4 checks the account-owned knight and current authentication
+revision, then acquires a single controller for its global world ID. Creation
+with the normal scene receiver registered immediately selects its saved result.
+A roster-only fixture without that receiver reports the save explicitly and
+cannot enter a world. Resubscribing to PlayerObject restores selected state.
+
+`WorldSession` owns its knight, equipment/balances snapshot and `TownMovement`.
+Zone 1 / scene 1 resolves to scene object 10 and the pinned archived Town Square
+layout. Scene snapshots contain occupant metadata and three verified service
+handles. Updates begin after the stock controller's `enteredPlace` notification,
+which follows attachment of its delta listener. Each session ticks at 20 Hz,
+publishing full snapshots until the client
+acknowledges a scene timestamp, then deltas relative to that acknowledged snapshot.
+It keeps 40 timestamp/actor-state baselines. Ordinary movement omits unchanged
+model configuration; gear changes are compared to the acknowledged configuration. New occupant metadata precedes added
+actors. Movement checks finite angles, frame count, freshness, ordering, scene
+ownership, and the sampled static collision mask. Bounded future input queues
+apply frames at their scene timestamps, integrating elapsed time in small substeps.
+Actor snapshots carry a nonzero movement limit derived from the verified collision
+shape, enabling stock local prediction. Delta elapsed time and ping estimates
+follow the scene clock rather than being fixed placeholders. Peer class names never cause
+class loading. Unsupported combat flags do not authorize movement or actions.
+
+SQLite schema 3 adds per-knight crowns/energy and a monotonic state revision,
+nullable equipped slots and currency audit events. Give/withdraw and equip/displace
+are atomic and ownership guarded. Existing kits are equipped once during upgrade;
+new kits are equipped during their roster transaction. Reopening does not change
+loadouts. Profile polling every 250 ms reflects local manager/terminal currency
+changes in online player objects. Disconnect releases controller/subscriptions
+and stops its tick executor. Static town state is shared across active knights;
+position remains transient. See [checkpoint limits](world-entry-plan.md).

@@ -8,7 +8,8 @@ both JARs. Read [AGENTS.md](../AGENTS.md) before changing code.
 
 Develop the server and local administration tools. Support normal username/password
 login only. Do not develop or patch the client/launcher or add Steam or guest
-login. World entry and gameplay remain future work.
+login. The current town checkpoint supports entry, movement, facing, starter equipment
+and stored currencies; combat, quests and travel remain future work.
 
 Packages under `src/main/java/org/tortodrone/`:
 
@@ -22,6 +23,7 @@ Packages under `src/main/java/org/tortodrone/`:
 | `protocol` | Verified bounded wire schemas | `HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
 | `server` | Startup, terminal commands, listener and logging | `Server`, `ServerConsole`, `ServerLog` |
 | `server.network` | Authentication, subscriptions and invocations | `SecureHandshake`, `ClientSession`, `SessionOutput` |
+| `world` | Archived town, collision samples and timestamped movement | `TownSquare`, `TownTerrain`, `TownMovement` |
 | `server.security` | Persistent RSA identity | `HandshakeKeys` |
 
 Add verified wire parsing to codecs, route operations in `ClientSession`, and keep
@@ -45,7 +47,7 @@ make clean             # preserve data and cached dependencies
 ```
 
 First build needs network access, `curl` and `sha256sum`. Dependency versions and digests
-are pinned in the Makefile and `scripts/fetch-sqlite.sh` / `scripts/fetch-jline.sh`;
+are pinned in the Makefile and `scripts/fetch-sqlite.sh`, `scripts/fetch-jline.sh` and `scripts/fetch-town-square.sh`;
 update the matching entries together.
 Bundled native libraries make a separate SQLite installation unnecessary.
 Sources/resources are discovered recursively. Tests have a `main` method and names
@@ -57,13 +59,15 @@ stale selections, failed writes, deletion cascades, concurrent uniqueness,
 headless Swing table search/sorting, packaged admin commands on a live server,
 session revocation, running-server stdin commands and clean stop, protocol/frame
 limits, character management, private live rosters, shutdown/restart, keys, logs,
-configuration and runtime paths. Use temporary deployments, never real saved data.
+configuration and runtime paths, timestamped input batches, scene readiness and
+movement under scheduler jitter. Use temporary deployments, never real saved data.
 Testing may start servers; leave them stopped afterward.
 
 A read-only harness may load installed client networking classes against temporary
 server state/preferences. This verifies actual serializers without modifying or
-launching the user's game installation. It does not establish graphical world
-entry or playable intro missions.
+launching the user's game installation. Graphical rendering and animation need a
+separate mapped window check. Town entry is implemented in 0.7.0; intro missions
+remain outside scope.
 
 ## Runtime and upgrades
 
@@ -71,14 +75,14 @@ Both JARs default to `data/` beside themselves. Keep them together or use the
 manager's `--data` option. Server `--config` chooses settings only, never state.
 Configuration defaults are bundled in `src/main/resources/server.properties`;
 existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
-and used by startup and each JAR's `--version`; the current release is `0.6.0`.
+and used by startup and each JAR's `--version`; the current release is `0.7.0`.
 
 `build/.build/` contains disposable classes and packaging output; `build/deps/`
-caches the driver. Git ignores all build/runtime output. Upgrades replace both
+caches pinned libraries and the town layout. Git ignores all build/runtime output. Upgrades replace both
 JARs and keep data. Stop the server and close the manager before a simple copy
 backup of the whole data directory; copying only a live DB can omit WAL changes.
 
-SQLite schema version 2 imports legacy registries and profiles transactionally on
+SQLite schema version 3 imports legacy registries and profiles transactionally on
 first open. Keep account/knight IDs, protected verifiers, appearance, creation
 times and next-ID counters. Imported Admin is false. Profile-only 0.2 deployments
 retain their original fixed login. Fresh deployments start empty. Source files
@@ -191,3 +195,30 @@ scripts/check-client-previews.sh "/path/to/Spiral Knights"
 This fixture loads unchanged client serialization/configuration classes and
 compares server previews to the client's model builder. It does not launch or
 modify the client. See [verification evidence](research/starter-equipment.md).
+
+## Town development (0.7.0)
+
+Read [the town checkpoint](world-entry-plan.md) before extending gameplay. The
+normal account flow enters archived Haven directly; do not invent tutorial progress
+or implement client patches. Build resources include a pinned scene and a derived
+static collision mask. Update them together when changing scene geometry.
+
+`TownMovementTest` checks elapsed-time movement, mouse facing, input freshness,
+replays, future batches, scheduler jitter, timeout and collision. `WorldInputTest` checks both base and ProjectX
+input frame schemas, including empty acknowledgement batches. Currency/equipment
+and migration fixtures use temporary SQLite databases; packaged tests exercise
+terminal give/withdraw commands. Run `make test` after changes.
+
+Optional installed-client check (Python 3 required):
+
+```sh
+make build
+python3 scripts/check-client-world.py "/path/to/Spiral Knights"
+```
+
+It reads the separate installed game, uses synthetic credentials and temporary
+state, checks local movement prediction and real zone/item/input marshallers on
+creation and reconnect, then stops its own server.
+Graphical scene entry, HUD, mouse facing and Arsenal behavior still need a mapped
+game window check when altering their protocol. Leave test servers stopped when
+finished. No game installation is required for the default build or test suite.

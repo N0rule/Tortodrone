@@ -14,6 +14,8 @@ import javax.swing.event.*;
 import javax.swing.table.TableRowSorter;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.account.Passwords;
+import org.tortodrone.character.Currency;
+import org.tortodrone.character.Knight;
 
 /** Desktop-only view; all expensive or blocking account work happens outside the Swing thread. */
 final class AdminWindow extends JFrame {
@@ -42,10 +44,10 @@ final class AdminWindow extends JFrame {
             public void insertUpdate(DocumentEvent event) { update(); } public void removeUpdate(DocumentEvent event) { update(); } public void changedUpdate(DocumentEvent event) { update(); }
         });
         table.getSelectionModel().addListSelectionListener(event -> enableActions());
-        JPanel footer = new JPanel(new BorderLayout(0,10)); JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT,6,0));
+        JPanel footer = new JPanel(new BorderLayout(0,10)); JPanel actions = new JPanel(new GridLayout(2,4,6,6));
         button(actions,"Create account",false,this::create); button(actions,"Change password",true,this::password);
         button(actions,"Check password",true,this::check); button(actions,"Set Admin",true,this::admin);
-        button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
+        button(actions,"Currency",true,this::currency); button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
         footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
         addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { if (accounts != null) accounts.close(); } });
         execute(() -> { accounts = new AccountStore(directory); return accounts.list(); },this::loaded);
@@ -104,6 +106,29 @@ final class AdminWindow extends JFrame {
         boolean admin = flag.isSelected();
         execute(() -> { accounts.setAdmin(account.username(),admin,account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Admin status updated."); });
     }
+    private void currency() {
+        var account = selected(); if (account == null) return;
+        execute(() -> accounts.knights(account.username()),knights -> {
+            if (knights.isEmpty()) { message("This account has no characters.",false); return; }
+            JComboBox<String> knight = new JComboBox<>(knights.stream().map(Knight::name).toArray(String[]::new));
+            if (JOptionPane.showConfirmDialog(this,form("Character",knight),"Character balances — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
+            String name = (String)knight.getSelectedItem();
+            execute(() -> accounts.worldProfile(account.username(),name),profile -> {
+                JComboBox<Currency> currency = new JComboBox<>(Currency.values());
+                JComboBox<String> operation = new JComboBox<>(new String[]{"Give","Withdraw"});
+                JTextField amount = new JTextField("1",12);
+                JPanel form = form("Current balances",new JLabel("Crowns: "+profile.crowns()+"  Energy: "+profile.energy()),"Currency",currency,"Operation",operation,"Amount",amount);
+                if (JOptionPane.showConfirmDialog(this,form,"Currency — "+name,JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
+                long value;
+                try { value=Long.parseLong(amount.getText().trim()); if(value<=0 || value>Integer.MAX_VALUE)throw new NumberFormatException(); }
+                catch(NumberFormatException invalid){message("Amount must be between 1 and 2147483647.",true);return;}
+                long delta = operation.getSelectedIndex()==0 ? value : -value;
+                Currency selectedCurrency=(Currency)currency.getSelectedItem();
+                execute(() -> accounts.currency(account.username(),name,selectedCurrency,delta,account.id(),profile.worldId()),result -> status.setText(name+" — Crowns: "+result.crowns()+" | Energy: "+result.energy()));
+            });
+        });
+    }
+
     private void delete() {
         var account = selected(); if (account == null) return;
         String typed = JOptionPane.showInputDialog(this,"Delete "+account.username()+" and "+account.knights()+" character(s)?\nType the username to confirm:","Delete account",JOptionPane.WARNING_MESSAGE);

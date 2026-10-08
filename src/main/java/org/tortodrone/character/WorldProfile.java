@@ -2,9 +2,26 @@ package org.tortodrone.character;
 
 import java.util.List;
 
-/** Durable character and item identities for future selection and shared scenes. No client state. */
-public record WorldProfile(int worldId, int accountId, int knightId, List<Item> items) {
+/** Server-owned character state persisted across sessions. */
+public record WorldProfile(int worldId, int accountId, int knightId, int crowns, int energy,
+        long revision, List<Item> items) {
     public WorldProfile { items = List.copyOf(items); }
-    public enum Slot { HELM, ARMOR, SWORD, GUN, SHIELD }
-    public record Item(long id, Slot slot, String config, String accessory, int heat) { }
+    public enum Slot {
+        HELM, ARMOR, SWORD, GUN, SHIELD;
+        public boolean accepts(int index) {
+            return switch(this) {
+                case HELM -> index==0;
+                case ARMOR -> index==1;
+                case SHIELD -> index==2;
+                case SWORD, GUN -> index==6 || index==7;
+            };
+        }
+        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD->6;case GUN->7;}; }
+    }
+    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot) { }
+    public long[] equipment() {
+        long[] result=new long[16];
+        for(var item:items)if(item.equippedSlot()!=null)result[item.equippedSlot()]=item.id();
+        return result;
+    }
 }

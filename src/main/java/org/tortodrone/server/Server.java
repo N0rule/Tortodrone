@@ -94,7 +94,10 @@ public final class Server {
                 log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
                     + ":" + listener.getLocalPort());
                 log.debug("Public key: " + keys.resolve("public.txt"));
-                log.info("Normal login and saved characters available; world entry is not implemented.");
+                log.info("Preparing Haven Town Square");
+                org.tortodrone.world.TownSquare.model();
+                if (!org.tortodrone.world.TownTerrain.walkable(0,-8)) throw new IOException("Invalid Town Square spawn");
+                log.info("Normal login, town movement and starter inventory available.");
                 accept(listener, key, log, accounts);
             }
         }
@@ -124,7 +127,7 @@ public final class Server {
         }, "ServerShutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
         try {
-            log.debug("Limits: 16 clients; 64 KiB/frame; 15 s handshake / 60 s session idle timeout");
+            log.debug("Limits: 16 clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             log.info("Type help for server commands.");
             console.start();

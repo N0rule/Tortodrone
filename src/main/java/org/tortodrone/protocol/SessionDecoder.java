@@ -17,10 +17,12 @@ public final class SessionDecoder {
     private final Types types;
     private int nodes;
 
-    public sealed interface Event permits Compound, Mutation, Invocation { int oid(); }
+    public sealed interface Event permits Compound, Mutation, Invocation, Input { int oid(); }
     public record Compound(int oid, List<Event> events) implements Event { }
     public record Mutation(int oid, String operation, String field, Object value) implements Event { }
     public record Invocation(int oid, int service, int method, List<Object> arguments) implements Event { }
+    public record Input(int oid,int acknowledge,int smoothedTime,List<InputFrame> frames) implements Event { }
+    public record InputFrame(int timestamp,float rotation,float direction,int flags) { }
     public record Registration(String code, short id) { }
     public record Listener(String type, short requestId) { }
     public record EnumValue(String type, int ordinal) { }
@@ -65,6 +67,23 @@ public final class SessionDecoder {
     private Event event(DataInputStream in, int depth) throws IOException {
         limit(depth);
         String type = types.read(in);
+        if("com.threerings.tudey.data.InputEnqueueEvent".equals(type)) {
+            int oid=in.readInt(),ack=in.readInt(),time=in.readInt();
+            check(oid>0,"Invalid input target");
+            check("[Lcom.threerings.tudey.data.InputFrame;".equals(types.read(in)),"Expected input frames");
+            int length=count(in);check(length<=32,"Invalid input frame count");
+            List<InputFrame> frames=new ArrayList<>();
+            for(int i=0;i<length;i++) {
+                String frameType=types.read(in);
+                boolean extended="com.threerings.projectx.data.ProjectXInputFrame".equals(frameType);
+                check(extended||"com.threerings.tudey.data.InputFrame".equals(frameType),"Expected input frame");
+                int stamp=in.readInt();float rotation=in.readFloat(),direction=in.readFloat();int flags=in.readInt();
+                if(extended)in.readInt(); // actionChanged: combat/action execution is not available in town.
+                check(Float.isFinite(rotation)&&Float.isFinite(direction),"Invalid input angles");
+                frames.add(new InputFrame(stamp,rotation,direction,flags));
+            }
+            return new Input(oid,ack,time,List.copyOf(frames));
+        }
         check(type != null && type.startsWith(DOB), "Expected distributed event");
         String name = type.substring(DOB.length());
         int oid = in.readInt(); check(oid > 0, "Invalid event target");
@@ -112,6 +131,7 @@ public final class SessionDecoder {
             case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List" -> values(in, depth);
             case "com.threerings.projectx.data.ProjectXCodes$KnightHeight" -> enumeration(in, type, 5);
             case "com.threerings.projectx.data.ProjectXCodes$EyeType" -> enumeration(in, type, 47);
+            case "com.threerings.projectx.item.data.ItemCodes$Location" -> enumeration(in,type,4);
             case "com.threerings.projectx.data.Pref" -> enumeration(in, type, 3);
             case "com.threerings.presents.client.InvocationReceiver$Registration" ->
                 new Registration(string(in), in.readShort());

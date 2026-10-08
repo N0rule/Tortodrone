@@ -10,10 +10,10 @@ import static org.tortodrone.support.TestWire.check;
 
 public final class CommandHistoryTest {
     public static void main(String[] args) throws Exception {
-        for (String line : List.of("help","status","stop","/status","account list","account create Alice","account create Alice admin","account password Alice","account check Alice","account delete Alice","account admin Alice true","account admin Alice false","knight list Alice","knight info Alice Saved-Knight")) {
+        for (String line : List.of("currency give Alice Saved-Knight crowns 100","currency withdraw Alice Saved-Knight energy 5","help","status","stop","/status","account list","account create Alice","account create Alice admin","account password Alice","account check Alice","account delete Alice","account admin Alice true","account admin Alice false","knight list Alice","knight info Alice Saved-Knight")) {
             check(CommandHistory.allowed(line),"recognized command history: "+line);
         }
-        for (String line : List.of(""," ","/","secret-password","account create Alice secret-password","account password Alice secret-password","account admin Alice secret-password","unknown","account","account create ../bad","knight list Alice secret-password","knight info Alice ../bad")) {
+        for (String line : List.of("currency give Alice Saved-Knight crowns 0","currency give Alice Saved-Knight crowns 2147483648","currency give Alice Saved-Knight gems 1",""," ","/","secret-password","account create Alice secret-password","account password Alice secret-password","account admin Alice secret-password","unknown","account","account create ../bad","knight list Alice secret-password","knight info Alice ../bad")) {
             check(!CommandHistory.allowed(line),"unknown or secret-bearing input excluded");
         }
         ByteArrayOutputStream output = new ByteArrayOutputStream();

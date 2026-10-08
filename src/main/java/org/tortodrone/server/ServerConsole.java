@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import org.tortodrone.account.AccountStore;
+import org.tortodrone.character.Currency;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.UserInterruptException;
 
@@ -63,11 +64,14 @@ final class ServerConsole implements AutoCloseable {
         if (words.length == 1 && command.equals("help")) {
             log.info("Commands: help | status | stop | account list | account create <username> [admin]");
             log.info("knight list <username> | knight info <username> <knight-name>");
+            log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
             log.info("account password <username> | account check <username> | account admin <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
         } else if (words.length == 1 && command.equals("stop")) {
             log.info("Stopping server…"); stop.run();
+        } else if (command.equals("currency")) {
+            currency(words);
         } else if (command.equals("knight")) {
             knight(words);
         } else if (command.equals("account")) {
@@ -84,9 +88,21 @@ final class ServerConsole implements AutoCloseable {
         } else if (words.length == 4 && words[1].equals("info")) {
             var profile = accounts.worldProfile(words[2],words[3]);
             log.info("Knight " + words[3] + ": account=" + profile.accountId() + ", roster ID=" + profile.knightId() + ", world ID=" + profile.worldId());
+            log.info("Crowns: " + profile.crowns() + " | Energy: " + profile.energy());
             for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config()
-                + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat());
+                + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat() + " | equipped=" + item.equippedSlot());
         } else throw new IOException("Invalid knight command. Type help for commands.");
+    }
+
+    private void currency(String[] words) throws IOException {
+        if (words.length != 6 || !(words[1].equals("give") || words[1].equals("withdraw")))
+            throw new IOException("Usage: currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
+        long amount;
+        try { amount = Long.parseLong(words[5]); }
+        catch (NumberFormatException failure) { throw new IOException("Amount must be a positive whole number"); }
+        if (amount <= 0 || amount > Integer.MAX_VALUE) throw new IOException("Amount must be between 1 and 2147483647");
+        var result = accounts.currency(words[2],words[3],Currency.parse(words[4]),words[1].equals("give") ? amount : -amount,-1,-1);
+        log.info(words[3] + " | Crowns: " + result.crowns() + " | Energy: " + result.energy());
     }
 
     private void account(String[] words) throws IOException {

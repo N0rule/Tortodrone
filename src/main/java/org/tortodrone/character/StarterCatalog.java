@@ -50,7 +50,26 @@ public final class StarterCatalog {
         return new Model("character/pc/model_level.dat", args);
     }
 
+    /** Town model includes the held starter weapon and shield as well as equipped cosmetics. */
+    public static Model equipped(Knight knight,WorldProfile profile) {
+        String helm=null,armor=null,ha=null,aa=null;WorldProfile.Item weapon=null;boolean shield=false;
+        for(var item:profile.items())if(item.equippedSlot()!=null) {
+            switch(item.slot()) {
+                case HELM -> {helm=item.config();ha=item.accessory();}
+                case ARMOR -> {armor=item.config();aa=item.accessory();}
+                case SHIELD -> shield=true;
+                case SWORD,GUN -> {if(weapon==null || item.equippedSlot()<weapon.equippedSlot())weapon=item;}
+            }
+        }
+        var visible=new Knight(knight.id(),knight.name(),helm,armor,ha,aa,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
+        var args=new TreeMap<>(preview(visible).arguments());int color=256|knight.color();
+        if(shield)args.put("Shield",new Model("item/gear/shield/buckler/model.dat",Map.of("Colorization",color,"variant","proto(green)")));
+        if(weapon!=null){boolean sword=weapon.slot()==WorldProfile.Slot.SWORD;args.put("Weapon",new Model(sword?"item/weapon/sword/proto/model.dat":"item/weapon/handgun/proto/model.dat",Map.of("Colorization",color,"variant","proto(green)")));args.put("Weapon Idle",sword?"ready_sword":"ready_pistol");}
+        return new Model("character/pc/model_level.dat",args);
+    }
+
     private static void add(Map<String, Object> args, String name, int color) {
+        if(name==null)return;
         Entry entry = ENTRIES.get(name);
         if (entry == null) return;
         Map<String, Object> values = new TreeMap<>();

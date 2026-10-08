@@ -7,7 +7,7 @@ import org.tortodrone.character.Knight;
 import org.tortodrone.character.WorldProfile;
 import org.tortodrone.character.WorldProfile.Slot;
 
-/** Schema v2 character foundation. Called inside the same transaction as its roster mutation. */
+/** Character schema and transactional upgrade helpers. Called inside the same transaction as its roster mutation. */
 final class WorldProfiles {
     private WorldProfiles() { }
 
@@ -25,13 +25,25 @@ final class WorldProfiles {
         for (int[] identity : identities) ensure(c, identity[0], Database.knight(c,identity[0],identity[1]));
     }
 
+    static void upgrade(Connection c) throws SQLException {
+        try(Statement s=c.createStatement()) {
+            s.execute("ALTER TABLE world_characters ADD COLUMN crowns INTEGER NOT NULL DEFAULT 0 CHECK(crowns BETWEEN 0 AND 2147483647)");
+            s.execute("ALTER TABLE world_characters ADD COLUMN energy INTEGER NOT NULL DEFAULT 0 CHECK(energy BETWEEN 0 AND 2147483647)");
+            s.execute("ALTER TABLE world_characters ADD COLUMN state_revision INTEGER NOT NULL DEFAULT 1 CHECK(state_revision>0)");
+            s.execute("ALTER TABLE inventory_items ADD COLUMN equipped_slot INTEGER CHECK(equipped_slot IN(0,1,2,6,7))");
+            s.execute("UPDATE inventory_items SET equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END");
+            s.execute("CREATE UNIQUE INDEX equipped_items ON inventory_items(world_id,equipped_slot) WHERE equipped_slot IS NOT NULL");
+            s.execute("CREATE TABLE currency_events(id INTEGER PRIMARY KEY,world_id INTEGER NOT NULL,currency TEXT NOT NULL CHECK(currency IN('crowns','energy')),delta INTEGER NOT NULL,balance INTEGER NOT NULL,created_at INTEGER NOT NULL)");
+        }
+    }
+
     static void ensure(Connection c, int accountId, Knight knight) throws SQLException, IOException {
         try (PreparedStatement s = c.prepareStatement("SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?")) {
             s.setInt(1,accountId); s.setInt(2,knight.id());
             try (ResultSet r = s.executeQuery()) { if (r.next()) return; }
         }
         int worldId = Math.toIntExact(allocate(c,"next-world-id",Integer.MAX_VALUE));
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO world_characters VALUES(?,?,?,1)")) {
+        try (PreparedStatement s = c.prepareStatement("INSERT INTO world_characters(world_id,account_id,knight_id,starter_version) VALUES(?,?,?,1)")) {
             s.setInt(1,worldId); s.setInt(2,accountId); s.setInt(3,knight.id()); s.executeUpdate();
         }
         add(c,worldId,Slot.HELM,knight.helm(),knight.helmAccessory());
@@ -71,18 +83,18 @@ final class WorldProfiles {
     }
 
     static WorldProfile load(Connection c,int accountId,int knightId,long authRevision) throws SQLException, IOException {
-        int worldId;
-        try (PreparedStatement s = c.prepareStatement("SELECT w.world_id FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.account_id=? AND w.knight_id=?" + (authRevision>=0 ? " AND a.auth_revision=?" : ""))) {
+        int worldId, crowns, energy; long revision;
+        try (PreparedStatement s = c.prepareStatement("SELECT w.world_id,w.crowns,w.energy,w.state_revision FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.account_id=? AND w.knight_id=?" + (authRevision>=0 ? " AND a.auth_revision=?" : ""))) {
             s.setInt(1,accountId); s.setInt(2,knightId); if (authRevision>=0) s.setLong(3,authRevision);
-            try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("No such knight or account changed; reconnect"); worldId=r.getInt(1); }
+            try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("No such knight or account changed; reconnect"); worldId=r.getInt(1); crowns=r.getInt(2); energy=r.getInt(3); revision=r.getLong(4); }
         }
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
-                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat")));
+                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot")));
             }
         }
         if (items.size()!=Slot.values().length) throw new IOException("Incomplete starter inventory; restore the saved database");
-        return new WorldProfile(worldId,accountId,knightId,items);
+        return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items);
     }
 }

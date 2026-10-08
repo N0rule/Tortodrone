@@ -13,8 +13,8 @@ import org.tortodrone.protocol.SessionDecoder;
 
 /** Authenticated objects, receiver registration, and limited invocation handling. */
 final class ClientSession {
-    static final String SAVED_WITHOUT_WORLD = "Knight saved. Reconnect to view it; world entry is not available yet.";
-    static final String UPDATED_WITHOUT_WORLD = "Knight updated. Reconnect to view it; world entry is not available yet.";
+    static final String SAVED_WITHOUT_WORLD = "Knight saved. World entry requires a scene receiver.";
+    static final String UPDATED_WITHOUT_WORLD = "Knight updated. World entry requires a scene receiver.";
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log) throws Exception {
         run(socket, incoming, connectionId, host, port, log, new CharacterStore());
@@ -42,6 +42,7 @@ final class ClientSession {
         Map<String, Short> receivers = new HashMap<>();
         boolean firstPing = true;
         CharacterStore.Subscription subscription = null;
+        WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log);
         try {
             byte[] body;
             while ((body = HandshakeCodec.readFrame(socket.getInputStream())) != null) {
@@ -61,9 +62,12 @@ final class ClientSession {
                             if (request.objectId() == clientOid) {
                                 if (subscription != null) subscription.close();
                                 subscription = characters.subscribe(
-                                    roster -> output.send(() -> outgoing.player(request.messageId(), clientOid,
-                                        characters.accountId(), characters.username(), receivers, roster)),
+                                    roster -> {
+                                        output.send(() -> outgoing.player(request.messageId(), clientOid,
+                                            characters.accountId(), characters.username(), receivers, roster));
+                                    },
                                     roster -> output.send(() -> outgoing.rosterChanged(clientOid, roster)));
+                                world.refresh();
                                 log.debug("PlayerObject snapshot sent; available knights=" + characters.roster().size());
                             } else if (request.objectId() == SessionCodec.SERVER_OID) {
                                 output.send(() -> outgoing.server(request.messageId()));
@@ -71,6 +75,8 @@ final class ClientSession {
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
+                            } else if(request.objectId()==org.tortodrone.world.TownSquare.SCENE_OID && world.ownsScene()) {
+                                world.subscribe(request.messageId());
                             } else {
                                 output.send(() -> outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
                                 log.debug("Subscription to unknown object rejected");
@@ -80,28 +86,32 @@ final class ClientSession {
                             if (request.objectId() == clientOid && subscription != null) {
                                 subscription.close(); subscription = null;
                             }
+                            if(request.objectId()==org.tortodrone.world.TownSquare.SCENE_OID)world.unsubscribe();
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
                             log.debug("Client logged off");
                             return;
                         }
-                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null, authRevision);
+                        case "ForwardEventRequest" -> handleEvent(output, outgoing, request.event(), clientOid, receivers, log, characters, subscription != null, authRevision,world);
                         default -> throw new IllegalStateException("Unsupported session request");
                     }
                 }
             }
             log.debug("Client disconnected");
         } finally {
+            world.close();
             if (subscription != null) subscription.close();
         }
     }
 
     private static void handleEvent(SessionOutput output, SessionCodec outgoing, SessionDecoder.Event event,
-            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision) throws IOException {
+            int clientOid, Map<String, Short> receivers, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision,WorldSession world) throws IOException {
         if (event instanceof SessionDecoder.Compound compound) {
             if (compound.oid() != clientOid) throw new SessionDecoder.Rejected("Invalid compound event target");
-            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed, authRevision);
+            for (var child : compound.events()) handleEvent(output, outgoing, child, clientOid, receivers, log, characters, subscribed, authRevision,world);
+        } else if(event instanceof SessionDecoder.Input input) {
+            world.input(input);
         } else if (event instanceof SessionDecoder.Mutation mutation) {
             if (mutation.oid() != clientOid || !"receivers".equals(mutation.field())) {
                 throw new SessionDecoder.Rejected("Unauthorized object mutation");
@@ -134,17 +144,27 @@ final class ClientSession {
                 }
                 default -> throw new SessionDecoder.Rejected("Unsupported receiver mutation");
             }
+            world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if (invocation.oid()==org.tortodrone.world.TownSquare.SCENE_OID && world.ownsScene() && invocation.service()>=6 && invocation.service()<=11) {
+                if (invocation.service() == 10 && invocation.method() == 1 && invocation.arguments().isEmpty()) {
+                    world.entered();
+                    return;
+                }
+                for(Object arg:invocation.arguments())if(arg instanceof SessionDecoder.Listener listener)output.send(()->outgoing.invocationFailure(clientOid,listener.requestId(),"Town operation is not available yet"));
+                return;
+            }
             if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size()) {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
+            if(world.invocation(invocation))return;
             // Initial hardware statistics are advisory and are deliberately not retained.
             if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
             if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
-                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision);
+                characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision,world,receivers);
                 return;
             }
             for (Object argument : invocation.arguments()) {
@@ -157,7 +177,7 @@ final class ClientSession {
     }
 
     private static void characterRequest(SessionOutput output, SessionCodec outgoing, SessionDecoder.Invocation invocation,
-            int clientOid, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision) throws IOException {
+            int clientOid, SessionLog log, CharacterStore characters, boolean subscribed, long authRevision,WorldSession world,Map<String,Short> receivers) throws IOException {
         var args = invocation.arguments();
         if (args.isEmpty() || !(args.get(args.size() - 1) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith("$ConfirmMarshaller")) {
@@ -173,15 +193,19 @@ final class ClientSession {
             } else if (characters.roster().stream().noneMatch(knight -> knight.name().equalsIgnoreCase(name))) {
                 failure = "No such knight";
             } else {
-                // No success or selected-player mutation until scene subscriptions are implemented.
-                failure = "World entry is not available yet";
+                if(!receivers.containsKey(org.tortodrone.world.TownSquare.ZONE_RECEIVER))failure="World entry requires a scene receiver";
+                else try { world.select(name,receivers); }
+                catch(CharacterStore.Refused|IOException refused){failure=refused.getMessage();}
             }
         } else if (invocation.method() == 6) {
             if (args.size() != 2 || !(args.get(0) instanceof String name)) {
                 failure = "Invalid character deletion request";
             } else {
                 try {
-                    characters.delete(name,authRevision);
+                    synchronized(characters) {
+                        if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(name)&&WorldSession.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before deleting it");
+                        characters.delete(name,authRevision);
+                    }
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {
@@ -210,7 +234,13 @@ final class ClientSession {
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),
                         ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0);
                     if (args.get(0) == null) characters.create(choices,authRevision);
-                    else characters.update((String) args.get(0), choices,authRevision);
+                    else {
+                        String old=(String)args.get(0);
+                        synchronized(characters) {
+                            if(characters.roster().stream().anyMatch(k->k.name().equalsIgnoreCase(old)&&WorldSession.active(characters.accountId(),k.id())))throw new IOException("Knight is online; disconnect before editing it");
+                            characters.update(old, choices,authRevision);
+                        }
+                    }
                 } catch (CharacterStore.Refused e) {
                     failure = e.getMessage();
                 } catch (IOException e) {
@@ -223,10 +253,11 @@ final class ClientSession {
                         output.send(() -> outgoing.rosterChanged(clientOid, roster));
                     }
                     log.info("Character saved; available knights=" + characters.roster().size());
-                    // The stock creator's success handler leaves its busy state active,
-                    // expecting selected-character/world events that we cannot provide yet.
-                    // Its failure handler clears that state and displays this explicit result.
-                    failure = args.get(0) == null ? SAVED_WITHOUT_WORLD : UPDATED_WITHOUT_WORLD;
+                    // The stock creator waits for selection and scene events after success.
+                    if(characters.hasWorldStorage() && receivers.containsKey(org.tortodrone.world.TownSquare.ZONE_RECEIVER)) {
+                        try { world.select((String)args.get(1),receivers); }
+                        catch(CharacterStore.Refused|IOException refused){failure=refused.getMessage();}
+                    } else failure = args.get(0) == null ? SAVED_WITHOUT_WORLD : UPDATED_WITHOUT_WORLD;
                 }
             }
         }

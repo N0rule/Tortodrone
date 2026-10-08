@@ -28,7 +28,7 @@ final class SessionOutput implements AutoCloseable {
         if (closed || failed) throw new IOException("Downstream connection closed");
         try {
             byte[] frame = encoder.frame();
-            if (frame.length > HandshakeCodec.MAX_FRAME) throw new IOException("Downstream frame exceeds size limit");
+            if (frame.length > org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME) throw new IOException("Downstream frame exceeds size limit");
             if (!pending.offer(frame)) throw new IOException("Downstream queue full");
         } catch (IOException | RuntimeException error) {
             // An unsent frame may have introduced codec mappings. Never reuse that stream.

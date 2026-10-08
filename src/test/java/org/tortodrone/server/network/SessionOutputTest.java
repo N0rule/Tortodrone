@@ -36,7 +36,7 @@ public final class SessionOutputTest {
         }
         RecordingSocket large = new RecordingSocket(false);
         try (SessionOutput output = new SessionOutput(large)) {
-            rejected(() -> output.send(() -> new byte[HandshakeCodec.MAX_FRAME + 1]));
+            rejected(() -> output.send(() -> new byte[org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME + 1]));
             check(large.closed, "oversized frames fail closed");
         }
         System.out.println("PASS: downstream mapping/frame ordering, clean drain, bounded slow-peer queues and encoding failure cleanup");

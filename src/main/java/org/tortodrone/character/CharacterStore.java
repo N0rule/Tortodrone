@@ -98,6 +98,8 @@ public final class CharacterStore {
 
     public synchronized int nextId() { return nextId; }
 
+    public boolean hasWorldStorage(){return database!=null;}
+
     public String username() { return username; }
     public int accountId() { return accountId; }
 
@@ -172,12 +174,17 @@ public final class CharacterStore {
         notifyListeners();
     }
 
-    /** Resolves only an owned character. Loading this foundation does not acknowledge world entry. */
+    /** Resolves only an owned character. The network layer publishes selection separately. */
     public synchronized WorldProfile worldProfile(String name,long authRevision) throws IOException, Refused {
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         if (database == null) throw new IOException("World profiles require SQLite storage");
         return database.worldProfile(accountId,knights.get(index).id(),authRevision);
+    }
+
+    public synchronized WorldProfile equip(int knightId,long revision,long itemId,Integer slot)throws IOException {
+        if(database==null)throw new IOException("Equipment requires SQLite storage");
+        return database.equip(accountId,knightId,revision,itemId,slot);
     }
 
     private int indexOf(String name) {

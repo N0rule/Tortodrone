@@ -4,11 +4,12 @@ Tortodrone is a standalone Java server emulator for Spiral Knights. Development
 is limited to the server and normal username/password login. The game and
 KnightLauncher are separate projects; Steam and guest login are unsupported.
 
-The server supports secure exchange, persistent accounts, heartbeat, character
-creation/editing/deletion, and live saved-roster updates across an account's
-sessions. Knights also have durable global identities and starter inventories, with
-equipment and appearance applied to roster previews. A separate desktop account manager and commands in the running server
-terminal administer accounts. **World entry and gameplay are not implemented.**
+The server supports normal login, saved characters, and a first playable town
+checkpoint: create or select a knight to enter **Haven Town Square**, move and face
+the mouse, and equip or unequip the five starter items. Crowns and energy are
+persistent counters that the local account manager or server terminal can change.
+Intro missions are skipped by directly entering town. Combat, quests, NPC logic,
+shops and travel to other scenes are still outside this checkpoint.
 
 ## Build on a fresh install
 
@@ -16,7 +17,10 @@ Install Git, GNU Make, JDK 17 or newer, `curl`, and `sha256sum` (GNU coreutils).
 The JDK must provide `java`, `javac`, and `jar` on `PATH`. No Maven, Gradle, game
 installation, or database server is needed. The first build downloads pinned,
 checksum-verified SQLite JDBC and JLine terminal libraries from Maven Central.
-Later builds use cached copies in `build/deps/`. Both executable JARs bundle those dependencies.
+The build also downloads a pinned Town Square layout from the
+[Spiral Knights Scene Archive](https://github.com/reference-source/SpiralKnightsSceneArchive).
+Later builds use cached copies in `build/deps/`. Both executable JARs bundle the
+libraries and layout; game rendering assets stay in the separate installed client.
 
 Clone using the repository's actual URL, or enter your existing checkout:
 
@@ -46,7 +50,9 @@ Click **Create account**, enter a username and password, optionally enable
 **Admin**, and save. Fresh installations have no automatic account or default
 password. The manager shows IDs, usernames, Admin flags, character counts and
 creation times. It also supports searching, changing passwords, checking a
-supplied password, deleting accounts and refreshing the list.
+supplied password, deleting accounts and refreshing the list. Select an account
+and click **Currency**, choose its knight, then give or withdraw crowns or energy.
+Changes appear in an online knight’s counters within about 250 ms.
 
 Then run:
 
@@ -84,7 +90,9 @@ Type these into the **running server terminal**, without restarting it:
 | `stop` | Close the listener and clients, then exit |
 | `account list` | List IDs, usernames, Admin flags and character counts |
 | `knight list Alice` | List Alice’s saved knights and roster IDs |
-| `knight info Alice Saved-Knight` | Inspect global identity and starter item IDs, configurations and heat |
+| `knight info Alice Saved-Knight` | Inspect global identity, balances, item IDs/configurations and equipped slots |
+| `currency give Alice Saved-Knight crowns 100` | Add 100 crowns to that knight |
+| `currency withdraw Alice Saved-Knight energy 5` | Remove 5 energy; reject insufficient funds |
 | `account create Alice` | Create an account; prompt for a password twice |
 | `account create Alice admin` | Create with Admin enabled |
 | `account password Alice` | Change/reset the password; prompt twice |
@@ -131,10 +139,10 @@ build/
   tortodrone.jar
   tortodrone-admin.jar
   .build/                       disposable classes and packaging output
-  deps/                         cached build dependency
+  deps/                         cached libraries and Town Square layout
   data/
     server.properties           server settings
-    tortodrone.db               accounts, Admin flags and saved knights
+    tortodrone.db               accounts, Admin flags, knights, items and balances
     tortodrone.db-wal/-shm       transient SQLite files when in use
     keys/private.pk8            private server identity; keep secret
     keys/public.txt             public key for launcher settings
@@ -160,17 +168,18 @@ There is no `data-directory` or `client-host` setting. `--config /path/to/server
 selects a settings file without moving state. First startup creates missing
 configuration and keys; existing configuration and identity are preserved.
 
-Startup displays the version bundled from `VERSION`, currently `0.6.0`:
+Startup displays the version bundled from `VERSION`, currently `0.7.0`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.6.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.7.0
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
 [19:30:01] [ServerMain/INFO]: Loading normal accounts and saved characters
 [19:30:01] [ServerMain/INFO]: Loaded accounts: 1
 [19:30:01] [ServerMain/INFO]: Starting Tortodrone on *:47624
-[19:30:01] [ServerMain/INFO]: Normal login and saved characters available; world entry is not implemented.
+[19:30:01] [ServerMain/INFO]: Preparing Haven Town Square
+[19:30:01] [ServerMain/INFO]: Normal login, town movement and starter inventory available.
 [19:30:01] [ServerMain/INFO]: Done! Listening on 0.0.0.0:47624 (TCP)
 [19:30:01] [ServerMain/INFO]: Type help for server commands.
 ```
@@ -182,12 +191,14 @@ payloads. Timestamps use local machine time. `--version` shows either JAR's rele
 
 ## Upgrade and back up
 
-Stop the old server before upgrading to 0.6.0 or opening the new account manager.
-Schema version 2 adds global character identities and a starter inventory to every
-saved knight in one transaction. Existing account/roster IDs, credentials,
-appearance and timestamps are preserved. The new character and item IDs are
-global and never reused after deletion. Opening the database again does not grant
-another kit. Keep both JARs on the same release; do not run an older release
+Stop the old server before upgrading to 0.7.0 or opening the new account manager.
+Schema version 3 preserves the global character identities and starter inventories
+from 0.6.0, and adds `crowns`, `energy` and `state_revision` to `world_characters`,
+plus nullable `equipped_slot` to `inventory_items`. Existing knights start with
+zero counters and their existing kit equipped. Reopening does not grant another
+kit or re-equip items you removed. A schema 1 database first receives the global
+identities from schema 2. The upgrade is transactional and requires the old
+server to be stopped. Keep both JARs on the same release; do not run older JARs
 against the upgraded database.
 
 For pre-SQLite installations, the first open automatically imports
@@ -229,19 +240,25 @@ Edits preserve IDs and creation times; deletion frees a slot without reusing IDs
 Other accounts cannot receive or alter the roster. Connections have ordered queues
 of at most 64 pending frames; a stalled recipient is disconnected.
 
-Creation/editing currently reports a saved/unavailable message; reconnect to view
-the roster. Selecting a knight fails until world entry is implemented. The preview
-applies color, height, eyes, the chosen starter helmet/armor, their costume
-colors, and creator accessories. New choices are checked against the verified
-starter catalog. Unknown choices in older saves remain stored; the preview
-omits equipment it cannot resolve. Intro missions and gameplay remain future work.
+Creation automatically selects the saved knight and loads Town Square. Selecting
+an existing knight loads the same town. Each knight has a server-owned global
+identity and five durable starter items: chosen helm and armor, Proto Sword,
+Proto Gun and Proto Shield. Open the client’s Arsenal to equip or unequip owned
+items. Their slots and balances survive logout and server restarts. Editing or
+deleting an online knight is rejected; disconnect it before making picker edits.
+Reconnect to change characters in this release.
 
-Each knight receives its chosen helmet/armor and a Proto Sword, Proto Gun and
-Proto Shield. This is a small development starter kit, not mission rewards.
-Inventory is stored in SQLite and can be inspected with `knight info`; it is not
-yet sent to a selected player or usable in gameplay. Edits preserve character
-and item IDs while updating chosen starter appearance. Deleting a knight or
-account removes its owned inventory atomically.
+Town movement runs at 20 updates per second. The server accepts movement and
+facing input, checks static walkable terrain, and publishes nearby town knights.
+Everyone currently starts at the same town spawn; position is not yet saved.
+There are no introductory missions, tutorial rewards or invented completion flags.
+The layout can include visual NPCs and portals, but their gameplay is not implemented.
+
+Crowns and energy both belong to **each knight**. They start at zero, have a range
+of 0–2,147,483,647, and have no earning, spending or regeneration rules yet.
+Give/withdraw actions are atomic, reject overflow and insufficient funds, and
+record an audit row in `currency_events`. The manager and terminal operate locally;
+Admin is stored for future in-game permissions, with no in-game commands yet.
 
 ## Contribute
 

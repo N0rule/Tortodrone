@@ -8,6 +8,7 @@ import java.util.concurrent.*;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.WorldProfile;
+import org.tortodrone.character.Currency;
 import org.tortodrone.storage.Database;
 
 /** Shared account service for the game server and local administration application. */
@@ -54,6 +55,11 @@ public final class AccountStore implements AutoCloseable {
         return new CharacterStore(database,identity.id(),identity.username());
     }
 
+    public synchronized WorldProfile currency(String username,String knight,Currency currency,long delta,int expectedAccount,int expectedWorld) throws IOException {
+        validateUsername(username);
+        if(database==null)throw new IOException("Currency requires SQLite storage");
+        return database.currency(username,knight,expectedAccount,expectedWorld,currency,delta);
+    }
     public void create(String username,char[] password) throws IOException { create(username,password,false); }
     public synchronized void create(String username,char[] password,boolean admin) throws IOException {
         validateUsername(username);

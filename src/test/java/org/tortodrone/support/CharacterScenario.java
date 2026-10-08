@@ -15,7 +15,7 @@ public final class CharacterScenario {
             TestWire.check(TestWire.string(update).equals("availableKnights"), "roster update field");
             roster(wire.object(update)); TestWire.end(update);
             confirmation(peer, wire, oid, (short) 41,
-                "Knight saved. Reconnect to view it; world entry is not available yet.");
+                "Knight saved. World entry requires a scene receiver.");
         }
         writer.send(peer.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 42); out.writeInt(oid); });
         var player = wire.snapshot(wire.frame(peer.getInputStream()), (short) 42, oid);
@@ -34,7 +34,7 @@ public final class CharacterScenario {
             invocation(writer, out, 4, 3); writer.type(out, "com.threerings.util.Name"); string(out, "Saved-Knight");
             out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(46);
         });
-        confirmation(peer, wire, oid, (short) 46, "World entry is not available yet");
+        confirmation(peer, wire, oid, (short) 46, "World entry requires a scene receiver");
         writer.send(peer.getOutputStream(), out -> {
             invocation(writer, out, 4, 3); writer.type(out, "com.threerings.util.Name"); string(out, "Missing-Knight");
             out.writeShort(0); writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(48);
@@ -58,13 +58,13 @@ public final class CharacterScenario {
                 short callback = (short) (60 + i);
                 creation(peer, writer, names[i], null, callback);
                 changedRoster(peer, wire, oid, Arrays.asList(names).subList(0, i + 1));
-                confirmation(peer, wire, oid, callback, "Knight saved. Reconnect to view it; world entry is not available yet.");
+                confirmation(peer, wire, oid, callback, "Knight saved. World entry requires a scene receiver.");
             }
             creation(peer, writer, "Fourth-Knight", null, (short) 63);
             confirmation(peer, wire, oid, (short) 63, "All three knight slots are occupied");
             creation(peer, writer, "Renamed-Knight", "saved-knight", (short) 64);
             changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Other-Knight", "Third-Knight"));
-            confirmation(peer, wire, oid, (short) 64, "Knight updated. Reconnect to view it; world entry is not available yet.");
+            confirmation(peer, wire, oid, (short) 64, "Knight updated. World entry requires a scene receiver.");
             creation(peer, writer, "other-knight", "Renamed-Knight", (short) 65);
             confirmation(peer, wire, oid, (short) 65, "That knight name is already in use");
             creation(peer, writer, "Changed-Knight", "Missing-Knight", (short) 66);
@@ -85,7 +85,7 @@ public final class CharacterScenario {
             confirmation(peer, wire, oid, (short) 71, "No such knight");
             creation(peer, writer, "Next-Knight", null, (short) 72);
             changedRoster(peer, wire, oid, List.of("Renamed-Knight", "Third-Knight", "Next-Knight"));
-            confirmation(peer, wire, oid, (short) 72, "Knight saved. Reconnect to view it; world entry is not available yet.");
+            confirmation(peer, wire, oid, (short) 72, "Knight saved. World entry requires a scene receiver.");
         }
         writer.send(peer.getOutputStream(), out -> { writer.message(out, "SubscribeRequest", 73); out.writeInt(oid); });
         var player = wire.snapshot(wire.frame(peer.getInputStream()), (short) 73, oid);

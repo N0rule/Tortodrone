@@ -42,12 +42,16 @@ manager (`make admin`) or the running server terminal (`account create Alice`).
 Fresh installations have no default login. Upgrades preserve existing credentials.
 Steam and guest login remain unsupported. See [accounts](../README.md#server-terminal-commands).
 
-The creator validates names and saves new knights. After saving, it reports
-"Knight saved. Reconnect to view it; world entry is not available yet." Reconnect
-to see the saved roster. Selecting a knight fails explicitly because world entry
-is not implemented. The server also supports editing saved names/appearance
-through the existing save request and deletion through the picker's Delete action.
-Edits preserve character IDs; deletion frees a slot. Both persist across restarts.
+The creator saves and selects a knight, then loads Haven Town Square directly.
+Selecting a saved knight enters the same town. Introductory missions are skipped.
+Use the existing movement controls and mouse facing; open Arsenal to equip or
+unequip owned starter items. Balances and equipment are saved; position currently
+resets to the town spawn on reconnect. Reconnect to switch characters.
+
+Crowns and energy start at zero. The server owner can give or withdraw them through
+**Currency** in the local manager or `currency` commands in the server terminal.
+Combat, NPC dialogue, shops and portal travel are not implemented. See the
+[town checkpoint](world-entry-plan.md) for limits and next milestones.
 
 ## Logs and troubleshooting
 
@@ -68,8 +72,10 @@ snapshots and receiver registration. It still excludes secrets and raw payloads.
   backup. The server refuses to silently replace an incomplete identity or corrupt save.
 - Character creation fails: check name rules, duplicate names, the three-slot limit,
   and save warnings in the server log.
-- Knight saved, or selection fails: reconnect to see the roster; world entry remains
-  unimplemented and cannot be enabled through connection settings.
+- Selection says the knight is online: disconnect its other session before selecting
+  it again. Scene-receiver errors indicate an incomplete client initialization.
+- A scene remains loading: inspect both the client log and server debug log. Confirm
+  the server was rebuilt with its pinned Town Square resource.
 - A protocol diagnostic closes the session: investigate the remaining server
   protocol boundary using debug logs and synthetic fixtures.
 
