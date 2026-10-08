@@ -41,7 +41,7 @@ frame headers. It covers 45 updates without acknowledgements, then stale, zero
 and fabricated acknowledgements, positive/ordered timestamps, scene readiness,
 resubscription and controller cleanup. Run it through `make test`.
 
-`scripts/check-client-world.py` uses a temporary copy of both JARs, two disposable
+`java scripts/compat/CheckClientWorld.java` uses a temporary copy of both JARs, two disposable
 normal accounts and isolated preferences. It reads unchanged installed-client
 classes. Its networking fixture now reconstructs actors from their actual scene
 references instead of applying a delta to a fabricated actor. Creation and

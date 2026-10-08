@@ -61,9 +61,9 @@ proof of graphical resolution. See [investigation and acceptance checks](town-en
 ## Verification
 
 `make test` uses disposable state and requires no game files. Optional
-`scripts/check-client-world.py "/path/to/Spiral Knights"` checks the stock reader
+`java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"` checks the stock reader
 and its movement predictor, plus real networking/marshaller classes against a temporary localhost server, covering both creation and reconnect. It
-requires Python 3 and a build made with `make build`, reads installed game JARs,
+requires a JDK and a build made with `make build`, reads installed game JARs,
 checks delayed acknowledgements, model retention, equipment changes and two-account
 multiplayer, and stops its server on completion. Graphical testing is a separate check because
 headless network success cannot prove that the client renders the scene and HUD.

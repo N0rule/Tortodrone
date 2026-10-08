@@ -209,11 +209,11 @@ input frame schemas, including empty acknowledgement batches. Currency/equipment
 and migration fixtures use temporary SQLite databases; packaged tests exercise
 terminal give/withdraw commands. Run `make test` after changes.
 
-Optional installed-client check (Python 3 required):
+Optional installed-client check (JDK required):
 
 ```sh
 make build
-python3 scripts/check-client-world.py "/path/to/Spiral Knights"
+java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
 ```
 
 It reads the separate installed game, uses synthetic credentials and temporary
