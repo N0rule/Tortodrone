@@ -74,10 +74,24 @@ accounts and unexpected disconnect/reconnect. The installed client fixture selec
 two different knights on successive connections and checks that only the new actor
 exists, then rapidly reselects the same knight.
 
-## 4–6. Remaining research boundaries
+## 4. Local knight deletion (0.8.2)
 
-Knight deletion must preserve monotonic IDs,
-remove associated owned data and prevent stale sessions from resurrecting a save.
+No new client protocol is needed. The existing picker owns roster deletion;
+local tools now capture the account ID and global world ID before confirmation
+and recheck both inside SQLite. Cascades remove world state/inventory; that knight's
+currency audit rows are explicitly removed. Account/world/item allocation counters
+are retained, so a recreated name is a different identity and stale confirmation fails.
+
+External deletion increments authentication and roster revisions atomically. It
+revokes only the affected account; login refreshes its cached roster. CharacterStore
+reads roster/counter/revision together and compares revision before replacing rows,
+preventing cross-process stale saves from resurrecting deleted owned state. Local
+deletion may remove an online knight; picker deletion keeps its online restriction.
+Tests cover cascade failure rollback, ownership/identity races, survivors, restart,
+stale saves, CLI confirmation, terminal commands and live reconnect after deletion.
+
+## 5–6. Remaining research boundaries
+
 Scene chat should use verified Crowd marshallers and message events. The installed
 PlayerObject.Type includes `GAME_MASTER`; verify its icon/title consumer rather
 than inventing a prestige enum value (the prestige enum only has RANK_0–RANK_5).

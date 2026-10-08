@@ -16,7 +16,8 @@ public final class AdminApplication {
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone-admin.jar [--data path/to/server/data] [command]");
                 System.out.println("No command opens the desktop account manager.");
-                System.out.println("Commands: --list-accounts | --create-account username [--admin] | --set-password username | --check-password username | --set-admin username true|false | --delete-account username | --version"); return;
+                System.out.println("Commands: --list-accounts | --create-account username [--admin] | --set-password username | --check-password username | --set-admin username true|false | --delete-account username | --version");
+                System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
                 try (var stream = AdminApplication.class.getResourceAsStream("/version.txt")) {
@@ -45,6 +46,21 @@ public final class AdminApplication {
         }
         if (args.length < 2) throw new IOException("Use --help for account commands");
         String username = args[1]; var input = new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8));
+        if(args.length==2&&args[0].equals("--list-knights")) {
+            System.out.println("Roster ID\tWorld ID\tKnight\tCrowns\tEnergy");
+            for(var knight:accounts.knights(username)) {
+                var profile=accounts.worldProfile(username,knight.name());
+                System.out.println(knight.id()+"\t"+profile.worldId()+"\t"+knight.name()+"\t"+profile.crowns()+"\t"+profile.energy());
+            }
+            return;
+        }
+        if(args.length==3&&args[0].equals("--delete-knight")) {
+            var account=selected(accounts,username);var profile=accounts.worldProfile(username,args[2]);
+            var knight=accounts.knights(username).stream().filter(k->k.id()==profile.knightId()).findFirst().orElseThrow(()->new IOException("Knight changed; refresh"));
+            String confirmation=System.console()==null?input.readLine():System.console().readLine("Type the exact knight name to delete it and its items/balances: ");
+            if(!knight.name().equals(confirmation))throw new IOException("Deletion confirmation did not match");
+            accounts.deleteKnight(username,knight.name(),account.id(),profile.worldId());System.out.println("Knight deleted.");return;
+        }
         if (args.length == 2 && args[0].equals("--delete-account")) {
             var selected = selected(accounts,username);
             String confirmation = System.console() == null ? input.readLine() : System.console().readLine("Type the account username to delete it and its characters: ");

@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.8.1**, SQLite schema **4**: normal login; saved character creation,
+Version **0.8.2**, SQLite schema **4**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items with persistent binding and Arsenal equip/unequip; per-character crowns and
@@ -81,7 +81,7 @@ log-mode=normal
 ## Administration and backups
 
 The manager supports account creation, password checks/resets, Admin flags,
-deletion and per-knight currency changes. The server terminal offers the same
+deletion, individual knight deletion and per-knight currency changes. The server terminal offers the same
 account services; type `help` for commands. Admin flags do not yet enable in-game
 commands. [Administration reference](docs/administration.md) covers commands,
 account rules and migrations.

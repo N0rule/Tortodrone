@@ -64,6 +64,7 @@ final class ServerConsole implements AutoCloseable {
         if (words.length == 1 && command.equals("help")) {
             log.info("Commands: help | status | stop | account list | account create <username> [admin]");
             log.info("knight list <username> | knight info <username> <knight-name>");
+            log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
             log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
             log.info("account password <username> | account check <username> | account admin <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
@@ -91,6 +92,14 @@ final class ServerConsole implements AutoCloseable {
             log.info("Crowns: " + profile.crowns() + " | Energy: " + profile.energy());
             for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config()
                 + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat() + " | equipped=" + item.equippedSlot());
+        } else if(words.length==4&&words[1].equals("delete")) {
+            var profile=accounts.worldProfile(words[2],words[3]);
+            var name=accounts.knights(words[2]).stream().filter(k->k.id()==profile.knightId()).findFirst().orElseThrow(()->new IOException("Knight changed; refresh"));
+            log.info("Delete "+name.name()+" and all its items/balances? Type the exact knight name to confirm:");
+            if(!name.name().equals(input.confirmation(16)))throw new IOException("Deletion confirmation did not match");
+            if(!running.getAsBoolean())return;
+            accounts.deleteKnight(words[2],name.name(),profile.accountId(),profile.worldId());
+            log.info("Knight deleted: "+name.name()+"; this account's sessions will disconnect.");
         } else throw new IOException("Invalid knight command. Type help for commands.");
     }
 

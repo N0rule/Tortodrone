@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.8.1, schema 4
+## Checkpoint: 0.8.2, schema 4
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -25,6 +25,11 @@ manual scene drawing or runtime downloads.
 login replaces the previous socket/controller; late cleanup cannot evict its
 replacement. Unexpected disconnects release ownership; no reconnect credentials
 or ghost-session grace period are introduced.
+
+0.8.2 adds individual knight deletion to the manager, its CLI and server terminal.
+Exact-name confirmation and account/world identity guards protect against stale
+selection. Owned items/balances/audit rows are removed atomically; survivors and
+allocation counters are preserved. The account reconnects with its refreshed roster.
 
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory

@@ -61,6 +61,8 @@ public final class ConsoleIntegrationTest {
                 server.send("account password Alice\nchanged-console-password\nchanged-console-password\n"); server.await("Password changed: Alice"); disconnected.get(10,TimeUnit.SECONDS);
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Alice","console-password",false,(a,b,c) -> {}); }
                 server.send("account check Alice\nchanged-console-password\n"); server.await("Password matches.");
+                server.send("knight delete Alice Console-Knight\nConsole-Knight\n");server.await("Knight deleted: Console-Knight");
+                check(db.identity("Alice")!=null&&db.roster(1).isEmpty(),"terminal individual knight deletion preserves account");
                 server.send("account delete Alice\nwrong-name\n"); server.await("Deletion confirmation did not match"); check(db.identity("Alice") != null,"incorrect deletion confirmation preserves account");
                 server.send("account delete Alice\nAlice\n"); server.await("Account deleted: Alice"); check(db.identity("Alice") == null,"terminal deletion persisted");
                 server.send("account create Bob\nbob-password\nbob-password\n"); server.await("Account created: Bob"); check(db.identity("Bob").id() == 2,"deleted account ID not reused");

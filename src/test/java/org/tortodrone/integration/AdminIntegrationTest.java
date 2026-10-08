@@ -50,6 +50,27 @@ public final class AdminIntegrationTest {
                 command(admin,directory,"changed-password\nchanged-password\n",true,"Password changed.","--set-password","Player");
                 disconnected.get(10,TimeUnit.SECONDS);
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","player-password",false,(a,b,c) -> {}); }
+                command(admin,directory,"",true,"Saved-Knight","--list-knights","Player");
+                command(admin,directory,"wrong-name\n",false,"did not match","--delete-knight","Player","Saved-Knight");
+                check(database.roster(2).size()==1,"incorrect knight confirmation preserves owned state");
+                var knightReady=new CompletableFuture<Void>();
+                Future<?> knightDeleted=worker.submit(()->{
+                    try(Socket socket=new Socket("127.0.0.1",port)) {
+                        TestClient.authenticate(socket,key,"Player","changed-password",true,(peer,wire,oid)->{knightReady.complete(null);check(peer.getInputStream().read()==-1,"local knight deletion revokes account session");});
+                    }catch(Exception failure){knightReady.completeExceptionally(failure);throw new RuntimeException(failure);}
+                });
+                knightReady.get(10,TimeUnit.SECONDS);
+                command(admin,directory,"Saved-Knight\n",true,"Knight deleted.","--delete-knight","Player","Saved-Knight");
+                knightDeleted.get(10,TimeUnit.SECONDS);
+                check(database.identity("Player")!=null&&database.roster(2).isEmpty(),"individual deletion preserves account credentials and clears its roster");
+                try(Socket socket=new Socket("127.0.0.1",port)) {
+                    TestClient.authenticate(socket,key,"Player","changed-password",true,(peer,wire,oid)->{
+                        var writer=new TestWire.Writer(TestWire.NET+"SecureRequest",TestWire.NET+"PublicKeyCredentials","[Ljava.lang.String;",TestWire.NET+"AESAuthRequest");
+                        writer.send(peer.getOutputStream(),out->{writer.message(out,"SubscribeRequest",40);out.writeInt(oid);});
+                        check(((List<?>)wire.snapshot(wire.frame(peer.getInputStream()),(short)40,oid).get("availableKnights")).isEmpty(),"reconnect refreshes cached roster after external knight deletion");
+                        writer.send(peer.getOutputStream(),out->writer.message(out,"LogoffRequest",41));
+                    });
+                }
                 var deletionReady = new CompletableFuture<Void>();
                 Future<?> deleted = worker.submit(() -> {
                     try (Socket socket = new Socket("127.0.0.1",port)) {

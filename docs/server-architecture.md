@@ -81,6 +81,12 @@ Authentication resolves account ID, canonical name and authentication revision.
 Login rechecks revision after hashing and at socket attachment. Password reset
 increments it; deletion removes the account. A 250 ms watcher closes stale sessions.
 Character/state mutations check ownership and revision inside their transaction.
+Roster reads capture list/counter/revision in one SQLite snapshot; writes compare
+that revision under `BEGIN IMMEDIATE`. Refresh before mutations/subscription/login
+prevents stale caches after external administration; concurrent stale writes fail
+without resurrecting removed items or consuming IDs. Local knight deletion captures
+account/world identity, cascades owned state, removes its currency audit rows and
+increments authentication/roster revisions in one transaction.
 Future in-game permissions must read the current Admin role, not a login snapshot.
 
 `AccountStore` shares a synchronized `CharacterStore` across that account's sessions.

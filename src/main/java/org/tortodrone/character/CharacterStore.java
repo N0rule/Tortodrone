@@ -17,6 +17,7 @@ public final class CharacterStore {
     private final int accountId;
     private List<Knight> knights = List.of();
     private int nextId = 1;
+    private long storageRevision;
     private final Set<RosterListener> listeners = new LinkedHashSet<>();
 
     @FunctionalInterface public interface RosterListener { void receive(List<Knight> roster) throws IOException; }
@@ -24,6 +25,7 @@ public final class CharacterStore {
 
     /** Snapshot and registration share the mutation lock, so an update cannot overtake its snapshot. */
     public synchronized Subscription subscribe(RosterListener initial, RosterListener updates) throws IOException {
+        refresh();
         initial.receive(knights);
         listeners.add(updates);
         return () -> { synchronized (CharacterStore.this) { listeners.remove(updates); } };
@@ -93,7 +95,16 @@ public final class CharacterStore {
 
     public CharacterStore(Database database, int accountId, String username) throws IOException {
         this.database = database; this.file = null; this.accountId = accountId; this.username = username;
-        knights = database.roster(accountId); nextId = database.nextKnight(accountId);
+        refresh();
+    }
+
+    public synchronized void refresh()throws IOException {
+        if(database==null)return;
+        var state=database.rosterState(accountId);
+        if(storageRevision==state.revision())return;
+        boolean changed=!knights.equals(state.knights());
+        knights=state.knights();nextId=state.next();storageRevision=state.revision();
+        if(changed)notifyListeners();
     }
 
     public synchronized int nextId() { return nextId; }
@@ -117,6 +128,7 @@ public final class CharacterStore {
     }
 
     public synchronized Knight create(Knight choices, long authRevision) throws IOException, Refused {
+        refresh();
         String error = nameFailure(choices.name());
         if (error != null) throw new Refused(error);
         try { validate(choices); if (!StarterCatalog.accepts(choices)) throw new IllegalArgumentException(); }
@@ -137,6 +149,7 @@ public final class CharacterStore {
     }
 
     public synchronized Knight update(String oldName, Knight choices, long authRevision) throws IOException, Refused {
+        refresh();
         int index = indexOf(oldName);
         if (index < 0) throw new Refused("No such knight");
         String error = nameError(choices.name());
@@ -165,6 +178,7 @@ public final class CharacterStore {
     }
 
     public synchronized void delete(String name, long authRevision) throws IOException, Refused {
+        refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         List<Knight> roster = new ArrayList<>(knights);
@@ -176,6 +190,7 @@ public final class CharacterStore {
 
     /** Resolves only an owned character. The network layer publishes selection separately. */
     public synchronized WorldProfile worldProfile(String name,long authRevision) throws IOException, Refused {
+        refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         if (database == null) throw new IOException("World profiles require SQLite storage");
@@ -196,7 +211,7 @@ public final class CharacterStore {
     }
 
     private void save(List<Knight> updated, int next, long authRevision) throws IOException {
-        if (database != null) { database.saveRoster(accountId, updated, next, authRevision); return; }
+        if (database != null) { database.saveRoster(accountId, updated, next, authRevision,storageRevision);storageRevision++;return; }
         if (file == null) return;
         Files.createDirectories(file.getParent());
         Properties properties = new Properties();

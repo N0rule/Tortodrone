@@ -21,6 +21,7 @@ Enter commands in the running server, not the shell. A leading `/` is optional.
 | `account delete Alice` | Delete account/characters after exact-username confirmation |
 | `knight list Alice` | Saved knights and account-local roster IDs |
 | `knight info Alice Saved-Knight` | Global identity, balances, items and equipped slots |
+| `knight delete Alice Saved-Knight` | Exact knight-name confirmation; delete owned state and disconnect that account |
 | `currency give Alice Saved-Knight crowns 100` | Add currency |
 | `currency withdraw Alice Saved-Knight energy 5` | Withdraw; reject insufficient funds |
 
@@ -34,13 +35,21 @@ Its CLI supports list/create/check/reset/delete/role actions, with `--data` befo
 the command. Without a terminal, supply password and confirmation as two complete
 stdin lines, or one for a check. Old account flags on the server JAR are unsupported.
 
+`--list-knights Alice` shows names/IDs/balances. `--delete-knight Alice Saved-Knight`
+requires one stdin line containing the exact saved knight name. The desktop's
+**Delete knight** action uses the same service and identity checks. Local deletion
+can remove an online knight: its account is revoked and must reconnect. Other
+knights, passwords and keys are retained; that knight's item/balance/currency-audit
+rows are removed. Picker deletion still refuses online knights.
+
 ## Account and character rules
 
 - Usernames: 3–32 ASCII characters, a letter first, then letters/digits/underscore/
   hyphen; case insensitive. Passwords: 8–128 characters, resettable but not recoverable.
 - Three knight slots per account. Names: 3–16 letters with optional single hyphens,
   unique within the account ignoring case. IDs are not recycled.
-- Online knights cannot be edited/deleted. Reconnect to select another knight.
+- Picker edits/deletion refuse online knights. Local deletion revokes the account.
+  Reconnect to select another knight.
 - One connection per account. A successful new password login replaces the old
   connection, releasing its knight before another can enter. Failed authentication
   leaves it connected. EOF/timeout releases ownership; reconnect normally afterward.

@@ -48,6 +48,7 @@ final class AdminWindow extends JFrame {
         button(actions,"Create account",false,this::create); button(actions,"Change password",true,this::password);
         button(actions,"Check password",true,this::check); button(actions,"Set Admin",true,this::admin);
         button(actions,"Currency",true,this::currency); button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
+        button(actions,"Delete knight",true,this::deleteKnight);
         footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
         addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { if (accounts != null) accounts.close(); } });
         execute(() -> { accounts = new AccountStore(directory); return accounts.list(); },this::loaded);
@@ -134,6 +135,20 @@ final class AdminWindow extends JFrame {
         String typed = JOptionPane.showInputDialog(this,"Delete "+account.username()+" and "+account.knights()+" character(s)?\nType the username to confirm:","Delete account",JOptionPane.WARNING_MESSAGE);
         if (typed == null) return; if (!typed.equals(account.username())) { message("Username did not match. Account was not deleted.",true); return; }
         execute(() -> { accounts.delete(account.username(),account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Account and its characters deleted. Existing sessions will disconnect."); });
+    }
+    private void deleteKnight() {
+        var account=selected();if(account==null)return;
+        execute(()->accounts.knights(account.username()),knights->{
+            if(knights.isEmpty()){message("This account has no characters.",false);return;}
+            var choice=new JComboBox<>(knights.stream().map(Knight::name).toArray(String[]::new));
+            if(JOptionPane.showConfirmDialog(this,form("Character",choice),"Delete knight — "+account.username(),JOptionPane.OK_CANCEL_OPTION)!=JOptionPane.OK_OPTION)return;
+            String name=(String)choice.getSelectedItem();
+            execute(()->accounts.worldProfile(account.username(),name),profile->{
+                String typed=JOptionPane.showInputDialog(this,"Delete "+name+" and its items/balances?\nThis account's sessions will disconnect. Type the exact knight name:","Delete knight",JOptionPane.WARNING_MESSAGE);
+                if(typed==null)return;if(!typed.equals(name)){message("Knight name did not match. Nothing was deleted.",true);return;}
+                execute(()->{accounts.deleteKnight(account.username(),name,account.id(),profile.worldId());return accounts.list();},rows->{loaded(rows);status.setText("Knight deleted: "+name);});
+            });
+        });
     }
     private void message(String text,boolean error) { JOptionPane.showMessageDialog(this,text,"Tortodrone",error ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE); }
     @FunctionalInterface private interface Work<T> { T run() throws Exception; }

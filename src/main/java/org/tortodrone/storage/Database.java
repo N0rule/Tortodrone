@@ -18,6 +18,7 @@ public final class Database {
         @Override public String toString() { return "Identity[redacted]"; }
     }
     public record Summary(int id, String username, boolean admin, int knights, long createdAt) { }
+    public record RosterState(List<Knight> knights,int next,long revision) { }
     private final Path file;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -241,6 +242,37 @@ public final class Database {
             } return List.copyOf(result);
         });
     }
+    /** One SQLite snapshot for the roster, allocation counter and compare-and-swap revision. */
+    public RosterState rosterState(int id)throws IOException {
+        return read(c->{
+            c.setAutoCommit(false);
+            int next;long revision;
+            try(var s=c.prepareStatement("SELECT next_knight_id,revision FROM accounts WHERE id=?")) {
+                s.setInt(1,id);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Account no longer exists");next=r.getInt(1);revision=r.getLong(2);}
+            }
+            var knights=new ArrayList<Knight>();
+            try(var s=c.prepareStatement("SELECT * FROM knights WHERE account_id=? ORDER BY id")) {
+                s.setInt(1,id);try(var r=s.executeQuery()){while(r.next())knights.add(knight(r));}
+            }
+            return new RosterState(List.copyOf(knights),next,revision);
+        });
+    }
+    public void deleteKnight(String username,String name,int expectedAccount,int expectedWorld)throws IOException {
+        write(c->{
+            int account=requireId(c,username);
+            if(account!=expectedAccount)throw new IOException("Account changed; refresh the account list");
+            int knight,world;
+            try(var s=c.prepareStatement("SELECT k.id,w.world_id FROM knights k JOIN world_characters w ON w.account_id=k.account_id AND w.knight_id=k.id WHERE k.account_id=? AND k.name_key=?")) {
+                s.setInt(1,account);s.setString(2,name.toLowerCase(Locale.ROOT));
+                try(var r=s.executeQuery()){if(!r.next())throw new IOException("No such knight");knight=r.getInt(1);world=r.getInt(2);}
+            }
+            if(world!=expectedWorld)throw new IOException("Knight changed; refresh the knight list");
+            try(var s=c.prepareStatement("DELETE FROM currency_events WHERE world_id=?")){s.setInt(1,world);s.executeUpdate();}
+            try(var s=c.prepareStatement("DELETE FROM knights WHERE account_id=? AND id=?")){s.setInt(1,account);s.setInt(2,knight);s.executeUpdate();}
+            try(var s=c.prepareStatement("UPDATE accounts SET auth_revision=auth_revision+1,revision=revision+1 WHERE id=?")){s.setInt(1,account);s.executeUpdate();}
+            event(c,account,"knight deleted; world="+world);return null;
+        });
+    }
     static Knight knight(Connection c,int accountId,int knightId) throws SQLException, IOException {
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM knights WHERE account_id=? AND id=?")) {
             s.setInt(1,accountId); s.setInt(2,knightId);
@@ -297,8 +329,13 @@ public final class Database {
             return WorldProfiles.load(c,accountId,knightId,revision);
         });
     }
-    public void saveRoster(int id,List<Knight> knights,int next,long revision) throws IOException {
+    public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision) throws IOException {
         write(c -> {
+            try(var s=c.prepareStatement("SELECT revision FROM accounts WHERE id=?")) {
+                s.setInt(1,id);try(var r=s.executeQuery()) {
+                    if(!r.next()||r.getLong(1)!=rosterRevision)throw new IOException("Roster changed; refresh or reconnect before saving characters");
+                }
+            }
             replaceRoster(c,id,knights,next,revision);
             for (Knight knight : knights) { boolean fresh;
                 try(PreparedStatement statement=c.prepareStatement("SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?")) {
@@ -311,7 +348,7 @@ public final class Database {
         });
     }
     private static void replaceRoster(Connection c,int id,List<Knight> knights,int next,long revision) throws IOException, SQLException {
-        try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET next_knight_id=? WHERE id=?" + (revision >= 0 ? " AND auth_revision=?" : ""))) {
+        try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET next_knight_id=?,revision=revision+1 WHERE id=?" + (revision >= 0 ? " AND auth_revision=?" : ""))) {
             s.setInt(1,next); s.setInt(2,id); if (revision >= 0) s.setLong(3,revision);
             if (s.executeUpdate() != 1) throw new IOException("Account changed; reconnect before saving characters");
         }

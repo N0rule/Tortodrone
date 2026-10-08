@@ -48,6 +48,11 @@ public final class AccountStore implements AutoCloseable {
         try { return charactersForAdministration(username).worldProfile(knight,-1); }
         catch (CharacterStore.Refused refused) { throw new IOException(refused.getMessage()); }
     }
+    public synchronized void deleteKnight(String username,String knight,int expectedAccount,int expectedWorld)throws IOException {
+        validateUsername(username);
+        if(database==null)throw new IOException("Local knight deletion requires SQLite storage");
+        database.deleteKnight(username,knight,expectedAccount,expectedWorld);
+    }
     private CharacterStore charactersForAdministration(String username) throws IOException {
         validateUsername(username);
         if (database == null) return require(username,-1).characters();
@@ -109,6 +114,7 @@ public final class AccountStore implements AutoCloseable {
                 CharacterStore previous = rosters.putIfAbsent(identity.id(),characters);
                 if (previous != null) characters = previous;
             }
+            characters.refresh();
             return new Account(identity.id(),identity.username(),identity.admin(),identity.authRevision(),characters);
         }
         synchronized (this) {
