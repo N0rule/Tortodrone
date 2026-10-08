@@ -323,6 +323,20 @@ public final class SessionCodec {
             attribute(out,oid,"loadouts",o -> currentLoadout(o,profile));
         });
     }
+    /** Notify stock Arsenal SetListeners as well as updating its stored DSet. */
+    public byte[] itemChanges(int oid,Knight knight,WorldProfile before,WorldProfile after)throws IOException {
+        var old=new HashMap<Long,WorldProfile.Item>();for(var item:before.items())old.put(item.id(),item);
+        var changed=after.items().stream().filter(i->!i.equals(old.get(i.id()))).toList();
+        return frame(out->{
+            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+2);
+            for(var item:changed) {
+                type(out,"com.threerings.presents.dobj."+(old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent"));
+                out.writeInt(oid);string(out,"items");item(out,knight,after.worldId(),item);
+            }
+            attribute(out,oid,"equipment",o->longs(o,after.equipment()));
+            attribute(out,oid,"loadouts",o->currentLoadout(o,after));
+        });
+    }
 
     public byte[] forceTown(int oid,short receiver) throws IOException {
         return forceScene(oid,receiver,SceneRegistry.system().entry());
@@ -463,14 +477,15 @@ public final class SessionCodec {
     private void ints(DataOutputStream out,int[] values)throws IOException{type(out,"[I");out.writeInt(values.length);for(int v:values)out.writeInt(v);}
     private void items(DataOutputStream out,Knight knight,WorldProfile profile)throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(profile.items().size());
-        for(var item:profile.items()) {
+        for(var item:profile.items())item(out,knight,profile.worldId(),item);
+    }
+    private void item(DataOutputStream out,Knight knight,int worldId,WorldProfile.Item item)throws IOException {
             type(out,"com.threerings.projectx.item.data.LevelItem");out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
             out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+knight.costume(),Map.of()));}
-            out.writeLong(item.id());out.writeInt(profile.worldId());out.writeInt(0);out.writeUTF(item.config());out.writeInt(1);out.writeShort(0);
+            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(0);out.writeUTF(item.config());out.writeInt(1);out.writeShort(0);
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Bit 1 is the permanent lock and remains unset.
             out.writeByte(item.bound() ? 2 : 0);
-        }
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);

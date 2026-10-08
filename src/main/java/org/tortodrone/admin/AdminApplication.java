@@ -17,7 +17,8 @@ public final class AdminApplication {
                 System.out.println("Usage: java -jar tortodrone-admin.jar [--data path/to/server/data] [command]");
                 System.out.println("No command opens the desktop account manager.");
                 System.out.println("Commands: --list-accounts | --create-account username [--gm] | --set-password username | --check-password username | --set-gm username true|false | --delete-account username | --version");
-                System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");return;
+                System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");
+                System.out.println("Items: --items [search] | --give-item username knight-name quantity \"exact item config\"");return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
                 try (var stream = AdminApplication.class.getResourceAsStream("/version.txt")) {
@@ -40,6 +41,13 @@ public final class AdminApplication {
         }
     }
     private static void command(AccountStore accounts,String[] args) throws IOException {
+        if(args[0].equals("--items")&&args.length<=2) {
+            System.out.println(org.tortodrone.server.ItemCommands.execute("items"+(args.length==2?" "+args[1]:""),accounts.catalog(),(u,k,c,n)->null));return;
+        }
+        if(args[0].equals("--give-item")&&args.length==5) {
+            System.out.println(org.tortodrone.server.ItemCommands.execute("giveitem "+String.join(" ",Arrays.copyOfRange(args,1,args.length)),accounts.catalog(),
+                (u,k,c,n)->accounts.grantItems(u,k,c,n,-1,-1)));return;
+        }
         if (args.length == 1 && args[0].equals("--list-accounts")) {
             System.out.println("ID\tUsername\tGame Master\tCharacters");
             for (var a : accounts.list()) System.out.println(a.id()+"\t"+a.username()+"\t"+a.gameMaster()+"\t"+a.knights()); return;

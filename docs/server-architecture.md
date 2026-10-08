@@ -16,7 +16,7 @@ All packages are under `src/main/java/org/tortodrone/`.
 | `server.network` | `SecureHandshake`: login; `ClientSession`: routing/subscriptions; `SessionOutput`: ordered writer; `WorldSession`: selected knight/scene ticks |
 | `protocol` | `HandshakeCodec`, `SessionCodec`, `SessionDecoder`: bounded explicit wire schemas |
 | `account` | `AccountStore`, `Passwords`: identity, roles, authentication/revocation |
-| `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `Currency`: world state/catalog |
+| `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `ItemCatalog`, `Currency`: world state/catalog |
 | `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state; `AtomicProperties`: legacy storage |
 | `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
 | `admin`, `config` | `AdminApplication`/`AdminWindow`: local tools; `ServerSettings`: settings |
@@ -34,7 +34,7 @@ than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
 not the wildcard listening address. Credentials/raw packets/secrets are never logged.
 
-Schema 4 stores accounts, account-local rosters, globally identified world knights,
+Schema 5 stores accounts, account-local rosters, globally identified world knights,
 owned item instances, binding, equipped slots, per-knight balances and audit events.
 Connections enable foreign keys, WAL and a five-second busy timeout. Writes use
 `BEGIN IMMEDIATE` with commit/rollback; password hashing happens outside SQL
@@ -162,3 +162,24 @@ transaction. Binding is separate from the equipped slot and persists on removal.
 Equipment updates publish items/loadout/slots together so a new binding is visible
 before the success callback. Stock Item flags bit 2 carries mutable binding;
 the permanent-lock bit is not used.
+
+`ItemCatalog` loads bounded external reference/metadata/model records from sibling
+`items/catalog.tsv`, with a starter fallback when absent. It loads no stock classes.
+`ItemCatalogExport` is an optional read-only installed oracle and does not run on
+the server. Normal equipment only is grantable; unknown types remain indexed.
+`StarterCatalog.equipped` composes the verified catalogue arguments with knight
+appearance and original accessories. The lowest equipped weapon slot is visible;
+unchanged inventory additions preserve the actor's model reference on the client.
+
+Schema-5 inventory supports multiple instances per type, a unique occupied equipment
+slot, and five marked starter rows. Appearance edits touch only marked cosmetics.
+Binding uses the stored `bind_on_equip` rule. `Database.grantItems` checks the GM's
+current role/auth revision and target identity under BEGIN IMMEDIATE before allocating
+IDs. Items/revision/audit commit together; failures consume no IDs. Grants impose
+1–20 instances per request and 256 per knight. `item_events` cascades with its knight.
+Normal-chat `!items`/`!giveitem` use existing SpeakMarshaller method 1 and private
+SystemMessage results; they share the chat rate budget and never broadcast command
+text. Console/CLI use the same syntax/service with a local trusted actor. Profile
+polling sends stock EntryAddedEvent/EntryUpdatedEvent for item changes so Arsenal
+SetListeners are notified. Equipment and loadout attributes follow in the compound
+event. See [game data reference](game-data.md) for deployment and limits.

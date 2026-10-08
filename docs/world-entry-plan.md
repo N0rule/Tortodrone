@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.9.1, schema 4
+## Checkpoint: 0.10.0, schema 5
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -46,8 +46,8 @@ them on live revocation. Its own nameplate follows the stock client's visibility
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory
 closing and reconnect passed isolated graphical checks. Graphical two-window
-animation and equip/unequip have not been independently accepted; networking
-checks pass. Repeat relevant checks when changing scene/movement behavior. See
+animation and unequip remain unchecked; the single-window item grant/equip
+acceptance is recorded below. Repeat relevant checks when changing scene/movement behavior. See
 [entry evidence and desktop limitations](town-entry-investigation.md).
 Accepted samples do not rule out recurrence of the previously intermittent
 fresh-creation animation/stutter symptom; keep its graphical regression checklist.
@@ -64,22 +64,51 @@ fresh-creation animation/stutter symptom; keep its graphical regression checklis
 5. **Scene chat**: original marshaller/messages, scene isolation and bounds,
    reusable routing for later channels.
 6. **Game Master**: role terminology/storage, current permissions, stock title/
-   support icon and broadcasts. Other staff commands remain unavailable.
+   support icon and broadcasts. Item commands follow in 0.10.0 below.
 
 All six are implemented in separate commits on main; nothing is pushed. Check
 Git for exact commit IDs. See the owner's instructions before additional work.
 
+## Inventory foundation and item grants (0.10.0)
+
+The read-only stock exporter indexes all item definitions and enables normal helm,
+armor, shield, sword, gun and bomb grants with verified model arguments. External
+`items/catalog.tsv` is loaded beside the JARs; absent catalogues retain the starter
+fallback. The tested installation indexes 9,348 definitions, of which 883 support
+equipment grants. Recipes, costumes, stackable and permanent items remain index-only.
+The separate file index lists physical game files and archive entries for later
+research. Generated data stays local and contains no extracted assets.
+
+Schema 5 preserves existing IDs/binding/loadouts and removes the one-item-per-type
+restriction. Each knight retains its five marked starter instances; creator edits
+only replace starter cosmetics. `!items` and `!giveitem` use the existing stock scene
+speak RPC; console and local CLI share the grant service. Current role/authentication
+checks, IDs, item rows, profile revision and audit commit in one transaction. Grants
+are unequipped, unbound instances, with 1–20 per command and 256 total per knight.
+Online updates use stock item entry events for Arsenal observers; external grants
+do not reset the actor model. See [catalogue/commands/file reference](game-data.md).
+
+Acceptance on the unchanged installed client: exhaustive metadata/model comparisons
+at three player colors, actual private GM commands, live/offline grants, item-entry
+observers, binding and reconnect persistence passed. A separate stock-reader fixture
+applies a combined grant/equip update, including both additions and starter displacement.
+The isolated graphical Arsenal rendered Calibur icons and distinct instances, received
+two new swords live, showed the binding prompt and moved the equipped highlight to
+the selected sword. Reconnect retained the bound loadout; inventory closing followed
+by movement worked. These samples do not accept every item animation or the earlier
+intermittent fresh-creation symptom. Temporary servers/clients were stopped.
+
 ## Current limits and later work
 
 Configured town maps/spawns; positions reset on entry. Reconnect to switch characters.
-Static collision is sampled; no dynamic physics. Five starter items, no drops,
+Static collision is sampled; no dynamic physics. Five starter items plus supported equipment grants; no drops,
 trade, crafting, loadouts or costume equipment. No combat, quests, shops, NPC
 dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
 News/social feeds are empty. Account/character/currency management remains local;
-the only in-game staff command implemented is broadcast. Binding has no unbinding service.
+in-game staff commands are broadcast, item search and item grants. Binding has no unbinding service.
 
 After the requested foundations: server-owned position persistence, clean picker
-return, one verified portal round trip, general owned items/weapon selection,
+return, one verified portal round trip, stackable owned items/weapon selection,
 then one enemy and one persisted mission with idempotent rewards. Keep changes
 small; do not attempt the full introduction at once.
 

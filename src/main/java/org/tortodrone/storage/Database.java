@@ -13,7 +13,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 4;
+    public static final int SCHEMA_VERSION = 5;
     public record Identity(int id, String username, boolean gameMaster, long authRevision, byte[] salt, byte[] verifier) {
         @Override public String toString() { return "Identity[redacted]"; }
     }
@@ -77,7 +77,8 @@ public final class Database {
                 if (current<1 || current>SCHEMA_VERSION) throw new IOException("Unsupported database version; database was not replaced");
                 if (current==1) WorldProfiles.initialize(c);
                 if (current<=2) WorldProfiles.upgrade(c);
-                WorldProfiles.upgradeBinding(c);
+                if(current<=3) WorldProfiles.upgradeBinding(c);
+                WorldProfiles.upgradeInventory(c);
                 try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version="+SCHEMA_VERSION); }
                 return null;
             });
@@ -105,6 +106,7 @@ public final class Database {
             WorldProfiles.initialize(connection);
             WorldProfiles.upgrade(connection);
             WorldProfiles.upgradeBinding(connection);
+            WorldProfiles.upgradeInventory(connection);
             try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version="+SCHEMA_VERSION); }
             return null;
         });
@@ -320,13 +322,47 @@ public final class Database {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
             if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
-            try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
+            try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL AND bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
                 if(slot==null)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
                 if(slot==null)s.setNull(2,Types.INTEGER);else s.setInt(2,slot);
                 s.setInt(3,profile.worldId());s.setLong(4,itemId);s.executeUpdate();
             }
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
             return WorldProfiles.load(c,accountId,knightId,revision);
+        });
+    }
+    /** Permission and target identity are checked under the same write lock as allocation. */
+    public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision)throws IOException {
+        if(quantity<1||quantity>org.tortodrone.character.ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
+        if(!entry.grantable())throw new IOException("Unsupported item for grants");
+        return write(c->{
+            if(actorAccount>=0)try(var s=c.prepareStatement("SELECT is_admin FROM accounts WHERE id=? AND auth_revision=?")) {
+                s.setInt(1,actorAccount);s.setLong(2,actorRevision);
+                try(var r=s.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}
+            }
+            int account=requireId(c,username),knight;
+            if(expectedAccount>=0&&account!=expectedAccount)throw new IOException("Account changed; refresh");
+            try(var s=c.prepareStatement("SELECT id FROM knights WHERE account_id=? AND name_key=?")) {
+                s.setInt(1,account);s.setString(2,knightName.toLowerCase(Locale.ROOT));
+                try(var r=s.executeQuery()){if(!r.next())throw new IOException("No such knight");knight=r.getInt(1);}
+            }
+            var profile=WorldProfiles.load(c,account,knight,-1);
+            if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
+            if(profile.items().size()+quantity>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
+            long first=0;
+            try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,bind_on_equip) VALUES(?,?,?,?,?)")) {
+                for(int i=0;i<quantity;i++) {
+                    long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
+                    s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());s.executeUpdate();
+                }
+            }
+            try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
+            try(var s=c.prepareStatement("INSERT INTO item_events(world_id,actor_account,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?,?)")) {
+                s.setInt(1,profile.worldId());if(actorAccount<0)s.setNull(2,Types.INTEGER);else s.setInt(2,actorAccount);
+                s.setString(3,entry.config());s.setInt(4,quantity);s.setLong(5,first);s.setLong(6,System.currentTimeMillis());s.executeUpdate();
+            }
+            return WorldProfiles.load(c,account,knight,-1);
         });
     }
     public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision) throws IOException {
@@ -342,7 +378,7 @@ public final class Database {
                     statement.setInt(1,id);statement.setInt(2,knight.id());try(ResultSet r=statement.executeQuery()){fresh=!r.next();}
                 }
                 WorldProfiles.ensure(c,id,knight);
-                if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET bound=1,equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
+                if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET bound=1,starter=1,equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
                 WorldProfiles.appearance(c,id,knight); }
             return null;
         });

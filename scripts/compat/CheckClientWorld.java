@@ -36,7 +36,9 @@ public final class CheckClientWorld {
             run(List.of(executable("javac"), "--release", "17", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
                 project.resolve("scripts/compat/AccountConnectionCheck.java").toString(),
-                project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString()), "compile", "", 30);
+                project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/ItemCatalogExport.java").toString(),project.resolve("scripts/compat/ItemCatalogCompatibility.java").toString(),
+                project.resolve("scripts/compat/ItemGrantConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
             List<String> base = new ArrayList<>(List.of(executable("java"), "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true",
@@ -45,6 +47,10 @@ public final class CheckClientWorld {
             List<String> reader = new ArrayList<>(base);
             reader.addAll(List.of("WorldCompatibility", game.toString()));
             run(reader, "reader", "", 30);
+            var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("items").toString()));
+            run(export,"item-export","",60);
+            var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.tsv").toString()));
+            run(catalogCheck,"item-catalog","",60);
             Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n");
             for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
             Path serverLog = scratch.resolve("server.log");
@@ -97,6 +103,8 @@ public final class CheckClientWorld {
             instanceCheck.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString(), "isolated"));
             try { run(instanceCheck, "instances", "", 60); }
             catch (Exception failure) { System.err.println(tail(isolatedLog)); throw failure; }
+            var itemCheck=new ArrayList<>(base);itemCheck.addAll(List.of("ItemGrantConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
+            try{run(itemCheck,"item-grants","",60);}catch(Exception failure){System.err.println(tail(isolatedLog));throw failure;}
         } finally {
             stopChildren();
             Runtime.getRuntime().removeShutdownHook(cleanup);

@@ -52,20 +52,44 @@ public final class StarterCatalog {
 
     /** Town model includes the held starter weapon and shield as well as equipped cosmetics. */
     public static Model equipped(Knight knight,WorldProfile profile) {
-        String helm=null,armor=null,ha=null,aa=null;WorldProfile.Item weapon=null;boolean shield=false;
-        for(var item:profile.items())if(item.equippedSlot()!=null) {
-            switch(item.slot()) {
-                case HELM -> {helm=item.config();ha=item.accessory();}
-                case ARMOR -> {armor=item.config();aa=item.accessory();}
-                case SHIELD -> shield=true;
-                case SWORD,GUN -> {if(weapon==null || item.equippedSlot()<weapon.equippedSlot())weapon=item;}
-            }
-        }
-        var visible=new Knight(knight.id(),knight.name(),helm,armor,ha,aa,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
+        return equipped(knight,profile,ItemCatalog.starter());
+    }
+    public static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog) {
+        var visible=new Knight(knight.id(),knight.name(),null,null,null,null,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
         var args=new TreeMap<>(preview(visible).arguments());int color=256|knight.color();
-        if(shield)args.put("Shield",new Model("item/gear/shield/buckler/model.dat",Map.of("Colorization",color,"variant","proto(green)")));
-        if(weapon!=null){boolean sword=weapon.slot()==WorldProfile.Slot.SWORD;args.put("Weapon",new Model(sword?"item/weapon/sword/proto/model.dat":"item/weapon/handgun/proto/model.dat",Map.of("Colorization",color,"variant","proto(green)")));args.put("Weapon Idle",sword?"ready_sword":"ready_pistol");}
+        // Apply armor/helm before accessories; use the lowest occupied weapon slot.
+        boolean weapon=false;
+        for(var item:profile.items().stream().filter(i->i.equippedSlot()!=null)
+                .sorted(Comparator.comparingInt(WorldProfile.Item::equippedSlot)).toList()) {
+            if(item.equippedSlot()>=6) {if(weapon)continue;weapon=true;}
+            var entry=catalog.find(item.config());
+            if(entry!=null)args.putAll(entry.arguments(color));
+            if(item.accessory()!=null)add(args,item.accessory()+", "+knight.costume(),color);
+        }
         return new Model("character/pc/model_level.dat",args);
+    }
+
+    static List<ItemCatalog.Entry> catalogEntries() {
+        var result=new ArrayList<ItemCatalog.Entry>();
+        for(var e:ENTRIES.entrySet()) if(e.getValue().category().equals("HELM")||e.getValue().category().equals("ARMOR")) {
+            var args=new TreeMap<String,Object>();add(args,e.getKey(),-12345);
+            var model=(Model)args.get(e.getValue().parameter());var values=new TreeMap<>(model.arguments());
+            values.replaceAll((k,v)->v instanceof Integer n&&n==-12345?ItemCatalog.PlayerColor.VALUE:v);
+            args.put(e.getValue().parameter(),new Model(model.name(),values));
+            result.add(new ItemCatalog.Entry(e.getKey(),0,e.getValue().category(),"",0,false,
+                WorldProfile.Slot.valueOf(e.getValue().category()),true,args));
+        }
+        for(var slot:List.of(WorldProfile.Slot.SWORD,WorldProfile.Slot.GUN,WorldProfile.Slot.SHIELD)) {
+            boolean sword=slot==WorldProfile.Slot.SWORD,shield=slot==WorldProfile.Slot.SHIELD;
+            var args=new TreeMap<String,Object>();
+            args.put(shield?"Shield":"Weapon",new Model(shield?"item/gear/shield/buckler/model.dat":sword?
+                "item/weapon/sword/proto/model.dat":"item/weapon/handgun/proto/model.dat",
+                Map.of("Colorization",ItemCatalog.PlayerColor.VALUE,"variant","proto(green)")));
+            if(!shield)args.put("Weapon Idle",sword?"ready_sword":"ready_pistol");
+            result.add(new ItemCatalog.Entry(shield?"Gear/Shield/Proto Shield":sword?"Weapon/Sword/Proto Sword":"Weapon/Handgun/Proto Gun",
+                0,slot.name(),"",0,false,slot,true,args));
+        }
+        return List.copyOf(result);
     }
 
     private static void add(Map<String, Object> args, String name, int color) {

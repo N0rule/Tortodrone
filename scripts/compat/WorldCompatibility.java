@@ -117,7 +117,7 @@ public final class WorldCompatibility {
         System.out.println("PASS: stock predictor advances the knight locally with movement enabled");
         System.out.println("PASS: stock reader accepts player/loadout, original town, occupant metadata and usable actor deltas");
     }
-    private static com.threerings.config.ConfigReference<?> reference(StarterCatalog.Model model) {
+    static com.threerings.config.ConfigReference<?> reference(StarterCatalog.Model model) {
         var result=new com.threerings.config.ConfigReference<>(model.name());
         model.arguments().forEach((key,value) -> result.kW().put(key,
             value instanceof StarterCatalog.Model nested ? reference(nested)

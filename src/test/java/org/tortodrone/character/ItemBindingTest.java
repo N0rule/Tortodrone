@@ -37,6 +37,7 @@ public final class ItemBindingTest {
             // Recreate an actual schema-3 shape, including a previously unequipped starter.
             db.write(c -> { try(var s=c.createStatement()) {
                 s.execute("ALTER TABLE inventory_items DROP COLUMN bound");
+                s.execute("DROP TABLE item_events");
                 s.execute("PRAGMA user_version=3");
                 s.execute("CREATE TRIGGER refuse_binding BEFORE UPDATE ON inventory_items BEGIN SELECT RAISE(ABORT,'test'); END");
             } return null; });

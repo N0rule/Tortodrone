@@ -82,6 +82,10 @@ final class WorldSession implements AutoCloseable {
         // Picker edits/deletes use this same account lock around their online check and save.
         synchronized (characters) {
             var loaded = characters.worldProfile(name, authRevision);
+            for(var item:loaded.items())if(!item.starter()) {
+                var entry=characters.catalog().require(item.config());
+                if(entry.slot()!=item.slot())throw new IOException("Saved item category differs from the deployed catalogue");
+            }
             var choice = characters.roster().stream().filter(k -> k.id() == loaded.knightId())
                 .findFirst().orElseThrow(() -> new IOException("No such knight"));
             synchronized (ACTIVE) {
@@ -202,8 +206,9 @@ final class WorldSession implements AutoCloseable {
             if (location.ordinal() != 0 && location.ordinal() != 1) {
                 throw new IOException("Only inventory and equipment moves are available");
             }
+            var before=profile;
             profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
-            output.send(() -> codec.equipped(oid, knight, profile));
+            output.send(() -> codec.itemChanges(oid, knight, before,profile));
             output.send(() -> codec.invocationConfirmed(oid, listener.requestId()));
         } catch (IOException failure) {
             String reason = failure.getMessage();
@@ -261,6 +266,17 @@ final class WorldSession implements AutoCloseable {
                 throw new SessionDecoder.Rejected("Invalid scene chat request");
             try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
             sender=chat;place=scene.oid();generation=sceneGeneration;
+        }
+        String text=(String)request.arguments().get(0);
+        if(text.stripLeading().matches("(?is)!(giveitem|items)(?:\\s.*)?")) {
+            try {
+                if(!roles.gameMaster())throw new IOException("Game Master permission required");
+                if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command.");
+                String result=org.tortodrone.server.ItemCommands.execute(SceneChat.validate(text).substring(1),characters.catalog(),
+                    (user,name,config,count)->characters.grantItems(user,name,config,count,authRevision));
+                feedback(place,generation,result);
+            }catch(IOException refused){feedback(place,generation,refused.getMessage());}
+            return;
         }
         try {
             if(!CHAT.speak(sender,(String)request.arguments().get(0),(Byte)request.arguments().get(1)))
@@ -336,7 +352,7 @@ final class WorldSession implements AutoCloseable {
                             output.send(() -> codec.balances(oid, profile));
                         }
                         if (!fresh.items().equals(previous.items())) {
-                            output.send(() -> codec.equipped(oid, knight, profile));
+                            output.send(() -> codec.itemChanges(oid, knight, previous,profile));
                         }
                     }
                 }
@@ -398,7 +414,7 @@ final class WorldSession implements AutoCloseable {
 
     private synchronized ActorState actor(SceneRegistry.Instance place) {
         if (closed || !selected() || scene!=place) return null;
-        var model = StarterCatalog.equipped(knight, profile);
+        var model = StarterCatalog.equipped(knight, profile,characters.catalog());
         var config = new StarterCatalog.Model("Character/PC/Default",
             Map.of("Model", model, "Height", model.arguments().get("Height")));
         return new ActorState(profile.worldId(), oid, knight.name(), 256 | knight.color(), created,

@@ -6,18 +6,18 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.9.1**, SQLite schema **4**: normal login; saved character creation,
+Version **0.10.0**, SQLite schema **5**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
-items with persistent binding and Arsenal equip/unequip; per-character crowns and
+items plus duplicate equipment instances, verified item grants and Arsenal equip/unequip; per-character crowns and
 energy with local administration; original-protocol scene chat with instance isolation;
-Game Master roles, stock title/support icon and permission-checked broadcasts.
+Game Master roles, stock title/support icon, permission-checked broadcasts and item commands.
 
 One authenticated connection per account: a successful new login replaces the
 previous connection and releases its knight. Failed logins do not disconnect it.
 
 Intro missions are skipped. Combat, quests, shops, NPC dialogue, portal travel,
-position persistence and other in-game staff commands are not implemented. Reconnect
+position persistence and other staff gameplay commands are not implemented. Reconnect
 to switch characters; every entry starts at the town spawn.
 
 The 0.7.1 entry fixes passed automated and isolated graphical creation/reconnect
@@ -84,14 +84,18 @@ log-mode=normal
 The manager supports account creation, password checks/resets, Game Master roles,
 deletion, individual knight deletion and per-knight currency changes. The server terminal offers the same
 account services; type `help` for commands. Game Masters can use the stock `/broadcast`
-command after entering a scene. [Administration reference](docs/administration.md) covers commands,
+command and normal-chat `!items`/`!giveitem` after entering a scene. Prepare an offline
+[item catalogue and game-file index](docs/game-data.md) for the wider equipment set.
+[Administration reference](docs/administration.md) covers commands,
 account rules and migrations.
 
 To back up, stop the server and close the manager, then copy the entire `data/`
 directory, including database and keys. A live SQLite database may have changes
 in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`. Version 0.7.2
 adds persistent item binding in schema 4; stop the old server before opening the
-new release. Do not downgrade an upgraded database.
+new release. Version 0.10.0 upgrades schema 4 to schema 5 for multiple owned items
+of each equipment type. Preserve `items/` beside the JARs when deploying its catalogue.
+Do not downgrade an upgraded database.
 
 ## Work on the repository
 

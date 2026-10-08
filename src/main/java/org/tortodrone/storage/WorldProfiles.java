@@ -62,9 +62,20 @@ final class WorldProfiles {
         }
     }
 
+    static void upgradeInventory(Connection c)throws SQLException {
+        try(var s=c.createStatement()) {
+            s.execute("CREATE TABLE inventory_new(item_id INTEGER PRIMARY KEY CHECK(item_id>0),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,slot TEXT NOT NULL CHECK(slot IN('HELM','ARMOR','SWORD','GUN','SHIELD','BOMB')),config TEXT NOT NULL,accessory TEXT,heat INTEGER NOT NULL DEFAULT 0 CHECK(heat>=0),equipped_slot INTEGER CHECK(equipped_slot IN(0,1,2,6,7)),bound INTEGER NOT NULL DEFAULT 0 CHECK(bound IN(0,1)),bind_on_equip INTEGER NOT NULL DEFAULT 1 CHECK(bind_on_equip IN(0,1)),starter INTEGER NOT NULL DEFAULT 0 CHECK(starter IN(0,1)))");
+            s.execute("INSERT INTO inventory_new(item_id,world_id,slot,config,accessory,heat,equipped_slot,bound,starter) SELECT item_id,world_id,slot,config,accessory,heat,equipped_slot,bound,1 FROM inventory_items");
+            s.execute("DROP TABLE inventory_items");s.execute("ALTER TABLE inventory_new RENAME TO inventory_items");
+            s.execute("CREATE UNIQUE INDEX equipped_items ON inventory_items(world_id,equipped_slot) WHERE equipped_slot IS NOT NULL");
+            s.execute("CREATE UNIQUE INDEX starter_items ON inventory_items(world_id,slot) WHERE starter=1");
+            s.execute("CREATE TABLE item_events(id INTEGER PRIMARY KEY,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,actor_account INTEGER,config TEXT NOT NULL,quantity INTEGER NOT NULL,first_item_id INTEGER NOT NULL,created_at INTEGER NOT NULL)");
+        }
+    }
+
     /** Creator edits replace chosen cosmetics, preserving IDs, heat and the rest of the kit. */
     static void appearance(Connection c,int accountId,Knight knight) throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=?")) {
+        try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=? AND starter=1")) {
             for (Slot slot : List.of(Slot.HELM,Slot.ARMOR)) {
                 s.setString(1,slot==Slot.HELM ? knight.helm() : knight.armor());
                 s.setString(2,slot==Slot.HELM ? knight.helmAccessory() : knight.armorAccessory());
@@ -80,7 +91,7 @@ final class WorldProfiles {
         }
     }
 
-    private static long allocate(Connection c,String key,long limit) throws SQLException, IOException {
+    static long allocate(Connection c,String key,long limit) throws SQLException, IOException {
         long id;
         try (PreparedStatement s = c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
             s.setString(1,key); try (ResultSet r = s.executeQuery()) {
@@ -100,10 +111,10 @@ final class WorldProfiles {
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
-                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound")));
+                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter")));
             }
         }
-        if (items.size()!=Slot.values().length) throw new IOException("Incomplete starter inventory; restore the saved database");
+        if (items.stream().filter(WorldProfile.Item::starter).count()!=5) throw new IOException("Incomplete starter inventory; restore the saved database");
         return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items);
     }
 }

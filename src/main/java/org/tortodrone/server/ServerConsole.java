@@ -61,11 +61,15 @@ final class ServerConsole implements AutoCloseable {
 
     private void execute(String[] words) throws IOException {
         String command = words[0].toLowerCase(Locale.ROOT);
-        if (words.length == 1 && command.equals("help")) {
+        if(command.equals("giveitem")||command.equals("items")) {
+            log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
+                (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));
+        } else if (words.length == 1 && command.equals("help")) {
             log.info("Commands: help | status | stop | account list | account create <username> [gm]");
             log.info("knight list <username> | knight info <username> <knight-name>");
             log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
             log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
+            log.info("items <search> | giveitem <username> <knight-name> <1-20> <exact item config>");
             log.info("account password <username> | account check <username> | account gm <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());

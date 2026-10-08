@@ -97,7 +97,8 @@ public final class Server {
                 log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
                     + ":" + listener.getLocalPort());
                 log.debug("Public key: " + keys.resolve("public.txt"));
-                log.info("Normal login, town movement and starter inventory available.");
+                log.info("Normal login, town movement and persistent inventory available.");
+                log.info("Item references: "+accounts.catalog().entries().size()+"; grantable: "+accounts.catalog().entries().stream().filter(org.tortodrone.character.ItemCatalog.Entry::grantable).count());
                 accept(listener, key, log, accounts);
             }
         }

@@ -9,6 +9,7 @@ import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.WorldProfile;
 import org.tortodrone.character.Currency;
+import org.tortodrone.character.ItemCatalog;
 import org.tortodrone.storage.Database;
 
 /** Shared account service for the game server and local administration application. */
@@ -18,6 +19,7 @@ public final class AccountStore implements AutoCloseable {
     public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
+    private final ItemCatalog catalog;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
     private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
@@ -27,13 +29,18 @@ public final class AccountStore implements AutoCloseable {
 
     /** Isolated wire tests retain their explicit synthetic account, never a production backdoor. */
     public AccountStore(CharacterStore characters) throws IOException {
-        database = null; nextId = characters.accountId()+1;
+        database = null; catalog=characters.catalog();nextId = characters.accountId()+1;
         char[] password = DEFAULT_USERNAME.toCharArray();
         try { memory.put(canonical(characters.username()),new Stored(characters.accountId(),characters.username(),Passwords.protect(password),false,1,characters)); }
         finally { Arrays.fill(password,'\0'); }
     }
     public AccountStore(Path directory) throws IOException { this(directory,false); }
-    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { database = new Database(directory,deploymentLocked); }
+    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { catalog=ItemCatalog.deployment(directory);database = new Database(directory,deploymentLocked); }
+    public ItemCatalog catalog(){return catalog;}
+    public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
+        validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
+        return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);
+    }
     public Path databaseFile() { return database == null ? null : database.file(); }
 
     public synchronized List<Summary> list() throws IOException {
@@ -110,7 +117,7 @@ public final class AccountStore implements AutoCloseable {
             if (!matches || identity == null || !database.current(identity.id(),identity.authRevision())) return null;
             CharacterStore characters = rosters.get(identity.id());
             if (characters == null) {
-                characters = new CharacterStore(database,identity.id(),identity.username());
+                characters = new CharacterStore(database,identity.id(),identity.username(),catalog);
                 CharacterStore previous = rosters.putIfAbsent(identity.id(),characters);
                 if (previous != null) characters = previous;
             }

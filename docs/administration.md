@@ -24,11 +24,21 @@ Enter commands in the running server, not the shell. A leading `/` is optional.
 | `knight delete Alice Saved-Knight` | Exact knight-name confirmation; delete owned state and disconnect that account |
 | `currency give Alice Saved-Knight crowns 100` | Add currency |
 | `currency withdraw Alice Saved-Knight energy 5` | Withdraw; reject insufficient funds |
+| `items Calibur` | Find item references (first five matches) |
+| `giveitem Alice Saved-Knight 2 Weapon/Sword/Calibur` | Grant distinct unequipped equipment instances |
 
 Interactive Up/Down recalls 100 commands in memory. Password/confirmation prompts
 and unrecognized input never enter history. Passwords are hidden in a terminal
 and never command arguments. Redirected stdin supplies complete UTF-8 lines;
 EOF leaves the server running. Logs preserve the active prompt.
+
+Game Masters use normal scene chat `!items Calibur` and
+`!giveitem Alice Saved-Knight 2 Weapon/Sword/Calibur`. The result is private to the
+sender. Console/CLI commands are local administration and do not require an account
+role. The CLI accepts `--items Calibur` and
+`--give-item Alice Saved-Knight 2 "Weapon/Sword/Calibur"`; only shell commands quote
+multiword references. See [catalogue preparation and supported item limits](game-data.md).
+The Swing manager does not yet have an item-grant dialog.
 
 For headless administration, run `java -jar build/tortodrone-admin.jar --help`.
 Its CLI supports list/create/check/reset/delete/role actions, with `--data` before
@@ -64,7 +74,8 @@ rows are removed. Picker deletion still refuses online knights.
 - Game Masters receive the stock nameplate subtitle and support icon, replacing
   the prestige icon without changing prestige rank. Stock `/broadcast message`
   reaches all ready scenes/instances and requires the current stored GM role.
-  Limits match scene chat; other in-game staff commands are unavailable. Role
+  Limits match scene chat; item search/grants use the same private scene-chat command
+  path described above. Other staff gameplay commands remain unavailable. Role
   changes update online player/occupant metadata within about 250 ms; permission
   checks read storage immediately. Normal players cannot broadcast or grant roles.
   Password reset/deletion revokes sessions within about 250 ms and blocks stale saves.
@@ -80,10 +91,13 @@ optional SQLite `-wal`/`-shm` files, `keys/private.pk8`, `keys/public.txt`,
 Stop the server and close the manager before copying the whole directory or upgrading.
 Keep both JARs on the same release; do not run an older release against upgraded state.
 
-Current schema is 4. Version 0.7.2 adds persistent item binding. All existing
+Current schema is 5. Version 0.7.2 adds persistent item binding. All existing
 starter items were originally granted equipped and remain bound after migration,
 including items now unequipped; their loadout, IDs and balances are preserved.
-Equipping binds an item; unequipping never clears binding. Schema 2 added
+Equipping applies the stored bind-on-equip rule; unequipping never clears binding.
+Version 0.10.0 preserves those rows in schema 5, marks the original starter items,
+allows additional instances of the same type, and adds item-grant audits. Preserve
+the external `items/` catalogue with the deployment. Schema 2 added
 global world/item identities and the starter kit; schema 3 added balances, state
 revision, equipped slots and currency audit events. Upgrades are transactional,
 retain account/roster IDs and credentials, and do not regrant kits or re-equip

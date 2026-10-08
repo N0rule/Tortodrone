@@ -15,6 +15,8 @@ public final class CharacterStore {
     private final Database database;
     private final String username;
     private final int accountId;
+    private ItemCatalog catalog=ItemCatalog.starter();
+    public ItemCatalog catalog(){return catalog;}
     private List<Knight> knights = List.of();
     private int nextId = 1;
     private long storageRevision;
@@ -96,6 +98,14 @@ public final class CharacterStore {
     public CharacterStore(Database database, int accountId, String username) throws IOException {
         this.database = database; this.file = null; this.accountId = accountId; this.username = username;
         refresh();
+    }
+    public CharacterStore(Database database,int accountId,String username,ItemCatalog catalog)throws IOException {
+        this(database,accountId,username);this.catalog=catalog;
+    }
+    public WorldProfile grantItems(String username,String name,String config,int quantity,long revision)throws IOException {
+        if(database==null)throw new IOException("Item grants require SQLite storage");
+        // No cross-account CharacterStore locks; resolve target and permissions in SQLite.
+        return database.grantItems(username,name,-1,-1,catalog.require(config),quantity,accountId,revision);
     }
 
     public synchronized void refresh()throws IOException {
