@@ -30,7 +30,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 23 unit and three integration checks. It covers persistence,
+The current suite has 24 unit and three integration checks. It covers persistence,
 migrations/rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 
@@ -53,7 +53,8 @@ Use a JDK that can read the installed JARs (the tested installation requires Jav
 25). The world harness copies both server JARs into temporary storage, creates
 disposable accounts/preferences and stops its server on exit. It checks the stock
 reader/predictor, creation/reconnect, delayed acknowledgements, activity timing,
-model retention, equipment, currency and two-account actor synchronization.
+model retention, equipment, currency, scene round trips, separate-instance isolation
+and two-account actor synchronization. Maps are copied into every test deployment.
 The preview fixture compares starter model construction with the stock builder.
 Persistent compatibility tools are Java; do not introduce Python scripts.
 
@@ -65,7 +66,7 @@ acceptance checks. Read JARs, assets and native libraries from
 client preferences. No graphical test launcher is committed: assemble an isolated
 environment for the installed version, using its deployment/JVM requirements.
 
-1. Create a temporary directory with a server JAR copy, fresh data/keys, disposable
+1. Create a temporary directory with a server JAR and maps copy, fresh data/keys, disposable
    normal accounts, client home/preferences/cache/native extraction directories.
 2. Start that server on an isolated localhost port. Create a temporary deployment
    configuration retaining required stock settings but using its endpoint and
@@ -95,8 +96,8 @@ Sources/resources are discovered recursively. `VERSION` becomes bundled
 `build/deps/` caches verified inputs, and `build/data/` is real runtime state.
 `make clean` preserves the latter two.
 
-Dependency pins/digests live in the Makefile and `scripts/fetch-*.sh`; update
-their [notices](dependencies.md) when changing them. Scene geometry and the
-derived `town-walkability.gz` must match; `scripts/compat/TownCollisionExport.java`
-documents collision derivation. Never commit installed game assets or assume an
+Dependency pins/digests live in the Makefile and preparation scripts; update
+their [notices](dependencies.md) when changing them. Scene geometry and collision
+must match; [maps](maps.md) documents preparation and the Java importer.
+Never commit installed game assets or assume an
 unlicensed reference project can be copied into the server.

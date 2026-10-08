@@ -29,7 +29,7 @@ public final class ServerIntegrationTest {
         try {
             // Each deployment owns data beside its JAR, including custom-config runs.
             Path jar = directory.resolve("tortodrone.jar");
-            Files.copy(sourceJar, jar);
+            org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
             Process version = command(jar, null, directory).command(
                 Path.of(System.getProperty("java.home"), "bin", "java").toString(),
                 "-jar", jar.toString(), "--version").start();
@@ -150,7 +150,7 @@ public final class ServerIntegrationTest {
         Path deployment = directory.resolve("deployment with spaces");
         Files.createDirectories(deployment);
         Path deployedJar = deployment.resolve("tortodrone.jar");
-        Files.copy(jar, deployedJar);
+        org.tortodrone.support.TestDeployment.copyServer(jar, deployedJar);
         seed(deployedJar,deployment);
         Path data = deployment.resolve("data");
         Path config = data.resolve("server.properties");
@@ -194,14 +194,14 @@ public final class ServerIntegrationTest {
             && !log.contains("snapshot sent") && !log.contains("InvocationRequestEvent"), "normal mode suppresses verbose protocol logs");
         check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
         try (var entries = Files.list(deployment)) {
-            check(entries.count() == 2, "deployment contains only the JAR and data directory");
+            check(entries.count() == 3, "deployment contains the JAR, external maps and data directory");
         }
     }
 
     private static void managementWorkflow(Path jar, Path directory) throws Exception {
         Files.createDirectories(directory);
         Path deployed = directory.resolve("tortodrone.jar");
-        Files.copy(jar, deployed);
+        org.tortodrone.support.TestDeployment.copyServer(jar, deployed);
         seed(deployed,directory);
         Path data = directory.resolve("data");
         Files.createDirectories(data);
@@ -226,7 +226,7 @@ public final class ServerIntegrationTest {
 
     private static void accountWorkflow(Path sourceJar, Path directory) throws Exception {
         Files.createDirectories(directory);
-        Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
         seed(jar,directory);
         Path data = directory.resolve("data");
         String password = "alice-test-password";
@@ -281,7 +281,7 @@ public final class ServerIntegrationTest {
     }
 
     private static void multiSessionWorkflow(Path sourceJar, Path directory) throws Exception {
-        Files.createDirectories(directory); Path jar = directory.resolve("tortodrone.jar"); Files.copy(sourceJar, jar);
+        Files.createDirectories(directory); Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
         seed(jar,directory);
         accountCommand(jar, directory, "--create-account", "Alice", "alice-password\nalice-password\n", true, "Account created.");
         accountCommand(jar, directory, "--create-account", "Bob", "bob-password\nbob-password\n", true, "Account created.");

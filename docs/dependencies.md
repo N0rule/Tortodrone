@@ -29,9 +29,9 @@ JLine uses the BSD 3-Clause license, included in each JAR as `licenses/jline.txt
 `scripts/fetch-jline.sh` verifies and caches the pinned artifact. CLI automation
 with redirected stdin uses plain input and does not require a native terminal.
 
-## Haven Town Square layout
+## External town layouts
 
-Both JARs currently package the original compressed scene 1 export from
+The external default map preparation downloads original compressed scene exports from
 [reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive).
 The layout references client resources; it does not include game meshes, textures
 or audio. The archive's static index identifies it as Haven Town Square.
@@ -40,14 +40,17 @@ or audio. The archive's static index identifies it as Haven Town Square.
 - Path: `Master/Static/1`
 - Scene revision: `1702968117`
 - SHA-256: `045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f`
-- Fetch/cache: `scripts/fetch-town-square.sh`, `build/deps/town-square.dat`
-- Packaged resource: `/scenes/town-square.dat`
+- Bazaar: `Master/Static/2`, revision `1661137235`
+- Bazaar SHA-256: `e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033`
+- Fetch/cache: `scripts/prepare-maps.sh`, `build/deps/`
+- Runtime: `build/maps/{haven,bazaar}/scene.dat`; neither JAR contains maps
 
 The archive provides no repository license file at the pinned revision. The
 layout is attributed here; no additional licensing claim is made for it.
-`town-walkability.gz` is a server collision mask derived from that scene using
+The default collision masks are derived from their respective scenes using
 read-only installed client configurations: default PC circle radius 1/3 and
 collision mask 43, samples spaced 0.25 units over x=[-35,34.75], y=[-32,43.75].
-The optional `scripts/compat/TownCollisionExport.java` records the derivation.
-Update the scene pin, checksum, collision mask and compatibility fixtures together
-when changing this layout.
+The Haven-specific historical `TownCollisionExport.java` records its derivation;
+the reusable `ScenePackExport.java` derives new packs (Bazaar uses it). Each map
+descriptor records both geometry and collision digests. Update them and compatibility
+fixtures together. [Map preparation](maps.md) describes importing original archives.

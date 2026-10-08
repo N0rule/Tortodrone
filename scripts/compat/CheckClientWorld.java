@@ -23,6 +23,13 @@ public final class CheckClientWorld {
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
             for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
+            Path maps=project.resolve("build/maps");
+            try(var paths=Files.walk(maps)) {
+                for(var path:paths.toList()) {
+                    Path target=scratch.resolve("maps").resolve(maps.relativize(path));
+                    if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
+                }
+            }
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
@@ -54,6 +61,29 @@ public final class CheckClientWorld {
             network.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString()));
             try { run(network, "network", "", 60); }
             catch (Exception failure) { System.err.println(tail(serverLog)); throw failure; }
+            server.destroy();
+            if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
+            Path descriptor = scratch.resolve("maps/haven/map.properties");
+            var properties = new Properties();
+            try (var in = Files.newInputStream(descriptor)) { properties.load(in); }
+            properties.setProperty("instances", "2");
+            try (var out = Files.newOutputStream(descriptor)) { properties.store(out, "Disposable instance check"); }
+            Path isolatedLog = scratch.resolve("isolated-server.log");
+            Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), isolatedLog);
+            isolated.getOutputStream().close();
+            port = null;
+            deadline = System.nanoTime() + Duration.ofSeconds(15).toNanos();
+            while (System.nanoTime() < deadline) {
+                var match = Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)").matcher(Files.readString(isolatedLog));
+                if (match.find()) { port = match.group(1); break; }
+                if (!isolated.isAlive()) throw new IOException("Temporary instance server failed:\n" + tail(isolatedLog));
+                Thread.sleep(50);
+            }
+            if (port == null) throw new IOException("Temporary instance server readiness timeout");
+            List<String> instanceCheck = new ArrayList<>(base);
+            instanceCheck.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString(), "isolated"));
+            try { run(instanceCheck, "instances", "", 60); }
+            catch (Exception failure) { System.err.println(tail(isolatedLog)); throw failure; }
         } finally {
             stopChildren();
             Runtime.getRuntime().removeShutdownHook(cleanup);

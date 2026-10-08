@@ -20,7 +20,7 @@ public final class AdminIntegrationTest {
         ExecutorService worker = Executors.newSingleThreadExecutor();
         try {
             Path server = directory.resolve("tortodrone.jar"), admin = directory.resolve("tortodrone-admin.jar");
-            Files.copy(Path.of(args[0]),server); Files.copy(Path.of(args[1]),admin);
+            org.tortodrone.support.TestDeployment.copyServer(Path.of(args[0]),server); Files.copy(Path.of(args[1]),admin);
             command(admin,directory,"",true,"Tortodrone Admin", "--version"); check(!Files.exists(directory.resolve("data")),"version command creates no runtime state");
             command(admin,directory,"",true,"ID\tUsername", "--list-accounts");
             command(admin,directory,"owner-password\nowner-password\n",true,"Account created.","--create-account","Owner","--admin");

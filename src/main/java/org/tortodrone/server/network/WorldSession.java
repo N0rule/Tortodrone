@@ -19,7 +19,9 @@ final class WorldSession implements AutoCloseable {
     private final int oid;
     private final long authRevision;
     private final SessionLog log;
-    private final TownMovement movement = new TownMovement();
+    private final SceneRegistry scenes;
+    private SceneRegistry.Instance scene;
+    private TownMovement movement;
     private Map<Integer, ActorState> lastSnapshot = Map.of();
     private Knight knight;
     private WorldProfile profile;
@@ -32,7 +34,12 @@ final class WorldSession implements AutoCloseable {
     private ScheduledExecutorService ticks;
 
     WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
-            SessionCodec codec, int oid, long revision, SessionLog log) {
+            SessionCodec codec, int oid, long revision, SessionLog log) throws IOException {
+        this(socket,characters,output,codec,oid,revision,log,SceneRegistry.system());
+    }
+
+    WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
+            SessionCodec codec, int oid, long revision, SessionLog log, SceneRegistry scenes) {
         this.socket = socket;
         this.characters = characters;
         this.output = output;
@@ -40,11 +47,12 @@ final class WorldSession implements AutoCloseable {
         this.oid = oid;
         authRevision = revision;
         this.log = log;
+        this.scenes = scenes;
         lastPoll = monotonicTime();
     }
 
     synchronized boolean selected() { return knight != null; }
-    synchronized boolean ownsScene() { return selected(); }
+    synchronized boolean ownsScene(int oid) { return selected() && scene.oid()==oid; }
 
     static boolean active(int accountId, int knightId) {
         synchronized (ACTIVE) {
@@ -56,7 +64,6 @@ final class WorldSession implements AutoCloseable {
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
-        TownSquare.model();
         // Picker edits/deletes use this same account lock around their online check and save.
         synchronized (characters) {
             var loaded = characters.worldProfile(name, authRevision);
@@ -66,29 +73,31 @@ final class WorldSession implements AutoCloseable {
                 if (ACTIVE.containsKey(loaded.worldId())) throw new IOException("This knight is already online");
                 profile = loaded;
                 knight = choice;
+                scene = scenes.destination(scenes.catalog().entry().id(),loaded.worldId());
+                movement = new TownMovement(scene.map().collision(),scene.map().spawnX(),scene.map().spawnY());
                 ACTIVE.put(loaded.worldId(), this);
             }
         }
-        created = TownSquare.clock();
+        created = SceneClock.now();
         movement.resetInput(created);
         output.send(() -> codec.selected(oid, knight, profile));
         receiverChanged(receivers);
-        log.info("Character selected; world ID=" + profile.worldId() + "; Town Square");
+        log.info("Character selected; world ID=" + profile.worldId() + "; scene=" + scene.map().id() + "; instance="+scene.index());
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */
     synchronized void refresh() throws IOException {
         if (selected()) {
             output.send(() -> codec.selected(oid, knight, profile));
-            if (subscribed) output.send(() -> codec.townLocation(oid));
+            if (subscribed) output.send(() -> codec.sceneLocation(oid,scene));
         }
     }
 
     synchronized void receiverChanged(Map<String, Short> receivers) throws IOException {
-        Short receiver = receivers.get(TownSquare.ZONE_RECEIVER);
+        Short receiver = receivers.get(SceneRegistry.ZONE_RECEIVER);
         if (receiver == null) forcedReceiver = null;
         if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
-            output.send(() -> codec.forceTown(oid, receiver));
+            output.send(() -> codec.forceScene(oid, receiver,scene));
             forcedReceiver = receiver;
         }
     }
@@ -137,17 +146,28 @@ final class WorldSession implements AutoCloseable {
         if (!selected()) failure = "Select a knight first";
         else if (!(args.get(0) instanceof Integer target) || !(args.get(1) instanceof Integer)) {
             failure = "Invalid scene move request";
-        } else if (zone ? target != TownSquare.ZONE_ID || !(args.get(2) instanceof Integer)
-                || !args.get(1).equals(TownSquare.SCENE_ID) : target != TownSquare.SCENE_ID) {
-            failure = "Only Town Square is available";
         }
         if (failure != null) {
             String reason = failure;
             output.send(() -> codec.invocationFailure(oid, listener.requestId(), reason));
             return;
         }
-        output.send(() -> codec.sceneMove(oid, listener.requestId(), zone));
-        output.send(() -> codec.townLocation(oid));
+        try {
+            int target=zone?(Integer)args.get(1):(Integer)args.get(0);
+            var next=scenes.destination(target,profile.worldId());
+            if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(next.map().zone())))
+                throw new IOException("Scene does not belong to that zone");
+            if(next!=scene) {
+                subscribed=entered=false;sceneGeneration++;occupants=Set.of();lastSnapshot=Map.of();
+                reference=acknowledge=0;scene=next;created=SceneClock.now();
+                movement=new TownMovement(scene.map().collision(),scene.map().spawnX(),scene.map().spawnY());
+                movement.resetInput(created);
+            }
+            output.send(() -> codec.sceneMove(oid, listener.requestId(), zone,scene,scenes.catalog()));
+            output.send(() -> codec.sceneLocation(oid,scene));
+        } catch(IOException error) {
+            output.send(() -> codec.invocationFailure(oid,listener.requestId(),error.getMessage()));
+        }
     }
 
     private void equip(List<Object> args) throws IOException {
@@ -175,16 +195,19 @@ final class WorldSession implements AutoCloseable {
 
     void subscribe(short message) throws IOException {
         if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
-        var snapshot = actors();
+        SceneRegistry.Instance place;
+        synchronized(this){place=scene;}
+        var snapshot = actors(place);
         synchronized (this) {
-            output.send(() -> codec.scene(message, snapshot));
+            if(scene!=place||closed)throw new IOException("Scene changed during subscription");
+            output.send(() -> codec.scene(message, scene, snapshot));
             lastSnapshot = Map.of();
             reference = acknowledge = 0;
             occupants = snapshot.stream().map(ActorState::id).collect(Collectors.toUnmodifiableSet());
             subscribed = true;
             entered = false;
             sceneGeneration++;
-            movement.resetInput(TownSquare.clock());
+            movement.resetInput(SceneClock.now());
         }
     }
 
@@ -193,7 +216,7 @@ final class WorldSession implements AutoCloseable {
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
-        lastStamp = TownSquare.clock();
+        lastStamp = SceneClock.now();
         if (ticks == null) {
             ticks = Executors.newSingleThreadScheduledExecutor(r -> {
                 var thread = new Thread(r, "Town-" + oid);
@@ -207,13 +230,13 @@ final class WorldSession implements AutoCloseable {
     synchronized void unsubscribe() { subscribed = entered = false; sceneGeneration++; }
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
-        if (!subscribed || !entered || input.oid() != TownSquare.SCENE_OID) {
+        if (!subscribed || !entered || input.oid() != scene.oid()) {
             throw new SessionDecoder.Rejected("Unauthorized movement input");
         }
         // TCP delivers every queued snapshot in order, even while scene loading delays input.
         // Client acknowledgements are for unreliable transport; they do not choose our baseline.
         long now = monotonicTime();
-        int sceneTime = TownSquare.clock();
+        int sceneTime = SceneClock.now();
         ping = (short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime()));
         for (var frame : input.frames()) {
             if (movement.accept(frame.timestamp(), frame.rotation(), frame.direction(),
@@ -224,13 +247,15 @@ final class WorldSession implements AutoCloseable {
     private void tick() {
         try {
             int stamp, generation;
+            SceneRegistry.Instance place;
             synchronized (this) {
                 if (closed || !subscribed || !entered) return;
-                stamp = TownSquare.clock();
+                stamp = SceneClock.now();
                 // Fixed-rate catch-up can run twice in the same millisecond. The stock reader
                 // discards repeated timestamps, so never reference such a discarded snapshot.
                 if (stamp - lastStamp <= 0) return;
                 generation = sceneGeneration;
+                place = scene;
                 long now = monotonicTime();
                 movement.advance(stamp, now);
                 if (now - lastPoll >= 250) {
@@ -249,7 +274,7 @@ final class WorldSession implements AutoCloseable {
                 }
             }
             // Never take another session's lock while holding this session or the ACTIVE lock.
-            List<ActorState> current = actors();
+            List<ActorState> current = actors(place);
             synchronized (this) {
                 if (closed || !subscribed || !entered || generation != sceneGeneration) return;
                 Map<Integer, ActorState> baseline = lastSnapshot;
@@ -262,12 +287,12 @@ final class WorldSession implements AutoCloseable {
                 }
                 int[] removed = baseline.keySet().stream().filter(id -> !next.contains(id)).mapToInt(Integer::intValue).toArray();
                 if (!next.equals(occupants)) {
-                    output.send(() -> codec.occupants(current));
+                    output.send(() -> codec.occupants(scene.oid(),current));
                     occupants = Set.copyOf(next);
                 }
                 Map<Integer, ActorState> referenceActors = baseline;
                 short elapsed = (short) Math.max(1, Math.min(Short.MAX_VALUE, stamp - lastStamp));
-                output.send(() -> codec.sceneDelta(oid, acknowledge, ping, reference, stamp, elapsed,
+                output.send(() -> codec.sceneDelta(oid, scene.oid(),acknowledge, ping, reference, stamp, elapsed,
                     added, updated, removed, referenceActors));
                 lastStamp = stamp;
                 // Advance only after enqueue succeeds. SessionOutput closes on any failure,
@@ -284,19 +309,19 @@ final class WorldSession implements AutoCloseable {
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
 
-    private static List<ActorState> actors() {
+    private static List<ActorState> actors(SceneRegistry.Instance place) {
         List<WorldSession> sessions;
         synchronized (ACTIVE) { sessions = List.copyOf(ACTIVE.values()); }
         List<ActorState> states = new ArrayList<>();
         for (var session : sessions) {
-            var state = session.actor();
+            var state = session.actor(place);
             if (state != null) states.add(state);
         }
         return List.copyOf(states);
     }
 
-    private synchronized ActorState actor() {
-        if (closed || !selected()) return null;
+    private synchronized ActorState actor(SceneRegistry.Instance place) {
+        if (closed || !selected() || scene!=place) return null;
         var model = StarterCatalog.equipped(knight, profile);
         var config = new StarterCatalog.Model("Character/PC/Default",
             Map.of("Model", model, "Height", model.arguments().get("Height")));

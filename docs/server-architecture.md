@@ -2,7 +2,7 @@
 
 One Java 17 server process, one TCP listener and a local SQLite database. A separate
 Swing/CLI admin JAR shares the database on the same PC. Both JARs bundle SQLite
-JDBC, JLine and the town layout. No upstream game server code or installed client
+JDBC and JLine. Maps are external validated packs. No upstream game server code or installed client
 classes are compiled into Tortodrone. See [dependency provenance](dependencies.md).
 
 ## Code map
@@ -18,7 +18,7 @@ All packages are under `src/main/java/org/tortodrone/`.
 | `account` | `AccountStore`, `Passwords`: identity, roles, authentication/revocation |
 | `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `Currency`: world state/catalog |
 | `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state; `AtomicProperties`: legacy storage |
-| `world` | `TownSquare`: scene; `TownTerrain`: collision; `TownMovement`, `ActorState`: simulation/replication |
+| `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
 | `admin`, `config` | `AdminApplication`/`AdminWindow`: local tools; `ServerSettings`: settings |
 
 ## Runtime and storage
@@ -99,7 +99,9 @@ Selection loads owned appearance/items/equipment/balances and acquires one contr
 per global knight ID. Creation selects automatically when the scene receiver is
 registered. A roster-only fixture can save without entering the world.
 
-Zone 1/scene 1 supplies the pinned town layout and scene object 10. Scene
+The external catalog supplies town templates; the registry assigns each instance
+a distinct scene object ID. Scene travel resets membership/input/baselines and
+uses the original zone callback with each summary's neighbor arrays. Scene
 subscriptions publish occupants and service handles; updates start only after
 `enteredPlace`, when the stock controller has attached its delta listener.
 `WorldSession` ticks at 20 Hz with elapsed scene time, bounded future input and

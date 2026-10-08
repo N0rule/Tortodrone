@@ -19,7 +19,7 @@ public final class ConsoleIntegrationTest {
         Path directory = Files.createTempDirectory("tortodrone-console-");
         ExecutorService worker = Executors.newSingleThreadExecutor();
         try {
-            Path jar = directory.resolve("tortodrone.jar"); Files.copy(Path.of(args[0]),jar);
+            Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(Path.of(args[0]),jar);
             Path config = directory.resolve("data/server.properties"); Files.createDirectories(config.getParent());
             Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
             try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {

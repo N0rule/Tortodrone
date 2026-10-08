@@ -75,7 +75,7 @@ final class ClientSession {
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
-                            } else if(request.objectId()==org.tortodrone.world.TownSquare.SCENE_OID && world.ownsScene()) {
+                            } else if(world.ownsScene(request.objectId())) {
                                 world.subscribe(request.messageId());
                             } else {
                                 output.send(() -> outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
@@ -86,7 +86,7 @@ final class ClientSession {
                             if (request.objectId() == clientOid && subscription != null) {
                                 subscription.close(); subscription = null;
                             }
-                            if(request.objectId()==org.tortodrone.world.TownSquare.SCENE_OID)world.unsubscribe();
+                            if(world.ownsScene(request.objectId()))world.unsubscribe();
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -146,7 +146,7 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
-            if (invocation.oid()==org.tortodrone.world.TownSquare.SCENE_OID && world.ownsScene() && invocation.service()>=6 && invocation.service()<=11) {
+            if (world.ownsScene(invocation.oid()) && invocation.service()>=6 && invocation.service()<=11) {
                 if (invocation.service() == 10 && invocation.method() == 1 && invocation.arguments().isEmpty()) {
                     world.entered();
                     return;
@@ -193,7 +193,7 @@ final class ClientSession {
             } else if (characters.roster().stream().noneMatch(knight -> knight.name().equalsIgnoreCase(name))) {
                 failure = "No such knight";
             } else {
-                if(!receivers.containsKey(org.tortodrone.world.TownSquare.ZONE_RECEIVER))failure="World entry requires a scene receiver";
+                if(!receivers.containsKey(org.tortodrone.world.SceneRegistry.ZONE_RECEIVER))failure="World entry requires a scene receiver";
                 else try { world.select(name,receivers); }
                 catch(CharacterStore.Refused|IOException refused){failure=refused.getMessage();}
             }
@@ -254,7 +254,7 @@ final class ClientSession {
                     }
                     log.info("Character saved; available knights=" + characters.roster().size());
                     // The stock creator waits for selection and scene events after success.
-                    if(characters.hasWorldStorage() && receivers.containsKey(org.tortodrone.world.TownSquare.ZONE_RECEIVER)) {
+                    if(characters.hasWorldStorage() && receivers.containsKey(org.tortodrone.world.SceneRegistry.ZONE_RECEIVER)) {
                         try { world.select((String)args.get(1),receivers); }
                         catch(CharacterStore.Refused|IOException refused){failure=refused.getMessage();}
                     } else failure = args.get(0) == null ? SAVED_WITHOUT_WORLD : UPDATED_WITHOUT_WORLD;

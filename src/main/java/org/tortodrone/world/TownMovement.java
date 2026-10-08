@@ -12,10 +12,20 @@ public final class TownMovement {
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
-    private float x, y = -8, rotation, direction;
+    private final CollisionMap terrain;
+    private float x, y, rotation, direction;
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
+
+    public TownMovement() {
+        this(SceneRegistry.defaultEntry().map().collision(),SceneRegistry.defaultEntry().map().spawnX(),
+            SceneRegistry.defaultEntry().map().spawnY());
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY) {
+        if(!terrain.walkable(spawnX,spawnY))throw new IllegalArgumentException("Invalid scene spawn");
+        this.terrain=terrain;x=spawnX;y=spawnY;
+    }
 
     /** Clear input on scene entry/re-entry without moving the character. */
     public void resetInput(int sceneTime) {
@@ -79,9 +89,9 @@ public final class TownMovement {
             float distance = SPEED * step / 1000f;
             float nx = x + (float) Math.cos(direction) * distance;
             float ny = y + (float) Math.sin(direction) * distance;
-            if (TownTerrain.walkable(nx, ny)) { x = nx; y = ny; }
-            else if (TownTerrain.walkable(nx, y)) x = nx;
-            else if (TownTerrain.walkable(x, ny)) y = ny;
+            if (terrain.walkable(nx, ny)) { x = nx; y = ny; }
+            else if (terrain.walkable(nx, y)) x = nx;
+            else if (terrain.walkable(x, ny)) y = ny;
         }
     }
 

@@ -81,6 +81,9 @@ public final class Server {
     }
 
     private static void run(ServerSettings settings, Path dataDirectory, ServerLog log) throws Exception {
+        log.info("Loading external scene catalog");
+        var scenes=org.tortodrone.world.SceneRegistry.system();
+        log.info("Prepared maps: "+scenes.catalog().scenes().size());
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");
@@ -94,9 +97,6 @@ public final class Server {
                 log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
                     + ":" + listener.getLocalPort());
                 log.debug("Public key: " + keys.resolve("public.txt"));
-                log.info("Preparing Haven Town Square");
-                org.tortodrone.world.TownSquare.model();
-                if (!org.tortodrone.world.TownTerrain.walkable(0,-8)) throw new IOException("Invalid Town Square spawn");
                 log.info("Normal login, town movement and starter inventory available.");
                 accept(listener, key, log, accounts);
             }

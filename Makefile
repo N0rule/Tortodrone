@@ -3,7 +3,6 @@ TEST_CLASSES := build/.build/test-classes
 PACKAGE := build/.build/package
 SQLITE := build/deps/sqlite-jdbc-3.53.4.0.jar
 JLINE := build/deps/jline-4.4.7-jdk11.jar
-TOWN_SCENE := build/deps/town-square.dat
 SERVER_JAR := build/tortodrone.jar
 ADMIN_JAR := build/tortodrone-admin.jar
 SOURCES := $(sort $(shell find src/main/java -name '*.java'))
@@ -12,9 +11,9 @@ TEST_SOURCES := $(sort $(shell find src/test/java -name '*.java'))
 UNIT_TEST_SOURCES := $(filter-out src/test/java/org/tortodrone/integration/%, $(filter %Test.java,$(TEST_SOURCES)))
 UNIT_TESTS := $(subst /,.,$(patsubst src/test/java/%.java,%,$(UNIT_TEST_SOURCES)))
 
-.PHONY: build build-server build-admin run server admin test test-unit test-integration test-compile clean
+.PHONY: build build-server build-admin maps run server admin test test-unit test-integration test-compile clean
 build: build-server build-admin
-build-server: $(SERVER_JAR)
+build-server: maps $(SERVER_JAR)
 build-admin: $(ADMIN_JAR)
 
 $(SQLITE): scripts/fetch-sqlite.sh
@@ -23,18 +22,16 @@ $(SQLITE): scripts/fetch-sqlite.sh
 $(JLINE): scripts/fetch-jline.sh
 	sh scripts/fetch-jline.sh $@
 
-$(TOWN_SCENE): scripts/fetch-town-square.sh
-	sh scripts/fetch-town-square.sh $@
+maps:
+	sh scripts/prepare-maps.sh
 
-build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE) $(JLINE) $(TOWN_SCENE)
+build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE) $(JLINE)
 	rm -rf $(CLASSES) $(PACKAGE)
 	mkdir -p $(CLASSES) $(PACKAGE)
 	javac --release 17 -cp $(JLINE) -d $(CLASSES) $(SOURCES)
 	cp VERSION $(CLASSES)/version.txt
 	cp -R $(CLASSES)/. $(PACKAGE)/
 	cp -R src/main/resources/. $(PACKAGE)/
-	mkdir -p $(PACKAGE)/scenes
-	cp $(TOWN_SCENE) $(PACKAGE)/scenes/town-square.dat
 	cd $(PACKAGE) && jar --extract --file ../../deps/sqlite-jdbc-3.53.4.0.jar
 	cd $(PACKAGE) && jar --extract --file ../../deps/jline-4.4.7-jdk11.jar
 	rm -f $(PACKAGE)/META-INF/MANIFEST.MF $(PACKAGE)/module-info.class

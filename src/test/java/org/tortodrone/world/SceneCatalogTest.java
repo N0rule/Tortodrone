@@ -1,0 +1,57 @@
+package org.tortodrone.world;
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.jar.JarFile;
+import org.tortodrone.server.Server;
+import static org.tortodrone.support.TestWire.check;
+
+public final class SceneCatalogTest {
+    public static void main(String[] args)throws Exception {
+        Path home=Files.createTempDirectory("tortodrone-map-catalog-");
+        try {
+            Path maps=home.resolve("maps");
+            refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("build/maps"),maps);
+            var catalog=SceneCatalog.load(maps);
+            check(catalog.scenes().size()==2 && catalog.entry().id()==1,"external Haven and Bazaar load without installed game");
+            check(catalog.scene(2).collision().walkable(catalog.scene(2).spawnX(),catalog.scene(2).spawnY()),"verified Bazaar spawn");
+            byte[] layout=catalog.scene(1).layout();layout[0]=0;
+            check(catalog.scene(1).layout()[0]==(byte)0xfa,"layout snapshots are immutable");
+            Path manifest=maps.resolve("haven/map.properties");
+            change(manifest,"instances","2");
+            var registry=new SceneRegistry(SceneCatalog.load(maps));
+            var first=registry.instance(1,0);var second=registry.instance(1,1);
+            check(first.oid()!=second.oid()&&first.map()==second.map()&&registry.entry()==first,"instances share immutable template but have distinct object identities");
+            check(registry.destination(1,1)==second && registry.destination(1,2)==first,"server assignment is stable");
+            refuse(()->registry.instance(1,2));refuse(()->registry.instance(999,0));
+            change(manifest,"spawn-x","NaN");refuse(()->SceneCatalog.load(maps));
+            change(manifest,"spawn-x","0");change(manifest,"spawn-y","9999");refuse(()->SceneCatalog.load(maps));
+            change(manifest,"spawn-y","-8");change(manifest,"scene-sha256","0".repeat(64));refuse(()->SceneCatalog.load(maps));
+            change(manifest,"scene-sha256",HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(catalog.entry().layout())));
+            change(maps.resolve("bazaar/map.properties"),"scene-id","1");refuse(()->SceneCatalog.load(maps));
+            change(maps.resolve("bazaar/map.properties"),"scene-id","2");
+            change(maps.resolve("bazaar/map.properties"),"zone-name","Other");refuse(()->SceneCatalog.load(maps));
+            change(maps.resolve("bazaar/map.properties"),"zone-name",catalog.scene(2).zoneName());
+            change(maps.resolve("bazaar/map.properties"),"kind","dungeon");refuse(()->SceneCatalog.load(maps));
+            Path jar=Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+            try(var archive=new JarFile(jar.toFile())) {
+                check(archive.getEntry("scenes/town-square.dat")==null&&archive.getEntry("town-walkability.gz")==null,
+                    "runtime map geometry/collision are outside the JAR");
+            }
+            System.out.println("PASS: external map catalog, distinct scene instances, immutable templates, checksums, spawn/bounds and unsupported scene validation");
+        }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
+    }
+    private static void copy(Path source,Path target)throws IOException {
+        try(var paths=Files.walk(source)){for(var p:paths.toList()){
+            Path out=target.resolve(source.relativize(p));if(Files.isDirectory(p))Files.createDirectories(out);else Files.copy(p,out);
+        }}
+    }
+    private static void change(Path file,String key,String value)throws IOException {
+        var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}p.setProperty(key,value);
+        try(var out=Files.newOutputStream(file)){p.store(out,"test");}
+    }
+    private static void refuse(Action action)throws Exception {try{action.run();throw new AssertionError("Invalid map accepted");}catch(IOException expected){}}
+    @FunctionalInterface private interface Action{void run()throws Exception;}
+}

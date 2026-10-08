@@ -6,8 +6,8 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.7.2**, SQLite schema **4**: normal login; saved character creation,
-editing, deletion and selection; direct Haven Town Square entry; movement, mouse
+Version **0.8.0**, SQLite schema **4**: normal login; saved character creation,
+editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items with persistent binding and Arsenal equip/unequip; per-character crowns and
 energy with local administration.
@@ -24,7 +24,8 @@ limits; [investigation](docs/town-entry-investigation.md) explains the fixes.
 
 Install Git, GNU Make, JDK 17+, `curl` and `sha256sum`. No Maven, Gradle, game
 installation or database service is required. The first build downloads pinned,
-checksum-verified libraries and the town layout; later builds use `build/deps/`.
+checksum-verified libraries and scene exports; later builds use `build/deps/`.
+`make maps` prepares external packs without starting the server; see [maps](docs/maps.md).
 
 ```sh
 make build
@@ -43,7 +44,8 @@ Wait for `Done! Listening`. Stop with `stop` in its terminal or Ctrl+C.
 `make build` starts neither. Both JARs report their version with `--version`.
 
 Both JARs use `data/` beside themselves, regardless of the working directory.
-For deployment, keep them together and preserve that directory across upgrades.
+For deployment, keep them together, copy `build/maps/` beside the server JAR,
+and preserve `data/` and edited map packs across upgrades.
 The manager can use another deployment with `--data /path/to/server/data`.
 It runs locally and opens no administration port.
 
@@ -83,7 +85,7 @@ account rules and migrations.
 
 To back up, stop the server and close the manager, then copy the entire `data/`
 directory, including database and keys. A live SQLite database may have changes
-in its WAL. Replace both JARs while stopped and retain `data/`. Version 0.7.2
+in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`. Version 0.7.2
 adds persistent item binding in schema 4; stop the old server before opening the
 new release. Do not downgrade an upgraded database.
 

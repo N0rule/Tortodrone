@@ -31,7 +31,7 @@ Installed-client fixtures check `Cs()` and use the actual Arsenal method on both
 creation and reconnect. Graphical Arsenal behavior is not independently reaccepted
 in this milestone; protocol and stock-client decision fields are tested.
 
-## 2. Scenes: researched, implementation next
+## 2. External scenes (0.8.0)
 
 The [pinned archive index](https://github.com/reference-source/SpiralKnightsSceneArchive/blob/ae49faf06788dd83b35a959306c9fe4c25688004/Master/Static/README.md)
 identifies Town Square as scene 1, Bazaar as 2 and Arcade as 3. Original compressed
@@ -40,10 +40,18 @@ NPC, mission, combat or portal rules. Static templates and runtime instance/obje
 IDs must be separate. Reuse Vilya zone callbacks and Clyde scene readiness/TCP
 baseline rules from [resource research](server-research.md).
 
-The practical preparation path should fetch pinned, checked archive exports before
-startup and derive collision using read-only installed configurations when needed.
-Do not hand-create layouts or silently allow unchecked collision. Keep runtime
-maps external to JARs and fail clearly for missing/corrupt prepared packs.
+`make maps` fetches checked exports before startup; the Java scene importer derives
+collision using unchanged installed configurations. Runtime packs are external
+and validated. Templates share immutable data; instances have distinct object IDs,
+occupants and readiness/baselines. Only verified town kinds are accepted initially.
+Vilya's `ZoneService.moveTo(zoneId,sceneId,version,listener)` treats its third integer
+as a cache version. Instance assignment belongs to the server. The stock reader
+also requires neighbor/neighbor-direction arrays on **every** SceneSummary.
+
+See [map format and preparation](maps.md). Network fixtures exercise Town Square →
+Bazaar → Town Square and two Haven instances; graphical Bazaar/portal acceptance
+is not claimed. Config warnings from older archive references do not establish NPC
+behavior. Positions reset to each pack's validated spawn on travel/reconnect.
 
 ## 3–6. Remaining research boundaries
 

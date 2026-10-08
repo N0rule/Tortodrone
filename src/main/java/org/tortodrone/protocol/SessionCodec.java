@@ -9,9 +9,10 @@ import java.util.Map;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.character.WorldProfile;
-import org.tortodrone.world.TownSquare;
 import org.tortodrone.world.TownMovement;
 import org.tortodrone.world.ActorState;
+import org.tortodrone.world.SceneRegistry;
+import org.tortodrone.world.SceneCatalog;
 
 /** Downstream session messages after the secure and authentication responses. */
 public final class SessionCodec {
@@ -310,58 +311,77 @@ public final class SessionCodec {
     }
 
     public byte[] forceTown(int oid,short receiver) throws IOException {
+        return forceScene(oid,receiver,SceneRegistry.system().entry());
+    }
+    public byte[] forceScene(int oid,short receiver,SceneRegistry.Instance scene) throws IOException {
         return frame(out -> { eventHeader(out,"InvocationNotificationEvent",oid);out.writeShort(receiver);out.writeByte(1);
-            out.writeBoolean(true);out.writeInt(2);value(out,TownSquare.ZONE_ID);value(out,TownSquare.SCENE_ID); });
+            out.writeBoolean(true);out.writeInt(2);value(out,scene.map().zone());value(out,scene.map().id()); });
     }
 
     public byte[] sceneMove(int oid,short request,boolean zone) throws IOException {
-        byte[] model=TownSquare.model();
+        var registry=SceneRegistry.system();
+        return sceneMove(oid,request,zone,registry.entry(),registry.catalog());
+    }
+    public byte[] sceneMove(int oid,short request,boolean zone,SceneRegistry.Instance scene,SceneCatalog catalog) throws IOException {
+        byte[] model=scene.map().layout();
         return frame(out -> {
             eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(3);
-            out.writeBoolean(true);out.writeInt(zone ? 4 : 3);value(out,TownSquare.SCENE_OID);
-            type(out,"com.threerings.projectx.town.data.TownSceneConfig");string(out,"haven.jpg");
+            out.writeBoolean(true);out.writeInt(zone ? 4 : 3);value(out,scene.oid());
+            type(out,"com.threerings.projectx.town.data.TownSceneConfig");string(out,scene.map().image());
             if(zone) {
-                type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(TownSquare.ZONE_ID);name(out,"Haven");
-                type(out,"[Lcom.threerings.whirled.zone.data.SceneSummary;");out.writeInt(1);
-                type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(TownSquare.SCENE_ID);string(out,"%town:m.haven_town_square");
-                emptyCollection(out);emptyCollection(out);
+                type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(scene.map().zone());name(out,scene.map().zoneName());
+                var summaries=catalog.scenes().stream().filter(s->s.zone()==scene.map().zone()).toList();
+                type(out,"[Lcom.threerings.whirled.zone.data.SceneSummary;");out.writeInt(summaries.size());
+                for(var summary:summaries){
+                    type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(summary.id());string(out,summary.name());
+                    emptyCollection(out);emptyCollection(out);
+                }
             }
             type(out,"com.threerings.tudey.data.TudeySceneModel");out.writeInt(model.length);out.write(model);
         });
     }
 
     public byte[] townLocation(int oid) throws IOException {
+        return sceneLocation(oid,SceneRegistry.system().entry());
+    }
+    public byte[] sceneLocation(int oid,SceneRegistry.Instance scene) throws IOException {
         return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);
-            attribute(out,oid,"lastTownSceneId",o->value(o,1));attribute(out,oid,"zoneId",o->value(o,TownSquare.ZONE_ID));
-            attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(TownSquare.SCENE_OID);o.writeInt(TownSquare.SCENE_ID);}); });
+            attribute(out,oid,"lastTownSceneId",o->value(o,scene.map().id()));attribute(out,oid,"zoneId",o->value(o,scene.map().zone()));
+            attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(scene.oid());o.writeInt(scene.map().id());}); });
     }
 
     public byte[] scene(short id,List<ActorState> actors) throws IOException {
+        return scene(id,SceneRegistry.system().entry(),actors);
+    }
+    public byte[] scene(short id,SceneRegistry.Instance scene,List<ActorState> actors) throws IOException {
         return frame(out -> {
-            objectHeader(out,id,"com.threerings.projectx.town.data.TownSceneObject",TownSquare.SCENE_OID);
+            objectHeader(out,id,"com.threerings.projectx.town.data.TownSceneObject",scene.oid());
             type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(actors.size());for(var a:actors)out.writeInt(a.clientOid());out.writeInt(actors.size());
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(actors.size());for(var a:actors)occupant(out,a);
             out.writeShort(0); // no scene chat yet
-            type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(TownSquare.SCENE_OID);out.writeInt(10);
-            type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(TownSquare.SCENE_OID);out.writeInt(6);
+            type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(10);
+            type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(6);
             emptyDSet(out);
-            type(out,"com.threerings.projectx.town.data.TownSceneMarshaller");out.writeInt(TownSquare.SCENE_OID);out.writeInt(11);
+            type(out,"com.threerings.projectx.town.data.TownSceneMarshaller");out.writeInt(scene.oid());out.writeInt(11);
         });
     }
 
     /** Publish occupant metadata before adding their actors to the scene. */
     public byte[] occupants(List<ActorState> actors) throws IOException {
+        return occupants(SceneRegistry.system().entry().oid(),actors);
+    }
+    public byte[] occupants(int sceneOid,List<ActorState> actors) throws IOException {
         return frame(out -> {
-            eventHeader(out, "CompoundEvent", TownSquare.SCENE_OID);
+            eventHeader(out, "CompoundEvent", sceneOid);
             type(out, "com.threerings.util.StreamableArrayList");
             out.writeInt(2);
-            attribute(out, TownSquare.SCENE_OID, "occupants", o -> {
+            attribute(out, sceneOid, "occupants", o -> {
                 type(o, "com.threerings.presents.dobj.OidList");
                 o.writeBoolean(true); o.writeInt(actors.size());
                 for (var actor : actors) o.writeInt(actor.clientOid());
                 o.writeInt(actors.size());
             });
-            attribute(out, TownSquare.SCENE_OID, "occupantInfo", o -> {
+            attribute(out, sceneOid, "occupantInfo", o -> {
                 type(o, "com.threerings.presents.dobj.DSet"); o.writeInt(actors.size());
                 for (var actor : actors) occupant(o, actor);
             });
@@ -377,9 +397,13 @@ public final class SessionCodec {
     public byte[] sceneDelta(int oid, int acknowledge, short ping, int reference, int timestamp,
             short elapsed, List<ActorState> added, List<ActorState> updated, int[] removed,
             Map<Integer, ActorState> baseline) throws IOException {
+        return sceneDelta(oid,SceneRegistry.system().entry().oid(),acknowledge,ping,reference,timestamp,elapsed,added,updated,removed,baseline);
+    }
+    public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
+            short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline)throws IOException {
         return frame(out -> {
             type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
-            out.writeInt(TownSquare.SCENE_OID);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
+            out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
             if(added.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.data.actor.Actor;");out.writeInt(added.size());for(var a:added)actor(out,a);}
             if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()));}
             out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);out.writeShort(0);
@@ -417,9 +441,10 @@ public final class SessionCodec {
         out.writeShort(0);string(out,""); // no sprite perk; empty name is the stock current loadout.
     }
     private void townSummary(DataOutputStream out)throws IOException {
-        type(out,"com.threerings.projectx.town.data.TownSummary");string(out,"Haven");string(out,null);
+        var entry=SceneRegistry.system().entry().map();
+        type(out,"com.threerings.projectx.town.data.TownSummary");string(out,entry.zoneName());string(out,null);
         emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);string(out,null);
-        out.writeInt(0);out.writeInt(TownSquare.SCENE_ID);out.writeInt(1);
+        out.writeInt(0);out.writeInt(entry.id());out.writeInt(entry.zone());
     }
     private void occupant(DataOutputStream out,ActorState actor)throws IOException {
         type(out,"com.threerings.projectx.data.ProjectXOccupantInfo");out.writeBoolean(true);out.writeInt(actor.clientOid());name(out,actor.name());out.writeByte(0);out.writeInt(actor.id());
