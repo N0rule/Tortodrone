@@ -34,7 +34,7 @@ than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
 not the wildcard listening address. Credentials/raw packets/secrets are never logged.
 
-Schema 5 stores accounts, account-local rosters, globally identified world knights,
+Schema 6 stores accounts, account-local rosters, globally identified world knights,
 owned item instances, binding, equipped slots, per-knight balances and audit events.
 Connections enable foreign keys, WAL and a five-second busy timeout. Writes use
 `BEGIN IMMEDIATE` with commit/rollback; password hashing happens outside SQL
@@ -67,7 +67,11 @@ Knight methods: 3 validates a name, 4 selects, 5 creates/edits, 6 deletes. Save
 validates all fourteen fields and commits/publishes the roster before selection
 and success callbacks. Confirm listeners use method 1/null arguments for success,
 method 0/literal `~` reason for failure. Names are rechecked under the mutation
-lock. Online knights cannot be edited/deleted. Unsupported services fail explicitly;
+lock. Global canonical-name availability is checked against SQLite; the schema-6
+unique index arbitrates concurrent creation/renaming under the write transaction.
+Name conflicts become normal confirmation failures, with no roster publication or
+ID consumption. Migration refuses duplicate names and rolls back; it never renames
+or deletes saved characters. Online knights cannot be edited/deleted. Unsupported services fail explicitly;
 empty feed/news handles support initialization without inventing gameplay.
 
 Limits include 16 clients, 64 KiB upstream/1 MiB downstream frames, 256 incoming

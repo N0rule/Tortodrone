@@ -129,6 +129,13 @@ public class WorldConnectionCheck {
    Class<?> receiver=Class.forName("com.threerings.whirled.zone.a.f");
    Object receiverInstance=java.lang.reflect.Proxy.newProxyInstance(receiver.getClassLoader(),new Class[]{receiver},(proxy,method,values)->null);
    var decoder=Class.forName("com.threerings.whirled.zone.a.a").getConstructor(receiver).newInstance(receiverInstance);peer.xd().a((com.threerings.presents.client.w)decoder);
+   if(fresh) {
+    Reply taken=new Reply();((aU)peer.bU(aU.class)).f(new Name("TOWN-KNIGHT"),taken);waitFor(()->taken.done);
+    if(taken.reason==null||!taken.reason.contains("already in use"))throw new AssertionError("Cross-account name validation accepted");
+    Reply duplicate=new Reply();((aU)peer.bU(aU.class)).a(null,new Name("town-knight"),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,ProjectXCodes.KnightHeight.BASE,ProjectXCodes.EyeType.DEFAULT,null,List.of(),null,duplicate);waitFor(()->duplicate.done);
+    if(duplicate.reason==null||!duplicate.reason.contains("already in use")||player.knightId!=0)throw new AssertionError("Duplicate creation selected a knight");
+    System.out.println("PASS: stock picker validation and creation reject another account's name case-insensitively");
+   }
    Reply validation=new Reply();((aU)peer.bU(aU.class)).f(new Name("Peer-Knight"),validation);waitFor(()->validation.done);
    Reply select=new Reply();
    if(fresh)((aU)peer.bU(aU.class)).a(null,new Name("Peer-Knight"),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,ProjectXCodes.KnightHeight.BASE,ProjectXCodes.EyeType.DEFAULT,null,List.of(),null,select);

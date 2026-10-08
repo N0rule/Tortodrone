@@ -200,8 +200,9 @@ final class ClientSession {
         }
         String failure = null;
         if (invocation.method() == 3) {
-            failure = args.size() == 2 && args.get(0) instanceof String name
-                ? characters.nameFailure(name) : "Invalid name validation request";
+            try { failure = args.size() == 2 && args.get(0) instanceof String name
+                ? characters.nameFailure(name) : "Invalid name validation request"; }
+            catch(IOException unavailable){failure="Knight name could not be checked; try again";}
         } else if (invocation.method() == 4) {
             if (args.size() != 3 || !(args.get(0) instanceof String name) || !optionalString(args.get(1))) {
                 failure = "Invalid character selection request";

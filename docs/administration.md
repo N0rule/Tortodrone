@@ -62,7 +62,8 @@ rows are removed. Picker deletion still refuses online knights.
 - Usernames: 3–32 ASCII characters, a letter first, then letters/digits/underscore/
   hyphen; case insensitive. Passwords: 8–128 characters, resettable but not recoverable.
 - Three knight slots per account. Names: 3–16 letters with optional single hyphens,
-  unique within the account ignoring case. IDs are not recycled.
+  globally unique across all accounts ignoring case. Creation and renaming check
+  availability; simultaneous requests cannot claim the same name. IDs are not recycled.
 - Picker edits/deletion refuse online knights. Local deletion revokes the account.
   Reconnect to select another knight.
 - One connection per account. A successful new password login replaces the old
@@ -91,13 +92,17 @@ optional SQLite `-wal`/`-shm` files, `keys/private.pk8`, `keys/public.txt`,
 Stop the server and close the manager before copying the whole directory or upgrading.
 Keep both JARs on the same release; do not run an older release against upgraded state.
 
-Current schema is 5. Version 0.7.2 adds persistent item binding. All existing
+Current schema is 6. Version 0.7.2 adds persistent item binding. All existing
 starter items were originally granted equipped and remain bound after migration,
 including items now unequipped; their loadout, IDs and balances are preserved.
 Equipping applies the stored bind-on-equip rule; unequipping never clears binding.
 Version 0.10.0 preserves those rows in schema 5, marks the original starter items,
 allows additional instances of the same type, and adds item-grant audits. Preserve
-the external `items/` catalogue with the deployment. Schema 2 added
+the external `items/` catalogue with the deployment. Version 0.10.1 adds the global
+knight-name index. A migration encountering duplicate names stops with the first
+conflicting name and rolls back, preserving the previous schema and characters.
+Use the previous release to rename a conflicting knight in the picker, stop it,
+then retry the upgrade. No automatic rename or deletion is performed. Schema 2 added
 global world/item identities and the starter kit; schema 3 added balances, state
 revision, equipped slots and currency audit events. Upgrades are transactional,
 retain account/roster IDs and credentials, and do not regrant kits or re-equip

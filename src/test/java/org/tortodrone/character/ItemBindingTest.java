@@ -38,7 +38,7 @@ public final class ItemBindingTest {
             db.write(c -> { try(var s=c.createStatement()) {
                 s.execute("ALTER TABLE inventory_items DROP COLUMN bound");
                 s.execute("DROP TABLE item_events");
-                s.execute("PRAGMA user_version=3");
+                s.execute("DROP INDEX global_knight_names");s.execute("PRAGMA user_version=3");
                 s.execute("CREATE TRIGGER refuse_binding BEFORE UPDATE ON inventory_items BEGIN SELECT RAISE(ABORT,'test'); END");
             } return null; });
             try { new Database(home,false); throw new AssertionError("failed migration accepted"); }

@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.10.0**, SQLite schema **5**: normal login; saved character creation,
+Version **0.10.1**, SQLite schema **6**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items plus duplicate equipment instances, verified item grants and Arsenal equip/unequip; per-character crowns and
@@ -15,6 +15,8 @@ Game Master roles, stock title/support icon, permission-checked broadcasts and i
 
 One authenticated connection per account: a successful new login replaces the
 previous connection and releases its knight. Failed logins do not disconnect it.
+Knight names are globally unique across all accounts, ignoring case, for creation
+and renaming.
 
 Intro missions are skipped. Combat, quests, shops, NPC dialogue, portal travel,
 position persistence and other staff gameplay commands are not implemented. Reconnect
@@ -95,6 +97,9 @@ in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`. Vers
 adds persistent item binding in schema 4; stop the old server before opening the
 new release. Version 0.10.0 upgrades schema 4 to schema 5 for multiple owned items
 of each equipment type. Preserve `items/` beside the JARs when deploying its catalogue.
+Version 0.10.1 adds global knight names in schema 6. If existing names collide,
+the upgrade stops and preserves all characters; resolve the names using the previous
+release before retrying. No characters are automatically renamed or removed.
 Do not downgrade an upgraded database.
 
 ## Work on the repository

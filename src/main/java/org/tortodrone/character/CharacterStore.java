@@ -126,10 +126,11 @@ public final class CharacterStore {
 
     public synchronized List<Knight> roster() { return knights; }
 
-    public synchronized String nameFailure(String name) {
+    public synchronized String nameFailure(String name) throws IOException {
         String error = nameError(name);
         if (error != null) return error;
-        return knights.stream().anyMatch(knight -> canonical(knight.name()).equals(canonical(name)))
+        return (database!=null ? database.knightNameInUse(name,-1,-1)
+            : knights.stream().anyMatch(knight -> canonical(knight.name()).equals(canonical(name))))
             ? "That knight name is already in use" : null;
     }
 
@@ -167,6 +168,8 @@ public final class CharacterStore {
         try { validate(choices); if (!StarterCatalog.accepts(choices)) throw new IllegalArgumentException(); }
         catch (IllegalArgumentException e) { throw new Refused("Invalid character appearance"); }
         Knight previous = knights.get(index);
+        if(database!=null&&database.knightNameInUse(choices.name(),accountId,previous.id()))
+            throw new Refused("That knight name is already in use");
         for (Knight knight : knights) {
             if (knight.id() != previous.id() && canonical(knight.name()).equals(canonical(choices.name()))) {
                 throw new Refused("That knight name is already in use");
@@ -220,8 +223,12 @@ public final class CharacterStore {
         return -1;
     }
 
-    private void save(List<Knight> updated, int next, long authRevision) throws IOException {
-        if (database != null) { database.saveRoster(accountId, updated, next, authRevision,storageRevision);storageRevision++;return; }
+    private void save(List<Knight> updated, int next, long authRevision) throws IOException, Refused {
+        if (database != null) {
+            try { database.saveRoster(accountId, updated, next, authRevision,storageRevision); }
+            catch(Database.KnightNameInUse conflict){throw new Refused(conflict.getMessage());}
+            storageRevision++;return;
+        }
         if (file == null) return;
         Files.createDirectories(file.getParent());
         Properties properties = new Properties();

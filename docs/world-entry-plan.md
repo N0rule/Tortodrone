@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.10.0, schema 5
+## Checkpoint: 0.10.1, schema 6
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -97,6 +97,19 @@ two new swords live, showed the binding prompt and moved the equipped highlight 
 the selected sword. Reconnect retained the bound loadout; inventory closing followed
 by movement worked. These samples do not accept every item animation or the earlier
 intermittent fresh-creation symptom. Temporary servers/clients were stopped.
+
+## Global knight names (0.10.1)
+
+Creation, picker name validation and renaming enforce case-insensitive uniqueness
+across every account. Schema 6 adds a unique index on canonical knight names;
+the transaction resolves competing requests and failed saves publish nothing or
+consume IDs. Owner-preserving case changes remain allowed, and deleted names can
+be claimed again. Account-local character IDs and global world/item IDs are unchanged.
+Upgrades check existing names and refuse conflicts without renaming/removing knights
+or replacing data. Resolve a conflicting name using the previous release, then retry.
+Storage regression checks cover cross-account availability, concurrent claims,
+rename collisions, rollback, deletion reuse and migration preservation. The stock
+picker fixture checks actual validation and creation rejection across accounts.
 
 ## Current limits and later work
 

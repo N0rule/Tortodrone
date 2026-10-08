@@ -25,7 +25,7 @@ public final class TownUpgradeTest {
                 s.execute("ALTER TABLE world_characters DROP COLUMN crowns");
                 s.execute("ALTER TABLE world_characters DROP COLUMN energy");
                 s.execute("ALTER TABLE world_characters DROP COLUMN state_revision");
-                s.execute("DROP TABLE item_events");s.execute("PRAGMA user_version=2");
+                s.execute("DROP TABLE item_events");s.execute("DROP INDEX global_knight_names");s.execute("PRAGMA user_version=2");
                 s.execute("CREATE TABLE currency_events(blocked INTEGER)");
             } return null; });
             try { new Database(home,false);throw new AssertionError("Blocked upgrade accepted"); }

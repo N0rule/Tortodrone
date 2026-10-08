@@ -21,7 +21,7 @@ public final class InventoryMigrationTest {
                 s.execute("INSERT INTO inventory_old SELECT item_id,world_id,slot,config,accessory,heat,equipped_slot,bound FROM inventory_items");
                 s.execute("DROP TABLE inventory_items");s.execute("ALTER TABLE inventory_old RENAME TO inventory_items");
                 s.execute("CREATE UNIQUE INDEX equipped_items ON inventory_items(world_id,equipped_slot) WHERE equipped_slot IS NOT NULL");
-                s.execute("PRAGMA user_version=4"); // Existing item_events blocks the last migration DDL.
+                s.execute("DROP INDEX global_knight_names");s.execute("PRAGMA user_version=4"); // Existing item_events blocks the last migration DDL.
             }return null;});
             try{new Database(home,false);throw new AssertionError("Broken migration accepted");}catch(IOException expected){}
             check(db.read(c->{try(var s=c.createStatement();var r=s.executeQuery("PRAGMA user_version")){r.next();return r.getInt(1);}})==4,"failed upgrade rolls back version/table rebuild");

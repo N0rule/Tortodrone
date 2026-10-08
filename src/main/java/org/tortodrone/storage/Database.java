@@ -13,7 +13,10 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 5;
+    public static final int SCHEMA_VERSION = 6;
+    public static final class KnightNameInUse extends IOException {
+        private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
+    }
     public record Identity(int id, String username, boolean gameMaster, long authRevision, byte[] salt, byte[] verifier) {
         @Override public String toString() { return "Identity[redacted]"; }
     }
@@ -78,7 +81,8 @@ public final class Database {
                 if (current==1) WorldProfiles.initialize(c);
                 if (current<=2) WorldProfiles.upgrade(c);
                 if(current<=3) WorldProfiles.upgradeBinding(c);
-                WorldProfiles.upgradeInventory(c);
+                if(current<=4) WorldProfiles.upgradeInventory(c);
+                upgradeKnightNames(c);
                 try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version="+SCHEMA_VERSION); }
                 return null;
             });
@@ -107,9 +111,23 @@ public final class Database {
             WorldProfiles.upgrade(connection);
             WorldProfiles.upgradeBinding(connection);
             WorldProfiles.upgradeInventory(connection);
+            upgradeKnightNames(connection);
             try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version="+SCHEMA_VERSION); }
             return null;
         });
+    }
+    private static void upgradeKnightNames(Connection c)throws SQLException,IOException {
+        try(var s=c.createStatement();var r=s.executeQuery("SELECT name_key FROM knights GROUP BY name_key HAVING count(*)>1 ORDER BY name_key LIMIT 1")) {
+            if(r.next())throw new IOException("Duplicate knight name prevents schema 6 upgrade: "+r.getString(1)+". Resolve duplicate names using the previous release, then retry; saved characters were not changed");
+        }
+        try(var s=c.createStatement()){s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");}
+    }
+    /** Availability is advisory; the unique index arbitrates competing writes. */
+    public boolean knightNameInUse(String name,int accountId,int knightId)throws IOException {
+        return read(c->{try(var s=c.prepareStatement("SELECT 1 FROM knights WHERE name_key=? AND NOT(account_id=? AND id=?) LIMIT 1")) {
+            s.setString(1,name.toLowerCase(Locale.ROOT));s.setInt(2,accountId);s.setInt(3,knightId);
+            try(var r=s.executeQuery()){return r.next();}
+        }});
     }
     private void migrate(Connection connection, Path directory) throws IOException, SQLException {
         Path registry = directory.resolve("accounts/users.properties");
@@ -398,6 +416,7 @@ public final class Database {
         }
     }
     private static IOException failure(SQLException e) {
+        if(e.getMessage()!=null&&e.getMessage().contains("UNIQUE constraint failed: knights.name_key"))return new KnightNameInUse(e);
         if (e.getMessage() != null && e.getMessage().contains("accounts.name_key")) return new IOException("Account already exists",e);
         return new IOException("Database operation failed; existing data was not replaced",e);
     }
