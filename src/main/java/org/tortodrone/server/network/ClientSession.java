@@ -5,6 +5,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.protocol.HandshakeCodec;
@@ -27,13 +28,19 @@ final class ClientSession {
 
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters, long authRevision) throws Exception {
+        run(socket,incoming,connectionId,host,port,log,characters,authRevision,()->{});
+    }
+
+    static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
+            SessionLog log, CharacterStore characters, long authRevision, AccountStore.Session session) throws Exception {
+        if(!session.current())throw new IOException("Session replaced during login");
         try (SessionOutput output = new SessionOutput(socket)) {
-            run(socket, incoming, connectionId, host, port, log, characters, output, authRevision);
+            run(socket, incoming, connectionId, host, port, log, characters, output, authRevision,session);
         }
     }
 
     private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
-            SessionLog log, CharacterStore characters, SessionOutput output, long authRevision) throws Exception {
+            SessionLog log, CharacterStore characters, SessionOutput output, long authRevision, AccountStore.Session session) throws Exception {
         SessionCodec outgoing = new SessionCodec();
         int clientOid = Math.addExact(1000, connectionId);
         output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
@@ -43,11 +50,13 @@ final class ClientSession {
         boolean firstPing = true;
         CharacterStore.Subscription subscription = null;
         WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log);
+        session.onInvalidated(world::close);
         try {
             byte[] body;
             while ((body = HandshakeCodec.readFrame(socket.getInputStream())) != null) {
                 long receivedAt = System.currentTimeMillis();
                 for (HandshakeCodec.SessionRequest request : incoming.sessionRequests(body)) {
+                    if(!session.current())throw new IOException("Session replaced");
                     switch (request.type()) {
                         case "PingRequest" -> {
                             output.send(() -> outgoing.pong(request.messageId(), receivedAt));

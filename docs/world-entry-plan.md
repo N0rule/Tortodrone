@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.8.0, schema 4
+## Checkpoint: 0.8.1, schema 4
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -20,6 +20,11 @@ Town Square and Bazaar load through the same catalog, with distinct runtime
 instances and isolated occupants. Original zone/scene RPC travel is supported;
 portal interaction remains future work. [Map preparation](maps.md) requires no
 manual scene drawing or runtime downloads.
+
+0.8.1 enforces one authenticated connection per account. A successful password
+login replaces the previous socket/controller; late cleanup cannot evict its
+replacement. Unexpected disconnects release ownership; no reconnect credentials
+or ghost-session grace period are introduced.
 
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory

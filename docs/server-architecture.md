@@ -84,6 +84,12 @@ Character/state mutations check ownership and revision inside their transaction.
 Future in-game permissions must read the current Admin role, not a login snapshot.
 
 `AccountStore` shares a synchronized `CharacterStore` across that account's sessions.
+Only one authenticated socket lease per account is current. Takeover closes the
+old socket and its registered world controller before returning the new lease;
+late registration is also cleaned up. Conditional removal prevents old finalizers
+from releasing a replacement. Cleanup runs outside account/lease locks. Normal
+EOF/logoff, timeout and revision revocation release the same lease. Request routing
+rechecks it and closed world sessions cannot select or mutate movement.
 Commit before replacing the roster/notifying observers. Register subscriptions and
 queue their initial snapshot under the same mutation lock, preventing older state
 from overtaking a change. Resubscribe replaces observers; disconnect detaches them.
@@ -96,7 +102,7 @@ Observers must not perform socket I/O or acquire another character-store lock.
 ## World entry and synchronization
 
 Selection loads owned appearance/items/equipment/balances and acquires one controller
-per global knight ID. Creation selects automatically when the scene receiver is
+per global knight ID, within the account's sole live connection. Creation selects automatically when the scene receiver is
 registered. A roster-only fixture can save without entering the world.
 
 The external catalog supplies town templates; the registry assigns each instance

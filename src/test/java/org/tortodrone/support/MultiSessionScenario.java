@@ -7,42 +7,41 @@ import java.util.*;
 import java.util.concurrent.*;
 import static org.tortodrone.support.TestWire.check;
 
-/** Three independent authenticated streams, including concurrent writers on one account. */
+/** Real authenticated account replacement, independent accounts and abrupt reconnect. */
 public final class MultiSessionScenario {
     public static void run(int port, PublicKey key) throws Exception {
         ExecutorService workers = Executors.newCachedThreadPool();
-        try (Connection first = new Connection(workers, port, key, "Alice", "alice-password", 2);
-             Connection second = new Connection(workers, port, key, "Alice", "alice-password", 2);
-             Connection other = new Connection(workers, port, key, "Bob", "bob-password", 3)) {
-            Channel a = first.channel(), b = second.channel(), bob = other.channel();
+        try (Connection first = new Connection(workers, port, key, "Alice", "alice-password", 2)) {
+            Channel a = first.channel();
             a.save(null, "First-Knight", (short) 50);
             a.changed(List.of("First-Knight")); a.confirmed((short) 50, "Knight saved.");
-            b.changed(List.of("First-Knight")); bob.ping();
-            b.subscribe(List.of("First-Knight")); // Replacing a subscription must not duplicate events.
-            a.save("First-Knight", "Renamed-Knight", (short) 51);
-            a.changed(List.of("Renamed-Knight")); a.confirmed((short) 51, "Knight updated.");
-            b.changed(List.of("Renamed-Knight")); b.ping(); bob.ping();
+            first.expectDisconnect=true;
+            try (Connection second=new Connection(workers,port,key,"Alice","alice-password",2);
+                 Connection other=new Connection(workers,port,key,"Bob","bob-password",3)) {
+            Channel b=second.channel(),bob=other.channel();
+            check(a.socket.getInputStream().read()==-1,"account replacement closes original stream");
+            b.subscribe(List.of("First-Knight"));
+            b.save("First-Knight", "Renamed-Knight", (short) 51);
+            b.changed(List.of("Renamed-Knight")); b.confirmed((short) 51, "Knight updated.");bob.ping();
             bob.select("Renamed-Knight",(short)60); bob.confirmed((short)60,"No such knight");
             bob.delete("Renamed-Knight", (short) 52); bob.confirmed((short) 52, "No such knight");
-            a.ping(); b.ping();
+            b.ping();
             b.unsubscribe();
-            a.save(null, "Second-Knight", (short) 53);
-            a.changed(List.of("Renamed-Knight", "Second-Knight")); a.confirmed((short) 53, "Knight saved.");
-            b.ping(); // Unsubscribed peers must not receive the update.
+            b.save(null, "Second-Knight", (short) 53);
+            b.changed(List.of("Renamed-Knight", "Second-Knight"));
+            b.confirmed((short) 53, "Knight saved.");
+            b.ping(); // The writer receives one direct save update, with no duplicate subscription event.
             b.subscribe(List.of("Renamed-Knight", "Second-Knight"));
-            a.delete("Renamed-Knight", (short) 54);
-            a.changed(List.of("Second-Knight")); a.confirmed((short) 54, null); b.changed(List.of("Second-Knight"));
-            a.delete("Second-Knight", (short) 55);
-            a.changed(List.of()); a.confirmed((short) 55, null); b.changed(List.of());
-
-            // Two sessions modify the same roster while all codec maps remain connection-local.
-            a.save(null, "Parallel-One", (short) 56);
-            b.save(null, "Parallel-Two", (short) 57);
-            a.twoChanges((short) 56); b.twoChanges((short) 57); bob.ping();
-            first.close(); // Cleanup must detach the closed subscription.
-            b.delete("Parallel-One", (short) 58);
-            b.changed(List.of("Parallel-Two")); b.confirmed((short) 58, null); bob.ping();
+            b.delete("Renamed-Knight", (short) 54);
+            b.changed(List.of("Second-Knight")); b.confirmed((short) 54, null);
+            second.expectDisconnect=true;b.socket.close();second.close();
+            try(Connection reconnect=new Connection(workers,port,key,"Alice","alice-password",2)) {
+            b=reconnect.channel();b.subscribe(List.of("Second-Knight"));
+            b.delete("Second-Knight", (short) 55);b.changed(List.of()); b.confirmed((short)55,null);
+            b.save(null,"Parallel-Two",(short)57);b.changed(List.of("Parallel-Two"));b.confirmed((short)57,"Knight saved.");bob.ping();
             b.subscribe(List.of("Parallel-Two"));
+            }
+            }
         } finally { workers.shutdownNow(); }
     }
 
@@ -51,6 +50,7 @@ public final class MultiSessionScenario {
         final CountDownLatch finish = new CountDownLatch(1);
         final Future<?> completed;
         private boolean closed;
+        volatile boolean expectDisconnect;
         Connection(ExecutorService workers, int port, PublicKey key, String username, String password, int accountId) {
             completed = workers.submit(() -> {
                 try (Socket socket = new Socket("127.0.0.1", port)) {
@@ -58,14 +58,13 @@ public final class MultiSessionScenario {
                         Channel channel = new Channel(peer, wire, oid);
                         var player = channel.snapshot();
                         check(player.get("username").equals(username) && player.get("playerId").equals(accountId), "authenticated player identity");
-                        check(((List<?>) player.get("availableKnights")).isEmpty(), "separate fresh account roster");
                         ready.complete(channel);
                         if (!finish.await(30, TimeUnit.SECONDS)) throw new AssertionError("session scenario timeout");
                         channel.writer.send(peer.getOutputStream(), out -> channel.writer.message(out, "LogoffRequest", 99));
                     });
                 } catch (Exception | AssertionError failure) {
                     ready.completeExceptionally(failure);
-                    throw new RuntimeException(failure);
+                    if(!expectDisconnect)throw new RuntimeException(failure);
                 }
             });
         }

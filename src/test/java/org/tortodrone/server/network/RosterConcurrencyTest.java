@@ -18,11 +18,12 @@ public final class RosterConcurrencyTest {
         try (ServerSocket listener = new ServerSocket(0, 3, InetAddress.getLoopbackAddress())) {
             Future<?> acceptor = workers.submit(() -> {
                 try {
-                    for (int id = 1; id <= 3; id++) {
+                    for (int id = 1; id <= 4; id++) {
                         Socket socket = listener.accept(); int connectionId = id;
                         sessions.add(workers.submit(() -> {
                             try (socket) { SecureHandshake.run(socket, keys.getPrivate(), ignored -> {}, true, connectionId,
                                 "127.0.0.1", listener.getLocalPort(), accounts); }
+                            catch (java.net.SocketException expectedDisconnect) { }
                             catch (Exception error) { throw new RuntimeException(error); }
                         }));
                     }
@@ -31,7 +32,7 @@ public final class RosterConcurrencyTest {
             MultiSessionScenario.run(listener.getLocalPort(), keys.getPublic());
             acceptor.get(10, TimeUnit.SECONDS);
             for (Future<?> session : sessions) session.get(10, TimeUnit.SECONDS);
-            System.out.println("PASS: live create/edit/delete, account isolation, resubscription, unsubscribe, concurrent saves and disconnect cleanup");
+            System.out.println("PASS: authenticated replacement, private rosters, edits/deletion, subscriptions and abrupt reconnect");
         } finally { workers.shutdownNow(); }
     }
 }

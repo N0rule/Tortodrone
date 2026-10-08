@@ -34,7 +34,8 @@ public final class CheckClientWorld {
             Files.createDirectories(scratch.resolve("data"));
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
             run(List.of(executable("javac"), "--release", "17", "-cp", cp, "-d", scratch.toString(),
-                project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString()), "compile", "", 30);
+                project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
+                project.resolve("scripts/compat/AccountConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
             List<String> base = new ArrayList<>(List.of(executable("java"), "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true",
@@ -63,6 +64,9 @@ public final class CheckClientWorld {
             catch (Exception failure) { System.err.println(tail(serverLog)); throw failure; }
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
+            List<String> seed = new ArrayList<>(base);
+            seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
+            run(seed,"seed-reconnect","",15);
             Path descriptor = scratch.resolve("maps/haven/map.properties");
             var properties = new Properties();
             try (var in = Files.newInputStream(descriptor)) { properties.load(in); }
@@ -80,6 +84,10 @@ public final class CheckClientWorld {
                 Thread.sleep(50);
             }
             if (port == null) throw new IOException("Temporary instance server readiness timeout");
+            List<String> accountCheck = new ArrayList<>(base);
+            accountCheck.addAll(List.of("AccountConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString()));
+            try { run(accountCheck,"account-sessions","",45); }
+            catch (Exception failure) { System.err.println(tail(isolatedLog)); throw failure; }
             List<String> instanceCheck = new ArrayList<>(base);
             instanceCheck.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString(), "isolated"));
             try { run(instanceCheck, "instances", "", 60); }

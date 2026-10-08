@@ -20,7 +20,8 @@ public final class AccountStore implements AutoCloseable {
     private final Database database;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
-    private final Map<Socket,Account> sessions = new ConcurrentHashMap<>();
+    private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
+    private final Map<Integer,Object> attachmentLocks = new ConcurrentHashMap<>();
     private ScheduledExecutorService watcher;
     private int nextId = 1;
 
@@ -121,24 +122,61 @@ public final class AccountStore implements AutoCloseable {
         Stored stored = memory.get(canonical(account.username()));
         return stored != null && stored.id() == account.id() && stored.revision() == account.authRevision();
     }
-    @FunctionalInterface public interface Session extends AutoCloseable { @Override void close(); }
+    @FunctionalInterface public interface Session extends AutoCloseable {
+        @Override void close();
+        default boolean current() { return true; }
+        default void onInvalidated(Runnable cleanup) { }
+    }
     public Session attach(Account account,Socket socket) throws IOException {
-        sessions.put(socket,account);
-        if (!current(account)) { sessions.remove(socket); socket.close(); throw new IOException("Account changed during login"); }
-        return () -> sessions.remove(socket);
+        synchronized(attachmentLocks.computeIfAbsent(account.id(),id->new Object())) {
+            Attached next=new Attached(account,socket),previous;
+            synchronized(this) {
+                if(!current(account)||socket.isClosed()) { socket.close();throw new IOException("Account changed during login"); }
+                previous=sessions.put(account.id(),next);
+            }
+            // Serialize takeovers per account; a third login cannot overtake old cleanup.
+            if(previous!=null)previous.close();
+            return next;
+        }
+    }
+    private final class Attached implements Session {
+        final Account account;
+        final Socket socket;
+        private volatile boolean live=true;
+        private Runnable cleanup;
+        private final CompletableFuture<Void> finished=new CompletableFuture<>();
+        Attached(Account account,Socket socket){this.account=account;this.socket=socket;}
+        @Override public boolean current(){return live&&!socket.isClosed()&&sessions.get(account.id())==this;}
+        @Override public void onInvalidated(Runnable action) {
+            synchronized(this) { if(live) { cleanup=action;return; } }
+            action.run();
+        }
+        @Override public void close() {
+            Runnable action;
+            boolean owner;
+            synchronized(this) { owner=live;live=false;action=cleanup;cleanup=null; }
+            if(!owner){finished.join();return;}
+            try {
+                try{socket.close();}catch(IOException ignored) { }
+                if(action!=null)action.run();
+            }finally {
+                sessions.remove(account.id(),this);
+                finished.complete(null);
+            }
+        }
     }
     /** The server owns this watcher. The desktop tool opens no networking endpoint. */
     public synchronized void watchSessions() {
         if (watcher != null) return;
         watcher = Executors.newSingleThreadScheduledExecutor(task -> { Thread t = new Thread(task,"AccountSessions"); t.setDaemon(true); return t; });
-        watcher.scheduleWithFixedDelay(() -> sessions.forEach((socket,account) -> {
-            try { if (!current(account)) { sessions.remove(socket); socket.close(); } }
-            catch (IOException failure) { sessions.remove(socket); try { socket.close(); } catch (IOException ignored) { } }
+        watcher.scheduleWithFixedDelay(() -> sessions.forEach((id,session) -> {
+            try { if (!current(session.account)||!session.current()) session.close(); }
+            catch (IOException failure) { session.close(); }
         }),250,250,TimeUnit.MILLISECONDS);
     }
-    @Override public synchronized void close() {
-        if (watcher != null) watcher.shutdownNow();
-        sessions.keySet().forEach(socket -> { try { socket.close(); } catch (IOException ignored) { } }); sessions.clear();
+    @Override public void close() {
+        synchronized(this){if (watcher != null) watcher.shutdownNow();}
+        List.copyOf(sessions.values()).forEach(Attached::close);
     }
     public static char[] transform(char[] password) throws IOException { return Passwords.transform(password); }
     private Stored require(String username,int expectedId) throws IOException { Stored stored = memory.get(canonical(username)); if (stored == null) throw new IOException("No such account"); if (expectedId >= 0 && stored.id() != expectedId) throw new IOException("Account changed; refresh the account list"); return stored; }

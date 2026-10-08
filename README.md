@@ -6,11 +6,14 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.8.0**, SQLite schema **4**: normal login; saved character creation,
+Version **0.8.1**, SQLite schema **4**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items with persistent binding and Arsenal equip/unequip; per-character crowns and
 energy with local administration.
+
+One authenticated connection per account: a successful new login replaces the
+previous connection and releases its knight. Failed logins do not disconnect it.
 
 Intro missions are skipped. Combat, quests, shops, NPC dialogue, portal travel,
 position persistence and in-game admin commands are not implemented. Reconnect

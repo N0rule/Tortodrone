@@ -53,10 +53,30 @@ Bazaar → Town Square and two Haven instances; graphical Bazaar/portal acceptan
 is not claimed. Config warnings from older archive references do not establish NPC
 behavior. Positions reset to each pack's validated spawn on travel/reconnect.
 
-## 3–6. Remaining research boundaries
+## 3. Single-account sessions (0.8.1)
 
-Duplicate-login replacement timing requires verification; do not equate account
-characters with separate accounts. Knight deletion must preserve monotonic IDs,
+Primary [Narya ClientManager](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/presents/server/ClientManager.java)
+reuses the authenticated identity's PresentsSession. Its
+[resumeSession](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/presents/server/PresentsSession.java)
+explicitly closes the old connection before replacing it and clearing subscriptions.
+Tortodrone follows the verified replacement rule with one socket lease per account,
+including picker connections. Authentication failure never acquires a lease.
+
+The exact current official Spiral Knights takeover message, grace timeout and
+character-restoration behavior could not be independently verified. No official
+server was contacted and no unsupported error packet is invented. Tortodrone closes
+the old TCP connection, releases its controller synchronously and bootstraps the
+new password login normally. Network EOF/60-second idle timeout releases the lease;
+position persistence and credential-based session resumption remain unsupported.
+
+Tests cover concurrent/rapid replacement, revision races, late cleanup, independent
+accounts and unexpected disconnect/reconnect. The installed client fixture selects
+two different knights on successive connections and checks that only the new actor
+exists, then rapidly reselects the same knight.
+
+## 4–6. Remaining research boundaries
+
+Knight deletion must preserve monotonic IDs,
 remove associated owned data and prevent stale sessions from resurrecting a save.
 Scene chat should use verified Crowd marshallers and message events. The installed
 PlayerObject.Type includes `GAME_MASTER`; verify its icon/title consumer rather

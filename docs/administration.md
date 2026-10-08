@@ -41,6 +41,9 @@ stdin lines, or one for a check. Old account flags on the server JAR are unsuppo
 - Three knight slots per account. Names: 3–16 letters with optional single hyphens,
   unique within the account ignoring case. IDs are not recycled.
 - Online knights cannot be edited/deleted. Reconnect to select another knight.
+- One connection per account. A successful new password login replaces the old
+  connection, releasing its knight before another can enter. Failed authentication
+  leaves it connected. EOF/timeout releases ownership; reconnect normally afterward.
 - Crowns/energy belong to each knight, start at zero and range from 0 to
   2,147,483,647. Changes are atomic, audited and visible online within about 250 ms.
   No earning, spending or regeneration rules exist yet.

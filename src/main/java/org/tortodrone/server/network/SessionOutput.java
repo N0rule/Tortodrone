@@ -25,7 +25,7 @@ final class SessionOutput implements AutoCloseable {
     @FunctionalInterface interface Encoder { byte[] frame() throws IOException; }
 
     synchronized void send(Encoder encoder) throws IOException {
-        if (closed || failed) throw new IOException("Downstream connection closed");
+        if (closed || failed || socket.isClosed()) throw new IOException("Downstream connection closed");
         try {
             byte[] frame = encoder.frame();
             if (frame.length > org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME) throw new IOException("Downstream frame exceeds size limit");

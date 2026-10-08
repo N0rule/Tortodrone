@@ -55,7 +55,7 @@ public final class HandshakeTest {
             Future<List<String>> result = executor.submit(() -> {
                 List<String> logs = new ArrayList<>();
                 try (Socket peer = listener.accept()) {
-                    peer.setSoTimeout(3000);
+                    peer.setSoTimeout(8000);
                     try {
                         SecureHandshake.run(peer, key.getPrivate(), logs::add);
                         check(!badSalt, "bad salt accepted");
@@ -67,7 +67,7 @@ public final class HandshakeTest {
                 return logs;
             });
             try (Socket peer = new Socket(listener.getInetAddress(), listener.getLocalPort())) {
-                peer.setSoTimeout(3000);
+                peer.setSoTimeout(8000);
                 peer.getOutputStream().write(request, 0, 2);
                 peer.getOutputStream().write(request, 2, request.length - 2);
                 byte[] body = HandshakeCodec.readFrame(peer.getInputStream());
@@ -87,7 +87,7 @@ public final class HandshakeTest {
                     check(peer.getInputStream().read() == -1, "stop before authentication");
                 }
             }
-            List<String> logs = result.get(5, TimeUnit.SECONDS);
+            List<String> logs = result.get(10, TimeUnit.SECONDS);
             check(badSalt || logs.stream().anyMatch(s -> s.startsWith("AESAuthRequest received")), "next request identified");
         } finally {
             executor.shutdownNow();

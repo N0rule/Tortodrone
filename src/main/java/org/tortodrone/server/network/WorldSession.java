@@ -63,6 +63,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {
+        if(closed||socket.isClosed())throw new IOException("Session is closed");
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
         // Picker edits/deletes use this same account lock around their online check and save.
         synchronized (characters) {
@@ -103,6 +104,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     synchronized boolean invocation(SessionDecoder.Invocation request) throws IOException {
+        if(closed||socket.isClosed())throw new IOException("Session is closed");
         int service = request.service();
         var args = request.arguments();
         if ((service == 4 || service == 5) && request.method() == 1) {
@@ -230,7 +232,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void unsubscribe() { subscribed = entered = false; sceneGeneration++; }
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
-        if (!subscribed || !entered || input.oid() != scene.oid()) {
+        if (closed || socket.isClosed() || !subscribed || !entered || input.oid() != scene.oid()) {
             throw new SessionDecoder.Rejected("Unauthorized movement input");
         }
         // TCP delivers every queued snapshot in order, even while scene loading delays input.

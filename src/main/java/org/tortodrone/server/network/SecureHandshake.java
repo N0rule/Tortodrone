@@ -95,7 +95,7 @@ public final class SecureHandshake {
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
             try (var session = accounts.attach(account,socket)) {
-                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision());
+                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision(),session);
             }
         } finally {
             Arrays.fill(plain, (byte) 0);
