@@ -290,6 +290,7 @@ the repository's hosting service. Include what changed and which checks passed.
 Never commit build output, runtime data, passwords, private keys or game assets.
 
 See [server architecture](docs/server-architecture.md), the
-[world entry plan](docs/world-entry-plan.md), and [dependency notices](docs/dependencies.md).
+[world entry plan](docs/world-entry-plan.md), the
+[current resource review](docs/server-research.md), and [dependency notices](docs/dependencies.md).
 [Historical research](docs/research/README.md) is evidence of past experiments,
 not current setup or client modification instructions.

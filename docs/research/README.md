@@ -14,6 +14,11 @@ Use the [README](../../README.md), [development guide](../development.md),
 [server architecture](../server-architecture.md), and
 [connection guide](../client-redirection.md) for current behavior.
 
+The [2026-10-08 resource review](../server-research.md) records current resource
+availability, server relevance and protocol priorities. The
+[town-entry investigation](../town-entry-investigation.md) distinguishes the
+0.7.1 TCP correction from still-pending graphical confirmation.
+
 - [Source references](research-sources.md)
 - [Protocol observations](protocol.md)
 - [Starter equipment and preview verification](starter-equipment.md)
