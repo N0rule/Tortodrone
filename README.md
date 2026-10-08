@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.11.1**, SQLite schema **7**: normal login; saved character creation,
+Version **0.12.0**, SQLite schema **8**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
@@ -29,7 +29,7 @@ limits; [investigation](docs/town-entry-investigation.md) explains the fixes.
 
 ## Build and run
 
-Install Git, GNU Make, JDK 17+, `curl` and `sha256sum`. No Maven, Gradle, game
+Install Git, GNU Make, JDK 25. No Maven, Gradle, game
 installation or database service is required. The first build downloads pinned,
 checksum-verified libraries and scene exports; later builds use `build/deps/`.
 `make maps` prepares external packs without starting the server; see [maps](docs/maps.md).
@@ -90,18 +90,17 @@ account services; type `help` for commands. Game Masters can use the stock `/bro
 command and normal-chat `!items`/`!giveitem` after entering a scene. Prepare an offline
 [item catalogue and game-file index](docs/game-data.md) for the wider equipment set.
 [Administration reference](docs/administration.md) covers commands,
-account rules and migrations.
+account rules and supported storage.
 
 To back up, stop the server and close the manager, then copy the entire `data/`
 directory, including database and keys. A live SQLite database may have changes
-in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`. Version 0.7.2
-adds persistent item binding in schema 4; stop the old server before opening the
-new release. Version 0.10.0 upgrades schema 4 to schema 5 for multiple owned items
-of each equipment type. Preserve `items/` beside the JARs when deploying its catalogue.
-Version 0.10.1 adds global knight names in schema 6. If existing names collide,
-the upgrade stops and preserves all characters; resolve the names using the previous
-release before retrying. No characters are automatically renamed or removed.
-Do not downgrade an upgraded database.
+in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`.
+
+Only schema 8 databases and v2 item catalogues are supported.
+There are no database upgrades or property-file imports. Other database versions
+are refused without changing saved data. Use a fresh deployment data directory
+for older releases; preserve the original database and keys as backups.
+Preserve `items/` beside the JARs when deploying its catalogue.
 
 ## Work on the repository
 
@@ -125,4 +124,3 @@ guide; persistent test tools are Java.
 | [Architecture](docs/server-architecture.md) | Code map, protocol, storage and concurrency invariants |
 | [Resource assessment](docs/server-research.md) | Upstream networking/game research and source links |
 | [Dependency notices](docs/dependencies.md) | Pins, licenses and scene/collision provenance |
-| [Historical research](docs/research/README.md) | Earlier evidence; not current setup instructions |

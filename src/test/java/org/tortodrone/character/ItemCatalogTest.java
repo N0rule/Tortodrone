@@ -35,9 +35,8 @@ public final class ItemCatalogTest {
             var unsupported=new ItemCatalog(List.of(new ItemCatalog.Entry("Recipe/Test",1,"Recipe","m.recipe",2,false,null,false,Map.of())));
             try{unsupported.require("Recipe/Test");throw new AssertionError("Unsupported type accepted");}catch(IOException expected){}
             String original=Files.readString(file);
-            var legacy=new StringBuilder("# Tortodrone item catalogue v1\n");
-            original.lines().filter(l->!l.startsWith("#")).forEach(l->{var f=new ArrayList<>(List.of(l.split("\\t",-1)));f.remove(8);legacy.append(String.join("\t",f)).append('\n');});
-            Files.writeString(file,legacy);check(ItemCatalog.load(file).entries().equals(catalog.entries()),"v1 deployed catalogues remain readable");
+            Files.writeString(file,"# Tortodrone item catalogue v1\n");
+            try{ItemCatalog.load(file);throw new AssertionError("Obsolete catalogue accepted");}catch(IOException expected){}
             Files.writeString(file,original+original.lines().filter(l->!l.startsWith("#")).findFirst().orElseThrow()+"\n");
             try{ItemCatalog.load(file);throw new AssertionError("Duplicate catalogue accepted");}catch(IOException expected){}
             Files.writeString(file,"# Tortodrone item catalogue v999\n");

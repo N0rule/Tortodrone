@@ -11,7 +11,7 @@ bundled into the server, and nothing writes to the installation or real preferen
 Use a JDK capable of reading the installed classes (Java 25 for the tested game):
 
 ```sh
-sh scripts/prepare-items.sh "/path/to/Spiral Knights"
+java scripts/StockTools.java items "/path/to/Spiral Knights"
 ```
 
 This builds both server tools and creates **build/items/catalog.tsv** and
@@ -42,7 +42,7 @@ has been exercised. Accessory tickets may derive their names from accessory defi
 The UTF-8 TSV columns are config reference, stock config ID, resolved implementation
 type, localized name key, rarity, stackability, supported slot (empty means index
 only), bind-on-equip, permanent binding, and bounded Base64 model arguments. This
-is catalogue v2; existing v1 catalogues remain readable but must be regenerated to
+is catalogue v2; older formats are refused and must be regenerated to
 enable newly supported items. Stock config IDs can be negative or zero; they are
 **not** persistent instance IDs. Nonzero IDs resolve only if unique; ID 0 and
 ambiguous/missing IDs are rejected. References are resolved

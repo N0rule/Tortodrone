@@ -9,8 +9,9 @@ still matches the checkout.
 
 [docs/development.md](docs/development.md) explains build, tests and graphical
 checks. [docs/server-architecture.md](docs/server-architecture.md) maps the code
-and its invariants. Read research only when needed; `docs/research/` contains
-historical experiments, including obsolete client modifications.
+and its invariants. Read current research in `docs/server-research.md` only when
+needed; obsolete client experiments have been removed. Use Java 25 for builds,
+server/admin runtime and persistent tools.
 
 ## Rules
 

@@ -8,7 +8,7 @@ import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
 import static org.tortodrone.support.TestWire.check;
 
-/** Disposable schema-6 upgrade and player inventory ownership/stack/binding regression. */
+/** Disposable current-schema player inventory ownership/stack/binding regression. */
 public final class PlayerItemTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-player-items-");
@@ -16,21 +16,7 @@ public final class PlayerItemTest {
             accounts.create("Alice","alice-password".toCharArray());accounts.create("Other","other-password".toCharArray());
             var db=new Database(home,false);var chars=new CharacterStore(db,1,"Alice");
             chars.create(new Knight(0,"Saved-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
-            var saved=db.worldProfile(1,1,1);var identity=db.identity("Alice");
-            // Build the actual previous table instead of just lowering user_version.
-            db.write(c->{try(var s=c.createStatement()) {
-                s.execute("CREATE TABLE inventory_old(item_id INTEGER PRIMARY KEY CHECK(item_id>0),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,slot TEXT NOT NULL CHECK(slot IN('HELM','ARMOR','SWORD','GUN','SHIELD','BOMB')),config TEXT NOT NULL,accessory TEXT,heat INTEGER NOT NULL DEFAULT 0 CHECK(heat>=0),equipped_slot INTEGER CHECK(equipped_slot IN(0,1,2,6,7)),bound INTEGER NOT NULL DEFAULT 0 CHECK(bound IN(0,1)),bind_on_equip INTEGER NOT NULL DEFAULT 1 CHECK(bind_on_equip IN(0,1)),starter INTEGER NOT NULL DEFAULT 0 CHECK(starter IN(0,1)))");
-                s.execute("INSERT INTO inventory_old SELECT item_id,world_id,slot,config,accessory,heat,equipped_slot,bound,bind_on_equip,starter FROM inventory_items");
-                s.execute("DROP TABLE inventory_items");s.execute("ALTER TABLE inventory_old RENAME TO inventory_items");
-                s.execute("CREATE UNIQUE INDEX equipped_items ON inventory_items(world_id,equipped_slot) WHERE equipped_slot IS NOT NULL");
-                s.execute("CREATE UNIQUE INDEX starter_items ON inventory_items(world_id,slot) WHERE starter=1");
-                s.execute("CREATE TABLE inventory_player(blocker INTEGER)");s.execute("PRAGMA user_version=6");
-            }return null;});
-            refused(()->new Database(home,false));
-            check(db.read(c->{try(var s=c.createStatement();var r=s.executeQuery("PRAGMA user_version")){r.next();return r.getInt(1);}})==6,"failed upgrade rolls back");
-            db.write(c->{try(var s=c.createStatement()){s.execute("DROP TABLE inventory_player");}return null;});
-            new Database(home,false);check(db.worldProfile(1,1,1).equals(saved),"schema-6 upgrade preserves starter IDs, loadout, flags and revisions");
-            check(Arrays.equals(identity.verifier(),db.identity("Alice").verifier()),"upgrade preserves password verifier");
+            var saved=db.worldProfile(1,1,1);
             final Database store=db;
             var material=new ItemCatalog.Entry("Material/Test",101,"Craft","m.material",1,true,WorldProfile.Slot.OTHER,false,Map.of());
             var p=store.grantItems("Alice","Saved-Knight",1,saved.worldId(),material,7,-1,-1);long id=p.items().get(5).id();
@@ -57,7 +43,7 @@ public final class PlayerItemTest {
                 p=store.equip(1,1,1,item.id(),null);check(p.items().stream().filter(i->i.id()==item.id()).findFirst().orElseThrow().permanent(),"unequip retains permanent binding");
             }
             check(new Database(home,false).worldProfile(1,1,1).equals(p),"new item fields survive reconnect");
-            System.out.println("PASS: schema-6 upgrade/rollback, persisted stacks, concurrent merging, audit rollback, ownership, costume/trinket slots and permanent binding");
+            System.out.println("PASS: persisted stacks, concurrent merging, audit rollback, ownership, costume/trinket slots and permanent binding");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
     private static void refused(Operation work)throws Exception{try{work.run();throw new AssertionError("Refusal expected");}catch(IOException expected){}}

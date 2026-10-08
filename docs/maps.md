@@ -26,7 +26,7 @@ compressed export from the [scene archive](https://github.com/reference-source/S
 and run:
 
 ```sh
-scripts/prepare-scene.sh "/path/to/Spiral Knights" /tmp/archive.dat \
+java scripts/StockTools.java scene "/path/to/Spiral Knights" /tmp/archive.dat \
   /tmp/new-town-pack 1 Haven
 ```
 

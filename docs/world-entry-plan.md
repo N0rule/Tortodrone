@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.11.1, schema 7
+## Checkpoint: 0.12.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -11,8 +11,7 @@ crowns/energy. Intro missions are skipped without invented completion flags/rewa
 
 0.7.2 fixes Arsenal re-equipping: its equipItem RPC is different from moveItem.
 Both now use the same owned equipment transaction. Starter items are bound by
-default; binding survives unequipping and database reopening. Schema 3 migrates
-transactionally without re-equipping items or changing identities/balances.
+default; binding survives unequipping and database reopening.
 See [current feature research](server-milestones.md).
 
 0.8.0 moves scene geometry/collision out of the JAR into validated external packs.
@@ -54,9 +53,9 @@ fresh-creation animation/stutter symptom; keep its graphical regression checklis
 
 ## Completed requested priorities
 
-1. **Item binding**: persistent state, migration and real Arsenal RPC support.
+1. **Item binding**: persistent state and real Arsenal RPC support.
 2. **External scene framework**: map catalog, validated scene/collision data,
-   multiple scene instances, pre-start archive preparation; migrate Haven.
+   multiple scene instances, pre-start archive preparation; external Haven.
 3. **Single account session**: verified policy, reconnect/replacement and abrupt
    disconnect cleanup without permitting two knights from one account to play.
 4. **Local knight deletion**: confirmation/identity checks, safe associated-data
@@ -106,10 +105,8 @@ across every account. Schema 6 adds a unique index on canonical knight names;
 the transaction resolves competing requests and failed saves publish nothing or
 consume IDs. Owner-preserving case changes remain allowed, and deleted names can
 be claimed again. Account-local character IDs and global world/item IDs are unchanged.
-Upgrades check existing names and refuse conflicts without renaming/removing knights
-or replacing data. Resolve a conflicting name using the previous release, then retry.
 Storage regression checks cover cross-account availability, concurrent claims,
-rename collisions, rollback, deletion reuse and migration preservation. The stock
+rename collisions, rollback and deletion reuse. The stock
 picker fixture checks actual validation and creation rejection across accounts.
 
 ## Player-item expansion (0.11.0)
@@ -120,10 +117,9 @@ indexes 9,348 definitions and enables 8,454 verified player items: normal gear,
 costumes, trinkets, materials, recipes, tickets, upgrades, boxes and consumables.
 Stock `creatable` does not exclude unobtainable player gear. Internal/developer/test/
 PvP definitions, expiring items, dungeon-only pickups and unsupported specialized
-records remain index-only. Existing v1 catalogues remain readable; regenerate them
-for the expanded grants.
+records remain index-only. Only v2 catalogues are supported.
 
-Schema 7 preserves prior item identities/loadouts/audits and adds stack counts,
+The current inventory stores item identities/loadouts/audits and stack counts,
 permanent binding and cosmetic/trinket slots. Stackable plain items use stock Item
 records and merge atomically; equipment remains distinct LevelItems. Costumes replace
 normal gear appearance, preserving its underlying equipment. The grant service
@@ -163,6 +159,27 @@ updated both immediately on unequip and re-equip with the fix. The town characte
 rendered empty hands and a shield on the back, and walked/stopped/reversed after
 closing the panels. These samples do not accept every item animation or resolve
 the earlier intermittent fresh-creation symptom. Test clients/servers were stopped.
+
+## Java 25 and current formats only (0.12.0)
+
+Builds, runtime tools and installed-client fixtures now require Java 25. Java tools
+replace the shell download/preparation wrappers. Pinned SHA-256 verification and
+preservation of edited deployment maps are retained.
+
+Fresh databases are created directly as schema 8, with `game_master` and no unused
+starter-version field. All schema upgrades, property-file readers/writers/imports,
+v1 catalogue support, old role aliases and obsolete client research/probes were
+removed. Unsupported database versions are refused unchanged; use a fresh data
+directory for this release and retain old data/keys as backups. Existing real data
+and keys were not changed during development.
+
+Acceptance: all 32 unit and three packaged integration checks passed on Java 25,
+including unsupported schema 0–7/future refusal with unchanged bytes/state, fresh
+starter kits, live current-schema opening and no property imports. The unchanged
+installed client passed world/account/GM/item checks and all 173 previews. Java
+preparation tools passed fresh pinned downloads, retry/checksum/cache/cleanup
+checks, edited-map preservation and a stock Bazaar scene export. Test processes
+were stopped. No new graphical animation acceptance is claimed for this cleanup.
 
 ## Current limits and later work
 

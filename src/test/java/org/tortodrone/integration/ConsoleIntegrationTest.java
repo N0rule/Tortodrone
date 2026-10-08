@@ -29,6 +29,9 @@ public final class ConsoleIntegrationTest {
                 server.send("account create Alice inline-secret\n"); server.await("Invalid account command");
                 server.send("account create Alice gm\nconsole-password\nconsole-password\n"); server.await("Account created: Alice");
                 check(db.identity("Alice").gameMaster(),"create with Game Master true persists role");
+                server.send("account admin Alice false\naccount create OldAlias admin\n");
+                server.await("Invalid account command");
+                check(db.identity("Alice").gameMaster() && db.identity("OldAlias")==null,"obsolete role aliases cannot mutate accounts");
                 server.send("account list\n"); server.await("1 | Alice | true | 0"); server.await("Accounts: 1");
                 new CharacterStore(db,1,"Alice").create(new Knight(0,"Console-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
                 server.send("knight list Alice\nknight info Alice Console-Knight\n");

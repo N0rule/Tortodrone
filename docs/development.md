@@ -3,13 +3,14 @@
 Read [AGENTS.md](../AGENTS.md), [README](../README.md) and the
 [current milestone](world-entry-plan.md) first. Then inspect Git and relevant code.
 [Architecture](server-architecture.md) records protocol/storage invariants;
-[resource assessment](server-research.md) points to primary sources. Historical
-research and ignored `local/` files are not build dependencies or current procedures.
+[resource assessment](server-research.md) points to primary sources. Ignored `local/`
+files are not build dependencies or current procedures.
 
 ## Build and automated checks
 
-The project targets Java 17 and uses GNU Make, `javac` and `jar`. The first build
-needs network access, `curl` and `sha256sum`; later builds use pinned cached inputs.
+The project targets Java 25 and uses GNU Make, `javac` and `jar`. The first build
+needs network access; the Java build tool verifies SHA-256 pins and later builds
+use cached inputs.
 No Maven/Gradle, installed game or database service is required.
 
 ```sh
@@ -30,8 +31,8 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 33 unit and three integration checks. It covers persistence,
-migrations/rollback, ownership/revocation, protocol bounds, character/session
+The current suite has 32 unit and three integration checks. It covers persistence,
+schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 
 Add meaningful regression checks for behavior changes. Review `git diff` and
@@ -45,7 +46,7 @@ From the repository root, with both JARs built:
 
 ```sh
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
-scripts/check-client-previews.sh "/path/to/Spiral Knights"
+java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
 These load unchanged installed game classes/resources, not a graphical game.
@@ -115,7 +116,7 @@ Sources/resources are discovered recursively. `VERSION` becomes bundled
 `build/deps/` caches verified inputs, and `build/data/` is real runtime state.
 `make clean` preserves the latter two.
 
-Dependency pins/digests live in the Makefile and preparation scripts; update
+Dependency pins/digests live in the Makefile and Java preparation tools; update
 their [notices](dependencies.md) when changing them. Scene geometry and collision
 must match; [maps](maps.md) documents preparation and the Java importer.
 Never commit installed game assets or assume an

@@ -10,7 +10,7 @@ This dated review began at `d1e57ac`, version 0.7.0. It contributed to the
 [0.7.1 entry fixes](town-entry-investigation.md), now checked graphically and merged.
 Availability findings below are from 2026-10-08, not a live directory.
 The [checkpoint plan](world-entry-plan.md) defines current acceptance and next work;
-the [historical register](research/research-sources.md) retains earlier experiments.
+obsolete client experiments have been removed.
 
 ## Verification method and limits
 
@@ -62,7 +62,7 @@ were run or verified against the current installed game.
 | [threerings/depot](https://github.com/threerings/depot) | Confirmed public repository | **Supporting.** Relational persistence/migration patterns for understanding other servers. No reason established to replace the current transactional SQLite store with this ORM. |
 | [threerings/game-gardens](https://github.com/threerings/game-gardens) | Confirmed public repository | **Medium examples.** ToyBox and hosted-game integration atop Narya/Nenya/Vilya. Useful service/lifecycle examples; not Spiral Knights gameplay. |
 | [threerings/maven-repo](https://github.com/threerings/maven-repo) | Confirmed public repository | **Supporting.** Historical dependency artifacts and reproducible upstream builds. It is an artifact repository, not missing server source. Check each artifact's version and notices. |
-| [threerings/ooo-build](https://github.com/threerings/ooo-build) | Confirmed public repository | **Low.** Legacy Ant build infrastructure. Helps read old code-generation/build conventions; current Tortodrone uses Make and Java 17. |
+| [threerings/ooo-build](https://github.com/threerings/ooo-build) | Confirmed public repository | **Low.** Legacy Ant build infrastructure. Helps read old code-generation/build conventions; current Tortodrone uses Make and Java 25. |
 | [Spiral Studio](https://github.com/spiralstudio) | Confirmed organization and API repository listing | **Discovery/reference.** Forks of Narya/Clyde/Vilya and related infrastructure plus SK-Tweaks. Compare specific fork commits where needed; organization existence does not establish a complete game server. |
 | [azzerial/spiral-knights-headless-client](https://github.com/azzerial/spiral-knights-headless-client) | Confirmed public repository | **High secondary reference.** Presents client wiring, bootstrap/service consumption and exchange examples. Historical build/IP/schema constants differ from the installed client; copied legacy/game-specific files are not the protocol authority. |
 | [reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive) | Confirmed public repository | **High data source.** Static scene exports and indexes; Town Square is already pinned. Procedural captures live partly in Legacy. Layouts do not implement enemies, scripts, mission rules or rewards. |
@@ -166,7 +166,7 @@ tests are detailed in the [entry investigation](town-entry-investigation.md).
 
 Graphical creation/reconnect checks passed for 0.7.1; repeat them when relevant
 behavior changes. Next, persist server-computed town position as its own small
-storage/session milestone, with migration, validation,
+storage/session milestone, with schema validation,
 revocation and restart tests. A clean picker return should be a separate verified
 transition. For portals, inspect one archived adjacent scene, its configurations
 and portal destination, then implement one round trip with occupant removal/addition

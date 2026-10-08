@@ -19,14 +19,12 @@ A network check of method 9 therefore missed the actual Arsenal equip operation.
 Both now route to the same transaction and publish items/equipment/loadout before
 confirmation. No unbinding, trade, economy or item grant service is introduced.
 
-Schema 4 adds independent `inventory_items.bound`. New equipped starters are
-bound; equipping binds, removing/displacing preserves binding. All existing items
-are starter items originally granted equipped, so migration binds even currently
-unequipped items without modifying IDs, appearance, heat, equipped slots or balances.
-The serializer emits binding bit 2, leaving permanent-lock/expiry flags unchanged.
+Inventory stores independent binding. New equipped starters are bound; equipping
+binds, removing/displacing preserves binding. The serializer emits binding bit 2,
+leaving permanent-lock/expiry flags unchanged.
 
-`ItemBindingTest` checks binding, re-equipping, reopen, schema-3 migration and forced
-rollback. `WorldSessionTest` exercises method 3 and rejects incompatible slots.
+`ItemBindingTest` checks binding, re-equipping and reopen. `WorldSessionTest`
+exercises method 3 and rejects incompatible slots.
 Installed-client fixtures check `Cs()` and use the actual Arsenal method on both
 creation and reconnect. Graphical Arsenal behavior is not independently reaccepted
 in this milestone; protocol and stock-client decision fields are tested.
@@ -129,8 +127,8 @@ stock ChatDirector exposes `/broadcast` with that permission check. UserMessage
 mode **4** reaches ready players across maps/instances; bounds and budgets match
 scene chat. Other staff, moderation, tells and party/guild commands are unavailable.
 
-Existing schema-4 `is_admin` roles become Game Master unchanged; public local
-commands/UI use GM terminology and retain old CLI aliases. Tests verify durable
+Local commands/UI use Game Master terminology; obsolete CLI aliases were removed
+in 0.12.0. Tests verify durable
 roles, cross-process/live grant/revocation, stale auth denial, stock reader role/icon,
 normal-player denial and unchanged actor models/positions on role changes.
 Narya OccupantDirector forwards EntryUpdatedEvent to occupant observers; a DSet

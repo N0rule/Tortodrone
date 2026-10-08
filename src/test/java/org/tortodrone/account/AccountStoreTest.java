@@ -13,15 +13,9 @@ public final class AccountStoreTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-accounts-");
         try {
-            CharacterStore legacy = new CharacterStore(directory);
-            Knight knight = legacy.create(choices("Legacy-Knight"));
-            Path profile = directory.resolve("accounts/1.properties"); byte[] oldProfile = Files.readAllBytes(profile);
-            legacyRegistry(directory);
-            Path registry = directory.resolve("accounts/users.properties"); byte[] oldRegistry = Files.readAllBytes(registry);
             try (AccountStore accounts = new AccountStore(directory)) {
-                var first = login(accounts,"TORTODRONE","tortodrone");
-                check(first.id() == 1 && !first.gameMaster() && first.characters().roster().equals(List.of(knight)),"migration preserves identity, verifier and appearance; Game Master defaults false");
-                check(Arrays.equals(oldProfile,Files.readAllBytes(profile)) && Arrays.equals(oldRegistry,Files.readAllBytes(registry)),"legacy files remain untouched");
+                check(accounts.list().isEmpty(),"fresh database has no automatic login");
+                accounts.create("First","first-password".toCharArray());
                 accounts.create("Alice","alice-password".toCharArray(),true); accounts.create("Bob","bob-password".toCharArray());
                 var alice = login(accounts,"alice","alice-password"); var bob = login(accounts,"Bob","bob-password");
                 check(alice.id() == 2 && bob.id() == 3 && alice.gameMaster() && !bob.gameMaster(),"separate stable identities and Game Master flag");
@@ -59,32 +53,9 @@ public final class AccountStoreTest {
             Path corrupt = directory.resolve("corrupt"); Files.createDirectories(corrupt); Files.writeString(corrupt.resolve("tortodrone.db"),"not a database");
             byte[] malformed = Files.readAllBytes(corrupt.resolve("tortodrone.db")); refused(() -> new AccountStore(corrupt));
             check(Arrays.equals(malformed,Files.readAllBytes(corrupt.resolve("tortodrone.db"))),"corrupt database never replaced");
-            Path failed = directory.resolve("bad-migration"); legacyRegistry(failed); Files.writeString(failed.resolve("accounts/1.properties"),"broken profile");
-            refused(() -> new AccountStore(failed)); check(Files.readString(failed.resolve("accounts/1.properties")).equals("broken profile"),"failed migration preserves source");
-            Files.delete(failed.resolve("accounts/1.properties"));
-            try (AccountStore repaired = new AccountStore(failed)) { check(repaired.list().size() == 1,"failed migration rolled back entire schema and can retry"); }
-            Path profileOnly = directory.resolve("version-02");
-            Knight oldKnight = new CharacterStore(profileOnly).create(choices("Old-Knight"));
-            byte[] source = Files.readAllBytes(profileOnly.resolve("accounts/1.properties"));
-            try (AccountStore accounts = new AccountStore(profileOnly)) {
-                var account = login(accounts,"tortodrone","tortodrone");
-                check(account.id() == 1 && account.characters().roster().equals(List.of(oldKnight)),"version 0.2 profile migration retains characters and fixed login");
-                check(Arrays.equals(source,Files.readAllBytes(profileOnly.resolve("accounts/1.properties"))),"profile-only migration leaves source untouched");
-            }
-            Path orphan = directory.resolve("orphan"); legacyRegistry(orphan); new CharacterStore(orphan,2,"Orphan").create(choices("Lost-Knight"));
-            refused(() -> new AccountStore(orphan));
-            Path unsupported = directory.resolve("unsupported");
-            Database future = new Database(unsupported,false); future.write(c -> { try (var statement = c.createStatement()) { statement.execute("PRAGMA user_version=99"); } return null; });
-            refused(() -> new AccountStore(unsupported));
             concurrent(directory.resolve("concurrent"));
-            System.out.println("PASS: SQLite migration, gameMaster roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
+            System.out.println("PASS: SQLite accounts, gameMaster roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
         } finally { try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); } }
-    }
-    public static void legacyRegistry(Path directory) throws IOException {
-        Files.createDirectories(directory.resolve("accounts")); var password = Passwords.protect("tortodrone".toCharArray()); Properties p = new Properties();
-        p.setProperty("schema","1"); p.setProperty("algorithm","PBKDF2WithHmacSHA256"); p.setProperty("iterations",String.valueOf(Passwords.ITERATIONS)); p.setProperty("accounts","1"); p.setProperty("next-id","2");
-        p.setProperty("account.0.id","1"); p.setProperty("account.0.username","tortodrone"); p.setProperty("account.0.salt",HexFormat.of().formatHex(password.salt())); p.setProperty("account.0.verifier",HexFormat.of().formatHex(password.verifier()));
-        try (Writer writer = Files.newBufferedWriter(directory.resolve("accounts/users.properties"))) { p.store(writer,"Synthetic legacy migration fixture"); }
     }
     private static void concurrent(Path directory) throws Exception {
         try (AccountStore one = new AccountStore(directory); AccountStore two = new AccountStore(directory)) {

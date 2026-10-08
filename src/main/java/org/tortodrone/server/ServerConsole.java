@@ -126,7 +126,7 @@ final class ServerConsole implements AutoCloseable {
         }
         if (words.length < 3) throw usage();
         String name = words[2]; AccountStore.validateUsername(name);
-        if ((words[1].equals("gm") || words[1].equals("admin")) && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
+        if (words[1].equals("gm") && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
             accounts.setGameMaster(name, Boolean.parseBoolean(words[3])); log.info("Game Master status changed: " + name); return;
         }
         if (words[1].equals("delete") && words.length == 3) {
@@ -136,7 +136,7 @@ final class ServerConsole implements AutoCloseable {
             if (!running.getAsBoolean()) return;
             accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
         }
-        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && (words[3].equals("gm") || words[3].equals("admin")));
+        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && words[3].equals("gm"));
         boolean reset = words[1].equals("password") && words.length == 3;
         boolean check = words[1].equals("check") && words.length == 3;
         if (!create && !reset && !check) throw usage();

@@ -51,4 +51,4 @@ and firewall before login/keys. On a host using UFW, allow the configured TCP po
 from the intended subnet; do not assume the example network is your network.
 
 [Graphical testing](development.md#isolated-graphical-checks) uses disposable state.
-[Historical research](research/README.md) is evidence, not client modification guidance.
+The installed client and launcher remain separate and unmodified.

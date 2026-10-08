@@ -16,19 +16,19 @@ build: build-server build-admin
 build-server: maps $(SERVER_JAR)
 build-admin: $(ADMIN_JAR)
 
-$(SQLITE): scripts/fetch-sqlite.sh
-	sh scripts/fetch-sqlite.sh $@
+$(SQLITE): scripts/BuildTools.java
+	java scripts/BuildTools.java sqlite $@
 
-$(JLINE): scripts/fetch-jline.sh
-	sh scripts/fetch-jline.sh $@
+$(JLINE): scripts/BuildTools.java
+	java scripts/BuildTools.java jline $@
 
 maps:
-	sh scripts/prepare-maps.sh
+	java scripts/BuildTools.java maps
 
 build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE) $(JLINE)
 	rm -rf $(CLASSES) $(PACKAGE)
 	mkdir -p $(CLASSES) $(PACKAGE)
-	javac --release 17 -cp $(JLINE) -d $(CLASSES) $(SOURCES)
+	javac --release 25 -cp $(JLINE) -d $(CLASSES) $(SOURCES)
 	cp VERSION $(CLASSES)/version.txt
 	cp -R $(CLASSES)/. $(PACKAGE)/
 	cp -R src/main/resources/. $(PACKAGE)/
@@ -57,7 +57,7 @@ test: test-unit test-integration
 test-compile: build
 	rm -rf $(TEST_CLASSES)
 	mkdir -p $(TEST_CLASSES)
-	javac --release 17 -cp $(SERVER_JAR) -d $(TEST_CLASSES) $(TEST_SOURCES)
+	javac --release 25 -cp $(SERVER_JAR) -d $(TEST_CLASSES) $(TEST_SOURCES)
 
 test-unit: test-compile
 	@set -e; for suite in $(UNIT_TESTS); do \
@@ -70,4 +70,4 @@ test-integration: test-compile
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ConsoleIntegrationTest $(SERVER_JAR)
 
 clean:
-	rm -rf $(SERVER_JAR) $(ADMIN_JAR) $(SERVER_JAR).tmp $(ADMIN_JAR).tmp build/tortodrone-server.jar build/.build .build
+	rm -rf $(SERVER_JAR) $(ADMIN_JAR) $(SERVER_JAR).tmp $(ADMIN_JAR).tmp build/.build

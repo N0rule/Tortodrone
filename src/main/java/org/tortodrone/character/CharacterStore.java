@@ -1,17 +1,14 @@
 package org.tortodrone.character;
 
 import java.io.*;
-import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
-import org.tortodrone.storage.AtomicProperties;
 import org.tortodrone.storage.Database;
 
-/** Account-owned roster with transactional SQLite saves; legacy files support migration and tests. */
+/** Account-owned roster with transactional SQLite saves. */
 public final class CharacterStore {
     public static final String USERNAME = AccountStore.DEFAULT_USERNAME;
     static final int MAX_KNIGHTS = 3;
-    private final Path file;
     private final Database database;
     private final String username;
     private final int accountId;
@@ -46,57 +43,11 @@ public final class CharacterStore {
 
     public CharacterStore(int accountId, String username) {
         if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
-        file = null; database = null; this.username = username; this.accountId = accountId;
-    }
-
-    public CharacterStore(Path dataDirectory) throws IOException {
-        this(dataDirectory, 1, USERNAME);
-    }
-
-    public CharacterStore(Path dataDirectory, int accountId, String username) throws IOException {
-        if (accountId < 1 || username == null) throw new IllegalArgumentException("Invalid account identity");
-        this.username = username; this.accountId = accountId; database = null;
-        file = dataDirectory.resolve("accounts/" + accountId + ".properties");
-        if (!Files.exists(file)) return;
-        if (Files.size(file) > 32768) throw new IOException("Character profile exceeds size limit");
-        Properties properties = new Properties();
-        try (Reader reader = Files.newBufferedReader(file)) { properties.load(reader); }
-        try {
-            String savedUsername = properties.getProperty("username");
-            // The renamed test account retains account ID 1 and its saved characters.
-            if (!"1".equals(properties.getProperty("schema"))
-                    || (!username.equals(savedUsername) && !(accountId == 1 && USERNAME.equals(username)
-                        && "tortodrone-local-probe".equals(savedUsername)))) {
-                throw new IllegalArgumentException();
-            }
-            int count = Integer.parseInt(properties.getProperty("knights"));
-            nextId = Integer.parseInt(properties.getProperty("next-id"));
-            if (count < 0 || count > MAX_KNIGHTS || nextId < 1) throw new IllegalArgumentException();
-            List<Knight> loaded = new ArrayList<>();
-            Set<Integer> ids = new HashSet<>(); Set<String> names = new HashSet<>();
-            for (int i = 0; i < count; i++) {
-                String prefix = "knight." + i + ".";
-                Knight knight = new Knight(Integer.parseInt(properties.getProperty(prefix + "id")),
-                    properties.getProperty(prefix + "name"), properties.getProperty(prefix + "helm"),
-                    properties.getProperty(prefix + "armor"), properties.getProperty(prefix + "helm-accessory"),
-                    properties.getProperty(prefix + "armor-accessory"), properties.getProperty(prefix + "costume"),
-                    Integer.parseInt(properties.getProperty(prefix + "color")),
-                    Integer.parseInt(properties.getProperty(prefix + "height")),
-                    Integer.parseInt(properties.getProperty(prefix + "eye")),
-                    Long.parseLong(properties.getProperty(prefix + "created-at")));
-                validate(knight);
-                if (knight.id() < 1 || knight.id() >= nextId || knight.createdAt() < 1
-                        || !ids.add(knight.id()) || !names.add(canonical(knight.name()))) throw new IllegalArgumentException();
-                loaded.add(knight);
-            }
-            knights = List.copyOf(loaded);
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IOException("Invalid character profile; saved characters were not modified", e);
-        }
+        database = null; this.username = username; this.accountId = accountId;
     }
 
     public CharacterStore(Database database, int accountId, String username) throws IOException {
-        this.database = database; this.file = null; this.accountId = accountId; this.username = username;
+        this.database = database; this.accountId = accountId; this.username = username;
         refresh();
     }
     public CharacterStore(Database database,int accountId,String username,ItemCatalog catalog)throws IOException {
@@ -229,25 +180,6 @@ public final class CharacterStore {
             catch(Database.KnightNameInUse conflict){throw new Refused(conflict.getMessage());}
             storageRevision++;return;
         }
-        if (file == null) return;
-        Files.createDirectories(file.getParent());
-        Properties properties = new Properties();
-        properties.setProperty("schema", "1"); properties.setProperty("username", username);
-        properties.setProperty("next-id", String.valueOf(next)); properties.setProperty("knights", String.valueOf(updated.size()));
-        for (int i = 0; i < updated.size(); i++) {
-            String prefix = "knight." + i + "."; Knight knight = updated.get(i);
-            properties.setProperty(prefix + "id", String.valueOf(knight.id()));
-            properties.setProperty(prefix + "name", knight.name());
-            properties.setProperty(prefix + "helm", knight.helm()); properties.setProperty(prefix + "armor", knight.armor());
-            if (knight.helmAccessory() != null) properties.setProperty(prefix + "helm-accessory", knight.helmAccessory());
-            if (knight.armorAccessory() != null) properties.setProperty(prefix + "armor-accessory", knight.armorAccessory());
-            properties.setProperty(prefix + "costume", knight.costume());
-            properties.setProperty(prefix + "color", String.valueOf(knight.color()));
-            properties.setProperty(prefix + "height", String.valueOf(knight.height()));
-            properties.setProperty(prefix + "eye", String.valueOf(knight.eye()));
-            properties.setProperty(prefix + "created-at", String.valueOf(knight.createdAt()));
-        }
-        AtomicProperties.save(file, properties, "Tortodrone character profile");
     }
 
     private static void validate(Knight knight) {

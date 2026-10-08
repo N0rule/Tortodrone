@@ -27,7 +27,7 @@ public final class StarterCatalogTest {
         Knight mismatched=new Knight(0,"Bad-Knight",choices.helm(),choices.armor(),null,null,"Blue",1,2,0,0);
         check(!StarterCatalog.accepts(mismatched),"creator cannot request gear from a different costume");
         Knight unknown=new Knight(0,"Old-Knight","unknown-helm","unknown-armor",null,null,"unknown",1,2,0,1);
-        check(!StarterCatalog.accepts(unknown) && !StarterCatalog.preview(unknown).arguments().containsKey("Helmet"),"unknown legacy choices do not turn into guessed assets");
+        check(!StarterCatalog.accepts(unknown) && !StarterCatalog.preview(unknown).arguments().containsKey("Helmet"),"unknown unsupported choices do not turn into guessed assets");
         var store=new CharacterStore();
         try {store.create(unknown);throw new AssertionError("Unsupported equipment granted");}catch(CharacterStore.Refused expected){}
         check(store.roster().isEmpty(),"rejected choices cannot grant items or consume slots");

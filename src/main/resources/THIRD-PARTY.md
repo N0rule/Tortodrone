@@ -11,14 +11,13 @@ The driver is distributed under Apache License 2.0 and BSD terms. Its bundled
 license/notice files are retained in `META-INF/` in each executable JAR. SQLite
 itself is public domain. Consult the bundled upstream notices for full terms.
 
-The pinned download is verified by `scripts/fetch-sqlite.sh` and cached under
+The pinned download is verified by `scripts/BuildTools.java sqlite` and cached under
 `build/deps/`. Changing the driver requires updating the version and digest,
 reviewing upstream license notices, and checking both packaged applications.
 
 ## JLine terminal editing
 
-Both JARs also bundle JLine **4.4.7**, using its `jdk11` classifier for compatibility
-with the project's Java 17 target. It supplies interactive terminal editing and
+Both JARs also bundle JLine **4.4.7** (`jdk11` artifact), tested on Java 25. It supplies interactive terminal editing and
 bounded command history; its native terminal libraries are included.
 
 - Upstream: https://github.com/jline/jline3
@@ -26,5 +25,5 @@ bounded command history; its native terminal libraries are included.
 - SHA-256: `091c6aaf65de86d4106528a626fe1d9daebcd2313102d6f7e484700846d0e63d`
 
 JLine uses the BSD 3-Clause license, included in each JAR as `licenses/jline.txt`.
-`scripts/fetch-jline.sh` verifies and caches the pinned artifact. CLI automation
+`scripts/BuildTools.java jline` verifies and caches the pinned artifact. CLI automation
 with redirected stdin uses plain input and does not require a native terminal.

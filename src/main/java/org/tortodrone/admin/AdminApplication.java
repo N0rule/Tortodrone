@@ -74,10 +74,10 @@ public final class AdminApplication {
             String confirmation = System.console() == null ? input.readLine() : System.console().readLine("Type the account username to delete it and its characters: ");
             if (!selected.username().equals(confirmation)) throw new IOException("Deletion confirmation did not match"); accounts.delete(username,selected.id()); System.out.println("Account deleted."); return;
         }
-        if (args.length == 3 && (args[0].equals("--set-gm") || args[0].equals("--set-admin")) && (args[2].equals("true") || args[2].equals("false"))) {
+        if (args.length == 3 && args[0].equals("--set-gm") && (args[2].equals("true") || args[2].equals("false"))) {
             accounts.setGameMaster(username,Boolean.parseBoolean(args[2])); System.out.println("Game Master status changed."); return;
         }
-        boolean create = args[0].equals("--create-account") && (args.length == 2 || args.length == 3 && (args[2].equals("--gm") || args[2].equals("--admin")));
+        boolean create = args[0].equals("--create-account") && (args.length == 2 || args.length == 3 && args[2].equals("--gm"));
         boolean reset = args[0].equals("--set-password") && args.length == 2;
         boolean check = args[0].equals("--check-password") && args.length == 2;
         if (!create && !reset && !check) throw new IOException("Use --help for account commands");

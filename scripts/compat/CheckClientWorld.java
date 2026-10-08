@@ -33,7 +33,7 @@ public final class CheckClientWorld {
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
-            run(List.of(executable("javac"), "--release", "17", "-cp", cp, "-d", scratch.toString(),
+            run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
                 project.resolve("scripts/compat/AccountConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString(),

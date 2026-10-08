@@ -1,4 +1,4 @@
-# Verified configuration references only; no game assets. See docs/research/starter-equipment.md.
+# Verified configuration references only; no game assets. See docs/server-architecture.md.
 # category|configuration|player-model-argument|model-reference|typed model arguments
 ARMOR|Gear/Armor/Spiral Brigandine (Blue)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3330;Colorization=PLAYER_COLOR;Green=C:3074;Red=C:2818
 ARMOR|Gear/Armor/Spiral Brigandine (Gold)|Armor|item/gear/armor/doublebelt/model_recolor.dat|Blue=C:3329;Colorization=PLAYER_COLOR;Green=C:3073;Red=C:2817

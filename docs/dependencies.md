@@ -11,14 +11,13 @@ The driver is distributed under Apache License 2.0 and BSD terms. Its bundled
 license/notice files are retained in `META-INF/` in each executable JAR. SQLite
 itself is public domain. Consult the bundled upstream notices for full terms.
 
-The pinned download is verified by `scripts/fetch-sqlite.sh` and cached under
+The pinned download is verified by `scripts/BuildTools.java sqlite` and cached under
 `build/deps/`. Changing the driver requires updating the version and digest,
 reviewing upstream license notices, and checking both packaged applications.
 
 ## JLine terminal editing
 
-Both JARs also bundle JLine **4.4.7**, using its `jdk11` classifier for compatibility
-with the project's Java 17 target. It supplies interactive terminal editing and
+Both JARs also bundle JLine **4.4.7** (`jdk11` artifact), tested on Java 25. It supplies interactive terminal editing and
 bounded command history; its native terminal libraries are included.
 
 - Upstream: https://github.com/jline/jline3
@@ -26,7 +25,7 @@ bounded command history; its native terminal libraries are included.
 - SHA-256: `091c6aaf65de86d4106528a626fe1d9daebcd2313102d6f7e484700846d0e63d`
 
 JLine uses the BSD 3-Clause license, included in each JAR as `licenses/jline.txt`.
-`scripts/fetch-jline.sh` verifies and caches the pinned artifact. CLI automation
+`scripts/BuildTools.java jline` verifies and caches the pinned artifact. CLI automation
 with redirected stdin uses plain input and does not require a native terminal.
 
 ## External town layouts
@@ -42,7 +41,7 @@ or audio. The archive's static index identifies it as Haven Town Square.
 - SHA-256: `045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f`
 - Bazaar: `Master/Static/2`, revision `1661137235`
 - Bazaar SHA-256: `e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033`
-- Fetch/cache: `scripts/prepare-maps.sh`, `build/deps/`
+- Fetch/cache: `scripts/BuildTools.java maps`, `build/deps/`
 - Runtime: `build/maps/{haven,bazaar}/scene.dat`; neither JAR contains maps
 
 The archive provides no repository license file at the pinned revision. The
@@ -50,7 +49,6 @@ layout is attributed here; no additional licensing claim is made for it.
 The default collision masks are derived from their respective scenes using
 read-only installed client configurations: default PC circle radius 1/3 and
 collision mask 43, samples spaced 0.25 units over x=[-35,34.75], y=[-32,43.75].
-The Haven-specific historical `TownCollisionExport.java` records its derivation;
-the reusable `ScenePackExport.java` derives new packs (Bazaar uses it). Each map
+The reusable `ScenePackExport.java` derives new packs (Bazaar uses it). Each map
 descriptor records both geometry and collision digests. Update them and compatibility
 fixtures together. [Map preparation](maps.md) describes importing original archives.

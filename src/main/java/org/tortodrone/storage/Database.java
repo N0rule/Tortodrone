@@ -7,13 +7,12 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.sql.*;
 import java.util.*;
 import org.tortodrone.account.Passwords;
-import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 7;
+    public static final int SCHEMA_VERSION = 8;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -30,15 +29,20 @@ public final class Database {
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
-        if (Files.exists(file)) { int version = version(); if (version == SCHEMA_VERSION) return; if (version < 0 || version > SCHEMA_VERSION) throw new IOException("Unsupported database version; database was not replaced"); }
-        if (deploymentLocked) initialize(directory);
+        if (Files.exists(file)) { requireCurrentVersion(); return; }
+        if (deploymentLocked) initialize();
         else {
             try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  var lock = channel.tryLock()) {
-                if (lock == null) throw new IOException("Stop the server once before initializing or migrating the database");
-                if (!Files.exists(file) || version() != SCHEMA_VERSION) initialize(directory);
+                if (lock == null) throw new IOException("Stop the server before initializing the database");
+                if (Files.exists(file)) requireCurrentVersion(); else initialize();
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
+    }
+    private void requireCurrentVersion() throws IOException {
+        int version = version();
+        if (version != SCHEMA_VERSION) throw new IOException("Unsupported database schema " + version
+            + "; expected " + SCHEMA_VERSION + ". Use a fresh data directory; saved data was not changed");
     }
     public Path file() { return file; }
     private Connection connect() throws SQLException {
@@ -67,62 +71,25 @@ public final class Database {
     private int version() throws IOException {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
     }
-    private void initialize(Path directory) throws IOException {
-        int existing = Files.exists(file) ? version() : 0;
-        if (existing == SCHEMA_VERSION) return;
-        if (existing >= 1 && existing < SCHEMA_VERSION) {
-            write(c -> {
-                int current;
-                try (Statement statement = c.createStatement(); ResultSet r = statement.executeQuery("PRAGMA user_version")) {
-                    r.next(); current=r.getInt(1);
-                }
-                if (current==SCHEMA_VERSION) return null;
-                if (current<1 || current>SCHEMA_VERSION) throw new IOException("Unsupported database version; database was not replaced");
-                if (current==1) WorldProfiles.initialize(c);
-                if (current<=2) WorldProfiles.upgrade(c);
-                if(current<=3) WorldProfiles.upgradeBinding(c);
-                if(current<=4) WorldProfiles.upgradeInventory(c);
-                if(current<=5)upgradeKnightNames(c);
-                WorldProfiles.upgradePlayerItems(c);
-                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version="+SCHEMA_VERSION); }
-                return null;
-            });
-            return;
-        }
-        if (existing != 0) throw new IOException("Unsupported database version; database was not replaced");
-        if (!Files.exists(file)) Files.createFile(file);
-        read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
-            r.next(); if (r.getInt(1) != 0) throw new IOException("Unsupported database schema; database was not replaced");
-        } return null; });
+    private void initialize() throws IOException {
+        Files.createFile(file);
         if (Files.getFileStore(file).supportsFileAttributeView("posix")) Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rw-------"));
         read(connection -> { try (Statement s = connection.createStatement()) { s.execute("PRAGMA journal_mode=WAL"); } return null; });
         write(connection -> {
-            try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")) {
-                r.next(); if (r.getInt(1) != 0) throw new IOException("Unsupported database schema; database was not replaced");
-            }
             try (Statement s = connection.createStatement()) {
                 s.execute("CREATE TABLE metadata(key TEXT PRIMARY KEY, value INTEGER NOT NULL)");
                 s.execute("INSERT INTO metadata VALUES('next-account-id',1)");
-                s.execute("CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), is_admin INTEGER NOT NULL DEFAULT 0 CHECK(is_admin IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0))");
+                s.execute("CREATE TABLE accounts(id INTEGER PRIMARY KEY CHECK(id>0), username TEXT NOT NULL, name_key TEXT NOT NULL UNIQUE, salt BLOB NOT NULL CHECK(length(salt)=16), verifier BLOB NOT NULL CHECK(length(verifier)=32), game_master INTEGER NOT NULL DEFAULT 0 CHECK(game_master IN(0,1)), auth_revision INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1, created_at INTEGER NOT NULL, next_knight_id INTEGER NOT NULL DEFAULT 1 CHECK(next_knight_id>0))");
                 s.execute("CREATE TABLE knights(account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, id INTEGER NOT NULL CHECK(id>0), name TEXT NOT NULL, name_key TEXT NOT NULL, helm TEXT NOT NULL, armor TEXT NOT NULL, helm_accessory TEXT, armor_accessory TEXT, costume TEXT NOT NULL, color INTEGER NOT NULL CHECK(color BETWEEN 0 AND 255), height INTEGER NOT NULL CHECK(height BETWEEN 0 AND 4), eye INTEGER NOT NULL CHECK(eye BETWEEN 0 AND 46), created_at INTEGER NOT NULL, PRIMARY KEY(account_id,id), UNIQUE(account_id,name_key))");
                 s.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL)");
             }
-            migrate(connection, directory);
             WorldProfiles.initialize(connection);
-            WorldProfiles.upgrade(connection);
-            WorldProfiles.upgradeBinding(connection);
-            WorldProfiles.upgradeInventory(connection);
-            upgradeKnightNames(connection);
-            WorldProfiles.upgradePlayerItems(connection);
-            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version="+SCHEMA_VERSION); }
+            try (Statement s = connection.createStatement()) {
+                s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
+                s.execute("PRAGMA user_version="+SCHEMA_VERSION);
+            }
             return null;
         });
-    }
-    private static void upgradeKnightNames(Connection c)throws SQLException,IOException {
-        try(var s=c.createStatement();var r=s.executeQuery("SELECT name_key FROM knights GROUP BY name_key HAVING count(*)>1 ORDER BY name_key LIMIT 1")) {
-            if(r.next())throw new IOException("Duplicate knight name prevents schema 6 upgrade: "+r.getString(1)+". Resolve duplicate names using the previous release, then retry; saved characters were not changed");
-        }
-        try(var s=c.createStatement()){s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");}
     }
     /** Availability is advisory; the unique index arbitrates competing writes. */
     public boolean knightNameInUse(String name,int accountId,int knightId)throws IOException {
@@ -130,56 +97,6 @@ public final class Database {
             s.setString(1,name.toLowerCase(Locale.ROOT));s.setInt(2,accountId);s.setInt(3,knightId);
             try(var r=s.executeQuery()){return r.next();}
         }});
-    }
-    private void migrate(Connection connection, Path directory) throws IOException, SQLException {
-        Path registry = directory.resolve("accounts/users.properties");
-        if (!Files.exists(registry)) {
-            Path profiles = directory.resolve("accounts");
-            if (Files.isDirectory(profiles)) try (var paths = Files.list(profiles)) {
-                var saved = paths.filter(p -> p.getFileName().toString().matches("[0-9]+\\.properties")).toList();
-                if (!saved.isEmpty()) {
-                    if (saved.size() != 1 || !saved.get(0).getFileName().toString().equals("1.properties")) {
-                        throw new IOException("Legacy profiles need their account registry before migration");
-                    }
-                    // Version 0.2 had only the fixed normal account and no separate registry.
-                    String username = org.tortodrone.account.AccountStore.DEFAULT_USERNAME;
-                    var password = Passwords.protect(username.toCharArray());
-                    CharacterStore legacy = new CharacterStore(directory,1,username);
-                    insertAccount(connection,1,username,password.salt(),password.verifier(),false,legacy.nextId());
-                    replaceRoster(connection,1,legacy.roster(),legacy.nextId(),-1);
-                    try (Statement s = connection.createStatement()) { s.executeUpdate("UPDATE metadata SET value=2 WHERE key='next-account-id'"); }
-                }
-            }
-            return; // A fresh installation has no automatic development account.
-        }
-        if (Files.size(registry) > 1024 * 1024) throw new IOException("Legacy account registry exceeds size limit");
-        Properties properties = new Properties();
-        try (Reader reader = Files.newBufferedReader(registry)) { properties.load(reader); }
-        try {
-            if (!"1".equals(properties.getProperty("schema")) || !"PBKDF2WithHmacSHA256".equals(properties.getProperty("algorithm"))
-                    || Integer.parseInt(properties.getProperty("iterations")) != Passwords.ITERATIONS) throw new IllegalArgumentException();
-            int count = Integer.parseInt(properties.getProperty("accounts")), next = Integer.parseInt(properties.getProperty("next-id"));
-            if (count < 1 || count > 1000 || next < 2) throw new IllegalArgumentException();
-            Set<Integer> ids = new HashSet<>(); Set<String> names = new HashSet<>();
-            for (int index = 0; index < count; index++) {
-                String prefix = "account." + index + ".";
-                int id = Integer.parseInt(properties.getProperty(prefix + "id")); String username = properties.getProperty(prefix + "username");
-                org.tortodrone.account.AccountStore.validateUsername(username);
-                byte[] salt = HexFormat.of().parseHex(properties.getProperty(prefix + "salt")), verifier = HexFormat.of().parseHex(properties.getProperty(prefix + "verifier"));
-                if (id < 1 || id >= next || !ids.add(id) || !names.add(username.toLowerCase(Locale.ROOT)) || salt.length != 16 || verifier.length != 32) throw new IllegalArgumentException();
-                CharacterStore legacy = new CharacterStore(directory, id, username);
-                insertAccount(connection, id, username, salt, verifier, false, legacy.nextId());
-                replaceRoster(connection, id, legacy.roster(), legacy.nextId(), -1);
-            }
-            Path profiles = directory.resolve("accounts");
-            if (Files.isDirectory(profiles)) try (var paths = Files.list(profiles)) {
-                for (Path profile : paths.filter(p -> p.getFileName().toString().matches("[0-9]+\\.properties")).toList()) {
-                    int profileId = Integer.parseInt(profile.getFileName().toString().replace(".properties", ""));
-                    if (!ids.contains(profileId)) throw new IOException("Legacy profile has no account owner; migration rolled back");
-                }
-            }
-            try (PreparedStatement s = connection.prepareStatement("UPDATE metadata SET value=? WHERE key='next-account-id'")) { s.setInt(1,next); s.executeUpdate(); }
-        } catch (IllegalArgumentException | NullPointerException e) { throw new IOException("Invalid legacy accounts; migration rolled back and source files preserved", e); }
     }
     public Identity identity(String username) throws IOException {
         return read(c -> { try (PreparedStatement s = c.prepareStatement("SELECT * FROM accounts WHERE name_key=?")) {
@@ -192,12 +109,12 @@ public final class Database {
         } });
     }
     private static Identity identity(ResultSet r) throws SQLException {
-        return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("is_admin"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
+        return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }
     public List<Summary> list() throws IOException {
         return read(c -> { List<Summary> result = new ArrayList<>();
-            try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT a.id,a.username,a.is_admin,a.created_at,count(k.id) AS knights FROM accounts a LEFT JOIN knights k ON k.account_id=a.id GROUP BY a.id ORDER BY a.id")) {
-                while (r.next()) result.add(new Summary(r.getInt("id"),r.getString("username"),r.getBoolean("is_admin"),r.getInt("knights"),r.getLong("created_at")));
+            try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT a.id,a.username,a.game_master,a.created_at,count(k.id) AS knights FROM accounts a LEFT JOIN knights k ON k.account_id=a.id GROUP BY a.id ORDER BY a.id")) {
+                while (r.next()) result.add(new Summary(r.getInt("id"),r.getString("username"),r.getBoolean("game_master"),r.getInt("knights"),r.getLong("created_at")));
             } return List.copyOf(result);
         });
     }
@@ -215,7 +132,7 @@ public final class Database {
         });
     }
     private static void insertAccount(Connection c, int id, String username, byte[] salt, byte[] verifier, boolean gameMaster, int next) throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("INSERT INTO accounts(id,username,name_key,salt,verifier,is_admin,created_at,next_knight_id) VALUES(?,?,?,?,?,?,?,?)")) {
+        try (PreparedStatement s = c.prepareStatement("INSERT INTO accounts(id,username,name_key,salt,verifier,game_master,created_at,next_knight_id) VALUES(?,?,?,?,?,?,?,?)")) {
             s.setInt(1,id); s.setString(2,username); s.setString(3,username.toLowerCase(Locale.ROOT)); s.setBytes(4,salt); s.setBytes(5,verifier); s.setBoolean(6,gameMaster); s.setLong(7,System.currentTimeMillis()); s.setInt(8,next); s.executeUpdate();
         }
     }
@@ -231,7 +148,7 @@ public final class Database {
     public void gameMaster(String username, boolean gameMaster,int expectedId) throws IOException {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
-            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET is_admin=?,revision=revision+1 WHERE id=?")) { s.setBoolean(1,gameMaster); s.setInt(2,id); s.executeUpdate(); }
+            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET game_master=?,revision=revision+1 WHERE id=?")) { s.setBoolean(1,gameMaster); s.setInt(2,id); s.executeUpdate(); }
             event(c,id,gameMaster ? "game master granted" : "game master removed"); return null;
         });
     }
@@ -295,12 +212,6 @@ public final class Database {
             event(c,account,"knight deleted; world="+world);return null;
         });
     }
-    static Knight knight(Connection c,int accountId,int knightId) throws SQLException, IOException {
-        try (PreparedStatement s = c.prepareStatement("SELECT * FROM knights WHERE account_id=? AND id=?")) {
-            s.setInt(1,accountId); s.setInt(2,knightId);
-            try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("Missing character during migration"); return knight(r); }
-        }
-    }
     private static Knight knight(ResultSet r) throws SQLException {
         return new Knight(r.getInt("id"),r.getString("name"),r.getString("helm"),r.getString("armor"),r.getString("helm_accessory"),r.getString("armor_accessory"),r.getString("costume"),r.getInt("color"),r.getInt("height"),r.getInt("eye"),r.getLong("created_at"));
     }
@@ -357,7 +268,7 @@ public final class Database {
         if(quantity<1||quantity>org.tortodrone.character.ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
         if(!entry.grantable())throw new IOException("Unsupported item for grants");
         return write(c->{
-            if(actorAccount>=0)try(var s=c.prepareStatement("SELECT is_admin FROM accounts WHERE id=? AND auth_revision=?")) {
+            if(actorAccount>=0)try(var s=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")) {
                 s.setInt(1,actorAccount);s.setLong(2,actorRevision);
                 try(var r=s.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}
             }

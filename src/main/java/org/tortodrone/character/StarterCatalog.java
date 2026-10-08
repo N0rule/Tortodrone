@@ -44,7 +44,7 @@ public final class StarterCatalog {
         args.put("Face Texture", eye + ".png");
         if (knight.eye() == 19) args.put("Texture - Closed", eye + ".png");
         else if (knight.eye() == 29 || knight.eye() == 46) args.put("Texture - Closed", eye + "_closed.png");
-        // Unknown legacy choices stay saved; never guess an asset path for them.
+        // Unknown unsupported choices stay saved; never guess an asset path for them.
         add(args, knight.helm(), color); add(args, knight.armor(), color);
         if (knight.helmAccessory() != null) add(args, knight.helmAccessory() + ", " + knight.costume(), color);
         if (knight.armorAccessory() != null) add(args, knight.armorAccessory() + ", " + knight.costume(), color);

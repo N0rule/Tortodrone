@@ -46,9 +46,7 @@ the command. Without a terminal, supply password and confirmation as two complet
 stdin lines, or one for a check. Old account flags on the server JAR are unsupported.
 
 Use `--create-account Alice --gm` or `--set-gm Alice true` in the local tool.
-The old `admin`, `--admin` and `--set-admin` spellings remain aliases for upgrades;
-the JAR filename remains `tortodrone-admin.jar` for deployment compatibility.
-Existing stored roles are retained with no schema change.
+Only the `gm`, `--gm` and `--set-gm` role spellings are supported.
 
 `--list-knights Alice` shows names/IDs/balances. `--delete-knight Alice Saved-Knight`
 requires one stdin line containing the exact saved knight name. The desktop's
@@ -84,38 +82,25 @@ rows are removed. Picker deletion still refuses online knights.
   over the stock client's password transform. Neither plaintext nor reusable
   transform is stored. Keys are independent of accounts.
 
-## State, upgrades and backup
+## State and backup
 
 `data/` beside the server JAR contains `server.properties`, `tortodrone.db`,
 optional SQLite `-wal`/`-shm` files, `keys/private.pk8`, `keys/public.txt`,
 `logs/latest.log` and `server.lock`. Preserve database and keypair together.
-Stop the server and close the manager before copying the whole directory or upgrading.
-Keep both JARs on the same release; do not run an older release against upgraded state.
+Stop the server and close the manager before copying the whole directory or replacing the JARs.
+Keep both JARs on the same release; only matching database schemas are supported.
 
-Current schema is 7. Version 0.11.0 preserves existing inventories and adds costume/
-trinket slots, stack counts and permanent binding. Regenerate the v2 item catalogue
-to enable additional player items; old v1 catalogues remain readable. Version 0.7.2 adds persistent item binding. All existing
-starter items were originally granted equipped and remain bound after migration,
-including items now unequipped; their loadout, IDs and balances are preserved.
-Equipping applies the stored bind-on-equip rule; unequipping never clears binding.
-Version 0.10.0 preserves those rows in schema 5, marks the original starter items,
-allows additional instances of the same type, and adds item-grant audits. Preserve
-the external `items/` catalogue with the deployment. Version 0.10.1 adds the global
-knight-name index. A migration encountering duplicate names stops with the first
-conflicting name and rolls back, preserving the previous schema and characters.
-Use the previous release to rename a conflicting knight in the picker, stop it,
-then retry the upgrade. No automatic rename or deletion is performed. Schema 2 added
-global world/item identities and the starter kit; schema 3 added balances, state
-revision, equipped slots and currency audit events. Upgrades are transactional,
-retain account/roster IDs and credentials, and do not regrant kits or re-equip
-items on reopening. Existing schema-2 kits are equipped once during upgrade.
+Current schema is 8. Fresh databases are created directly with the current tables,
+indexes and constraints. Only that exact schema is accepted: older, future,
+unversioned and corrupt databases are refused without replacement. There are no
+schema upgrades, account/profile property readers, imports or automatic development
+accounts. Use a fresh data directory when adopting this release from an older
+schema; preserve the original data and keys as backups. No data is discarded by
+the tools.
 
-Pre-SQLite registries/profiles are imported once, retaining identities, verifiers,
-appearance, timestamps and counters. Imported Game Master defaults to false; the old
-profile-only 0.2 installation retains its fixed development login. Fresh installs
-create none. Legacy files remain untouched as backups and are no longer active.
-Invalid sources fail migration rather than inventing replacement identities.
+Item catalogues must use v2. Regenerate an older catalogue with the Java exporter.
+Equipped starters are bound; equipping applies the stored bind-on-equip rule and
+unequipping retains binding. Reopening never regrants kits or re-equips items.
+Preserve external `items/` and `maps/` with the deployment.
 
-Older root-level data must be moved beside the JAR while stopped, without
-overwriting an existing deployment. Remove obsolete `data-directory` settings.
 Never copy only a live database: pending changes may reside in its WAL.

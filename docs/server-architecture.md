@@ -1,6 +1,6 @@
 # Server architecture
 
-One Java 17 server process, one TCP listener and a local SQLite database. A separate
+One Java 25 server process, one TCP listener and a local SQLite database. A separate
 Swing/CLI admin JAR shares the database on the same PC. Both JARs bundle SQLite
 JDBC and JLine. Maps are external validated packs. No upstream game server code or installed client
 classes are compiled into Tortodrone. See [dependency provenance](dependencies.md).
@@ -17,7 +17,7 @@ All packages are under `src/main/java/org/tortodrone/`.
 | `protocol` | `HandshakeCodec`, `SessionCodec`, `SessionDecoder`: bounded explicit wire schemas |
 | `account` | `AccountStore`, `Passwords`: identity, roles, authentication/revocation |
 | `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `ItemCatalog`, `Currency`: world state/catalog |
-| `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state; `AtomicProperties`: legacy storage |
+| `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state |
 | `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
 | `admin`, `config` | `AdminApplication`/`AdminWindow`: local tools; `ServerSettings`: settings |
 
@@ -34,12 +34,13 @@ than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
 not the wildcard listening address. Credentials/raw packets/secrets are never logged.
 
-Schema 7 stores accounts, account-local rosters, globally identified world knights,
+Schema 8 stores accounts, account-local rosters, globally identified world knights,
 owned item instances, binding, equipped slots, per-knight balances and audit events.
 Connections enable foreign keys, WAL and a five-second busy timeout. Writes use
 `BEGIN IMMEDIATE` with commit/rollback; password hashing happens outside SQL
-transactions. IDs are monotonic and never recycled. Migrations are transactional
-and require the deployment lock. See [administration/upgrades](administration.md).
+transactions. IDs are monotonic and never recycled. Fresh schema creation requires
+the deployment lock. Only the current schema is accepted; unsupported databases are refused unchanged. There are no imports or
+upgrade paths. See [administration/storage](administration.md).
 
 Account-local roster ID, global world/actor ID, item ID, scene model ID and
 connection-local distributed-object ID are different identities. Never substitute
@@ -67,11 +68,10 @@ Knight methods: 3 validates a name, 4 selects, 5 creates/edits, 6 deletes. Save
 validates all fourteen fields and commits/publishes the roster before selection
 and success callbacks. Confirm listeners use method 1/null arguments for success,
 method 0/literal `~` reason for failure. Names are rechecked under the mutation
-lock. Global canonical-name availability is checked against SQLite; the schema-6
-unique index arbitrates concurrent creation/renaming under the write transaction.
+lock. Global canonical-name availability is checked against SQLite; the global unique index arbitrates concurrent creation/renaming under the write transaction.
 Name conflicts become normal confirmation failures, with no roster publication or
-ID consumption. Migration refuses duplicate names and rolls back; it never renames
-or deletes saved characters. Online knights cannot be edited/deleted. Unsupported services fail explicitly;
+ID consumption. Online knights cannot be edited/deleted. Unsupported services fail
+explicitly;
 empty feed/news handles support initialization without inventing gameplay.
 
 Limits include 16 clients, 64 KiB upstream/1 MiB downstream frames, 256 incoming
@@ -155,8 +155,8 @@ and occupant Type ordinal 2 supplies the stock title/support icon. No admin toke
 or invented prestige rank is granted. A 250 ms role poll republishes player and
 occupant metadata without changing actor configs, positions or identity. Existing
 occupants receive EntryUpdatedEvent so stock nameplate/chat observers refresh;
-replacing the whole DSet only updates its stored value. Schema-4
-`is_admin` remains the durable GM boolean for compatibility with existing data.
+replacing the whole DSet only updates its stored value. The current schema stores
+the role in `accounts.game_master`.
 
 The [milestone plan](world-entry-plan.md) owns feature status; the
 [entry investigation](town-entry-investigation.md) owns defect/acceptance evidence.
@@ -171,7 +171,7 @@ bit 1 carries permanent binding, which also sets mutable binding at creation.
 `items/catalog.tsv`, with a starter fallback when absent. It loads no stock classes.
 `ItemCatalogExport` is an optional read-only installed oracle and does not run on
 the server. Verified normal equipment, costumes, trinkets and plain inventory records are grantable;
-unsupported/internal/expiring types remain indexed. Catalogue v2 retains v1 reading
+unsupported/internal/expiring types remain indexed. Catalogue v2 is required
 and resolves unique nonzero stock IDs to canonical references.
 `StarterCatalog.equipped` composes the verified catalogue arguments with knight
 appearance and original accessories for the equipment preview. The lowest equipped
@@ -182,13 +182,13 @@ slots. Weapon-only changes and unchanged inventory additions preserve the town
 actor's model reference on the client. All currently supported maps are towns;
 combat/action inputs remain ignored by the authoritative simulation.
 
-Schema-5 inventory supports multiple instances per type, a unique occupied equipment
+Inventory supports multiple instances per type, a unique occupied equipment
 slot, and five marked starter rows. Appearance edits touch only marked cosmetics.
 Binding uses the stored `bind_on_equip` rule. `Database.grantItems` checks the GM's
 current role/auth revision and target identity under BEGIN IMMEDIATE before allocating
 IDs. Items/revision/audit commit together; failures consume no IDs. Grants impose
 1–20 instances per request and 256 per knight. `item_events` cascades with its knight.
-Schema 7 adds costume/trinket equipment slots, permanent binding and bounded stack
+Inventory supports costume/trinket equipment slots, permanent binding and bounded stack
 counts. Plain inventory records serialize as stock Item; equipment uses LevelItem.
 Stack merges retain instance IDs and publish EntryUpdatedEvent. Normal-chat `!items`/`!giveitem` use existing SpeakMarshaller method 1 and private
 SystemMessage results; they share the chat rate budget and never broadcast command

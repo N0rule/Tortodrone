@@ -24,6 +24,8 @@ public final class AdminIntegrationTest {
             command(admin,directory,"",true,"Tortodrone Game Master", "--version"); check(!Files.exists(directory.resolve("data")),"version command creates no runtime state");
             command(admin,directory,"",true,"ID\tUsername", "--list-accounts");
             command(admin,directory,"owner-password\nowner-password\n",true,"Account created.","--create-account","Owner","--gm");
+            command(admin,directory,"",false,"Use --help","--set-admin","Owner","false");
+            command(admin,directory,"",false,"Use --help","--create-account","OldAlias","--admin");
             command(admin,directory,"owner-password\n",true,"Password matches.","--check-password","Owner");
             command(admin,directory,"wrong-password\n",true,"Password does not match.","--check-password","Owner");
             command(admin,directory,"",true,"1\tOwner\ttrue\t0","--list-accounts");

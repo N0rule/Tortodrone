@@ -68,7 +68,7 @@ public final class SecureHandshake {
             log.debug("AESAuthRequest decoded; frame=" + (body.length + 4)
                 + " bytes; bootstrap groups=" + auth.groupCount());
             Cipher aes = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            // Verified legacy protocol IV; this is wire compatibility, not a new encryption design.
+            // Verified stock protocol IV; this is wire compatibility, not a new encryption design.
             aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"), new IvParameterSpec(
                 new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());

@@ -69,18 +69,18 @@ public final class ItemCatalog {
         if(Files.size(file)>32_000_000)throw new IOException("Item catalogue exceeds size limit");
         var entries=new ArrayList<Entry>();
         try(var reader=Files.newBufferedReader(file)) {
-            String header=reader.readLine();boolean v1="# Tortodrone item catalogue v1".equals(header);
-            if(!v1&&!"# Tortodrone item catalogue v2".equals(header))throw new IOException("Unsupported item catalogue");
+            String header=reader.readLine();
+            if(!"# Tortodrone item catalogue v2".equals(header))throw new IOException("Unsupported item catalogue");
             for(String line;(line=reader.readLine())!=null;) {
                 if(line.isBlank()||line.startsWith("#"))continue;
                 if(line.length()>65536||entries.size()>=50000)throw new IOException("Item catalogue exceeds limits");
-                var f=line.split("\t",-1);if(f.length!=(v1?9:10))throw new IOException("Malformed item catalogue row");
+                var f=line.split("\t",-1);if(f.length!=10)throw new IOException("Malformed item catalogue row");
                 if(!Set.of("true","false").contains(f[5])||!Set.of("true","false").contains(f[7]))throw new IOException("Invalid item flags");
-                if(!v1&&!Set.of("true","false").contains(f[8]))throw new IOException("Invalid permanent flag");
-                try(var in=new DataInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(f[v1?8:9])))) {
+                if(!Set.of("true","false").contains(f[8]))throw new IOException("Invalid permanent flag");
+                try(var in=new DataInputStream(new ByteArrayInputStream(Base64.getDecoder().decode(f[9])))) {
                     var args=readMap(in,0,new int[]{0});if(in.read()!=-1)throw new IOException("Trailing item arguments");
                     var e=new Entry(f[0],Integer.parseInt(f[1]),f[2],f[3],Integer.parseInt(f[4]),Boolean.parseBoolean(f[5]),
-                        f[6].isEmpty()?null:WorldProfile.Slot.valueOf(f[6]),Boolean.parseBoolean(f[7]),!v1&&Boolean.parseBoolean(f[8]),args);
+                        f[6].isEmpty()?null:WorldProfile.Slot.valueOf(f[6]),Boolean.parseBoolean(f[7]),Boolean.parseBoolean(f[8]),args);
                     if(e.config().length()>512||e.rarity()<-1||e.rarity()>10)throw new IOException("Invalid item metadata");
                     entries.add(e);
                 }
