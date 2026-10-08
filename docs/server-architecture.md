@@ -288,11 +288,14 @@ cannot enter a world. Resubscribing to PlayerObject restores selected state.
 Zone 1 / scene 1 resolves to scene object 10 and the pinned archived Town Square
 layout. Scene snapshots contain occupant metadata and three verified service
 handles. Updates begin after the stock controller's `enteredPlace` notification,
-which follows attachment of its delta listener. Each session ticks at 20 Hz,
-publishing full snapshots until the client
-acknowledges a scene timestamp, then deltas relative to that acknowledged snapshot.
-It keeps 40 timestamp/actor-state baselines. Ordinary movement omits unchanged
-model configuration; gear changes are compared to the acknowledged configuration. New occupant metadata precedes added
+which follows attachment of its delta listener. Each session ticks at 20 Hz.
+Since 0.7.1, the first delta adds the actors and subsequent TCP deltas reference
+the previously queued snapshot, matching Clyde's reliable-transport policy.
+One baseline is retained; delayed input acknowledgements cannot cause full actor
+replacement or reset the baseline. Re-entry resets it, duplicate scene timestamps
+are skipped, and an in-flight tick cannot publish across a resubscription.
+Ordinary movement omits unchanged model configuration; gear changes are compared
+to the previously queued configuration. New occupant metadata precedes added
 actors. Movement checks finite angles, frame count, freshness, ordering, scene
 ownership, and the sampled static collision mask. Bounded future input queues
 apply frames at their scene timestamps, integrating elapsed time in small substeps.

@@ -33,7 +33,8 @@ with tempfile.TemporaryDirectory(prefix='tortodrone-installed-client-') as name:
     (scratch / 'data').mkdir()
     (scratch / 'home').mkdir()
     (scratch / 'data/server.properties').write_text('server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n')
-    subprocess.run(['java', '-jar', str(scratch / 'tortodrone-admin.jar'), '--create-account', 'LanPlayer'], input='lan-test-password\nlan-test-password\n', text=True, cwd=scratch, check=True, stdout=subprocess.PIPE)
+    for username in ('LanPlayer', 'PeerPlayer'):
+        subprocess.run(['java', '-jar', str(scratch / 'tortodrone-admin.jar'), '--create-account', username], input='lan-test-password\nlan-test-password\n', text=True, cwd=scratch, check=True, stdout=subprocess.PIPE)
     with (scratch / 'server-output.log').open('w') as output:
         server = subprocess.Popen(['java', '-jar', str(scratch / 'tortodrone.jar')], cwd=scratch, stdout=output, stderr=subprocess.STDOUT)
         try:
@@ -52,7 +53,7 @@ with tempfile.TemporaryDirectory(prefix='tortodrone-installed-client-') as name:
                 raise RuntimeError('Temporary server readiness timeout')
             classpath = ':'.join([str(scratch), str(game / 'code/projectx-pcode.jar'), str(game / 'code/*'), str(project / 'build/tortodrone.jar')])
             command = ['java', '--add-opens=java.base/java.lang=ALL-UNNAMED', '--add-opens=java.base/java.util=ALL-UNNAMED', '-Djava.awt.headless=true', '-Duser.home=' + str(scratch / 'home'), '-Djava.util.prefs.userRoot=' + str(scratch / 'home/prefs'), '-cp', classpath, 'WorldConnectionCheck', port, str(scratch / 'data/keys/public.txt')]
-            result = subprocess.run(command, cwd=scratch, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=35)
+            result = subprocess.run(command, cwd=scratch, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=60)
             if result.returncode:
                 print(result.stdout[-9000:]); print((scratch / 'server-output.log').read_text()[-6000:])
                 raise RuntimeError('Installed client check failed')

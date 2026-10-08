@@ -168,10 +168,10 @@ There is no `data-directory` or `client-host` setting. `--config /path/to/server
 selects a settings file without moving state. First startup creates missing
 configuration and keys; existing configuration and identity are preserved.
 
-Startup displays the version bundled from `VERSION`, currently `0.7.0`:
+Startup displays the version bundled from `VERSION`, currently `0.7.1`:
 
 ```text
-[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.7.0
+[19:30:01] [ServerMain/INFO]: Starting Tortodrone server version 0.7.1
 [19:30:01] [ServerMain/INFO]: Loading properties
 [19:30:01] [ServerMain/INFO]: Log mode: normal
 [19:30:01] [ServerMain/INFO]: Generating server keypair
@@ -190,6 +190,9 @@ warnings, errors and shutdown. Debug adds protocol diagnostics. Console and
 payloads. Timestamps use local machine time. `--version` shows either JAR's release.
 
 ## Upgrade and back up
+
+Version 0.7.1 keeps schema 3; upgrading from 0.7.0 requires no data migration.
+Replace both JARs while the server is stopped and preserve the existing `data/`.
 
 Stop the old server before upgrading to 0.7.0 or opening the new account manager.
 Schema version 3 preserves the global character identities and starter inventories
@@ -253,6 +256,12 @@ facing input, checks static walkable terrain, and publishes nearby town knights.
 Everyone currently starts at the same town spawn; position is not yet saved.
 There are no introductory missions, tutorial rewards or invented completion flags.
 The layout can include visual NPCs and portals, but their gameplay is not implemented.
+
+Version 0.7.1 fixes repeated actor/model replacement while first-entry input
+acknowledgements are delayed. TCP scene updates now reference the preceding sent
+snapshot. Automated creation, reconnect and multiplayer checks pass; the reported
+intermittent animation/stutter symptom still needs graphical confirmation.
+See the [entry investigation](docs/town-entry-investigation.md).
 
 Crowns and energy both belong to **each knight**. They start at zero, have a range
 of 0–2,147,483,647, and have no earning, spending or regeneration rules yet.

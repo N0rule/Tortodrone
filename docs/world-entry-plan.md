@@ -16,7 +16,8 @@ Selection sends the owned world ID, appearance, actual item set, equipment,
 balances and home town before forcing the stock zone receiver to town. Zone and
 scene callbacks return the layout and explicit scene object. Scene subscriptions
 receive occupant metadata; actor updates start after `enteredPlace` and continue
-at 20 Hz relative to acknowledged snapshots. Client input
+at 20 Hz. In 0.7.1, reliable TCP deltas reference the preceding queued snapshot,
+retaining actor/model identity even while loading delays input acknowledgements. Client input
 provides direction/facing only; the server computes position and checks a sampled
 static collision map. Empty acknowledgement batches and the normal ProjectX input
 extension are supported. Future input is queued until due, and elapsed scene time
@@ -43,6 +44,11 @@ into an online character within about 250 ms.
 
 ## Next priorities
 
+Confirm the intermittent first-creation animation/stutter symptom in a mapped
+game window before adding the next gameplay milestone. The reproducible TCP
+actor replacement defect is fixed and regression-tested in 0.7.1; that is not
+proof of graphical resolution. See [investigation and acceptance checks](town-entry-investigation.md).
+
 1. Persist position and support clean return to the character picker.
 2. Implement one additional connected scene and verified portal transitions.
 3. Generalize item instances beyond the starter kit, then add item grants and
@@ -58,5 +64,6 @@ into an online character within about 250 ms.
 `scripts/check-client-world.py "/path/to/Spiral Knights"` checks the stock reader
 and its movement predictor, plus real networking/marshaller classes against a temporary localhost server, covering both creation and reconnect. It
 requires Python 3 and a build made with `make build`, reads installed game JARs,
-and stops its server on completion. Graphical testing is a separate check because
+checks delayed acknowledgements, model retention, equipment changes and two-account
+multiplayer, and stops its server on completion. Graphical testing is a separate check because
 headless network success cannot prove that the client renders the scene and HUD.

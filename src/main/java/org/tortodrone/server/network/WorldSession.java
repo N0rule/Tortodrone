@@ -20,10 +20,10 @@ final class WorldSession implements AutoCloseable {
     private final long authRevision;
     private final SessionLog log;
     private final TownMovement movement = new TownMovement();
-    private final LinkedHashMap<Integer, Map<Integer, ActorState>> history = new LinkedHashMap<>();
+    private Map<Integer, ActorState> lastSnapshot = Map.of();
     private Knight knight;
     private WorldProfile profile;
-    private int acknowledge, created, sceneAcknowledge, lastStamp;
+    private int acknowledge, created, reference, lastStamp, sceneGeneration;
     private short ping;
     private long lastPoll;
     private boolean subscribed, entered, closed;
@@ -168,11 +168,12 @@ final class WorldSession implements AutoCloseable {
         var snapshot = actors();
         synchronized (this) {
             output.send(() -> codec.scene(message, snapshot));
-            history.clear();
-            sceneAcknowledge = acknowledge = 0;
+            lastSnapshot = Map.of();
+            reference = acknowledge = 0;
             occupants = snapshot.stream().map(ActorState::id).collect(Collectors.toUnmodifiableSet());
             subscribed = true;
             entered = false;
+            sceneGeneration++;
             movement.resetInput(TownSquare.clock());
         }
     }
@@ -193,15 +194,14 @@ final class WorldSession implements AutoCloseable {
         }
     }
 
-    synchronized void unsubscribe() { subscribed = entered = false; }
+    synchronized void unsubscribe() { subscribed = entered = false; sceneGeneration++; }
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
         if (!subscribed || !entered || input.oid() != TownSquare.SCENE_OID) {
             throw new SessionDecoder.Rejected("Unauthorized movement input");
         }
-        if (input.acknowledge() == 0 || history.containsKey(input.acknowledge())) {
-            sceneAcknowledge = input.acknowledge();
-        }
+        // TCP delivers every queued snapshot in order, even while scene loading delays input.
+        // Client acknowledgements are for unreliable transport; they do not choose our baseline.
         long now = monotonicTime();
         int sceneTime = TownSquare.clock();
         ping = (short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime()));
@@ -213,10 +213,14 @@ final class WorldSession implements AutoCloseable {
 
     private void tick() {
         try {
-            int stamp;
+            int stamp, generation;
             synchronized (this) {
                 if (closed || !subscribed || !entered) return;
                 stamp = TownSquare.clock();
+                // Fixed-rate catch-up can run twice in the same millisecond. The stock reader
+                // discards repeated timestamps, so never reference such a discarded snapshot.
+                if (stamp - lastStamp <= 0) return;
+                generation = sceneGeneration;
                 long now = monotonicTime();
                 movement.advance(stamp, now);
                 if (now - lastPoll >= 250) {
@@ -237,10 +241,8 @@ final class WorldSession implements AutoCloseable {
             // Never take another session's lock while holding this session or the ACTIVE lock.
             List<ActorState> current = actors();
             synchronized (this) {
-                if (closed || !subscribed || !entered) return;
-                Map<Integer, ActorState> baseline = history.get(sceneAcknowledge);
-                int reference = baseline == null ? 0 : sceneAcknowledge;
-                if (baseline == null) baseline = Map.of();
+                if (closed || !subscribed || !entered || generation != sceneGeneration) return;
+                Map<Integer, ActorState> baseline = lastSnapshot;
                 List<ActorState> added = new ArrayList<>(), updated = new ArrayList<>();
                 var next = new HashSet<Integer>();
                 for (var actor : current) {
@@ -258,8 +260,10 @@ final class WorldSession implements AutoCloseable {
                 output.send(() -> codec.sceneDelta(oid, acknowledge, ping, reference, stamp, elapsed,
                     added, updated, removed, referenceActors));
                 lastStamp = stamp;
-                history.put(stamp, current.stream().collect(Collectors.toUnmodifiableMap(ActorState::id, a -> a)));
-                while (history.size() > 40) history.remove(history.keySet().iterator().next());
+                // Advance only after enqueue succeeds. SessionOutput closes on any failure,
+                // so a later delta cannot reference a snapshot that was never queued.
+                reference = stamp;
+                lastSnapshot = current.stream().collect(Collectors.toUnmodifiableMap(ActorState::id, a -> a));
             }
         } catch (IOException | CharacterStore.Refused | RuntimeException failure) {
             log.debug("Town session closed; " + failure.getClass().getSimpleName());

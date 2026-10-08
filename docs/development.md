@@ -75,7 +75,7 @@ Both JARs default to `data/` beside themselves. Keep them together or use the
 manager's `--data` option. Server `--config` chooses settings only, never state.
 Configuration defaults are bundled in `src/main/resources/server.properties`;
 existing settings and RSA keys are preserved. `VERSION` is bundled as `version.txt`
-and used by startup and each JAR's `--version`; the current release is `0.7.0`.
+and used by startup and each JAR's `--version`; the current release is `0.7.1`.
 
 `build/.build/` contains disposable classes and packaging output; `build/deps/`
 caches pinned libraries and the town layout. Git ignores all build/runtime output. Upgrades replace both
@@ -218,7 +218,10 @@ python3 scripts/check-client-world.py "/path/to/Spiral Knights"
 
 It reads the separate installed game, uses synthetic credentials and temporary
 state, checks local movement prediction and real zone/item/input marshallers on
-creation and reconnect, then stops its own server.
+creation and reconnect, delayed acknowledgements, retained model configuration,
+equipment model updates and two-account multiplayer, then stops its own server.
+`WorldSessionTest` also verifies TCP delta references across delayed, stale, zero
+and fabricated acknowledgements and scene resubscription without game files.
 Graphical scene entry, HUD, mouse facing and Arsenal behavior still need a mapped
 game window check when altering their protocol. Leave test servers stopped when
 finished. No game installation is required for the default build or test suite.
