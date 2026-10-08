@@ -125,6 +125,7 @@ public final class SessionDecoder {
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Boolean" -> present(in);
             case "java.lang.Integer" -> in.readInt();
+            case "java.lang.Byte" -> in.readByte();
             case "java.lang.Long" -> in.readLong();
             case "java.lang.Float" -> in.readFloat();
             case "com.threerings.util.Name" -> string(in);

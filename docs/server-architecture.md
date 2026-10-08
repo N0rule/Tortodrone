@@ -132,6 +132,16 @@ Poll profile revisions every 250 ms for local currency changes. Equip/currency
 writes are atomic and ownership checked. Disconnect releases controller/subscriptions
 and stops its tick executor. Positions remain transient in this checkpoint.
 
+Scene snapshots advertise Crowd SpeakMarshaller at scene-local service 12. Method
+1 takes String/Byte; MessageEvent `crowd.chat` carries UserMessage with null bundle
+and an authoritative knight Name. Membership starts at enteredPlace and ends on
+unsubscribe/travel/disconnect; captured generations drop old-recipient deliveries.
+The reusable SceneChat router copies recipients before calling bounded output queues,
+so it holds no routing lock during delivery. Failed peers are removed independently.
+Five-message bursts replenish one token per second, with budgets retained across
+scene changes. Normal/think/emote/shout are scene-wide; no distance or tell policy
+is inferred. Validation/rate feedback uses the stock SystemMessage schema.
+
 The [milestone plan](world-entry-plan.md) owns feature status; the
 [entry investigation](town-entry-investigation.md) owns defect/acceptance evidence.
 

@@ -30,7 +30,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 26 unit and three integration checks. It covers persistence,
+The current suite has 27 unit and three integration checks. It covers persistence,
 migrations/rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 
@@ -56,6 +56,8 @@ reader/predictor, creation/reconnect, delayed acknowledgements, activity timing,
 model retention, equipment, currency, scene round trips, separate-instance isolation
 and two-account actor synchronization. It also checks same-account knight takeover
 and rapid reconnect using stock login/selection readers. Maps are copied into every test deployment.
+Chat fixtures use the stock scene speak RPC and reader, including Unicode, speaker
+names, sender echo, emote mode and isolation across instances and map transitions.
 The preview fixture compares starter model construction with the stock builder.
 Persistent compatibility tools are Java; do not introduce Python scripts.
 

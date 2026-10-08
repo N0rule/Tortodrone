@@ -30,6 +30,8 @@ public final class WorldSessionTest {
                 refuse(() -> first.input(input));
                 refuse(() -> expired.select(knight.name(),receiver));
                 first.select(knight.name(),receiver);
+                var chatRequest=new SessionDecoder.Invocation(TownSquare.SCENE_OID,org.tortodrone.world.SceneChat.SERVICE,1,List.of("hello",(byte)0));
+                refuse(()->first.speak(chatRequest));
                 check(first.selected() && WorldSession.active(1,knight.id()),"owned character acquires controller");
                 refuse(() -> second.select(knight.name(),receiver));
                 check(!second.selected(),"duplicate selection leaves its session unselected");
@@ -62,6 +64,7 @@ public final class WorldSessionTest {
                 refuse(() -> first.input(new SessionDecoder.Input(999,0,0,List.of())));
                 first.refresh();
                 first.unsubscribe();
+                refuse(()->first.speak(chatRequest));
                 refuse(() -> first.entered());
                 refuse(() -> first.input(input));
                 // Re-entry starts a new baseline, then resumes the same reliable stream policy.
@@ -83,6 +86,7 @@ public final class WorldSessionTest {
                 first.invocation(new SessionDecoder.Invocation(3,9,3,List.of(helm,7,confirm)));
                 check(characters.worldProfile(knight.name(),1).equipment()[0]==helm,"invalid Arsenal slot cannot change equipment");
                 first.close();
+                refuse(()->first.speak(chatRequest));
                 check(!WorldSession.active(1,knight.id()),"disconnect releases controller");
             }
             // A new session can select the persistent character after the old controller exits.

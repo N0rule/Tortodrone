@@ -7,6 +7,7 @@ public class WorldConnectionCheck {
 
  static TownSceneObject scene;static SceneDeltaEvent last;static int deltas, repeatedAdds, configReplacements;
  static com.threerings.presents.dobj.t<TownSceneObject> primarySubscription;
+ static final List<com.threerings.crowd.chat.data.UserMessage> primaryChat=new ArrayList<>();
  static final Map<Integer,Map<Integer,com.threerings.tudey.data.actor.Actor>> snapshots=new LinkedHashMap<>();
  static void received(SceneDeltaEvent event) {
   if(last!=null && (event.QY()<=last.QY() || event.aeh()!=last.QY()))
@@ -36,7 +37,7 @@ public class WorldConnectionCheck {
  static boolean isolation;
  public static void main(String[]args)throws Exception { isolation=args.length>2&&args[2].equals("isolated");if(!isolation)run(args,true);run(args,false); }
  static void run(String[]args,boolean fresh)throws Exception {
-  tasks.clear();snapshots.clear();scene=null;last=null;deltas=repeatedAdds=configReplacements=0;
+  tasks.clear();snapshots.clear();primaryChat.clear();scene=null;last=null;deltas=repeatedAdds=configReplacements=0;
   System.setProperty("com.threerings.io.enumPolicy","ORDINAL");Thread dispatch=Thread.currentThread();at queue=new at(){public void postRunnable(Runnable r){tasks.add(r);}public boolean isDispatchThread(){return Thread.currentThread()==dispatch;}public boolean isRunning(){return true;}};
   var client=new Client(new ProjectXCredentials(new Name("LanPlayer"),"lan-test-password"),queue);client.b("127.0.0.1",new int[]{Integer.parseInt(args[0])},new int[0]);client.dr(Files.readString(Path.of(args[1])).trim());client.ds("world-fixture");client.dt("projectx");client.xg();
   try {
@@ -111,8 +112,13 @@ public class WorldConnectionCheck {
  }
  static void subscribePrimary(Client client,int oid){
   primarySubscription=new com.threerings.presents.dobj.t<TownSceneObject>(){
-   public void a(TownSceneObject object){scene=object;}public void a(int id,ObjectAccessException error){throw new AssertionError(error);}};
+   public void a(TownSceneObject object){scene=object;listenChat(object,primaryChat);}public void a(int id,ObjectAccessException error){throw new AssertionError(error);}};
   client.xb().a(oid,primarySubscription);
+ }
+ static void listenChat(TownSceneObject object,List<com.threerings.crowd.chat.data.UserMessage> messages){
+  object.a(new com.threerings.presents.dobj.l(){public void a(MessageEvent event){
+   if(event.getName().equals("crowd.chat")&&event.yd()[0] instanceof com.threerings.crowd.chat.data.UserMessage message)messages.add(message);
+  }});
  }
  static void multiplayer(String[] args,at queue,boolean fresh,PlayerObject primary,Client primaryClient)throws Exception {
   var peer=new Client(new ProjectXCredentials(new Name("PeerPlayer"),"lan-test-password"),queue);
@@ -136,12 +142,20 @@ public class WorldConnectionCheck {
    Zone move=new Zone();Class<?> zoneListener=Class.forName("com.threerings.whirled.zone.a.g$a"),zoneService=Class.forName("com.threerings.whirled.zone.a.g");
    Object listener=java.lang.reflect.Proxy.newProxyInstance(zoneListener.getClassLoader(),new Class[]{zoneListener},(proxy,method,values)->{if(method.getName().equals("aT"))throw new AssertionError(values[0]);if(method.getName().equals("a")&&values.length==4){move.oid=(Integer)values[0];move.done=true;}return null;});
    zoneService.getMethod("a",int.class,int.class,int.class,zoneListener).invoke(peer.bU(zoneService),1,1,0,listener);waitFor(()->move.done);
-   TownSceneObject[] peerScene={null};SceneDeltaEvent[] peerDelta={null};
+   TownSceneObject[] peerScene={null};SceneDeltaEvent[] peerDelta={null};var peerChat=new ArrayList<com.threerings.crowd.chat.data.UserMessage>();
    player.a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent event){peerDelta[0]=event;}});
-   peer.xb().a(move.oid,new com.threerings.presents.dobj.t<TownSceneObject>(){public void a(TownSceneObject obj){peerScene[0]=obj;}public void a(int oid,ObjectAccessException error){throw new AssertionError(error);}});
+   peer.xb().a(move.oid,new com.threerings.presents.dobj.t<TownSceneObject>(){public void a(TownSceneObject obj){peerScene[0]=obj;listenChat(obj,peerChat);}public void a(int oid,ObjectAccessException error){throw new AssertionError(error);}});
    waitFor(()->peerScene[0]!=null);peerScene[0].tudeySceneService.adB();waitFor(()->peerDelta[0]!=null);
    int occupants=isolation?1:2;
    if(peerDelta[0].aej()==null||peerDelta[0].aej().length!=occupants||peerScene[0].occupantInfo.size()!=occupants)throw new AssertionError("Peer received incorrect instance occupants");
+   scene.speakService.a("Hello 🌍",(byte)0);waitFor(()->primaryChat.size()==1);
+   if(!primaryChat.get(0).speaker.toString().equals("Town-Knight")||!primaryChat.get(0).message.equals("Hello 🌍"))throw new AssertionError("Chat sender/text mismatch");
+   if(!isolation)waitFor(()->peerChat.size()==1);
+   peerScene[0].speakService.a("waves",(byte)2);waitFor(()->peerChat.size()==(isolation?1:2));
+   if(!isolation)waitFor(()->primaryChat.size()==2);
+   int chatDeltas=deltas;waitFor(()->deltas>chatDeltas+3);
+   if(primaryChat.size()!=(isolation?1:2)||peerChat.size()!=(isolation?1:2))throw new AssertionError("Chat leaks across instances or sender echo duplicated");
+   System.out.println("PASS: stock scene speak RPC and user messages preserve Unicode/names/emote mode, sender echo and instance isolation");
    peerScene[0].a(peerDelta[0].QY(),peerDelta[0].QY(),new InputFrame[]{new ProjectXInputFrame(peerDelta[0].QY()+50,.7f,0,1,0)});
    if(isolation){waitFor(()->peerDelta[0].aek()!=null);if(snapshots.get(last.QY()).containsKey(id))throw new AssertionError("Movement leaked across instances");System.out.println("PASS: two instances isolate occupants, actors and movement for different accounts");}
    else {
@@ -151,6 +165,10 @@ public class WorldConnectionCheck {
     System.out.println("PASS: two normal accounts receive peer actors, movement, facing and movement-animation flags");
     Zone bazaar=moveScene(primaryClient,2);if(bazaar.model.sceneId!=2||bazaar.oid==move.oid)throw new AssertionError("Distinct external Bazaar scene not loaded");
     enterPrimary(primaryClient,primary,bazaar);waitFor(()->peerScene[0].occupantInfo.size()==1);
+    int heard=primaryChat.size(),peerHeard=peerChat.size();
+    peerScene[0].speakService.a("stays in Haven",(byte)0);waitFor(()->peerChat.size()==peerHeard+1);
+    int separated=deltas;waitFor(()->deltas>separated+3);
+    if(primaryChat.size()!=heard)throw new AssertionError("Chat crossed a scene transition");
     if(scene.occupantInfo.size()!=1||snapshots.get(last.QY()).containsKey(id))throw new AssertionError("Old scene occupants retained after transition");
     var spawn=controlled(primary);var map=org.tortodrone.world.SceneRegistry.system().catalog().scene(2);
     if(!map.collision().walkable(spawn.tz().x,spawn.tz().y))throw new AssertionError("Invalid Bazaar spawn");

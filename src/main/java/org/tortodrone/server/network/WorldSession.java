@@ -12,6 +12,9 @@ import org.tortodrone.world.*;
 /** A selected character's server-controlled town state. Each world ID has one controller. */
 final class WorldSession implements AutoCloseable {
     private static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
+    private static final SceneChat CHAT=new SceneChat();
+    private final SceneChat.RateLimit chatRate=new SceneChat.RateLimit();
+    private SceneChat.Membership chat;
     private final Socket socket;
     private final CharacterStore characters;
     private final SessionOutput output;
@@ -160,6 +163,7 @@ final class WorldSession implements AutoCloseable {
             if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(next.map().zone())))
                 throw new IOException("Scene does not belong to that zone");
             if(next!=scene) {
+                leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupants=Set.of();lastSnapshot=Map.of();
                 reference=acknowledge=0;scene=next;created=SceneClock.now();
                 movement=new TownMovement(scene.map().collision(),scene.map().spawnX(),scene.map().spawnY());
@@ -203,6 +207,7 @@ final class WorldSession implements AutoCloseable {
         synchronized (this) {
             if(scene!=place||closed)throw new IOException("Scene changed during subscription");
             output.send(() -> codec.scene(message, scene, snapshot));
+            leaveChat();
             lastSnapshot = Map.of();
             reference = acknowledge = 0;
             occupants = snapshot.stream().map(ActorState::id).collect(Collectors.toUnmodifiableSet());
@@ -218,6 +223,8 @@ final class WorldSession implements AutoCloseable {
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
+        int generation=sceneGeneration,place=scene.oid();
+        chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
         lastStamp = SceneClock.now();
         if (ticks == null) {
             ticks = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -229,7 +236,32 @@ final class WorldSession implements AutoCloseable {
         }
     }
 
-    synchronized void unsubscribe() { subscribed = entered = false; sceneGeneration++; }
+    synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++; }
+
+    void speak(SessionDecoder.Invocation request)throws IOException {
+        SceneChat.Membership sender;
+        int place,generation;
+        synchronized(this) {
+            if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
+            if(request.service()!=SceneChat.SERVICE||request.method()!=1||request.arguments().size()!=2
+                    ||!(request.arguments().get(0) instanceof String)||!(request.arguments().get(1) instanceof Byte))
+                throw new SessionDecoder.Rejected("Invalid scene chat request");
+            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
+            sender=chat;place=scene.oid();generation=sceneGeneration;
+        }
+        try {
+            if(!CHAT.speak(sender,(String)request.arguments().get(0),(Byte)request.arguments().get(1)))
+                feedback(place,generation,"Please slow down before sending another message.");
+        }catch(IOException refused){feedback(place,generation,refused.getMessage());}
+    }
+    private synchronized void feedback(int place,int generation,String reason)throws IOException {
+        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)output.send(()->codec.chatFeedback(place,reason));
+    }
+    private synchronized void deliverChat(int place,int generation,SceneChat.Message message)throws IOException {
+        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)
+            output.send(()->codec.chat(place,message));
+    }
+    private void leaveChat(){if(chat!=null){chat.close();chat=null;}}
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
         if (closed || socket.isClosed() || !subscribed || !entered || input.oid() != scene.oid()) {
@@ -333,6 +365,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     @Override public synchronized void close() {
+        leaveChat();
         closed = true;
         subscribed = false;
         if (ticks != null) ticks.shutdownNow();

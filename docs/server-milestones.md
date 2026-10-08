@@ -90,8 +90,25 @@ deletion may remove an online knight; picker deletion keeps its online restricti
 Tests cover cascade failure rollback, ownership/identity races, survivors, restart,
 stale saves, CLI confirmation, terminal commands and live reconnect after deletion.
 
-## 5–6. Remaining research boundaries
+## 5. Scene chat (0.9.0)
 
-Scene chat should use verified Crowd marshallers and message events. The installed
+Primary [SpeakMarshaller](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/crowd/chat/data/SpeakMarshaller.java)
+and [SpeakUtil](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/crowd/chat/server/SpeakUtil.java)
+define `speak(String,byte)` method 1 and MessageEvent `crowd.chat` carrying UserMessage.
+The installed stock classes confirm PlaceObject.speakService, String/Byte arguments,
+message/bundle/speaker/mode field order and SystemMessage attention-level feedback.
+The server supplies the service handle; its integer code is local routing metadata.
+
+Local chat is currently **scene-wide**, including sender echo. Exact official
+proximity filtering is not verified and is not invented. Ready membership and scene
+generation checks isolate instances/transitions. No messages are persisted or logged;
+private tells, guild/party channels and broadcast are not implemented in this milestone.
+The router, membership and retained rate budget are reusable for later channels.
+Tests cover Unicode/size/mode bounds, rate replenishment, stale memberships and
+failed recipients; installed fixtures send/receive through the stock marshaller.
+
+## 6. Remaining research boundary
+
+The installed
 PlayerObject.Type includes `GAME_MASTER`; verify its icon/title consumer rather
 than inventing a prestige enum value (the prestige enum only has RANK_0–RANK_5).

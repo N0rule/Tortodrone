@@ -41,6 +41,8 @@ public final class WorldCompatibility {
         var moved=new ActorState(10,1001,knight.name(),257,100,.25f,-8,1.5f,0,2,state.config());
         append(bytes,codec.sceneDelta(1001,101,(short)20,101,151,(short)50,List.of(),List.of(moved),new int[0],Map.of(10,state)));
         append(bytes,codec.occupants(List.of(state)));
+        append(bytes,codec.chat(10,new org.tortodrone.world.SceneChat.Message(knight.name(),"Hello 🌍",(byte)2)));
+        append(bytes,codec.chatFeedback(10,"Please slow down."));
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));
         input.qe();input.qe();
         var player=(PlayerObject)((ObjectResponse)input.qe()).yk();
@@ -62,6 +64,13 @@ public final class WorldCompatibility {
                 else actor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(actor);
             }
         }
+        var chat=(com.threerings.presents.dobj.MessageEvent)((EventNotification)input.qe()).yj();
+        var user=(com.threerings.crowd.chat.data.UserMessage)chat.yd()[0];
+        var feedback=(com.threerings.presents.dobj.MessageEvent)((EventNotification)input.qe()).yj();
+        var system=(com.threerings.crowd.chat.data.SystemMessage)feedback.yd()[0];
+        if(!chat.getName().equals("crowd.chat")||!user.message.equals("Hello 🌍")||user.bundle!=null||!user.speaker.toString().equals(knight.name())||user.mode!=2
+                ||system.attentionLevel!=1||!system.message.equals("Please slow down.")||town.speakService==null)
+            throw new AssertionError("Stock place chat schema mismatch");
         if(input.available()!=0 || player.items.size()!=5 || player.crowns!=120 || player.energy!=34
                 || player.loadouts.size()!=1 || town.occupantInfo.size()!=1 || actor==null
                 || !actor.Np() || actor.adU()!=0 || actor.adV()!=100

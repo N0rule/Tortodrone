@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.8.2, schema 4
+## Checkpoint: 0.9.0, schema 4
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -30,6 +30,11 @@ or ghost-session grace period are introduced.
 Exact-name confirmation and account/world identity guards protect against stale
 selection. Owned items/balances/audit rows are removed atomically; survivors and
 allocation counters are preserved. The account reconnects with its refreshed roster.
+
+0.9.0 adds scene-wide local chat through the stock SpeakMarshaller and Crowd message
+events, with ready membership, authoritative knight names, instance isolation,
+256-character limits and a five-message burst/one-per-second sustained rate.
+Normal/think/emote/shout modes are supported; tells and broadcast remain unavailable.
 
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory

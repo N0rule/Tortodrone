@@ -358,11 +358,27 @@ public final class SessionCodec {
             objectHeader(out,id,"com.threerings.projectx.town.data.TownSceneObject",scene.oid());
             type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(actors.size());for(var a:actors)out.writeInt(a.clientOid());out.writeInt(actors.size());
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(actors.size());for(var a:actors)occupant(out,a);
-            out.writeShort(0); // no scene chat yet
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
             type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(10);
             type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(6);
             emptyDSet(out);
             type(out,"com.threerings.projectx.town.data.TownSceneMarshaller");out.writeInt(scene.oid());out.writeInt(11);
+        });
+    }
+
+    /** Original Crowd place chat message, carrying a server-selected visible name. */
+    public byte[] chat(int sceneOid,org.tortodrone.world.SceneChat.Message message)throws IOException {
+        return frame(out->{
+            eventHeader(out,"MessageEvent",sceneOid);string(out,"crowd.chat");
+            out.writeBoolean(true);out.writeInt(1);type(out,"com.threerings.crowd.chat.data.UserMessage");
+            string(out,message.text());string(out,null);name(out,message.speaker());out.writeByte(message.mode());
+        });
+    }
+    public byte[] chatFeedback(int sceneOid,String reason)throws IOException {
+        return frame(out->{
+            eventHeader(out,"MessageEvent",sceneOid);string(out,"crowd.chat");
+            out.writeBoolean(true);out.writeInt(1);type(out,"com.threerings.crowd.chat.data.SystemMessage");
+            string(out,reason);string(out,null);out.writeByte(1);
         });
     }
 

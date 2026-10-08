@@ -155,6 +155,9 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if(invocation.service()==org.tortodrone.world.SceneChat.SERVICE) {
+                world.speak(invocation);return;
+            }
             if (world.ownsScene(invocation.oid()) && invocation.service()>=6 && invocation.service()<=11) {
                 if (invocation.service() == 10 && invocation.method() == 1 && invocation.arguments().isEmpty()) {
                     world.entered();
