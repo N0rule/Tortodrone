@@ -36,6 +36,17 @@ public final class SceneChat {
         if(sender==null||members.get(sender.member.client())!=sender.member)throw new IOException("Chat membership is no longer current");
         return sender.member;
     }
+    /** Staff permission is checked by the authenticated caller; targets all ready memberships. */
+    public boolean broadcast(Membership sender,String text)throws IOException {
+        text=validate(text);
+        List<Member> recipients;Member source;
+        synchronized(this) {
+            source=require(sender);
+            if(!source.rate().allow(System.nanoTime()))return false;
+            recipients=List.copyOf(members.values());
+        }
+        deliver(recipients,new Message(source.name(),text,(byte)4));return true;
+    }
     private void deliver(List<Member> recipients,Message message) {
         for(var member:recipients) {
             try{member.endpoint().deliver(message);}

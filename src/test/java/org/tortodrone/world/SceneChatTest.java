@@ -21,6 +21,9 @@ public final class SceneChatTest {
         alice.close();refuse(()->router.speak(alice,"stale",(byte)0));
         check(router.speak(replacement,"new instance",(byte)0)&&a.size()==3&&isolated.size()==2&&isolated.get(0).equals(isolated.get(1)),"late cleanup cannot remove replacement membership or route to old scene");
         refuse(()->router.speak(replacement,"spoof broadcast",(byte)4));
+        var third=router.join(12,1005,"Third-Knight",new SceneChat.RateLimit(),a::add);
+        check(router.broadcast(replacement,"staff announcement")&&a.size()==4&&isolated.size()==4
+            &&a.get(3).mode()==4&&a.get(3).speaker().equals("Alice-Knight"),"authorized server broadcast reaches every ready instance with authoritative identity");
         refuse(()->router.speak(replacement,"x".repeat(257),(byte)0));
         refuse(()->SceneChat.validate("bad\ntext"));refuse(()->SceneChat.validate("\ud800"));refuse(()->SceneChat.validate("  "));
         check(SceneChat.validate("🌍".repeat(256)).codePointCount(0,512)==256,"Unicode limit counts characters rather than UTF-16 units");
@@ -28,7 +31,7 @@ public final class SceneChatTest {
         for(int i=0;i<5;i++)check(rate.allow(0),"bounded initial burst");
         check(!rate.allow(0)&&!rate.allow(999_999_999)&&rate.allow(1_000_000_000),"rate limit replenishes at one message per second");
         check(!rate.allow(-1),"clock reversal cannot grant tokens");
-        replacement.close();other.close();failed.close();
+        replacement.close();other.close();failed.close();third.close();
         System.out.println("PASS: scene chat identity, echo/modes, instance isolation, departure/re-entry, failed peers, Unicode bounds and persistent rate budget");
     }
     private static void refuse(Action action)throws Exception{try{action.run();throw new AssertionError("Invalid chat accepted");}catch(IOException expected){}}

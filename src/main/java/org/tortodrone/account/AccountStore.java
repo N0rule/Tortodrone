@@ -14,9 +14,9 @@ import org.tortodrone.storage.Database;
 /** Shared account service for the game server and local administration application. */
 public final class AccountStore implements AutoCloseable {
     public static final String DEFAULT_USERNAME = "tortodrone";
-    public record Account(int id, String username, boolean admin, long authRevision, CharacterStore characters) { }
-    public record Summary(int id, String username, boolean admin, int knights, long createdAt) { }
-    private record Stored(int id,String username,Passwords.Protection password,boolean admin,long revision,CharacterStore characters) { }
+    public record Account(int id, String username, boolean gameMaster, long authRevision, CharacterStore characters) { }
+    public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
+    private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
@@ -37,8 +37,8 @@ public final class AccountStore implements AutoCloseable {
     public Path databaseFile() { return database == null ? null : database.file(); }
 
     public synchronized List<Summary> list() throws IOException {
-        if (database != null) return database.list().stream().map(a -> new Summary(a.id(),a.username(),a.admin(),a.knights(),a.createdAt())).toList();
-        return memory.values().stream().map(a -> new Summary(a.id(),a.username(),a.admin(),a.characters().roster().size(),0)).sorted(Comparator.comparingInt(Summary::id)).toList();
+        if (database != null) return database.list().stream().map(a -> new Summary(a.id(),a.username(),a.gameMaster(),a.knights(),a.createdAt())).toList();
+        return memory.values().stream().map(a -> new Summary(a.id(),a.username(),a.gameMaster(),a.characters().roster().size(),0)).sorted(Comparator.comparingInt(Summary::id)).toList();
     }
     /** Read-only local administration, without authenticating or changing session privileges. */
     public synchronized List<Knight> knights(String username) throws IOException {
@@ -67,34 +67,34 @@ public final class AccountStore implements AutoCloseable {
         return database.currency(username,knight,expectedAccount,expectedWorld,currency,delta);
     }
     public void create(String username,char[] password) throws IOException { create(username,password,false); }
-    public synchronized void create(String username,char[] password,boolean admin) throws IOException {
+    public synchronized void create(String username,char[] password,boolean gameMaster) throws IOException {
         validateUsername(username);
         Passwords.Protection protection = Passwords.protect(password);
-        if (database != null) { database.create(username,protection,admin); return; }
+        if (database != null) { database.create(username,protection,gameMaster); return; }
         if (memory.containsKey(canonical(username))) throw new IOException("Account already exists");
         if (memory.size() >= 1000 || nextId == Integer.MAX_VALUE) throw new IOException("Account limit reached");
-        memory.put(canonical(username),new Stored(nextId,username,protection,admin,1,new CharacterStore(nextId,username))); nextId++;
+        memory.put(canonical(username),new Stored(nextId,username,protection,gameMaster,1,new CharacterStore(nextId,username))); nextId++;
     }
     public void setPassword(String username,char[] password) throws IOException { setPassword(username,password,-1); }
     public synchronized void setPassword(String username,char[] password,int expectedId) throws IOException {
         Passwords.Protection protection = Passwords.protect(password);
         if (database != null) { database.password(username,protection,expectedId); return; }
         Stored old = require(username,expectedId);
-        memory.put(canonical(username),new Stored(old.id(),old.username(),protection,old.admin(),old.revision()+1,old.characters()));
+        memory.put(canonical(username),new Stored(old.id(),old.username(),protection,old.gameMaster(),old.revision()+1,old.characters()));
     }
-    public void setAdmin(String username,boolean admin) throws IOException { setAdmin(username,admin,-1); }
-    public synchronized void setAdmin(String username,boolean admin,int expectedId) throws IOException {
-        if (database != null) { database.admin(username,admin,expectedId); return; }
+    public void setGameMaster(String username,boolean gameMaster) throws IOException { setGameMaster(username,gameMaster,-1); }
+    public synchronized void setGameMaster(String username,boolean gameMaster,int expectedId) throws IOException {
+        if (database != null) { database.gameMaster(username,gameMaster,expectedId); return; }
         Stored old = require(username,expectedId);
-        memory.put(canonical(username),new Stored(old.id(),old.username(),old.password(),admin,old.revision(),old.characters()));
+        memory.put(canonical(username),new Stored(old.id(),old.username(),old.password(),gameMaster,old.revision(),old.characters()));
     }
     public void delete(String username) throws IOException { delete(username,-1); }
     public synchronized void delete(String username,int expectedId) throws IOException {
         if (database != null) { database.delete(username,expectedId); return; }
         require(username,expectedId); memory.remove(canonical(username));
     }
-    public synchronized boolean isAdmin(int id) throws IOException {
-        return list().stream().anyMatch(a -> a.id() == id && a.admin());
+    public synchronized boolean isGameMaster(int id) throws IOException {
+        return list().stream().anyMatch(a -> a.id() == id && a.gameMaster());
     }
     public boolean checkPassword(String username,char[] password) throws IOException {
         char[] hash = Passwords.transform(password);
@@ -115,12 +115,12 @@ public final class AccountStore implements AutoCloseable {
                 if (previous != null) characters = previous;
             }
             characters.refresh();
-            return new Account(identity.id(),identity.username(),identity.admin(),identity.authRevision(),characters);
+            return new Account(identity.id(),identity.username(),identity.gameMaster(),identity.authRevision(),characters);
         }
         synchronized (this) {
             Stored stored = memory.get(canonical(username));
             boolean matches = Passwords.matches(hash,stored == null ? new byte[16] : stored.password().salt(),stored == null ? new byte[32] : stored.password().verifier());
-            return matches && stored != null ? new Account(stored.id(),stored.username(),stored.admin(),stored.revision(),stored.characters()) : null;
+            return matches && stored != null ? new Account(stored.id(),stored.username(),stored.gameMaster(),stored.revision(),stored.characters()) : null;
         }
     }
     public synchronized boolean current(Account account) throws IOException {
@@ -131,6 +131,7 @@ public final class AccountStore implements AutoCloseable {
     @FunctionalInterface public interface Session extends AutoCloseable {
         @Override void close();
         default boolean current() { return true; }
+        default boolean gameMaster() throws IOException { return false; }
         default void onInvalidated(Runnable cleanup) { }
     }
     public Session attach(Account account,Socket socket) throws IOException {
@@ -153,6 +154,20 @@ public final class AccountStore implements AutoCloseable {
         private final CompletableFuture<Void> finished=new CompletableFuture<>();
         Attached(Account account,Socket socket){this.account=account;this.socket=socket;}
         @Override public boolean current(){return live&&!socket.isClosed()&&sessions.get(account.id())==this;}
+        @Override public boolean gameMaster() throws IOException {
+            if(!current())throw new IOException("Session replaced");
+            synchronized(AccountStore.this) {
+                if(database!=null) {
+                    var identity=database.identity(account.username());
+                    if(identity==null||identity.id()!=account.id()||identity.authRevision()!=account.authRevision())
+                        throw new IOException("Account changed; reconnect");
+                    return identity.gameMaster();
+                }
+                var stored=require(account.username(),account.id());
+                if(stored.revision()!=account.authRevision())throw new IOException("Account changed; reconnect");
+                return stored.gameMaster();
+            }
+        }
         @Override public void onInvalidated(Runnable action) {
             synchronized(this) { if(live) { cleanup=action;return; } }
             action.run();

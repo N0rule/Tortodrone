@@ -20,11 +20,11 @@ public final class AccountStoreTest {
             Path registry = directory.resolve("accounts/users.properties"); byte[] oldRegistry = Files.readAllBytes(registry);
             try (AccountStore accounts = new AccountStore(directory)) {
                 var first = login(accounts,"TORTODRONE","tortodrone");
-                check(first.id() == 1 && !first.admin() && first.characters().roster().equals(List.of(knight)),"migration preserves identity, verifier and appearance; Admin defaults false");
+                check(first.id() == 1 && !first.gameMaster() && first.characters().roster().equals(List.of(knight)),"migration preserves identity, verifier and appearance; Game Master defaults false");
                 check(Arrays.equals(oldProfile,Files.readAllBytes(profile)) && Arrays.equals(oldRegistry,Files.readAllBytes(registry)),"legacy files remain untouched");
                 accounts.create("Alice","alice-password".toCharArray(),true); accounts.create("Bob","bob-password".toCharArray());
                 var alice = login(accounts,"alice","alice-password"); var bob = login(accounts,"Bob","bob-password");
-                check(alice.id() == 2 && bob.id() == 3 && alice.admin() && !bob.admin(),"separate stable identities and Admin flag");
+                check(alice.id() == 2 && bob.id() == 3 && alice.gameMaster() && !bob.gameMaster(),"separate stable identities and Game Master flag");
                 alice.characters().create(choices("Alice-Knight")); check(bob.characters().roster().isEmpty(),"private character rosters");
                 refused(() -> accounts.create("ALICE","new-password".toCharArray()));
                 refused(() -> accounts.create("../bad","new-password".toCharArray()));
@@ -34,7 +34,7 @@ public final class AccountStoreTest {
                 refused(() -> alice.characters().create(choices("Stale-Revision"),alice.authRevision()));
                 check(!accounts.current(alice) && login(accounts,"Alice","alice-password") == null,"reset invalidates old credentials and session revisions");
                 check(login(accounts,"Alice","changed-password").characters().roster().size() == 1,"reset preserves characters");
-                accounts.setAdmin("Alice",false); check(!accounts.isAdmin(alice.id()),"Admin changes read current database state");
+                accounts.setGameMaster("Alice",false); check(!accounts.isGameMaster(alice.id()),"Game Master changes read current database state");
                 Path file = accounts.databaseFile(), backup = directory.resolve("saved.db");
                 Files.move(file,backup); Files.createDirectory(file);
                 refused(() -> accounts.create("Retry","retry-password".toCharArray()));
@@ -51,7 +51,7 @@ public final class AccountStoreTest {
                 if (Files.getFileStore(file).supportsFileAttributeView("posix")) check(Files.getPosixFilePermissions(file).equals(PosixFilePermissions.fromString("rw-------")),"database is owner-only");
             }
             try (AccountStore restored = new AccountStore(directory)) {
-                check(login(restored,"Alice","replacement-password").id() == 5 && !login(restored,"Alice","replacement-password").admin(),"database restart preserves account and role");
+                check(login(restored,"Alice","replacement-password").id() == 5 && !login(restored,"Alice","replacement-password").gameMaster(),"database restart preserves account and role");
             }
             Path fresh = directory.resolve("fresh");
             try (AccountStore accounts = new AccountStore(fresh)) { check(accounts.list().isEmpty(),"fresh database has no automatic development login"); accounts.create("First","first-password".toCharArray()); accounts.delete("First"); }
@@ -77,7 +77,7 @@ public final class AccountStoreTest {
             Database future = new Database(unsupported,false); future.write(c -> { try (var statement = c.createStatement()) { statement.execute("PRAGMA user_version=99"); } return null; });
             refused(() -> new AccountStore(unsupported));
             concurrent(directory.resolve("concurrent"));
-            System.out.println("PASS: SQLite migration, admin roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
+            System.out.println("PASS: SQLite migration, gameMaster roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
         } finally { try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); } }
     }
     public static void legacyRegistry(Path directory) throws IOException {

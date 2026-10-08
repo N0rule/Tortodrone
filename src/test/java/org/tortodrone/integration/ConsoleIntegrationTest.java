@@ -27,8 +27,8 @@ public final class ConsoleIntegrationTest {
                 check(db.list().isEmpty(),"fresh server does not seed a default account");
                 server.send("help\nstatus\n"); server.await("Commands: help"); server.await("Server running. Accounts: 0");
                 server.send("account create Alice inline-secret\n"); server.await("Invalid account command");
-                server.send("account create Alice admin\nconsole-password\nconsole-password\n"); server.await("Account created: Alice");
-                check(db.identity("Alice").admin(),"create with Admin true persists role");
+                server.send("account create Alice gm\nconsole-password\nconsole-password\n"); server.await("Account created: Alice");
+                check(db.identity("Alice").gameMaster(),"create with Game Master true persists role");
                 server.send("account list\n"); server.await("1 | Alice | true | 0"); server.await("Accounts: 1");
                 new CharacterStore(db,1,"Alice").create(new Knight(0,"Console-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
                 server.send("knight list Alice\nknight info Alice Console-Knight\n");
@@ -47,8 +47,8 @@ public final class ConsoleIntegrationTest {
                 server.send("account password Alice\nmismatch-one\nmismatch-two\n"); server.await("Passwords do not match");
                 server.send("account check Alice\nconsole-password\n"); server.await("Password matches.");
                 server.send("account check Alice\nincorrect-password\n"); server.await("Password does not match.");
-                server.send("account admin Alice false\n"); server.await("Admin status changed: Alice");
-                check(!db.identity("Alice").admin(),"Admin toggle visible through shared database");
+                server.send("account gm Alice false\n"); server.await("Game Master status changed: Alice");
+                check(!db.identity("Alice").gameMaster(),"Game Master toggle visible through shared database");
                 String[] keyParts = Files.readString(directory.resolve("data/keys/public.txt")).trim().split("#");
                 PublicKey key = KeyFactory.getInstance("RSA").generatePublic(new RSAPublicKeySpec(new BigInteger(keyParts[0],16),new BigInteger(keyParts[1],16)));
                 CompletableFuture<Void> ready = new CompletableFuture<>();
@@ -75,7 +75,7 @@ public final class ConsoleIntegrationTest {
                 server.ready(); server.process.getOutputStream().close(); server.await("Terminal input closed; server remains running");
                 check(server.process.isAlive(),"redirected stdin EOF leaves service running");
             }
-            System.out.println("PASS: running server terminal commands, password prompts, Admin roles, reset revocation, delete confirmation, stop and closed stdin");
+            System.out.println("PASS: running server terminal commands, password prompts, Game Master roles, reset revocation, delete confirmation, stop and closed stdin");
         } finally {
             worker.shutdownNow();
             try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); }

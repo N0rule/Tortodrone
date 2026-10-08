@@ -49,7 +49,8 @@ final class ClientSession {
         Map<String, Short> receivers = new HashMap<>();
         boolean firstPing = true;
         CharacterStore.Subscription subscription = null;
-        WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log);
+        WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log,
+            org.tortodrone.world.SceneRegistry.system(),session::gameMaster);
         session.onInvalidated(world::close);
         try {
             byte[] body;
@@ -70,10 +71,11 @@ final class ClientSession {
                                 + (request.objectId() == clientOid ? "; client bootstrap accepted" : ""));
                             if (request.objectId() == clientOid) {
                                 if (subscription != null) subscription.close();
+                                boolean gameMaster=session.gameMaster(); // Outside CharacterStore's publication lock.
                                 subscription = characters.subscribe(
                                     roster -> {
                                         output.send(() -> outgoing.player(request.messageId(), clientOid,
-                                            characters.accountId(), characters.username(), receivers, roster));
+                                            characters.accountId(), characters.username(), receivers, roster,gameMaster));
                                     },
                                     roster -> output.send(() -> outgoing.rosterChanged(clientOid, roster)));
                                 world.refresh();
@@ -169,6 +171,7 @@ final class ClientSession {
             if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size()) {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
+            if(invocation.service()==3&&invocation.method()==2){world.broadcast(invocation);return;}
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());

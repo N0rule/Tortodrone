@@ -14,10 +14,10 @@ import org.tortodrone.character.WorldProfile;
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
     public static final int SCHEMA_VERSION = 4;
-    public record Identity(int id, String username, boolean admin, long authRevision, byte[] salt, byte[] verifier) {
+    public record Identity(int id, String username, boolean gameMaster, long authRevision, byte[] salt, byte[] verifier) {
         @Override public String toString() { return "Identity[redacted]"; }
     }
-    public record Summary(int id, String username, boolean admin, int knights, long createdAt) { }
+    public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     public record RosterState(List<Knight> knights,int next,long revision) { }
     private final Path file;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
@@ -179,7 +179,7 @@ public final class Database {
             } return List.copyOf(result);
         });
     }
-    public int create(String username, Passwords.Protection protection, boolean admin) throws IOException {
+    public int create(String username, Passwords.Protection protection, boolean gameMaster) throws IOException {
         return write(c -> {
             try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT count(*) FROM accounts")) {
                 r.next(); if (r.getInt(1) >= 1000) throw new IOException("Account limit reached");
@@ -187,14 +187,14 @@ public final class Database {
             int id;
             try (Statement s = c.createStatement(); ResultSet r = s.executeQuery("SELECT value FROM metadata WHERE key='next-account-id'")) { r.next(); id = r.getInt(1); }
             if (id >= Integer.MAX_VALUE) throw new IOException("Account ID space exhausted");
-            insertAccount(c,id,username,protection.salt(),protection.verifier(),admin,1);
+            insertAccount(c,id,username,protection.salt(),protection.verifier(),gameMaster,1);
             try (Statement s = c.createStatement()) { s.executeUpdate("UPDATE metadata SET value=value+1 WHERE key='next-account-id'"); }
             event(c,id,"created"); return id;
         });
     }
-    private static void insertAccount(Connection c, int id, String username, byte[] salt, byte[] verifier, boolean admin, int next) throws SQLException {
+    private static void insertAccount(Connection c, int id, String username, byte[] salt, byte[] verifier, boolean gameMaster, int next) throws SQLException {
         try (PreparedStatement s = c.prepareStatement("INSERT INTO accounts(id,username,name_key,salt,verifier,is_admin,created_at,next_knight_id) VALUES(?,?,?,?,?,?,?,?)")) {
-            s.setInt(1,id); s.setString(2,username); s.setString(3,username.toLowerCase(Locale.ROOT)); s.setBytes(4,salt); s.setBytes(5,verifier); s.setBoolean(6,admin); s.setLong(7,System.currentTimeMillis()); s.setInt(8,next); s.executeUpdate();
+            s.setInt(1,id); s.setString(2,username); s.setString(3,username.toLowerCase(Locale.ROOT)); s.setBytes(4,salt); s.setBytes(5,verifier); s.setBoolean(6,gameMaster); s.setLong(7,System.currentTimeMillis()); s.setInt(8,next); s.executeUpdate();
         }
     }
     public void password(String username, Passwords.Protection protection,int expectedId) throws IOException {
@@ -206,11 +206,11 @@ public final class Database {
             } event(c,id,"password changed"); return null;
         });
     }
-    public void admin(String username, boolean admin,int expectedId) throws IOException {
+    public void gameMaster(String username, boolean gameMaster,int expectedId) throws IOException {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
-            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET is_admin=?,revision=revision+1 WHERE id=?")) { s.setBoolean(1,admin); s.setInt(2,id); s.executeUpdate(); }
-            event(c,id,admin ? "admin granted" : "admin removed"); return null;
+            try (PreparedStatement s = c.prepareStatement("UPDATE accounts SET is_admin=?,revision=revision+1 WHERE id=?")) { s.setBoolean(1,gameMaster); s.setInt(2,id); s.executeUpdate(); }
+            event(c,id,gameMaster ? "game master granted" : "game master removed"); return null;
         });
     }
     public void delete(String username,int expectedId) throws IOException {

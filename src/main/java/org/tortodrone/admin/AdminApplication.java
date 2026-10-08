@@ -16,12 +16,12 @@ public final class AdminApplication {
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone-admin.jar [--data path/to/server/data] [command]");
                 System.out.println("No command opens the desktop account manager.");
-                System.out.println("Commands: --list-accounts | --create-account username [--admin] | --set-password username | --check-password username | --set-admin username true|false | --delete-account username | --version");
+                System.out.println("Commands: --list-accounts | --create-account username [--gm] | --set-password username | --check-password username | --set-gm username true|false | --delete-account username | --version");
                 System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
                 try (var stream = AdminApplication.class.getResourceAsStream("/version.txt")) {
-                    System.out.println("Tortodrone Admin " + new String(stream.readAllBytes(),StandardCharsets.UTF_8).trim());
+                    System.out.println("Tortodrone Game Master " + new String(stream.readAllBytes(),StandardCharsets.UTF_8).trim());
                 } return;
             }
             Path location = Path.of(AdminApplication.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -41,8 +41,8 @@ public final class AdminApplication {
     }
     private static void command(AccountStore accounts,String[] args) throws IOException {
         if (args.length == 1 && args[0].equals("--list-accounts")) {
-            System.out.println("ID\tUsername\tAdmin\tCharacters");
-            for (var a : accounts.list()) System.out.println(a.id()+"\t"+a.username()+"\t"+a.admin()+"\t"+a.knights()); return;
+            System.out.println("ID\tUsername\tGame Master\tCharacters");
+            for (var a : accounts.list()) System.out.println(a.id()+"\t"+a.username()+"\t"+a.gameMaster()+"\t"+a.knights()); return;
         }
         if (args.length < 2) throw new IOException("Use --help for account commands");
         String username = args[1]; var input = new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8));
@@ -66,10 +66,10 @@ public final class AdminApplication {
             String confirmation = System.console() == null ? input.readLine() : System.console().readLine("Type the account username to delete it and its characters: ");
             if (!selected.username().equals(confirmation)) throw new IOException("Deletion confirmation did not match"); accounts.delete(username,selected.id()); System.out.println("Account deleted."); return;
         }
-        if (args.length == 3 && args[0].equals("--set-admin") && (args[2].equals("true") || args[2].equals("false"))) {
-            accounts.setAdmin(username,Boolean.parseBoolean(args[2])); System.out.println("Admin status changed."); return;
+        if (args.length == 3 && (args[0].equals("--set-gm") || args[0].equals("--set-admin")) && (args[2].equals("true") || args[2].equals("false"))) {
+            accounts.setGameMaster(username,Boolean.parseBoolean(args[2])); System.out.println("Game Master status changed."); return;
         }
-        boolean create = args[0].equals("--create-account") && (args.length == 2 || args.length == 3 && args[2].equals("--admin"));
+        boolean create = args[0].equals("--create-account") && (args.length == 2 || args.length == 3 && (args[2].equals("--gm") || args[2].equals("--admin")));
         boolean reset = args[0].equals("--set-password") && args.length == 2;
         boolean check = args[0].equals("--check-password") && args.length == 2;
         if (!create && !reset && !check) throw new IOException("Use --help for account commands");

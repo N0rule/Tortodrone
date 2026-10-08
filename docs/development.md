@@ -30,7 +30,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 27 unit and three integration checks. It covers persistence,
+The current suite has 28 unit and three integration checks. It covers persistence,
 migrations/rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 
@@ -58,6 +58,8 @@ and two-account actor synchronization. It also checks same-account knight takeov
 and rapid reconnect using stock login/selection readers. Maps are copied into every test deployment.
 Chat fixtures use the stock scene speak RPC and reader, including Unicode, speaker
 names, sender echo, emote mode and isolation across instances and map transitions.
+GM fixtures verify login/occupant role and support icon, broadcasts across maps,
+normal/revoked permission denial and live role changes without model/position resets.
 The preview fixture compares starter model construction with the stock builder.
 Persistent compatibility tools are Java; do not introduce Python scripts.
 
@@ -91,6 +93,13 @@ joystick input devices in the temporary environment if necessary while preservin
 GPU access. These are test-environment accommodations, not server/client patches.
 Record inconclusive checks and environment limitations explicitly. See the
 [0.7.1 investigation](town-entry-investigation.md) for accepted checks.
+
+Set the stock `resource_dir` property to the read-only installed `rsrc/` directory;
+omitting it can crash the image cache. Set `java.io.tmpdir` to a writable temporary
+directory for font extraction. Center the niri test window before coordinate input,
+and match X11's `_NET_WM_PID` to the host client PID; niri may show a namespace PID.
+For GM visual checks, use a second disposable peer and temporary always-visible
+knight labels: the stock renderer hides the controlled knight's own nameplate.
 
 ## Resources and releases
 

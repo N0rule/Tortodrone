@@ -107,8 +107,40 @@ The router, membership and retained rate budget are reusable for later channels.
 Tests cover Unicode/size/mode bounds, rate replenishment, stale memberships and
 failed recipients; installed fixtures send/receive through the stock marshaller.
 
-## 6. Remaining research boundary
+## 6. Game Master (0.9.1)
 
-The installed
-PlayerObject.Type includes `GAME_MASTER`; verify its icon/title consumer rather
-than inventing a prestige enum value (the prestige enum only has RANK_0–RANK_5).
+The installed PlayerObject.Nb() derives GAME_MASTER from flags bit **256**;
+PlayerObject has no streamed Type field. ProjectXOccupantInfo does stream Type,
+whose GAME_MASTER ordinal is **2**. KnightSprite's nameplate builder translates
+`projectx:m.game_master` into `character/label.dat` **Subtext** and uses
+ProjectXOccupantInfo.getIcon() for **Prestige Icon**. Type.GAME_MASTER supplies
+`support.png`, overriding the rank icon. PrestigeRank stays RANK_0; no enum is invented.
+
+PlayerObject's permission policy checks ProjectXTokenRing.Nl() for Crowd broadcast
+access; bit **8** satisfies it without granting TokenRing.isAdmin() (bit 1) or OOO
+branding. The exact symbolic name of bit 8 is not available; only the verified
+consumer behavior is relied upon. Client affordances are advisory: server permission
+checks read the current stored role and authenticated identity on each broadcast.
+
+Primary [ChatMarshaller](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/crowd/chat/data/ChatMarshaller.java)
+defines broadcast(String,InvocationListener) method **2**. Its ListenerMarshaller
+supports failure only; successful broadcasts require no success callback. The
+stock ChatDirector exposes `/broadcast` with that permission check. UserMessage
+mode **4** reaches ready players across maps/instances; bounds and budgets match
+scene chat. Other staff, moderation, tells and party/guild commands are unavailable.
+
+Existing schema-4 `is_admin` roles become Game Master unchanged; public local
+commands/UI use GM terminology and retain old CLI aliases. Tests verify durable
+roles, cross-process/live grant/revocation, stale auth denial, stock reader role/icon,
+normal-player denial and unchanged actor models/positions on role changes.
+Narya OccupantDirector forwards EntryUpdatedEvent to occupant observers; a DSet
+AttributeChangedEvent alone bypasses those consumers. Live roles use verified
+entry updates and the stock fixture asserts their old/new types and callbacks.
+
+An isolated unmodified ProjectXApp on niri also rendered the GM subtitle beneath
+the peer's name and the support badge. Live removal hid both without disconnecting
+the knight. The viewer used disposable always-visible nameplate preferences;
+the stock client hides its own nameplate. Files/assets remained read-only and
+all accounts, keys, deployment, preferences and extraction directories were temporary.
+This accepts the GM nameplate boundary; it is not a new two-window movement,
+graphical Bazaar or Arsenal acceptance claim.

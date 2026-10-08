@@ -83,6 +83,10 @@ public final class SessionCodec {
 
     public byte[] player(short messageId, int oid, int playerId, String username,
             Map<String, Short> receivers, List<Knight> knights) throws IOException {
+        return player(messageId,oid,playerId,username,receivers,knights,false);
+    }
+    public byte[] player(short messageId, int oid, int playerId, String username,
+            Map<String, Short> receivers, List<Knight> knights, boolean gameMaster) throws IOException {
         return frame(out -> {
             objectHeader(out, messageId, "com.threerings.projectx.data.PlayerObject", oid);
             type(out, "com.threerings.util.Name"); string(out, username);
@@ -94,7 +98,7 @@ public final class SessionCodec {
             out.writeShort(0); out.writeByte(0); string(out, null); // location, status, away message
             out.writeInt(0); // pawn ID
             out.writeInt(playerId); string(out, null); string(out, "us-east");
-            type(out, "com.threerings.projectx.data.ProjectXTokenRing"); out.writeInt(0);
+            type(out, "com.threerings.projectx.data.ProjectXTokenRing"); out.writeInt(gameMaster?8:0);
             out.writeInt(0); out.writeLong(0); out.writeInt(1); // site, creation time, session count
             emptyDSet(out); emptyDSet(out); // achievements, gifts
             out.writeShort(0); out.writeInt(0); // survey, queue position
@@ -109,7 +113,7 @@ public final class SessionCodec {
             out.writeInt(0); emptyDSet(out); // equipped sprite, loadouts
             out.writeInt(0); out.writeInt(0); out.writeBoolean(false); // weapon/trinket slots, heat bonus
             out.writeInt(0); out.writeInt(0); out.writeBoolean(false); // PvP bonus, crowns, show energy
-            out.writeInt(0); out.writeInt(0); out.writeShort(0); // energy, flags, home town
+            out.writeInt(0); out.writeInt(gameMaster?256:0); out.writeShort(0); // energy, flags, home town
             for (int i = 0; i < 6; i++) out.writeInt(0); // town, zone, instance, general/trade/party OIDs
             out.writeShort(0); out.writeLong(0); // scene dialog and creation time
             out.writeShort(0); out.writeShort(0); // new scene dialog, unique dialog
@@ -229,6 +233,16 @@ public final class SessionCodec {
             type(out, PREFIX + "EventNotification"); out.writeShort(-1);
             type(out, "com.threerings.presents.dobj.AttributeChangedEvent"); out.writeInt(clientOid);
             string(out, "availableKnights"); roster(out, knights);
+        });
+    }
+
+    /** PlayerObject derives GAME_MASTER from flag 256; token 8 permits stock broadcast UI. */
+    public byte[] gameMaster(int clientOid,boolean enabled)throws IOException {
+        return frame(out->{
+            eventHeader(out,"CompoundEvent",clientOid);
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
+            attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt(enabled?256:0);});
+            attribute(out,clientOid,"tokens",o->{type(o,"com.threerings.projectx.data.ProjectXTokenRing");o.writeInt(enabled?8:0);});
         });
     }
 
@@ -404,6 +418,18 @@ public final class SessionCodec {
         });
     }
 
+    /** Notify stock OccupantDirector observers; replacing a DSet alone does not update labels. */
+    public byte[] occupantRoles(int sceneOid,List<ActorState> changed)throws IOException {
+        return frame(out->{
+            eventHeader(out,"CompoundEvent",sceneOid);
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size());
+            for(var actor:changed) {
+                type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(sceneOid);
+                string(out,"occupantInfo");occupant(out,actor);
+            }
+        });
+    }
+
     public byte[] sceneDelta(int oid,int acknowledge,int reference,int timestamp,List<ActorState> added,
             List<ActorState> updated,int[] removed) throws IOException {
         return sceneDelta(oid, acknowledge, (short) 0, reference, timestamp, (short) 50,
@@ -464,7 +490,7 @@ public final class SessionCodec {
     }
     private void occupant(DataOutputStream out,ActorState actor)throws IOException {
         type(out,"com.threerings.projectx.data.ProjectXOccupantInfo");out.writeBoolean(true);out.writeInt(actor.clientOid());name(out,actor.name());out.writeByte(0);out.writeInt(actor.id());
-        type(out,"com.threerings.projectx.data.PlayerObject$Type");out.writeByte(0);out.writeInt(actor.color());out.writeShort(0);type(out,"com.threerings.projectx.data.ProjectXCodes$PrestigeRank");out.writeByte(0);out.writeInt(1);
+        type(out,"com.threerings.projectx.data.PlayerObject$Type");out.writeByte(actor.gameMaster()?2:0);out.writeInt(actor.color());out.writeShort(0);type(out,"com.threerings.projectx.data.ProjectXCodes$PrestigeRank");out.writeByte(0);out.writeInt(1);
     }
     private void actor(DataOutputStream out,ActorState a)throws IOException {
         type(out,"com.threerings.projectx.data.actor.Knight");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);

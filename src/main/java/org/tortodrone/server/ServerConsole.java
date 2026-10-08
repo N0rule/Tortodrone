@@ -62,11 +62,11 @@ final class ServerConsole implements AutoCloseable {
     private void execute(String[] words) throws IOException {
         String command = words[0].toLowerCase(Locale.ROOT);
         if (words.length == 1 && command.equals("help")) {
-            log.info("Commands: help | status | stop | account list | account create <username> [admin]");
+            log.info("Commands: help | status | stop | account list | account create <username> [gm]");
             log.info("knight list <username> | knight info <username> <knight-name>");
             log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
             log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
-            log.info("account password <username> | account check <username> | account admin <username> <true|false> | account delete <username>");
+            log.info("account password <username> | account check <username> | account gm <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
         } else if (words.length == 1 && command.equals("stop")) {
@@ -116,14 +116,14 @@ final class ServerConsole implements AutoCloseable {
 
     private void account(String[] words) throws IOException {
         if (words.length == 2 && words[1].equals("list")) {
-            log.info("ID | Username | Admin | Characters");
-            for (var account : accounts.list()) log.info(account.id() + " | " + account.username() + " | " + account.admin() + " | " + account.knights());
+            log.info("ID | Username | Game Master | Characters");
+            for (var account : accounts.list()) log.info(account.id() + " | " + account.username() + " | " + account.gameMaster() + " | " + account.knights());
             log.info("Accounts: " + accounts.list().size()); return;
         }
         if (words.length < 3) throw usage();
         String name = words[2]; AccountStore.validateUsername(name);
-        if (words[1].equals("admin") && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
-            accounts.setAdmin(name, Boolean.parseBoolean(words[3])); log.info("Admin status changed: " + name); return;
+        if ((words[1].equals("gm") || words[1].equals("admin")) && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
+            accounts.setGameMaster(name, Boolean.parseBoolean(words[3])); log.info("Game Master status changed: " + name); return;
         }
         if (words[1].equals("delete") && words.length == 3) {
             var selected = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account"));
@@ -132,7 +132,7 @@ final class ServerConsole implements AutoCloseable {
             if (!running.getAsBoolean()) return;
             accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
         }
-        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && words[3].equals("admin"));
+        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && (words[3].equals("gm") || words[3].equals("admin")));
         boolean reset = words[1].equals("password") && words.length == 3;
         boolean check = words[1].equals("check") && words.length == 3;
         if (!create && !reset && !check) throw usage();

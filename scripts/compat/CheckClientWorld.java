@@ -35,7 +35,8 @@ public final class CheckClientWorld {
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
             run(List.of(executable("javac"), "--release", "17", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
-                project.resolve("scripts/compat/AccountConnectionCheck.java").toString()), "compile", "", 30);
+                project.resolve("scripts/compat/AccountConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
             List<String> base = new ArrayList<>(List.of(executable("java"), "--add-opens=java.base/java.lang=ALL-UNNAMED",
                 "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true",
@@ -62,6 +63,10 @@ public final class CheckClientWorld {
             network.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString()));
             try { run(network, "network", "", 60); }
             catch (Exception failure) { System.err.println(tail(serverLog)); throw failure; }
+            List<String> staffCheck=new ArrayList<>(base);
+            staffCheck.addAll(List.of("GameMasterConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
+            try{run(staffCheck,"game-master","",45);}
+            catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
             List<String> seed = new ArrayList<>(base);

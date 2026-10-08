@@ -46,7 +46,7 @@ final class AdminWindow extends JFrame {
         table.getSelectionModel().addListSelectionListener(event -> enableActions());
         JPanel footer = new JPanel(new BorderLayout(0,10)); JPanel actions = new JPanel(new GridLayout(2,4,6,6));
         button(actions,"Create account",false,this::create); button(actions,"Change password",true,this::password);
-        button(actions,"Check password",true,this::check); button(actions,"Set Admin",true,this::admin);
+        button(actions,"Check password",true,this::check); button(actions,"Set Game Master",true,this::gameMaster);
         button(actions,"Currency",true,this::currency); button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
         button(actions,"Delete knight",true,this::deleteKnight);
         footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
@@ -72,13 +72,13 @@ final class AdminWindow extends JFrame {
         for (int i=0;i<rows.length;i+=2) { form.add(new JLabel((String)rows[i])); form.add((Component)rows[i+1]); } return form;
     }
     private void create() {
-        JTextField username = new JTextField(20); JPasswordField password = new JPasswordField(20), confirm = new JPasswordField(20); JCheckBox admin = new JCheckBox("Administrator");
-        if (JOptionPane.showConfirmDialog(this,form("Username",username,"Password",password,"Confirm password",confirm,"Admin",admin),"Create account",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
+        JTextField username = new JTextField(20); JPasswordField password = new JPasswordField(20), confirm = new JPasswordField(20); JCheckBox gameMaster = new JCheckBox("Game Master");
+        if (JOptionPane.showConfirmDialog(this,form("Username",username,"Password",password,"Confirm password",confirm,"Game Master",gameMaster),"Create account",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
         char[] first = password.getPassword(), second = confirm.getPassword(); password.setText(""); confirm.setText("");
         try { AccountStore.validateUsername(username.getText()); Passwords.validate(first); if (!Arrays.equals(first,second)) throw new IOException("Passwords do not match"); }
         catch (IOException failure) { Arrays.fill(first,'\0'); message(failure.getMessage(),true); return; }
         finally { Arrays.fill(second,'\0'); }
-        String name = username.getText(); boolean flag = admin.isSelected();
+        String name = username.getText(); boolean flag = gameMaster.isSelected();
         execute(() -> { try { accounts.create(name,first,flag); return accounts.list(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Account created: "+name); });
     }
     private void password() {
@@ -100,12 +100,12 @@ final class AdminWindow extends JFrame {
             status.setText("Password check completed."); message(matches ? "Password matches." : "Password does not match.",false);
         });
     }
-    private void admin() {
+    private void gameMaster() {
         var account = selected(); if (account == null) return;
-        JCheckBox flag = new JCheckBox("Administrator",account.admin());
-        if (JOptionPane.showConfirmDialog(this,flag,"Admin status — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
-        boolean admin = flag.isSelected();
-        execute(() -> { accounts.setAdmin(account.username(),admin,account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Admin status updated."); });
+        JCheckBox flag = new JCheckBox("Game Master",account.gameMaster());
+        if (JOptionPane.showConfirmDialog(this,flag,"Game Master status — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
+        boolean gameMaster = flag.isSelected();
+        execute(() -> { accounts.setGameMaster(account.username(),gameMaster,account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Game Master status updated."); });
     }
     private void currency() {
         var account = selected(); if (account == null) return;

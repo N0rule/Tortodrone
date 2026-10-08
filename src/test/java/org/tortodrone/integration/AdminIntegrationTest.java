@@ -21,9 +21,9 @@ public final class AdminIntegrationTest {
         try {
             Path server = directory.resolve("tortodrone.jar"), admin = directory.resolve("tortodrone-admin.jar");
             org.tortodrone.support.TestDeployment.copyServer(Path.of(args[0]),server); Files.copy(Path.of(args[1]),admin);
-            command(admin,directory,"",true,"Tortodrone Admin", "--version"); check(!Files.exists(directory.resolve("data")),"version command creates no runtime state");
+            command(admin,directory,"",true,"Tortodrone Game Master", "--version"); check(!Files.exists(directory.resolve("data")),"version command creates no runtime state");
             command(admin,directory,"",true,"ID\tUsername", "--list-accounts");
-            command(admin,directory,"owner-password\nowner-password\n",true,"Account created.","--create-account","Owner","--admin");
+            command(admin,directory,"owner-password\nowner-password\n",true,"Account created.","--create-account","Owner","--gm");
             command(admin,directory,"owner-password\n",true,"Password matches.","--check-password","Owner");
             command(admin,directory,"wrong-password\n",true,"Password does not match.","--check-password","Owner");
             command(admin,directory,"",true,"1\tOwner\ttrue\t0","--list-accounts");
@@ -38,8 +38,8 @@ public final class AdminIntegrationTest {
                     TestClient.authenticate(socket,key,"Player","player-password",true,(peer,wire,oid) -> CharacterScenario.session(peer,wire,oid,true));
                 }
                 Database database = new Database(data,false); check(database.roster(2).size() == 1,"live-created account owns saved characters");
-                command(admin,directory,"",true,"Admin status changed.","--set-admin","Player","true");
-                check(database.identity("Player").admin(),"desktop service role change visible while server runs");
+                command(admin,directory,"",true,"Game Master status changed.","--set-gm","Player","true");
+                check(database.identity("Player").gameMaster(),"desktop service role change visible while server runs");
                 var ready = new CompletableFuture<Void>();
                 Future<?> disconnected = worker.submit(() -> {
                     try (Socket socket = new Socket("127.0.0.1",port)) {

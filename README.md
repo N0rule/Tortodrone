@@ -6,17 +6,18 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.9.0**, SQLite schema **4**: normal login; saved character creation,
+Version **0.9.1**, SQLite schema **4**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items with persistent binding and Arsenal equip/unequip; per-character crowns and
-energy with local administration; original-protocol scene chat with instance isolation.
+energy with local administration; original-protocol scene chat with instance isolation;
+Game Master roles, stock title/support icon and permission-checked broadcasts.
 
 One authenticated connection per account: a successful new login replaces the
 previous connection and releases its knight. Failed logins do not disconnect it.
 
 Intro missions are skipped. Combat, quests, shops, NPC dialogue, portal travel,
-position persistence and in-game admin commands are not implemented. Reconnect
+position persistence and other in-game staff commands are not implemented. Reconnect
 to switch characters; every entry starts at the town spawn.
 
 The 0.7.1 entry fixes passed automated and isolated graphical creation/reconnect
@@ -80,10 +81,10 @@ log-mode=normal
 
 ## Administration and backups
 
-The manager supports account creation, password checks/resets, Admin flags,
+The manager supports account creation, password checks/resets, Game Master roles,
 deletion, individual knight deletion and per-knight currency changes. The server terminal offers the same
-account services; type `help` for commands. Admin flags do not yet enable in-game
-commands. [Administration reference](docs/administration.md) covers commands,
+account services; type `help` for commands. Game Masters can use the stock `/broadcast`
+command after entering a scene. [Administration reference](docs/administration.md) covers commands,
 account rules and migrations.
 
 To back up, stop the server and close the manager, then copy the entire `data/`

@@ -10,6 +10,8 @@ import static org.tortodrone.support.TestWire.check;
 
 public final class CommandHistoryTest {
     public static void main(String[] args) throws Exception {
+        check(CommandHistory.allowed("account create Alice gm")&&CommandHistory.allowed("account gm Alice false"),"Game Master commands are recallable");
+        check(!CommandHistory.allowed("account gm Alice secret-password"),"misplaced GM password is not recallable");
         for (String line : List.of("currency give Alice Saved-Knight crowns 100","currency withdraw Alice Saved-Knight energy 5","help","status","stop","/status","account list","account create Alice","account create Alice admin","account password Alice","account check Alice","account delete Alice","account admin Alice true","account admin Alice false","knight list Alice","knight info Alice Saved-Knight")) {
             check(CommandHistory.allowed(line),"recognized command history: "+line);
         }

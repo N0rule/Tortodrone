@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.9.0, schema 4
+## Checkpoint: 0.9.1, schema 4
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -34,7 +34,14 @@ allocation counters are preserved. The account reconnects with its refreshed ros
 0.9.0 adds scene-wide local chat through the stock SpeakMarshaller and Crowd message
 events, with ready membership, authoritative knight names, instance isolation,
 256-character limits and a five-message burst/one-per-second sustained rate.
-Normal/think/emote/shout modes are supported; tells and broadcast remain unavailable.
+Normal/think/emote/shout modes are supported; private tells remain unavailable.
+
+0.9.1 renames the account role to Game Master, preserving existing stored flags.
+Stock PlayerObject/occupant fields enable its title and support icon; prestige
+rank is unchanged. `/broadcast` is restricted to current GM roles and reaches
+ready players across maps/instances. Live role changes do not reset actor models.
+The isolated stock graphical client rendered a peer's title/support icon and removed
+them on live revocation. Its own nameplate follows the stock client's visibility rules.
 
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory
@@ -42,8 +49,10 @@ closing and reconnect passed isolated graphical checks. Graphical two-window
 animation and equip/unequip have not been independently accepted; networking
 checks pass. Repeat relevant checks when changing scene/movement behavior. See
 [entry evidence and desktop limitations](town-entry-investigation.md).
+Accepted samples do not rule out recurrence of the previously intermittent
+fresh-creation animation/stutter symptom; keep its graphical regression checklist.
 
-## Requested priorities
+## Completed requested priorities
 
 1. **Item binding**: persistent state, migration and real Arsenal RPC support.
 2. **External scene framework**: map catalog, validated scene/collision data,
@@ -54,11 +63,11 @@ checks pass. Repeat relevant checks when changing scene/movement behavior. See
    cleanup, live session/roster consistency.
 5. **Scene chat**: original marshaller/messages, scene isolation and bounds,
    reusable routing for later channels.
-6. **Game Master**: replace Admin terminology while retaining roles, basic
-   permission checks, verified title and special icon. Document unsupported visuals.
+6. **Game Master**: role terminology/storage, current permissions, stock title/
+   support icon and broadcasts. Other staff commands remain unavailable.
 
-Complete and commit these separately in this order; do not push. See the owner's
-current instructions before choosing any additional milestone.
+All six are implemented in separate commits on main; nothing is pushed. Check
+Git for exact commit IDs. See the owner's instructions before additional work.
 
 ## Current limits and later work
 
@@ -66,8 +75,8 @@ Configured town maps/spawns; positions reset on entry. Reconnect to switch chara
 Static collision is sampled; no dynamic physics. Five starter items, no drops,
 trade, crafting, loadouts or costume equipment. No combat, quests, shops, NPC
 dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
-News/social feeds are empty. Administration is local; Admin does not enable in-game
-commands. Binding does not implement an unbinding service.
+News/social feeds are empty. Account/character/currency management remains local;
+the only in-game staff command implemented is broadcast. Binding has no unbinding service.
 
 After the requested foundations: server-owned position persistence, clean picker
 return, one verified portal round trip, general owned items/weapon selection,

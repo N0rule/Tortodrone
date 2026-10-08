@@ -31,9 +31,9 @@ final class CommandHistory extends DefaultHistory {
         if (words.length == 2) return words[1].equals("list");
         if (!words[2].matches("[A-Za-z][A-Za-z0-9_-]{2,31}")) return false;
         return switch (words[1]) {
-            case "create" -> words.length == 3 || words.length == 4 && words[3].equals("admin");
+            case "create" -> words.length == 3 || words.length == 4 && (words[3].equals("gm") || words[3].equals("admin"));
             case "password", "check", "delete" -> words.length == 3;
-            case "admin" -> words.length == 4 && (words[3].equals("true") || words[3].equals("false"));
+            case "gm", "admin" -> words.length == 4 && (words[3].equals("true") || words[3].equals("false"));
             default -> false;
         };
     }

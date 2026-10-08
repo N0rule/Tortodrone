@@ -87,7 +87,8 @@ prevents stale caches after external administration; concurrent stale writes fai
 without resurrecting removed items or consuming IDs. Local knight deletion captures
 account/world identity, cascades owned state, removes its currency audit rows and
 increments authentication/roster revisions in one transaction.
-Future in-game permissions must read the current Admin role, not a login snapshot.
+GM permission checks read the current stored role through the authenticated socket
+lease, checking identity/authentication revision rather than its login snapshot.
 
 `AccountStore` shares a synchronized `CharacterStore` across that account's sessions.
 Only one authenticated socket lease per account is current. Takeover closes the
@@ -141,6 +142,17 @@ so it holds no routing lock during delivery. Failed peers are removed independen
 Five-message bursts replenish one token per second, with budgets retained across
 scene changes. Normal/think/emote/shout are scene-wide; no distance or tell policy
 is inferred. Validation/rate feedback uses the stock SystemMessage schema.
+
+Global ChatMarshaller method 2 implements GM broadcasts via the same bounded
+router/rate budget. The ListenerMarshaller receives failures only. Ready scenes
+receive UserMessage mode 4; normal/revoked roles fail before routing. PlayerObject
+flag 256 derives GAME_MASTER, token bit 8 enables the verified broadcast affordance,
+and occupant Type ordinal 2 supplies the stock title/support icon. No admin token
+or invented prestige rank is granted. A 250 ms role poll republishes player and
+occupant metadata without changing actor configs, positions or identity. Existing
+occupants receive EntryUpdatedEvent so stock nameplate/chat observers refresh;
+replacing the whole DSet only updates its stored value. Schema-4
+`is_admin` remains the durable GM boolean for compatibility with existing data.
 
 The [milestone plan](world-entry-plan.md) owns feature status; the
 [entry investigation](town-entry-investigation.md) owns defect/acceptance evidence.

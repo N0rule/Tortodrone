@@ -13,11 +13,11 @@ Enter commands in the running server, not the shell. A leading `/` is optional.
 | Command | Action |
 | --- | --- |
 | `help`, `status`, `stop` | Commands, status/account count, clean shutdown |
-| `account list` | IDs, usernames, Admin flags, character counts |
-| `account create Alice [admin]` | Create; prompt twice for a password |
+| `account list` | IDs, usernames, Game Master roles, character counts |
+| `account create Alice [gm]` | Create; prompt twice for a password |
 | `account password Alice` | Reset password; prompt twice |
 | `account check Alice` | Check a supplied password |
-| `account admin Alice true` | Set Admin; `false` clears it |
+| `account gm Alice true` | Grant Game Master; `false` removes it |
 | `account delete Alice` | Delete account/characters after exact-username confirmation |
 | `knight list Alice` | Saved knights and account-local roster IDs |
 | `knight info Alice Saved-Knight` | Global identity, balances, items and equipped slots |
@@ -34,6 +34,11 @@ For headless administration, run `java -jar build/tortodrone-admin.jar --help`.
 Its CLI supports list/create/check/reset/delete/role actions, with `--data` before
 the command. Without a terminal, supply password and confirmation as two complete
 stdin lines, or one for a check. Old account flags on the server JAR are unsupported.
+
+Use `--create-account Alice --gm` or `--set-gm Alice true` in the local tool.
+The old `admin`, `--admin` and `--set-admin` spellings remain aliases for upgrades;
+the JAR filename remains `tortodrone-admin.jar` for deployment compatibility.
+Existing stored roles are retained with no schema change.
 
 `--list-knights Alice` shows names/IDs/balances. `--delete-knight Alice Saved-Knight`
 requires one stdin line containing the exact saved knight name. The desktop's
@@ -56,7 +61,12 @@ rows are removed. Picker deletion still refuses online knights.
 - Crowns/energy belong to each knight, start at zero and range from 0 to
   2,147,483,647. Changes are atomic, audited and visible online within about 250 ms.
   No earning, spending or regeneration rules exist yet.
-- Admin is stored for future permissions; there are no in-game admin commands.
+- Game Masters receive the stock nameplate subtitle and support icon, replacing
+  the prestige icon without changing prestige rank. Stock `/broadcast message`
+  reaches all ready scenes/instances and requires the current stored GM role.
+  Limits match scene chat; other in-game staff commands are unavailable. Role
+  changes update online player/occupant metadata within about 250 ms; permission
+  checks read storage immediately. Normal players cannot broadcast or grant roles.
   Password reset/deletion revokes sessions within about 250 ms and blocks stale saves.
 - Password storage uses a random salt and PBKDF2-HMAC-SHA256, 600,000 iterations,
   over the stock client's password transform. Neither plaintext nor reusable
@@ -80,7 +90,7 @@ retain account/roster IDs and credentials, and do not regrant kits or re-equip
 items on reopening. Existing schema-2 kits are equipped once during upgrade.
 
 Pre-SQLite registries/profiles are imported once, retaining identities, verifiers,
-appearance, timestamps and counters. Imported Admin defaults to false; the old
+appearance, timestamps and counters. Imported Game Master defaults to false; the old
 profile-only 0.2 installation retains its fixed development login. Fresh installs
 create none. Legacy files remain untouched as backups and are no longer active.
 Invalid sources fail migration rather than inventing replacement identities.

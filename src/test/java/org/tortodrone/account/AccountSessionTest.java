@@ -14,9 +14,15 @@ public final class AccountSessionTest {
             var identity=AccountStoreTest.login(accounts,"tortodrone","tortodrone");
             var cleaned=new AtomicInteger();Socket first=new Socket();
             var a=accounts.attach(identity,first);a.onInvalidated(cleaned::incrementAndGet);
+            check(!a.gameMaster(),"normal lease has no staff privileges");
+            accounts.setGameMaster("tortodrone",true);
+            check(a.gameMaster()&&!identity.gameMaster(),"role grant reads current state rather than login snapshot");
+            accounts.setGameMaster("tortodrone",false);
+            check(!a.gameMaster()&&a.current(),"revocation applies without invalidating password session");
             check(AccountStoreTest.login(accounts,"tortodrone","wrong-password")==null&&a.current(),"failed login cannot evict a session");
             Socket second=new Socket();var b=accounts.attach(identity,second);
             check(first.isClosed()&&!a.current()&&b.current()&&cleaned.get()==1,"new authenticated session replaces old socket/controller");
+            try{a.gameMaster();throw new AssertionError("Replaced lease read privileges");}catch(IOException expected){}
             a.close();check(b.current()&&cleaned.get()==1,"late cleanup cannot release replacement lease");
             b.close();check(second.isClosed()&&!b.current(),"normal/abrupt cleanup releases lease");
             // Replaced before its world controller exists: registration still cleans up once.
