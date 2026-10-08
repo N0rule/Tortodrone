@@ -19,9 +19,9 @@ public final class TownUpgradeTest {
             var original=characters.worldProfile(knight.name(),1);
             db.write(c -> { try(var s=c.createStatement()) {
                 s.execute("DROP TABLE currency_events");
-                s.execute("DROP INDEX equipped_items");
-                s.execute("ALTER TABLE inventory_items DROP COLUMN equipped_slot");
-                s.execute("ALTER TABLE inventory_items DROP COLUMN bound");
+                s.execute("CREATE TABLE inventory_old(item_id INTEGER PRIMARY KEY CHECK(item_id>0),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,slot TEXT NOT NULL CHECK(slot IN('HELM','ARMOR','SWORD','GUN','SHIELD')),config TEXT NOT NULL,accessory TEXT,heat INTEGER NOT NULL DEFAULT 0 CHECK(heat>=0),UNIQUE(world_id,slot))");
+                s.execute("INSERT INTO inventory_old SELECT item_id,world_id,slot,config,accessory,heat FROM inventory_items");
+                s.execute("DROP TABLE inventory_items");s.execute("ALTER TABLE inventory_old RENAME TO inventory_items");
                 s.execute("ALTER TABLE world_characters DROP COLUMN crowns");
                 s.execute("ALTER TABLE world_characters DROP COLUMN energy");
                 s.execute("ALTER TABLE world_characters DROP COLUMN state_revision");

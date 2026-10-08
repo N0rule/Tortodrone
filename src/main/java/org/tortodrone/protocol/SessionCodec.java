@@ -269,6 +269,10 @@ public final class SessionCodec {
             }
         } else if (value instanceof StarterCatalog.Colorization color) {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal"); out.writeInt(color.value());
+        } else if (value instanceof StarterCatalog.TransColorization color) {
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$TransNormal");out.writeInt(color.clazz());out.writeInt(color.value());
+        } else if (value instanceof Float number) {
+            type(out,"java.lang.Float");out.writeFloat(number);
         } else if (value instanceof Integer number) {
             type(out,"java.lang.Integer"); out.writeInt(number);
         } else if (value instanceof String text) {
@@ -480,12 +484,15 @@ public final class SessionCodec {
         for(var item:profile.items())item(out,knight,profile.worldId(),item);
     }
     private void item(DataOutputStream out,Knight knight,int worldId,WorldProfile.Item item)throws IOException {
-            type(out,"com.threerings.projectx.item.data.LevelItem");out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
-            out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+knight.costume(),Map.of()));}
-            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(0);out.writeUTF(item.config());out.writeInt(1);out.writeShort(0);
+            type(out,"com.threerings.projectx.item.data."+(item.slot()==WorldProfile.Slot.OTHER?"Item":"LevelItem"));
+            if(item.slot()!=WorldProfile.Slot.OTHER) {
+                out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
+                out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+knight.costume(),Map.of()));}
+            }
+            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(0);out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
-            // tested by Cs(). Bit 1 is the permanent lock and remains unset.
-            out.writeByte(item.bound() ? 2 : 0);
+            // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
+            out.writeByte((item.bound() ? 2 : 0) | (item.permanent() ? 1 : 0));
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);

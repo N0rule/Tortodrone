@@ -23,22 +23,33 @@ restart server/tools after replacing it. Without it, a built-in catalogue suppor
 the creator's helms/armor and Proto sword/gun/shield only. Invalid catalogues fail
 startup rather than silently falling back. The game is never a server runtime dependency.
 
-The tested installation provides **9,348 definitions**, including **883 supported
-equipment references**: 214 helms, 204 armor, 109 shields, 138 swords, 134 guns and
-84 bombs. Counts depend on the installed version. Recipes, materials, costumes,
-accessory tickets and internal parts are indexed for research but cannot be granted
-as equipment. Equipment must be creatable, non-stackable, supported by the stock
-normal equipment slot rules, and have representable model arguments. Permanent
-items and unknown argument types remain catalogue-only.
+The tested installation provides **9,348 definitions**, including **8,454 grantable
+player items**: 905 normal equipment references, 2,421 costumes, 93 trinkets and
+5,035 plain inventory definitions. The latter include materials, recipes, accessory
+and variant tickets, minerals, tokens, rarity items, sprite eggs, cosmetic upgrades,
+boxes and consumables. Counts depend on the installed version.
+
+Grants require a nonzero stock ID, usable display metadata and a supported stock
+item record. Equipment additionally requires verified slot rules and representable
+model arguments. Unobtainable/event/permanent player gear is allowed when it passes
+those checks; stock `creatable` is not treated as an obtainability restriction.
+Internal parts, developer/test/PvP definitions, expiring items, dungeon-only pickups
+and unimplemented specialized records (furniture, seed/artifact, gift-box and
+upgrading records) remain indexed but unavailable for grants. This is a conservative
+compatibility policy, not a guarantee that every item animation or gameplay action
+has been exercised. Accessory tickets may derive their names from accessory definitions.
 
 The UTF-8 TSV columns are config reference, stock config ID, resolved implementation
 type, localized name key, rarity, stackability, supported slot (empty means index
-only), bind-on-equip, and bounded Base64 model arguments. Stock config IDs can be
-negative or zero; they are **not** persistent instance IDs. References are resolved
+only), bind-on-equip, permanent binding, and bounded Base64 model arguments. This
+is catalogue v2; existing v1 catalogues remain readable but must be regenerated to
+enable newly supported items. Stock config IDs can be negative or zero; they are
+**not** persistent instance IDs. Nonzero IDs resolve only if unique; ID 0 and
+ambiguous/missing IDs are rejected. References are resolved
 case-insensitively and stored with their stock spelling. Rarity -1 is an unspecified
 stock value, not an invented star rank. `provenance.tsv` records hashes of the
 installed code JAR and item definitions. Model arguments preserve typed strings,
-integers, booleans, colorizations and nested references; player colors resolve at
+integers, finite floats, booleans, normal/translated colorizations and nested references; player colors resolve at
 rendering time. They contain no textures, meshes, audio or executable objects.
 
 ## Item commands
@@ -48,10 +59,12 @@ In normal scene chat, a current Game Master can type:
 ```text
 !items Calibur
 !giveitem Alice Alice-Knight 2 Weapon/Sword/Calibur
+!giveitem Alice Alice-Knight 2 1157187935
 ```
 
 Use the **account username and saved knight name**, then quantity and the exact
-config reference. Config names can contain spaces; chat and server terminal
+config reference or catalogue ID shown by `items`. The example ID is Calibur in
+the tested installation; consult your exported catalogue. Config names can contain spaces; chat and server terminal
 commands consume the remaining text as the reference, without quotation marks.
 The command and its result stay private to the sender. Unknown, unsupported or
 invalid requests do not mutate inventories. Permission is rechecked in the write
@@ -72,7 +85,13 @@ java -jar build/tortodrone-admin.jar --items Calibur
 java -jar build/tortodrone-admin.jar --give-item Alice Alice-Knight 2 "Weapon/Sword/Calibur"
 ```
 
-Grants create 1–20 distinct, unequipped, level-zero, zero-heat instances. The current
+Grants give 1–20 units per request. Equipment creates distinct, unequipped,
+level-zero, zero-heat instances. Stackable plain items merge into an existing
+unbound stack, or create a new one; each stack is capped at 9,999 units. Other
+non-stackable inventory items remain distinct. Permanent equipment is bound from
+creation; other equipment follows its verified bind-on-equip rule. Costumes use
+slots 3, 4 and 15, and trinkets use slots 10/11. Costume models replace normal gear
+appearance without removing the underlying equipped gear. The current
 limit is 256 instances per knight, including starters; this is a Tortodrone limit,
 not a claim about official inventory capacity. Grants do not displace equipped gear
 or reset movement. Online recipients receive original item entry events observed
@@ -83,9 +102,10 @@ Audit rows identify the GM account; local console/CLI grants use a null actor.
 Knight deletion removes its item/audit rows. Creator edits affect only original
 starter cosmetics, retaining additional items of the same type.
 
-This milestone implements storage, equipment presentation and grants. Combat
-damage, drops, stacking, crafting, trade, costumes, weapon switching, levelling,
-random variants and accessory attachment are separate work. The lowest equipped
+This milestone implements storage, stacking, equipment/costume presentation and
+grants. Crafting, learning recipes, opening boxes, using tickets/consumables, sprite
+hatching, accessory attachment, combat damage, drops, trade, weapon switching,
+levelling and random variants remain unavailable; grants do not implement those actions. The lowest equipped
 weapon slot remains the visible held weapon. Catalogue rarity/model information
 does not imply server combat stats have been implemented.
 
@@ -137,3 +157,10 @@ prompt and the equipped highlight moving to the selected sword. It also checked 
 persisted loadout on reconnect and movement after closing inventory. It does not accept
 all item animations or resolve the previously intermittent creation symptom;
 network/model equality alone cannot establish walking animation acceptance.
+
+The 0.11.0 checks also validate every grantable native item class/count/binding flag,
+translated-color costume actor serialization and cosmetic precedence. Live stock
+checks exercise grants by ID, costume slots, plain recipes, stack merges and
+reconnect. The isolated graphical check accepted Steam Knight Mask and Cool
+Hexoskeleton icons/binding/world models, a live Brimstone stack update to 10 and
+movement after closing Arsenal. Unsupported item-use actions remain unavailable.

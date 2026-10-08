@@ -10,6 +10,7 @@ public final class StarterCatalog {
         public Model { arguments = Map.copyOf(arguments); }
     }
     public record Colorization(int value) { }
+    public record TransColorization(int clazz,int value) { }
     private record Entry(String category, String parameter, String model, Map<String, String> arguments) { }
     private static final Map<String, Entry> ENTRIES = load();
     private static final Set<String> COSTUMES = Set.of("Blue", "Gold", "Green", "Heavy", "Pink", "Purple", "Red");
@@ -61,7 +62,10 @@ public final class StarterCatalog {
         boolean weapon=false;
         for(var item:profile.items().stream().filter(i->i.equippedSlot()!=null)
                 .sorted(Comparator.comparingInt(WorldProfile.Item::equippedSlot)).toList()) {
-            if(item.equippedSlot()>=6) {if(weapon)continue;weapon=true;}
+            if(item.slot()==WorldProfile.Slot.HELM && profile.equipment()[3]!=0
+                || item.slot()==WorldProfile.Slot.ARMOR && profile.equipment()[4]!=0
+                || item.slot()==WorldProfile.Slot.SHIELD && profile.equipment()[15]!=0)continue;
+            if(item.slot().weapon()) {if(weapon)continue;weapon=true;}
             var entry=catalog.find(item.config());
             if(entry!=null)args.putAll(entry.arguments(color));
             if(item.accessory()!=null)add(args,item.accessory()+", "+knight.costume(),color);

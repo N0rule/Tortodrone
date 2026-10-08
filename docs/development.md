@@ -30,7 +30,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 32 unit and three integration checks. It covers persistence,
+The current suite has 33 unit and three integration checks. It covers persistence,
 migrations/rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 
@@ -62,7 +62,8 @@ names, sender echo, emote mode and isolation across instances and map transition
 GM fixtures verify login/occupant role and support icon, broadcasts across maps,
 normal/revoked permission denial and live role changes without model/position resets.
 Item fixtures export a disposable catalogue and compare all metadata and supported
-equipment models with stock configuration at three colors. Actual scene commands
+equipment models with stock configuration at three colors. Every grantable record is
+read by stock classes and checked against its native constructor, count and binding flags. Actual scene commands
 exercise private feedback, live/offline grants, Arsenal item observers, binding,
 equipment models, denial/revocation and reconnect persistence. See [game data](game-data.md).
 The preview fixture compares starter model construction with the stock builder.

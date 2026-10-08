@@ -13,7 +13,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 6;
+    public static final int SCHEMA_VERSION = 7;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -82,7 +82,8 @@ public final class Database {
                 if (current<=2) WorldProfiles.upgrade(c);
                 if(current<=3) WorldProfiles.upgradeBinding(c);
                 if(current<=4) WorldProfiles.upgradeInventory(c);
-                upgradeKnightNames(c);
+                if(current<=5)upgradeKnightNames(c);
+                WorldProfiles.upgradePlayerItems(c);
                 try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version="+SCHEMA_VERSION); }
                 return null;
             });
@@ -112,6 +113,7 @@ public final class Database {
             WorldProfiles.upgradeBinding(connection);
             WorldProfiles.upgradeInventory(connection);
             upgradeKnightNames(connection);
+            WorldProfiles.upgradePlayerItems(connection);
             try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version="+SCHEMA_VERSION); }
             return null;
         });
@@ -367,12 +369,23 @@ public final class Database {
             }
             var profile=WorldProfiles.load(c,account,knight,-1);
             if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
-            if(profile.items().size()+quantity>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
+            // Stack only plain inventory items with identical grant flags; equipment stays distinct.
+            var stack=entry.stackable()?profile.items().stream().filter(i->i.config().equals(entry.config())
+                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&!i.bound()&&!i.permanent()
+                &&i.equippedSlot()==null&&i.count()+quantity<=9999).findFirst().orElse(null):null;
+            int instances=stack!=null?0:entry.stackable()?1:quantity;
+            if(profile.items().size()+instances>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
             long first=0;
-            try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,bind_on_equip) VALUES(?,?,?,?,?)")) {
-                for(int i=0;i<quantity;i++) {
+            if(stack!=null) {
+                first=stack.id();
+                try(var s=c.prepareStatement("UPDATE inventory_items SET count=count+? WHERE item_id=? AND world_id=?")) {
+                    s.setInt(1,quantity);s.setLong(2,first);s.setInt(3,profile.worldId());s.executeUpdate();
+                }
+            }else try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,bind_on_equip,count,permanent,bound) VALUES(?,?,?,?,?,?,?,?)")) {
+                for(int i=0;i<instances;i++) {
                     long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
-                    s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());s.executeUpdate();
+                    s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
+                    s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,entry.permanent());s.executeUpdate();
                 }
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}

@@ -21,9 +21,24 @@ public final class ItemCatalogTest {
                 try{ItemCommands.execute(line,loaded,(u,k,c,n)->{calls[0]++;return null;});throw new AssertionError("Invalid command accepted");}catch(IOException expected){}
             }
             check(calls[0]==1,"invalid commands never reach mutation boundary");
+            var byId=new ItemCatalog(List.of(new ItemCatalog.Entry(sword.config(),-123,"Sword","m.sword",0,false,sword.slot(),true,sword.modelArgs())));
+            check(byId.require("-123").config().equals(sword.config()),"signed catalogue IDs resolve canonical references");
+            check(ItemCommands.execute("items -123",byId,(u,k,c,n)->null).contains("[id=-123]"),"search displays and accepts IDs");
+            ItemCommands.execute("giveitem Alice Alice-Knight 2 -123",byId,(u,k,c,n)->{check(c.equals(sword.config()),"ID resolved before storage");return null;});
+            for(var c:List.of(loaded,new ItemCatalog(List.of(
+                new ItemCatalog.Entry("One",7,"Sword","",0,false,sword.slot(),true,sword.modelArgs()),
+                new ItemCatalog.Entry("Two",7,"Sword","",0,false,sword.slot(),true,sword.modelArgs()))))) {
+                for(String id:List.of("0","7","999999999999999999999","99999")) {
+                    try{c.require(id);throw new AssertionError("Invalid/ambiguous ID accepted");}catch(IOException expected){}
+                }
+            }
             var unsupported=new ItemCatalog(List.of(new ItemCatalog.Entry("Recipe/Test",1,"Recipe","m.recipe",2,false,null,false,Map.of())));
             try{unsupported.require("Recipe/Test");throw new AssertionError("Unsupported type accepted");}catch(IOException expected){}
-            String original=Files.readString(file);Files.writeString(file,original+original.lines().filter(l->!l.startsWith("#")).findFirst().orElseThrow()+"\n");
+            String original=Files.readString(file);
+            var legacy=new StringBuilder("# Tortodrone item catalogue v1\n");
+            original.lines().filter(l->!l.startsWith("#")).forEach(l->{var f=new ArrayList<>(List.of(l.split("\\t",-1)));f.remove(8);legacy.append(String.join("\t",f)).append('\n');});
+            Files.writeString(file,legacy);check(ItemCatalog.load(file).entries().equals(catalog.entries()),"v1 deployed catalogues remain readable");
+            Files.writeString(file,original+original.lines().filter(l->!l.startsWith("#")).findFirst().orElseThrow()+"\n");
             try{ItemCatalog.load(file);throw new AssertionError("Duplicate catalogue accepted");}catch(IOException expected){}
             Files.writeString(file,"# Tortodrone item catalogue v999\n");
             try{ItemCatalog.load(file);throw new AssertionError("Unknown version accepted");}catch(IOException expected){}

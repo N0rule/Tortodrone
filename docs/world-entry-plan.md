@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.10.1, schema 6
+## Checkpoint: 0.11.0, schema 7
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -71,11 +71,12 @@ Git for exact commit IDs. See the owner's instructions before additional work.
 
 ## Inventory foundation and item grants (0.10.0)
 
-The read-only stock exporter indexes all item definitions and enables normal helm,
+The initial 0.10.0 stock exporter indexed all item definitions and enabled normal helm,
 armor, shield, sword, gun and bomb grants with verified model arguments. External
 `items/catalog.tsv` is loaded beside the JARs; absent catalogues retain the starter
 fallback. The tested installation indexes 9,348 definitions, of which 883 support
-equipment grants. Recipes, costumes, stackable and permanent items remain index-only.
+equipment grants. Recipes, costumes, stackable and permanent items were index-only
+in that release; the 0.11.0 expansion is described below.
 The separate file index lists physical game files and archive entries for later
 research. Generated data stays local and contains no extracted assets.
 
@@ -111,17 +112,45 @@ Storage regression checks cover cross-account availability, concurrent claims,
 rename collisions, rollback, deletion reuse and migration preservation. The stock
 picker fixture checks actual validation and creation rejection across accounts.
 
+## Player-item expansion (0.11.0)
+
+`giveitem` accepts a unique nonzero stock catalogue ID or exact reference; `items`
+displays IDs. Missing/ambiguous IDs and ID 0 fail without mutation. Catalogue v2
+indexes 9,348 definitions and enables 8,454 verified player items: normal gear,
+costumes, trinkets, materials, recipes, tickets, upgrades, boxes and consumables.
+Stock `creatable` does not exclude unobtainable player gear. Internal/developer/test/
+PvP definitions, expiring items, dungeon-only pickups and unsupported specialized
+records remain index-only. Existing v1 catalogues remain readable; regenerate them
+for the expanded grants.
+
+Schema 7 preserves prior item identities/loadouts/audits and adds stack counts,
+permanent binding and cosmetic/trinket slots. Stackable plain items use stock Item
+records and merge atomically; equipment remains distinct LevelItems. Costumes replace
+normal gear appearance, preserving its underlying equipment. The grant service
+retains role/authentication/ownership checks and transactional audit/revision updates.
+Grants implement possession and supported equipping; item-use actions remain unavailable.
+
+Acceptance: unchanged stock readers validated every grantable definition's native
+item class, count and binding flags, all model arguments at three colors, and
+serialized translated-color costume composition. Actual network checks passed ID
+grants, costume slots, material stack updates, recipe possession and reconnect.
+An isolated graphical Arsenal rendered Steam Knight Mask and Cool Hexoskeleton
+icons, accepted permanent and equip-time binding, displayed a live Brimstone stack
+increase to 10, and rendered both costumes while moving after closing inventory.
+These samples do not accept every item animation or resolve the earlier intermittent
+fresh-creation issue. Test clients/servers were stopped.
+
 ## Current limits and later work
 
 Configured town maps/spawns; positions reset on entry. Reconnect to switch characters.
-Static collision is sampled; no dynamic physics. Five starter items plus supported equipment grants; no drops,
-trade, crafting, loadouts or costume equipment. No combat, quests, shops, NPC
+Static collision is sampled; no dynamic physics. Five starter items plus supported player-item grants, stacks and costume/trinket
+equipment; no drops, trade, crafting, item-use actions or loadout switching. No combat, quests, shops, NPC
 dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
 News/social feeds are empty. Account/character/currency management remains local;
 in-game staff commands are broadcast, item search and item grants. Binding has no unbinding service.
 
 After the requested foundations: server-owned position persistence, clean picker
-return, one verified portal round trip, stackable owned items/weapon selection,
+return, one verified portal round trip, weapon selection,
 then one enemy and one persisted mission with idempotent rewards. Keep changes
 small; do not attempt the full introduction at once.
 

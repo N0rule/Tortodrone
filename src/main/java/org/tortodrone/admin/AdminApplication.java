@@ -18,7 +18,7 @@ public final class AdminApplication {
                 System.out.println("No command opens the desktop account manager.");
                 System.out.println("Commands: --list-accounts | --create-account username [--gm] | --set-password username | --check-password username | --set-gm username true|false | --delete-account username | --version");
                 System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");
-                System.out.println("Items: --items [search] | --give-item username knight-name quantity \"exact item config\"");return;
+                System.out.println("Items: --items [search] | --give-item username knight-name quantity \"catalogue ID or exact item config\"");return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
                 try (var stream = AdminApplication.class.getResourceAsStream("/version.txt")) {

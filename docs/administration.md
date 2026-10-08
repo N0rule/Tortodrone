@@ -92,7 +92,9 @@ optional SQLite `-wal`/`-shm` files, `keys/private.pk8`, `keys/public.txt`,
 Stop the server and close the manager before copying the whole directory or upgrading.
 Keep both JARs on the same release; do not run an older release against upgraded state.
 
-Current schema is 6. Version 0.7.2 adds persistent item binding. All existing
+Current schema is 7. Version 0.11.0 preserves existing inventories and adds costume/
+trinket slots, stack counts and permanent binding. Regenerate the v2 item catalogue
+to enable additional player items; old v1 catalogues remain readable. Version 0.7.2 adds persistent item binding. All existing
 starter items were originally granted equipped and remain bound after migration,
 including items now unequipped; their loadout, IDs and balances are preserved.
 Equipping applies the stored bind-on-equip rule; unequipping never clears binding.

@@ -36,7 +36,10 @@ public final class ItemBindingTest {
             db.currency("Alice",knight.name(),1,original.worldId(),Currency.CROWNS,42);
             // Recreate an actual schema-3 shape, including a previously unequipped starter.
             db.write(c -> { try(var s=c.createStatement()) {
-                s.execute("ALTER TABLE inventory_items DROP COLUMN bound");
+                s.execute("CREATE TABLE inventory_old(item_id INTEGER PRIMARY KEY CHECK(item_id>0),world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,slot TEXT NOT NULL CHECK(slot IN('HELM','ARMOR','SWORD','GUN','SHIELD')),config TEXT NOT NULL,accessory TEXT,heat INTEGER NOT NULL DEFAULT 0 CHECK(heat>=0),equipped_slot INTEGER CHECK(equipped_slot IN(0,1,2,6,7)),UNIQUE(world_id,slot))");
+                s.execute("INSERT INTO inventory_old SELECT item_id,world_id,slot,config,accessory,heat,equipped_slot FROM inventory_items");
+                s.execute("DROP TABLE inventory_items");s.execute("ALTER TABLE inventory_old RENAME TO inventory_items");
+                s.execute("CREATE UNIQUE INDEX equipped_items ON inventory_items(world_id,equipped_slot) WHERE equipped_slot IS NOT NULL");
                 s.execute("DROP TABLE item_events");
                 s.execute("DROP INDEX global_knight_names");s.execute("PRAGMA user_version=3");
                 s.execute("CREATE TRIGGER refuse_binding BEFORE UPDATE ON inventory_items BEGIN SELECT RAISE(ABORT,'test'); END");

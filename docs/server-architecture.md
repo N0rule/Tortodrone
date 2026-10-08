@@ -34,7 +34,7 @@ than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
 not the wildcard listening address. Credentials/raw packets/secrets are never logged.
 
-Schema 6 stores accounts, account-local rosters, globally identified world knights,
+Schema 7 stores accounts, account-local rosters, globally identified world knights,
 owned item instances, binding, equipped slots, per-knight balances and audit events.
 Connections enable foreign keys, WAL and a five-second busy timeout. Writes use
 `BEGIN IMMEDIATE` with commit/rollback; password hashing happens outside SQL
@@ -165,12 +165,14 @@ Arsenal equipItem (item method 3) and moveItem (method 9) share the owned equipm
 transaction. Binding is separate from the equipped slot and persists on removal.
 Equipment updates publish items/loadout/slots together so a new binding is visible
 before the success callback. Stock Item flags bit 2 carries mutable binding;
-the permanent-lock bit is not used.
+bit 1 carries permanent binding, which also sets mutable binding at creation.
 
 `ItemCatalog` loads bounded external reference/metadata/model records from sibling
 `items/catalog.tsv`, with a starter fallback when absent. It loads no stock classes.
 `ItemCatalogExport` is an optional read-only installed oracle and does not run on
-the server. Normal equipment only is grantable; unknown types remain indexed.
+the server. Verified normal equipment, costumes, trinkets and plain inventory records are grantable;
+unsupported/internal/expiring types remain indexed. Catalogue v2 retains v1 reading
+and resolves unique nonzero stock IDs to canonical references.
 `StarterCatalog.equipped` composes the verified catalogue arguments with knight
 appearance and original accessories. The lowest equipped weapon slot is visible;
 unchanged inventory additions preserve the actor's model reference on the client.
@@ -181,7 +183,9 @@ Binding uses the stored `bind_on_equip` rule. `Database.grantItems` checks the G
 current role/auth revision and target identity under BEGIN IMMEDIATE before allocating
 IDs. Items/revision/audit commit together; failures consume no IDs. Grants impose
 1–20 instances per request and 256 per knight. `item_events` cascades with its knight.
-Normal-chat `!items`/`!giveitem` use existing SpeakMarshaller method 1 and private
+Schema 7 adds costume/trinket equipment slots, permanent binding and bounded stack
+counts. Plain inventory records serialize as stock Item; equipment uses LevelItem.
+Stack merges retain instance IDs and publish EntryUpdatedEvent. Normal-chat `!items`/`!giveitem` use existing SpeakMarshaller method 1 and private
 SystemMessage results; they share the chat rate budget and never broadcast command
 text. Console/CLI use the same syntax/service with a local trusted actor. Profile
 polling sends stock EntryAddedEvent/EntryUpdatedEvent for item changes so Arsenal

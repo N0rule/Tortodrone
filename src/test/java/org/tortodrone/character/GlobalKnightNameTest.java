@@ -63,7 +63,7 @@ public final class GlobalKnightNameTest {
             check(version(db)==5&&db.rosterState(1).equals(savedAlice)&&db.rosterState(2).equals(savedBob),"failed migration preserves schema and every saved knight");
             db.write(c->{try(var s=c.createStatement()){s.execute("UPDATE knights SET name='Resolved-Knight',name_key='resolved-knight' WHERE account_id=1 AND id="+migrationKnight.id());}return null;});
             var upgraded=new Database(home,false);
-            check(version(upgraded)==6,"collision-free schema-5 upgrade succeeds");
+            check(version(upgraded)==Database.SCHEMA_VERSION,"collision-free schema-5 upgrade succeeds");
             for(var p:profiles)check(upgraded.worldProfile(p.accountId(),p.knightId(),1).equals(p),"upgrade preserves inventory, equipment, balances, revisions and identities");
             check(Arrays.equals(identity.salt(),upgraded.identity("Alice").salt())&&Arrays.equals(identity.verifier(),upgraded.identity("Alice").verifier()),"migration preserves credentials");
             check(upgraded.knightNameInUse("RaCe-KnIgHt",-1,-1),"global names remain reserved after restart");

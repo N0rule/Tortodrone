@@ -19,26 +19,40 @@ public final class ItemCatalogExport {
         var entries=new ArrayList<ItemCatalog.Entry>();
         for(var config:manager.bd(ItemConfig.class).kK()) {
             var item=config.w(manager);WorldProfile.Slot slot=null;
-            // Costumes, recipes, parts and non-Level types are indexed, never sent as LevelItem.
-            if(config.creatable&&item instanceof ItemConfig.Level level&&!level.isPermanent&&!item.stackable) {
-                if(item instanceof ItemConfig.Helm&&item.h(0,false))slot=WorldProfile.Slot.HELM;
+            // A stock ID, display name/icon and a player-facing definition are required.
+            // Creatable is a stock tooling flag, not an ownership/obtainability test.
+            String path=config.getName().toLowerCase(Locale.ROOT);
+            boolean named=item.name!=null&&!item.name.isBlank()
+                ||item instanceof ItemConfig.AccessoryTicket ticket&&ticket.accessory!=null&&manager.a(AccessoryConfig.class,ticket.accessory)!=null;
+            boolean player=config.getConfigId()!=0&&named&&item.icon!=null
+                &&item.expireDays==0&&(item.expireEvent==null||item.expireEvent.isBlank())
+                &&!path.contains("/parts/")&&!path.contains("/dev/")&&!path.contains("(dev)")
+                &&!path.contains("/test")&&!path.contains("/pvp/")&&!path.contains("ideal sword");
+            if(player&&item instanceof ItemConfig.Level&&!item.stackable) {
+                if(item instanceof ItemConfig.HelmCostume&&item.h(3,false))slot=WorldProfile.Slot.HELM_COSTUME;
+                else if(item instanceof ItemConfig.ArmorCostume&&item.h(4,false))slot=WorldProfile.Slot.ARMOR_COSTUME;
+                else if(item instanceof ItemConfig.ShieldCostume&&item.h(15,false))slot=WorldProfile.Slot.SHIELD_COSTUME;
+                else if(item instanceof ItemConfig.Trinket&&item.h(10,false)&&item.h(11,false))slot=WorldProfile.Slot.TRINKET;
+                else if(item instanceof ItemConfig.Helm&&item.h(0,false))slot=WorldProfile.Slot.HELM;
                 else if(item instanceof ItemConfig.Armor&&item.h(1,false))slot=WorldProfile.Slot.ARMOR;
                 else if(item instanceof ItemConfig.Shield&&item.h(2,false))slot=WorldProfile.Slot.SHIELD;
                 else if(item instanceof ItemConfig.Sword&&item.h(6,false))slot=WorldProfile.Slot.SWORD;
                 else if(item instanceof ItemConfig.Handgun&&item.h(6,false))slot=WorldProfile.Slot.GUN;
                 else if(item instanceof ItemConfig.Bomb&&item.h(6,false))slot=WorldProfile.Slot.BOMB;
-            }
+            }else if(player&&plainPlayerType(item.getClass().getSimpleName())
+                &&(!Set.of("Capsule","Vial").contains(item.getClass().getSimpleName())||config.creatable))slot=WorldProfile.Slot.OTHER;
             Map<String,Object> model=Map.of();
-            if(slot!=null) {
+            if(slot!=null&&slot!=WorldProfile.Slot.OTHER) {
                 var a=new ArgumentMap();var b=new ArgumentMap();item.a(256,a);item.a(257,b);
                 try {model=convert(a,b);if(item instanceof ItemConfig.Weapon weapon) {
                     var values=new TreeMap<>(model);values.put("Weapon Idle",weapon.UU());model=Map.copyOf(values);
                 }}catch(IOException unsupported){slot=null;}
-                String parameter=switch(slot==null?WorldProfile.Slot.SWORD:slot){case HELM->"Helmet";case ARMOR->"Armor";case SHIELD->"Shield";default->"Weapon";};
-                if(!(model.get(parameter) instanceof StarterCatalog.Model)) {slot=null;model=Map.of();}
+                String parameter=switch(slot==null?WorldProfile.Slot.SWORD:slot){case HELM,HELM_COSTUME->"Helmet";case ARMOR,ARMOR_COSTUME->"Armor";case SHIELD,SHIELD_COSTUME->"Shield";case TRINKET,OTHER->null;default->"Weapon";};
+                if(parameter!=null&&!(model.get(parameter) instanceof StarterCatalog.Model)) {slot=null;model=Map.of();}
             }
             entries.add(new ItemCatalog.Entry(config.getName(),config.getConfigId(),item.getClass().getSimpleName(),
-                item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,model));
+                item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,
+                item instanceof ItemConfig.Level l&&l.isPermanent,model));
         }
         Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.tsv"),entries);
         String facts="# Read-only stock metadata; not game assets.\n";
@@ -48,7 +62,13 @@ public final class ItemCatalogExport {
         }
         Files.writeString(out.resolve("provenance.tsv"),facts,StandardOpenOption.CREATE_NEW);
         var loaded=ItemCatalog.load(out.resolve("catalog.tsv"));
-        System.out.println("PASS: indexed "+loaded.entries().size()+" definitions, "+loaded.entries().stream().filter(ItemCatalog.Entry::grantable).count()+" grantable equipment references");
+        System.out.println("PASS: indexed "+loaded.entries().size()+" definitions, "+loaded.entries().stream().filter(ItemCatalog.Entry::grantable).count()+" grantable player item references");
+    }
+    static boolean plainPlayerType(String type) {
+        return Set.of("Craft","Recipe","Mineral","Token","Ticket","AccessoryTicket","VariantTicket",
+            "SpriteEgg","Harness","Color","Eye","Height","Lockbox","Pack","GuildBond","GuildHallGlobalTicket",
+            "RenameGuild","RenameKnight","WrappingPaper","AnimatedAction","Lift","SpawnActor","TokenArtifact",
+            "Capsule","Vial").contains(type);
     }
     static Map<String,Object> convert(Map<String,Object> a,Map<String,Object> b)throws IOException {
         if(!a.keySet().equals(b.keySet()))throw new IOException("Color-dependent argument keys");
@@ -61,7 +81,10 @@ public final class ItemCatalogExport {
         if(a instanceof com.threerings.opengl.renderer.config.ColorizationConfig.Normal c
                 &&b instanceof com.threerings.opengl.renderer.config.ColorizationConfig.Normal d&&c.colorization==d.colorization)
             return new StarterCatalog.Colorization(c.colorization);
-        if(Objects.equals(a,b)&&(a instanceof String||a instanceof Integer||a instanceof Boolean))return a;
+        if(a instanceof com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal c
+                &&b instanceof com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal d&&c.clazz==d.clazz&&c.colorization==d.colorization)
+            return new StarterCatalog.TransColorization(c.clazz,c.colorization);
+        if(Objects.equals(a,b)&&(a instanceof String||a instanceof Integer||a instanceof Boolean||a instanceof Float f&&Float.isFinite(f)))return a;
         throw new IOException("Unsupported item model value");
     }
 }

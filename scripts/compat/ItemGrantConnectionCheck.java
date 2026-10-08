@@ -24,7 +24,7 @@ public final class ItemGrantConnectionCheck {
                     public void a(EntryAddedEvent<Item> e){if(e.getName().equals("items"))additions[0]++;}
                     public void a(EntryRemovedEvent<Item> e){}public void a(EntryUpdatedEvent<Item> e){}
                 });
-                String command="!giveitem ItemPlayer Grant-Knight 2 "+sword;
+                String command="!giveitem ItemPlayer Grant-Knight 2 "+tools.catalog().require(sword).stockId();
                 player.scene.speakService.a(command,(byte)0);WorldConnectionCheck.waitFor(()->!denial.isEmpty());
                 if(!denial.get(0).contains("Game Master")||player.player.items.size()!=5)throw new AssertionError("Player grant denial failed");
                 player.enter(2); // Grant across scenes, command feedback remains private to staff.
@@ -39,7 +39,7 @@ public final class ItemGrantConnectionCheck {
                 var weapon=(com.threerings.config.ConfigReference<?>)level.kW().get("Weapon");
                 if(!weapon.getName().contains("calibur"))throw new AssertionError("Granted weapon still renders Proto model");
                 // Catalogue-only types and bad references refuse without changing the target.
-                int heard=feedback.size();staff.scene.speakService.a("!giveitem ItemPlayer Grant-Knight 1 Recipe/Sword/Calibur Recipe",(byte)0);
+                int heard=feedback.size();staff.scene.speakService.a("!giveitem ItemPlayer Grant-Knight 1 Weapon/Bomb/Parts/Base",(byte)0);
                 WorldConnectionCheck.waitFor(()->feedback.size()>heard);if(player.player.items.size()!=7)throw new AssertionError("Unsupported item granted");
                 tools.setGameMaster("ItemStaff",false);int rev=feedback.size();staff.scene.speakService.a(command,(byte)0);
                 WorldConnectionCheck.waitFor(()->feedback.size()>rev);if(!feedback.get(rev).contains("Game Master")||tools.worldProfile("ItemPlayer","Grant-Knight").items().size()!=7)throw new AssertionError("Live revocation failed");
@@ -49,12 +49,34 @@ public final class ItemGrantConnectionCheck {
                 int offline=feedback.size();staff.scene.speakService.a("!giveitem ItemPlayer Offline-Knight 1 "+sword,(byte)0);
                 WorldConnectionCheck.waitFor(()->feedback.size()>offline);if(tools.worldProfile("ItemPlayer","Offline-Knight").items().size()!=6)throw new AssertionError("Offline grant failed");
                 if(player.player.items.size()!=7)throw new AssertionError("Offline grant reached wrong knight");
+                // Expanded catalogue: stock LevelItem costume and plain Item stack/recipe readers.
+                var costume=tools.catalog().require("Costume/Helm/Steamvalve Mask");
+                tools.grantItems("ItemPlayer","Grant-Knight",costume.config(),1,-1,-1);
+                String material="Material/Brimstone";
+                tools.catalog().require(material);
+                tools.grantItems("ItemPlayer","Grant-Knight",material,7,-1,-1);
+                tools.grantItems("ItemPlayer","Grant-Knight","Recipe/Sword/Calibur Recipe",1,-1,-1);
+                WorldConnectionCheck.waitFor(()->player.player.items.size()==10);
+                var hat=find(player,costume.config());var stack=find(player,material);
+                if(!hat.VC()||!hat.Cs()||stack.getClass()!=Item.class||stack.getCount()!=7)throw new AssertionError("Costume/stack stock type/flags/count mismatch");
+                var costumeReply=new WorldConnectionCheck.Reply();service.a(hat.VA(),3,costumeReply);
+                WorldConnectionCheck.waitFor(()->costumeReply.done&&player.player.equipment[3]==hat.VA());
+                if(costumeReply.reason!=null)throw new AssertionError("Stock costume equip refused: "+costumeReply.reason);
+                tools.grantItems("ItemPlayer","Grant-Knight",material,3,-1,-1);
+                WorldConnectionCheck.waitFor(()->find(player,material).getCount()==10);
+                var invalidReply=new WorldConnectionCheck.Reply();service.a(stack.VA(),6,invalidReply);
+                WorldConnectionCheck.waitFor(()->invalidReply.done);
+                if(invalidReply.reason==null||player.player.equipment[6]==stack.VA())throw new AssertionError("Material equipped as a weapon");
             }
             try(var reconnect=new GameMasterConnectionCheck.Endpoint(args,queue,"ItemPlayer","Grant-Knight")) {
-                if(reconnect.player.items.size()!=7||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
+                if(reconnect.player.items.size()!=10||find(reconnect,"Material/Brimstone").getCount()!=10||reconnect.player.equipment[3]==0||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
             }
-            System.out.println("PASS: stock GM item commands, private feedback, Arsenal entry-added observers, cross-map live grants, distinct instances, equip/model/binding, normal/revoked denial, unsupported refusal, offline target and reconnect persistence");
+            System.out.println("PASS: stock GM item commands, private feedback, Arsenal entry-added observers, cross-map live grants, distinct instances, equip/model/binding, normal/revoked denial, unsupported refusal, offline target, ID grants, costume slots, plain item stacks/recipes and reconnect persistence");
         }
+    }
+    static Item find(GameMasterConnectionCheck.Endpoint endpoint,String config) {
+        for(var item:endpoint.player.items)if(item.Vx().getName().equals(config))return item;
+        throw new AssertionError("Missing item: "+config);
     }
     static void listen(com.threerings.projectx.town.data.TownSceneObject scene,List<String> messages) {
         scene.a(new l(){public void a(MessageEvent e){if(e.getName().equals("crowd.chat")&&e.yd()[0] instanceof SystemMessage m)messages.add(m.message);}});

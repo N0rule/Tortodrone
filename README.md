@@ -6,10 +6,10 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.10.1**, SQLite schema **6**: normal login; saved character creation,
+Version **0.11.0**, SQLite schema **7**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
-items plus duplicate equipment instances, verified item grants and Arsenal equip/unequip; per-character crowns and
+items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
 energy with local administration; original-protocol scene chat with instance isolation;
 Game Master roles, stock title/support icon, permission-checked broadcasts and item commands.
 

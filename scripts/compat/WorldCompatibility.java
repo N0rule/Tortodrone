@@ -121,8 +121,12 @@ public final class WorldCompatibility {
         var result=new com.threerings.config.ConfigReference<>(model.name());
         model.arguments().forEach((key,value) -> result.kW().put(key,
             value instanceof StarterCatalog.Model nested ? reference(nested)
+                : value instanceof StarterCatalog.TransColorization color ? transColor(color)
                 : value instanceof StarterCatalog.Colorization color
                     ? com.threerings.opengl.renderer.config.ColorizationConfig.createConfig(color.value()) : value));
         return result;
+    }
+    static com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal transColor(StarterCatalog.TransColorization color) {
+        var config=new com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal();config.clazz=color.clazz();config.colorization=color.value();return config;
     }
 }

@@ -7,18 +7,27 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
         long revision, List<Item> items) {
     public WorldProfile { items = List.copyOf(items); }
     public enum Slot {
-        HELM, ARMOR, SWORD, GUN, SHIELD, BOMB;
+        HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, OTHER;
+        public boolean weapon() { return this==SWORD || this==GUN || this==BOMB; }
         public boolean accepts(int index) {
             return switch(this) {
                 case HELM -> index==0;
                 case ARMOR -> index==1;
                 case SHIELD -> index==2;
                 case SWORD, GUN, BOMB -> index==6 || index==7;
+                case HELM_COSTUME -> index==3;
+                case ARMOR_COSTUME -> index==4;
+                case SHIELD_COSTUME -> index==15;
+                case TRINKET -> index==10 || index==11;
+                case OTHER -> false;
             };
         }
-        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;}; }
+        public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;case HELM_COSTUME->3;case ARMOR_COSTUME->4;case SHIELD_COSTUME->15;case TRINKET->10;case OTHER->-1;}; }
     }
-    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter) {
+    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter, int count, boolean permanent) {
+        public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter) {
+            this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,1,false);
+        }
         public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound) {
             this(id,slot,config,accessory,heat,equippedSlot,bound,true,true);
         }

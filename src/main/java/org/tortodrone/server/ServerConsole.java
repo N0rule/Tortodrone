@@ -69,7 +69,7 @@ final class ServerConsole implements AutoCloseable {
             log.info("knight list <username> | knight info <username> <knight-name>");
             log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
             log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
-            log.info("items <search> | giveitem <username> <knight-name> <1-20> <exact item config>");
+            log.info("items <search> | giveitem <username> <knight-name> <1-20> <catalogue ID or exact item config>");
             log.info("account password <username> | account check <username> | account gm <username> <true|false> | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
