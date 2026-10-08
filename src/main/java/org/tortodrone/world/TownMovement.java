@@ -7,11 +7,13 @@ public final class TownMovement {
     public static final float SPEED = 5f;
     // Half the shortest edge of the verified Default PC collision shape, as in MobileLogic.
     public static final float MAX_STEP = .333333f;
+    // Verified stock KnightAdvancer inventory activities and closing duration.
+    public static final int INVENTORY = 3, INVENTORY_END = 4, INVENTORY_END_MILLIS = 889;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
     private float x, y = -8, rotation, direction;
-    private int flags, lastTimestamp, timestamp;
+    private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
 
@@ -20,6 +22,9 @@ public final class TownMovement {
         pending.clear();
         timestamp = sceneTime;
         flags = 0;
+        inputFlags = 0;
+        activity = 0;
+        activityStarted = sceneTime;
         inputSeen = false;
     }
 
@@ -29,8 +34,7 @@ public final class TownMovement {
                 || Math.abs((long) (stamp - sceneTime)) > 10000
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
-        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading),
-            (inputFlags & 1) != 0 ? 2 : 0)); // Input MOVE=1; actor Mobile.MOVING=2.
+        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & 3));
         lastTimestamp = stamp;
         lastInputAt = now;
         inputSeen = true;
@@ -43,15 +47,28 @@ public final class TownMovement {
         while (!pending.isEmpty() && sceneTime - pending.peekFirst().timestamp() >= 0) {
             var frame = pending.removeFirst();
             if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
-            rotation = frame.rotation();
+            if (activity == 0) rotation = frame.rotation();
             direction = frame.direction();
-            flags = frame.flags();
+            inputFlags = frame.flags();
+            if ((inputFlags & 2) != 0 && activity != INVENTORY) setActivity(INVENTORY, timestamp);
+            else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            updateFlags();
         }
-        if (now - lastInputAt > 500) flags = 0;
+        if (now - lastInputAt > 500) {
+            inputFlags = 0;
+            if (activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            updateFlags();
+        }
         moveTo(sceneTime);
     }
 
     private void moveTo(int target) {
+        if (activity == INVENTORY_END && target - activityStarted >= INVENTORY_END_MILLIS) {
+            int ended = activityStarted + INVENTORY_END_MILLIS;
+            if (ended - timestamp > 0) timestamp = ended;
+            setActivity(0, ended);
+            updateFlags();
+        }
         int elapsed = target - timestamp;
         timestamp = target;
         if ((flags & 2) == 0) return;
@@ -73,6 +90,15 @@ public final class TownMovement {
     public float rotation() { return rotation; }
     public float direction() { return direction; }
     public int flags() { return flags; }
+    public int activity() { return activity; }
+    public int activityStarted() { return activityStarted; }
+    private void setActivity(int value, int started) {
+        activity = value;
+        activityStarted = started;
+    }
+    private void updateFlags() {
+        flags = activity == 0 && (inputFlags & 1) != 0 ? 2 : 0;
+    }
     private static float normalize(float angle) {
         return (float) Math.IEEEremainder(angle, Math.PI * 2);
     }

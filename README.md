@@ -258,9 +258,11 @@ There are no introductory missions, tutorial rewards or invented completion flag
 The layout can include visual NPCs and portals, but their gameplay is not implemented.
 
 Version 0.7.1 fixes repeated actor/model replacement while first-entry input
-acknowledgements are delayed. TCP scene updates now reference the preceding sent
-snapshot. Automated creation, reconnect and multiplayer checks pass; the reported
-intermittent animation/stutter symptom still needs graphical confirmation.
+acknowledgements are delayed and inventory activity leaking into scene snapshots.
+TCP scene updates reference the preceding sent snapshot. Inventory activities now
+have stable server-owned start times and finish before walking resumes. Automated
+creation, reconnect and multiplayer checks pass; graphical reruns show animated
+walking after creation and reconnect.
 See the [entry investigation](docs/town-entry-investigation.md).
 
 Crowns and energy both belong to **each knight**. They start at zero, have a range

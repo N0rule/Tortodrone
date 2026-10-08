@@ -29,7 +29,7 @@ public final class TownMovementTest {
         check(Math.abs(m.x()-.25f)<.00001 && m.flags()==0, "stale input stops movement");
         check(m.accept(101,7,0,2,101,1600), "facing update accepted");
         m.advance(152,1600);
-        check(Math.abs(m.x()-.25f)<.00001 && m.flags()==0 && Math.abs(m.rotation())<=Math.PI, "shield input does not cause movement and angle normalized");
+        check(Math.abs(m.x()-.25f)<.00001 && m.flags()==0 && Math.abs(m.rotation())<=Math.PI, "inventory input does not cause movement and angle normalized");
         int stamp=153;
         for(int i=0;i<1000;i++) {
             check(m.accept(stamp,0,0,1,stamp,2000+i*50), "fresh frame");
@@ -61,6 +61,31 @@ public final class TownMovementTest {
         bounded.resetInput(100);
         for(int i=0;i<256;i++) check(bounded.accept(1000+i,0,0,1,100,1000), "bounded future input");
         check(!bounded.accept(1256,0,0,1,100,1000), "future queue cannot grow without limit");
+        var inventory = new TownMovement();
+        inventory.resetInput(100);
+        check(inventory.accept(100,1,0,3,100,1000), "inventory and move input accepted");
+        inventory.advance(150,1050);
+        check(inventory.activity()==3 && inventory.activityStarted()==100
+            && inventory.flags()==0 && inventory.x()==0, "inventory blocks walking");
+        check(inventory.accept(200,2,0,3,150,1050), "continued inventory input accepted");
+        inventory.advance(200,1100);
+        check(inventory.activityStarted()==100 && inventory.rotation()==1, "inventory start and facing remain stable");
+        check(inventory.accept(250,2,0,1,200,1100), "inventory close accepted");
+        inventory.advance(250,1150);
+        check(inventory.activity()==4 && inventory.activityStarted()==250, "closing activity starts once");
+        for(int time=300;time<=1100;time+=50) {
+            check(inventory.accept(time,2,0,1,time,900+time), "walking during inventory close accepted");
+            inventory.advance(time,900+time);
+            check(inventory.x()==0 && inventory.flags()==0 && inventory.activityStarted()==250,
+                "closing animation is not restarted and prevents early movement");
+        }
+        inventory.advance(1189,2089);
+        check(inventory.activity()==0 && inventory.activityStarted()==1139
+            && inventory.flags()==2 && Math.abs(inventory.x()-.25f)<.00001,
+            "walking resumes at the exact closing deadline within a tick");
+        inventory.resetInput(1200);
+        check(inventory.activity()==0 && inventory.activityStarted()==1200 && inventory.flags()==0,
+            "re-entry clears inventory activity");
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }

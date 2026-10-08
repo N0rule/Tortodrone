@@ -291,7 +291,8 @@ final class WorldSession implements AutoCloseable {
         var config = new StarterCatalog.Model("Character/PC/Default",
             Map.of("Model", model, "Height", model.arguments().get("Height")));
         return new ActorState(profile.worldId(), oid, knight.name(), 256 | knight.color(), created,
-            movement.x(), movement.y(), movement.rotation(), movement.direction(), movement.flags(), config);
+            movement.x(), movement.y(), movement.rotation(), movement.direction(), movement.flags(),
+            movement.activity(), movement.activityStarted(), config);
     }
 
     @Override public synchronized void close() {

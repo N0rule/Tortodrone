@@ -423,7 +423,7 @@ public final class SessionCodec {
     }
     private void actor(DataOutputStream out,ActorState a)throws IOException {
         type(out,"com.threerings.projectx.data.actor.Knight");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);
-        vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(0);out.writeInt(a.created());
+        vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());
         out.writeShort(0);out.writeShort(0);out.writeShort(0);out.writeShort(0);string(out,null);out.writeInt(0);out.writeShort(0);
     }
     private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline)throws IOException {
@@ -431,9 +431,12 @@ public final class SessionCodec {
         out.writeInt(a.id());type(out,"com.threerings.projectx.data.actor.Knight");
         boolean configChanged = baseline == null || !a.config().equals(baseline.config());
         // Preserve the reference's config object on ordinary movement; update it for actual gear changes.
-        out.writeByte(configChanged ? 0x5d : 0x5c);out.writeByte(0);
+        // The stock controller predicts directly on its first snapshot. Always replace activity
+        // fields so that local inventory prediction cannot leak into subsequent delta baselines.
+        out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(1);
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
+        out.writeInt(a.activity());out.writeInt(a.activityStarted());
     }
     private void vector(DataOutputStream out,float x,float y)throws IOException{type(out,"com.threerings.math.Vector2f");out.writeFloat(x);out.writeFloat(y);}
 

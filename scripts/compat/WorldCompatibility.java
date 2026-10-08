@@ -53,13 +53,19 @@ public final class WorldCompatibility {
             else if(event instanceof CompoundEvent compound) {
                 for(var child:compound.xE()) child.b(i==7 ? town : player);
             } else if(event instanceof SceneDeltaEvent delta) {
-                if(delta.aej()!=null) actor=(com.threerings.projectx.data.actor.Knight)delta.aej()[0];
+                if(delta.aej()!=null) {
+                    actor=(com.threerings.projectx.data.actor.Knight)delta.aej()[0];
+                    // controlledActorAdded predicts directly on this first record. Emulate the
+                    // inventory panel opened during entry, before its next authoritative delta.
+                    actor.aU(3,101);
+                }
                 else actor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(actor);
             }
         }
         if(input.available()!=0 || player.items.size()!=5 || player.crowns!=120 || player.energy!=34
                 || player.loadouts.size()!=1 || town.occupantInfo.size()!=1 || actor==null
-                || !actor.Np() || Math.abs(actor.aeb()-TownMovement.MAX_STEP)>.00001 || actor.tz().x!=.25f || actor.tA()!=1.5f) throw new AssertionError("World schema mismatch");
+                || !actor.Np() || actor.adU()!=0 || actor.adV()!=100
+                || Math.abs(actor.aeb()-TownMovement.MAX_STEP)>.00001 || actor.tz().x!=.25f || actor.tA()!=1.5f) throw new AssertionError("World schema mismatch or predicted activity leaked into delta baseline");
         var occupant=(ProjectXOccupantInfo)town.occupantInfo.iterator().next();
         if(occupant.pr==null) throw new AssertionError("Missing prestige rank for stock renderer");
         occupant.getIcon();

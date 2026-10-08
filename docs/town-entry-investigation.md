@@ -2,8 +2,9 @@
 
 Checkpoint reviewed on 2026-10-08: clean `d1e57ac`, release 0.7.0. The reported
 symptom is intermittent missing movement animation and movement/rotation stutter
-immediately after character creation; relogging helps. Its graphical resolution
-has **not** been confirmed.
+immediately after character creation; relogging helps. Graphical reruns of the
+0.7.1 corrections show animated walking after creation and reconnect. The checks
+and their desktop limitations are recorded below.
 
 ## Reproduced defect and 0.7.1 correction
 
@@ -34,6 +35,25 @@ generation cannot create an unusable reference.
 No changes were made to movement speed, appearance, accounts, items, currencies,
 database schema, server keys, the installed game or launcher.
 
+## Inventory activity retained in the first snapshot
+
+Graphical testing found a second independent protocol defect. Clyde's
+`TudeySceneController.controlledActorAdded` creates its predictor directly on the
+first received actor. Opening the stock entry HUD can therefore change that
+snapshot to inventory activity 3. Later deltas previously omitted both activity
+fields, so they inherited the locally predicted state. Closing the HUD then
+repeatedly started activity 4 from each new authoritative snapshot. This activity
+blocks movement prediction and overrides the walking animation; server position
+corrections still moved the knight, producing a fixed pose and jumps.
+
+0.7.1 now owns these activities on the server. Input flag 2 means **use inventory**,
+not shield. Opening retains one activity-start timestamp; closing starts activity
+4 once and returns to idle after the stock 889 ms duration. Movement and rotation
+pause during these activities, matching the stock advancer. Scene re-entry clears
+the activity. Every actor delta explicitly supplies activity and start time,
+including unchanged idle values, so local prediction cannot pollute the reference.
+Unchanged model configurations are still retained. Combat remains unsupported.
+
 ## Automated evidence
 
 `WorldSessionTest` uses disposable SQLite state and independently reads queued
@@ -53,9 +73,48 @@ removal on disconnect. The temporary server is stopped in `finally`.
 These checks establish protocol compatibility and model retention. They do not
 exercise pixel rendering or show that a walking animation actually plays.
 
+The installed reader fixture also deliberately changes the first actor to
+inventory activity before applying the next delta. It fails against the previous
+serializer and passes with explicit authoritative activity fields. The networking
+fixture checks stable inventory timestamps, blocked movement, the closing activity
+and its exact idle deadline on both creation and reconnect. `TownMovementTest`
+checks movement resuming partway through a tick at that deadline.
+
 ## Graphical acceptance and next milestone
 
-Use a disposable deployment/account and the separately maintained launcher.
+Testing uses the installed ProjectXApp directly, without changing the client or
+launcher. The server JAR, accounts, keys, deployment configuration, preferences,
+downloaded scene cache and native extraction directory live under `/tmp`.
+The game installation is mounted read-only, with private loopback networking.
+On niri, `_JAVA_AWT_WM_NONREPARENTING=1` is set. Native XTest input checks the target
+process window and focus; screenshots come from `niri screenshot-window`.
+
+An initial run stalled in native buffer swaps at roughly one frame per second.
+Disabling vertical sync through the disposable client preferences removed that
+desktop rendering stall; it is not a server correction. Physical/virtual joystick
+devices are excluded from the final temporary environment because this installation
+can mistake virtual pointer devices for gamepads. GPU devices remain available.
+Read-only debugger inspection was used to trace controller and animation fields;
+the fresh-creation capture uses the stock process without a debugger.
+
+Accepted graphical reruns on 2026-10-08:
+
+- Fresh `Gammathree`, created through the stock creator with disposable account
+  `FreshThree`: 24 window captures show changing walking poses and continuous
+  displacement immediately after closing the entry HUD, without relogging.
+- Stop/start and reverse direction, mouse facing on both sides, then open and
+  close Current Equipment: walking poses continue in a further 12 captures.
+- Reconnect to `Gammathree` in a new stock JVM with joystick devices excluded:
+  another 24 captures show animated walking across town. No debugger was attached.
+
+Earlier attempts with exposed virtual controllers and displaced mouse events were
+inconclusive for input readiness. Default vertical-sync performance on this desktop
+is also outside the server acceptance result. Two-account synchronization and
+equip/unequip pass the networking fixture; simultaneous two-window animation and
+graphical equipment changes have not been independently accepted. All temporary
+clients and servers were stopped. Real accounts, characters, keys and preferences
+were preserved.
+
 Repeat fresh creation with both a cold and warm town load, immediately move and
 face the mouse, stop/start, change direction, and equip/unequip a starter item.
 Compare with selecting an existing knight after relogging. Check two players

@@ -30,7 +30,7 @@ public class WorldConnectionCheck {
   while(snapshots.size()>128)snapshots.remove(snapshots.keySet().iterator().next());
   last=event;deltas++;
  }
- static com.threerings.tudey.data.actor.Actor controlled(PlayerObject player){return snapshots.get(last.QY()).get(player.pawnId);}
+ static com.threerings.projectx.data.actor.Knight controlled(PlayerObject player){return (com.threerings.projectx.data.actor.Knight)snapshots.get(last.QY()).get(player.pawnId);}
  public static void main(String[]args)throws Exception { run(args,true); run(args,false); }
  static void run(String[]args,boolean fresh)throws Exception {
   tasks.clear();snapshots.clear();scene=null;last=null;deltas=repeatedAdds=configReplacements=0;
@@ -60,6 +60,20 @@ public class WorldConnectionCheck {
    int count=deltas;scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,1,0)});waitFor(()->deltas>count+3);if(last.aek()==null)throw new AssertionError("Movement delta missing");
    var actor=controlled(player);
    if(actor.tz().x<=0 || Math.abs(actor.tA()-1.5f)>.01)throw new AssertionError("Movement/facing ignored: "+actor);System.out.println("PASS: movement and independent mouse-facing updates");
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,3,0)});
+   waitFor(()->controlled(player).adU()==3);
+   int inventoryStarted=controlled(player).adV();float inventoryX=controlled(player).tz().x;
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,3,0)});
+   int inventoryCount=deltas;waitFor(()->deltas>=inventoryCount+3);
+   if(controlled(player).adV()!=inventoryStarted || controlled(player).bR(2)
+       || controlled(player).tz().x!=inventoryX)throw new AssertionError("Inventory activity restarted or allowed movement");
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,0,0)});
+   waitFor(()->controlled(player).adU()==4);
+   int closingStarted=controlled(player).adV();
+   waitFor(()->controlled(player).adU()==0);
+   if(controlled(player).adV()!=closingStarted+org.tortodrone.world.TownMovement.INVENTORY_END_MILLIS)
+       throw new AssertionError("Inventory closing activity did not finish at its deadline");
+   System.out.println("PASS: inventory blocks movement, retains its animation start and closes into idle");
    var beforeEquipment=actor.Mv();
    long helm=player.equipment[0];var itemService=client.bU(com.threerings.projectx.item.client.L.class);Reply equip=new Reply();itemService.a(helm,ItemCodes.Location.ARSENAL,0,equip);waitFor(()->equip.done);if(equip.reason!=null||player.equipment[0]!=0)throw new AssertionError("Unequip failed: "+equip.reason);
    waitFor(()->controlled(player).Mv()!=beforeEquipment);

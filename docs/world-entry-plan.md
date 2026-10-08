@@ -22,7 +22,9 @@ provides direction/facing only; the server computes position and checks a sample
 static collision map. Empty acknowledgement batches and the normal ProjectX input
 extension are supported. Future input is queued until due, and elapsed scene time
 controls movement speed. A verified movement limit permits client prediction;
-unchanged actor model configurations are retained across ordinary updates. Combat actions are ignored in this town checkpoint.
+unchanged actor model configurations are retained across ordinary updates. Inventory
+activity and its closing duration are synchronized with stable start times; actor
+deltas explicitly replace predicted activity fields. Combat actions are ignored in this town checkpoint.
 
 Only one connection can control a given knight. Disconnect releases it. Different
 knights can share town; actor identity is global, while roster IDs stay local to
@@ -44,10 +46,10 @@ into an online character within about 250 ms.
 
 ## Next priorities
 
-Confirm the intermittent first-creation animation/stutter symptom in a mapped
-game window before adding the next gameplay milestone. The reproducible TCP
-actor replacement defect is fixed and regression-tested in 0.7.1; that is not
-proof of graphical resolution. See [investigation and acceptance checks](town-entry-investigation.md).
+The TCP actor replacement and leaked inventory activity defects are fixed and
+regression-tested in 0.7.1. Mapped-window reruns show animated walking after creation
+and reconnect. Keep graphical entry checks alongside network checks as new gameplay
+is added. See [investigation and acceptance checks](town-entry-investigation.md).
 
 1. Persist position and support clean return to the character picker.
 2. Implement one additional connected scene and verified portal transitions.
