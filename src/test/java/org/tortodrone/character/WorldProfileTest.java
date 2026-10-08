@@ -36,7 +36,7 @@ public final class WorldProfileTest {
                 refused(() -> new Database(home,false)); check(version(db)==1,"migration requires stopped deployment");
             }
             db=new Database(home,false);
-            check(version(db)==3 && db.roster(1).equals(savedAlice) && db.roster(2).equals(savedBob),"upgrade preserves every saved appearance field and local ID");
+            check(version(db)==Database.SCHEMA_VERSION && db.roster(1).equals(savedAlice) && db.roster(2).equals(savedBob),"upgrade preserves every saved appearance field and local ID");
             check(Arrays.equals(salt,db.identity("Alice").salt()) && Arrays.equals(verifier,db.identity("Alice").verifier()),"upgrade preserves password verifiers");
             var a=db.worldProfile(1,1,1); var b=db.worldProfile(2,1,1);
             check(a.worldId()!=b.worldId() && a.knightId()==b.knightId(),"colliding roster IDs receive distinct global identities");

@@ -18,7 +18,11 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
         }
         public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD->6;case GUN->7;}; }
     }
-    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot) { }
+    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound) {
+        public Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot) {
+            this(id, slot, config, accessory, heat, equippedSlot, true);
+        }
+    }
     public long[] equipment() {
         long[] result=new long[16];
         for(var item:items)if(item.equippedSlot()!=null)result[item.equippedSlot()]=item.id();

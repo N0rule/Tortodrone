@@ -299,10 +299,11 @@ public final class SessionCodec {
             attribute(out,oid,"crowns",o->value(o,profile.crowns()));attribute(out,oid,"energy",o->value(o,profile.energy())); });
     }
 
-    public byte[] equipped(int oid,WorldProfile profile) throws IOException {
+    public byte[] equipped(int oid,Knight knight,WorldProfile profile) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);
-            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);
+            attribute(out,oid,"items",o -> items(o,knight,profile));
             attribute(out,oid,"equipment",o -> longs(o,profile.equipment()));
             attribute(out,oid,"loadouts",o -> currentLoadout(o,profile));
         });
@@ -399,7 +400,10 @@ public final class SessionCodec {
         for(var item:profile.items()) {
             type(out,"com.threerings.projectx.item.data.LevelItem");out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
             out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+knight.costume(),Map.of()));}
-            out.writeLong(item.id());out.writeInt(profile.worldId());out.writeInt(0);out.writeUTF(item.config());out.writeInt(1);out.writeShort(0);out.writeByte(0);
+            out.writeLong(item.id());out.writeInt(profile.worldId());out.writeInt(0);out.writeUTF(item.config());out.writeInt(1);out.writeShort(0);
+            // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
+            // tested by Cs(). Bit 1 is the permanent lock and remains unset.
+            out.writeByte(item.bound() ? 2 : 0);
         }
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {

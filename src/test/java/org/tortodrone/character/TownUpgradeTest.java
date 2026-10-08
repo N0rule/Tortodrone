@@ -21,6 +21,7 @@ public final class TownUpgradeTest {
                 s.execute("DROP TABLE currency_events");
                 s.execute("DROP INDEX equipped_items");
                 s.execute("ALTER TABLE inventory_items DROP COLUMN equipped_slot");
+                s.execute("ALTER TABLE inventory_items DROP COLUMN bound");
                 s.execute("ALTER TABLE world_characters DROP COLUMN crowns");
                 s.execute("ALTER TABLE world_characters DROP COLUMN energy");
                 s.execute("ALTER TABLE world_characters DROP COLUMN state_revision");

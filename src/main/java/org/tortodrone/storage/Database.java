@@ -13,6 +13,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
+    public static final int SCHEMA_VERSION = 4;
     public record Identity(int id, String username, boolean admin, long authRevision, byte[] salt, byte[] verifier) {
         @Override public String toString() { return "Identity[redacted]"; }
     }
@@ -25,13 +26,13 @@ public final class Database {
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
-        if (Files.exists(file)) { int version = version(); if (version == 3) return; if (version != 0 && version != 1 && version != 2) throw new IOException("Unsupported database version; database was not replaced"); }
+        if (Files.exists(file)) { int version = version(); if (version == SCHEMA_VERSION) return; if (version < 0 || version > SCHEMA_VERSION) throw new IOException("Unsupported database version; database was not replaced"); }
         if (deploymentLocked) initialize(directory);
         else {
             try (var channel = FileChannel.open(directory.resolve("server.lock"), StandardOpenOption.CREATE, StandardOpenOption.WRITE);
                  var lock = channel.tryLock()) {
                 if (lock == null) throw new IOException("Stop the server once before initializing or migrating the database");
-                if (!Files.exists(file) || version() != 3) initialize(directory);
+                if (!Files.exists(file) || version() != SCHEMA_VERSION) initialize(directory);
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
     }
@@ -64,18 +65,19 @@ public final class Database {
     }
     private void initialize(Path directory) throws IOException {
         int existing = Files.exists(file) ? version() : 0;
-        if (existing == 3) return;
-        if (existing == 1 || existing == 2) {
+        if (existing == SCHEMA_VERSION) return;
+        if (existing >= 1 && existing < SCHEMA_VERSION) {
             write(c -> {
                 int current;
                 try (Statement statement = c.createStatement(); ResultSet r = statement.executeQuery("PRAGMA user_version")) {
                     r.next(); current=r.getInt(1);
                 }
-                if (current==3) return null;
-                if (current!=1 && current!=2) throw new IOException("Unsupported database version; database was not replaced");
+                if (current==SCHEMA_VERSION) return null;
+                if (current<1 || current>SCHEMA_VERSION) throw new IOException("Unsupported database version; database was not replaced");
                 if (current==1) WorldProfiles.initialize(c);
-                WorldProfiles.upgrade(c);
-                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version=3"); }
+                if (current<=2) WorldProfiles.upgrade(c);
+                WorldProfiles.upgradeBinding(c);
+                try (Statement statement = c.createStatement()) { statement.execute("PRAGMA user_version="+SCHEMA_VERSION); }
                 return null;
             });
             return;
@@ -101,7 +103,8 @@ public final class Database {
             migrate(connection, directory);
             WorldProfiles.initialize(connection);
             WorldProfiles.upgrade(connection);
-            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version=3"); }
+            WorldProfiles.upgradeBinding(connection);
+            try (Statement s = connection.createStatement()) { s.execute("PRAGMA user_version="+SCHEMA_VERSION); }
             return null;
         });
     }
@@ -285,9 +288,10 @@ public final class Database {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
             if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
-            try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=? WHERE world_id=? AND item_id=?")){
+            try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
                 if(slot==null)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
-                s.setInt(2,profile.worldId());s.setLong(3,itemId);s.executeUpdate();
+                if(slot==null)s.setNull(2,Types.INTEGER);else s.setInt(2,slot);
+                s.setInt(3,profile.worldId());s.setLong(4,itemId);s.executeUpdate();
             }
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
             return WorldProfiles.load(c,accountId,knightId,revision);
@@ -301,7 +305,7 @@ public final class Database {
                     statement.setInt(1,id);statement.setInt(2,knight.id());try(ResultSet r=statement.executeQuery()){fresh=!r.next();}
                 }
                 WorldProfiles.ensure(c,id,knight);
-                if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
+                if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET bound=1,equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
                 WorldProfiles.appearance(c,id,knight); }
             return null;
         });

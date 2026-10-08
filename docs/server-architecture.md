@@ -34,8 +34,8 @@ than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
 not the wildcard listening address. Credentials/raw packets/secrets are never logged.
 
-Schema 3 stores accounts, account-local rosters, globally identified world knights,
-owned item instances, equipped slots, per-knight balances and audit events.
+Schema 4 stores accounts, account-local rosters, globally identified world knights,
+owned item instances, binding, equipped slots, per-knight balances and audit events.
 Connections enable foreign keys, WAL and a five-second busy timeout. Writes use
 `BEGIN IMMEDIATE` with commit/rollback; password hashing happens outside SQL
 transactions. IDs are monotonic and never recycled. Migrations are transactional
@@ -120,3 +120,9 @@ and stops its tick executor. Positions remain transient in this checkpoint.
 
 The [milestone plan](world-entry-plan.md) owns feature status; the
 [entry investigation](town-entry-investigation.md) owns defect/acceptance evidence.
+
+Arsenal equipItem (item method 3) and moveItem (method 9) share the owned equipment
+transaction. Binding is separate from the equipped slot and persists on removal.
+Equipment updates publish items/loadout/slots together so a new binding is visible
+before the success callback. Stock Item flags bit 2 carries mutable binding;
+the permanent-lock bit is not used.

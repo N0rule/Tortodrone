@@ -53,6 +53,15 @@ final class WorldProfiles {
         add(c,worldId,Slot.SHIELD,"Gear/Shield/Proto Shield",null);
     }
 
+    static void upgradeBinding(Connection c) throws SQLException {
+        try (Statement s = c.createStatement()) {
+            s.execute("ALTER TABLE inventory_items ADD COLUMN bound INTEGER NOT NULL DEFAULT 0 CHECK(bound IN(0,1))");
+            // Every existing item is from the starter kit, granted equipped. An unequipped
+            // starter was previously worn too: retain that binding during the upgrade.
+            s.execute("UPDATE inventory_items SET bound=1");
+        }
+    }
+
     /** Creator edits replace chosen cosmetics, preserving IDs, heat and the rest of the kit. */
     static void appearance(Connection c,int accountId,Knight knight) throws SQLException {
         try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=?")) {
@@ -91,7 +100,7 @@ final class WorldProfiles {
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
-                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot")));
+                while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound")));
             }
         }
         if (items.size()!=Slot.values().length) throw new IOException("Incomplete starter inventory; restore the saved database");

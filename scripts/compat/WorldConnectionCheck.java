@@ -31,6 +31,7 @@ public class WorldConnectionCheck {
   last=event;deltas++;
  }
  static com.threerings.projectx.data.actor.Knight controlled(PlayerObject player){return (com.threerings.projectx.data.actor.Knight)snapshots.get(last.QY()).get(player.pawnId);}
+ static boolean bound(PlayerObject player,long id){for(var item:player.items)if(item.VA()==id)return item.Cs();return false;}
  public static void main(String[]args)throws Exception { run(args,true); run(args,false); }
  static void run(String[]args,boolean fresh)throws Exception {
   tasks.clear();snapshots.clear();scene=null;last=null;deltas=repeatedAdds=configReplacements=0;
@@ -43,7 +44,8 @@ public class WorldConnectionCheck {
    Reply validation=new Reply();((aU)client.bU(aU.class)).f(new Name("Town-Knight"),validation);waitFor(()->validation.done);
    Reply create=new Reply();if(fresh)((aU)client.bU(aU.class)).a(null,new Name("Town-Knight"),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,ProjectXCodes.KnightHeight.BASE,ProjectXCodes.EyeType.DEFAULT,null,List.of(),null,create);else ((aU)client.bU(aU.class)).b(new Name("Town-Knight"),null,create);waitFor(()->create.done);
    if(create.reason!=null)throw new AssertionError(create.reason);if(player.knightId<=0||player.pawnId!=player.knightId||player.bagId!=player.knightId||player.items.size()!=5||player.equipment.length!=16||player.homeTown==null)throw new AssertionError("Selected player invalid");
-   System.out.println("PASS: "+(fresh?"creation":"reconnect")+" selects durable identity and five equipped starter items");
+   for(var item:player.items)if(!item.Cs())throw new AssertionError("Starter not bound on "+(fresh?"creation":"reconnect"));
+   System.out.println("PASS: "+(fresh?"creation":"reconnect")+" selects durable identity and five bound starter items");
    Zone move=new Zone();Class<?> zoneListener=Class.forName("com.threerings.whirled.zone.a.g$a"),zoneService=Class.forName("com.threerings.whirled.zone.a.g");Object listener=java.lang.reflect.Proxy.newProxyInstance(zoneListener.getClassLoader(),new Class[]{zoneListener},(proxy,method,values)->{if(method.getName().equals("aT"))throw new AssertionError(values[0]);if(method.getName().equals("a")&&values.length==4&&values[3] instanceof SceneModel m){move.oid=(Integer)values[0];move.model=m;move.done=true;}return null;});Object zs=client.bU(zoneService);zoneService.getMethod("a",int.class,int.class,int.class,zoneListener).invoke(zs,1,1,0,listener);waitFor(()->move.done);if(move.model.sceneId!=1||!(move.model instanceof TudeySceneModel)||move.oid!=10)throw new AssertionError("Town Square invalid");
    player.a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){received(e);}});
    client.xb().a(move.oid,new com.threerings.presents.dobj.t<TownSceneObject>(){public void a(TownSceneObject obj){scene=obj;}public void a(int id,ObjectAccessException error){throw new AssertionError(error);}});waitFor(()->scene!=null);
@@ -76,9 +78,10 @@ public class WorldConnectionCheck {
    System.out.println("PASS: inventory blocks movement, retains its animation start and closes into idle");
    var beforeEquipment=actor.Mv();
    long helm=player.equipment[0];var itemService=client.bU(com.threerings.projectx.item.client.L.class);Reply equip=new Reply();itemService.a(helm,ItemCodes.Location.ARSENAL,0,equip);waitFor(()->equip.done);if(equip.reason!=null||player.equipment[0]!=0)throw new AssertionError("Unequip failed: "+equip.reason);
+   if(!bound(player,helm))throw new AssertionError("Unequip lost binding");
    waitFor(()->controlled(player).Mv()!=beforeEquipment);
    var withoutHelm=controlled(player).Mv();
-   Reply re=new Reply();itemService.a(helm,ItemCodes.Location.EQUIPMENT,0,re);waitFor(()->re.done);if(re.reason!=null||player.equipment[0]!=helm)throw new AssertionError("Equip failed: "+re.reason);System.out.println("PASS: real item service unequips and re-equips owned helm");
+   Reply re=new Reply();itemService.a(helm,0,re);waitFor(()->re.done);if(re.reason!=null||player.equipment[0]!=helm||!bound(player,helm))throw new AssertionError("Arsenal equip failed or lost binding: "+re.reason);System.out.println("PASS: real Arsenal equip RPC re-equips the bound helm after unequipping");
    waitFor(()->controlled(player).Mv()!=withoutHelm);
    var withHelm=controlled(player).Mv();int afterEquip=deltas;waitFor(()->deltas>=afterEquip+10);
    if(controlled(player).Mv()!=withHelm)throw new AssertionError("Equipped model replaced on unchanged ticks");

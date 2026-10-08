@@ -1,66 +1,59 @@
 # Current checkpoint and next milestones
 
-This is the authoritative feature/acceptance handoff. Read `VERSION` and Git for
-the exact checkout; update this file when a milestone changes behavior or limits.
+This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
+checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.7.1, schema 3
+## Checkpoint: 0.7.2, schema 4
 
-Normal login → create/select a saved knight → Haven Town Square → movement and
-mouse facing → persistent starter equip/unequip and per-knight crowns/energy.
-Different knights share the town and see peer movement. Intro missions are
-skipped; no tutorial completion flags or rewards are invented.
+Normal login → saved knight creation/selection → Haven Town Square → movement,
+mouse facing and multiplayer → durable bound starter equipment and per-knight
+crowns/energy. Intro missions are skipped without invented completion flags/rewards.
 
-The scene is archived town 1, bundled with a derived static collision mask; see
-[provenance](dependencies.md). Stock clients provide rendering assets. Entry
-publishes selected state, zone/scene callbacks, occupant metadata and scene object
-10. Actors update at 20 Hz after `enteredPlace`. The server computes position
-from timestamped input and collision, not client coordinates. Only one session
-controls a global knight ID; disconnect releases it.
+0.7.2 fixes Arsenal re-equipping: its equipItem RPC is different from moveItem.
+Both now use the same owned equipment transaction. Starter items are bound by
+default; binding survives unequipping and database reopening. Schema 3 migrates
+transactionally without re-equipping items or changing identities/balances.
+See [current feature research](server-milestones.md).
 
-The 0.7.1 fixes are merged into `main` (`32629e2`): TCP deltas reference the prior
-queued snapshot, retain unchanged models, and explicitly synchronize inventory
-activity/start times. Inventory closing lasts 889 ms before movement resumes.
-See [cause and evidence](town-entry-investigation.md).
+The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
+inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory
+closing and reconnect passed isolated graphical checks. Graphical two-window
+animation and equip/unequip have not been independently accepted; networking
+checks pass. Repeat relevant checks when changing scene/movement behavior. See
+[entry evidence and desktop limitations](town-entry-investigation.md).
 
-## Acceptance and limits
+## Requested priorities
 
-- `make build test`: 22 unit and three packaged integration checks passed.
-- Java installed-client fixture: creation/reconnect, delayed acknowledgements,
-  predictor/activity timing, model retention, gear/currency and multiplayer passed.
-- Isolated stock graphical client: fresh creation, stop/start/reverse movement,
-  mouse facing, inventory closing and reconnect showed animated walking.
-- Graphical simultaneous two-window animation and equip/unequip were not separately
-  accepted; their networking checks passed. Desktop vsync/gamepad accommodations
-  are recorded in the investigation. Do not treat one accepted run as proof that
-  every intermittent symptom is impossible; repeat relevant checks after changes.
-- One town/spawn; position resets on entry. Reconnect to switch characters.
-- Sampled static collision only; no dynamic scenery physics.
-- Five starter items only; no drops, trade, crafting, loadouts or costume equipment.
-- Currencies start at zero; no economy/regeneration. Admin is local only.
-- NPCs/portals may be visible but have no gameplay. No combat, quests or shops.
-- News/social feeds are empty; unsupported services fail explicitly.
+1. **Item binding**: persistent state, migration and real Arsenal RPC support.
+2. **External scene framework**: map catalog, validated scene/collision data,
+   multiple scene instances, pre-start archive preparation; migrate Haven.
+3. **Single account session**: verified policy, reconnect/replacement and abrupt
+   disconnect cleanup without permitting two knights from one account to play.
+4. **Local knight deletion**: confirmation/identity checks, safe associated-data
+   cleanup, live session/roster consistency.
+5. **Scene chat**: original marshaller/messages, scene isolation and bounds,
+   reusable routing for later channels.
+6. **Game Master**: replace Admin terminology while retaining roles, basic
+   permission checks, verified title and special icon. Document unsupported visuals.
 
-## Next milestone: town position persistence
+Complete and commit these separately in this order; do not push. See the owner's
+current instructions before choosing any additional milestone.
 
-Persist server-computed town coordinates and facing, with ownership and account
-authentication-revision guards. Add a transactional schema upgrade and spawn
-defaults for existing knights. Validate finite, walkable positions; unknown scenes
-or invalid positions must fall back to the known town spawn. Checkpoint during play
-and flush on disconnect/clean shutdown without overwriting currency/equipment edits.
+## Current limits and later work
 
-Acceptance: disposable migration/reopen, logout/reconnect, clean server restart,
-invalid state, revocation/deletion and concurrent currency/equipment checks; then
-stock-client entry at the saved location with working prediction/animation. Keep
-this separate from returning to the picker or portal travel.
+One hardcoded town/spawn; positions reset on entry. Reconnect to switch characters.
+Static collision is sampled; no dynamic physics. Five starter items, no drops,
+trade, crafting, loadouts or costume equipment. No combat, quests, shops, NPC
+dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
+News/social feeds are empty. Administration is local; Admin does not enable in-game
+commands. Binding does not implement an unbinding service.
 
-## Later milestones
+After the requested foundations: server-owned position persistence, clean picker
+return, one verified portal round trip, general owned items/weapon selection,
+then one enemy and one persisted mission with idempotent rewards. Keep changes
+small; do not attempt the full introduction at once.
 
-1. Verified clean return to the character picker.
-2. One additional scene and a verified portal round trip with subscription cleanup.
-3. General item instances, owned item grants and weapon selection.
-4. A small combat area: one enemy, damage, death and reconnect behavior.
-5. One persisted mission with idempotent rewards before broader introductions.
-6. Limited in-game admin commands checking the current stored role.
-
-Follow [AGENTS.md](../AGENTS.md) and [development workflow](development.md).
-Primary protocol references are linked in [resource research](server-research.md).
+Follow [AGENTS.md](../AGENTS.md), [development](development.md) and
+[architecture](server-architecture.md). [Resource research](server-research.md)
+provides primary networking/scene references. Default tests need no installed game;
+optional installed-reader and graphical checks use disposable state.

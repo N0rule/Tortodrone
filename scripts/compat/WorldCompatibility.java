@@ -67,6 +67,9 @@ public final class WorldCompatibility {
                 || !actor.Np() || actor.adU()!=0 || actor.adV()!=100
                 || Math.abs(actor.aeb()-TownMovement.MAX_STEP)>.00001 || actor.tz().x!=.25f || actor.tA()!=1.5f) throw new AssertionError("World schema mismatch or predicted activity leaked into delta baseline");
         var occupant=(ProjectXOccupantInfo)town.occupantInfo.iterator().next();
+        for (var item : player.items) {
+            if (!item.Cs() || item.VC()) throw new AssertionError("Starter binding flags differ from stock mutable binding");
+        }
         if(occupant.pr==null) throw new AssertionError("Missing prestige rank for stock renderer");
         occupant.getIcon();
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");

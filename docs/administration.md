@@ -58,7 +58,10 @@ optional SQLite `-wal`/`-shm` files, `keys/private.pk8`, `keys/public.txt`,
 Stop the server and close the manager before copying the whole directory or upgrading.
 Keep both JARs on the same release; do not run an older release against upgraded state.
 
-Current schema is 3. Version 0.7.1 keeps 0.7.0's schema unchanged. Schema 2 added
+Current schema is 4. Version 0.7.2 adds persistent item binding. All existing
+starter items were originally granted equipped and remain bound after migration,
+including items now unequipped; their loadout, IDs and balances are preserved.
+Equipping binds an item; unequipping never clears binding. Schema 2 added
 global world/item identities and the starter kit; schema 3 added balances, state
 revision, equipped slots and currency audit events. Upgrades are transactional,
 retain account/roster IDs and credentials, and do not regrant kits or re-equip

@@ -114,6 +114,16 @@ final class WorldSession implements AutoCloseable {
             equip(args);
             return true;
         }
+        // Arsenal's equip action uses method 3, distinct from moveItem (method 9).
+        if (service == 9 && request.method() == 3) {
+            if (args.size() != 3 || !(args.get(0) instanceof Long)
+                    || !(args.get(1) instanceof Integer) || !(args.get(2) instanceof SessionDecoder.Listener)) {
+                throw new SessionDecoder.Rejected("Invalid equip item request");
+            }
+            equip(List.of(args.get(0), new SessionDecoder.EnumValue(
+                "com.threerings.projectx.item.data.ItemCodes$Location", 1), args.get(1), args.get(2)));
+            return true;
+        }
         return false;
     }
 
@@ -155,7 +165,7 @@ final class WorldSession implements AutoCloseable {
                 throw new IOException("Only inventory and equipment moves are available");
             }
             profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
-            output.send(() -> codec.equipped(oid, profile));
+            output.send(() -> codec.equipped(oid, knight, profile));
             output.send(() -> codec.invocationConfirmed(oid, listener.requestId()));
         } catch (IOException failure) {
             String reason = failure.getMessage();
@@ -233,7 +243,7 @@ final class WorldSession implements AutoCloseable {
                             output.send(() -> codec.balances(oid, profile));
                         }
                         if (!fresh.items().equals(previous.items())) {
-                            output.send(() -> codec.equipped(oid, profile));
+                            output.send(() -> codec.equipped(oid, knight, profile));
                         }
                     }
                 }

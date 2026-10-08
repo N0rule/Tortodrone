@@ -6,10 +6,11 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.7.1**, SQLite schema **3**: normal login; saved character creation,
+Version **0.7.2**, SQLite schema **4**: normal login; saved character creation,
 editing, deletion and selection; direct Haven Town Square entry; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
-items with equip/unequip; per-character crowns and energy with local administration.
+items with persistent binding and Arsenal equip/unequip; per-character crowns and
+energy with local administration.
 
 Intro missions are skipped. Combat, quests, shops, NPC dialogue, portal travel,
 position persistence and in-game admin commands are not implemented. Reconnect
@@ -82,8 +83,9 @@ account rules and migrations.
 
 To back up, stop the server and close the manager, then copy the entire `data/`
 directory, including database and keys. A live SQLite database may have changes
-in its WAL. Replace both JARs while stopped and retain `data/`. Version 0.7.1
-requires no schema change from 0.7.0; do not downgrade an upgraded database.
+in its WAL. Replace both JARs while stopped and retain `data/`. Version 0.7.2
+adds persistent item binding in schema 4; stop the old server before opening the
+new release. Do not downgrade an upgraded database.
 
 ## Work on the repository
 

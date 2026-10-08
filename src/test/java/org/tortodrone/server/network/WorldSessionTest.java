@@ -72,6 +72,16 @@ public final class WorldSessionTest {
                 var afterReentry = reader.next();
                 check(afterReentry.reference()==reentry.timestamp() && afterReentry.added()==0,
                     "re-entry retains actor after its initial snapshot");
+                long helm=characters.worldProfile(knight.name(),1).equipment()[0];
+                var confirm=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)9);
+                first.invocation(new SessionDecoder.Invocation(3,9,9,List.of(helm,
+                    new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$Location",0),0,confirm)));
+                check(characters.worldProfile(knight.name(),1).equipment()[0]==0,"moveItem unequips");
+                first.invocation(new SessionDecoder.Invocation(3,9,3,List.of(helm,0,confirm)));
+                check(characters.worldProfile(knight.name(),1).equipment()[0]==helm
+                    && characters.worldProfile(knight.name(),1).items().get(0).bound(),"Arsenal equipItem restores bound item");
+                first.invocation(new SessionDecoder.Invocation(3,9,3,List.of(helm,7,confirm)));
+                check(characters.worldProfile(knight.name(),1).equipment()[0]==helm,"invalid Arsenal slot cannot change equipment");
                 first.close();
                 check(!WorldSession.active(1,knight.id()),"disconnect releases controller");
             }
