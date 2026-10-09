@@ -7,15 +7,13 @@ import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Properties;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
-/** Java 25 build inputs, offline map preparation and external-map release bundles. */
+/** Java 25 build inputs, offline map preparation. */
 public final class BuildTools {
     private static final String[] MAPS = {"haven", "bazaar"};
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
-        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, maps [output], dist, or fetch-maps output");
+        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or maps [output]");
         switch (args[0]) {
             case "sqlite", "jline" -> {
                 if (args.length != 2) throw new IllegalArgumentException("Expected dependency output path");
@@ -36,18 +34,6 @@ public final class BuildTools {
                         copyMissing(project.resolve("maps/default/" + map + "/" + name), output.resolve(map + "/" + name));
                 }
             }
-            case "dist" -> {
-                if (args.length != 1) throw new IllegalArgumentException("dist takes no arguments");
-                distribution(project);
-            }
-            case "fetch-maps" -> {
-                if (args.length != 2) throw new IllegalArgumentException("Expected maintainer download directory");
-                var sources = properties(project.resolve("maps/sources.properties"));
-                for (String map : MAPS) {
-                    var descriptor = properties(project.resolve("maps/default/" + map + "/map.properties"));
-                    fetch(Path.of(args[1]).resolve(map + ".dat"), sources.getProperty(map + ".url"), descriptor.getProperty("scene-sha256"));
-                }
-            }
             default -> throw new IllegalArgumentException("Unknown build input command");
         }
     }
@@ -63,39 +49,6 @@ public final class BuildTools {
             verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
             verify(pack.resolve("walkability.gz"), descriptor.getProperty("collision-sha256"));
         }
-    }
-    private static void distribution(Path project) throws Exception {
-        verifyMaps(project);
-        String version = Files.readString(project.resolve("VERSION")).trim();
-        if (!version.matches("[0-9]+\\.[0-9]+\\.[0-9]+")) throw new IOException("Invalid release version");
-        String release = "tortodrone-" + version;
-        Path output = project.resolve("build/" + release + ".zip");
-        Files.createDirectories(output.getParent());
-        Path temporary = Files.createTempFile(output.getParent(), release + "-", ".zip.tmp");
-        try {
-            try (var zip = new ZipOutputStream(Files.newOutputStream(temporary))) {
-                for (String jar : new String[]{"tortodrone.jar", "tortodrone-admin.jar"})
-                    zipFile(zip, project.resolve("build/" + jar), release + "/" + jar);
-                zipFile(zip, project.resolve("docs/distribution.md"), release + "/README.md");
-                zipFile(zip, project.resolve("docs/dependencies.md"), release + "/DEPENDENCIES.md");
-                zipFile(zip, project.resolve("maps/sources.properties"), release + "/MAP-SOURCES.properties");
-                zipFile(zip, project.resolve("VERSION"), release + "/VERSION");
-                Path maps = project.resolve("maps/default");
-                try (var paths = Files.walk(maps)) {
-                    for (Path file : paths.filter(Files::isRegularFile).sorted().toList())
-                        zipFile(zip, file, release + "/maps/" + maps.relativize(file).toString().replace('\\', '/'));
-                }
-            }
-            Files.move(temporary, output, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
-            System.out.println(output);
-        } finally { Files.deleteIfExists(temporary); }
-    }
-    private static void zipFile(ZipOutputStream zip, Path source, String name) throws IOException {
-        var entry = new ZipEntry(name);
-        entry.setTime(0);
-        zip.putNextEntry(entry);
-        Files.copy(source, zip);
-        zip.closeEntry();
     }
     private static void copyMissing(Path source, Path target) throws IOException {
         Files.createDirectories(target.toAbsolutePath().getParent());

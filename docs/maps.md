@@ -7,11 +7,8 @@ scene exports and matching collision masks. `make maps` verifies their checksums
 and copies missing files into `build/maps/`, without accessing an archive repository
 or download cache. Existing destination files are preserved.
 
-`make dist` packages both executable JARs and these defaults into a self-contained
-release ZIP, with maps outside the JARs. End users extract it and run Java 25;
-Git, Make, an installed game and a map download are unnecessary on the server.
-The archive repository may disappear without affecting builds or deployments.
-Release packaging uses checked-in defaults, never local deployment maps or data.
+Deploy `build/maps/` beside the server JAR. The archive repository may disappear
+without affecting map preparation or running the server.
 Keep edited packs across updates; install a new map explicitly while stopped,
 replacing its scene, descriptor and collision mask together.
 
@@ -32,15 +29,8 @@ The client scene-version argument remains a cache version, never an instance sel
 
 ## Maintainer imports
 
-Provenance URLs are recorded in `maps/sources.properties`. To deliberately fetch
-the exact original exports again into a maintainer workspace:
-
-```sh
-java scripts/BuildTools.java fetch-maps /tmp/tortodrone-map-sources
-```
-
-This optional command verifies each descriptor's scene digest and changes neither
-the checked-in packs nor deployed maps. Builds and release users never call it.
+Original archive paths and checksums are recorded in [dependency notices](dependencies.md).
+There is no map download command; obtaining another export is optional maintainer work.
 Town Square uses the regular 2017 export, rather than the snowy static export.
 Scene revisions are signed client integers; a negative revision is valid.
 

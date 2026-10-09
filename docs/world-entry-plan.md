@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.13.0, schema 8
+## Checkpoint: 0.13.1, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -187,9 +187,8 @@ were stopped. No new graphical animation acceptance is claimed for this cleanup.
 and switches Haven to its authentic regular 2017 export, with a freshly derived
 stock collision mask. There are no snow tiles or Winterfest decorations in this
 export. Default preparation is offline and preserves edited deployment files.
-`make dist` ships both JARs, external packs and run instructions in one ZIP;
-end users need only Java 25 to run it. Downloads remain optional maintainer work
-through `BuildTools.java fetch-maps`. Database schema remains 8.
+The initial ZIP packaging and optional maintainer downloader added here were
+removed in 0.13.1 below. Database schema remains 8.
 
 Acceptance: `make build test` passed all 32 unit and four packaged integration
 checks on Java 25. The unchanged installed reader/network harness passed both maps,
@@ -201,6 +200,20 @@ check passed extraction/startup with no game or download cache, maps outside bot
 JARs, offline preparation, edited-pack preservation and corrupt-source refusal.
 All test processes were stopped; real data, keys,
 preferences and edited maps were preserved.
+
+## Map-tool cleanup (0.13.1)
+
+Removed the map source properties file, optional map downloader and premature
+release ZIP tooling. Map preparation still verifies and copies the complete local
+default packs, preserving existing deployment files. Provenance remains documented
+in dependency notices. Tests check offline map preparation directly; they no longer
+build release archives. Only missing SQLite/JLine library caches can cause Make
+to download build inputs. Regular Town Square and schema 8 are unchanged.
+
+Acceptance: all 32 unit and four integration checks passed on Java 25. Offline
+map preparation passed with no URL metadata or download cache, preserved edited
+packs and refused corrupt sources. Both JARs were rebuilt; test processes stopped.
+The owner's running server, data, keys and preferences were left untouched.
 
 ## Current limits and later work
 

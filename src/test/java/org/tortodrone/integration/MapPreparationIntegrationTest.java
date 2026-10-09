@@ -1,0 +1,53 @@
+package org.tortodrone.integration;
+
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import org.tortodrone.world.SceneCatalog;
+import static org.tortodrone.support.TestWire.check;
+
+/** Map preparation works without downloads, caches, game files or release archives. */
+public final class MapPreparationIntegrationTest {
+    public static void main(String[] args) throws Exception {
+        Path home = Files.createTempDirectory("tortodrone-offline-maps-test-");
+        try {
+            offlinePreparation(home);
+            System.out.println("PASS: offline map preparation, edited-pack preservation and corrupt-source refusal");
+        } finally {
+            try (var paths = Files.walk(home)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
+            }
+        }
+    }
+    private static void offlinePreparation(Path home) throws Exception {
+        Path project = home.resolve("source without cache");
+        Path source = project.resolve("maps/default");
+        try (var paths = Files.walk(Path.of("maps/default"))) {
+            for (Path path : paths.toList()) {
+                Path out = source.resolve(Path.of("maps/default").relativize(path));
+                if (Files.isDirectory(path)) Files.createDirectories(out); else Files.copy(path, out);
+            }
+        }
+        Path tool = project.resolve("BuildTools.java");
+        Files.copy(Path.of("scripts/BuildTools.java"), tool);
+        check(runMaps(project, tool, "prepared maps") == 0, "maps prepare without dependency cache or provenance URLs");
+        SceneCatalog.load(project.resolve("prepared maps"));
+        Path edited = project.resolve("prepared maps/haven/map.properties");
+        Files.writeString(edited, Files.readString(edited).replace("instances=1", "instances=2"));
+        byte[] preserved = Files.readAllBytes(edited);
+        check(runMaps(project, tool, "prepared maps") == 0 && Arrays.equals(preserved, Files.readAllBytes(edited)), "edited deployment pack preserved");
+        Files.write(source.resolve("haven/scene.dat"), new byte[]{1, 2, 3});
+        check(runMaps(project, tool, "damaged maps") != 0 && !Files.exists(project.resolve("damaged maps")),
+            "damaged source rejected before producing a partial deployment");
+        check(!Files.exists(project.resolve("build/deps")), "offline preparation creates no download cache");
+    }
+    private static int runMaps(Path project, Path tool, String output) throws Exception {
+        Process process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin/java").toString(),
+            tool.toString(), "maps", output).directory(project.toFile()).redirectErrorStream(true)
+            .redirectOutput(project.resolve("tool-output.txt").toFile()).start();
+        try {
+            check(process.waitFor(30, TimeUnit.SECONDS), "offline map preparation finishes");
+            return process.exitValue();
+        } finally { process.destroyForcibly(); process.waitFor(); }
+    }
+}

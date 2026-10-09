@@ -5,9 +5,8 @@ Swing/CLI admin JAR shares the database on the same PC. Both JARs bundle SQLite
 JDBC and JLine. Maps are external validated packs. No upstream game server code or installed client
 classes are compiled into Tortodrone. See [dependency provenance](dependencies.md).
 Complete default scene exports and collision masks are retained under
-`maps/default/`. Offline preparation copies missing deployment files; `make dist`
-ships the defaults beside both JARs in a release ZIP. Archive downloads are an
-explicit maintainer operation, never a build or runtime map dependency.
+`maps/default/`. Offline preparation copies missing deployment files into
+`build/maps/`. There is no map download command or release-packaging target.
 
 ## Code map
 

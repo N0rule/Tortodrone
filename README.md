@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.12.0**, SQLite schema **8**: normal login; saved character creation,
+Version **0.13.1**, SQLite schema **8**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
@@ -53,11 +53,7 @@ Wait for `Done! Listening`. Stop with `stop` in its terminal or Ctrl+C.
 `make build` starts neither. Both JARs report their version with `--version`.
 
 Both JARs use `data/` beside themselves, regardless of the working directory.
-For end-user deployment, run `make dist` and distribute
-`build/tortodrone-0.13.0.zip`. Extract the whole ZIP: both JARs, complete external
-`maps/` and run instructions are included. Users need Java 25 and no build tools,
-game installation or map downloads to run the server. Release packs come from
-the checked-in defaults, independently of edited `build/maps/`.
+Copy `build/maps/` beside the server JAR when deploying the built applications.
 Keep both JARs together and preserve `data/` and edited map packs across updates.
 The manager can use another deployment with `--data /path/to/server/data`.
 It runs locally and opens no administration port.

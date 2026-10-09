@@ -34,7 +34,7 @@ The external default map packs retain original compressed scene exports obtained
 [reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive).
 The layout references client resources; it does not include game meshes, textures
 or audio. Complete copies are checked in and shipped outside both JARs; building,
-release packaging and running do not depend on the archive's availability.
+preparation and running do not depend on the archive's availability.
 
 - Archive commit: `ae49faf06788dd83b35a959306c9fe4c25688004`
 - Regular Town Square path: `Legacy/BukkitBoss/2017/1`
@@ -42,8 +42,6 @@ release packaging and running do not depend on the archive's availability.
 - SHA-256: `26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57`
 - Bazaar: `Master/Static/2`, revision `1661137235`
 - Bazaar SHA-256: `e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033`
-- Optional maintainer fetch: `scripts/BuildTools.java fetch-maps OUTPUT`
-- Provenance URLs: `maps/sources.properties`
 - Offline source packs: `maps/default/{haven,bazaar}/`
 - Runtime: `build/maps/{haven,bazaar}/scene.dat`; neither JAR contains maps
 

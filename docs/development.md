@@ -15,7 +15,6 @@ No Maven/Gradle, installed game or database service is required.
 
 ```sh
 make build             # server and local admin JARs
-make dist              # end-user ZIP: JARs, external default maps and instructions
 make build-server      # server only
 make build-admin       # manager only
 make build test        # rebuild and run all checks
@@ -35,9 +34,9 @@ ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/torto
 The current suite has 32 unit and four integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
-The release check extracts the end-user ZIP without game files or build caches,
-starts and stops its server, verifies both JARs exclude maps, and exercises offline
-map preparation, corrupt-source rejection and preservation of edited packs.
+The map preparation check uses a temporary source tree without game files or
+download caches, and verifies offline copying, corrupt-source rejection and
+preservation of edited deployment packs.
 
 Add meaningful regression checks for behavior changes. Review `git diff` and
 `git diff --check`; update current docs and commit major completed milestones.
