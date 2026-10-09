@@ -37,6 +37,7 @@ public final class CheckClientWorld {
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
                 project.resolve("scripts/compat/AccountConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/TellConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/ItemCatalogExport.java").toString(),project.resolve("scripts/compat/ItemCatalogCompatibility.java").toString(),
                 project.resolve("scripts/compat/ItemGrantConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
@@ -72,6 +73,10 @@ public final class CheckClientWorld {
             List<String> staffCheck=new ArrayList<>(base);
             staffCheck.addAll(List.of("GameMasterConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
             try{run(staffCheck,"game-master","",45);}
+            catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
+            var tellCheck=new ArrayList<>(base);
+            tellCheck.addAll(List.of("TellConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
+            try{run(tellCheck,"tells","",45);}
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");

@@ -301,9 +301,30 @@ final class WorldSession implements AutoCloseable {
             if(!CHAT.broadcast(sender,text))throw new IOException("Please slow down before sending another message.");
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
     }
-    private synchronized void deliverChat(int place,int generation,SceneChat.Message message)throws IOException {
-        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)
-            output.send(()->codec.chat(place,message));
+    void tell(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=3
+                ||args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof String text)
+                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.crowd.chat.data.ChatMarshaller$TellMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid tell request");
+        SceneChat.Membership sender;
+        try {
+            synchronized(this) {
+                if(closed||socket.isClosed()||!subscribed||!entered)throw new IOException("Enter a scene before sending a tell");
+                try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
+                sender=chat;
+            }
+            CHAT.tell(sender,target,text);
+            output.send(()->codec.tellSucceeded(oid,listener.requestId()));
+        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+    }
+    private synchronized boolean deliverChat(int place,int generation,SceneChat.Message message)throws IOException {
+        if(closed||socket.isClosed()||!subscribed||!entered||scene.oid()!=place||sceneGeneration!=generation)return false;
+        if(message.personal()) {
+            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){return false;}
+        }
+        output.send(()->codec.chat(message.personal()?oid:place,message));return true;
     }
     private void leaveChat(){
         if(chat!=null){chat.close();chat=null;}

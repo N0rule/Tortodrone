@@ -6,8 +6,10 @@ import java.util.*;
 /** Reusable chat membership/routing; recipients enqueue without holding the routing lock. */
 public final class SceneChat {
     public static final int SERVICE=12,MAX_CHARACTERS=256;
-    public record Message(String speaker,String text,byte mode) { }
-    @FunctionalInterface public interface Endpoint { void deliver(Message message)throws IOException; }
+    public record Message(String speaker,String text,byte mode,boolean personal) {
+        public Message(String speaker,String text,byte mode){this(speaker,text,mode,false);}
+    }
+    @FunctionalInterface public interface Endpoint { boolean deliver(Message message)throws IOException; }
     private record Member(int scene,int client,String name,RateLimit rate,Endpoint endpoint) { }
     private final Map<Integer,Member> members=new HashMap<>();
     public final class Membership implements AutoCloseable {
@@ -46,6 +48,24 @@ public final class SceneChat {
             recipients=List.copyOf(members.values());
         }
         deliver(recipients,new Message(source.name(),text,(byte)4));return true;
+    }
+    /** A tell has no server echo: the stock success listener renders the sender's feedback. */
+    public void tell(Membership sender,String target,String text)throws IOException {
+        text=validate(text);
+        if(target==null||target.length()<3||target.length()>16||!target.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))
+            throw new IOException("Enter a valid knight name");
+        Member source,recipient;
+        synchronized(this) {
+            source=require(sender);
+            if(!source.rate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another message.");
+            recipient=members.values().stream().filter(m->m.name().equalsIgnoreCase(target)).findFirst().orElse(null);
+        }
+        if(recipient!=null) {
+            try {
+                if(recipient.endpoint().deliver(new Message(source.name(),text,(byte)0,true)))return;
+            }catch(IOException failure){synchronized(this){members.remove(recipient.client(),recipient);}}
+        }
+        throw new IOException("That knight is not online");
     }
     private void deliver(List<Member> recipients,Message message) {
         for(var member:recipients) {

@@ -142,3 +142,30 @@ the stock client hides its own nameplate. Files/assets remained read-only and
 all accounts, keys, deployment, preferences and extraction directories were temporary.
 This accepts the GM nameplate boundary; it is not a new two-window movement,
 graphical Bazaar or Arsenal acceptance claim.
+
+## Character private tells (0.18.0)
+
+Primary [ChatMarshaller](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/crowd/chat/data/ChatMarshaller.java)
+defines tell(Name,String,TellListener) method **3**; TellMarshaller success method
+**1** carries **Long idle duration, String away message**. Zero/null correctly
+omits unsupported idle/away feedback. The installed `ChatMarshaller` and nested
+TellMarshaller bytecode independently confirm these fields and dispatch IDs.
+[ChatDirector](https://github.com/threerings/narya/blob/master/core/src/main/java/com/threerings/crowd/chat/client/ChatDirector.java)
+listens to `crowd.chat` on the private client object as user chat. Default-mode
+UserMessage is an incoming tell; success locally creates TellFeedbackMessage.
+Sending a scene message or a second server echo would give the wrong UI behavior.
+
+The installed `ProjectXChatDirector` registers `tell` and `respond`; its `$aa`
+respond handler uses the last incoming speaker and sends another normal tell.
+Read-only `javap -c -p` checks and `rsrc/i18n/chat.properties` in the installed
+projectx-config JAR verify English aliases `tell msg t whisper w` and
+`respond reply r`. No extra server command parser or invented tell mode is needed.
+
+Ready membership resolves globally unique knight names case-insensitively across
+maps/instances. The same rate budget covers scene messages, broadcasts, commands
+and tells. Both endpoints recheck authenticated ownership; the recipient's captured
+scene generation must still match before its private event is queued. The router
+does not hold its lock or the sender's session lock while calling the recipient.
+Offline/loading/departed recipients and failed queues return failure, with no
+success feedback or message storage. Away/idle, block lists and guild/party/global
+chat channels remain outside this milestone.

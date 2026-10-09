@@ -214,8 +214,22 @@ unsubscribe/travel/disconnect; captured generations drop old-recipient deliverie
 The reusable SceneChat router copies recipients before calling bounded output queues,
 so it holds no routing lock during delivery. Failed peers are removed independently.
 Five-message bursts replenish one token per second, with budgets retained across
-scene changes. Normal/think/emote/shout are scene-wide; no distance or tell policy
-is inferred. Validation/rate feedback uses the stock SystemMessage schema.
+scene changes. Normal/think/emote/shout are scene-wide; no distance policy is
+inferred. Validation/rate feedback uses the stock SystemMessage schema.
+
+Global ChatMarshaller method 3 implements private tells between ready knight
+memberships, ignoring name case and crossing scene boundaries. Default-mode
+UserMessage targets the recipient's private PlayerObject, so the stock director
+tracks it as user chat and remembers its speaker for replies. TellMarshaller
+method 1 returns Long idle duration 0 and null away String; the client creates
+sender feedback. These fields are not a timestamp or canonical target name.
+Malformed routing/listeners are rejected; normal refusals use the failure callback.
+Sender/recipient authentication and captured recipient scene generation are checked
+before enqueueing. A dropped stale recipient or failed output queue produces no
+success callback. The router holds no membership lock during delivery and never
+acquires another session while holding the sender's session lock. Tells share the
+existing session chat budget; messages are not stored or logged. Away/idle and
+block lists are not implemented.
 
 Global ChatMarshaller method 2 implements GM broadcasts via the same bounded
 router/rate budget. The ListenerMarshaller receives failures only. Ready scenes

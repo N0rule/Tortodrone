@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.17.1, schema 8
+## Checkpoint: 0.18.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -369,6 +369,73 @@ Acceptance: `make build test` passed 37 unit and five integration checks on Java
 refusal, stalled-body deadlines and temporary-file cleanup. Both JARs rebuilt;
 test servers stopped and real data/keys were preserved.
 
+## Character gameplay scope requested on 2026-10-09
+
+The current objective is character gameplay without NPC dependencies: private
+messages, player actions such as sitting, weapon use, portal travel, Haven's
+connected town maps and player-to-player trade. NPC conversations, crafting,
+shops, quests and introductory mission/reward work are outside this scope.
+Complete and commit one verified milestone at a time:
+
+1. **Private tells and replies (0.18.0)**: stock commands, authoritative knight
+   names, private delivery across maps/instances, lifecycle/authentication gates
+   and a shared bounded chat budget.
+2. **Character actions**: verify stock `/sit` and related animation/state inputs;
+   implement one action with movement, interruption, inventory and peer rendering
+   checks before adding other commands.
+3. **Portal round trip**: Town Square ↔ Bazaar through their actual stock portal
+   interaction, server-controlled destinations/proximity, safe departure/readiness
+   and clean actor/chat membership in both views. Existing direct scene RPC travel
+   is a foundation, not portal acceptance.
+4. **Connected Haven**: add remaining verified regular town packs/links (including
+   Arcade when its data is validated), and check boundaries/collision and non-NPC
+   interactables. Document NPC-dependent doors/features explicitly rather than
+   claiming the town is complete from geometry alone.
+5. **Basic weapons**: verify selection, one sword's normal combo and charge/heavy
+   attack, timing/movement and peer effects in a scene where stock rules permit
+   combat. Preserve peaceful town behavior. Damage needs an explicitly supported
+   target; do not invent PvP, NPC or quest rules to demonstrate attacks.
+6. **Player trade**: verify the stock offer/accept/cancel UI and protocol; commit
+   owned, eligible unbound items/stacks and supported currencies atomically for
+   both knights, with capacity/identity checks and disconnect/change cancellation.
+   This is player-to-player exchange; `/trade` channel chat is a separate feature.
+
+Position persistence, picker return, loadout switching and verified item-use
+actions are supporting character milestones when a feature needs them. Implement
+each separately; retain the no-migration and no-fabricated-progress policies.
+
+## Private tells (0.18.0)
+
+ChatMarshaller method 3 accepts a stock Name, message and TellMarshaller listener.
+Only selected, subscribed, entered knights can send or receive. Names resolve
+case-insensitively across ready maps/instances, with no account-name lookup.
+The recipient receives default-mode UserMessage on its private PlayerObject;
+TellListener success returns idle duration 0 and null away text. The stock client
+creates sender feedback and tracks the last incoming speaker for `/reply`.
+No duplicate server echo, message persistence or chat-content logging is added.
+
+Messages retain the 256-code-point limit and shared five-message burst/one-per-second
+budget. Offline, departed, stale, revoked or failed-queue targets cannot produce a
+successful delivery result. Captured scene generations prevent routing a tell to
+an old scene subscription; late cleanup preserves replacement memberships. Both
+sender and recipient authentication are checked at the delivery boundary. Idle,
+away, block lists and social channels remain future work.
+
+Acceptance: `make build test` passed all 38 unit and five packaged integration
+checks on Java 25; both JARs report 0.18.0. The focused independent review found
+no concrete issues. All test servers/clients were stopped.
+
+The 54 installed-stock reader/network checks pass, including actual tell
+marshaller/listener callbacks, Unicode private player-object delivery, replies,
+cross-map travel/re-entry, disconnected/offline names, bounds and rate limits.
+Isolated graphical acceptance used two unchanged stock ProjectXApp clients with
+read-only installation and disposable data/preferences. `/tell Peer-Knight private
+hello` rendered one purple sender confirmation and a purple recipient tell;
+`/reply got your private message` answered the correct knight. An absent target
+rendered private failure feedback. Those clients and their server were stopped;
+real accounts, characters, keys and preferences were preserved. Screenshots remain
+in ignored `local/research/2026-10-09/private-tell-acceptance/`.
+
 ## Current limits and later work
 
 Configured town maps/spawns; positions reset on entry. Reconnect to switch characters.
@@ -378,10 +445,8 @@ dialogue or portal gameplay. Currencies start at zero, with no economy/regenerat
 News/social feeds are empty. Account/character/currency management remains local;
 in-game staff commands are help, broadcast, item search and item grants. Binding has no unbinding service.
 
-After the requested foundations: server-owned position persistence, clean picker
-return, one verified portal round trip, weapon selection,
-then one enemy and one persisted mission with idempotent rewards. Keep changes
-small; do not attempt the full introduction at once.
+Follow the character gameplay milestones above. Enemy/mission work remains
+deferred while the current non-NPC scope is implemented.
 
 Follow [AGENTS.md](../AGENTS.md), [development](development.md) and
 [architecture](server-architecture.md). [Resource research](server-research.md)

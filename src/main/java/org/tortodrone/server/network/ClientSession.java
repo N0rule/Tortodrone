@@ -172,6 +172,7 @@ final class ClientSession {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
             if(invocation.service()==3&&invocation.method()==2){world.broadcast(invocation);return;}
+            if(invocation.service()==3&&invocation.method()==3){world.tell(invocation);return;}
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());

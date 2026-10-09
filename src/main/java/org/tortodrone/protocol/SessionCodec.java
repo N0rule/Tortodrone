@@ -220,6 +220,15 @@ public final class SessionCodec {
         });
     }
 
+    /** TellListener method one carries idle duration and an optional away message. */
+    public byte[] tellSucceeded(int clientOid,short requestId)throws IOException {
+        return frame(out->{
+            eventHeader(out,"InvocationResponseEvent",clientOid);
+            out.writeShort(requestId);out.writeByte(1);out.writeBoolean(true);out.writeInt(2);
+            value(out,0L);value(out,null);
+        });
+    }
+
     /** News and social feed are empty on this server; Result listeners receive one list. */
     public byte[] emptyListResult(int oid, short requestId) throws IOException {
         return frame(out -> {

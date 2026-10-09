@@ -32,7 +32,43 @@ public final class SceneChatTest {
         check(!rate.allow(0)&&!rate.allow(999_999_999)&&rate.allow(1_000_000_000),"rate limit replenishes at one message per second");
         check(!rate.allow(-1),"clock reversal cannot grant tokens");
         replacement.close();other.close();failed.close();third.close();
+        tells();
         System.out.println("PASS: scene chat identity, echo/modes, instance isolation, departure/re-entry, failed peers, Unicode bounds and persistent rate budget");
+    }
+    private static void tells()throws Exception {
+        var router=new SceneChat();var sourceMessages=new ArrayList<SceneChat.Message>();
+        var targetMessages=new ArrayList<SceneChat.Message>();var bystander=new ArrayList<SceneChat.Message>();
+        var source=router.join(10,1,"Sender",new SceneChat.RateLimit(),sourceMessages::add);
+        var target=router.join(11,2,"Recipient",new SceneChat.RateLimit(),targetMessages::add);
+        router.join(10,3,"Bystander",new SceneChat.RateLimit(),bystander::add);
+        router.tell(source,"rEcIpIeNt","hello 🌍");
+        check(targetMessages.size()==1&&sourceMessages.isEmpty()&&bystander.isEmpty(),"tell crosses instances without sender echo or bystander disclosure");
+        var message=targetMessages.getFirst();
+        check(message.personal()&&message.mode()==0&&message.speaker().equals("Sender")&&message.text().equals("hello 🌍"),"tell uses authoritative speaker and stock default mode");
+        router.tell(target,"Sender","reply");
+        check(sourceMessages.size()==1&&sourceMessages.getFirst().speaker().equals("Recipient"),"reply routes as a normal tell");
+        target.close();refuse(()->router.tell(source,"Recipient","offline"));
+        var departed=router.join(11,2,"Recipient",new SceneChat.RateLimit(),m->false);
+        refuse(()->router.tell(source,"Recipient","departed during delivery"));
+        var replacement=router.join(12,2,"Recipient",new SceneChat.RateLimit(),targetMessages::add);
+        departed.close();router.tell(source,"RECIPIENT","after travel");
+        check(targetMessages.size()==2,"late departure cannot evict a replacement tell recipient");
+        source.close();refuse(()->router.tell(source,"Recipient","stale sender"));
+        var budget=new SceneChat.RateLimit(System.nanoTime()+60_000_000_000L);
+        var limited=router.join(10,4,"Limited",budget,m->true);
+        for(int i=0;i<4;i++)check(router.speak(limited,"local",(byte)0),"local chat shares budget");
+        router.tell(limited,"Recipient","last token");
+        refuse(()->router.tell(limited,"Recipient","rate limited"));
+        check(!router.broadcast(limited,"rate limited"),"tell, scene chat and broadcast share rate budget");
+        var errors=router.join(10,5,"Errors",new SceneChat.RateLimit(),m->true);
+        router.join(11,6,"Broken",new SceneChat.RateLimit(),m->{throw new IOException("Queue full");});
+        refuse(()->router.tell(errors,"Broken","failed delivery"));
+        refuse(()->router.tell(errors,"Recipient","x".repeat(257)));
+        refuse(()->router.tell(errors,"Recipient","bad\ntext"));
+        refuse(()->router.tell(errors,"invalid target","text"));
+        refuse(()->router.tell(errors,null,"text"));
+        replacement.close();
+        System.out.println("PASS: private tell routing/replies, cross-instance privacy, offline/stale/failed delivery, bounds and shared rate limit");
     }
     private static void refuse(Action action)throws Exception{try{action.run();throw new AssertionError("Invalid chat accepted");}catch(IOException expected){}}
     @FunctionalInterface interface Action{void run()throws Exception;}
