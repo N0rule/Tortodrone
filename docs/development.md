@@ -10,11 +10,12 @@ files are not build dependencies or current procedures.
 
 The project targets Java 25 and uses GNU Make, `javac` and `jar`. The first build
 needs network access; the Java build tool verifies SHA-256 pins and later builds
-use cached inputs.
+use cached libraries. Map packs are checked in and prepare offline.
 No Maven/Gradle, installed game or database service is required.
 
 ```sh
 make build             # server and local admin JARs
+make dist              # end-user ZIP: JARs, external default maps and instructions
 make build-server      # server only
 make build-admin       # manager only
 make build test        # rebuild and run all checks
@@ -31,9 +32,12 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 32 unit and three integration checks. It covers persistence,
+The current suite has 32 unit and four integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
+The release check extracts the end-user ZIP without game files or build caches,
+starts and stops its server, verifies both JARs exclude maps, and exercises offline
+map preparation, corrupt-source rejection and preservation of edited packs.
 
 Add meaningful regression checks for behavior changes. Review `git diff` and
 `git diff --check`; update current docs and commit major completed milestones.

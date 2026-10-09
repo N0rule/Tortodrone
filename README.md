@@ -31,8 +31,10 @@ limits; [investigation](docs/town-entry-investigation.md) explains the fixes.
 
 Install Git, GNU Make, JDK 25. No Maven, Gradle, game
 installation or database service is required. The first build downloads pinned,
-checksum-verified libraries and scene exports; later builds use `build/deps/`.
-`make maps` prepares external packs without starting the server; see [maps](docs/maps.md).
+checksum-verified libraries; later builds use `build/deps/`. Complete regular
+Town Square and Bazaar packs are checked in under `maps/default/`; preparing them
+requires no network. `make maps` copies external packs without starting the server;
+see [maps](docs/maps.md).
 
 ```sh
 make build
@@ -51,8 +53,12 @@ Wait for `Done! Listening`. Stop with `stop` in its terminal or Ctrl+C.
 `make build` starts neither. Both JARs report their version with `--version`.
 
 Both JARs use `data/` beside themselves, regardless of the working directory.
-For deployment, keep them together, copy `build/maps/` beside the server JAR,
-and preserve `data/` and edited map packs across upgrades.
+For end-user deployment, run `make dist` and distribute
+`build/tortodrone-0.13.0.zip`. Extract the whole ZIP: both JARs, complete external
+`maps/` and run instructions are included. Users need Java 25 and no build tools,
+game installation or map downloads to run the server. Release packs come from
+the checked-in defaults, independently of edited `build/maps/`.
+Keep both JARs together and preserve `data/` and edited map packs across updates.
 The manager can use another deployment with `--data /path/to/server/data`.
 It runs locally and opens no administration port.
 

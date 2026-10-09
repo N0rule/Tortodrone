@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.12.0, schema 8
+## Checkpoint: 0.13.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -180,6 +180,27 @@ installed client passed world/account/GM/item checks and all 173 previews. Java
 preparation tools passed fresh pinned downloads, retry/checksum/cache/cleanup
 checks, edited-map preservation and a stock Bazaar scene export. Test processes
 were stopped. No new graphical animation acceptance is claimed for this cleanup.
+
+## Completed external-map distribution (0.13.0)
+
+0.13.0 retains complete default Town Square and Bazaar scene packs in the checkout
+and switches Haven to its authentic regular 2017 export, with a freshly derived
+stock collision mask. There are no snow tiles or Winterfest decorations in this
+export. Default preparation is offline and preserves edited deployment files.
+`make dist` ships both JARs, external packs and run instructions in one ZIP;
+end users need only Java 25 to run it. Downloads remain optional maintainer work
+through `BuildTools.java fetch-maps`. Database schema remains 8.
+
+Acceptance: `make build test` passed all 32 unit and four packaged integration
+checks on Java 25. The unchanged installed reader/network harness passed both maps,
+round-trip travel, matching collision, movement, peaceful equipment and observer
+updates, accounts, GM roles and item grants. An isolated stock graphical client
+loaded the regular grass/flower/fountain scene and rendered walking in both
+directions. Both pinned maintainer downloads matched the retained exports. The release
+check passed extraction/startup with no game or download cache, maps outside both
+JARs, offline preparation, edited-pack preservation and corrupt-source refusal.
+All test processes were stopped; real data, keys,
+preferences and edited maps were preserved.
 
 ## Current limits and later work
 

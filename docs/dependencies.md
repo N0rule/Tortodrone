@@ -30,25 +30,29 @@ with redirected stdin uses plain input and does not require a native terminal.
 
 ## External town layouts
 
-The external default map preparation downloads original compressed scene exports from
+The external default map packs retain original compressed scene exports obtained from
 [reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive).
 The layout references client resources; it does not include game meshes, textures
-or audio. The archive's static index identifies it as Haven Town Square.
+or audio. Complete copies are checked in and shipped outside both JARs; building,
+release packaging and running do not depend on the archive's availability.
 
 - Archive commit: `ae49faf06788dd83b35a959306c9fe4c25688004`
-- Path: `Master/Static/1`
-- Scene revision: `1702968117`
-- SHA-256: `045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f`
+- Regular Town Square path: `Legacy/BukkitBoss/2017/1`
+- Scene revision: `-1072195501`
+- SHA-256: `26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57`
 - Bazaar: `Master/Static/2`, revision `1661137235`
 - Bazaar SHA-256: `e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033`
-- Fetch/cache: `scripts/BuildTools.java maps`, `build/deps/`
+- Optional maintainer fetch: `scripts/BuildTools.java fetch-maps OUTPUT`
+- Provenance URLs: `maps/sources.properties`
+- Offline source packs: `maps/default/{haven,bazaar}/`
 - Runtime: `build/maps/{haven,bazaar}/scene.dat`; neither JAR contains maps
 
 The archive provides no repository license file at the pinned revision. The
 layout is attributed here; no additional licensing claim is made for it.
 The default collision masks are derived from their respective scenes using
 read-only installed client configurations: default PC circle radius 1/3 and
-collision mask 43, samples spaced 0.25 units over x=[-35,34.75], y=[-32,43.75].
-The reusable `ScenePackExport.java` derives new packs (Bazaar uses it). Each map
+collision mask 43, samples spaced 0.25 units over each scene's tile bounds.
+The reusable `ScenePackExport.java` derives packs; the regular Town Square mask
+was regenerated from its exact retained export. Each map
 descriptor records both geometry and collision digests. Update them and compatibility
 fixtures together. [Map preparation](maps.md) describes importing original archives.

@@ -8,7 +8,7 @@ public final class TownMovementTest {
     public static void main(String[] args) throws Exception {
         byte[] scene = TownSquare.model();
         check(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(scene))
-            .equals("045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f"), "pinned original Town Square");
+            .equals("26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57"), "pinned regular Town Square");
         scene[0] ^= 1;
         check(scene[0] != TownSquare.model()[0], "callers cannot modify the cached scene");
         check(TownSquare.clock() > 0, "scene clock starts positive");

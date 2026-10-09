@@ -11,8 +11,10 @@ TEST_SOURCES := $(sort $(shell find src/test/java -name '*.java'))
 UNIT_TEST_SOURCES := $(filter-out src/test/java/org/tortodrone/integration/%, $(filter %Test.java,$(TEST_SOURCES)))
 UNIT_TESTS := $(subst /,.,$(patsubst src/test/java/%.java,%,$(UNIT_TEST_SOURCES)))
 
-.PHONY: build build-server build-admin maps run server admin test test-unit test-integration test-compile clean
+.PHONY: build dist build-server build-admin maps run server admin test test-unit test-integration test-compile clean
 build: build-server build-admin
+dist: build
+	java scripts/BuildTools.java dist
 build-server: maps $(SERVER_JAR)
 build-admin: $(ADMIN_JAR)
 
@@ -64,10 +66,11 @@ test-unit: test-compile
 		java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) "$$suite"; \
 	done
 
-test-integration: test-compile
+test-integration: test-compile dist
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ServerIntegrationTest $(SERVER_JAR)
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.AdminIntegrationTest $(SERVER_JAR) $(ADMIN_JAR)
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ConsoleIntegrationTest $(SERVER_JAR)
+	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.DistributionIntegrationTest build/tortodrone-$(shell cat VERSION).zip
 
 clean:
 	rm -rf $(SERVER_JAR) $(ADMIN_JAR) $(SERVER_JAR).tmp $(ADMIN_JAR).tmp build/.build

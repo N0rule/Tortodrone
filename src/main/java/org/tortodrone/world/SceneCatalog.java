@@ -23,7 +23,7 @@ public final class SceneCatalog {
     public MapScene entry(){return scenes.get(entry);}
     public List<MapScene> scenes(){return List.copyOf(scenes.values());}
     public static SceneCatalog load(Path directory)throws IOException {
-        if(!Files.isDirectory(directory))throw new IOException("Missing prepared maps; run make maps and deploy maps/ beside the server JAR");
+        if(!Files.isDirectory(directory))throw new IOException("Missing maps; extract the complete Tortodrone release with maps/ beside the server JAR");
         Path root=directory.toRealPath();var settings=properties(root.resolve("catalog.properties"));
         int entry=number(settings,"entry-scene",1,Integer.MAX_VALUE);var scenes=new TreeMap<Integer,MapScene>();
         try(var paths=Files.list(root)) {
