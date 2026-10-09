@@ -38,16 +38,32 @@ server/admin runtime and persistent tools.
 
 ## Subagent delegation
 
-- Use up to 3 concurrent STEP 5 Preview subagents through OpenCode for repository
-  exploration, protocol research, documentation, tests, isolated features,
-  straightforward bug fixes, and independent code reviews. Use GPT-6 Luna as
-  fallback if STEP 5 Preview is unavailable; do not spawn additional Sol High agents.
-- Give each subagent a precise scope, acceptance criteria, and non-overlapping
-  file ownership; coordinate shared dependencies and avoid conflicting edits.
-- Require concise findings, reuse completed work, and spawn fewer agents when
-  tasks are small or dependent on each other.
-- Keep architecture decisions, complex concurrency-sensitive changes,
-  integration, and final verification with the existing primary agent.
+- Delegate when the primary agent can continue useful independent work. Handle
+  tiny or tightly dependent tasks directly. Start with one subagent; use up to
+  3 concurrently only for substantial, independent scopes. Reuse completed work.
+- Prefer STEP 5 Preview through OpenCode for background repository exploration,
+  protocol research, documentation, focused tests, isolated features and
+  straightforward fixes. Use GPT-6 Luna when quick turnaround matters or STEP 5
+  is unavailable. Discover available models through the live orchestration
+  catalogue; do not spawn additional Sol High agents.
+- Assign one concrete deliverable, acceptance criteria, relevant sources,
+  non-overlapping file ownership and exact verification commands. Research and
+  review tasks are read-only by default; give experiments separate temporary
+  directories. Subagents must not delegate further or commit unless explicitly
+  assigned to do so.
+- Coordinate shared dependencies, build output and test processes through the
+  primary agent. Avoid concurrent builds in the same checkout. Use the current
+  authorized runtime mode; Full Access does not relax file ownership, task scope
+  or protection of real data, keys, preferences and the installed game.
+- Require concise results with file:line evidence, actual commands and outcomes,
+  changed files and blockers. Review findings need a concrete trigger and
+  consequence; label unverified claims and platform assumptions. Do not invent
+  findings to fill a quota. The primary agent checks evidence and reproduces
+  suspected bugs before accepting fixes.
+- Keep architecture decisions, concurrency, authentication and storage
+  invariants, protocol changes, integration and final verification with the
+  primary agent. Review every delegated diff and run the relevant regression,
+  stock-client and graphical checks before committing the completed milestone.
 
 ## Workflow
 
