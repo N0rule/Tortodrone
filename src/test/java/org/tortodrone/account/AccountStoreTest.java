@@ -24,6 +24,11 @@ public final class AccountStoreTest {
                 refused(() -> accounts.create("../bad","new-password".toCharArray()));
                 refused(() -> accounts.create("Short","short".toCharArray()));
                 check(accounts.checkPassword("Alice","alice-password".toCharArray()) && !accounts.checkPassword("Alice","wrong-password".toCharArray()),"password verification");
+                char[] invalid=AccountStore.transform("wrong-password".toCharArray());
+                try {
+                    check(accounts.login("MissingUser",invalid).failure()==AccountStore.LoginFailure.NO_SUCH_USER,"unknown account gets its own login error");
+                    check(accounts.login("ALICE",invalid).failure()==AccountStore.LoginFailure.INVALID_PASSWORD,"existing account with wrong password stays invalid-password");
+                }finally{Arrays.fill(invalid,'\0');}
                 accounts.setPassword("ALICE","changed-password".toCharArray());
                 refused(() -> alice.characters().create(choices("Stale-Revision"),alice.authRevision()));
                 check(!accounts.current(alice) && login(accounts,"Alice","alice-password") == null,"reset invalidates old credentials and session revisions");

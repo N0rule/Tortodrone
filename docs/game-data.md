@@ -61,6 +61,7 @@ metadata hashes; definitions contain references, never textures, meshes or audio
 In normal scene chat, a current Game Master can type:
 
 ```text
+!help
 !items Calibur
 !giveitem Alice Alice-Knight 2 Weapon/Sword/Calibur
 !giveitem Alice Alice-Knight 2 1157187935
@@ -72,8 +73,10 @@ the tested installation; consult your exported catalogue. Config names can conta
 commands consume the remaining text as the reference, without quotation marks.
 The command and its result stay private to the sender. Unknown, unsupported or
 invalid requests do not mutate inventories. Permission is rechecked in the write
-transaction, including authentication revision and live GM revocation. Ordinary
-chat beginning with an unrelated exclamation word still behaves as chat.
+transaction, including authentication revision and live GM revocation. Unknown GM
+`!` commands return a private error pointing to `!help`. For normal players and
+revoked staff, every `!` message remains ordinary scene chat, with no command
+recognition or staff help.
 
 The local server terminal uses the same syntax without `!`:
 

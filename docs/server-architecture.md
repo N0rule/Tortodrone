@@ -64,7 +64,11 @@ nothing and consume no IDs. Deletion cascades owned state. Reopening grants no k
 object serialization. Directional class/intern mappings persist across frames.
 `SecureHandshake` processes RSA secure exchange, AES credentials and normal
 account verification, then hands the socket/mappings to `ClientSession`.
-Unexpected/platform/guest credentials are rejected. `ProjectXAuthResponseData.ident`
+Unexpected/platform/guest credentials are rejected.
+Normal logins resolve distinct `m.no_such_user` and `m.invalid_password` errors
+from the same account identity used for password verification; missing identities
+still run dummy password verification. Failed logins do not attach/take over a session.
+`ProjectXAuthResponseData.ident`
 **must remain null**: a non-null value changes the stock client's persistent
 installation identifier and can interfere with official-server login.
 
@@ -85,7 +89,7 @@ ID consumption. Online knights cannot be edited/deleted. Unsupported services fa
 explicitly;
 empty feed/news handles support initialization without inventing gameplay.
 
-Limits include 16 clients, 64 KiB upstream/1 MiB downstream frames, 256 incoming
+Limits include configurable `max-clients` (default 16, range 1–1024), 64 KiB upstream/1 MiB downstream frames, 256 incoming
 class mappings, eight nesting levels, 128 collection entries and 512 parsed nodes.
 Authentication/session idle limits are 15/60 seconds. Preserve bounds and fixed
 error diagnostics; never log argument values.
@@ -219,9 +223,13 @@ IDs. Items/revision/audit commit together; failures consume no IDs. Grants impos
 1–20 instances per request and 256 per knight. `item_events` cascades with its knight.
 Inventory supports costume/trinket equipment slots, permanent binding and bounded stack
 counts. Plain inventory records serialize as stock Item; equipment uses LevelItem.
-Stack merges retain instance IDs and publish EntryUpdatedEvent. Normal-chat `!items`/`!giveitem` use existing SpeakMarshaller method 1 and private
-SystemMessage results; they share the chat rate budget and never broadcast command
-text. Console/CLI use the same syntax/service with a local trusted actor. Profile
+Stack merges retain instance IDs and publish EntryUpdatedEvent. GM `!` commands use
+existing SpeakMarshaller method 1 and private SystemMessage results: `!help` lists
+supported commands, `!items`/`!giveitem` retain their shared service, and unknown names
+return a private error. They share the chat rate budget and never broadcast command
+text. Current non-GM accounts pass every `!` message through ordinary scene chat,
+including after live revocation. Grant transactions still recheck GM permissions.
+Console/CLI use the same item syntax/service with a local trusted actor. Profile
 polling sends stock EntryAddedEvent/EntryUpdatedEvent for item changes so Arsenal
 SetListeners are notified. Changed equipment slots then receive stock
 `ElementUpdatedEvent` records, followed by one `EntryUpdatedEvent` for the current

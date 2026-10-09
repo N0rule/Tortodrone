@@ -85,7 +85,7 @@ public final class AdminIntegrationTest {
                 deletionReady.get(10,TimeUnit.SECONDS);
                 command(admin,directory,"Player\n",true,"Account deleted.","--delete-account","Player"); deleted.get(10,TimeUnit.SECONDS);
                 check(database.identity("Player") == null && database.roster(2).isEmpty(),"delete cascades character rows");
-                try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","changed-password",false,(a,b,c) -> {}); }
+                try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","changed-password","m.no_such_user",(a,b,c) -> {}); }
                 check(running.process.isAlive(),"administration does not stop server");
             }
             String log = Files.readString(data.resolve("logs/latest.log")); check(!log.contains("player-password") && !log.contains("changed-password") && !log.contains(TestClient.passwordHash("player-password")),"passwords and transforms never logged");

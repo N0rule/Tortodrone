@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.Properties;
 
 /** Editable listener and logging settings. */
-public record ServerSettings(String bind, int port, LogMode logMode) {
+public record ServerSettings(String bind, int port, LogMode logMode, int maxClients) {
     public enum LogMode { NORMAL, DEBUG }
     public static ServerSettings load(Path file) throws IOException {
         file = file.toAbsolutePath().normalize();
@@ -42,7 +42,11 @@ public record ServerSettings(String bind, int port, LogMode logMode) {
             case "debug" -> LogMode.DEBUG;
             default -> throw new IOException("log-mode must be normal or debug");
         };
-        return new ServerSettings(bind, port, logMode);
+        int maxClients;
+        try { maxClients=Integer.parseInt(value(settings,"max-clients")); }
+        catch(NumberFormatException invalid){throw new IOException("max-clients must be an integer from 1 to 1024");}
+        if(maxClients<1||maxClients>1024)throw new IOException("max-clients must be from 1 to 1024");
+        return new ServerSettings(bind, port, logMode, maxClients);
     }
 
     private static String value(Properties settings, String name) {

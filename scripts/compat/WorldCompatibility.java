@@ -16,6 +16,16 @@ public final class WorldCompatibility {
     }
     public static void main(String[] args) throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
+        for(String reason:List.of("m.no_such_user","m.invalid_password")) {
+            var rejection=new ByteArrayOutputStream();
+            append(rejection,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+            append(rejection,HandshakeCodec.authenticationResponse((short)2,reason,null,null));
+            var reader=new com.threerings.io.v(new ByteArrayInputStream(rejection.toByteArray()));reader.qe();
+            var response=(ProjectXAuthResponseData)((AuthResponse)reader.qe()).yg();
+            if(!response.code.equals(reason)||response.ident!=null||response.sessionId!=null||response.authName!=null||reader.available()!=0)
+                throw new AssertionError("Stock login rejection code/identity mismatch");
+        }
+        System.out.println("PASS: stock authentication reader preserves distinct unknown-user/password errors without client identity changes");
         var knight=new org.tortodrone.character.Knight(1,"World-Knight","Gear/Helm/Spiral Sallet (Blue)",
             "Gear/Armor/Spiral Culet (Blue)","Helm/Top/Headband/Headband",null,"Blue",1,2,0,1);
         var items=List.of(

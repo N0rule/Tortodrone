@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.15.0**, SQLite schema **8**: normal login; saved character creation,
+Version **0.16.0**, SQLite schema **8**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
@@ -83,10 +83,12 @@ Stop the server before changing `build/data/server.properties`:
 ```properties
 server-ip=0.0.0.0
 server-port=47624
+max-clients=16
 log-mode=normal
 ```
 
 `server-ip` is the listening interface; `0.0.0.0` accepts all IPv4 interfaces.
+`max-clients` limits simultaneous connections (1–1024, default 16).
 `log-mode=debug` adds protocol diagnostics. Logs append to `data/logs/latest.log`.
 `--config /path/to/server.properties` selects settings only, not a data directory.
 
@@ -94,8 +96,10 @@ log-mode=normal
 
 The manager supports account creation, password checks/resets, Game Master roles,
 deletion, individual knight deletion and per-knight currency changes. The server terminal offers the same
-account services; type `help` for commands. Game Masters can use the stock `/broadcast`
-command and normal-chat `!items`/`!giveitem` after entering a scene. Default item
+account services; type `help` for commands. Game Masters can use `!help`, the stock `/broadcast`
+command and normal-chat `!items`/`!giveitem` after entering a scene. Unknown GM `!`
+commands return a private error; normal players' `!` text stays ordinary chat.
+Login distinguishes an unknown username from an incorrect password. Default item
 definitions include the wider equipment set; [game data](docs/game-data.md) explains
 maintainer exports and custom catalogues.
 [Administration reference](docs/administration.md) covers commands,
@@ -124,6 +128,7 @@ and [development workflow](docs/development.md). For a new AI thread, this is en
 
 ```sh
 make build test
+make benchmark         # disposable 50/100/200/300-client town load runs
 ```
 
 Tests use disposable state. `make clean` preserves runtime data and cached

@@ -118,16 +118,16 @@ public final class Server {
                     ? "Normal login and account administration available; maps are required for world entry."
                     : "Normal login, town movement and persistent inventory available.");
                 log.info("Item references: "+accounts.catalog().entries().size()+"; grantable: "+accounts.catalog().entries().stream().filter(org.tortodrone.character.ItemCatalog.Entry::grantable).count());
-                accept(listener, key, log, accounts);
+                accept(listener, key, log, accounts,settings.maxClients());
             }
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts)
+            AccountStore accounts,int maxClients)
             throws IOException {
         Set<Socket> clients = ConcurrentHashMap.newKeySet();
-        Semaphore slots = new Semaphore(16);
+        Semaphore slots = new Semaphore(maxClients);
         AtomicLong ids = new AtomicLong();
         ServerConsole console = new ServerConsole(accounts, log, () -> {
             try { listener.close(); } catch (IOException ignored) { }
@@ -147,7 +147,7 @@ public final class Server {
         }, "ServerShutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
         try {
-            log.debug("Limits: 16 clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
+            log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             log.info("Type help for server commands.");
             console.start();

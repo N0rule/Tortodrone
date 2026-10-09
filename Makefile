@@ -11,7 +11,7 @@ TEST_SOURCES := $(sort $(shell find src/test/java -name '*.java'))
 UNIT_TEST_SOURCES := $(filter-out src/test/java/org/tortodrone/integration/%, $(filter %Test.java,$(TEST_SOURCES)))
 UNIT_TESTS := $(subst /,.,$(patsubst src/test/java/%.java,%,$(UNIT_TEST_SOURCES)))
 
-.PHONY: build build-server build-admin defaults maps run server admin test test-unit test-integration test-compile clean
+.PHONY: build build-server build-admin defaults maps run server admin test test-unit test-integration test-compile benchmark clean
 build: build-server build-admin
 build-server: defaults $(SERVER_JAR)
 build-admin: $(ADMIN_JAR)
@@ -56,6 +56,9 @@ admin: build-admin
 	java -jar $(ADMIN_JAR)
 
 test: test-unit test-integration
+
+benchmark: test-compile
+	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.benchmark.LoadBenchmark $(BENCHMARK_ARGS)
 
 test-compile: build
 	rm -rf $(TEST_CLASSES)

@@ -183,6 +183,10 @@ public final class HandshakeCodec {
 
     /** Second downstream frame, after response(): preserve mappings 1 and 2. */
     public static byte[] authenticationResponse(short messageId, boolean accepted, String sessionId, String username) throws IOException {
+        return authenticationResponse(messageId,accepted ? "success" : "m.invalid_password",sessionId,username);
+    }
+    public static byte[] authenticationResponse(short messageId, String result, String sessionId, String username) throws IOException {
+        boolean accepted="success".equals(result);
         ByteArrayOutputStream body = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(body);
         out.writeShort(-3);
@@ -192,7 +196,7 @@ public final class HandshakeCodec {
         out.writeUTF("com.threerings.projectx.data.ProjectXAuthResponseData");
         out.writeInt(0);
         out.writeBoolean(true);
-        out.writeUTF(accepted ? "success" : "m.invalid_password");
+        out.writeUTF(result);
         // The stock login observer persists a non-null ident outside the game
         // directory. Preserve the client's installation identity on every result.
         out.writeBoolean(false);

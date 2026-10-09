@@ -16,6 +16,8 @@ import org.tortodrone.storage.Database;
 public final class AccountStore implements AutoCloseable {
     public static final String DEFAULT_USERNAME = "tortodrone";
     public record Account(int id, String username, boolean gameMaster, long authRevision, CharacterStore characters) { }
+    public enum LoginFailure { NO_SUCH_USER, INVALID_PASSWORD }
+    public record LoginResult(Account account, LoginFailure failure) { }
     public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
@@ -110,12 +112,17 @@ public final class AccountStore implements AutoCloseable {
         finally { Arrays.fill(hash,'\0'); }
     }
     public Account authenticate(String username,char[] hash) throws IOException {
-        if (username == null) return null;
+        return login(username,hash).account();
+    }
+    /** Resolve the error from the same identity snapshot used to verify the password. */
+    public LoginResult login(String username,char[] hash) throws IOException {
+        if (username == null) return new LoginResult(null,LoginFailure.NO_SUCH_USER);
         if (database != null) {
             var identity = database.identity(username);
             byte[] salt = identity == null ? new byte[16] : identity.salt(), verifier = identity == null ? new byte[32] : identity.verifier();
             boolean matches = Passwords.matches(hash,salt,verifier);
-            if (!matches || identity == null || !database.current(identity.id(),identity.authRevision())) return null;
+            if (identity == null) return new LoginResult(null,LoginFailure.NO_SUCH_USER);
+            if (!matches || !database.current(identity.id(),identity.authRevision())) return new LoginResult(null,LoginFailure.INVALID_PASSWORD);
             CharacterStore characters = rosters.get(identity.id());
             if (characters == null) {
                 characters = new CharacterStore(database,identity.id(),identity.username(),catalog);
@@ -123,12 +130,14 @@ public final class AccountStore implements AutoCloseable {
                 if (previous != null) characters = previous;
             }
             characters.refresh();
-            return new Account(identity.id(),identity.username(),identity.gameMaster(),identity.authRevision(),characters);
+            return new LoginResult(new Account(identity.id(),identity.username(),identity.gameMaster(),identity.authRevision(),characters),null);
         }
         synchronized (this) {
             Stored stored = memory.get(canonical(username));
             boolean matches = Passwords.matches(hash,stored == null ? new byte[16] : stored.password().salt(),stored == null ? new byte[32] : stored.password().verifier());
-            return matches && stored != null ? new Account(stored.id(),stored.username(),stored.gameMaster(),stored.revision(),stored.characters()) : null;
+            return stored == null ? new LoginResult(null,LoginFailure.NO_SUCH_USER)
+                : matches ? new LoginResult(new Account(stored.id(),stored.username(),stored.gameMaster(),stored.revision(),stored.characters()),null)
+                : new LoginResult(null,LoginFailure.INVALID_PASSWORD);
         }
     }
     public synchronized boolean current(Account account) throws IOException {

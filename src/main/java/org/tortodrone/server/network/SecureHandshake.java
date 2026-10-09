@@ -73,13 +73,19 @@ public final class SecureHandshake {
                 new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());
             AccountStore.Account account;
+            String loginResult="m.invalid_password";
             try (var decoded = HandshakeCodec.credentials(credentials)) {
-                account = decoded.normalLogin() ? accounts.authenticate(decoded.username(), decoded.passwordHash()) : null;
+                account=null;
+                if(decoded.normalLogin()) {
+                    var result=accounts.login(decoded.username(),decoded.passwordHash());
+                    account=result.account();
+                    loginResult=account!=null ? "success" : result.failure()==AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
+                }
             } finally {
                 Arrays.fill(credentials, (byte) 0);
             }
             boolean accepted = account != null;
-            byte[] authResponse = HandshakeCodec.authenticationResponse(auth.messageId(), accepted,
+            byte[] authResponse = HandshakeCodec.authenticationResponse(auth.messageId(), loginResult,
                 accepted ? UUID.randomUUID().toString() : null, accepted ? account.username() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();

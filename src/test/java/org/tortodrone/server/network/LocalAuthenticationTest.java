@@ -15,7 +15,18 @@ public final class LocalAuthenticationTest {
         KeyPair key = generator.generateKeyPair();
         exchange(key, true);
         exchange(key, false);
+        rejection(key,"MissingUser","m.no_such_user");
         System.out.println("PASS: authentication, snapshots, receivers, batched requests, invocation failure callbacks, logoff, secret-free logs");
+    }
+
+    private static void rejection(KeyPair key,String username,String reason)throws Exception {
+        try(var workers=Executors.newSingleThreadExecutor();var listener=new ServerSocket(0,1,InetAddress.getLoopbackAddress())) {
+            var server=workers.submit(()->{try(var socket=listener.accept()){SecureHandshake.run(socket,key.getPrivate(),message->{},true);}return null;});
+            try(var peer=new Socket(listener.getInetAddress(),listener.getLocalPort())) {
+                TestClient.authenticate(peer,key.getPublic(),username,"wrong-password",reason,(a,b,c)->{});
+            }
+            server.get(5,TimeUnit.SECONDS);
+        }
     }
 
     private static void exchange(KeyPair key, boolean valid) throws Exception {

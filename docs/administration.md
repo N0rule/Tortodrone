@@ -32,9 +32,12 @@ and unrecognized input never enter history. Passwords are hidden in a terminal
 and never command arguments. Redirected stdin supplies complete UTF-8 lines;
 EOF leaves the server running. Logs preserve the active prompt.
 
-Game Masters use normal scene chat `!items Calibur` and
+Game Masters use `!help` to list supported chat commands, normal scene chat `!items Calibur` and
 `!giveitem Alice Saved-Knight 2 Weapon/Sword/Calibur`. The result is private to the
-sender. Console/CLI commands are local administration and do not require an account
+sender. An unknown GM `!` command returns “Unknown command. Use !help for available
+commands.” Normal players, including staff whose role was revoked, send all `!`
+text as ordinary scene chat; it never invokes a staff command or shows its help.
+Console/CLI commands are local administration and do not require an account
 role. The CLI accepts `--items Calibur` and
 `--give-item Alice Saved-Knight 2 "Weapon/Sword/Calibur"`; only shell commands quote
 multiword references. See [catalogue preparation and supported item limits](game-data.md).
@@ -67,6 +70,8 @@ rows are removed. Picker deletion still refuses online knights.
 - One connection per account. A successful new password login replaces the old
   connection, releasing its knight before another can enter. Failed authentication
   leaves it connected. EOF/timeout releases ownership; reconnect normally afterward.
+  Login returns the stock “No such user” code for an unknown username and the
+  stock invalid-password code for an existing account with the wrong password.
 - Crowns/energy belong to each knight, start at zero and range from 0 to
   2,147,483,647. Changes are atomic, audited and visible online within about 250 ms.
   No earning, spending or regeneration rules exist yet.
@@ -98,9 +103,9 @@ accounts. Use a fresh data directory when adopting this release from an older
 schema; preserve the original data and keys as backups. No data is discarded by
 the tools.
 
-Item catalogues must use v2. Regenerate an older catalogue with the Java exporter.
+Item catalogues must use version 1 JSON. Regenerate an older catalogue with the Java exporter.
 Equipped starters are bound; equipping applies the stored bind-on-equip rule and
 unequipping retains binding. Reopening never regrants kits or re-equips items.
-Preserve external `items/` and `maps/` with the deployment.
+Preserve external `defaults/` and optional custom `items/` and `maps/` with the deployment.
 
 Never copy only a live database: pending changes may reside in its WAL.

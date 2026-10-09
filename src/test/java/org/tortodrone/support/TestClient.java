@@ -26,7 +26,16 @@ public final class TestClient {
 
     public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
             boolean valid, Session session) throws Exception {
-        peer.setSoTimeout(8000);
+        return authenticate(peer,publicKey,username,password,valid ? "success" : "m.invalid_password",session);
+    }
+    public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
+            String expectedResult, Session session) throws Exception {
+        return authenticate(peer,publicKey,username,password,expectedResult,8000,session);
+    }
+    public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
+            String expectedResult, int timeoutMillis, Session session) throws Exception {
+        boolean valid="success".equals(expectedResult);
+        peer.setSoTimeout(timeoutMillis);
         byte[] plain = new byte[20];
         new SecureRandom().nextBytes(plain);
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
@@ -74,7 +83,7 @@ public final class TestClient {
         check(response.readShort() == 12, "auth sequence");
         check(response.readShort() == -4 && response.readUTF().endsWith("ProjectXAuthResponseData"), "game auth data");
         check(response.readInt() == 0 && response.readBoolean(), "auth data fields");
-        check(response.readUTF().equals(valid ? "success" : "m.invalid_password"), "auth result");
+        check(response.readUTF().equals(expectedResult), "auth result: "+expectedResult);
         check(!response.readBoolean(), "accepted and rejected logins preserve the client's installation ident");
         check(response.readBoolean() == valid, "session presence");
         if (valid) UUID.fromString(response.readUTF());

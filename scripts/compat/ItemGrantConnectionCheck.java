@@ -25,8 +25,19 @@ public final class ItemGrantConnectionCheck {
                     public void a(EntryRemovedEvent<Item> e){}public void a(EntryUpdatedEvent<Item> e){}
                 });
                 String command="!giveitem ItemPlayer Grant-Knight 2 "+tools.catalog().require(sword).stockId();
-                player.scene.speakService.a(command,(byte)0);WorldConnectionCheck.waitFor(()->!denial.isEmpty());
-                if(!denial.get(0).contains("Game Master")||player.player.items.size()!=5)throw new AssertionError("Player grant denial failed");
+                player.scene.speakService.a(command,(byte)0);WorldConnectionCheck.waitFor(()->player.messages.size()==1);
+                if(!denial.isEmpty()||!player.messages.get(0).message.equals(command)||player.player.items.size()!=5)throw new AssertionError("Normal player command must remain ordinary chat");
+                for(String text:List.of("!items Calibur","!help","!unknown")) {
+                    int heard=player.messages.size();player.scene.speakService.a(text,(byte)1);
+                    WorldConnectionCheck.waitFor(()->player.messages.size()>heard);
+                    if(!denial.isEmpty()||!player.messages.get(heard).message.equals(text)||player.messages.get(heard).mode!=1)throw new AssertionError("Normal ! text/mode was intercepted");
+                }
+                staff.messages.clear();player.messages.clear();
+                staff.scene.speakService.a("!help",(byte)0);WorldConnectionCheck.waitFor(()->feedback.size()==1);
+                if(!feedback.get(0).contains("!giveitem")||!feedback.get(0).contains("!items"))throw new AssertionError("GM help missing supported commands");
+                staff.scene.speakService.a("!unknown",(byte)0);WorldConnectionCheck.waitFor(()->feedback.size()==2);
+                if(!feedback.get(1).contains("Unknown command")||!staff.messages.isEmpty()||!player.messages.isEmpty())throw new AssertionError("Unknown GM command must give private error");
+                feedback.clear();
                 player.enter(2); // Grant across scenes, command feedback remains private to staff.
                 staff.scene.speakService.a(command,(byte)0);WorldConnectionCheck.waitFor(()->player.player.items.size()==7&&additions[0]==2&&!feedback.isEmpty());
                 if(!feedback.get(0).startsWith("Granted 2")||!staff.messages.isEmpty()||!player.messages.isEmpty())throw new AssertionError("Command leaked to chat or no stock feedback");
@@ -42,7 +53,7 @@ public final class ItemGrantConnectionCheck {
                 int heard=feedback.size();staff.scene.speakService.a("!giveitem ItemPlayer Grant-Knight 1 Weapon/Bomb/Parts/Base",(byte)0);
                 WorldConnectionCheck.waitFor(()->feedback.size()>heard);if(player.player.items.size()!=7)throw new AssertionError("Unsupported item granted");
                 tools.setGameMaster("ItemStaff",false);int rev=feedback.size();staff.scene.speakService.a(command,(byte)0);
-                WorldConnectionCheck.waitFor(()->feedback.size()>rev);if(!feedback.get(rev).contains("Game Master")||tools.worldProfile("ItemPlayer","Grant-Knight").items().size()!=7)throw new AssertionError("Live revocation failed");
+                WorldConnectionCheck.waitFor(()->staff.messages.size()==1);if(feedback.size()!=rev||!staff.messages.get(0).message.equals(command)||tools.worldProfile("ItemPlayer","Grant-Knight").items().size()!=7)throw new AssertionError("Revoked GM must use ordinary chat without grants");
                 tools.setGameMaster("ItemStaff",true);
                 // Drain one second so this fixture respects the shared chat/command rate budget.
                 long end=System.nanoTime()+1_100_000_000L;while(System.nanoTime()<end){var task=WorldConnectionCheck.tasks.poll(50,java.util.concurrent.TimeUnit.MILLISECONDS);if(task!=null)task.run();}
@@ -78,7 +89,7 @@ public final class ItemGrantConnectionCheck {
                 if(!actual.equals(expected))
                     throw new AssertionError("Character select preview differs from the equipped appearance:\n actual "+actual+"\n expected "+expected);
             }
-            System.out.println("PASS: stock GM item commands, private feedback, Arsenal entry-added observers, cross-map live grants, distinct instances, equip/model/binding, normal/revoked denial, unsupported refusal, offline target, ID grants, costume slots, plain item stacks/recipes and reconnect persistence");
+            System.out.println("PASS: stock GM help/unknown-command feedback, normal/revoked ! chat, private item commands, Arsenal observers, cross-map grants, equip/binding, offline/ID grants, costumes, stacks/recipes and reconnect persistence");
         }
     }
     static Item find(GameMasterConnectionCheck.Endpoint endpoint,String config) {

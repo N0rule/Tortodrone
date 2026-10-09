@@ -32,7 +32,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 34 unit and four integration checks. It covers persistence,
+The current suite has 36 unit and four integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 The map preparation check uses a temporary source tree without game files or
@@ -43,6 +43,56 @@ Add meaningful regression checks for behavior changes. Review `git diff` and
 `git diff --check`; update current docs and commit major completed milestones.
 Documentation-only edits do not need a version increment. Leave test processes
 stopped and report checks/limitations. Follow the owner's instruction on merging.
+
+## Load benchmarks
+
+```sh
+make benchmark
+make benchmark BENCHMARK_ARGS='--seconds 60 --clients 50,100,200,300'
+make benchmark BENCHMARK_ARGS='--session-only --clients 50,100,200,300'
+```
+
+The Java fixture starts a fresh localhost server for each load, using copied JAR/default
+resources and disposable accounts/knights in `/tmp`. It raises `max-clients` only in
+that deployment. Town clients enter the same Haven instance, continuously drain the
+downstream stream, send movement input at 10 Hz and ping once per second. The default
+measurement is 20 seconds at each of 50, 100, 200 and 300 clients, after an eight-login
+concurrent ramp. `--session-only` subscribes to private rosters and pings without
+entering town, to separate connection overhead from scene replication.
+
+Reports include readiness/completion/failures, login p95, ping p50/p95/p99 and sample
+count, scene deltas per requested client per second, input count, downstream MiB,
+server CPU use in cores, peak sampled RSS and native thread count (Linux `/proc`).
+The server runs with a 512 MiB heap limit and 256 KiB native thread stacks. Reports,
+server logs and failure details remain at the printed temporary path; disposable
+accounts/private keys are deleted on normal completion. All fixture processes stop
+on exit. Client failures return a nonzero status after reporting every load; startup
+failures abort with the server log path. The login ramp has a ten-minute deadline.
+
+Run on an otherwise idle machine for comparisons. The load generator shares the
+machine, so these are local stress measurements, not a remote capacity guarantee.
+Login hashing keeps the server's normal 600,000 iterations; setup shares one
+synthetic verifier across disposable accounts and is excluded from measurement.
+The bounded benchmark reader checks frame/header/correlation and delta readiness;
+installed-reader tests separately validate complete actor payloads. It does not
+render graphics, simulate combat or measure inventory writes. Keep benchmark
+results out of Git; record a concise dated observation when it informs a change.
+
+Observed on 2026-10-09, Java 25, one local Haven instance, 20 seconds per load:
+
+| Clients completed | Ping p95 (ms) | Received deltas/client/s | Peak server RSS (MiB) | Peak native threads |
+| --- | ---: | ---: | ---: | ---: |
+| 50/50 | 6.70 | 26.40 | 392.41 | 180 |
+| 100/100 | 11.91 | 4.77 | 440.75 | 327 |
+| 200/200 | 131.22 | 0.98 | 741.62 | 629 |
+| 300/300 | 110.10 | 0.46 | 809.00 | 928 |
+
+There were no client failures and all expected pings returned. Received frame rates
+include scheduler catch-up bursts after login; a rate above 20 is not a steady
+simulation frequency. Town replication falls below its 20 Hz target at the larger
+loads, so successful connections do not establish smooth gameplay capacity. Profile
+scene ticks, per-player database polling and actor snapshot contention before raising
+normal deployment limits. The default stays 16 connections.
 
 ## Installed-client compatibility
 

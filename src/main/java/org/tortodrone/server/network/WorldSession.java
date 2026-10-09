@@ -269,11 +269,10 @@ final class WorldSession implements AutoCloseable {
             sender=chat;place=scene.oid();generation=sceneGeneration;
         }
         String text=(String)request.arguments().get(0);
-        if(text.stripLeading().matches("(?is)!(giveitem|items)(?:\\s.*)?")) {
+        if(text.stripLeading().startsWith("!")&&roles.gameMaster()) {
             try {
-                if(!roles.gameMaster())throw new IOException("Game Master permission required");
                 if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command.");
-                String result=org.tortodrone.server.ItemCommands.execute(SceneChat.validate(text).substring(1),characters.catalog(),
+                String result=org.tortodrone.server.ItemCommands.chat(SceneChat.validate(text).substring(1),characters.catalog(),
                     (user,name,config,count)->characters.grantItems(user,name,config,count,authRevision));
                 feedback(place,generation,result);
             }catch(IOException refused){feedback(place,generation,refused.getMessage());}

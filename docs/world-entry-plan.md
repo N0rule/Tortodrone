@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.15.0, schema 8
+## Checkpoint: 0.16.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -267,6 +267,38 @@ logging private material. All 9,348 shipped JSON entries exactly matched a fresh
 stock export; the exhaustive stock item/wire checks and 173 starter previews passed.
 The graphical picker checks above passed. All test clients and servers were stopped.
 
+## Clear login messages, private GM commands and load fixture (0.16.0)
+
+Unknown usernames return the stock `m.no_such_user` login error; existing accounts
+with an incorrect password retain `m.invalid_password`. Both use the identity
+snapshot already used for verification. Authentication hashing, account takeover,
+revocation, client installation identity and schema 8 are unchanged.
+
+For current normal accounts every `!` message is ordinary scene chat, including
+known staff commands, `!help`, unknown names and live GM revocation. Current GMs
+receive private help for `!help`, private errors for unknown `!` names and the
+existing item command results. Command/chat rate limits and transactional grant
+permission checks remain in place.
+
+`max-clients` is bounded/configurable (1–1024), retaining 16 by default. The Java
+`make benchmark` fixture exercises real normal logins, town readiness, 10 Hz
+movement input and 1 Hz ping at 50/100/200/300 clients, with temporary deployments,
+CSV latency/resource metrics, explicit failures and cleanup. It validates bounded
+downstream headers; stock fixtures remain the full payload oracle. It measures no
+combat, rendering or inventory-write workload. See [development](development.md).
+
+Acceptance: all 36 unit and four packaged integration checks passed on Java 25.
+The unchanged stock authentication reader accepted both rejection codes without
+client identity changes. Stock network checks passed normal/revoked `!` chat,
+private GM help/unknown errors, item grants and earlier account/world behavior.
+Two-client town and session-only smoke runs completed with no client failures.
+All four 20-second town loads completed (50/100/200/300) without client failures;
+ping p95 was 6.70/11.91/131.22/110.10 ms. Received town updates fell to
+4.77/0.98/0.46 per client per second at 100/200/300 clients, below the 20 Hz
+target. These are functional stress checks, not an acceptance of smooth gameplay
+at those loads. All fixture servers and clients were stopped; real data, keys and
+preferences were preserved.
+
 ## Current limits and later work
 
 Configured town maps/spawns; positions reset on entry. Reconnect to switch characters.
@@ -274,7 +306,7 @@ Static collision is sampled; no dynamic physics. Five starter items plus support
 equipment; no drops, trade, crafting, item-use actions or loadout switching. No combat, quests, shops, NPC
 dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
 News/social feeds are empty. Account/character/currency management remains local;
-in-game staff commands are broadcast, item search and item grants. Binding has no unbinding service.
+in-game staff commands are help, broadcast, item search and item grants. Binding has no unbinding service.
 
 After the requested foundations: server-owned position persistence, clean picker
 return, one verified portal round trip, weapon selection,
