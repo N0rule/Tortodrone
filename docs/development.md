@@ -32,12 +32,15 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 37 unit and four integration checks. It covers persistence,
+The current suite has 37 unit and five integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 The map preparation check uses a temporary source tree without game files or
 download caches, and verifies offline copying, corrupt-source rejection and
 preservation of edited deployment packs.
+The build-input check uses a local HTTP fixture to verify cache reuse without
+network access, retries, checksum rejection, stalled response-body deadlines and
+temporary-file cleanup.
 
 Add meaningful regression checks for behavior changes. Review `git diff` and
 `git diff --check`; update current docs and commit major completed milestones.
@@ -197,6 +200,11 @@ Sources/resources are discovered recursively. `VERSION` becomes bundled
 `version.txt`; both JARs use it. `build/.build/` is disposable packaging output,
 `build/deps/` caches verified inputs, and `build/data/` is real runtime state.
 `make clean` preserves the latter two.
+
+Missing dependencies print their source URL, attempts, progress and verification
+result. Each of up to three attempts has a 30-second complete-transfer deadline;
+failures identify the dependency and suggest rerunning after fixing connectivity.
+Existing verified dependencies are reused without network requests.
 
 Dependency pins/digests live in the Makefile and Java preparation tools; update
 their [notices](dependencies.md) when changing them. Scene geometry and collision

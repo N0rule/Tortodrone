@@ -71,6 +71,7 @@ test-unit: test-compile
 	done
 
 test-integration: test-compile
+	java scripts/BuildToolsTest.java
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ServerIntegrationTest $(SERVER_JAR)
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.AdminIntegrationTest $(SERVER_JAR) $(ADMIN_JAR)
 	java --enable-native-access=ALL-UNNAMED -cp $(SERVER_JAR):$(TEST_CLASSES) org.tortodrone.integration.ConsoleIntegrationTest $(SERVER_JAR)

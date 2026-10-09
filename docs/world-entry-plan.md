@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.17.0, schema 8
+## Checkpoint: 0.17.1, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -354,6 +354,20 @@ helm unequip/re-equip through the Java storage API updated the controlled portra
 and both scene models with Arsenal open. This sample covers saved-character entry;
 fresh creator entry and takeover/reconnect also pass the stock network fixtures.
 All test clients/servers stopped; real data, keys and preferences were untouched.
+
+## Build download diagnostics (0.17.1)
+
+Missing pinned SQLite/JLine build libraries now report source URLs, attempts,
+transfer progress and checksum verification. Each attempt has a 30-second deadline
+covering the response body, with at most three attempts. Stalled downloads cancel
+before HTTP-client shutdown; failures remove temporary files and explain how to
+retry. Verified dependency caches remain offline, and `make clean` preserves them.
+Library pins, default-map preparation, server behavior and schema 8 are unchanged.
+
+Acceptance: `make build test` passed 37 unit and five integration checks on Java
+25, including cache reuse without HTTP, HTTP retries, corrupt-cache/download
+refusal, stalled-body deadlines and temporary-file cleanup. Both JARs rebuilt;
+test servers stopped and real data/keys were preserved.
 
 ## Current limits and later work
 

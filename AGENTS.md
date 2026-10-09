@@ -21,8 +21,8 @@ server/admin runtime and persistent tools.
 - Preserve real accounts, characters, database and server keys. Tests use temporary
   deployments and disposable accounts/preferences. Never commit secrets, game
   assets, runtime data or build output.
-- Do not add persistent Python scripts. Use Java for persistent test tools;
-  one-off Python, if necessary, belongs in `/tmp`.
+- Persistent tools are Java only; no scripts (Python or otherwise) belong in
+  the repository. Run one-off throwaway work from `/tmp`.
 - Work autonomously in concrete, manageable milestones. Keep progress updates
   concise; ask only when an important decision needs the owner's input. Do not
   attempt all introductory missions at once or invent completion/reward flags.
@@ -32,6 +32,9 @@ server/admin runtime and persistent tools.
 - Commit every major completed change with a clear message. Increment `VERSION`
   for an appropriate behavior release, not documentation alone. Preserve unrelated
   changes. Merge/delete branches only when authorized; Git is authoritative.
+- Do not migrate existing server data (database, saved characters). Rapid
+  development has no real users, so an old database may be refused or discarded
+  rather than upgraded.
 
 ## Workflow
 

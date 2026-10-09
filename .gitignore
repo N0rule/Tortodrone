@@ -15,15 +15,11 @@
 .env.*
 
 # Build output and editors (JARs are not globally ignored)
-.gradle/
 build/
 .build/
-out/
-target/
 .idea/
 .vscode/
 *.class
-__pycache__/
 *~
 *.swp
 *.swo

@@ -1,12 +1,15 @@
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.*;
+import java.nio.ByteBuffer;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
 import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Properties;
+import java.util.List;
+import java.util.concurrent.*;
 
 /** Java 25 build inputs and offline preparation of the extensible defaults tree. */
 public final class BuildTools {
@@ -58,27 +61,76 @@ public final class BuildTools {
         if (!Files.exists(target)) Files.copy(source, target);
     }
     static void fetch(Path target, String url, String digest) throws Exception {
+        fetch(target, url, digest, Duration.ofSeconds(30));
+    }
+    static void fetch(Path target, String url, String digest, Duration timeout) throws Exception {
         if (Files.exists(target)) {
             verify(target, digest);
             Files.setLastModifiedTime(target, FileTime.fromMillis(System.currentTimeMillis()));
+            System.out.println("Using verified cached dependency: " + target);
             return;
         }
         Files.createDirectories(target.toAbsolutePath().getParent());
-        Path temporary = Files.createTempFile(target.toAbsolutePath().getParent(), target.getFileName() + ".download-", ".tmp");
-        try (var client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).followRedirects(HttpClient.Redirect.NORMAL).build()) {
-            var request = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(120)).GET().build();
+        System.out.println("Missing dependency: " + target + "; downloading from " + url);
+        try (var client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NORMAL).build()) {
+            var request = HttpRequest.newBuilder(URI.create(url)).timeout(timeout).GET().build();
             IOException failure = null;
-            for (int attempt = 0; attempt < 3; attempt++) {
-                try {
-                    var response = client.send(request, HttpResponse.BodyHandlers.ofFile(temporary, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING));
-                    if (response.statusCode() != 200) throw new IOException("Download failed: HTTP " + response.statusCode());
-                    verify(temporary, digest);
-                    Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE);
-                    return;
-                } catch (IOException e) { failure = e; }
+            try {
+                for (int attempt = 1; attempt <= 3; attempt++) {
+                    System.out.printf("Download attempt %d/3 (%.1f s deadline)%n", attempt, timeout.toMillis() / 1000.0);
+                    // Each attempt owns a separate file, including when a cancelled transfer unwinds.
+                    Path temporary = Files.createTempFile(target.toAbsolutePath().getParent(), target.getFileName() + ".download-", ".tmp");
+                    CompletableFuture<HttpResponse<Path>> download = null;
+                    try {
+                        download = client.sendAsync(request, info -> new DownloadBody(temporary,
+                            target.getFileName().toString(), info.headers().firstValueAsLong("Content-Length").orElse(-1)));
+                        var response = download.get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+                        if (response.statusCode() != 200) throw new IOException("HTTP " + response.statusCode());
+                        verify(temporary, digest);
+                        Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE);
+                        System.out.println("Downloaded and checksum verified: " + target);
+                        return;
+                    } catch (TimeoutException e) {
+                        failure = new IOException("Download timed out", e);
+                    } catch (ExecutionException e) {
+                        failure = new IOException("Download failed: " + e.getCause(), e.getCause());
+                    } catch (IOException e) { failure = e; }
+                    finally {
+                        if (download != null) download.cancel(true);
+                        Files.deleteIfExists(temporary);
+                    }
+                    System.out.println("Download attempt " + attempt + " failed: " + failure.getMessage());
+                }
+                throw new IOException("Could not download " + target + " after 3 attempts; check your connection and rerun make build", failure);
+            } finally {
+                // A body can stall after headers arrive. Cancel transfers before closing the client.
+                client.shutdownNow();
             }
-            throw failure;
-        } finally { Files.deleteIfExists(temporary); }
+        }
+    }
+    private static final class DownloadBody implements HttpResponse.BodySubscriber<Path> {
+        private final HttpResponse.BodySubscriber<Path> delegate;
+        private final String name;
+        private final long length;
+        private long received, lastReport = System.nanoTime();
+        DownloadBody(Path target, String name, long length) {
+            delegate = HttpResponse.BodySubscribers.ofFile(target, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
+            this.name = name; this.length = length;
+        }
+        public CompletionStage<Path> getBody() { return delegate.getBody(); }
+        public void onSubscribe(Flow.Subscription subscription) { delegate.onSubscribe(subscription); }
+        public void onNext(List<ByteBuffer> buffers) {
+            for (var buffer : buffers) received += buffer.remaining();
+            long now = System.nanoTime();
+            if (now - lastReport >= TimeUnit.SECONDS.toNanos(5)) {
+                System.out.printf("Downloading %s: %.1f MiB%s%n", name, received / 1048576.0,
+                    length > 0 ? " (" + received * 100 / length + "%)" : "");
+                lastReport = now;
+            }
+            delegate.onNext(buffers);
+        }
+        public void onError(Throwable error) { delegate.onError(error); }
+        public void onComplete() { delegate.onComplete(); }
     }
     private static void verify(Path file, String digest) throws Exception {
         var hash = MessageDigest.getInstance("SHA-256");

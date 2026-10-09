@@ -6,7 +6,7 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.17.0**, SQLite schema **8**: normal login; saved character creation,
+Version **0.17.1**, SQLite schema **8**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors with shared scene simulation; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
@@ -32,7 +32,9 @@ limits; [investigation](docs/town-entry-investigation.md) explains the fixes.
 
 Install Git, GNU Make, JDK 25. No Maven, Gradle, game
 installation or database service is required. The first build downloads pinned,
-checksum-verified libraries; later builds use `build/deps/`. Complete regular
+checksum-verified libraries; later builds use `build/deps/`. Downloads show progress
+and use up to three attempts with a 30-second deadline each. Keep `build/deps/`
+to avoid downloading again; `make clean` preserves it. Complete regular
 Town Square and Bazaar packs and JSON item definitions are checked in under
 `defaults/maps/` and `defaults/items/`. `make defaults` prepares all local default
 resources without downloads; `make maps` prepares only maps. See [maps](docs/maps.md).
