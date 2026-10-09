@@ -3,13 +3,12 @@ package org.tortodrone.server.network;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
 import org.tortodrone.character.*;
 import org.tortodrone.protocol.*;
+import org.tortodrone.storage.Database;
 import org.tortodrone.world.*;
 
-/** A selected character's server-controlled town state. Each world ID has one controller. */
+/** Selected character protocol/controller; authoritative entities live in their scene instance. */
 final class WorldSession implements AutoCloseable {
     private static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
     private static final SceneChat CHAT=new SceneChat();
@@ -27,18 +26,23 @@ final class WorldSession implements AutoCloseable {
     private final RoleSource roles;
     private boolean gameMaster;
     private SceneRegistry.Instance scene;
-    private TownMovement movement;
-    private Map<Integer, ActorState> lastSnapshot = Map.of();
+    private SceneSimulation.Membership membership;
+    private SceneSimulation.Snapshot lastSnapshot;
+    private final Object publications=new Object();
+    private record Publication(SceneRegistry.Instance scene,SceneSimulation.Snapshot snapshot) { }
+    private Publication pending;
+    private boolean deliveryStopped;
+    private Thread delivery;
+    private StarterCatalog.Model appearance;
     private Knight knight;
     private WorldProfile profile;
     private int acknowledge, created, reference, lastStamp, sceneGeneration;
     private short ping;
-    private long lastPoll;
+    private WorldStatePoller.Registration persistence;
     private boolean subscribed, entered, closed;
     private Short forcedReceiver;
     private Set<Integer> occupants = Set.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
-    private ScheduledExecutorService ticks;
 
     WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
             SessionCodec codec, int oid, long revision, SessionLog log) throws IOException {
@@ -61,7 +65,6 @@ final class WorldSession implements AutoCloseable {
         this.log = log;
         this.scenes = scenes;
         this.roles=roles;
-        lastPoll = monotonicTime();
     }
 
     synchronized boolean selected() { return knight != null; }
@@ -94,12 +97,11 @@ final class WorldSession implements AutoCloseable {
                 profile = loaded;
                 knight = choice;
                 scene = scenes.destination(scenes.catalog().entry().id(),loaded.worldId());
-                movement = new TownMovement(scene.map().collision(),scene.map().spawnX(),scene.map().spawnY());
                 ACTIVE.put(loaded.worldId(), this);
             }
         }
         created = SceneClock.now();
-        movement.resetInput(created);
+        attach();
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.gameMaster(oid,gameMaster));
         receiverChanged(receivers);
@@ -181,10 +183,8 @@ final class WorldSession implements AutoCloseable {
                 throw new IOException("Scene does not belong to that zone");
             if(next!=scene) {
                 leaveChat();
-                subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=Map.of();
-                reference=acknowledge=0;scene=next;created=SceneClock.now();
-                movement=new TownMovement(scene.map().collision(),scene.map().spawnX(),scene.map().spawnY());
-                movement.resetInput(created);
+                subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=null;
+                reference=acknowledge=0;membership.close();scene=next;created=SceneClock.now();attach();
             }
             output.send(() -> codec.sceneMove(oid, listener.requestId(), zone,scene,scenes.catalog()));
             output.send(() -> codec.sceneLocation(oid,scene));
@@ -209,6 +209,7 @@ final class WorldSession implements AutoCloseable {
             }
             var before=profile;
             profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
+            updateAppearance();
             output.send(() -> codec.itemChanges(oid, knight, before,profile));
             output.send(() -> codec.invocationConfirmed(oid, listener.requestId()));
         } catch (IOException failure) {
@@ -221,19 +222,19 @@ final class WorldSession implements AutoCloseable {
         if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
         SceneRegistry.Instance place;
         synchronized(this){place=scene;}
-        var snapshot = actors(place);
+        var snapshot = place.simulation().snapshot();
         synchronized (this) {
             if(scene!=place||closed)throw new IOException("Scene changed during subscription");
-            output.send(() -> codec.scene(message, scene, snapshot));
+            output.send(() -> codec.scene(message, scene, snapshot.actors()));
             leaveChat();
-            lastSnapshot = Map.of();
+            lastSnapshot = null;
             reference = acknowledge = 0;
-            occupants = snapshot.stream().map(ActorState::id).collect(Collectors.toUnmodifiableSet());
-            occupantRoles=roleSnapshot(snapshot);
+            occupants = snapshot.occupants();
+            occupantRoles=snapshot.roles();
             subscribed = true;
             entered = false;
             sceneGeneration++;
-            movement.resetInput(SceneClock.now());
+            membership.pause();
         }
     }
 
@@ -245,17 +246,12 @@ final class WorldSession implements AutoCloseable {
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
         lastStamp = SceneClock.now();
-        if (ticks == null) {
-            ticks = Executors.newSingleThreadScheduledExecutor(r -> {
-                var thread = new Thread(r, "Town-" + oid);
-                thread.setDaemon(true);
-                return thread;
-            });
-            ticks.scheduleAtFixedRate(this::tick, 50, 50, TimeUnit.MILLISECONDS);
-        }
+        membership.enter();
+        persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
+        if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
     }
 
-    synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++; }
+    synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
 
     void speak(SessionDecoder.Invocation request)throws IOException {
         SceneChat.Membership sender;
@@ -309,7 +305,10 @@ final class WorldSession implements AutoCloseable {
         if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)
             output.send(()->codec.chat(place,message));
     }
-    private void leaveChat(){if(chat!=null){chat.close();chat=null;}}
+    private void leaveChat(){
+        if(chat!=null){chat.close();chat=null;}
+        if(persistence!=null){persistence.close();persistence=null;}
+    }
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
         if (closed || socket.isClosed() || !subscribed || !entered || input.oid() != scene.oid()) {
@@ -321,112 +320,99 @@ final class WorldSession implements AutoCloseable {
         int sceneTime = SceneClock.now();
         ping = (short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime()));
         for (var frame : input.frames()) {
-            if (movement.accept(frame.timestamp(), frame.rotation(), frame.direction(),
+            if (membership.input(frame.timestamp(), frame.rotation(), frame.direction(),
                     frame.flags(), sceneTime, now)) acknowledge = frame.timestamp();
         }
     }
 
-    private void tick() {
+    /** One latest immutable publication, replacing obsolete frames before encoding. */
+    private void offer(SceneRegistry.Instance place,SceneSimulation.Snapshot snapshot) {
+        synchronized(publications){if(deliveryStopped)return;pending=new Publication(place,snapshot);publications.notifyAll();}
+    }
+    private void deliverPublications() {
         try {
-            int stamp, generation;
-            SceneRegistry.Instance place;
-            synchronized (this) {
-                if (closed || !subscribed || !entered) return;
-                stamp = SceneClock.now();
-                // Fixed-rate catch-up can run twice in the same millisecond. The stock reader
-                // discards repeated timestamps, so never reference such a discarded snapshot.
-                if (stamp - lastStamp <= 0) return;
-                generation = sceneGeneration;
-                place = scene;
-                long now = monotonicTime();
-                movement.advance(stamp, now);
-                if (now - lastPoll >= 250) {
-                    lastPoll = now;
-                    boolean role=roles.gameMaster();
-                    if(role!=gameMaster){gameMaster=role;output.send(()->codec.gameMaster(oid,gameMaster));}
-                    var fresh = characters.worldProfile(knight.name(), authRevision);
-                    if (fresh.revision() != profile.revision()) {
-                        var previous = profile;
-                        profile = fresh;
-                        if (fresh.crowns() != previous.crowns() || fresh.energy() != previous.energy()) {
-                            output.send(() -> codec.balances(oid, profile));
-                        }
-                        if (!fresh.items().equals(previous.items())) {
-                            output.send(() -> codec.itemChanges(oid, knight, previous,profile));
-                        }
-                    }
+            while(true) {
+                Publication publication;
+                synchronized(publications) {
+                    while(pending==null&&!deliveryStopped)publications.wait();
+                    if(deliveryStopped)return;
+                    publication=pending;pending=null;
                 }
+                publish(publication);
             }
-            // Never take another session's lock while holding this session or the ACTIVE lock.
-            List<ActorState> current = actors(place);
-            synchronized (this) {
-                if (closed || !subscribed || !entered || generation != sceneGeneration) return;
-                Map<Integer, ActorState> baseline = lastSnapshot;
-                List<ActorState> added = new ArrayList<>(), updated = new ArrayList<>();
-                var next = new HashSet<Integer>();
-                for (var actor : current) {
-                    next.add(actor.id());
-                    if (baseline.containsKey(actor.id())) updated.add(actor);
-                    else added.add(actor);
-                }
-                int[] removed = baseline.keySet().stream().filter(id -> !next.contains(id)).mapToInt(Integer::intValue).toArray();
-                var currentRoles=roleSnapshot(current);
-                var changedRoles=current.stream().filter(a->occupantRoles.containsKey(a.id())
-                    &&occupantRoles.get(a.id())!=a.gameMaster()).toList();
-                if(!changedRoles.isEmpty())output.send(()->codec.occupantRoles(scene.oid(),changedRoles));
-                if (!next.equals(occupants)) {
-                    output.send(() -> codec.occupants(scene.oid(),current));
-                    occupants = Set.copyOf(next);
-                }
-                occupantRoles=currentRoles;
-                Map<Integer, ActorState> referenceActors = baseline;
-                short elapsed = (short) Math.max(1, Math.min(Short.MAX_VALUE, stamp - lastStamp));
-                output.send(() -> codec.sceneDelta(oid, scene.oid(),acknowledge, ping, reference, stamp, elapsed,
-                    added, updated, removed, referenceActors));
-                lastStamp = stamp;
-                // Advance only after enqueue succeeds. SessionOutput closes on any failure,
-                // so a later delta cannot reference a snapshot that was never queued.
-                reference = stamp;
-                lastSnapshot = current.stream().collect(Collectors.toUnmodifiableMap(ActorState::id, a -> a));
-            }
-        } catch (IOException | CharacterStore.Refused | RuntimeException failure) {
-            log.debug("Town session closed; " + failure.getClass().getSimpleName());
-            close();
-            try { socket.close(); } catch (IOException ignored) { }
+        }catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+        catch(IOException|RuntimeException failure) {
+            log.debug("Town session closed; "+failure.getClass().getSimpleName());close();
+            try{socket.close();}catch(IOException ignored){}
         }
+    }
+    private synchronized void publish(Publication publication)throws IOException {
+        var current=publication.snapshot();int stamp=current.timestamp();
+        if(closed||!subscribed||!entered||scene!=publication.scene()||stamp-lastStamp<=0)return;
+        var delta=current.delta(lastSnapshot);
+        // Subscription already announces occupants; the first reliable delta has no baseline.
+        var changedRoles=lastSnapshot==null?current.actors().stream().filter(a->occupantRoles.containsKey(a.id())&&occupantRoles.get(a.id())!=a.gameMaster()).toList():delta.changedRoles();
+        if(!changedRoles.isEmpty())output.send(()->codec.occupantRoles(scene.oid(),changedRoles));
+        if(!current.occupants().equals(occupants)){output.send(()->codec.occupants(scene.oid(),current.actors()));occupants=current.occupants();}
+        occupantRoles=current.roles();
+        short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
+        output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
+            delta.added(),delta.updated(),delta.removed(),delta.baseline()));
+        lastStamp=reference=stamp;lastSnapshot=current;
+    }
+    /** Batch metadata is validated against this exact subscription before publication.
+     * Changed inventory loads without holding the session or simulation lock. */
+    void refreshState(WorldStatePoller.Registration registration,Database.WorldState state)throws IOException {
+        WorldProfile before;
+        synchronized(this) {
+            if(closed||!entered||persistence!=registration)return;
+            if(state==null||state.accountId()!=registration.accountId||state.knightId()!=registration.knightId
+                    ||state.authRevision()!=registration.authRevision||!state.name().equalsIgnoreCase(registration.name))
+                throw new IOException("Knight or account changed; reconnect");
+            before=profile;
+        }
+        WorldProfile fresh=state.revision()>before.revision()?loadProfile(before):before;
+        synchronized(this) {
+            if(closed||!entered||persistence!=registration)return;
+            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.gameMaster(oid,gameMaster));}
+            // An equip may commit while the read is in flight: never roll back its publication.
+            if(fresh.revision()>profile.revision()) {
+                var previous=profile;profile=fresh;
+                if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
+                if(!fresh.items().equals(previous.items())){updateAppearance();output.send(()->codec.itemChanges(oid,knight,previous,profile));}
+            }
+        }
+    }
+    private WorldProfile loadProfile(WorldProfile cached)throws IOException {
+        try{return characters.worldProfile(knight.name(),authRevision,cached);}
+        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+    }
+    synchronized void refreshFailed(WorldStatePoller.Registration registration,Exception failure) {
+        if(persistence!=registration||closed)return;
+        log.debug("Town session closed; "+failure.getClass().getSimpleName());close();
+        try{socket.close();}catch(IOException ignored){}
+    }
+    private void attach() {
+        rebuildAppearance();var place=scene;
+        membership=place.simulation().join(actorAppearance(),snapshot->offer(place,snapshot));
+    }
+    private void rebuildAppearance() {
+        var model=StarterCatalog.town(knight,profile,characters.catalog());
+        appearance=new StarterCatalog.Model("Character/PC/Default",Map.of("Model",model,"Height",model.arguments().get("Height")));
+    }
+    private void updateAppearance(){rebuildAppearance();membership.appearance(actorAppearance());}
+    private ActorState actorAppearance() {
+        return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
+            scene.map().spawnX(),scene.map().spawnY(),0,0,0,0,created,appearance,gameMaster);
     }
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
-    private static Map<Integer,Boolean> roleSnapshot(List<ActorState> actors) {
-        return actors.stream().collect(Collectors.toUnmodifiableMap(ActorState::id,ActorState::gameMaster));
-    }
-
-    private static List<ActorState> actors(SceneRegistry.Instance place) {
-        List<WorldSession> sessions;
-        synchronized (ACTIVE) { sessions = List.copyOf(ACTIVE.values()); }
-        List<ActorState> states = new ArrayList<>();
-        for (var session : sessions) {
-            var state = session.actor(place);
-            if (state != null) states.add(state);
-        }
-        return List.copyOf(states);
-    }
-
-    private synchronized ActorState actor(SceneRegistry.Instance place) {
-        if (closed || !selected() || scene!=place) return null;
-        var model = StarterCatalog.town(knight, profile,characters.catalog());
-        var config = new StarterCatalog.Model("Character/PC/Default",
-            Map.of("Model", model, "Height", model.arguments().get("Height")));
-        return new ActorState(profile.worldId(), oid, knight.name(), 256 | knight.color(), created,
-            movement.x(), movement.y(), movement.rotation(), movement.direction(), movement.flags(),
-            movement.activity(), movement.activityStarted(), config,gameMaster);
-    }
-
     @Override public synchronized void close() {
         leaveChat();
         closed = true;
         subscribed = false;
-        if (ticks != null) ticks.shutdownNow();
+        if(membership!=null)membership.close();
+        synchronized(publications){deliveryStopped=true;pending=null;publications.notifyAll();}
         if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
     }
 }

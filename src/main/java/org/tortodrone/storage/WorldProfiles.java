@@ -41,12 +41,19 @@ final class WorldProfiles {
 
     /** Creator edits replace chosen cosmetics, preserving IDs, heat and the rest of the kit. */
     static void appearance(Connection c,int accountId,Knight knight) throws SQLException {
-        try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=? AND starter=1")) {
+        boolean changed=false;
+        try (PreparedStatement s = c.prepareStatement("UPDATE inventory_items SET config=?,accessory=? WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?) AND slot=? AND starter=1 AND (config IS NOT ? OR accessory IS NOT ?)")) {
             for (Slot slot : List.of(Slot.HELM,Slot.ARMOR)) {
                 s.setString(1,slot==Slot.HELM ? knight.helm() : knight.armor());
                 s.setString(2,slot==Slot.HELM ? knight.helmAccessory() : knight.armorAccessory());
-                s.setInt(3,accountId); s.setInt(4,knight.id()); s.setString(5,slot.name()); s.executeUpdate();
+                s.setInt(3,accountId); s.setInt(4,knight.id()); s.setString(5,slot.name());
+                s.setString(6,slot==Slot.HELM?knight.helm():knight.armor());
+                s.setString(7,slot==Slot.HELM?knight.helmAccessory():knight.armorAccessory());
+                changed|=s.executeUpdate()>0;
             }
+        }
+        if(changed)try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE account_id=? AND knight_id=?")) {
+            s.setInt(1,accountId);s.setInt(2,knight.id());s.executeUpdate();
         }
     }
 
@@ -69,11 +76,17 @@ final class WorldProfiles {
     }
 
     static WorldProfile load(Connection c,int accountId,int knightId,long authRevision) throws SQLException, IOException {
+        return load(c,accountId,knightId,authRevision,null);
+    }
+    static WorldProfile load(Connection c,int accountId,int knightId,long authRevision,WorldProfile cached) throws SQLException, IOException {
         int worldId, crowns, energy; long revision;
         try (PreparedStatement s = c.prepareStatement("SELECT w.world_id,w.crowns,w.energy,w.state_revision FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.account_id=? AND w.knight_id=?" + (authRevision>=0 ? " AND a.auth_revision=?" : ""))) {
             s.setInt(1,accountId); s.setInt(2,knightId); if (authRevision>=0) s.setLong(3,authRevision);
             try (ResultSet r = s.executeQuery()) { if (!r.next()) throw new IOException("No such knight or account changed; reconnect"); worldId=r.getInt(1); crowns=r.getInt(2); energy=r.getInt(3); revision=r.getLong(4); }
         }
+        // All supported inventory/balance writes increment state_revision in their transaction.
+        // Still validate current ownership/authentication before reusing immutable inventory.
+        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision)return cached;
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {

@@ -32,7 +32,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 36 unit and four integration checks. It covers persistence,
+The current suite has 37 unit and four integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 The map preparation check uses a temporary source tree without game files or
@@ -50,19 +50,23 @@ stopped and report checks/limitations. Follow the owner's instruction on merging
 make benchmark
 make benchmark BENCHMARK_ARGS='--seconds 60 --clients 50,100,200,300'
 make benchmark BENCHMARK_ARGS='--session-only --clients 50,100,200,300'
+make benchmark BENCHMARK_ARGS='--instances 4 --clients 50,100,200,300'
 ```
 
 The Java fixture starts a fresh localhost server for each load, using copied JAR/default
 resources and disposable accounts/knights in `/tmp`. It raises `max-clients` only in
-that deployment. Town clients enter the same Haven instance, continuously drain the
+that deployment. Town clients enter one Haven instance by default, continuously drain the
 downstream stream, send movement input at 10 Hz and ping once per second. The default
 measurement is 20 seconds at each of 50, 100, 200 and 300 clients, after an eight-login
 concurrent ramp. `--session-only` subscribes to private rosters and pings without
-entering town, to separate connection overhead from scene replication.
+entering town, to separate connection overhead from scene replication. `--instances`
+(1–16, default 1) changes only the disposable Haven manifest. Normal server assignment
+spreads world IDs across those instances; clients address and validate their assigned
+scene object. This reuses the same login, workload, metrics and cleanup fixture.
 
 Reports include readiness/completion/failures, login p95, ping p50/p95/p99 and sample
 count, scene deltas per requested client per second, input count, downstream MiB,
-server CPU use in cores, peak sampled RSS and native thread count (Linux `/proc`).
+server CPU use in cores, peak sampled RSS and native thread count (Linux `/proc`), plus instance count.
 The server runs with a 512 MiB heap limit and 256 KiB native thread stacks. Reports,
 server logs and failure details remain at the printed temporary path; disposable
 accounts/private keys are deleted on normal completion. All fixture processes stop
@@ -93,6 +97,27 @@ simulation frequency. Town replication falls below its 20 Hz target at the large
 loads, so successful connections do not establish smooth gameplay capacity. Profile
 scene ticks, per-player database polling and actor snapshot contention before raising
 normal deployment limits. The default stays 16 connections.
+
+After shared simulation (0.17.0), same Java 25/20-second local town workload:
+
+| Clients completed | Instances | Ping p95 (ms) | Deltas/client/s | CPU cores | Peak RSS (MiB) | Peak native threads |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 50/50 | 1 | 2.99 | 19.75 | 0.75 | 331.70 | 139 |
+| 100/100 | 1 | 5.70 | 19.70 | 1.20 | 373.20 | 238 |
+| 200/200 | 1 | 6.21 | 19.45 | 2.74 | 397.64 | 438 |
+| 300/300 | 1 | 21.37 | 18.45 | 4.70 | 411.08 | 638 |
+| 300/300 | 4 | 5.73 | 19.71 | 2.59 | 410.18 | 641 |
+
+All expected pings returned and no clients failed. At 300 in one instance, received
+updates improved about 40×, peak RSS roughly halved, and native threads fell by 290.
+Simulation/snapshot work now runs once per instance and metadata polling once per
+deployment. Connection-specific all-actor encoding remains quadratic in a crowd:
+the 300-client run sent 1,212.71 MiB over 20 seconds, versus 30.97 MiB when the old
+loop produced far fewer updates. Four existing instances (75 players each) lowered
+traffic to 328.49 MiB, about 73% less, while returning close to the 20 Hz target.
+These header/latency checks complement stock
+payload and graphical checks; they are not a remote capacity or combat guarantee.
+
 
 ## Installed-client compatibility
 

@@ -21,13 +21,13 @@ All packages are under `src/main/java/org/tortodrone/`.
 | --- | --- |
 | `server` | `Server`: lifecycle; `ServerConsole`/`ConsoleInput`: commands; `ServerLog`: output |
 | `server.security` | `HandshakeKeys`: persistent RSA identity |
-| `server.network` | `SecureHandshake`: login; `ClientSession`: routing/subscriptions; `SessionOutput`: ordered writer; `WorldSession`: selected knight/scene ticks |
+| `server.network` | `SecureHandshake`: login; `ClientSession`: routing/subscriptions; `SessionOutput`: ordered writer; `WorldSession`: selected knight, owned scene membership and client publication; `WorldStatePoller`: shared revision/role checks |
 | `protocol` | `HandshakeCodec`, `SessionCodec`, `SessionDecoder`: bounded explicit wire schemas |
 | `account` | `AccountStore`, `Passwords`: identity, roles, authentication/revocation |
 | `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `ItemCatalog`, `Currency`: world state/catalog |
 | `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state |
 | `resources` | `DefaultResources`: optional defaults recovery; `Json`: bounded JSON metadata reader/writer |
-| `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
+| `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `SceneSimulation`: shared instance ticks/entities/snapshots; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
 | `admin`, `config` | `AdminApplication`/`AdminWindow`: local tools; `ServerSettings`: settings |
 
 ## Runtime and storage
@@ -153,9 +153,31 @@ a distinct scene object ID. Scene travel resets membership/input/baselines and
 uses the original zone callback with each summary's neighbor arrays. Scene
 subscriptions publish occupants and service handles; updates start only after
 `enteredPlace`, when the stock controller has attached its delta listener.
-`WorldSession` ticks at 20 Hz with elapsed scene time, bounded future input and
-sampled collision. Client input supplies movement/facing, never authoritative
+Each registry instance owns one `SceneSimulation`: its selected player entities,
+movement queues, cached appearances, readiness, collision integration and simulation
+clock. Instances share immutable map/collision templates, with separate mutable
+entities and timers. One 50 ms fixed-delay timer per active instance advances all
+entered entities before capturing one immutable snapshot; missed ticks integrate
+actual elapsed scene time without fixed-rate catch-up bursts. No global player scan
+or other session lock is required. Client input supplies movement/facing, never
 coordinates. A verified nonzero movement limit permits stock prediction.
+
+Each entered session has one latest-publication mailbox and a virtual delivery
+worker. Offering a snapshot does no encoding, socket I/O or database work. A busy
+recipient replaces obsolete pending publications, then computes its delta against
+its own last successfully queued snapshot. Recipients on the common predecessor
+share the actor index, occupant/role sets and delta partition; skipped frames use
+an explicit fallback diff. Shared snapshots retain at most one predecessor actor
+map, not a chain of frames. Class/config mappings, input acknowledgements, ping,
+reliable references and elapsed fields remain connection-specific. Existing bounded
+`SessionOutput` writers and slow-peer closure remain the transport boundary.
+
+The locked advance-before-capture stage is the ownership boundary for future
+entity AI, combat, dynamic collision and Clockworks dungeon rules: run them once per instance,
+then publish the resulting state through the same observation boundary. Current
+entities are knights and current templates are towns. Monster schemas, dungeon
+creation/party assignment and combat still require their own verified milestones;
+no invented NPC packets, mission flags or rewards are introduced.
 
 TCP deltas use the preceding successfully queued snapshot, independent of input
 acknowledgements. Preserve unchanged model configs; replace them only for real
@@ -163,11 +185,27 @@ gear changes. Every delta supplies activity/start time because the stock predict
 can mutate its first snapshot. Inventory activity 3 closes through activity 4
 for 889 ms, blocking movement/facing before returning to idle. Combat flags are ignored.
 
-Re-entry resets input/baseline; scene generations prevent old ticks crossing a
-subscription. Skip duplicate timestamps. Publish occupant metadata before new actors.
-Poll profile revisions every 250 ms for local currency changes. Equip/currency
-writes are atomic and ownership checked. Disconnect releases controller/subscriptions
-and stops its tick executor. Positions remain transient in this checkpoint.
+Re-entry pauses/resets scene-owned input and the recipient baseline; scene identity,
+readiness and increasing timestamp checks reject stale publications after travel
+or resubscription. Chat retains its generation checks. Publish occupant metadata
+before new actors. Scene membership detaches on travel/disconnect; idempotent late
+cleanup cannot remove a replacement. The last entered member leaving stops the
+instance timer; idle selected members remain visible without advancing. Re-entry
+restarts the timer. Positions remain transient.
+
+One `WorldStatePoller` checks revisions/roles every 250 ms with one metadata query
+per deployment, outside simulation/session locks. It loads inventories only for
+changed revisions, then validates the exact subscription before applying results.
+A concurrent equip's newer revision cannot be rolled back by an older read.
+Ownership/authentication is checked again when loading inventory; unchanged
+revisions reuse immutable inventory rather than loading every item.
+Every supported balance/inventory write increments state revision atomically.
+Appearance is composed on selection/travel and inventory changes, retained by
+ordinary movement/role updates. Equipment/balance observer events keep their order
+and transactional authorization checks. The poller releases its thread when the
+last ready subscription leaves. Existing account revocation and immediate command permission checks are retained, as are
+connection settings. Bulk inventory changes can extend a polling cycle; load
+benchmarks deliberately do not measure inventory writes.
 
 Scene snapshots advertise Crowd SpeakMarshaller at scene-local service 12. Method
 1 takes String/Byte; MessageEvent `crowd.chat` carries UserMessage with null bundle

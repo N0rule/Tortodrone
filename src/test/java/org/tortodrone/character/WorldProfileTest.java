@@ -20,6 +20,12 @@ public final class WorldProfileTest {
             CharacterStore alice = new CharacterStore(db,1,"Alice"), bob = new CharacterStore(db,2,"Bob");
             alice.create(choices("Alice-Knight")); bob.create(choices("Bob-Knight"));
             var a=db.worldProfile(1,1,1); var b=db.worldProfile(2,1,1);
+            var metadata=db.worldStates();
+            check(metadata.size()==2&&metadata.get(a.worldId()).accountId()==1&&metadata.get(a.worldId()).knightId()==a.knightId()
+                &&metadata.get(a.worldId()).authRevision()==1&&!metadata.get(a.worldId()).gameMaster(),"one metadata snapshot preserves world ownership/authentication/roles");
+            check(db.worldProfile(1,1,1,a)==a,"unchanged revision shares immutable inventory after ownership check");
+            check(db.worldProfile(2,1,1,a).equals(b),"cached profile cannot cross account ownership");
+            refused(()->db.worldProfile(1,1,999,a));
             check(a.worldId()!=b.worldId() && a.knightId()==b.knightId(),"colliding roster IDs receive distinct global identities");
             check(a.items().size()==5 && b.items().size()==5,"exactly one starter kit per new knight");
             Set<Long> itemIds=new HashSet<>(); for(var item:a.items())check(itemIds.add(item.id()),"unique item ID"); for(var item:b.items())check(itemIds.add(item.id()),"globally unique item ID");
@@ -28,7 +34,9 @@ public final class WorldProfileTest {
             refused(() -> new Database(home,false).worldProfile(1,1,999));
             alice = new CharacterStore(db,1,"Alice");
             var edited=new Knight(0,"Renamed-Knight","Gear/Helm/Spiral Round Helm (Red)","Gear/Armor/Spiral Flak Jacket (Red)","Helm/Top/Headband/Headband","Helm/Back/Plume/Plume","Red",7,4,29,0);
-            alice.update("Alice-Knight",edited,1); var updated=alice.worldProfile("renamed-knight",1);
+            alice.update("Alice-Knight",edited,1); var updated=alice.worldProfile("renamed-knight",1,a);
+            check(metadata.get(a.worldId()).revision()==a.revision()&&db.worldStates().get(a.worldId()).revision()==updated.revision(),"batch metadata snapshots remain immutable and observe later revisions");
+            check(updated!=a&&updated.revision()>a.revision(),"revision change reloads inventory");
             check(updated.worldId()==a.worldId() && updated.items().stream().map(WorldProfile.Item::id).toList().equals(a.items().stream().map(WorldProfile.Item::id).toList()),"edits preserve global character/item identity");
             check(updated.items().get(0).config().equals(edited.helm()) && updated.items().get(0).accessory().equals(edited.helmAccessory()),"edited creator appearance updates starter gear");
             // A starter insert failure must not consume identity counters or publish a knight.
@@ -45,12 +53,14 @@ public final class WorldProfileTest {
             refused(() -> current.create(choices("Exhausted-Knight"),1));
             check(alice.roster().size()==2 && db.roster(1).size()==2,"exhaustion cannot publish a character without identity");
             db.write(c -> {try(var s=c.prepareStatement("UPDATE metadata SET value=? WHERE key='next-world-id'")){s.setLong(1,exhaustedCounter);s.executeUpdate();}return null;});
-            alice.delete("Renamed-Knight",1); refused(() -> active.worldProfile(1,1,1));
+            alice.delete("Renamed-Knight",1); refused(() -> active.worldProfile(1,1,1,a));
             check(count(db,"inventory_items")==10,"knight deletion cascades only its own inventory");
             alice.create(choices("Next-Knight"),1); check(alice.worldProfile("Next-Knight",1).worldId()>retryProfile.worldId(),"deleted world IDs never recycled");
             check(db.worldProfile(2,1,1).equals(b),"another account's identity and items are unchanged");
             try(AccountStore accounts=new AccountStore(home)) {
-                accounts.setPassword("Alice","new-password".toCharArray()); refused(() -> active.worldProfile(1,retry.id(),1));
+                accounts.setPassword("Alice","new-password".toCharArray());
+                check(db.worldStates().get(retryProfile.worldId()).authRevision()>1,"batch metadata detects stale authentication");
+                refused(() -> active.worldProfile(1,retry.id(),1));
                 accounts.delete("Alice");
             }
             check(count(db,"inventory_items")==5 && count(db,"world_characters")==1,"account deletion cascades only owned profiles/items");

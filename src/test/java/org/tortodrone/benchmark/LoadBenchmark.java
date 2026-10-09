@@ -24,7 +24,7 @@ import org.tortodrone.world.SceneRegistry;
 public final class LoadBenchmark {
     private static final String PASSWORD="benchmark-password";
     private static final String DELTA="com.threerings.tudey.dobj.SceneDeltaEvent";
-    private static final int SCENE=10;
+    private static final int FIRST_SCENE=10;
     private static final Set<Socket> SOCKETS=ConcurrentHashMap.newKeySet();
     private static volatile Process server;
     private static final class Metrics {
@@ -35,19 +35,24 @@ public final class LoadBenchmark {
         volatile long start,end;
     }
     public static void main(String[] args)throws Exception {
-        int seconds=20;int[] sizes={50,100,200,300};boolean town=true;
+        int seconds=20,instances=1;int[] sizes={50,100,200,300};boolean town=true;
         for(int i=0;i<args.length;i++)switch(args[i]) {
             case "--seconds" -> seconds=Integer.parseInt(args[++i]);
             case "--clients" -> sizes=Arrays.stream(args[++i].split(",")).mapToInt(Integer::parseInt).toArray();
             case "--session-only" -> town=false;
-            default -> throw new IllegalArgumentException("Usage: make benchmark BENCHMARK_ARGS='[--seconds 20] [--clients 50,100,200,300] [--session-only]'");
+            case "--instances" -> instances=Integer.parseInt(args[++i]);
+            default -> throw new IllegalArgumentException("Usage: make benchmark BENCHMARK_ARGS='[--seconds 20] [--clients 50,100,200,300] [--session-only] [--instances 1]'");
         }
+        if(instances<1||instances>16)throw new IllegalArgumentException("instances: 1–16");
         if(seconds<1||seconds>300||sizes.length==0||Arrays.stream(sizes).anyMatch(n->n<1||n>1000))throw new IllegalArgumentException("seconds: 1–300; clients: 1–1000");
         Path home=Files.createTempDirectory("tortodrone-load-");
         System.out.println("Isolated benchmark: "+home+"; workload="+(town?"town movement":"authenticated sessions")+"; seconds="+seconds);
         Thread hook=new Thread(LoadBenchmark::stop,"BenchmarkCleanup");Runtime.getRuntime().addShutdownHook(hook);
         try {
             TestDeployment.copyServer(Path.of("build/tortodrone.jar"),home.resolve("tortodrone.jar"));
+            Path manifest=home.resolve("defaults/maps/haven/map.properties");
+            var settings=new Properties();try(var in=Files.newInputStream(manifest)){settings.load(in);}
+            settings.setProperty("instances",Integer.toString(instances));try(var out=Files.newOutputStream(manifest)){settings.store(out,"isolated benchmark");}
             Path data=home.resolve("data");
             int maximum=Arrays.stream(sizes).max().orElseThrow();
             try(var accounts=new AccountStore(data)) {
@@ -62,8 +67,8 @@ public final class LoadBenchmark {
                 }
             }
             Path report=home.resolve("results.csv");
-            Files.writeString(report,"clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads\n");
-            boolean passed=true;for(int count:sizes)passed&=run(home,count,seconds,town,report);
+            Files.writeString(report,"clients,workload,seconds,ready,completed,failed,login_p95_ms,ping_p50_ms,ping_p95_ms,ping_p99_ms,ping_samples,deltas_per_client_s,input_frames,downstream_mib,server_cpu_cores,server_peak_rss_mib,server_peak_threads,instances\n");
+            boolean passed=true;for(int count:sizes)passed&=run(home,count,seconds,town,instances,report);
             System.out.println("Results: "+report);
             if(!passed)throw new IOException("Benchmark recorded failures; see reports above");
         }finally {
@@ -72,7 +77,7 @@ public final class LoadBenchmark {
             Path data=home.resolve("data");if(Files.exists(data))try(var paths=Files.walk(data)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}
         }
     }
-    private static boolean run(Path home,int count,int seconds,boolean town,Path report)throws Exception {
+    private static boolean run(Path home,int count,int seconds,boolean town,int instances,Path report)throws Exception {
         Files.writeString(home.resolve("data/server.properties"),"server-ip=127.0.0.1\nserver-port=0\nlog-mode=normal\nmax-clients="+count+"\n");
         Path log=home.resolve("server-"+count+".log");
         server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString())
@@ -90,7 +95,7 @@ public final class LoadBenchmark {
         var tasks=new ArrayList<Future<?>>();final int endpoint=port;
         System.out.println("Starting "+count+" clients...");
         try(var workers=Executors.newVirtualThreadPerTaskExecutor()) {
-            for(int i=0;i<count;i++){final int id=i;tasks.add(workers.submit(()->client(endpoint,publicKey,id,town,ramp,settled,begin,metrics)));}
+            for(int i=0;i<count;i++){final int id=i;tasks.add(workers.submit(()->client(endpoint,publicKey,id,town,instances,ramp,settled,begin,metrics)));}
             if(!settled.await(600,TimeUnit.SECONDS))metrics.failures.add("Ramp timeout");
             long cpu=cpuNanos();metrics.start=System.nanoTime();metrics.end=metrics.start+TimeUnit.SECONDS.toNanos(seconds);begin.countDown();
             long rss=0,threads=0;
@@ -99,8 +104,8 @@ public final class LoadBenchmark {
             }
             double cores=Math.max(0,cpuNanos()-cpu)/(double)TimeUnit.SECONDS.toNanos(seconds);
             for(var task:tasks)try{task.get(15,TimeUnit.SECONDS);}catch(Exception failure){metrics.failures.add(failure.getClass().getSimpleName());task.cancel(true);}
-            String row=String.format(Locale.ROOT,"%d,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f,%.2f,%d%n",
-                count,town?"town":"session",seconds,metrics.ready.get(),metrics.completed.get(),metrics.failures.size(),percentile(metrics.login,.95),percentile(metrics.ping,.5),percentile(metrics.ping,.95),percentile(metrics.ping,.99),metrics.ping.size(),metrics.deltas.sum()/(double)(count*seconds),metrics.inputs.sum(),metrics.bytes.sum()/1048576d,cores,rss/1024d,threads);
+            String row=String.format(Locale.ROOT,"%d,%s,%d,%d,%d,%d,%.2f,%.2f,%.2f,%.2f,%d,%.2f,%d,%.2f,%.2f,%.2f,%d,%d%n",
+                count,town?"town":"session",seconds,metrics.ready.get(),metrics.completed.get(),metrics.failures.size(),percentile(metrics.login,.95),percentile(metrics.ping,.5),percentile(metrics.ping,.95),percentile(metrics.ping,.99),metrics.ping.size(),metrics.deltas.sum()/(double)(count*seconds),metrics.inputs.sum(),metrics.bytes.sum()/1048576d,cores,rss/1024d,threads,instances);
             Files.writeString(report,row,StandardOpenOption.APPEND);System.out.print(row);
             if(!metrics.failures.isEmpty()) {
                 Files.write(home.resolve("failures-"+count+".txt"),metrics.failures);
@@ -109,7 +114,7 @@ public final class LoadBenchmark {
             return metrics.failures.isEmpty()&&metrics.completed.get()==count;
         }finally{stop();}
     }
-    private static void client(int port,PublicKey key,int id,boolean town,Semaphore ramp,CountDownLatch settled,CountDownLatch begin,Metrics metrics) {
+    private static void client(int port,PublicKey key,int id,boolean town,int instances,Semaphore ramp,CountDownLatch settled,CountDownLatch begin,Metrics metrics) {
         boolean[] released={false};
         try {
             ramp.acquire();
@@ -119,7 +124,7 @@ public final class LoadBenchmark {
                 TestClient.authenticate(peer,key,"Bench"+id,PASSWORD,"success",20000,(socket,wire,oid)->{
                     metrics.login.add((System.nanoTime()-login)/1_000_000d);
                     var writer=new TestWire.Writer(TestWire.NET+"SecureRequest",TestWire.NET+"PublicKeyCredentials","[Ljava.lang.String;",TestWire.NET+"AESAuthRequest");
-                    var reader=new Headers();
+                    var reader=new Headers(FIRST_SCENE+Math.floorMod(id+1,instances));
                     if(town)enter(socket,writer,reader,oid,id);else {
                         writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",30);out.writeInt(oid);});
                         wire.snapshot(wire.frame(socket.getInputStream()),(short)30,oid);
@@ -159,7 +164,7 @@ public final class LoadBenchmark {
                             }
                             if(town&&now>=nextInput) {
                                 int stamp=reader.timestamp.get();float heading=((now-metrics.start)/TimeUnit.SECONDS.toNanos(2))%2==0?0:(float)Math.PI;
-                                writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",31000);writer.type(out,"com.threerings.tudey.data.InputEnqueueEvent");out.writeInt(SCENE);out.writeInt(stamp);out.writeInt(stamp);writer.type(out,"[Lcom.threerings.tudey.data.InputFrame;");out.writeInt(1);writer.type(out,"com.threerings.tudey.data.InputFrame");out.writeInt(stamp+50);out.writeFloat(heading);out.writeFloat(heading);out.writeInt(1);});
+                                writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",31000);writer.type(out,"com.threerings.tudey.data.InputEnqueueEvent");out.writeInt(reader.scene);out.writeInt(stamp);out.writeInt(stamp);writer.type(out,"[Lcom.threerings.tudey.data.InputFrame;");out.writeInt(1);writer.type(out,"com.threerings.tudey.data.InputFrame");out.writeInt(stamp+50);out.writeFloat(heading);out.writeFloat(heading);out.writeInt(1);});
                                 metrics.inputs.increment();nextInput=now+TimeUnit.MILLISECONDS.toNanos(100);
                             }
                             Thread.sleep(10);
@@ -190,9 +195,9 @@ public final class LoadBenchmark {
             }
             if(i==9)throw new IOException("No selection confirmation");
         }
-        writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",23);out.writeInt(SCENE);});
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",23);out.writeInt(reader.scene);});
         var response=frame(socket);if(!(TestWire.NET+"ObjectResponse").equals(reader.type(response))||response.readShort()!=23)throw new IOException("Missing scene subscription");
-        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(SCENE);out.writeInt(10);out.writeByte(1);out.writeBoolean(false);});
+        writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(reader.scene);out.writeInt(10);out.writeByte(1);out.writeBoolean(false);});
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
         while(System.nanoTime()<deadline) {
             var in=frame(socket);if((TestWire.NET+"EventNotification").equals(reader.type(in))){in.readShort();if(DELTA.equals(reader.type(in))){reader.delta(in);reader.wasDelta=false;return;}}
@@ -207,9 +212,11 @@ public final class LoadBenchmark {
         byte[] body=new byte[size-4];in.readFully(body);return body;
     }
     private static final class Headers {
+        final int scene;
+        Headers(int scene){this.scene=scene;}
         final Map<Integer,String> types=new HashMap<>();final AtomicInteger timestamp=new AtomicInteger();boolean wasDelta;
         String type(DataInputStream in)throws IOException {int code=in.readShort();if(code<0){String name=in.readUTF();types.put(-code,name);return name;}return types.get(code);}
-        void delta(DataInputStream in)throws IOException {in.readInt();if(in.readInt()!=SCENE)throw new IOException("Wrong delta scene");in.readInt();in.readShort();in.readInt();timestamp.set(in.readInt());wasDelta=true;}
+        void delta(DataInputStream in)throws IOException {in.readInt();if(in.readInt()!=scene)throw new IOException("Wrong delta scene");in.readInt();in.readShort();in.readInt();timestamp.set(in.readInt());wasDelta=true;}
     }
     private static String name(int id){return "Load-"+(char)('A'+id/676)+(char)('A'+id/26%26)+(char)('A'+id%26);}
     private static double percentile(Queue<Double> values,double quantile){if(values.isEmpty())return Double.NaN;var sorted=values.stream().mapToDouble(Double::doubleValue).sorted().toArray();return sorted[(int)Math.ceil(sorted.length*quantile)-1];}

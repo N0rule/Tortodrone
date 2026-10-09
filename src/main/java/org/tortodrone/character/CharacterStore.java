@@ -1,6 +1,7 @@
 package org.tortodrone.character;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.storage.Database;
@@ -75,6 +76,8 @@ public final class CharacterStore {
     public synchronized int nextId() { return nextId; }
 
     public boolean hasWorldStorage(){return database!=null;}
+    public Path worldStorageFile(){return database.file();}
+    public Map<Integer,Database.WorldState> worldStates()throws IOException{return database.worldStates();}
 
     public String username() { return username; }
     public int accountId() { return accountId; }
@@ -177,11 +180,15 @@ public final class CharacterStore {
 
     /** Resolves only an owned character. The network layer publishes selection separately. */
     public synchronized WorldProfile worldProfile(String name,long authRevision) throws IOException, Refused {
+        return worldProfile(name,authRevision,null);
+    }
+    /** Reuse unchanged inventory after a current ownership/authenticated revision check. */
+    public synchronized WorldProfile worldProfile(String name,long authRevision,WorldProfile cached) throws IOException, Refused {
         refresh();
         int index = indexOf(name);
         if (index < 0) throw new Refused("No such knight");
         if (database == null) throw new IOException("World profiles require SQLite storage");
-        return database.worldProfile(accountId,knights.get(index).id(),authRevision);
+        return database.worldProfile(accountId,knights.get(index).id(),authRevision,cached);
     }
 
     public synchronized WorldProfile equip(int knightId,long revision,long itemId,Integer slot)throws IOException {

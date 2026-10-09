@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.16.0, schema 8
+## Checkpoint: 0.17.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -44,9 +44,9 @@ them on live revocation. Its own nameplate follows the stock client's visibility
 
 The 0.7.1 movement fixes (`32629e2`) retain TCP actor/model baselines and synchronize
 inventory activity timing. Fresh creation, stop/start/reverse, facing, inventory
-closing and reconnect passed isolated graphical checks. Graphical two-window
-animation remains unchecked; single-window item grant/equip and live unequip
-acceptance is recorded below. Repeat relevant checks when changing scene/movement behavior. See
+closing and reconnect passed isolated graphical checks. Those checks used one
+window; shared simulation's two-view acceptance is recorded below. Single-window
+item grant/equip and live unequip acceptance is recorded below. Repeat relevant checks when changing scene/movement behavior. See
 [entry evidence and desktop limitations](town-entry-investigation.md).
 Accepted samples do not rule out recurrence of the previously intermittent
 fresh-creation animation/stutter symptom; keep its graphical regression checklist.
@@ -298,6 +298,62 @@ ping p95 was 6.70/11.91/131.22/110.10 ms. Received town updates fell to
 target. These are functional stress checks, not an acceptance of smooth gameplay
 at those loads. All fixture servers and clients were stopped; real data, keys and
 preferences were preserved.
+
+## Shared scene simulation (0.17.0)
+
+Each `SceneRegistry.Instance` now owns one `SceneSimulation`: selected entities,
+ready memberships, authoritative input queues, movement/collision and a shared
+50 ms simulation tick. All entered entities advance before one immutable snapshot
+and common actor/occupant/role diff are built. Appearance is cached across ordinary
+movement. The global controller guard remains for ownership, with no global actor
+scan or per-player simulation timer.
+
+Per-connection virtual delivery workers consume one latest-publication mailbox;
+coalesced frames still reference that recipient's last successfully queued TCP
+snapshot. The stock schema, class mappings, acknowledgement/ping fields, activity
+repair fields, item observer ordering and bounded output writer remain intact.
+Travel, pause/re-entry, disconnect, replacement ownership and idle timer shutdown
+are covered by regressions. A stale persistent poll cannot close a new subscription.
+
+One metadata poll per deployment checks world/account revisions and roles every
+250 ms outside session/simulation locks. Full inventory loads occur on change;
+creator cosmetic writes now bump the same state revision. An older asynchronous
+read cannot overwrite a newer equipment publication. Existing account revocation,
+transactional command permissions and `max-clients` settings are retained.
+
+The central advance-before-capture stage is the boundary for later monsters,
+combat, dynamic collision and Clockworks instance rules. Town entities and validated
+town templates remain the supported gameplay. Party/dungeon generation, NPC wire
+schemas and combat belong to later verified milestones. Physics/snapshot work is
+linear in each instance's entities; stock all-actor encoding remains per observer.
+
+Java 25 regression acceptance: 37 unit and four packaged integration checks pass,
+including shared immutable publications/common diffs, cached appearance, centralized
+movement, entry gates, pause/re-entry, instance isolation, idle shutdown, safe late
+cleanup, metadata ownership/authentication and creator revision changes. The stale
+subscription callback regression also passes. All 52 unchanged installed-stock
+reader/network checks pass, including actor prediction/model retention, inventory
+activity, live gear/currency/GM updates, normal chat, travel, two-instance isolation,
+account takeover and rapid reconnect.
+
+Load acceptance uses the existing real-login/movement fixture with a 512 MiB heap,
+20 seconds after ramp. At 50/100/200/300 in one Haven instance, all clients/pings
+completed without failures; deltas/client/s were 19.75/19.70/19.45/18.45 and ping p95
+2.99/5.70/6.21/21.37 ms. The prior 300-player baseline was 0.46 deltas/client/s,
+110.10 ms p95, 809.00 MiB RSS and 928 native threads; shared simulation measured
+411.08 MiB RSS and 638 native threads with roughly 40× the received updates.
+At 300 across four Haven instances, deltas/client/s were 19.71, p95 5.73 ms and
+CPU 2.59 cores versus 4.70 for one crowded instance. Downstream traffic fell from
+1,212.71 to 328.49 MiB. See [development](development.md) for tables and limits.
+
+Isolated graphical acceptance used two saved disposable knights in the unchanged
+stock client, with read-only installation, separate preferences and temporary
+Java 25 server/data. Both views rendered local/peer walking in opposite directions,
+reverse movement, stable stops and walking after opening/closing Arsenal. Live
+helm unequip/re-equip through the Java storage API updated the controlled portrait
+and both scene models with Arsenal open. This sample covers saved-character entry;
+fresh creator entry and takeover/reconnect also pass the stock network fixtures.
+All test clients/servers stopped; real data, keys and preferences were untouched.
 
 ## Current limits and later work
 

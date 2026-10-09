@@ -7,7 +7,16 @@ import java.util.*;
 /** Server-assigned scene instances; a client scene version is never an instance selector. */
 public final class SceneRegistry {
     public static final String ZONE_RECEIVER="2d900cf54355111b4bb4befcdff42b82";
-    public record Instance(int oid,int index,SceneCatalog.MapScene map) { }
+    public static final class Instance {
+        private final int oid,index;
+        private final SceneCatalog.MapScene map;
+        private final SceneSimulation simulation;
+        public Instance(int oid,int index,SceneCatalog.MapScene map){this.oid=oid;this.index=index;this.map=map;simulation=new SceneSimulation(this);}
+        public int oid(){return oid;}
+        public int index(){return index;}
+        public SceneCatalog.MapScene map(){return map;}
+        public SceneSimulation simulation(){return simulation;}
+    }
     private final SceneCatalog catalog;
     private final Map<Integer,List<Instance>> instances=new HashMap<>();
     private static SceneRegistry system;

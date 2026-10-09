@@ -49,6 +49,7 @@ public final class WorldSessionTest {
                 first.entered();
                 first.entered(); // repeated readiness must not create a second ticker
                 first.input(input);
+                var oldRegistration=persistence(first);
                 var reader = new DeltaReader(one);
                 var initial = reader.next();
                 check(initial.reference()==0 && initial.added()==1, "initial delta contains the controlled actor");
@@ -76,6 +77,9 @@ public final class WorldSessionTest {
                 // Re-entry starts a new baseline, then resumes the same reliable stream policy.
                 first.subscribe((short)2);
                 first.entered();
+                first.refreshState(oldRegistration,null);
+                first.refreshFailed(oldRegistration,new IOException("late old subscription read"));
+                check(WorldSession.active(1,knight.id())&&!one.isClosed(),"stale poll results/errors cannot close a replacement subscription");
                 var reentry = reader.nextAfterSubscription((short)2);
                 check(reentry.reference()==0 && reentry.added()==1, "resubscription resets the scene baseline");
                 var afterReentry = reader.next();
@@ -105,6 +109,10 @@ public final class WorldSessionTest {
             check(!WorldSession.active(1,knight.id()),"reconnect cleanup releases controller");
             System.out.println("PASS: town ownership, auth revisions, input readiness, delayed/invalid acknowledgements, reliable deltas, re-entry and reconnect cleanup");
         } finally {try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
+    }
+    private static WorldStatePoller.Registration persistence(WorldSession session)throws ReflectiveOperationException {
+        var field=WorldSession.class.getDeclaredField("persistence");field.setAccessible(true);
+        return (WorldStatePoller.Registration)field.get(session);
     }
     private static void refuse(Action action) throws Exception {
         try {action.run();throw new AssertionError("Invalid session operation accepted");}

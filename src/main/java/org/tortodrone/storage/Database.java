@@ -21,6 +21,7 @@ public final class Database {
     }
     public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     public record RosterState(List<Knight> knights,int next,long revision) { }
+    public record WorldState(int accountId,int knightId,int worldId,String name,long revision,long authRevision,boolean gameMaster) { }
     private final Path file;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -216,9 +217,25 @@ public final class Database {
         return new Knight(r.getInt("id"),r.getString("name"),r.getString("helm"),r.getString("armor"),r.getString("helm_accessory"),r.getString("armor_accessory"),r.getString("costume"),r.getInt("color"),r.getInt("height"),r.getInt("eye"),r.getLong("created_at"));
     }
     public WorldProfile worldProfile(int accountId,int knightId,long authRevision) throws IOException {
+        return worldProfile(accountId,knightId,authRevision,null);
+    }
+    public WorldProfile worldProfile(int accountId,int knightId,long authRevision,WorldProfile cached) throws IOException {
         return read(c -> {
             c.setAutoCommit(false); // One read snapshot for identity and inventory, even during deletion.
-            var profile = WorldProfiles.load(c,accountId,knightId,authRevision); c.commit(); return profile;
+            var profile = WorldProfiles.load(c,accountId,knightId,authRevision,cached); c.commit(); return profile;
+        });
+    }
+    /** Lightweight consistent metadata for active world observers; inventories load only on change. */
+    public Map<Integer,WorldState> worldStates()throws IOException {
+        return read(c->{
+            var states=new HashMap<Integer,WorldState>();
+            try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
+                while(rows.next()) {
+                    var state=new WorldState(rows.getInt(1),rows.getInt(2),rows.getInt(3),rows.getString(4),rows.getLong(5),rows.getLong(6),rows.getBoolean(7));
+                    states.put(state.worldId(),state);
+                }
+            }
+            return Map.copyOf(states);
         });
     }
     /** Current world state without an authentication-revision check, for read-only publications. */
