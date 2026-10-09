@@ -9,6 +9,8 @@ public final class TownMovement {
     public static final float MAX_STEP = .333333f;
     // Verified stock KnightAdvancer inventory activities and closing duration.
     public static final int INVENTORY = 3, INVENTORY_END = 4, INVENTORY_END_MILLIS = 889;
+    // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
+    public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
@@ -51,6 +53,15 @@ public final class TownMovement {
         return true;
     }
 
+    /** A scene RPC starts only this actor's verified, non-targetable Sit emote. */
+    public boolean sit(int sceneTime, long now) {
+        advance(sceneTime, now);
+        if (activity != 0 && activity != SIT) return false;
+        if (activity != SIT) setActivity(SIT, timestamp);
+        updateFlags();
+        return true;
+    }
+
     /** Integrate each input segment only when its timestamp is due. */
     public void advance(int sceneTime, long now) {
         if (sceneTime - timestamp < 0) return;
@@ -60,6 +71,7 @@ public final class TownMovement {
             if (activity == 0) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
+            if (activity == SIT && (inputFlags & 1) != 0) setActivity(SIT_END, timestamp);
             if ((inputFlags & 2) != 0 && activity != INVENTORY) setActivity(INVENTORY, timestamp);
             else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
             updateFlags();
@@ -73,8 +85,10 @@ public final class TownMovement {
     }
 
     private void moveTo(int target) {
-        if (activity == INVENTORY_END && target - activityStarted >= INVENTORY_END_MILLIS) {
-            int ended = activityStarted + INVENTORY_END_MILLIS;
+        int duration = activity == INVENTORY_END ? INVENTORY_END_MILLIS
+            : activity == SIT_END ? SIT_END_MILLIS : 0;
+        if (duration > 0 && target - activityStarted >= duration) {
+            int ended = activityStarted + duration;
             if (ended - timestamp > 0) timestamp = ended;
             setActivity(0, ended);
             updateFlags();

@@ -68,6 +68,9 @@ public final class SceneSimulation {
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&movement.accept(stamp,facing,heading,flags,sceneTime,now);}
         }
+        public boolean sit(int sceneTime,long now) {
+            synchronized(SceneSimulation.this){check();return entered&&movement.sit(sceneTime,now);}
+        }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
         }

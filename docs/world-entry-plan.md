@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.18.0, schema 8
+## Checkpoint: 0.19.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -380,9 +380,8 @@ Complete and commit one verified milestone at a time:
 1. **Private tells and replies (0.18.0)**: stock commands, authoritative knight
    names, private delivery across maps/instances, lifecycle/authentication gates
    and a shared bounded chat budget.
-2. **Character actions**: verify stock `/sit` and related animation/state inputs;
-   implement one action with movement, interruption, inventory and peer rendering
-   checks before adding other commands.
+2. **Character actions**: `/sit` is implemented in 0.19.0; add other commands only
+   after verifying their stock configuration, routing and rendering separately.
 3. **Portal round trip**: Town Square ↔ Bazaar through their actual stock portal
    interaction, server-controlled destinations/proximity, safe departure/readiness
    and clean actor/chat membership in both views. Existing direct scene RPC travel
@@ -435,6 +434,31 @@ hello` rendered one purple sender confirmation and a purple recipient tell;
 rendered private failure feedback. Those clients and their server were stopped;
 real accounts, characters, keys and preferences were preserved. Screenshots remain
 in ignored `local/research/2026-10-09/private-tell-acceptance/`.
+
+## Sitting (0.19.0)
+
+The original `/sit` and `/sitdown` commands request the verified Sit configuration
+through scene-local ProjectXSceneMarshaller. The server owns activity 26 and its
+start time; it stays seated without input. Movement starts activity 46 for exactly
+1333 ms before walking resumes. Inventory input interrupts the pose and closes
+through the existing inventory timeline. Repeated requests preserve the pose's
+start; scene pause/re-entry resets it. Requests require current authenticated
+ownership, entered/subscribed membership and the shared bounded chat budget.
+Other animated commands return a stock confirmation failure; they cannot select
+arbitrary activities. No storage/schema changes or client modifications.
+
+Acceptance: `make build test` passed 39 unit and five integration checks on Java
+25; both JARs report 0.19.0. A concurrent run timed out during roster fixture
+authentication while graphical clients loaded; the final rerun after stopping
+them passed. Focused independent review found no concrete issue.
+
+The 61 installed-stock reader/network checks pass, including actual sit RPCs on
+creation/reconnect and separate instances, configuration/predictor parity,
+persistent activity/model identity, exact standing deadline and inventory
+interruption/closing. Two isolated stock graphical clients rendered `/sit` and
+`/sitdown` in local/peer views, then standing and walking after movement. Arsenal
+opened/closed while seated. Screenshots are ignored under
+`local/research/2026-10-09/sit-acceptance/`; disposable clients/server were stopped.
 
 ## Current limits and later work
 

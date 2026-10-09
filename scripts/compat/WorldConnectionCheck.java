@@ -80,6 +80,33 @@ public class WorldConnectionCheck {
    if(controlled(player).adV()!=closingStarted+org.tortodrone.world.TownMovement.INVENTORY_END_MILLIS)
        throw new AssertionError("Inventory closing activity did not finish at its deadline");
    System.out.println("PASS: inventory blocks movement, retains its animation start and closes into idle");
+   Reply sit=new Reply();scene.projectXSceneService.b("Sit",null,sit);waitFor(()->sit.done);
+   if(sit.reason!=null)throw new AssertionError("Stock sit RPC rejected: "+sit.reason);
+   waitFor(()->controlled(player).adU()==26);int seatedStarted=controlled(player).adV();
+   float seatedX=controlled(player).tz().x;var seatedModel=controlled(player).Mv();
+   int seatedCount=deltas;waitFor(()->deltas>=seatedCount+15);
+   if(controlled(player).adU()!=26||controlled(player).adV()!=seatedStarted
+       ||controlled(player).tz().x!=seatedX||controlled(player).bR(2)||controlled(player).Mv()!=seatedModel)
+    throw new AssertionError("Seated pose expired, moved, restarted or replaced its model");
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,1,0)});
+   waitFor(()->controlled(player).adU()==46);int standingStarted=controlled(player).adV();
+   while(last.QY()<standingStarted+1333){
+    if(controlled(player).tz().x!=seatedX||controlled(player).bR(2))throw new AssertionError("Walk starts before standing completes");
+    int beforeStanding=deltas;scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,1,0)});
+    waitFor(()->deltas>beforeStanding);
+   }
+   waitFor(()->controlled(player).adU()==0&&controlled(player).tz().x>seatedX);
+   if(controlled(player).adV()!=standingStarted+1333)throw new AssertionError("Standing deadline differs from stock");
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,0,0)});
+   System.out.println("PASS: stock sit RPC, persistent pose, stable model and standing deadline before walking");
+   Reply sitForInventory=new Reply();scene.projectXSceneService.b("Sit",null,sitForInventory);
+   waitFor(()->sitForInventory.done);if(sitForInventory.reason!=null)throw new AssertionError(sitForInventory.reason);
+   waitFor(()->controlled(player).adU()==26);
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,2,0)});
+   waitFor(()->controlled(player).adU()==3);
+   scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,2,0,0,0)});
+   waitFor(()->controlled(player).adU()==4);waitFor(()->controlled(player).adU()==0);
+   System.out.println("PASS: inventory input interrupts sitting and closes back into idle");
    var slotUpdates=new ArrayList<Integer>();int[] loadoutUpdates={0};
    player.a(new j(){public void a(ElementUpdatedEvent e){if(e.getName().equals("equipment"))slotUpdates.add(e.pN());}});
    player.a(new com.threerings.presents.dobj.s<Loadout>(){public void a(EntryAddedEvent<Loadout> e){}public void a(EntryRemovedEvent<Loadout> e){}

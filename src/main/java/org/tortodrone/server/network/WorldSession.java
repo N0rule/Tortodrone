@@ -253,6 +253,30 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
 
+    /** ProjectXSceneMarshaller.emote(String, Name, ConfirmListener), stock method three. */
+    synchronized void emote(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();
+        if(request.service()!=6||request.method()!=3||args.size()!=3
+                ||!(args.get(0) instanceof String)
+                ||!(args.get(1)==null||args.get(1) instanceof String)
+                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid emote request");
+        String failure=null;
+        if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))
+            failure="Enter a scene before using an emote";
+        else {
+            try{characters.worldProfile(knight.name(),authRevision);}
+            catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
+            if(!args.get(0).equals("Sit"))failure="This emote is not available yet";
+            else if(!chatRate.allow(System.nanoTime()))failure="Please slow down before using another emote";
+            // Sit is non-targetable in the stock config; a supplied Name is ignored there too.
+            else if(!membership.sit(SceneClock.now(),monotonicTime()))failure="Finish your current action before sitting";
+        }
+        if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
+    }
+
     void speak(SessionDecoder.Invocation request)throws IOException {
         SceneChat.Membership sender;
         int place,generation;

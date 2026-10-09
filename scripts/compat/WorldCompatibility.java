@@ -127,6 +127,23 @@ public final class WorldCompatibility {
             throw new AssertionError("Stock predictor cannot walk smoothly: "+predicted);
         }
         System.out.println("PASS: stock predictor advances the knight locally with movement enabled");
+        var emotes=com.threerings.projectx.config.EmoteConfig.d(manager);
+        var sit=emotes[org.tortodrone.world.TownMovement.SIT-9];
+        if(!sit.getName().equals("Sit")||sit.duration!=0||sit.allowsMovement||sit.targetable
+                ||9+emotes.length+sit.e(manager)!=org.tortodrone.world.TownMovement.SIT_END
+                ||sit.endDuration!=org.tortodrone.world.TownMovement.SIT_END_MILLIS)
+            throw new AssertionError("Installed sit configuration differs from server activity/timing");
+        predicted.aU(org.tortodrone.world.TownMovement.SIT,201);
+        advancer.a(new ProjectXInputFrame(251,1.5f,0,0,0));
+        float seatedX=predicted.tz().x;
+        advancer.a(new ProjectXInputFrame(301,1.5f,0,1,0));
+        if(predicted.adU()!=org.tortodrone.world.TownMovement.SIT_END||predicted.adV()!=301
+                ||predicted.tz().x!=seatedX||predicted.bR(2))
+            throw new AssertionError("Stock predictor did not stand before walking: "+predicted);
+        advancer.a(new ProjectXInputFrame(401,1.5f,0,1,0));
+        if(predicted.adU()!=org.tortodrone.world.TownMovement.SIT_END||predicted.tz().x!=seatedX)
+            throw new AssertionError("Stock predictor moved before standing completed");
+        System.out.println("PASS: stock Sit configuration and predictor match seated/standing activities and movement interruption");
         System.out.println("PASS: stock reader accepts player/loadout, original town, occupant metadata and usable actor deltas");
     }
     static com.threerings.config.ConfigReference<?> reference(StarterCatalog.Model model) {

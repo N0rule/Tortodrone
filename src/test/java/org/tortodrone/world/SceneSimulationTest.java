@@ -22,6 +22,7 @@ public final class SceneSimulationTest {
         try {
             check(a.playerCount()==2&&a.snapshot().actors().size()==2,"selected actors are scene-owned before readiness");
             check(!one.input(start,0,0,1,start,System.nanoTime()/1_000_000L),"movement is gated by entry");
+            check(!one.sit(start,System.nanoTime()/1_000_000L),"sitting is gated by entry");
             one.enter();two.enter();isolated.enter();
             var previous=next(first);var peer=next(second);
             check(previous==peer,"recipients receive the exact same immutable scene publication");
@@ -38,6 +39,11 @@ public final class SceneSimulationTest {
             one.pause();float frozen=a.snapshot().actors().getFirst().x();Thread.sleep(160);
             check(a.snapshot().actors().getFirst().x()==frozen,"unsubscribed actors stop advancing");
             one.enter();Thread.sleep(70);check(a.snapshot().actors().getFirst().x()==frozen,"re-entry cannot replay stale input");
+            check(one.sit(SceneClock.now(),System.nanoTime()/1_000_000L),"entered knight can request sitting");
+            var seated=a.snapshot();
+            check(seated.actors().getFirst().activity()==TownMovement.SIT
+                &&seated.actors().get(1).activity()==0&&b.snapshot().actors().getFirst().activity()==0,
+                "sitting changes only the owned actor, leaving peers and other instances alone");
             two.close();var removed=awaitMissing(first,2);
             var removedIds=removed.delta(current).removed();removedIds[0]=999;
             check(removed.delta(current).removed()[0]==2,"removal arrays cannot mutate a shared publication");

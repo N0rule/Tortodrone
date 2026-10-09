@@ -184,6 +184,13 @@ acknowledgements. Preserve unchanged model configs; replace them only for real
 gear changes. Every delta supplies activity/start time because the stock predictor
 can mutate its first snapshot. Inventory activity 3 closes through activity 4
 for 889 ms, blocking movement/facing before returning to idle. Combat flags are ignored.
+Scene-local ProjectXSceneMarshaller service 6/method 3 takes String, Name and a
+ConfirmMarshaller. Only the verified non-targetable `Sit` action is accepted,
+after readiness/current authenticated ownership checks and the shared chat budget.
+The owning simulation membership starts activity 26; no client activity or position
+is accepted. Movement input changes it to standing activity 46 for exactly 1333 ms,
+then resumes movement at the deadline. Inventory interrupts the pose; repeated sit
+does not restart it, and scene pause/re-entry clears it. Sit has no stock chat format.
 
 Re-entry pauses/resets scene-owned input and the recipient baseline; scene identity,
 readiness and increasing timestamp checks reject stale publications after travel

@@ -169,3 +169,23 @@ does not hold its lock or the sender's session lock while calling the recipient.
 Offline/loading/departed recipients and failed queues return failure, with no
 success feedback or message storage. Away/idle, block lists and guild/party/global
 chat channels remain outside this milestone.
+
+## Sitting (0.19.0)
+
+Installed `ProjectXChatDirector.mw()` registers commands dynamically from
+EmoteConfig names; `$j` sends `ProjectXSceneMarshaller.b(String,Name,ConfirmListener)`.
+Read-only `javap -c -p` verifies service 6/method 3 and the listener schema.
+The English stock bundle supplies `/sit` and `/sitdown`. The sorted animated
+EmoteConfig list has 20 entries; Sit index 17 maps to activity 9+17=26 and its
+end maps to 9+20+17=46. Duration is zero (persistent), allowsMovement=false,
+endDuration=1333, targetable=false and balloonless=true. No `m.sit_format` exists.
+
+Installed KnightAdvancer (`com.threerings.projectx.util.j`) builds those handlers
+from the same configuration; `util.p.NO()` changes a stationary emote to its end
+activity on movement bit 1. The end handler blocks movement/facing until its
+deadline. Inventory input can interrupt the pose. The installed-reader fixture
+compares these configuration facts and runs the original predictor; the network
+fixture calls the original RPC on creation/reconnect and checks the actor timeline.
+Only Sit is accepted; unsupported action names cannot supply arbitrary activities.
+The per-membership simulation owns state and immediate ownership/readiness/auth
+checks protect the RPC. No saved state or schema changes are required.

@@ -94,6 +94,29 @@ public final class TownMovementTest {
         peaceful.advance(200,1100);
         check(peaceful.activity()==0&&peaceful.flags()==2&&Math.abs(peaceful.x()-.25f)<.00001,
             "combat bits neither block walking nor become actor flags");
+        var seated=new TownMovement();seated.resetInput(100);
+        check(seated.sit(100,1000),"idle knight can sit");
+        seated.advance(10000,10000);
+        check(seated.activity()==TownMovement.SIT&&seated.activityStarted()==100&&seated.x()==0,
+            "sitting persists without input, including past movement timeout");
+        check(seated.sit(10000,10000)&&seated.activityStarted()==100,"repeated sit does not restart the pose");
+        check(seated.accept(10050,2,0,1,10000,10000),"movement while seated queued");
+        seated.advance(10050,10050);
+        check(seated.activity()==TownMovement.SIT_END&&seated.activityStarted()==10050
+            &&seated.x()==0&&seated.rotation()==0,"walk starts standing without snapping facing or position");
+        for(int time=10100;time<11383;time+=50){
+            check(seated.accept(time,2,0,1,time,time),"fresh movement while standing");seated.advance(time,time);
+            check(seated.activity()==TownMovement.SIT_END&&seated.x()==0,"standing blocks early walking");
+        }
+        seated.advance(11433,11433);
+        check(seated.activity()==0&&seated.activityStarted()==11383&&Math.abs(seated.x()-.25f)<.00001,
+            "walking resumes at the exact stock standing deadline");
+        seated.resetInput(12000);check(seated.sit(12000,12000),"sit after reset");
+        check(seated.accept(12050,2,0,2,12000,12000),"inventory while sitting");seated.advance(12050,12050);
+        check(seated.activity()==TownMovement.INVENTORY&&!seated.sit(12050,12050),
+            "inventory interrupts sitting and cannot be replaced by another sit");
+        seated.resetInput(12100);
+        check(seated.activity()==0&&seated.flags()==0,"scene transition clears the sitting activity and queued input");
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }
