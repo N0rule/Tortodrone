@@ -36,6 +36,19 @@ server/admin runtime and persistent tools.
   development has no real users, so an old database may be refused or discarded
   rather than upgraded.
 
+## Subagent delegation
+
+- Use up to 3 concurrent STEP 5 Preview subagents through OpenCode for repository
+  exploration, protocol research, documentation, tests, isolated features,
+  straightforward bug fixes, and independent code reviews. Use GPT-6 Luna as
+  fallback if STEP 5 Preview is unavailable; do not spawn additional Sol High agents.
+- Give each subagent a precise scope, acceptance criteria, and non-overlapping
+  file ownership; coordinate shared dependencies and avoid conflicting edits.
+- Require concise findings, reuse completed work, and spawn fewer agents when
+  tasks are small or dependent on each other.
+- Keep architecture decisions, complex concurrency-sensitive changes,
+  integration, and final verification with the existing primary agent.
+
 ## Workflow
 
 1. Review the current milestone and acceptance limits in `docs/world-entry-plan.md`.
