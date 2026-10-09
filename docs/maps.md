@@ -1,13 +1,14 @@
 # External scenes
 
-The server loads `maps/` beside its JAR before opening its listener. No map files
-are bundled in either JAR, and startup performs no downloads. The complete regular
-Town Square and Bazaar packs live in `maps/default/`, including original compressed
+The server loads `defaults/maps/` beside its JAR before opening its listener;
+custom `maps/` takes precedence. No map files
+are bundled in either JAR. Complete local defaults avoid all startup downloads. The complete regular
+Town Square and Bazaar packs live in `defaults/maps/`, including original compressed
 scene exports and matching collision masks. `make maps` verifies their checksums
-and copies missing files into `build/maps/`, without accessing an archive repository
+and copies missing files into `build/defaults/maps/`, without accessing an archive repository
 or download cache. Existing destination files are preserved.
 
-Deploy `build/maps/` beside the server JAR. The archive repository may disappear
+Deploy the complete `build/defaults/` tree beside the server JAR. The archive repository may disappear
 without affecting map preparation or running the server.
 Keep edited packs across updates; install a new map explicitly while stopped,
 replacing its scene, descriptor and collision mask together.
@@ -20,7 +21,12 @@ replacing its scene, descriptor and collision mask together.
 | `scene.dat` | Original compressed scene export, sent to the stock reader |
 | `walkability.gz` | Server collision samples derived from that scene and installed configurations |
 
-Missing files, wrong checksums, unsupported kinds and blocked spawns fail startup.
+Missing default files trigger a bounded startup download from the hardcoded placeholder
+repository in `DefaultResources.SOURCE`. Only root `defaults/` is imported, including
+items and future directories; existing files are preserved. Download failures warn
+and continue. If maps remain missing or invalid, the server starts with login and
+local tools available and refuses world entry clearly. Checksums, supported scene
+kinds and walkable spawns are still required before loading any geometry.
 The current verified object/configuration protocol supports **town scenes only**.
 Geometry does not implement NPCs, shops, quests or portal triggers. Scene IDs identify
 templates; each configured instance has a separate distributed-object ID, occupants,
@@ -30,7 +36,9 @@ The client scene-version argument remains a cache version, never an instance sel
 ## Maintainer imports
 
 Original archive paths and checksums are recorded in [dependency notices](dependencies.md).
-There is no map download command; obtaining another export is optional maintainer work.
+Obtaining another scene export is maintainer work. Add a verified pack under
+`defaults/maps/<name>/`; preparation discovers folders automatically, with no Java
+name list to edit. Use `make defaults` to copy maps, items and any future directories.
 Town Square uses the regular 2017 export, rather than the snowy static export.
 Scene revisions are signed client integers; a negative revision is valid.
 

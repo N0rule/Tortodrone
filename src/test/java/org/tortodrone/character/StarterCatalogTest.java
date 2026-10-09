@@ -16,7 +16,7 @@ public final class StarterCatalogTest {
         check(helm.arguments().get("Blue").equals(new StarterCatalog.Colorization(3332)),"costume recolor metadata");
         check(model.arguments().containsKey("Armor") && model.arguments().containsKey("helm_top") && model.arguments().containsKey("helm_back"),"equipment and both accessory choices applied");
         var wire=new TestWire();var codec=new SessionCodec();
-        var player=wire.snapshot(wire.frame(codec.player((short)1,1001,1,"Alice",Map.of(),List.of(choices))),(short)1,1001);
+        var player=wire.snapshot(wire.frame(codec.player((short)1,1001,1,"Alice",Map.of(),List.of(new CharacterStore.RosterEntry(choices,model)))),(short)1,1001);
         var preview=(Map<?,?>)((Map<?,?>)((List<?>)player.get("availableKnights")).get(0)).get("model");
         check(((Map<?,?>)preview.get("_arguments")).containsKey("Helmet"),"nested equipment models serialize with ordered class and intern tables");
         for(int eye=0;eye<47;eye++) {

@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.13.1, schema 8
+## Checkpoint: 0.15.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -214,6 +214,58 @@ Acceptance: all 32 unit and four integration checks passed on Java 25. Offline
 map preparation passed with no URL metadata or download cache, preserved edited
 packs and refused corrupt sources. Both JARs were rebuilt; test processes stopped.
 The owner's running server, data, keys and preferences were left untouched.
+
+## Character select renders the current outfit (0.15.0)
+
+The stock picker renders each `AvailableKnight` model verbatim, so the preview is
+entirely server-composed. Roster publications previously composed it from the saved
+creation choices: the picker showed the outfit the knight was created with and ignored
+everything equipped afterwards. `CharacterStore.available` now composes each published
+preview from the knight's currently equipped items (helm/armor, costumes, trinket,
+shield, the lowest occupied weapon slot and item accessories) under the roster
+publication lock, using the same verified composition as the world actor. Creation gear
+still seeds the starter kit and creator edits still replace the marked cosmetics.
+
+Schema remains 8. A profile read for publication uses no authentication revision; an
+unreadable profile falls back to the creation outfit instead of failing the roster.
+
+Acceptance: `make build test` passed all unit and integration checks, including the new
+picker composition regression. The unchanged installed client, after equipment changes
+and a reconnect, received a picker model equal to the stock held-model builder applied
+to the knight's current equipment; every earlier roster/equipment/reconnect check still
+passed. An isolated graphical stock client confirmed current red helm/Wolver Coat
+and Calibur sword on hover, with an unequipped armor slot rendering without the
+saved blue creation armor. Test processes were stopped.
+
+## Startup defaults and JSON definitions (0.15.0)
+
+Default resources are organized as `defaults/maps/` and `defaults/items/` and stay
+outside the JARs. Preparation discovers map folders and copies future default
+directories without hardcoded names. All 9,348 item definitions are retained in
+version 1 JSON, preserving supported models/colors, signed IDs, counts, binding,
+costumes/trinkets, grants and equipment behavior. There are no new dependencies.
+
+Startup attempts a bounded root-defaults download from the hardcoded placeholder
+repository when required files are missing. The complete archive is validated
+before installation, existing files are preserved, and failures warn and continue.
+Local custom resources take precedence. Without usable maps, login and local
+administration continue and world entry fails clearly; absent/unreadable items use
+the existing starter fallback. Fresh RSA generation logs only the copyable public
+key, once. Schema 8 data and existing keys are preserved without migrations.
+
+At review, `step` and `main` both pointed to `d35b844`; `step` had no unique commits.
+Useful unfinished
+picker composition changes were already in the working tree and were retained:
+fresh login/subscription previews current equipment, including weapons, rather than
+the saved creation outfit. The read-only profile uses a consistent SQL snapshot.
+
+Acceptance: all 34 unit and four integration checks passed on Java 25. Local HTTP
+checks covered successful recovery, warm/offline startup, stalled-body deadlines,
+future directories, path validation and preservation of existing files. Packaged
+checks verified missing-default startup and copyable public-key logging without
+logging private material. All 9,348 shipped JSON entries exactly matched a fresh
+stock export; the exhaustive stock item/wire checks and 173 starter previews passed.
+The graphical picker checks above passed. All test clients and servers were stopped.
 
 ## Current limits and later work
 

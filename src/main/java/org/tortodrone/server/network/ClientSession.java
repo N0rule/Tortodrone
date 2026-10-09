@@ -230,7 +230,7 @@ final class ClientSession {
                 }
                 if (failure == null) {
                     if (!subscribed) {
-                        var roster = characters.roster();
+                        var roster=characters.available();
                         output.send(() -> outgoing.rosterChanged(clientOid, roster));
                     }
                     log.info("Character deleted; available knights=" + characters.roster().size());
@@ -265,7 +265,7 @@ final class ClientSession {
                 }
                 if (failure == null) {
                     if (!subscribed) {
-                        var roster = characters.roster();
+                        var roster=characters.available();
                         output.send(() -> outgoing.rosterChanged(clientOid, roster));
                     }
                     log.info("Character saved; available knights=" + characters.roster().size());

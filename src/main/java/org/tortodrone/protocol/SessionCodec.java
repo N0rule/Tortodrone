@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.character.WorldProfile;
@@ -83,11 +84,11 @@ public final class SessionCodec {
     }
 
     public byte[] player(short messageId, int oid, int playerId, String username,
-            Map<String, Short> receivers, List<Knight> knights) throws IOException {
+            Map<String, Short> receivers, List<CharacterStore.RosterEntry> knights) throws IOException {
         return player(messageId,oid,playerId,username,receivers,knights,false);
     }
     public byte[] player(short messageId, int oid, int playerId, String username,
-            Map<String, Short> receivers, List<Knight> knights, boolean gameMaster) throws IOException {
+            Map<String, Short> receivers, List<CharacterStore.RosterEntry> knights, boolean gameMaster) throws IOException {
         return frame(out -> {
             objectHeader(out, messageId, "com.threerings.projectx.data.PlayerObject", oid);
             type(out, "com.threerings.util.Name"); string(out, username);
@@ -229,7 +230,7 @@ public final class SessionCodec {
         });
     }
 
-    public byte[] rosterChanged(int clientOid, List<Knight> knights) throws IOException {
+    public byte[] rosterChanged(int clientOid, List<CharacterStore.RosterEntry> knights) throws IOException {
         return frame(out -> {
             type(out, PREFIX + "EventNotification"); out.writeShort(-1);
             type(out, "com.threerings.presents.dobj.AttributeChangedEvent"); out.writeInt(clientOid);
@@ -247,13 +248,14 @@ public final class SessionCodec {
         });
     }
 
-    private void roster(DataOutputStream out, List<Knight> knights) throws IOException {
+    private void roster(DataOutputStream out, List<CharacterStore.RosterEntry> knights) throws IOException {
         type(out, "[Lcom.threerings.projectx.data.AvailableKnight;"); out.writeInt(knights.size());
-        for (Knight knight : knights) {
+        for (CharacterStore.RosterEntry entry : knights) {
+            Knight knight = entry.knight();
             type(out, "com.threerings.projectx.data.AvailableKnight");
             out.writeInt(knight.id()); type(out, "com.threerings.util.Name"); string(out, knight.name());
             out.writeInt(0); string(out, null); out.writeInt(0); // rank, guild, session seconds
-            value(out, StarterCatalog.preview(knight));
+            value(out, entry.preview());
             emptyCollection(out); // Typed Set<Name>, no mail senders.
         }
     }

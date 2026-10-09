@@ -78,6 +78,7 @@ final class WorldSession implements AutoCloseable {
             throws IOException, CharacterStore.Refused {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
+        if(scenes.catalog().scenes().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
         gameMaster=roles.gameMaster();
         // Picker edits/deletes use this same account lock around their online check and save.
         synchronized (characters) {

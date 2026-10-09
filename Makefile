@@ -11,9 +11,9 @@ TEST_SOURCES := $(sort $(shell find src/test/java -name '*.java'))
 UNIT_TEST_SOURCES := $(filter-out src/test/java/org/tortodrone/integration/%, $(filter %Test.java,$(TEST_SOURCES)))
 UNIT_TESTS := $(subst /,.,$(patsubst src/test/java/%.java,%,$(UNIT_TEST_SOURCES)))
 
-.PHONY: build build-server build-admin maps run server admin test test-unit test-integration test-compile clean
+.PHONY: build build-server build-admin defaults maps run server admin test test-unit test-integration test-compile clean
 build: build-server build-admin
-build-server: maps $(SERVER_JAR)
+build-server: defaults $(SERVER_JAR)
 build-admin: $(ADMIN_JAR)
 
 $(SQLITE): scripts/BuildTools.java
@@ -24,6 +24,9 @@ $(JLINE): scripts/BuildTools.java
 
 maps:
 	java scripts/BuildTools.java maps
+
+defaults:
+	java scripts/BuildTools.java defaults
 
 build/.build/package.stamp: $(SOURCES) $(RESOURCES) VERSION Makefile $(SQLITE) $(JLINE)
 	rm -rf $(CLASSES) $(PACKAGE)

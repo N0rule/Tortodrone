@@ -23,10 +23,10 @@ public final class CheckClientWorld {
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
             for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
-            Path maps=project.resolve("build/maps");
+            Path maps=project.resolve("build/defaults");
             try(var paths=Files.walk(maps)) {
                 for(var path:paths.toList()) {
-                    Path target=scratch.resolve("maps").resolve(maps.relativize(path));
+                    Path target=scratch.resolve("defaults").resolve(maps.relativize(path));
                     if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
                 }
             }
@@ -49,7 +49,7 @@ public final class CheckClientWorld {
             run(reader, "reader", "", 30);
             var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("items").toString()));
             run(export,"item-export","",60);
-            var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.tsv").toString()));
+            var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.json").toString()));
             run(catalogCheck,"item-catalog","",60);
             Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n");
             for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
@@ -78,7 +78,7 @@ public final class CheckClientWorld {
             List<String> seed = new ArrayList<>(base);
             seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
             run(seed,"seed-reconnect","",15);
-            Path descriptor = scratch.resolve("maps/haven/map.properties");
+            Path descriptor = scratch.resolve("defaults/maps/haven/map.properties");
             var properties = new Properties();
             try (var in = Files.newInputStream(descriptor)) { properties.load(in); }
             properties.setProperty("instances", "2");

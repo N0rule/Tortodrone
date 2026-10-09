@@ -6,13 +6,14 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.13.1**, SQLite schema **8**: normal login; saved character creation,
+Version **0.15.0**, SQLite schema **8**: normal login; saved character creation,
 editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
 energy with local administration; peaceful town stance with shields on the back and live open-loadout updates;
 original-protocol scene chat with instance isolation;
-Game Master roles, stock title/support icon, permission-checked broadcasts and item commands.
+Game Master roles, stock title/support icon, permission-checked broadcasts and item commands;
+character select previews that show each knight's currently equipped outfit.
 
 One authenticated connection per account: a successful new login replaces the
 previous connection and releases its knight. Failed logins do not disconnect it.
@@ -32,9 +33,9 @@ limits; [investigation](docs/town-entry-investigation.md) explains the fixes.
 Install Git, GNU Make, JDK 25. No Maven, Gradle, game
 installation or database service is required. The first build downloads pinned,
 checksum-verified libraries; later builds use `build/deps/`. Complete regular
-Town Square and Bazaar packs are checked in under `maps/default/`; preparing them
-requires no network. `make maps` copies external packs without starting the server;
-see [maps](docs/maps.md).
+Town Square and Bazaar packs and JSON item definitions are checked in under
+`defaults/maps/` and `defaults/items/`. `make defaults` prepares all local default
+resources without downloads; `make maps` prepares only maps. See [maps](docs/maps.md).
 
 ```sh
 make build
@@ -53,7 +54,12 @@ Wait for `Done! Listening`. Stop with `stop` in its terminal or Ctrl+C.
 `make build` starts neither. Both JARs report their version with `--version`.
 
 Both JARs use `data/` beside themselves, regardless of the working directory.
-Copy `build/maps/` beside the server JAR when deploying the built applications.
+Copy `build/defaults/` beside the JARs when deploying. Startup attempts to fill
+missing defaults from a hardcoded placeholder Git repository; failed downloads
+warn and continue with available resources. Without maps, login and local tools
+work but world entry is unavailable. Replace the placeholder URL in
+`src/main/java/org/tortodrone/resources/DefaultResources.java` when the defaults
+repository is hosted.
 Keep both JARs together and preserve `data/` and edited map packs across updates.
 The manager can use another deployment with `--data /path/to/server/data`.
 It runs locally and opens no administration port.
@@ -89,20 +95,23 @@ log-mode=normal
 The manager supports account creation, password checks/resets, Game Master roles,
 deletion, individual knight deletion and per-knight currency changes. The server terminal offers the same
 account services; type `help` for commands. Game Masters can use the stock `/broadcast`
-command and normal-chat `!items`/`!giveitem` after entering a scene. Prepare an offline
-[item catalogue and game-file index](docs/game-data.md) for the wider equipment set.
+command and normal-chat `!items`/`!giveitem` after entering a scene. Default item
+definitions include the wider equipment set; [game data](docs/game-data.md) explains
+maintainer exports and custom catalogues.
 [Administration reference](docs/administration.md) covers commands,
 account rules and supported storage.
 
 To back up, stop the server and close the manager, then copy the entire `data/`
 directory, including database and keys. A live SQLite database may have changes
-in its WAL. Replace both JARs while stopped and retain `data/` and `maps/`.
+in its WAL. Replace both JARs while stopped and retain `data/`, `defaults/` and custom resources.
 
-Only schema 8 databases and v2 item catalogues are supported.
+Schema 8 databases and version 1 JSON item catalogues are supported.
 There are no database upgrades or property-file imports. Other database versions
 are refused without changing saved data. Use a fresh deployment data directory
 for older releases; preserve the original database and keys as backups.
-Preserve `items/` beside the JARs when deploying its catalogue.
+Preserve `defaults/` and optional custom `maps/` and `items/catalog.json` beside
+the JARs. Custom files take precedence. TSV item catalogues must be regenerated
+as JSON; no database or saved-character migration is performed.
 
 ## Work on the repository
 

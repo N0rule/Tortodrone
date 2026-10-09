@@ -8,12 +8,11 @@ import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Properties;
 
-/** Java 25 build inputs, offline map preparation. */
+/** Java 25 build inputs and offline preparation of the extensible defaults tree. */
 public final class BuildTools {
-    private static final String[] MAPS = {"haven", "bazaar"};
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
-        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or maps [output]");
+        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or defaults|maps [output]");
         switch (args[0]) {
             case "sqlite", "jline" -> {
                 if (args.length != 2) throw new IllegalArgumentException("Expected dependency output path");
@@ -24,14 +23,17 @@ public final class BuildTools {
                     ? "bcb1f51e36f940867e83342f9efbf5968ac44a6bef4d397bb4af7b17b45cd2fb"
                     : "091c6aaf65de86d4106528a626fe1d9daebcd2313102d6f7e484700846d0e63d");
             }
-            case "maps" -> {
+            case "maps", "defaults" -> {
                 if (args.length > 2) throw new IllegalArgumentException("Expected at most one map output directory");
-                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve("build/maps");
+                boolean maps=args[0].equals("maps");
+                Path source=project.resolve(maps?"defaults/maps":"defaults");
+                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(maps?"build/defaults/maps":"build/defaults");
                 verifyMaps(project);
-                copyMissing(project.resolve("maps/default/catalog.properties"), output.resolve("catalog.properties"));
-                for (String map : MAPS) {
-                    for (String name : new String[]{"map.properties", "walkability.gz", "scene.dat"})
-                        copyMissing(project.resolve("maps/default/" + map + "/" + name), output.resolve(map + "/" + name));
+                try(var paths=Files.walk(source)) {
+                    for(Path file:paths.filter(Files::isRegularFile).sorted().toList()) {
+                        if(Files.isSymbolicLink(file) || !file.toRealPath().startsWith(source.toRealPath()))throw new IOException("Default file escapes its source tree");
+                        copyMissing(file,output.resolve(source.relativize(file)));
+                    }
                 }
             }
             default -> throw new IllegalArgumentException("Unknown build input command");
@@ -43,11 +45,12 @@ public final class BuildTools {
         return values;
     }
     private static void verifyMaps(Path project) throws Exception {
-        for (String map : MAPS) {
-            Path pack = project.resolve("maps/default/" + map);
-            var descriptor = properties(pack.resolve("map.properties"));
-            verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
-            verify(pack.resolve("walkability.gz"), descriptor.getProperty("collision-sha256"));
+        try(var folders=Files.list(project.resolve("defaults/maps"))) {
+            for(Path pack:folders.filter(Files::isDirectory).toList()) {
+                var descriptor = properties(pack.resolve("map.properties"));
+                verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
+                verify(pack.resolve("walkability.gz"), descriptor.getProperty("collision-sha256"));
+            }
         }
     }
     private static void copyMissing(Path source, Path target) throws IOException {

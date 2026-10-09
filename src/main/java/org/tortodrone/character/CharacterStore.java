@@ -19,21 +19,25 @@ public final class CharacterStore {
     private long storageRevision;
     private final Set<RosterListener> listeners = new LinkedHashSet<>();
 
-    @FunctionalInterface public interface RosterListener { void receive(List<Knight> roster) throws IOException; }
+    /** One published available knight: identity plus the preview model the picker renders. */
+    public record RosterEntry(Knight knight, StarterCatalog.Model preview) { }
+
+    @FunctionalInterface public interface RosterListener { void receive(List<RosterEntry> roster) throws IOException; }
     @FunctionalInterface public interface Subscription extends AutoCloseable { @Override void close(); }
 
     /** Snapshot and registration share the mutation lock, so an update cannot overtake its snapshot. */
     public synchronized Subscription subscribe(RosterListener initial, RosterListener updates) throws IOException {
         refresh();
-        initial.receive(knights);
+        initial.receive(available());
         listeners.add(updates);
         return () -> { synchronized (CharacterStore.this) { listeners.remove(updates); } };
     }
 
     /** Listeners enqueue bounded downstream frames; they must not block on network I/O. */
-    private void notifyListeners() {
+    private void notifyListeners() throws IOException {
+        List<RosterEntry> published = available();
         for (var iterator = listeners.iterator(); iterator.hasNext();) {
-            try { iterator.next().receive(knights); }
+            try { iterator.next().receive(published); }
             catch (IOException e) { iterator.remove(); } // A failed peer must not invalidate a committed save.
         }
     }
@@ -76,6 +80,25 @@ public final class CharacterStore {
     public int accountId() { return accountId; }
 
     public synchronized List<Knight> roster() { return knights; }
+
+    /**
+     * Available knights for the character picker. Each preview composes the knight's currently
+     * equipped appearance, not the creation choices, so the picker follows Arsenal equipment.
+     * Composed under the publication lock; a profile that cannot be read falls back to the saved
+     * creation outfit instead of failing the roster publication.
+     */
+    public synchronized List<RosterEntry> available() throws IOException {
+        refresh();
+        var result = new ArrayList<RosterEntry>();
+        for (Knight knight : knights) result.add(new RosterEntry(knight, preview(knight)));
+        return List.copyOf(result);
+    }
+
+    private StarterCatalog.Model preview(Knight knight) {
+        if (database == null) return StarterCatalog.preview(knight);
+        try { return StarterCatalog.equipped(knight, database.profile(accountId, knight.id()), catalog); }
+        catch (IOException unreadable) { return StarterCatalog.preview(knight); }
+    }
 
     public synchronized String nameFailure(String name) throws IOException {
         String error = nameError(name);

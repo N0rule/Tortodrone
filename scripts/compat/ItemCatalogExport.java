@@ -54,14 +54,14 @@ public final class ItemCatalogExport {
                 item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,
                 item instanceof ItemConfig.Level l&&l.isPermanent,model));
         }
-        Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.tsv"),entries);
+        Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.json"),entries);
         String facts="# Read-only stock metadata; not game assets.\n";
         for(String file:List.of("code/projectx-pcode.jar","rsrc/config/item.dat")) {
             var digest=MessageDigest.getInstance("SHA-256");try(var in=Files.newInputStream(game.resolve(file))){byte[] buf=new byte[65536];for(int n;(n=in.read(buf))!=-1;)digest.update(buf,0,n);}
             facts+=file+"\t"+HexFormat.of().formatHex(digest.digest())+"\n";
         }
         Files.writeString(out.resolve("provenance.tsv"),facts,StandardOpenOption.CREATE_NEW);
-        var loaded=ItemCatalog.load(out.resolve("catalog.tsv"));
+        var loaded=ItemCatalog.load(out.resolve("catalog.json"));
         System.out.println("PASS: indexed "+loaded.entries().size()+" definitions, "+loaded.entries().stream().filter(ItemCatalog.Entry::grantable).count()+" grantable player item references");
     }
     static boolean plainPlayerType(String type) {

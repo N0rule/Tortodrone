@@ -21,10 +21,10 @@ public final class MapPreparationIntegrationTest {
     }
     private static void offlinePreparation(Path home) throws Exception {
         Path project = home.resolve("source without cache");
-        Path source = project.resolve("maps/default");
-        try (var paths = Files.walk(Path.of("maps/default"))) {
+        Path source = project.resolve("defaults/maps");
+        try (var paths = Files.walk(Path.of("defaults/maps"))) {
             for (Path path : paths.toList()) {
-                Path out = source.resolve(Path.of("maps/default").relativize(path));
+                Path out = source.resolve(Path.of("defaults/maps").relativize(path));
                 if (Files.isDirectory(path)) Files.createDirectories(out); else Files.copy(path, out);
             }
         }

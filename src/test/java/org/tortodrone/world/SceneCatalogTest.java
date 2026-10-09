@@ -13,7 +13,7 @@ public final class SceneCatalogTest {
         try {
             Path maps=home.resolve("maps");
             refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("build/maps"),maps);
+            copy(Path.of("build/defaults/maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==2 && catalog.entry().id()==1,"external Haven and Bazaar load without installed game");
             check(catalog.scene(2).collision().walkable(catalog.scene(2).spawnX(),catalog.scene(2).spawnY()),"verified Bazaar spawn");

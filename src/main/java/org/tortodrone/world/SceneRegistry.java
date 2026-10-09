@@ -13,6 +13,7 @@ public final class SceneRegistry {
     private static SceneRegistry system;
     public SceneRegistry(SceneCatalog catalog) {
         this.catalog=catalog;int oid=10;
+        if(catalog.scenes().isEmpty())return;
         // Keep the entry object's identity stable for existing clients; other templates are ordered.
         var ordered=new ArrayList<>(catalog.scenes());ordered.remove(catalog.entry());ordered.add(0,catalog.entry());
         for(var map:ordered) {
@@ -35,7 +36,10 @@ public final class SceneRegistry {
         if(system==null) {
             try {
                 Path source=Path.of(SceneRegistry.class.getProtectionDomain().getCodeSource().getLocation().toURI());
-                system=new SceneRegistry(SceneCatalog.load((Files.isDirectory(source)?source:source.getParent()).resolve("maps")));
+                Path deployment=Files.isDirectory(source)?source:source.getParent();
+                Path maps=deployment.resolve("maps");
+                if(!Files.exists(maps))maps=deployment.resolve("defaults/maps");
+                system=new SceneRegistry(SceneCatalog.load(maps));
             }catch(java.net.URISyntaxException e){throw new IOException("Cannot locate map directory",e);}
         }
         return system;

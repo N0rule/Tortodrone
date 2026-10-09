@@ -14,14 +14,16 @@ Use a JDK capable of reading the installed classes (Java 25 for the tested game)
 java scripts/StockTools.java items "/path/to/Spiral Knights"
 ```
 
-This builds both server tools and creates **build/items/catalog.tsv** and
-**build/items/provenance.tsv**. The output directory must be fresh; for another
-snapshot, pass a different directory as the second argument. The exporter reads
-the installation locally; it does not download game content. Copy `items/` beside
-both deployment JARs, alongside `maps/` and `data/`. Retain it across upgrades and
-restart server/tools after replacing it. Without it, a built-in catalogue supports
-the creator's helms/armor and Proto sword/gun/shield only. Invalid catalogues fail
-startup rather than silently falling back. The game is never a server runtime dependency.
+This builds both server tools and creates **build/items/catalog.json** and
+**build/items/provenance.tsv**. Output must be a fresh directory; pass a different
+directory as the optional final argument for another snapshot. The exporter reads
+the installation locally and never downloads game assets.
+
+The checked-in default definitions live in `defaults/items/catalog.json` and are
+copied by `make defaults`. Both applications prefer custom `items/catalog.json`
+beside their JARs, then use the default catalogue. Server startup warns and uses
+built-in starter definitions if neither is usable. Restart after changing definitions;
+preserve custom catalogues across updates. The game is not a runtime dependency.
 
 The tested installation provides **9,348 definitions**, including **8,454 grantable
 player items**: 905 normal equipment references, 2,421 costumes, 93 trinkets and
@@ -39,18 +41,20 @@ upgrading records) remain indexed but unavailable for grants. This is a conserva
 compatibility policy, not a guarantee that every item animation or gameplay action
 has been exercised. Accessory tickets may derive their names from accessory definitions.
 
-The UTF-8 TSV columns are config reference, stock config ID, resolved implementation
-type, localized name key, rarity, stackability, supported slot (empty means index
-only), bind-on-equip, permanent binding, and bounded Base64 model arguments. This
-is catalogue v2; older formats are refused and must be regenerated to
-enable newly supported items. Stock config IDs can be negative or zero; they are
-**not** persistent instance IDs. Nonzero IDs resolve only if unique; ID 0 and
-ambiguous/missing IDs are rejected. References are resolved
-case-insensitively and stored with their stock spelling. Rarity -1 is an unspecified
-stock value, not an invented star rank. `provenance.tsv` records hashes of the
-installed code JAR and item definitions. Model arguments preserve typed strings,
-integers, finite floats, booleans, normal/translated colorizations and nested references; player colors resolve at
-rendering time. They contain no textures, meshes, audio or executable objects.
+The UTF-8 JSON document has `format: "tortodrone-items"`, `version: 1`, and an
+`items` array. Each item records `config`, `stockId`, `type`, `nameKey`, `rarity`,
+`stackable`, `slot` (null means index only), `bindOnEquip`, `permanent`, and
+`modelArguments`. Values are readable JSON rather than Base64. Model references,
+normal/translated colorizations, player colors and finite floats carry explicit
+`type` objects; strings, integers and booleans use native JSON values. This preserves
+the exact stock wire types. Unknown fields/types, duplicates, invalid flags and
+oversized/deep data are rejected. TSV/CSV is not a runtime catalogue format; obtain
+a fresh JSON export rather than migrating account/character data.
+
+Stock IDs may be signed and are distinct from persistent item instance IDs.
+Only unique nonzero IDs resolve; exact references remain case insensitive.
+Rarity -1 is an unspecified stock value. `provenance.tsv` records original installed
+metadata hashes; definitions contain references, never textures, meshes or audio.
 
 ## Item commands
 

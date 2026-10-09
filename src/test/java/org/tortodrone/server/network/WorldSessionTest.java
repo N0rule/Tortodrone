@@ -20,6 +20,12 @@ public final class WorldSessionTest {
             var characters=new CharacterStore(new Database(home,false),1,"Alice");
             var knight=characters.create(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)",
                 "Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+            RecordingSocket unavailable=new RecordingSocket();
+            try(var output=new SessionOutput(unavailable);var empty=new WorldSession(unavailable,characters,output,new SessionCodec(),1000,1,message->{},
+                    new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.empty()))) {
+                refuse(()->empty.select(knight.name(),Map.of(TownSquare.ZONE_RECEIVER,(short)0)));
+                check(!empty.selected()&&!WorldSession.active(1,knight.id()),"missing maps refuse world entry without acquiring a controller");
+            }
             RecordingSocket one=new RecordingSocket(),two=new RecordingSocket(),stale=new RecordingSocket();
             try(var out1=new SessionOutput(one);var out2=new SessionOutput(two);var out3=new SessionOutput(stale);
                     var first=new WorldSession(one,characters,out1,new SessionCodec(),1001,1,message -> {});

@@ -22,6 +22,7 @@ public final class SceneCatalog {
     }
     public MapScene entry(){return scenes.get(entry);}
     public List<MapScene> scenes(){return List.copyOf(scenes.values());}
+    public static SceneCatalog empty(){return new SceneCatalog(new TreeMap<>(),0);}
     public static SceneCatalog load(Path directory)throws IOException {
         if(!Files.isDirectory(directory))throw new IOException("Missing maps; deploy maps/ beside the server JAR (make maps prepares local defaults)");
         Path root=directory.toRealPath();var settings=properties(root.resolve("catalog.properties"));

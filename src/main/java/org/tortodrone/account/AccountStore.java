@@ -35,7 +35,8 @@ public final class AccountStore implements AutoCloseable {
         finally { Arrays.fill(password,'\0'); }
     }
     public AccountStore(Path directory) throws IOException { this(directory,false); }
-    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { catalog=ItemCatalog.deployment(directory);database = new Database(directory,deploymentLocked); }
+    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,ItemCatalog.deployment(directory)); }
+    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
         validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");

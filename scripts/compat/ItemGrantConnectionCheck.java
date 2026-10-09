@@ -70,6 +70,13 @@ public final class ItemGrantConnectionCheck {
             }
             try(var reconnect=new GameMasterConnectionCheck.Endpoint(args,queue,"ItemPlayer","Grant-Knight")) {
                 if(reconnect.player.items.size()!=10||find(reconnect,"Material/Brimstone").getCount()!=10||reconnect.player.equipment[3]==0||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
+                // The picker renders the AvailableKnight model verbatim; it must show the current outfit, not the creation one.
+                var knight=tools.knights("ItemPlayer").stream().filter(k->k.name().equals("Grant-Knight")).findFirst().orElseThrow();
+                var expected=WorldCompatibility.reference(org.tortodrone.character.StarterCatalog.equipped(knight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
+                var actual=Arrays.stream(reconnect.player.availableKnights)
+                    .filter(entry->entry.name.toString().equals("Grant-Knight")).findFirst().orElseThrow().model;
+                if(!actual.equals(expected))
+                    throw new AssertionError("Character select preview differs from the equipped appearance:\n actual "+actual+"\n expected "+expected);
             }
             System.out.println("PASS: stock GM item commands, private feedback, Arsenal entry-added observers, cross-map live grants, distinct instances, equip/model/binding, normal/revoked denial, unsupported refusal, offline target, ID grants, costume slots, plain item stacks/recipes and reconnect persistence");
         }

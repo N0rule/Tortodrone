@@ -51,6 +51,7 @@ public final class ServerIntegrationTest {
             check(ServerSettings.load(generated).port() == 47624, "default port");
             check(Files.exists(generated), "first-start configuration generation");
             defaultWorkflow(jar, directory.resolve("default-start"));
+            missingDefaultsWorkflow(sourceJar,directory.resolve("missing-defaults"));
             rejected(jar, null, directory, "Use --help", "removed account startup option", "--list-accounts");
             managementWorkflow(jar, directory.resolve("management-start"));
             accountWorkflow(jar, directory.resolve("account-start"));
@@ -107,6 +108,10 @@ public final class ServerIntegrationTest {
             check(log.contains("[ServerMain/INFO]: Starting Tortodrone server version "), "versioned startup banner");
             checkLogFormat(log);
             check(log.contains("Server stopped."), "clean shutdown log");
+            String publicValue=Files.readString(state.resolve("keys/public.txt")).trim();
+            check(log.lines().filter(line->line.contains("Public key (game.publicKey): "+publicValue)).count()==1,
+                "new public key is copyable and logged when generated");
+            check(!log.contains(java.util.Base64.getEncoder().encodeToString(identity)),"private key never logged");
             check(!log.contains("password=") && !log.contains(TestClient.passwordHash("tortodrone")) && !log.contains("private-test-ident")
                 && !log.contains("BEGIN PRIVATE KEY"), "no sensitive payloads in logs");
             try (Running server = new Running(jar, config, directory)) {
@@ -119,6 +124,8 @@ public final class ServerIntegrationTest {
                 }
             }
             // Reject mismatched and incomplete keys without replacing the server's identity.
+            check(Files.readString(state.resolve("logs/latest.log")).lines().filter(line->line.contains("Public key (game.publicKey): ")).count()==1,
+                "reopening existing keys does not repeat the public key");
             Files.writeString(state.resolve("keys/public.txt"), "mismatched");
             rejected(jar, config, directory, "does not match", "mismatched keypair");
             check(Arrays.equals(identity, Files.readAllBytes(state.resolve("keys/private.pk8"))), "mismatch preserves private key");
@@ -143,6 +150,23 @@ public final class ServerIntegrationTest {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
             }
         }
+    }
+
+    private static void missingDefaultsWorkflow(Path sourceJar,Path directory)throws Exception {
+        Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");Files.copy(sourceJar,jar);
+        seed(jar,directory);
+        Path config=directory.resolve("data/server.properties");Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        try(var server=new Running(jar,config,directory,java.util.List.of("-Dhttps.proxyHost=127.0.0.1","-Dhttps.proxyPort=1"))) {
+            int port=server.ready();
+            try(var socket=new Socket("127.0.0.1",port)) {
+                TestClient.authenticate(socket,publicKey(Files.readString(directory.resolve("data/keys/public.txt")).trim()),true,
+                    (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,true));
+            }
+        }
+        String log=Files.readString(directory.resolve("data/logs/latest.log"));
+        check(log.contains("Default resource download failed")&&log.contains("Maps unavailable")
+            &&log.contains("using built-in starter definitions")&&log.contains("Done! Listening"),"unavailable defaults warn while normal login/character persistence still work");
+        check(database(directory.resolve("data")).roster(1).size()==1,"missing defaults do not discard saved characters");
     }
 
     private static void defaultWorkflow(Path jar, Path directory) throws Exception {
@@ -362,7 +386,11 @@ public final class ServerIntegrationTest {
         private final BlockingQueue<String> lines = new LinkedBlockingQueue<>();
 
         Running(Path jar, Path config, Path directory) throws IOException {
-            process = command(jar, config, directory).start();
+            this(jar,config,directory,java.util.List.of());
+        }
+        Running(Path jar, Path config, Path directory,java.util.List<String> jvmOptions) throws IOException {
+            var builder=command(jar,config,directory);builder.command().addAll(1,jvmOptions);
+            process = builder.start();
             Thread reader = new Thread(() -> {
                 try (var input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                     String line;

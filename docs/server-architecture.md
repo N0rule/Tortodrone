@@ -5,8 +5,13 @@ Swing/CLI admin JAR shares the database on the same PC. Both JARs bundle SQLite
 JDBC and JLine. Maps are external validated packs. No upstream game server code or installed client
 classes are compiled into Tortodrone. See [dependency provenance](dependencies.md).
 Complete default scene exports and collision masks are retained under
-`maps/default/`. Offline preparation copies missing deployment files into
-`build/maps/`. There is no map download command or release-packaging target.
+`defaults/maps/`; default JSON item definitions live under `defaults/items/`.
+Offline preparation copies the whole extensible tree into `build/defaults/` without
+replacing files. Startup attempts one bounded download of root `defaults/` from
+the hardcoded placeholder Git repository if required defaults are missing. The
+archive is validated in temporary storage before files are installed. Existing
+files and symlinks are never overwritten; failed downloads warn and continue.
+Additional default directories are copied automatically. No release packaging is needed.
 
 ## Code map
 
@@ -21,6 +26,7 @@ All packages are under `src/main/java/org/tortodrone/`.
 | `account` | `AccountStore`, `Passwords`: identity, roles, authentication/revocation |
 | `character` | `CharacterStore`, `Knight`: roster; `WorldProfile`, `StarterCatalog`, `ItemCatalog`, `Currency`: world state/catalog |
 | `storage` | `Database`: schema/transactions; `WorldProfiles`: identity/items/state |
+| `resources` | `DefaultResources`: optional defaults recovery; `Json`: bounded JSON metadata reader/writer |
 | `world` | `SceneCatalog`/`SceneRegistry`: templates/instances; `CollisionMap`: terrain; `TownMovement`, `ActorState`, `SceneClock`: simulation/replication |
 | `admin`, `config` | `AdminApplication`/`AdminWindow`: local tools; `ServerSettings`: settings |
 
@@ -35,7 +41,9 @@ stdin EOF only disables commands. The GUI can run alongside an initialized serve
 Keys are persistent 2048-bit RSA. An incomplete/mismatched identity fails rather
 than being replaced; a missing public file can be reconstructed from the private
 key. Bootstrap uses the accepted socket's concrete local address/actual port,
-not the wildcard listening address. Credentials/raw packets/secrets are never logged.
+not the wildcard listening address. New key generation logs the public key once
+as `Public key (game.publicKey): HEX#EXPONENT`; reuse does not repeat it. The
+private key and credentials/raw packets/secrets are never logged.
 
 Schema 8 stores accounts, account-local rosters, globally identified world knights,
 owned item instances, binding, equipped slots, per-knight balances and audit events.
@@ -119,6 +127,23 @@ Selection loads owned appearance/items/equipment/balances and acquires one contr
 per global knight ID, within the account's sole live connection. Creation selects automatically when the scene receiver is
 registered. A roster-only fixture can save without entering the world.
 
+Roster publications carry each knight's picker preview, not the creation choices.
+`CharacterStore.available` composes the preview under the publication lock from the
+knight's currently equipped items with `StarterCatalog.equipped`, so the stock
+character select renders the outfit the knight actually wears; the picker uses the
+server model verbatim and adds nothing client-side. Fresh subscriptions, unequip,
+re-equip, weapon previews and other-knight isolation are covered by `PickerPreviewTest`; the
+installed reader compares the picker model with the stock held-model builder after a
+reconnect. Profiles are read without an authentication-revision check for this
+read-only publication, using one SQL snapshot per profile; an unreadable profile falls back to the saved creation outfit
+rather than failing the roster. Equipment changes republish only the inventory/loadout
+events of the entered world; a new login publishes fresh previews.
+
+Unavailable maps produce a warning and an empty registry; authentication, rosters
+and local administration remain available. World selection returns an explicit
+failure before acquiring a controller. Existing custom `maps/` takes precedence
+over `defaults/maps/`; no substitute geometry is invented.
+
 The external catalog supplies town templates; the registry assigns each instance
 a distinct scene object ID. Scene travel resets membership/input/baselines and
 uses the original zone callback with each summary's neighbor arrays. Scene
@@ -171,10 +196,11 @@ before the success callback. Stock Item flags bit 2 carries mutable binding;
 bit 1 carries permanent binding, which also sets mutable binding at creation.
 
 `ItemCatalog` loads bounded external reference/metadata/model records from sibling
-`items/catalog.tsv`, with a starter fallback when absent. It loads no stock classes.
+custom `items/catalog.json` or `defaults/items/catalog.json`, with a starter fallback
+when absent. At server startup, an unreadable catalogue warns and uses that fallback. It loads no stock classes.
 `ItemCatalogExport` is an optional read-only installed oracle and does not run on
 the server. Verified normal equipment, costumes, trinkets and plain inventory records are grantable;
-unsupported/internal/expiring types remain indexed. Catalogue v2 is required
+unsupported/internal/expiring types remain indexed. JSON catalogue version 1 is required
 and resolves unique nonzero stock IDs to canonical references.
 `StarterCatalog.equipped` composes the verified catalogue arguments with knight
 appearance and original accessories for the equipment preview. The lowest equipped

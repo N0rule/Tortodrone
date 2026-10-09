@@ -221,6 +221,11 @@ public final class Database {
             var profile = WorldProfiles.load(c,accountId,knightId,authRevision); c.commit(); return profile;
         });
     }
+    /** Current world state without an authentication-revision check, for read-only publications. */
+    public WorldProfile profile(int accountId,int knightId) throws IOException {
+        return worldProfile(accountId,knightId,-1);
+    }
+
     public WorldProfile currency(String username,String knightName,int expectedAccount,int expectedWorld,
             org.tortodrone.character.Currency currency,long delta) throws IOException {
         if (delta==0 || delta<-Integer.MAX_VALUE || delta>Integer.MAX_VALUE) throw new IOException("Amount must be between 1 and 2147483647");

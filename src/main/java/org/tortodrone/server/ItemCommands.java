@@ -13,7 +13,7 @@ public final class ItemCommands {
         if(head[0].equalsIgnoreCase("items")) {
             String query=head.length==2?head[1]:"";var matches=catalog.search(query);
             String rows=String.join("; ",matches.stream().limit(5).map(e->e.config()+" [id="+e.stockId()+"]"+(e.grantable()?"":" [index only]")).toList());
-            return matches.size()+" matches"+(rows.isEmpty()?"":"; "+rows)+(matches.size()>5?"; narrow the search or consult items/catalog.tsv":"");
+            return matches.size()+" matches"+(rows.isEmpty()?"":"; "+rows)+(matches.size()>5?"; narrow the search or consult items/catalog.json":"");
         }
         var words=line.strip().split("\\s+",5);
         if(words.length!=5||!words[0].equalsIgnoreCase("giveitem"))throw new IOException("Usage: giveitem <username> <knight-name> <1-20> <catalogue ID or exact item config>; items <search>");

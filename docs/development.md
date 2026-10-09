@@ -15,6 +15,7 @@ No Maven/Gradle, installed game or database service is required.
 
 ```sh
 make build             # server and local admin JARs
+make defaults          # copy all local defaults, preserving existing files
 make build-server      # server only
 make build-admin       # manager only
 make build test        # rebuild and run all checks
@@ -31,7 +32,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 32 unit and four integration checks. It covers persistence,
+The current suite has 34 unit and four integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 The map preparation check uses a temporary source tree without game files or
@@ -61,7 +62,10 @@ model retention, peaceful town models, ignored combat inputs, equipment element/
 observer callbacks before confirmation, currency, scene round trips, separate-instance isolation
 and two-account actor synchronization. It also checks same-account knight takeover
 and rapid reconnect using stock login/selection readers. Picker validation and creation
-reject names owned by another account, including case variants. Maps are copied into every test deployment.
+reject names owned by another account, including case variants. Complete defaults are copied into each normal test deployment. The missing-default
+fixture blocks outbound repository access and checks warning-only startup, normal
+login and character persistence. Local HTTP fixtures exercise downloads, future
+directories, validation and preservation of existing files.
 Chat fixtures use the stock scene speak RPC and reader, including Unicode, speaker
 names, sender echo, emote mode and isolation across instances and map transitions.
 GM fixtures verify login/occupant role and support icon, broadcasts across maps,
@@ -82,7 +86,7 @@ acceptance checks. Read JARs, assets and native libraries from
 client preferences. No graphical test launcher is committed: assemble an isolated
 environment for the installed version, using its deployment/JVM requirements.
 
-1. Create a temporary directory with a server JAR and maps copy, fresh data/keys, disposable
+1. Create a temporary directory with a server JAR and defaults copy, fresh data/keys, disposable
    normal accounts, client home/preferences/cache/native extraction directories.
 2. Start that server on an isolated localhost port. Create a temporary deployment
    configuration retaining required stock settings but using its endpoint and
