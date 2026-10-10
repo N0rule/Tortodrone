@@ -1,6 +1,6 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-10, version 0.23.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-10, version 0.24.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
@@ -8,7 +8,7 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 
 ## Current recorded baseline
 
-- Java 25 Gradle Kotlin DSL build; executable server/admin JARs; isolated standalone regression suite. Normal resource-fallback warnings are consolidated; debug includes recovery/storage details. Admin lists knight names; console supports `ac` and `gm <account>` toggles; console/chat grants accept globally unique knight names with legacy account-qualified forms retained.
+- Java 25 Gradle Kotlin DSL build; executable server/admin JARs; isolated standalone regression suite. Normal resource-fallback warnings are consolidated; debug includes recovery/storage details. Console history includes invalid/incomplete input, with grouped and command-specific help. Startup hints use Gradle and respect the active log mode. Admin lists knight names; console supports `ac` and `gm <account>` toggles; console/chat grants accept globally unique knight names with legacy account-qualified forms retained.
 - RSA/AES authentication; one active session/account; case-insensitive unique knight names; persisted account/roster/character/inventory/currency; creation/selection/deletion; local admin and GM commands.
 - Four imported Haven districts: Town Square, Bazaar, Arcade, Garrison; **ten native portal transitions**, checked external map/collision packs, server-authoritative movement and static collision. Independent scene instances, shared `SceneSimulation` tick (**50 ms**) and per-recipient actor delta state, bounded output queues and shared revision/role polling.
 - Inventory, Arsenal, equipment/costumes/trinkets, binding/stacks, live visual updates; scene chat, private tells, broadcasts, sitting/emotes recorded through the last committed milestone as applicable. Intro missions bypassed **without inventing completion/rewards**.

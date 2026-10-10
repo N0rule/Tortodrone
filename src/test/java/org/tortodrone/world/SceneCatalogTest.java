@@ -12,7 +12,13 @@ public final class SceneCatalogTest {
         Path home=Files.createTempDirectory("tortodrone-map-catalog-");
         try {
             Path maps=home.resolve("maps");
-            refuse(()->SceneCatalog.load(maps));
+            try { SceneCatalog.load(maps); throw new AssertionError("Missing maps accepted"); }
+            catch(IOException expected) {
+                check(expected.getMessage().contains("./gradlew prepareMaps")
+                    &&expected.getMessage().contains("build/defaults/maps")
+                    &&expected.getMessage().contains("defaults/maps/"),"missing maps hint gives Gradle preparation command and deployment paths");
+                check(!expected.getMessage().contains("make maps"),"missing maps hint has no stale Make command");
+            }
             copy(Path.of("defaults/maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==4 && catalog.entry().id()==1,"all four Haven towns load without installed game");

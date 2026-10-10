@@ -106,9 +106,12 @@ public final class Server {
             catalog=org.tortodrone.character.ItemCatalog.starter();
         }
         if(itemSource==null)fallbacks.add("item catalog missing (using built-in starter definitions)");
+        String resourceHint=settings.logMode()==ServerSettings.LogMode.DEBUG
+            ? "See diagnostics above."
+            : "Check defaults/maps/ and defaults/items/catalog.json beside the server JAR; use log-mode=debug for details.";
         if(!fallbacks.isEmpty())log.warn("Resource fallback: " + String.join("; ",fallbacks)
-            + "; login and administration remain available. Check defaults/; use log-mode=debug for details.");
-        else if(!recoveryWarnings.isEmpty())log.warn("Default resource recovery incomplete; using available local maps/items. Use log-mode=debug for details.");
+            + "; login and administration remain available. " + resourceHint);
+        else if(!recoveryWarnings.isEmpty())log.warn("Default resource recovery incomplete; using available local maps/items. " + resourceHint);
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");

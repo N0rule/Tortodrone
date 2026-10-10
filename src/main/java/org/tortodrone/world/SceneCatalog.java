@@ -26,7 +26,7 @@ public final class SceneCatalog {
     public List<MapScene> scenes(){return List.copyOf(scenes.values());}
     public static SceneCatalog empty(){return new SceneCatalog(new TreeMap<>(),0);}
     public static SceneCatalog load(Path directory)throws IOException {
-        if(!Files.isDirectory(directory))throw new IOException("Missing maps; deploy maps/ beside the server JAR (make maps prepares local defaults)");
+        if(!Files.isDirectory(directory))throw new IOException("Missing maps; run ./gradlew prepareMaps (writes build/defaults/maps by default), then deploy as maps/ or defaults/maps/ beside the server JAR");
         Path root=directory.toRealPath();var settings=properties(root.resolve("catalog.properties"));
         int entry=number(settings,"entry-scene",1,Integer.MAX_VALUE);var scenes=new TreeMap<Integer,MapScene>();
         try(var paths=Files.list(root)) {

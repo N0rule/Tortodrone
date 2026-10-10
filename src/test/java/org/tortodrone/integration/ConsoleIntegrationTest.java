@@ -25,12 +25,26 @@ public final class ConsoleIntegrationTest {
             try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {
                 int port = server.ready(); Database db = new Database(directory.resolve("data"),false);
                 check(db.list().isEmpty(),"fresh server does not seed a default account");
-                server.send("help\nstatus\n"); server.await("Commands: help"); server.await("Server running. Accounts: 0");
-                server.send("account create Alice inline-secret\n"); server.await("Invalid account command");
+                server.send("help\nstatus\n"); server.await("Server console commands:"); server.await("Server running. Accounts: 0");
+                for(String command:new String[]{"account","ac","account create","help account create","account create --help"}) {
+                    server.send(command+"\n");server.await("Example: account create Alice");
+                }
+                for(String command:new String[]{"knight","knight list","help knight list"}) {
+                    server.send(command+"\n");server.await("Example: knight list Alice");
+                }
+                for(String command:new String[]{"gm","help gm"}) {
+                    server.send(command+"\n");server.await("Example: gm Alice");
+                }
+                server.send("currency give\n");server.await("Example: currency give Alice Jane crowns 100");
+                server.send("giveitem\n");server.await("Example: giveitem Jane 2 Weapon/Sword/Proto Sword");
+                server.send("status extra\nstop extra\n");server.await("Usage: status");server.await("Usage: stop");
+                server.send("accout\n");server.await("Unknown command. Type help");
+                check(db.list().isEmpty()&&server.process.isAlive(),"help and malformed commands do not create accounts or stop server");
+                server.send("account create Alice inline-secret\n"); server.await("Usage: account create <username> [gm]");
                 server.send("account create Alice gm\nconsole-password\nconsole-password\n"); server.await("Account created: Alice");
                 check(db.identity("Alice").gameMaster(),"create with Game Master true persists role");
                 server.send("account admin Alice false\naccount create OldAlias admin\n");
-                server.await("Invalid account command");
+                server.await("Usage: account create <username> [gm]");
                 check(db.identity("Alice").gameMaster() && db.identity("OldAlias")==null,"obsolete role aliases cannot mutate accounts");
                 server.send("ac list\n"); server.await("1 | Alice | true | 0"); server.await("Accounts: 1");
                 new CharacterStore(db,1,"Alice").create(new Knight(0,"Console-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
@@ -84,11 +98,17 @@ public final class ConsoleIntegrationTest {
                 server.send("account delete Alice\nwrong-name\n"); server.await("Deletion confirmation did not match"); check(db.identity("Alice") != null,"incorrect deletion confirmation preserves account");
                 server.send("account delete Alice\nAlice\n"); server.await("Account deleted: Alice"); check(db.identity("Alice") == null,"terminal deletion persisted");
                 server.send("account create Bob\nbob-password\nbob-password\n"); server.await("Account created: Bob"); check(db.identity("Bob").id() == 2,"deleted account ID not reused");
+                server.send("account create help\nhelp-password\nhelp-password\n");server.await("Account created: help");
+                server.send("gm help\n");server.await("Game Master status changed: help = true");
+                check(db.identity("help").gameMaster(),"help remains a valid account name for creation and GM toggle");
+                server.send("help gm\n");server.await("Example: gm Alice");
+                check(db.identity("help").gameMaster(),"explicit help does not toggle role");
+                server.send("account delete help\nhelp\n");server.await("Account deleted: help");
                 server.send("/status\n"); server.await("Server running. Accounts: 1");
                 server.send("/stop\n"); check(server.process.waitFor(10,TimeUnit.SECONDS) && server.process.exitValue() == 0,"stop command exits cleanly without Ctrl+C");
             }
             String log = Files.readString(directory.resolve("data/logs/latest.log"));
-            check(log.contains("Server stopped.") && !log.contains("console-password") && !log.contains("inline-secret") && !log.contains(TestClient.passwordHash("console-password")),"console logs lifecycle, never password arguments or prompts' values");
+            check(log.contains("Server stopped.") && !log.contains("console-password") && !log.contains("inline-secret") && !log.contains("help-password") && !log.contains(TestClient.passwordHash("console-password")),"console logs lifecycle, never password arguments or prompts' values");
             try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {
                 server.ready(); server.process.getOutputStream().close(); server.await("Terminal input closed; server remains running");
                 check(server.process.isAlive(),"redirected stdin EOF leaves service running");

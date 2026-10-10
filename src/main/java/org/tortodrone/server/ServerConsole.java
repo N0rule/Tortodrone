@@ -60,17 +60,39 @@ final class ServerConsole implements AutoCloseable {
     }
 
     private void execute(String[] words) throws IOException {
-        String command = words[0].toLowerCase(Locale.ROOT);
+        String command = ConsoleHelp.canonical(words[0]);
+        words[0]=command;
+        if(command.equals("help")) {
+            if(words.length==1||words.length==2&&words[1].equalsIgnoreCase("--help"))showHelp(ConsoleHelp.overview());
+            else if(words.length<=3)showHelp(ConsoleHelp.topic(words[1],words.length==3?words[2]:""));
+            else showHelp(ConsoleHelp.topic("help",""));
+            return;
+        }
+        boolean group=command.equals("account")||command.equals("knight")||command.equals("currency");
+        if(ConsoleHelp.known(command) && words.length==1 && !command.equals("items")
+                && !command.equals("status") && !command.equals("stop")) {
+            showHelp(ConsoleHelp.topic(command,""));return;
+        }
+        if(ConsoleHelp.known(command)&&words.length==2&&words[1].equalsIgnoreCase("--help")) {
+            showHelp(ConsoleHelp.topic(command,""));return;
+        }
+        if(group&&words.length>1) {
+            words[1]=words[1].toLowerCase(Locale.ROOT);
+            if(words[1].equals("help")&&words.length<=3) {
+                showHelp(ConsoleHelp.topic(command,words.length==3?words[2]:""));return;
+            }
+            if(words.length==3&&words[2].equalsIgnoreCase("--help")) {
+                showHelp(ConsoleHelp.topic(command,words[1]));return;
+            }
+        }
         if(command.equals("giveitem")||command.equals("items")) {
-            log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
-                (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));
-        } else if (words.length == 1 && command.equals("help")) {
-            log.info("Commands: help | status | stop | account (alias: ac) list | account create <username> [gm]");
-            log.info("knight list <username> | knight info <username> <knight-name>");
-            log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
-            log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
-            log.info("items <search> | giveitem <knight-name> <1-20> <catalogue ID or exact item config>");
-            log.info("account password <username> | account check <username> | gm <username> [true|false] | account gm <username> [true|false] | account delete <username>");
+            try {
+                log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
+                    (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));
+            } catch(IOException failure) {
+                if(failure.getMessage().startsWith("Usage:"))throw new IOException(ConsoleHelp.usage(words));
+                throw failure;
+            }
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
         } else if (words.length == 1 && command.equals("stop")) {
@@ -80,13 +102,16 @@ final class ServerConsole implements AutoCloseable {
         } else if (command.equals("knight")) {
             knight(words);
         } else if (command.equals("gm")) {
+            if(!(words.length==2||words.length==3&&(words[2].equals("true")||words[2].equals("false"))))
+                throw new IOException(ConsoleHelp.usage(words));
             String[] accountWords = new String[words.length+1];
             accountWords[0]="account";accountWords[1]="gm";
             System.arraycopy(words,1,accountWords,2,words.length-1);
             account(accountWords);
         } else if (command.equals("account") || command.equals("ac")) {
             account(words);
-        } else throw new IOException("Unknown command or arguments. Type help for commands.");
+        } else if(ConsoleHelp.known(command))throw new IOException(ConsoleHelp.usage(words));
+        else throw new IOException("Unknown command. Type help to see commands, or press Up to correct your input.");
     }
 
     private void knight(String[] words) throws IOException {
@@ -109,12 +134,12 @@ final class ServerConsole implements AutoCloseable {
             if(!running.getAsBoolean())return;
             accounts.deleteKnight(words[2],name.name(),profile.accountId(),profile.worldId());
             log.info("Knight deleted: "+name.name()+"; this account's sessions will disconnect.");
-        } else throw new IOException("Invalid knight command. Type help for commands.");
+        } else throw new IOException(ConsoleHelp.usage(words));
     }
 
     private void currency(String[] words) throws IOException {
         if (words.length != 6 || !(words[1].equals("give") || words[1].equals("withdraw")))
-            throw new IOException("Usage: currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
+            throw new IOException(ConsoleHelp.usage(words));
         long amount;
         try { amount = Long.parseLong(words[5]); }
         catch (NumberFormatException failure) { throw new IOException("Amount must be a positive whole number"); }
@@ -129,7 +154,13 @@ final class ServerConsole implements AutoCloseable {
             for (var account : accounts.list()) log.info(account.id() + " | " + account.username() + " | " + account.gameMaster() + " | " + account.knights());
             log.info("Accounts: " + accounts.list().size()); return;
         }
-        if (words.length < 3) throw usage();
+        if (words.length < 3) throw new IOException(ConsoleHelp.usage(words));
+        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && words[3].equals("gm"));
+        boolean reset = words[1].equals("password") && words.length == 3;
+        boolean check = words[1].equals("check") && words.length == 3;
+        boolean role = words[1].equals("gm") && (words.length == 3 || words.length == 4 && (words[3].equals("true")||words[3].equals("false")));
+        boolean delete = words[1].equals("delete") && words.length == 3;
+        if(!create&&!reset&&!check&&!role&&!delete)throw new IOException(ConsoleHelp.usage(words));
         String name = words[2]; AccountStore.validateUsername(name);
         if (words[1].equals("gm") && words.length == 3) {
             boolean enabled=accounts.toggleGameMaster(name);
@@ -145,10 +176,6 @@ final class ServerConsole implements AutoCloseable {
             if (!running.getAsBoolean()) return;
             accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
         }
-        boolean create = words[1].equals("create") && (words.length == 3 || words.length == 4 && words[3].equals("gm"));
-        boolean reset = words[1].equals("password") && words.length == 3;
-        boolean check = words[1].equals("check") && words.length == 3;
-        if (!create && !reset && !check) throw usage();
         // Capture the selected identity before prompting; deletion/recreation must not redirect a reset.
         int expectedId = -1;
         if (!create) expectedId = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account")).id();
@@ -169,6 +196,6 @@ final class ServerConsole implements AutoCloseable {
         }
     }
 
-    private IOException usage() { return new IOException("Invalid account command. Type help for commands."); }
+    private void showHelp(java.util.List<String> lines) { lines.forEach(log::info); }
 
 }

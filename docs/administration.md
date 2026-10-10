@@ -27,8 +27,13 @@ Enter commands in the running server, not the shell. A leading `/` is optional. 
 | `items Calibur` | Find item references (first five matches) |
 | `giveitem Saved-Knight 2 Weapon/Sword/Calibur` | Grant distinct unequipped equipment instances |
 
-Interactive Up/Down recalls 100 commands in memory. Password/confirmation prompts
-and unrecognized input never enter history. Passwords are hidden in a terminal
+Use `help` for a grouped overview, `help account create` for specific usage and examples,
+or type a command such as `account` without arguments to see its available forms.
+`account help`, `account create --help`, and `gm --help` also work.
+
+Interactive Up/Down recalls the last 100 typed commands in memory, including typos,
+incomplete commands and repeated commands. History is never written to disk.
+Password/confirmation prompts never enter history. Passwords are hidden in a terminal
 and never command arguments. Redirected stdin supplies complete UTF-8 lines;
 EOF leaves the server running. Logs preserve the active prompt.
 

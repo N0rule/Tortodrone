@@ -166,6 +166,8 @@ public final class ServerIntegrationTest {
         String log=Files.readString(directory.resolve("data/logs/latest.log"));
         check(log.contains("Resource fallback: maps unavailable")
             &&log.contains("using built-in starter definitions")&&log.contains("Done! Listening"),"unavailable defaults warn while normal login/character persistence still work");
+        check(log.contains("Check defaults/maps/ and defaults/items/catalog.json beside the server JAR; use log-mode=debug for details.")
+            &&!log.contains("make maps"),"normal fallback hint gives deployment paths, debug setting and no stale Make command");
         check(log.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1
             &&!log.contains("Default resource download failed")&&!log.contains("Missing default resources")&&!log.contains("/DEBUG]:"),
             "normal mode reports missing defaults once without recovery diagnostics");
@@ -180,6 +182,9 @@ public final class ServerIntegrationTest {
         check(debug.contains("Default resource download failed")&&debug.contains("Missing default resources")
             &&debug.contains("Account database:")&&debug.contains("Scene IDs:"),"debug mode includes recovery and storage diagnostics");
         check(debug.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1,"debug fallback warning is consolidated");
+        check(debug.contains("Resource fallback:")&&debug.contains("See diagnostics above.")
+            &&!debug.contains("use log-mode=debug")&&!debug.contains("make maps"),
+            "debug fallback hint points to existing diagnostics without repeating debug setting or stale Make command");
     }
 
     private static void defaultWorkflow(Path jar, Path directory) throws Exception {

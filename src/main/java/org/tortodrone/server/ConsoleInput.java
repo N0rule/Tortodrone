@@ -33,7 +33,7 @@ final class ConsoleInput implements AutoCloseable {
     static LineReader commandReader(Terminal terminal) {
         LineReader reader = reader(terminal).history(new CommandHistory()).variable(LineReader.HISTORY_SIZE, CommandHistory.LIMIT)
             .option(LineReader.Option.HISTORY_INCREMENTAL, false)
-            .option(LineReader.Option.HISTORY_IGNORE_DUPS, true).build();
+            .option(LineReader.Option.HISTORY_IGNORE_DUPS, false).build();
         bindCursorKeys(reader);
         return reader;
     }
