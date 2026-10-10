@@ -196,6 +196,24 @@ public final class CharacterStore {
         return database.equip(accountId,knightId,revision,itemId,slot);
     }
 
+    /** Trade coordinator never takes an account's roster lock while holding its own lock. */
+    public WorldProfile tradeProfile(int knightId,long authRevision)throws IOException {
+        if(database==null)throw new IOException("Trading requires SQLite storage");
+        return database.worldProfile(accountId,knightId,authRevision);
+    }
+    public boolean inspectionHidden(long authRevision)throws IOException {
+        return database!=null&&database.inspectionHidden(accountId,authRevision);
+    }
+    public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
+        if(database==null)throw new IOException("Preferences require SQLite storage");
+        database.inspectionHidden(accountId,authRevision,hidden);
+    }
+    public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
+            WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
+        if(database==null||first.accountId()!=accountId)throw new IOException("Invalid trade owner");
+        return database.trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy);
+    }
+
     private int indexOf(String name) {
         if (name == null) return -1;
         for (int i = 0; i < knights.size(); i++) {

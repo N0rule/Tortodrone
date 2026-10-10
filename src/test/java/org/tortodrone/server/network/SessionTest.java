@@ -48,8 +48,8 @@ public final class SessionTest {
             out.writeInt(3); out.writeInt(1); out.writeByte(5); out.writeBoolean(true); out.writeInt(1);
             out.writeShort(-3); out.writeUTF("java.lang.Runtime"); // No reflective class loading.
         });
-        ownership(1002, "receivers", "Unauthorized object mutation");
-        ownership(1001, "crowns", "Unauthorized object mutation");
+        ownership(1004, "receivers", "Unauthorized object mutation");
+        ownership(1002, "crowns", "Unauthorized object mutation");
         duplicateReceivers();
         System.out.println("PASS: bounded events/batches/collections/enums, null arguments, foreign object/field mutations, duplicate receivers");
     }
@@ -65,10 +65,10 @@ public final class SessionTest {
     private static void duplicateReceivers() throws Exception {
         sessionRejected((writer, out) -> {
             writer.message(out, "ForwardEventRequest", 1);
-            writer.type(out, TestWire.DOB + "CompoundEvent"); out.writeInt(1001);
+            writer.type(out, TestWire.DOB + "CompoundEvent"); out.writeInt(1002);
             writer.type(out, "com.threerings.util.StreamableArrayList"); out.writeInt(2);
             for (String code : List.of("receiver-a", "receiver-b")) {
-                writer.type(out, TestWire.DOB + "EntryAddedEvent"); out.writeInt(1001);
+                writer.type(out, TestWire.DOB + "EntryAddedEvent"); out.writeInt(1002);
                 out.writeBoolean(true); out.writeUTF("receivers");
                 writer.type(out, "com.threerings.presents.client.InvocationReceiver$Registration");
                 out.writeBoolean(true); out.writeUTF(code); out.writeShort(0);

@@ -117,6 +117,42 @@ public final class TownMovementTest {
             "inventory interrupts sitting and cannot be replaced by another sit");
         seated.resetInput(12100);
         check(seated.activity()==0&&seated.flags()==0,"scene transition clears the sitting activity and queued input");
+        var animated=new TownMovement();animated.resetInput(1000);
+        check(animated.emote(PlayerEmotes.find("Attack"),1000,1000),"catalogued emote starts");
+        check(animated.activity()==9&&animated.activityStarted()==1000,"stock activity id and start time");
+        check(animated.accept(1000,0,0,1,1000,1000),"movement begins during movement-enabled emote");
+        animated.advance(1000,1000);
+        for(int time=1100;time<=1600;time+=100){
+            check(animated.accept(time,0,0,1,time,time),"movement frame during emote");
+            animated.advance(time,time);
+            check(animated.activity()==9&&animated.flags()==2,"movement and emote coexist before deadline");
+        }
+        animated.advance(1699,1699);
+        check(animated.activity()==9,"timed activity persists until its exact deadline");
+        animated.advance(1700,1700);
+        check(animated.activity()==0&&animated.activityStarted()==1700&&animated.flags()==2
+            &&Math.abs(animated.x()-3.5f)<.0001,"timed activity ends exactly and movement integrates across deadline");
+        var sleep=new TownMovement();sleep.resetInput(2000);
+        check(sleep.emote(PlayerEmotes.find("Sleep"),2000,2000)&&sleep.activity()==27
+            &&sleep.activityStarted()==2000,"zero-duration blocked emote remains active");
+        check(sleep.accept(2000,0,0,1,2000,2000),"movement can cancel Sleep");sleep.advance(2050,2050);
+        check(sleep.activity()==0&&sleep.activityStarted()==2000&&sleep.flags()==2
+            &&Math.abs(sleep.x()-.25f)<.0001,"Sleep without end animation clears to idle on movement");
+        var textEmote=new TownMovement();textEmote.resetInput(3000);
+        check(textEmote.emote(PlayerEmotes.find("Sit"),3000,3000),"animated pose starts");
+        check(textEmote.emote(PlayerEmotes.find("Gaze"),3001,3001)
+            &&textEmote.activity()==26&&textEmote.activityStarted()==3000,
+            "chat-only emote leaves ongoing actor activity untouched");
+        var interrupted=new TownMovement();interrupted.resetInput(4000);
+        check(interrupted.emote(PlayerEmotes.find("Hello"),4000,4000),"emote can start before inventory");
+        check(interrupted.accept(4050,0,0,2,4000,4000),"inventory input during emote accepted");
+        interrupted.advance(4050,4050);
+        check(interrupted.activity()==TownMovement.INVENTORY&&interrupted.flags()==0,
+            "inventory interrupts an active emote");
+        check(!interrupted.emote(PlayerEmotes.find("Hello"),4051,4051),
+            "emote cannot replace active inventory pose");
+        var forged=new PlayerEmotes.Descriptor("forged",264,0,0,0,true,false,true,false,0);
+        check(!new TownMovement().emote(forged,5000,5000),"uncatalogued activity descriptors rejected");
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }

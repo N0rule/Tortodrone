@@ -63,12 +63,21 @@ public final class TownMovement {
         return true;
     }
 
-    /** A scene RPC starts only this actor's verified, non-targetable Sit emote. */
+    /** Compatibility adapter for the original sit RPC. */
     public boolean sit(int sceneTime, long now) {
+        return emote(PlayerEmotes.find("Sit"),sceneTime,now);
+    }
+
+    /** Start a catalogued stock emote without accepting client-supplied activity data. */
+    public boolean emote(PlayerEmotes.Descriptor emote, int sceneTime, long now) {
+        if(!PlayerEmotes.isCatalogued(emote))return false;
         advance(sceneTime, now);
         if(portal!=null)return false;
-        if (activity != 0 && activity != SIT) return false;
-        if (activity != SIT) setActivity(SIT, timestamp);
+        // Text-only emotes use the normal chat bubble path and must not clear a pose.
+        if (!emote.animated()) return true;
+        if (activity == INVENTORY || activity == INVENTORY_END) return false;
+        if (activity != emote.activity() || emote.activity()!=SIT)
+            setActivity(emote.activity(), timestamp);
         updateFlags();
         return true;
     }
@@ -81,10 +90,13 @@ public final class TownMovement {
             var frame = pending.removeFirst();
             if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
             if(portal!=null)return;
-            if (activity == 0) rotation = frame.rotation();
+            if (activity == 0 || activityAllowsMovement()) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
-            if (activity == SIT && (inputFlags & 1) != 0) setActivity(SIT_END, timestamp);
+            if (activity != 0 && !activityAllowsMovement() && (inputFlags & 1) != 0) {
+                var emote = PlayerEmotes.byActivity(activity);
+                if(emote!=null)setActivity(emote.endActivity(),timestamp);
+            }
             if ((inputFlags & 2) != 0 && activity != INVENTORY) setActivity(INVENTORY, timestamp);
             else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
             updateFlags();
@@ -100,9 +112,14 @@ public final class TownMovement {
     private void moveTo(int target) {
         int duration = activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
+        var emote = PlayerEmotes.byActivity(activity);
+        boolean movingEmote=emote!=null&&emote.allowsMovement();
+        if(movingEmote)duration=emote.duration();
         if (duration > 0 && target - activityStarted >= duration) {
             int ended = activityStarted + duration;
-            if (ended - timestamp > 0) timestamp = ended;
+            // A movement-enabled animation permits the same movement before and after
+            // its exact deadline, so integrate the whole interval in one pass.
+            if (!movingEmote && ended - timestamp > 0) timestamp = ended;
             setActivity(0, ended);
             updateFlags();
         }
@@ -141,8 +158,12 @@ public final class TownMovement {
         activity = value;
         activityStarted = started;
     }
+    private boolean activityAllowsMovement() {
+        var emote=PlayerEmotes.byActivity(activity);
+        return emote!=null&&emote.allowsMovement();
+    }
     private void updateFlags() {
-        flags = activity == 0 && (inputFlags & 1) != 0 ? 2 : 0;
+        flags = (activity == 0 || activityAllowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
     }
     private static float normalize(float angle) {
         return (float) Math.IEEEremainder(angle, Math.PI * 2);

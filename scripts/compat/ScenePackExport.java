@@ -4,6 +4,7 @@ import java.security.*;
 import java.util.*;
 import java.util.zip.*;
 import com.threerings.config.*;
+import com.threerings.tudey.config.PlaceableConfig;
 import com.threerings.tudey.data.*;
 import com.threerings.math.*;
 
@@ -20,8 +21,8 @@ public final class ScenePackExport {
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");manager.init();
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(manager);
-        if(!(scene.adD() instanceof com.threerings.projectx.town.data.TownSceneConfig))
-            throw new IOException("Only verified town scene packs are currently supported");
+        String kind=sceneKind(scene.adD());
+        Entrance entrance=kind.equals("town")?null:defaultEntrance(scene,manager);
         var coords=scene.adE();if(coords.isEmpty())throw new IOException("No static tiles");
         int minX=coords.stream().mapToInt(c->c.x).min().orElseThrow()-1;
         int minY=coords.stream().mapToInt(c->c.y).min().orElseThrow()-1;
@@ -33,7 +34,8 @@ public final class ScenePackExport {
         actor.init(manager);
         var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(manager);
         var shape=config.shape.acP();var bits=new BitSet(width*height);
-        float targetX=args.length==7?Float.parseFloat(args[5]):0,targetY=args.length==7?Float.parseFloat(args[6]):0;
+        float targetX=args.length==7?Float.parseFloat(args[5]):entrance==null?0:entrance.x;
+        float targetY=args.length==7?Float.parseFloat(args[6]):entrance==null?0:entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
         float spawnX=0,spawnY=0;double nearest=Double.POSITIVE_INFINITY;
         for(int row=0;row<height;row++)for(int col=0;col<width;col++) {
@@ -53,14 +55,53 @@ public final class ScenePackExport {
             stream.writeFloat(minX);stream.writeFloat(minY);stream.writeFloat(.25f);
             stream.write(Arrays.copyOf(bits.toByteArray(),(width*height+7)/8));
         }
-        var p=new Properties();p.setProperty("kind","town");p.setProperty("scene-id",Integer.toString(scene.sceneId));
+        var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));p.setProperty("image","haven.jpg");p.setProperty("instances","1");
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
         p.setProperty("collision-sha256",digest(out.resolve("walkability.gz")));
-        try(var stream=Files.newOutputStream(out.resolve("map.properties"))){p.store(stream,"Prepared from read-only stock scene/configuration data");}
-        System.out.println("PASS: scene="+scene.sceneId+" version="+scene.version+" samples="+bits.cardinality()+" spawn="+spawnX+","+spawnY);
+        writeProperties(out.resolve("map.properties"),p);
+        if(entrance!=null)writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
+        System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version+
+            " samples="+bits.cardinality()+" spawn="+spawnX+","+spawnY+
+            (entrance==null?"":" entrance="+entrance.id+" yaw="+entrance.rotation));
+    }
+    private static String sceneKind(TudeySceneConfig config)throws IOException {
+        if(config instanceof com.threerings.projectx.dungeon.data.TrainingSceneConfig training&&"training".equals(training.getType()))return "training";
+        if(config instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level&&"level".equals(level.getType()))return "level";
+        if(config instanceof com.threerings.projectx.town.data.TownSceneConfig town&&"town".equals(town.getType()))return "town";
+        throw new IOException("Unsupported scene configuration kind: "+config.getClass().getName());
+    }
+    private static Entrance defaultEntrance(TudeySceneModel scene,ConfigManager manager)throws IOException {
+        var matches=new ArrayList<TudeySceneModel.PlaceableEntry>();
+        for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)) {
+            if(!entry.placeable.getName().equals("Dynamic/Portal/Level Start"))continue;
+            PlaceableConfig config=entry.placeable.a(manager,PlaceableConfig.class);
+            if(config.q(manager).defaultEntrance)matches.add(entry);
+        }
+        if(matches.size()!=1)throw new IOException("Expected exactly one default Level Start portal, found "+matches.size());
+        var entry=matches.getFirst();var position=entry.transform.tD();var rotation=entry.transform.tE();
+        float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
+            1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
+        if(!Float.isFinite(position.x)||!Float.isFinite(position.y)||!Float.isFinite(yaw))
+            throw new IOException("Invalid default Level Start transform");
+        return new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw);
+    }
+    private static void writeEntrance(Path out,String layoutDigest,Entrance entrance)throws IOException {
+        var p=new Properties();p.setProperty("format","2");p.setProperty("layout-sha256",layoutDigest);
+        p.setProperty("entrances","level_start");p.setProperty("entrance.level_start.id",Integer.toString(entrance.id));
+        p.setProperty("entrance.level_start.x",Float.toString(entrance.x));
+        p.setProperty("entrance.level_start.y",Float.toString(entrance.y));
+        p.setProperty("entrance.level_start.rotation",Float.toString(entrance.rotation));
+        writeProperties(out.resolve("portals.properties"),p);
+    }
+    private record Entrance(int id,float x,float y,float rotation) { }
+    static void writeProperties(Path path,Properties values)throws IOException {
+        var lines=new ArrayList<String>();
+        for(String key:values.stringPropertyNames())lines.add(key+"="+values.getProperty(key));
+        Collections.sort(lines);
+        Files.writeString(path,String.join("\n",lines)+"\n");
     }
     private static String digest(Path file)throws Exception {
         return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(file)));

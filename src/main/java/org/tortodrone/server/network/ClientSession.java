@@ -42,7 +42,7 @@ final class ClientSession {
     private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters, SessionOutput output, long authRevision, AccountStore.Session session) throws Exception {
         SessionCodec outgoing = new SessionCodec();
-        int clientOid = Math.addExact(1000, connectionId);
+        int clientOid = Math.addExact(1000, Math.multiplyExact(2,connectionId));
         output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
         log.debug("BootstrapNotification sent; clientOid=" + clientOid + "; services=" + SessionCodec.SERVICES.size());
         socket.setSoTimeout(60000); // Current client heartbeat period exceeds the handshake timeout.
@@ -59,6 +59,7 @@ final class ClientSession {
                 for (HandshakeCodec.SessionRequest request : incoming.sessionRequests(body)) {
                     if(!session.current())throw new IOException("Session replaced");
                     switch (request.type()) {
+                        case "ThrottleUpdatedMessage" -> log.debug("Client acknowledged TCP input throttle update");
                         case "PingRequest" -> {
                             output.send(() -> outgoing.pong(request.messageId(), receivedAt));
                             if (firstPing) {
@@ -81,13 +82,18 @@ final class ClientSession {
                                 world.refresh();
                                 log.debug("PlayerObject snapshot sent; available knights=" + characters.roster().size());
                             } else if (request.objectId() == SessionCodec.SERVER_OID) {
-                                output.send(() -> outgoing.server(request.messageId()));
+                                output.send(() -> outgoing.server(request.messageId(),world.hasInteriors()));
                                 log.debug("ServerObject snapshot sent");
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
+                            } else if(world.ownsTrade(request.objectId())) {
+                                try{world.subscribeTrade(request.objectId(),request.messageId());}
+                                catch(IOException expired){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),"Trade is no longer available"));}
                             } else if(world.ownsScene(request.objectId())) {
                                 world.subscribe(request.messageId());
+                            } else if(world.ownsInteriorParty(request.objectId())) {
+                                world.subscribeInteriorParty(request.messageId());
                             } else {
                                 output.send(() -> outgoing.subscriptionFailure(request.messageId(), request.objectId(), "No such object"));
                                 log.debug("Subscription to unknown object rejected");
@@ -98,6 +104,7 @@ final class ClientSession {
                                 subscription.close(); subscription = null;
                             }
                             if(world.ownsScene(request.objectId()))world.unsubscribe();
+                            if(world.ownsTrade(request.objectId()))world.unsubscribeTrade(request.objectId());
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -157,12 +164,15 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if(world.interiorPartyInvocation(invocation))return;
+            if(world.tradeInvocation(invocation))return;
             if(world.departingScene(invocation.oid())&&invocation.service()==10
                     &&invocation.method()==1&&invocation.arguments().isEmpty())return;
-            if(invocation.service()==org.tortodrone.world.SceneChat.SERVICE) {
+            if(invocation.service()==org.tortodrone.world.SceneChat.SERVICE&&invocation.oid()!=SessionCodec.INVOCATION_OID) {
                 world.speak(invocation);return;
             }
             if (world.ownsScene(invocation.oid()) && invocation.service()>=6 && invocation.service()<=11) {
+                if(invocation.service()==6&&invocation.method()==2){world.inspect(invocation);return;}
                 if (invocation.service() == 6 && invocation.method() == 3) {
                     world.emote(invocation);return;
                 }

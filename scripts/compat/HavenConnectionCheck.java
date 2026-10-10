@@ -29,11 +29,14 @@ public final class HavenConnectionCheck {
             WorldConnectionCheck.waitFor(()->selected.done);if(selected.reason!=null)throw new AssertionError(selected.reason);
             WorldConnectionCheck.waitFor(()->!PortalConnectionCheck.forced.isEmpty());
             player.a(new com.threerings.tudey.dobj.a(){public void c(com.threerings.tudey.dobj.SceneDeltaEvent event){if(observing[0])WorldConnectionCheck.received(event);}});
-            WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,1));
             int identity=player.pawnId;var equipment=player.equipment.clone();
+            int readySceneId=-1;
             for(var source:maps.scenes())for(var trigger:source.portals().triggers()) {
                 // Direct stock move RPC sets up the source; the link itself must trigger by walking.
-                WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,source.id()));
+                if(readySceneId!=source.id()) {
+                    WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,source.id()));
+                    readySceneId=source.id();
+                }
                 var pawn=WorldConnectionCheck.controlled(player);PortalConnectionCheck.forced.clear();
                 var route=route(source,trigger,pawn.tz().x,pawn.tz().y);
                 try{PortalConnectionCheck.walk(player,route);}
@@ -41,6 +44,7 @@ public final class HavenConnectionCheck {
                 WorldConnectionCheck.waitFor(()->!PortalConnectionCheck.forced.isEmpty());
                 PortalConnectionCheck.verifyForce(trigger.destination());
                 WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,trigger.destination()));
+                readySceneId=trigger.destination();
                 var destination=maps.scene(trigger.destination());var arrival=destination.portals().entrances().get(trigger.entrance());
                 PortalConnectionCheck.arrival(player,arrival.x(),arrival.y(),arrival.rotation());
                 if(player.pawnId!=identity||!Arrays.equals(player.equipment,equipment))throw new AssertionError("Travel changed character identity/equipment");

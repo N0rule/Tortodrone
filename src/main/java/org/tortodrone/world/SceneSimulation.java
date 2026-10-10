@@ -75,6 +75,9 @@ public final class SceneSimulation {
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
         }
+        public boolean emote(PlayerEmotes.Descriptor emote,int sceneTime,long now) {
+            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.emote(emote,sceneTime,now);}
+        }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
         }

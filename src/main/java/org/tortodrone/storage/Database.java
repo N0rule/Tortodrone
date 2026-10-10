@@ -109,6 +109,32 @@ public final class Database {
             s.setInt(1,id); try (ResultSet r = s.executeQuery()) { return r.next() && r.getLong(1) == revision; }
         } });
     }
+    /** Ordinary account preference rows in the existing integer metadata table; schema stays unchanged. */
+    public boolean inspectionHidden(int accountId,long authRevision)throws IOException {
+        return read(c->{requirePreferenceOwner(c,accountId,authRevision);
+            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")) {
+                s.setString(1,"account."+accountId+".inspection-hidden");
+                try(var r=s.executeQuery()) {
+                    if(!r.next())return false;
+                    int value=r.getInt(1);if(value!=0&&value!=1)throw new IOException("Invalid inspection preference");return value==1;
+                }
+            }
+        });
+    }
+    public void inspectionHidden(int accountId,long authRevision,boolean hidden)throws IOException {
+        write(c->{requirePreferenceOwner(c,accountId,authRevision);
+            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
+                s.setString(1,"account."+accountId+".inspection-hidden");s.setInt(2,hidden?1:0);s.executeUpdate();
+            }return null;
+        });
+    }
+    private static void requirePreferenceOwner(Connection c,int accountId,long authRevision)throws SQLException,IOException {
+        if(authRevision<0)throw new IOException("Authenticated preference owner required");
+        try(var s=c.prepareStatement("SELECT 1 FROM accounts WHERE id=? AND auth_revision=?")) {
+            s.setInt(1,accountId);s.setLong(2,authRevision);
+            try(var r=s.executeQuery()){if(!r.next())throw new IOException("Account changed; reconnect");}
+        }
+    }
     private static Identity identity(ResultSet r) throws SQLException {
         return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }
@@ -157,6 +183,7 @@ public final class Database {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
             try (PreparedStatement s = c.prepareStatement("DELETE FROM accounts WHERE id=?")) { s.setInt(1,id); s.executeUpdate(); }
+            try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"account."+id+".inspection-hidden");s.executeUpdate();}
             event(c,id,"deleted"); return null;
         });
     }
@@ -329,6 +356,12 @@ public final class Database {
             return WorldProfiles.load(c,account,knight,-1);
         });
     }
+    public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
+            WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
+        var a=Map.copyOf(firstItems);var b=Map.copyOf(secondItems);
+        return write(c->TradeTransfer.commit(c,first,firstAuth,a,firstCrowns,firstEnergy,second,secondAuth,b,secondCrowns,secondEnergy));
+    }
+
     public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision) throws IOException {
         write(c -> {
             try(var s=c.prepareStatement("SELECT revision FROM accounts WHERE id=?")) {

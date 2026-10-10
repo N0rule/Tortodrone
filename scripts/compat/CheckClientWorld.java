@@ -11,8 +11,8 @@ public final class CheckClientWorld {
     private static Path scratch;
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
-        if (args.length != 1 || !Files.isRegularFile(Path.of(args[0], "code/projectx-pcode.jar"))) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckClientWorld.java \"/path/to/Spiral Knights\"");
+        if (args.length < 1 || args.length > 2 || !Files.isRegularFile(Path.of(args[0], "code/projectx-pcode.jar"))) {
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckClientWorld.java \"/path/to/Spiral Knights\" [prepared-seven-scene-maps]");
         }
         Path game = Path.of(args[0]).toAbsolutePath();
         for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) {
@@ -41,6 +41,14 @@ public final class CheckClientWorld {
                 project.resolve("scripts/compat/PortalConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/HavenConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/HavenCompatibility.java").toString(),
+                project.resolve("scripts/compat/EmoteCompatibility.java").toString(),
+                project.resolve("scripts/compat/EmoteConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/TradeCompatibility.java").toString(),
+                project.resolve("scripts/compat/TradeConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/InspectCompatibility.java").toString(),
+                project.resolve("scripts/compat/InspectConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/InteriorCompatibility.java").toString(),
+                project.resolve("scripts/compat/InteriorConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/ItemCatalogExport.java").toString(),project.resolve("scripts/compat/ItemCatalogCompatibility.java").toString(),
                 project.resolve("scripts/compat/ItemGrantConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
@@ -54,6 +62,15 @@ public final class CheckClientWorld {
             var havenReader=new ArrayList<>(base);
             havenReader.addAll(List.of("HavenCompatibility",game.toString()));
             run(havenReader,"haven-reader","",45);
+            var emoteReader=new ArrayList<>(base);
+            emoteReader.addAll(List.of("EmoteCompatibility",game.toString()));
+            run(emoteReader,"emote-reader","",45);
+            var tradeReader=new ArrayList<>(base);tradeReader.add("TradeCompatibility");
+            run(tradeReader,"trade-reader","",30);
+            var inspectReader=new ArrayList<>(base);inspectReader.add("InspectCompatibility");
+            run(inspectReader,"inspect-reader","",30);
+            var interiorReader=new ArrayList<>(base);interiorReader.addAll(List.of("InteriorCompatibility",game.toString()));
+            run(interiorReader,"interior-reader","",45);
             var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("items").toString()));
             run(export,"item-export","",60);
             var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.json").toString()));
@@ -90,10 +107,33 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             var havenCheck=new ArrayList<>(base);
             havenCheck.addAll(List.of("HavenConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
-            try{run(havenCheck,"haven-links","",180);}
+            try{run(havenCheck,"haven-links","",240);}
+            catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
+            var inspectCheck=new ArrayList<>(base);
+            inspectCheck.addAll(List.of("InspectConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString(),
+                "LanPlayer","lan-test-password","Town-Knight","PeerPlayer","lan-test-password","Peer-Knight"));
+            try{run(inspectCheck,"inspection","",45);}
+            catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
+            var emoteCheck=new ArrayList<>(base);
+            emoteCheck.addAll(List.of("EmoteConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
+            try{run(emoteCheck,"emotes","",150);}
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
+            if(args.length==2) {
+                Path prepared=Path.of(args[1]).toAbsolutePath();
+                copyTree(prepared,scratch.resolve("maps"));
+                Path interiorLog=scratch.resolve("interior-server.log");
+                Process interiorServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString()),interiorLog);
+                interiorServer.getOutputStream().close();
+                String interiorPort=ready(interiorServer,interiorLog);
+                var interiorCheck=new ArrayList<>(base);
+                interiorCheck.addAll(List.of("InteriorConnectionCheck",interiorPort,scratch.resolve("data/keys/public.txt").toString(),"127.0.0.1",scratch.resolve("maps").toString()));
+                try{run(interiorCheck,"interior-links","",180);}
+                catch(Exception failure){System.err.println(tail(interiorLog));throw failure;}
+                interiorServer.destroy();if(!interiorServer.waitFor(5,TimeUnit.SECONDS))throw new IOException("Temporary interior server did not stop");
+                try(var paths=Files.walk(scratch.resolve("maps"))){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
+            }
             List<String> seed = new ArrayList<>(base);
             seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
             run(seed,"seed-reconnect","",15);
@@ -124,6 +164,21 @@ public final class CheckClientWorld {
             catch (Exception failure) { System.err.println(tail(isolatedLog)); throw failure; }
             var itemCheck=new ArrayList<>(base);itemCheck.addAll(List.of("ItemGrantConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
             try{run(itemCheck,"item-grants","",60);}catch(Exception failure){System.err.println(tail(isolatedLog));throw failure;}
+            // Trade deliberately changes persistent inventories and balances;
+            // finish the five-starter reconnect checks before its separate fixture.
+            isolated.destroy();if(!isolated.waitFor(5,TimeUnit.SECONDS))throw new IOException("Temporary instance server did not stop");
+            properties.setProperty("instances","1");
+            try(var out=Files.newOutputStream(descriptor)){properties.store(out,"Disposable trade check");}
+            var tradeSeed=new ArrayList<>(base);
+            tradeSeed.addAll(List.of("TradeConnectionCheck","--seed",scratch.resolve("data").toString(),scratch.resolve("trade.properties").toString()));
+            run(tradeSeed,"seed-trade","",15);
+            Path tradeLog=scratch.resolve("trade-server.log");
+            Process tradeServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString()),tradeLog);
+            tradeServer.getOutputStream().close();String tradePort=ready(tradeServer,tradeLog);
+            var tradeCheck=new ArrayList<>(base);
+            tradeCheck.addAll(List.of("TradeConnectionCheck",tradePort,scratch.resolve("data/keys/public.txt").toString(),scratch.resolve("trade.properties").toString()));
+            try{run(tradeCheck,"trade","",60);}
+            catch(Exception failure){System.err.println(tail(tradeLog));throw failure;}
         } finally {
             stopChildren();
             Runtime.getRuntime().removeShutdownHook(cleanup);
@@ -131,6 +186,23 @@ public final class CheckClientWorld {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
             }
         }
+    }
+    private static void copyTree(Path source,Path destination)throws IOException {
+        try(var paths=Files.walk(source)) {for(var path:paths.toList()) {
+            if(Files.isSymbolicLink(path))throw new IOException("Symlink in prepared maps");
+            Path target=destination.resolve(source.relativize(path));
+            if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
+        }}
+    }
+    private static String ready(Process server,Path log)throws Exception {
+        long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(15);
+        while(System.nanoTime()<end){
+            var match=Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)").matcher(Files.readString(log));
+            if(match.find())return match.group(1);
+            if(!server.isAlive())throw new IOException("Temporary server failed:\n"+tail(log));
+            Thread.sleep(50);
+        }
+        throw new IOException("Temporary server readiness timeout:\n"+tail(log));
     }
     private static String executable(String name) { return Path.of(System.getProperty("java.home"), "bin", name).toString(); }
     private static synchronized Process start(List<String> command, Path log) throws IOException {

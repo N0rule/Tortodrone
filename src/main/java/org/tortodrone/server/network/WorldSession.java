@@ -14,6 +14,8 @@ final class WorldSession implements AutoCloseable {
     private static final SceneChat CHAT=new SceneChat();
     private final SceneChat.RateLimit chatRate=new SceneChat.RateLimit();
     private SceneChat.Membership chat;
+    private PlayerTrades trades;
+    private PlayerTrades.Member tradeMember;
     private final Socket socket;
     private final CharacterStore characters;
     private final SessionOutput output;
@@ -24,7 +26,7 @@ final class WorldSession implements AutoCloseable {
     private final SceneRegistry scenes;
     @FunctionalInterface interface RoleSource { boolean gameMaster()throws IOException; }
     private final RoleSource roles;
-    private boolean gameMaster;
+    private boolean gameMaster,inspectionHidden;
     private SceneRegistry.Instance scene;
     private SceneSimulation.Membership membership;
     private SceneSimulation.Snapshot lastSnapshot;
@@ -39,7 +41,7 @@ final class WorldSession implements AutoCloseable {
     private int acknowledge, created, reference, lastStamp, sceneGeneration;
     private short ping;
     private WorldStatePoller.Registration persistence;
-    private boolean subscribed, entered, closed;
+    private boolean subscribed, entered, closed, interiorThrottleSent;
     private Short forcedReceiver;
     private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
     private PortalMove portalMove;
@@ -72,8 +74,65 @@ final class WorldSession implements AutoCloseable {
     }
 
     synchronized boolean selected() { return knight != null; }
+    boolean hasInteriors(){return scenes.catalog().scenes().stream().anyMatch(map->!map.town());}
     synchronized boolean ownsScene(int oid) { return selected() && scene.oid()==oid; }
+    synchronized boolean ownsInteriorParty(int target){return selected()&&!scene.map().town()&&target==SessionCodec.interiorPartyOid(scene);}
+    synchronized void subscribeInteriorParty(short message)throws IOException {
+        profile=loadProfile(profile);
+        output.send(()->codec.interiorParty(message,SessionCodec.interiorPartyOid(scene),oid,knight,profile,scene));
+    }
+    synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(!ownsInteriorParty(request.oid()))return false;
+        var args=request.arguments();
+        if(request.service()!=20||request.method()!=3||args.size()!=1
+                ||!(args.getFirst() instanceof SessionDecoder.Listener listener)
+                ||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Unsupported interior party operation");
+        profile=loadProfile(profile);
+        var exit=scene.map().portals().triggers().stream().filter(p->{
+            try{return scenes.catalog().scene(p.destination()).town();}catch(IOException e){return false;}
+        }).findFirst().orElse(null);
+        if(!subscribed||!entered||exit==null||forcedReceiver==null)output.send(()->codec.invocationFailure(oid,listener.requestId(),"Interior exit is not available"));
+        else{beginPortal(exit);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));}
+        return true;
+    }
     synchronized boolean departingScene(int oid) { return !closed&&departedSceneOid!=0&&departedSceneOid==oid; }
+    synchronized boolean ownsTrade(int objectId){return trades!=null&&trades.owns(tradeMember,objectId);}
+    void subscribeTrade(int objectId,short message)throws IOException {
+        PlayerTrades broker;PlayerTrades.Member member;
+        synchronized(this){broker=trades;member=tradeMember;}
+        if(broker==null)throw new IOException("No such trade");broker.subscribe(member,objectId,message);
+    }
+    synchronized void unsubscribeTrade(int objectId){if(trades!=null)trades.unsubscribe(tradeMember,objectId);}
+
+    /** Route across players without holding either WorldSession's monitor. */
+    boolean tradeInvocation(SessionDecoder.Invocation request)throws IOException {
+        boolean invite=request.service()==6&&request.method()==4&&ownsScene(request.oid());
+        boolean close=request.service()==6&&request.method()==1&&ownsScene(request.oid());
+        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==12&&request.method()==5;
+        boolean operation=request.service()==1&&request.oid()>=1001&&(request.oid()&1)==1;
+        if(!invite&&!close&&!response&&!operation)return false;
+        var args=request.arguments();PlayerTrades broker;PlayerTrades.Member member;
+        synchronized(this){broker=trades;member=tradeMember;}
+        if(close){if(args.size()!=1||!(args.getFirst() instanceof Long))throw new SessionDecoder.Rejected("Invalid dialog close");
+            if(broker!=null)broker.close(member,(Long)args.getFirst());return true;}
+        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid trade confirmation listener");
+        boolean valid=invite?args.size()==2&&args.getFirst() instanceof String:
+            response?args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Integer:
+            request.method()>=1&&request.method()<=5&&(request.method()==2||request.method()==3?
+                args.size()==3&&args.get(0) instanceof Long&&args.get(1) instanceof Integer:
+                args.size()==2&&args.get(0) instanceof Integer);
+        if(!valid)throw new SessionDecoder.Rejected("Invalid trade arguments");
+        try {
+            if(member==null||broker==null)throw new IOException("Enter a scene before trading");
+            if(invite){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before inviting another trade");broker.invite(member,(String)args.get(0));}
+            else if(response)broker.respond(member,(String)args.get(0),(Integer)args.get(1));
+            else broker.operate(member,request.oid(),request.method(),args);
+            output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+        return true;
+    }
 
     static boolean active(int accountId, int knightId) {
         synchronized (ACTIVE) {
@@ -88,6 +147,7 @@ final class WorldSession implements AutoCloseable {
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
         if(scenes.catalog().scenes().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
         gameMaster=roles.gameMaster();
+        inspectionHidden=characters.inspectionHidden(authRevision);
         // Picker edits/deletes use this same account lock around their online check and save.
         synchronized (characters) {
             var loaded = characters.worldProfile(name, authRevision);
@@ -108,7 +168,7 @@ final class WorldSession implements AutoCloseable {
         created = SceneClock.now();
         attach();
         output.send(() -> codec.selected(oid, knight, profile));
-        output.send(() -> codec.gameMaster(oid,gameMaster));
+        output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
         receiverChanged(receivers);
         log.info("Character selected; world ID=" + profile.worldId() + "; scene=" + scene.map().id() + "; instance="+scene.index());
     }
@@ -117,6 +177,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void refresh() throws IOException {
         if (selected()) {
             output.send(() -> codec.selected(oid, knight, profile));
+            output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
             if (subscribed) output.send(() -> codec.sceneLocation(oid,scene));
         }
     }
@@ -135,6 +196,12 @@ final class WorldSession implements AutoCloseable {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         int service = request.service();
         var args = request.arguments();
+        if(service==1&&request.method()==13) {
+            if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))throw new SessionDecoder.Rejected("Invalid inspect privacy request");
+            characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
+            gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
+            output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden));return true;
+        }
         if ((service == 4 || service == 5) && request.method() == 1) {
             move(args, service == 5);
             return true;
@@ -166,6 +233,36 @@ final class WorldSession implements AutoCloseable {
         return false;
     }
 
+    private record Inspection(Knight knight,WorldProfile profile,boolean hidden) { }
+    /** Capture one target at a time, with no sender monitor held while inspecting a peer. */
+    void inspect(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();
+        if(request.service()!=6||request.method()!=2||args.size()!=2||!(args.get(0) instanceof String target)
+                ||!(args.get(1) instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid inspection request");
+        SceneRegistry.Instance place;
+        synchronized(this) {
+            if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized inspection");
+            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+            place=scene;
+        }
+        WorldSession peer;
+        synchronized(ACTIVE) {peer=ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(target)
+            &&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElse(null);}
+        Inspection inspection=peer==null?null:peer.inspection(place);
+        synchronized(this) {
+            if(closed||scene!=place||!subscribed||!entered)return;
+            if(inspection==null)output.send(()->codec.invocationFailure(oid,listener.requestId(),"That knight is not in this scene"));
+            else output.send(()->codec.inspected(oid,listener.requestId(),inspection.knight(),inspection.profile(),inspection.hidden()));
+        }
+    }
+    private synchronized Inspection inspection(SceneRegistry.Instance place)throws IOException {
+        if(closed||socket.isClosed()||!subscribed||!entered||scene!=place)return null;
+        try {var current=characters.worldProfile(knight.name(),authRevision);return new Inspection(knight,current,inspectionHidden);}
+        catch(CharacterStore.Refused refused){return null;}
+    }
+
     private void move(List<Object> args, boolean zone) throws IOException {
         int count = zone ? 4 : 3;
         if (args.size() != count || !(args.get(count - 1) instanceof SessionDecoder.Listener listener)
@@ -186,17 +283,25 @@ final class WorldSession implements AutoCloseable {
             try{characters.worldProfile(knight.name(),authRevision,profile);}
             catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             int target=zone?(Integer)args.get(1):(Integer)args.get(0);
-            var next=scenes.destination(target,profile.worldId());
-            if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(next.map().zone())))
+            var targetMap=scenes.catalog().scene(target);
+            if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(targetMap.zone())))
                 throw new IOException("Scene does not belong to that zone");
+            if(portalMove!=null&&target!=portalMove.destination().map().id())throw new IOException("Finish the current portal journey first");
+            var next=scenes.destination(target,profile.worldId());
             if(portalMove!=null&&next!=portalMove.destination())throw new IOException("Finish the current portal journey first");
             if(next!=scene) {
                 leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();scene=next;
+                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();scenes.release(scene,profile.worldId());scene=next;
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
             }
+            if(!scene.map().town()&&!interiorThrottleSent) {
+                // Keep native level inputs from accumulating ahead of travel/keepalive
+                // requests in the client's ten-message TCP fallback queue.
+                output.send(codec::interiorInputThrottle);interiorThrottleSent=true;
+            }
+            output.send(() -> codec.sceneParty(oid,scene));
             output.send(() -> codec.sceneMove(oid, listener.requestId(), zone,scene,scenes.catalog()));
             output.send(() -> codec.sceneLocation(oid,scene));
         } catch(IOException error) {
@@ -259,6 +364,8 @@ final class WorldSession implements AutoCloseable {
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
+        trades=PlayerTrades.forStore(characters);
+        tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
         lastStamp = SceneClock.now();
         membership.enter();
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
@@ -268,7 +375,7 @@ final class WorldSession implements AutoCloseable {
     synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
 
     /** ProjectXSceneMarshaller.emote(String, Name, ConfirmListener), stock method three. */
-    synchronized void emote(SessionDecoder.Invocation request)throws IOException {
+    void emote(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
         if(request.service()!=6||request.method()!=3||args.size()!=3
                 ||!(args.get(0) instanceof String)
@@ -276,17 +383,32 @@ final class WorldSession implements AutoCloseable {
                 ||!(args.get(2) instanceof SessionDecoder.Listener listener)
                 ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))
             throw new SessionDecoder.Rejected("Invalid emote request");
-        String failure=null;
-        if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))
+        String failure=null,target=null;SceneChat.Membership sender=null;
+        var descriptor=PlayerEmotes.find((String)args.getFirst());
+        synchronized(this) {
+          if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))
             failure="Enter a scene before using an emote";
-        else {
+          else {
             try{characters.worldProfile(knight.name(),authRevision);}
             catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
-            if(!args.get(0).equals("Sit"))failure="This emote is not available yet";
-            else if(!chatRate.allow(System.nanoTime()))failure="Please slow down before using another emote";
-            // Sit is non-targetable in the stock config; a supplied Name is ignored there too.
-            else if(!membership.sit(SceneClock.now(),monotonicTime()))failure="Finish your current action before sitting";
+            if(descriptor==null)failure="This emote is not available";
+            else if(descriptor.targetable()&&args.get(1)!=null) {
+                String supplied=(String)args.get(1);
+                target=scene.simulation().snapshot().actors().stream().map(ActorState::name)
+                    .filter(n->n.equalsIgnoreCase(supplied)).findFirst().orElse(null);
+                if(target==null)failure="That knight is not in this scene";
+                else if(target.equalsIgnoreCase(knight.name()))failure="You can't do that to yourself";
+            }
+            if(failure==null) {
+                if(!chatRate.allow(System.nanoTime()))failure="Please slow down before using another emote";
+                else if(!membership.emote(descriptor,SceneClock.now(),monotonicTime()))failure="Finish your current action before using an emote";
+                else sender=chat;
+            }
+          }
         }
+        // Route outside the session lock: peer delivery acquires its own session monitor.
+        if(failure==null)try{CHAT.emote(sender,descriptor,target);}
+        catch(IOException departed){failure="Scene changed before the emote could be delivered";}
         if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
     }
@@ -366,6 +488,7 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.chat(message.personal()?oid:place,message));return true;
     }
     private void leaveChat(){
+        if(tradeMember!=null){trades.leave(tradeMember);tradeMember=null;}
         if(chat!=null){chat.close();chat=null;}
         if(persistence!=null){persistence.close();persistence=null;}
     }
@@ -420,7 +543,7 @@ final class WorldSession implements AutoCloseable {
         occupantRoles=current.roles();
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
-            delta.added(),delta.updated(),delta.removed(),delta.baseline()));
+            delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town()));
         lastStamp=reference=stamp;lastSnapshot=current;
         var trigger=current.portal(profile.worldId());
         if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
@@ -447,11 +570,12 @@ final class WorldSession implements AutoCloseable {
                     ||state.authRevision()!=registration.authRevision||!state.name().equalsIgnoreCase(registration.name))
                 throw new IOException("Knight or account changed; reconnect");
             before=profile;
+            if(tradeMember!=null)trades.changed(tradeMember,state);
         }
         WorldProfile fresh=state.revision()>before.revision()?loadProfile(before):before;
         synchronized(this) {
             if(closed||!entered||persistence!=registration)return;
-            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.gameMaster(oid,gameMaster));}
+            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden));}
             // An equip may commit while the read is in flight: never roll back its publication.
             if(fresh.revision()>profile.revision()) {
                 var previous=profile;profile=fresh;
@@ -475,7 +599,8 @@ final class WorldSession implements AutoCloseable {
     }
     private void rebuildAppearance() {
         var model=StarterCatalog.town(knight,profile,characters.catalog());
-        appearance=new StarterCatalog.Model("Character/PC/Default",Map.of("Model",model,"Height",model.arguments().get("Height")));
+        appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
+            Map.of("Model",model,"Height",model.arguments().get("Height")));
     }
     private void updateAppearance(){rebuildAppearance();membership.appearance(actorAppearance());}
     private ActorState actorAppearance() {
@@ -490,6 +615,7 @@ final class WorldSession implements AutoCloseable {
         closed = true;
         subscribed = false;
         if(membership!=null)membership.close();
+        if(profile!=null){scenes.release(scene,profile.worldId());if(portalMove!=null)scenes.release(portalMove.destination(),profile.worldId());}
         synchronized(publications){deliveryStopped=true;pending=null;publications.notifyAll();}
         if (profile != null) synchronized (ACTIVE) { ACTIVE.remove(profile.worldId(), this); }
     }

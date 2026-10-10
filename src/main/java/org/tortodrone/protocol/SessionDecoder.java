@@ -58,6 +58,8 @@ public final class SessionDecoder {
                 oid = in.readInt(); check(oid > 0, "Invalid object ID");
             }
             case "ForwardEventRequest" -> event = event(in, depth + 1);
+            // Stock Client.cC sends the no-argument ACK constructor, whose int is zero.
+            case "ThrottleUpdatedMessage" -> check(in.readInt()==0,"Invalid throttle acknowledgement");
             case "PingRequest", "LogoffRequest" -> { }
             default -> throw new Rejected("Unsupported upstream message");
         }
@@ -75,7 +77,10 @@ public final class SessionDecoder {
             List<InputFrame> frames=new ArrayList<>();
             for(int i=0;i<length;i++) {
                 String frameType=types.read(in);
-                boolean extended="com.threerings.projectx.data.ProjectXInputFrame".equals(frameType);
+                // DungeonInputFrame inherits the same five fields; its extra controls
+                // are packed into flags and remain outside peaceful scene movement.
+                boolean extended="com.threerings.projectx.data.ProjectXInputFrame".equals(frameType)
+                    ||"com.threerings.projectx.dungeon.data.DungeonInputFrame".equals(frameType);
                 check(extended||"com.threerings.tudey.data.InputFrame".equals(frameType),"Expected input frame");
                 int stamp=in.readInt();float rotation=in.readFloat(),direction=in.readFloat();int flags=in.readInt();
                 if(extended)in.readInt(); // actionChanged: combat/action execution is not available in town.

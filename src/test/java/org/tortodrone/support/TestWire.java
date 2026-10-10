@@ -64,13 +64,14 @@ public final class TestWire {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
-        check(in.readBoolean() && in.readInt() == 11, "login service count");
+        check(in.readBoolean() && in.readInt() == 12, "login service count");
         Set<String> services = new HashSet<>();
-        for (int i = 0; i < 11; i++) {
+        for (int i = 0; i < 12; i++) {
             String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
-        check(services.size() == 11 && services.contains("com.threerings.projectx.data.KnightMarshaller"), "distinct login services");
+        check(services.size() == 12 && services.contains("com.threerings.projectx.data.KnightMarshaller")
+            &&services.contains("com.threerings.projectx.social.data.SocialMarshaller"), "distinct login and trade response services");
         check(in.readInt() == 2, "configuration identity");
         check(in.readBoolean(), "bootstrap host present");
         String host = in.readUTF();
@@ -99,6 +100,13 @@ public final class TestWire {
             case "com.threerings.projectx.data.ProjectXTokenRing" -> in.readInt();
             case "com.threerings.projectx.data.PlayerObject" -> fields(in, PLAYER);
             case "com.threerings.projectx.data.ServerObject" -> fields(in, SERVER);
+            case "com.threerings.projectx.town.data.TownSummary" -> fields(in,
+                "name:s icon:s colorizations:o description:s flags:i defaultSceneId:i _townId:i");
+            case "com.threerings.projectx.dungeon.data.GateSummary" -> fields(in,
+                "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o");
+            case "[Lcom.threerings.opengl.renderer.config.ColorizationConfig;", "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wheel;" -> {
+                check(in.readInt()==0,"empty polymorphic transport array");yield List.of();
+            }
             case "com.threerings.config.dist.data.DConfigObject" -> fields(in, "_oid:i dconfigService:o added:o updated:o removed:o");
             case "com.threerings.projectx.data.LootReportLevel" -> in.readUnsignedByte();
             case "[Lcom.threerings.projectx.data.AvailableKnight;" -> {
@@ -128,6 +136,7 @@ public final class TestWire {
             String[] parts = field.split(":");
             Object value = switch (parts[1]) {
                 case "i" -> in.readInt(); case "l" -> in.readLong(); case "b" -> in.readByte();
+                case "I" -> in.readBoolean()?in.readInt():null;
                 case "f" -> in.readFloat(); case "s" -> string(in); case "o" -> object(in); case "n" -> intern(in);
                 case "c" -> { check(in.readBoolean() && in.readInt() == 0, "empty typed collection"); yield List.of(); }
                 default -> throw new AssertionError("Unknown schema kind");

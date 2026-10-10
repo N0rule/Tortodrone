@@ -19,9 +19,15 @@ public final class SceneRegistry {
     }
     private final SceneCatalog catalog;
     private final Map<Integer,List<Instance>> instances=new HashMap<>();
+    private record InteriorKey(int scene,int worldId){}
+    private final Map<InteriorKey,Instance> interiors=new HashMap<>();
+    // Static places end before 138; player/trade objects start at 1000. Keep
+    // active solo interior places and their party objects in disjoint ranges.
+    private final ArrayDeque<Integer> interiorOids=new ArrayDeque<>();
     private static SceneRegistry system;
     public SceneRegistry(SceneCatalog catalog) {
         this.catalog=catalog;int oid=10;
+        for(int id=140;id<500;id++)interiorOids.add(id);
         if(catalog.scenes().isEmpty())return;
         // Keep the entry object's identity stable for existing clients; other templates are ordered.
         var ordered=new ArrayList<>(catalog.scenes());ordered.remove(catalog.entry());ordered.add(0,catalog.entry());
@@ -37,9 +43,20 @@ public final class SceneRegistry {
         var copies=instances.get(scene);
         if(copies==null||index<0||index>=copies.size())throw new IOException("Scene instance is not available");return copies.get(index);
     }
-    public Instance destination(int scene,int worldId)throws IOException {
-        catalog.scene(scene);
+    public synchronized Instance destination(int scene,int worldId)throws IOException {
+        var map=catalog.scene(scene);
+        if(!map.town()) {
+            if(worldId<1)throw new IOException("Invalid interior owner");
+            var key=new InteriorKey(scene,worldId);var existing=interiors.get(key);
+            if(existing!=null)return existing;
+            var oid=interiorOids.pollFirst();if(oid==null)throw new IOException("Interior capacity is full; try again later");
+            var created=new Instance(oid,0,map);interiors.put(key,created);return created;
+        }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
+    }
+    public synchronized void release(Instance scene,int worldId) {
+        if(scene==null||scene.map().town())return;
+        if(interiors.remove(new InteriorKey(scene.map().id(),worldId),scene))interiorOids.addLast(scene.oid());
     }
     public static synchronized SceneRegistry system()throws IOException {
         if(system==null) {

@@ -6,8 +6,9 @@ import java.util.*;
 /** Reusable chat membership/routing; recipients enqueue without holding the routing lock. */
 public final class SceneChat {
     public static final int SERVICE=12,MAX_CHARACTERS=256;
-    public record Message(String speaker,String text,byte mode,boolean personal) {
-        public Message(String speaker,String text,byte mode){this(speaker,text,mode,false);}
+    public record Message(String speaker,String text,byte mode,boolean personal,String bundle) {
+        public Message(String speaker,String text,byte mode){this(speaker,text,mode,false,null);}
+        public Message(String speaker,String text,byte mode,boolean personal){this(speaker,text,mode,personal,null);}
     }
     @FunctionalInterface public interface Endpoint { boolean deliver(Message message)throws IOException; }
     private record Member(int scene,int client,String name,RateLimit rate,Endpoint endpoint) { }
@@ -33,6 +34,18 @@ public final class SceneChat {
             recipients=members.values().stream().filter(m->m.scene()==source.scene()).toList();
         }
         deliver(recipients,new Message(source.name(),text,mode));return true;
+    }
+    /** Already rate-limited by the actor action; literal names are localized by the stock bundle. */
+    public void emote(Membership sender,PlayerEmotes.Descriptor descriptor,String target)throws IOException {
+        List<Member> recipients;Member source;
+        synchronized(this) {
+            source=require(sender);
+            recipients=members.values().stream().filter(m->m.scene()==source.scene()).toList();
+        }
+        String key=descriptor.messageKey(target!=null);
+        if(key==null)return;
+        String text=key+"|~"+source.name()+(target==null?"":"|~"+target);
+        deliver(recipients,new Message(source.name(),text,(byte)(descriptor.balloonless()?6:5),false,"chat"));
     }
     private Member require(Membership sender)throws IOException {
         if(sender==null||members.get(sender.member.client())!=sender.member)throw new IOException("Chat membership is no longer current");

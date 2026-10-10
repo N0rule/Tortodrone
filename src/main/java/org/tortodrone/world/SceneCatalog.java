@@ -7,10 +7,12 @@ import java.util.*;
 
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
-    public record MapScene(int id,int zone,String zoneName,String name,String image,int version,
+    public record MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
             float spawnX,float spawnY,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
         public MapScene { layout=layout.clone(); }
         @Override public byte[] layout(){return layout.clone();}
+        public boolean town(){return kind.equals("town");}
+        public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":kind.equals("training")?"dungeon.data.TrainingSceneConfig":"dungeon.data.LevelSceneConfig");}
     }
     private final NavigableMap<Integer,MapScene> scenes;
     private final int entry;
@@ -35,7 +37,8 @@ public final class SceneCatalog {
                 if(!descriptor.toRealPath().getParent().equals(folder.toRealPath()))throw new IOException("Map descriptor escapes its pack");
                 var p=properties(descriptor);
                 int id=number(p,"scene-id",1,Integer.MAX_VALUE),zone=number(p,"zone-id",1,Integer.MAX_VALUE);
-                if(!"town".equals(required(p,"kind")))throw new IOException("Unsupported scene kind; only verified town objects are available");
+                String kind=required(p,"kind");
+                if(!Set.of("town","training","level").contains(kind))throw new IOException("Unsupported scene kind");
                 byte[] layout=checked(folder,"scene.dat",required(p,"scene-sha256"),900_000);
                 if(layout.length<16 || layout[0]!=(byte)0xfa || layout[1]!=(byte)0xce || layout[2]!=(byte)0xaf || layout[3]!=0x0e)
                     throw new IOException("Invalid archived scene header");
@@ -43,13 +46,14 @@ public final class SceneCatalog {
                 var collision=CollisionMap.read(folder.resolve("walkability.gz"));
                 float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");
                 if(!collision.walkable(x,y))throw new IOException("Map spawn is not walkable: "+id);
-                var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),
+                var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),kind,
                     integer(p,"version"),x,y,number(p,"instances",1,16),collision,layout,
                     ScenePortals.load(folder,required(p,"scene-sha256"),collision));
                 if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
             }
         }
         if(!scenes.containsKey(entry))throw new IOException("Entry scene is missing");
+        if(!scenes.get(entry).town())throw new IOException("Entry scene must be a town");
         var zones=new HashMap<Integer,String>();
         for(var scene:scenes.values()) {
             String previous=zones.putIfAbsent(scene.zone(),scene.zoneName());

@@ -1,5 +1,10 @@
 import com.samskivert.util.at;import com.threerings.presents.client.*;import com.threerings.presents.dobj.*;import com.threerings.projectx.client.aU;import com.threerings.projectx.data.*;import com.threerings.projectx.town.data.*;import com.threerings.whirled.zone.data.*;import com.threerings.whirled.data.*;import com.threerings.crowd.data.*;import com.threerings.tudey.data.*;import com.threerings.tudey.dobj.*;import com.threerings.projectx.item.data.*;import com.threerings.util.Name;import java.nio.file.*;import java.util.*;import java.util.concurrent.*;import java.util.function.*;
 public class WorldConnectionCheck {
+ static void registerSceneReceiver(Client client)throws Exception {
+  Class<?> receiver=Class.forName("com.threerings.whirled.zone.a.f");
+  Object instance=java.lang.reflect.Proxy.newProxyInstance(receiver.getClassLoader(),new Class[]{receiver},(proxy,method,values)->null);
+  client.xd().a((com.threerings.presents.client.w)Class.forName("com.threerings.whirled.zone.a.a").getConstructor(receiver).newInstance(instance));
+ }
  static LinkedBlockingQueue<Runnable> tasks=new LinkedBlockingQueue<>();
  static void waitFor(BooleanSupplier ready)throws Exception{long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);while(!ready.getAsBoolean()&&System.nanoTime()<end){var task=tasks.poll(100,TimeUnit.MILLISECONDS);if(task!=null)task.run();}if(!ready.getAsBoolean())throw new AssertionError("Client fixture timeout");}
  static class Reply implements A.a{boolean done;String reason;public void xx(){done=true;}public void aT(String s){reason=s;done=true;}}
@@ -157,14 +162,16 @@ public class WorldConnectionCheck {
   if(!"True".equals(model.kW().get("Shield Away"))||model.kW().containsKey("Weapon")||model.kW().containsKey("Weapon Idle"))
    throw new AssertionError("Town actor carries combat equipment in its hands");
  }
- static Zone moveScene(Client client,int sceneId)throws Exception {
+ @FunctionalInterface interface Await {void until(BooleanSupplier ready)throws Exception;}
+ static Zone moveScene(Client client,int sceneId)throws Exception {return moveScene(client,sceneId,WorldConnectionCheck::waitFor);}
+ static Zone moveScene(Client client,int sceneId,Await await)throws Exception {
   if(scene!=null&&primarySubscription!=null)client.xb().b(scene.xL(),primarySubscription);
   Zone move=new Zone();Class<?> listenerType=Class.forName("com.threerings.whirled.zone.a.g$a"),serviceType=Class.forName("com.threerings.whirled.zone.a.g");
   Object listener=java.lang.reflect.Proxy.newProxyInstance(listenerType.getClassLoader(),new Class[]{listenerType},(proxy,method,values)->{
    if(method.getName().equals("aT"))throw new AssertionError(values[0]);
    if(method.getName().equals("a")&&values.length==4&&values[3] instanceof SceneModel model){move.oid=(Integer)values[0];move.model=model;move.done=true;}return null;});
   serviceType.getMethod("a",int.class,int.class,int.class,listenerType).invoke(client.bU(serviceType),1,sceneId,0,listener);
-  waitFor(()->move.done);return move;
+  await.until(()->move.done);return move;
  }
  static void enterPrimary(Client client,PlayerObject player,Zone place)throws Exception {
   snapshots.clear();last=null;scene=null;deltas=0;
