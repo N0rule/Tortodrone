@@ -1,6 +1,4 @@
-# Server state and legacy research (never commit private keys)
-/data/
-/server.properties
+# Server state and legacy research
 /local/
 
 # Captures and logs
@@ -10,16 +8,6 @@
 *.log
 /logs/
 
-# Secrets / config
-.env
-.env.*
-
 # Build output and editors (JARs are not globally ignored)
 build/
 .build/
-.idea/
-.vscode/
-*.class
-*~
-*.swp
-*.swo
