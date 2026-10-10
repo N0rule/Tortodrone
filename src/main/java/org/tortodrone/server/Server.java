@@ -52,10 +52,9 @@ public final class Server {
                 if (lock == null) throw new IOException("Another server is using this JAR's data directory");
                 log = new ServerLog(dataDirectory.resolve("logs"));
                 log.info("Starting Tortodrone server version " + version());
-                log.info("Loading properties");
                 ServerSettings settings = ServerSettings.load(config);
                 log.setDebugEnabled(settings.logMode() == ServerSettings.LogMode.DEBUG);
-                log.info("Log mode: " + settings.logMode().name().toLowerCase(java.util.Locale.ROOT));
+                log.debug("Log mode: " + settings.logMode().name().toLowerCase(java.util.Locale.ROOT));
                 log.debug("Configuration: " + config.toAbsolutePath().normalize());
                 log.debug("Data directory: " + dataDirectory);
                 run(settings, dataDirectory, log);
@@ -82,7 +81,6 @@ public final class Server {
 
     private static void run(ServerSettings settings, Path dataDirectory, ServerLog log) throws Exception {
         org.tortodrone.resources.DefaultResources.prepare(dataDirectory.getParent(),log::info,log::warn);
-        log.info("Loading external scene catalog");
         org.tortodrone.world.SceneRegistry scenes;
         try { scenes=org.tortodrone.world.SceneRegistry.system(); }
         catch(IOException missing) {
@@ -90,12 +88,13 @@ public final class Server {
             scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.empty());
             org.tortodrone.world.SceneRegistry.install(scenes);
         }
-        log.info("Loaded maps: "+scenes.catalog().scenes().size()+"; scene IDs: "+scenes.catalog().scenes().stream().map(org.tortodrone.world.SceneCatalog.MapScene::id).toList());
+        log.debug("Scene IDs: " + scenes.catalog().scenes().stream()
+            .map(org.tortodrone.world.SceneCatalog.MapScene::id).toList());
         org.tortodrone.character.ItemCatalog catalog;
         Path itemSource=org.tortodrone.character.ItemCatalog.source(dataDirectory);
         try {
             catalog=org.tortodrone.character.ItemCatalog.deployment(dataDirectory);
-            if(itemSource!=null)log.info("Item definitions: "+itemSource);
+            if (itemSource != null) log.debug("Item catalog: " + itemSource);
         }
         catch(IOException invalid) { log.warn("Item definitions unavailable: "+invalid.getMessage()+"; using built-in starter definitions");catalog=org.tortodrone.character.ItemCatalog.starter(); }
         if(itemSource==null)log.warn("Missing defaults/items/catalog.json; using built-in starter definitions");
@@ -105,19 +104,13 @@ public final class Server {
             boolean generate=!Files.exists(keys.resolve("private.pk8"));
             log.info(generate ? "Generating server keypair" : "Loading server keypair");
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
-            if(generate)log.info("Public key (game.publicKey): "+Files.readString(keys.resolve("public.txt")).trim());
-            log.info("Loading normal accounts and saved characters");
+            if(generate)log.info("Public key : "+Files.readString(keys.resolve("public.txt")).trim());
             try (AccountStore accounts = new AccountStore(dataDirectory,true,catalog)) {
                 accounts.watchSessions();
-                log.info("Loaded accounts: " + accounts.list().size());
+                log.info("Loaded " + scenes.catalog().scenes().size() + " maps, "
+                    + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));
-                log.info("Starting Tortodrone on " + (address.isAnyLocalAddress() ? "*" : address.getHostAddress())
-                    + ":" + listener.getLocalPort());
                 log.debug("Public key: " + keys.resolve("public.txt"));
-                log.info(scenes.catalog().scenes().isEmpty()
-                    ? "Normal login and account administration available; maps are required for world entry."
-                    : "Normal login, town movement and persistent inventory available.");
-                log.info("Item references: "+accounts.catalog().entries().size()+"; grantable: "+accounts.catalog().entries().stream().filter(org.tortodrone.character.ItemCatalog.Entry::grantable).count());
                 accept(listener, key, log, accounts,settings.maxClients());
             }
         }
@@ -189,7 +182,7 @@ public final class Server {
 
     private static void receive(Socket client, long id, PrivateKey key, int port,
             ServerLog log, AccountStore accounts) {
-        log.info("Client connected from " + client.getRemoteSocketAddress());
+        log.debug("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
             client.setSoTimeout(15000);
             SessionLog sessionLog = new SessionLog() {
@@ -210,7 +203,7 @@ public final class Server {
         } catch (Exception e) {
             log.warn("Handshake rejected: " + e.getClass().getSimpleName());
         } finally {
-            log.info("Client disconnected");
+            log.debug("Client disconnected");
         }
     }
 }
