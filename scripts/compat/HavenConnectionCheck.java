@@ -7,7 +7,7 @@ import com.threerings.projectx.data.*;
 import com.threerings.util.Name;
 import org.tortodrone.world.*;
 
-/** Stock network walking exercises every directed link; routing is test-only static collision. */
+/** Stock network walking exercises every directed town link; routing is test-only static collision. */
 public final class HavenConnectionCheck {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
@@ -32,6 +32,8 @@ public final class HavenConnectionCheck {
             int identity=player.pawnId;var equipment=player.equipment.clone();
             int readySceneId=-1;
             for(var source:maps.scenes())for(var trigger:source.portals().triggers()) {
+                // Interior travel has native party/Dungeoneer handling in InteriorConnectionCheck.
+                if(!source.town()||!maps.scene(trigger.destination()).town())continue;
                 // Direct stock move RPC sets up the source; the link itself must trigger by walking.
                 if(readySceneId!=source.id()) {
                     WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,source.id()));

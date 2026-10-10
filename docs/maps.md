@@ -5,8 +5,8 @@ custom `maps/` takes precedence. No map files
 are bundled in either JAR. Complete local defaults avoid all startup downloads. The complete regular
 Town Square, Bazaar, Arcade and Garrison packs live in `defaults/maps/`, including original compressed
 scene exports and matching collision masks. `./gradlew prepareMaps` verifies their checksums
-and copies missing files into `build/defaults/maps/`, without accessing an archive repository
-or download cache. Existing destination files are preserved.
+and prepares `build/defaults/maps/`, without accessing an archive repository
+or download cache. A prepared `local/defaults/maps/` source takes precedence over the bundled town source, so ordinary `buildServer` includes the interiors too. Existing custom files are preserved; matching unmodified town portal files are upgraded with the interior links. Conflicting edits fail before files are copied.
 
 Deploy the complete `build/defaults/` tree beside the server JAR. The archive repository may disappear
 without affecting map preparation or running the server.
@@ -87,6 +87,6 @@ Advanced Training Hall, Laboratory and Hall of Heroes are not bundled in the fou
 ./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"
 ```
 
-This reads the installed stock client without changing it, checks pinned archive digests, and publishes a fresh `build/maps/` tree. The server beside it loads this tree in preference to `build/defaults/maps/`. Source downloads are cached in `build/stock-scenes/`; a valid cache allows offline preparation. No game installation is needed for ordinary builds or the four towns.
+This reads the installed stock client without changing it, checks pinned archive digests, and publishes a fresh ignored `local/defaults/maps/` source. It then prepares all seven scenes and matching town entry/return links under `build/defaults/maps/`. `./gradlew buildServer -PgameDir="/path/to/Spiral Knights"` also performs first-time export; subsequent `buildServer`, `prepareMaps` and `prepareDefaults` reuse the source offline without needing the game path. Source downloads are cached in `build/stock-scenes/`. The local source and deployment survive `clean`. Without a local source, builds retain the four bundled towns.
 
-Existing output is refused to protect customized packs. Use `-PinteriorsOutput=/path/to/fresh/maps` and optionally `-PsceneCache=/path/to/cache` for another deployment. Copy the complete generated `maps/` tree beside the server JAR, and restart the server yourself when ready. Never merge only the interior folders: the town entrance and return metadata must travel with them. Generated packs remain local and are not committed. See [solo interior scope](town-interactions.md).
+An existing local source is reused rather than regenerated. Use `-PinteriorsOutput=/path/to/fresh/maps` and optionally `-PsceneCache=/path/to/cache` to export a separate fresh tree; only the standard `local/defaults/maps/` source is picked up automatically by ordinary builds. Deploy the complete `build/defaults/` tree beside the JAR, and restart the server yourself when ready. Map updates refuse a deployment whose server lock is held. A custom `maps/` beside the JAR still takes precedence. Never merge only the interior folders: the town entrance and return metadata must travel with them. Generated packs remain local and are not committed. See [solo interior scope](town-interactions.md).

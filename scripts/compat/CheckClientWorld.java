@@ -16,7 +16,7 @@ public final class CheckClientWorld {
         }
         Path game = Path.of(args[0]).toAbsolutePath();
         for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) {
-            if (!Files.isRegularFile(project.resolve("build/" + jar))) throw new IOException("Build first with make build");
+            if (!Files.isRegularFile(project.resolve("build/" + jar))) throw new IOException("Build first with ./gradlew build");
         }
         scratch = Files.createTempDirectory("tortodrone-installed-client-");
         Thread cleanup = new Thread(CheckClientWorld::stopChildren, "check-cleanup");
@@ -120,8 +120,9 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
-            if(args.length==2) {
-                Path prepared=Path.of(args[1]).toAbsolutePath();
+            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/defaults/maps");
+            if(args.length==2||Files.isDirectory(prepared.resolve("advanced_training"))
+                    &&Files.isDirectory(prepared.resolve("laboratory"))&&Files.isDirectory(prepared.resolve("hall_of_heroes"))) {
                 copyTree(prepared,scratch.resolve("maps"));
                 Path interiorLog=scratch.resolve("interior-server.log");
                 Process interiorServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString()),interiorLog);

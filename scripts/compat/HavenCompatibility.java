@@ -11,7 +11,7 @@ import com.threerings.tudey.shape.config.ShapeConfig;
 import org.tortodrone.world.ScenePortals;
 import org.tortodrone.world.CollisionMap;
 
-/** Read-only stock-client oracle for the four installed Haven town scenes and portal metadata. */
+/** Read-only stock-client oracle for the four Haven towns and town-to-town portal metadata. */
 public final class HavenCompatibility {
     private static final float EPS = 0.000002f;
     private record V(float x, float y) { }
@@ -90,7 +90,12 @@ public final class HavenCompatibility {
     }
 
     private static void compareTriggers(int sceneId,Properties pp,Map<Integer,Portal> nativePortals,List<ScenePortals.Trigger> parsed) {
-        var listed=csv(pp.getProperty("triggers","")); if(listed.size()!=nativePortals.size()||parsed.size()!=nativePortals.size())throw new AssertionError("Portal count mismatch for "+sceneId);
+        // These specialized native entrances are verified by HavenInteriorsExport and
+        // walked by InteriorConnectionCheck; this oracle checks Portals/Portal town links.
+        var interiorIds=parsed.stream().filter(t->interiorEntry(sceneId,t)).map(t->Integer.toString(t.id())).collect(java.util.stream.Collectors.toSet());
+        var listed=new LinkedHashSet<>(csv(pp.getProperty("triggers","")));listed.removeAll(interiorIds);
+        var towns=parsed.stream().filter(t->!interiorIds.contains(Integer.toString(t.id()))).toList();
+        if(listed.size()!=nativePortals.size()||towns.size()!=nativePortals.size())throw new AssertionError("Portal count mismatch for "+sceneId);
         for(String raw:listed) {
             int id=Integer.parseInt(raw);var nativePortal=nativePortals.get(id);if(nativePortal==null)throw new AssertionError("Metadata names missing native portal "+id);
             int dest=Integer.parseInt(pp.getProperty("trigger."+id+".scene"));String tag=pp.getProperty("trigger."+id+".entrance");
@@ -103,6 +108,12 @@ public final class HavenCompatibility {
             if(Math.abs(server.minX()-minX)>EPS||Math.abs(server.maxX()-maxX)>EPS||Math.abs(server.minY()-minY)>EPS||Math.abs(server.maxY()-maxY)>EPS)throw new AssertionError("Portal bounds mismatch at "+id);
             for(int i=0;i<wanted.size();i++)if(Math.abs(server.vertices().get(i).x()-wanted.get(i).x)>EPS||Math.abs(server.vertices().get(i).y()-wanted.get(i).y)>EPS)throw new AssertionError("Server polygon vertex sequence mismatch at "+id);
         }
+    }
+    private static boolean interiorEntry(int scene,ScenePortals.Trigger trigger) {
+        if(!trigger.entrance().equals("level_start"))return false;
+        return scene==1&&trigger.id()==3922&&trigger.destination()==294
+            ||scene==445&&(trigger.id()==3770&&trigger.destination()==437
+                ||trigger.id()==3568&&trigger.destination()==449);
     }
     private static void checkCircleIntersection(TudeySceneModel.AreaEntry area,ConfigManager manager,ScenePortals.Trigger serverTrigger) {
         Shape target=area.av(manager);

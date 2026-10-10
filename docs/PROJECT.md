@@ -16,7 +16,7 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 
 ## Current work / next validation
 
-Advanced Training Hall, Laboratory and Hall of Heroes require optional local packs: `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"` creates a fresh `build/maps/` with all seven scenes and native portal links. Ordinary defaults contain only the four towns.
+Advanced Training Hall, Laboratory and Hall of Heroes require local packs: `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"` exports the persistent ignored `local/defaults/maps/` source and prepares all seven scenes in `build/defaults/maps/`. `buildServer -PgameDir=...` also performs first-time preparation; later plain builds reuse that source offline. Without a prepared local source, bundled defaults contain four towns. Unchanged bundled portal metadata upgrades with the maps; conflicting custom edits and active-server map changes are refused.
 
 Follow the **owner's latest task** and current Git diff first; don't redo work under way. Relevant reported problems: incoming trade Accept/Reject/Hide notification; inspect another knight and privacy/equipment rules; concurrent travel through the same gate leaving one player unable to move; logout/reconnect town or position behavior. For reconnect, **research original game's location semantics before adding exact-coordinate persistence**. Trade and scene changes need stock wire evidence, two-client testing and transactional/ownership checks. Do not infer a new feature's completion from client UI elements alone.
 

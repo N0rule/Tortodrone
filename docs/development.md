@@ -11,7 +11,7 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ./gradlew testIntegration
 ./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
 ./gradlew prepareMaps
-./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # fresh build/maps, optional stock interiors
+./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # persistent local source; deploy build/defaults/maps
 ./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
 ```
 

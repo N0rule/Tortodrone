@@ -1,6 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import java.io.File
 
 plugins {
     java
@@ -65,7 +66,7 @@ val buildTools = sourceSets.create("buildTools") {
 }
 fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) {
     group = "build setup"
-    description = "Verify local map checksums and copy missing $command files; preserve existing files."
+    description = "Prepare bundled defaults and local interior maps; preserve custom files."
     classpath = buildTools.runtimeClasspath
     javaLauncher.set(launcher25)
     mainClass.set("BuildTools")
@@ -77,23 +78,31 @@ fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) 
 val prepareDefaults = preparation("prepareDefaults", "defaults")
 preparation("prepareMaps", "maps")
 // Interior layouts stay local: read the stock game without changing its assets/preferences.
-tasks.register<Exec>("prepareInteriors") {
+val prepareInteriors = tasks.register<Exec>("prepareInteriors") {
     group = "build setup"
-    description = "Export verified Haven interiors into a fresh build/maps deployment; requires -PgameDir."
+    description = "Prepare local Haven interiors and deploy them under build/defaults/maps; requires -PgameDir on first use."
     workingDir = projectDir
+    dependsOn(serverJar)
     val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
-    val mapsOutput = providers.gradleProperty("interiorsOutput").getOrElse(publicOutput.dir("maps").asFile.absolutePath)
+    val localMapsSource = layout.projectDirectory.dir("local/defaults/maps").asFile.absolutePath
+    val mapsOutput = providers.gradleProperty("interiorsOutput").getOrElse(localMapsSource)
     val sourceCache = providers.gradleProperty("sceneCache").getOrElse(publicOutput.dir("stock-scenes").asFile.absolutePath)
     commandLine(launcher25.get().executablePath.asFile.absolutePath,
         "scripts/StockTools.java", "interiors", gameDirectory, mapsOutput, sourceCache)
+    onlyIf("The standard local map source has not already been exported") {
+        mapsOutput != localMapsSource || !File(mapsOutput).exists()
+    }
     doFirst {
         if (gameDirectory.isBlank()) throw GradleException("Specify the read-only stock game directory with -PgameDir=/path/to/Spiral Knights")
     }
+    finalizedBy(prepareDefaults)
 }
+prepareDefaults.configure { mustRunAfter(prepareInteriors) }
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare external defaults."
     dependsOn(serverJar, prepareDefaults)
+    if (providers.gradleProperty("gameDir").isPresent) dependsOn(prepareInteriors)
 }
 val buildAdmin = tasks.register("buildAdmin") {
     group = "build"

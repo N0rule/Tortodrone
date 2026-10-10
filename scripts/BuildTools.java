@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.*;
 import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
@@ -9,6 +11,7 @@ import java.time.Duration;
 import java.util.HexFormat;
 import java.util.Properties;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.concurrent.*;
 
 /** Java 25 build inputs and offline preparation of the extensible defaults tree. */
@@ -29,20 +32,8 @@ public final class BuildTools {
             case "maps", "defaults" -> {
                 if (args.length > 2) throw new IllegalArgumentException("Expected at most one map output directory");
                 boolean maps=args[0].equals("maps");
-                Path source=project.resolve(maps?"defaults/maps":"defaults");
                 Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(maps?"build/defaults/maps":"build/defaults");
-                verifyMaps(project);
-                if (Files.notExists(source, LinkOption.NOFOLLOW_LINKS)) {
-                    System.out.println("Optional default source is absent: " + source + "; continuing without it");
-                    return;
-                }
-                if (!Files.isDirectory(source)) throw new IOException("Default source is not a directory: " + source);
-                try(var paths=Files.walk(source)) {
-                    for(Path file:paths.filter(Files::isRegularFile).sorted().toList()) {
-                        if(Files.isSymbolicLink(file) || !file.toRealPath().startsWith(source.toRealPath()))throw new IOException("Default file escapes its source tree");
-                        copyMissing(file,output.resolve(source.relativize(file)));
-                    }
-                }
+                prepare(project, output.toAbsolutePath().normalize(), maps);
             }
             default -> throw new IllegalArgumentException("Unknown build input command");
         }
@@ -52,8 +43,7 @@ public final class BuildTools {
         try (var input = Files.newInputStream(file)) { values.load(input); }
         return values;
     }
-    private static void verifyMaps(Path project) throws Exception {
-        Path maps = project.resolve("defaults/maps");
+    private static void verifyMaps(Path maps) throws Exception {
         if (Files.notExists(maps, LinkOption.NOFOLLOW_LINKS)) {
             System.out.println("Optional map source is absent: " + maps + "; continuing without maps");
             return;
@@ -63,6 +53,69 @@ public final class BuildTools {
                 var descriptor = properties(pack.resolve("map.properties"));
                 verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
                 verify(pack.resolve("walkability.gz"), descriptor.getProperty("collision-sha256"));
+            }
+        }
+    }
+    private record Copy(Path source, Path target, boolean replace) { }
+    private static void prepare(Path project, Path output, boolean mapsOnly) throws Exception {
+        Path bundled=project.resolve("defaults/maps"), local=project.resolve("local/defaults/maps");
+        boolean prepared=Files.exists(local,LinkOption.NOFOLLOW_LINKS);
+        Path mapSource=prepared?local:bundled, mapOutput=mapsOnly?output:output.resolve("maps");
+        if(prepared)verifyPreparedMaps(local);
+        verifyMaps(mapSource);
+        var copies=new ArrayList<Copy>();
+        plan(mapSource,mapOutput,prepared?bundled:null,copies,null);
+        if(!mapsOnly)plan(project.resolve("defaults"),output,null,copies,Path.of("maps"));
+        // Hold an existing deployment's lock before changing maps; never stop a live server.
+        Path lockFile=(Path.of("defaults").equals(mapOutput.getParent().getFileName())
+            ?mapOutput.getParent().getParent():mapOutput.getParent()).resolve("data/server.lock");
+        boolean mapsChanging=copies.stream().anyMatch(copy->copy.target.startsWith(mapOutput));
+        try(var channel=mapsChanging&&Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)
+                ?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;
+            FileLock lock=channel==null?null:channel.tryLock()) {
+            if(channel!=null&&lock==null)throw new IOException("Maps need updating but the server is running; stop it yourself before rebuilding");
+            for(var copy:copies) {
+                if(copy.replace) {
+                    Path temporary=Files.createTempFile(copy.target.getParent(),".map-update-",".tmp");
+                    try {
+                        Files.copy(copy.source,temporary,StandardCopyOption.REPLACE_EXISTING);
+                        Files.move(temporary,copy.target,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+                    } finally { Files.deleteIfExists(temporary); }
+                } else copyMissing(copy.source,copy.target);
+            }
+        }
+        if(prepared)System.out.println("Prepared local maps: " + local + " -> " + mapOutput);
+    }
+    private static void verifyPreparedMaps(Path maps) throws IOException {
+        if(!Files.isRegularFile(maps.resolve("catalog.properties"),LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("Incomplete prepared map source: missing catalog.properties in " + maps);
+        for(String pack:List.of("haven","bazaar","arcade","garrison","advanced_training","laboratory","hall_of_heroes"))
+            for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties"))
+                if(!Files.isRegularFile(maps.resolve(pack).resolve(file),LinkOption.NOFOLLOW_LINKS))
+                    throw new IOException("Incomplete prepared map source: missing " + pack + "/" + file);
+    }
+    private static void plan(Path source,Path output,Path baseline,List<Copy> copies,Path skip) throws IOException {
+        if(Files.notExists(source,LinkOption.NOFOLLOW_LINKS)) {
+            System.out.println("Optional default source is absent: " + source + "; continuing without it");return;
+        }
+        if(!Files.isDirectory(source,LinkOption.NOFOLLOW_LINKS))throw new IOException("Default source is not a directory: " + source);
+        try(var paths=Files.walk(source)) {
+            for(Path file:paths.sorted().toList()) {
+                Path relative=source.relativize(file);
+                if(skip!=null&&relative.startsWith(skip))continue;
+                if(Files.isSymbolicLink(file))throw new IOException("Default source contains a symlink: " + file);
+                if(!Files.isRegularFile(file))continue;
+                Path target=output.resolve(relative);
+                for(Path parent=target.getParent();parent!=null;parent=parent.getParent())
+                    if(Files.isSymbolicLink(parent))throw new IOException("Default output contains a symlink directory: " + parent);
+                if(Files.notExists(target,LinkOption.NOFOLLOW_LINKS)) {copies.add(new Copy(file,target,false));continue;}
+                Path original=baseline==null?null:baseline.resolve(relative);
+                if(original!=null&&Files.isRegularFile(original)&&Files.mismatch(original,file)!=-1) {
+                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Prepared map conflicts with existing file: " + target);
+                    if(Files.mismatch(target,file)==-1)continue;
+                    if(Files.mismatch(target,original)!=-1)throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
+                    copies.add(new Copy(file,target,true));
+                }
             }
         }
     }
