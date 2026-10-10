@@ -42,7 +42,9 @@ The server currently uses TCP only. On the first interior entry, a native `Updat
 
 The repository's `defaults/maps/` contains the four town packs. Interior exports are prepared locally into a seven-map deployment tree; no game assets or generated scene packs are committed. `./gradlew prepareMaps` prepares only bundled defaults and preserves existing local files. The prepared tree belongs in the deployment's `maps/` directory, which takes precedence over `defaults/maps/`.
 
-To prepare a fresh local tree, use a new output path and a reusable source cache:
+To enable these rooms beside the local server JAR, run `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"` before starting it. The default output is `build/maps/`, which the server loads automatically. Existing output is refused; use `-PinteriorsOutput` for a fresh destination. Ordinary `prepareMaps` prepares only the four bundled towns.
+
+To prepare a fresh local tree directly, use a new output path and a reusable source cache:
 
 ```sh
 java scripts/StockTools.java interiors "/path/to/Spiral Knights" \

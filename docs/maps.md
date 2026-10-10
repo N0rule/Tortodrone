@@ -28,7 +28,7 @@ items and future directories; existing files are preserved. Download failures wa
 and continue. If maps remain missing or invalid, the server starts with login and
 local tools available and refuses world entry clearly. Checksums, supported scene
 kinds and walkable spawns are still required before loading any geometry.
-The current verified object/configuration protocol supports **town scenes only**.
+The bundled defaults contain town scenes. Verified solo interior transport is also supported when the optional local interior packs are prepared.
 Geometry does not implement NPCs, shops or quests. All ten directed links between
 the four Haven towns have verified automatic triggers and original tagged arrival markers. Scene IDs identify
 templates; each configured instance has a separate distributed-object ID, occupants,
@@ -78,3 +78,15 @@ vertices. All current sensors have zero expansion and mask 65535. Circle/polygon
 intersection checks the interior and distance to each segment, including corners;
 the PC radius is .333333. Loading refuses malformed polygons, missing tags and arrivals intersecting
 another sensor. Packs with no metadata remain valid and have no automatic portals.
+
+## Enable the Haven interiors locally
+
+Advanced Training Hall, Laboratory and Hall of Heroes are not bundled in the four-town defaults. Without their verified layouts and portal metadata, walking into their entrances cannot transfer a knight. Prepare the complete seven-scene deployment before starting the server:
+
+```sh
+./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"
+```
+
+This reads the installed stock client without changing it, checks pinned archive digests, and publishes a fresh `build/maps/` tree. The server beside it loads this tree in preference to `build/defaults/maps/`. Source downloads are cached in `build/stock-scenes/`; a valid cache allows offline preparation. No game installation is needed for ordinary builds or the four towns.
+
+Existing output is refused to protect customized packs. Use `-PinteriorsOutput=/path/to/fresh/maps` and optionally `-PsceneCache=/path/to/cache` for another deployment. Copy the complete generated `maps/` tree beside the server JAR, and restart the server yourself when ready. Never merge only the interior folders: the town entrance and return metadata must travel with them. Generated packs remain local and are not committed. See [solo interior scope](town-interactions.md).

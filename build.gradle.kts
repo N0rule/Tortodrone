@@ -76,6 +76,20 @@ fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) 
 }
 val prepareDefaults = preparation("prepareDefaults", "defaults")
 preparation("prepareMaps", "maps")
+// Interior layouts stay local: read the stock game without changing its assets/preferences.
+tasks.register<Exec>("prepareInteriors") {
+    group = "build setup"
+    description = "Export verified Haven interiors into a fresh build/maps deployment; requires -PgameDir."
+    workingDir = projectDir
+    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
+    val mapsOutput = providers.gradleProperty("interiorsOutput").getOrElse(publicOutput.dir("maps").asFile.absolutePath)
+    val sourceCache = providers.gradleProperty("sceneCache").getOrElse(publicOutput.dir("stock-scenes").asFile.absolutePath)
+    commandLine(launcher25.get().executablePath.asFile.absolutePath,
+        "scripts/StockTools.java", "interiors", gameDirectory, mapsOutput, sourceCache)
+    doFirst {
+        if (gameDirectory.isBlank()) throw GradleException("Specify the read-only stock game directory with -PgameDir=/path/to/Spiral Knights")
+    }
+}
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare external defaults."

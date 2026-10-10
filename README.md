@@ -51,6 +51,7 @@ Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 ./gradlew test                    # both test groups; build also runs these
 ./gradlew prepareDefaults         # verify/copy local maps and item defaults
 ./gradlew prepareMaps             # verify/copy only local maps
+./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # optional seven-scene build/maps
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ./gradlew clean                   # removes generated artifacts; preserves persistent state
 ```
@@ -62,6 +63,8 @@ Benchmarks are never part of `build` or `test`. Resource preparation is offline,
 `build.gradle.kts` defines compilation, executable packaging, preparation, tests and runs; `settings.gradle.kts` names the project. `gradlew`, `gradlew.bat` and `gradle/wrapper/` pin and bootstrap Gradle, with a distribution checksum. `gradle/verification-metadata.xml` pins SHA-256 checksums for dependencies and plugins (including the original runtime JAR checksums); review changes before accepting new hashes. Gradle caches live in its user home and `.gradle/`; compiler and packaging output lives in `.build/`. `gradle.properties` enables Gradle’s configuration cache so repeated builds can reuse the configured task graph. `clean` deletes that scratch tree, the old `build/.build/`, Gradle dependency-verification reports and the two generated JARs, while preserving `build/data/`, `build/defaults/`, `build/deps/` and other deployment files.
 
 The [migration record](docs/gradle-migration.md) maps every old Make target and records verification.
+
+Advanced Training Hall, Laboratory and Hall of Heroes require the optional `prepareInteriors` command above; ordinary defaults contain only the four towns. It creates a fresh `build/maps/` with verified native entry/return links. See [map preparation](docs/maps.md) for existing-output protection and deployment.
 
 Both JARs keep `data/` beside themselves; copy `build/defaults/` beside them when deploying. Preserve `data/` (especially keys/DB) and customized `defaults/`. The optional startup default-resource downloader points to a placeholder repository; missing maps prevent world entry but not login/admin. See [maps](docs/maps.md).
 
