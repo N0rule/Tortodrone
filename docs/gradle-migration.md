@@ -142,3 +142,20 @@ omitted. Missing runtime maps still block world entry while allowing login/local
 The Makefile was retained for the baseline and removed only after the Gradle packaging, regression,
 preparation, run and data-preservation checks passed. No owner processes or real runtime data were
 stopped, cleaned or modified; all process-starting tests used disposable deployments.
+
+## Regression scheduling follow-up
+
+Enabling the configuration cache allowed independent standalone `JavaExec` test tasks
+in this single project to run concurrently. Default builds reproduced local socket
+timeouts in crypto-heavy fixtures. Regression JVMs now declare the same shared build
+service with `maxParallelUsages=1`, including unit, integration and build-tool tests.
+Gradle applies the limit both during fresh configuration and cache reuse, while build
+steps retain normal worker scheduling. Fixture concurrency scenarios and server
+protocol/security timeouts are unchanged.
+
+Verification: plain `./gradlew build` passed the complete regression in 7m 3s,
+without a worker-limit override. `./gradlew unitserver_network_CharacterCreationTest
+unitserver_network_HandshakeTest --max-workers=16 --info` passed twice, with
+fresh configuration (25s) and configuration-cache reuse (13s). The execution logs
+showed the first fixture finishing before the second JVM started in both runs.
+This follow-up changes build scheduling only; release version remains 0.23.0.

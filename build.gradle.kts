@@ -1,4 +1,6 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.services.BuildService
+import org.gradle.api.services.BuildServiceParameters
 
 plugins {
     java
@@ -101,10 +103,18 @@ fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, 
 packagedRun("runServer", serverJar, "org.tortodrone.server.Server", buildServer, publicOutput.asFile)
 packagedRun("runAdmin", adminJar, "org.tortodrone.admin.AdminApplication", buildAdmin, projectDir)
 
+// Bound regression JVMs, whose RSA/PBKDF2 work otherwise crowds out local socket deadlines.
+// A shared service also enforces this limit when the configuration cache is reused.
+abstract class RegressionExecution : BuildService<BuildServiceParameters.None>
+val regressionExecution = gradle.sharedServices.registerIfAbsent("regressionExecution", RegressionExecution::class) {
+    maxParallelUsages.set(1)
+}
+
 // The test suite consists of standalone main programs, each in a fresh JVM.
 // Use packaged code rather than main output so tests exercise the shipped resources/driver.
 fun standalone(name: String, entryPoint: String, arguments: List<String> = emptyList()) =
     tasks.register<JavaExec>(name) {
+        usesService(regressionExecution)
         dependsOn(buildServer, buildAdmin, tasks.testClasses)
         javaLauncher.set(launcher25)
         classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
@@ -135,6 +145,7 @@ val integrationPrograms = listOf(
     standalone("integrationMaps", "org.tortodrone.integration.MapPreparationIntegrationTest")
 )
 val testBuildTools = tasks.register<JavaExec>("testBuildTools") {
+    usesService(regressionExecution)
     javaLauncher.set(launcher25)
     classpath = buildTools.runtimeClasspath
     mainClass.set("BuildToolsTest")

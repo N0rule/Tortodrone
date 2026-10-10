@@ -14,6 +14,8 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
 ```
 
+Standalone regression JVMs share one Gradle build-service slot, including when the configuration cache is reused. This avoids CPU contention from RSA/password hashing triggering local socket deadlines. Compilation and packaging retain normal worker scheduling; each fixture still runs its own concurrent scenarios. No `--max-workers=1` flag is needed for `build`, `testUnit` or `testIntegration`.
+
 The pinned Gradle Wrapper uses Java 25. Dependency/plugin checksums are in `gradle/verification-metadata.xml`; downloads are cached in Gradle user home. Use `.\gradlew.bat` on Windows. For headless Linux: `env -u DISPLAY ./gradlew build` (not a substitute for graphical tests). Avoid `JAVA_TOOL_OPTIONS`: startup output can break packaged fixture assertions. Tests must use disposable deployments; `./gradlew runServer` or `./gradlew runAdmin` starts real processes/data. Persistent compat tools are **Java**; throwaway work goes under `/tmp`.
 
 Before commit: add focused regression, run `./gradlew build`, run relevant compat/graphical checks, inspect `git diff` and `git diff --check`; update only current docs, commit major milestones, bump `VERSION` for behavioral releases only. Record commands/results, actual limitations and stopped processes.
