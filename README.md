@@ -6,12 +6,12 @@ separate and unmodified.
 
 ## Current state
 
-Version **0.20.0**, SQLite schema **8**: normal login; saved character creation,
-editing, deletion and selection; external Town Square/Bazaar maps and instances; movement, mouse
+Version **0.21.0**, SQLite schema **8**: normal login; saved character creation,
+editing, deletion and selection; external Town Square, Bazaar, Arcade and Garrison maps and instances; movement, mouse
 facing, sampled static collision and multiplayer actors with shared scene simulation; five persistent starter
 items plus player equipment/costumes/trinkets and stackable inventory, grants by catalogue ID or reference, and Arsenal equip/unequip; per-character crowns and
 energy with local administration; peaceful town stance with shields on the back and live open-loadout updates;
-original-protocol scene chat with instance isolation and private tells across maps; vanilla sitting; automatic Town Square ↔ Bazaar portals;
+original-protocol scene chat with instance isolation and private tells across maps; vanilla sitting; all ten connecting Haven town portals;
 Game Master roles, stock title/support icon, permission-checked broadcasts and item commands;
 character select previews that show each knight's currently equipped outfit.
 
@@ -29,10 +29,10 @@ knights still loading a scene receive no messages. Away/idle reporting is unavai
 Use `/sit` (or `/sitdown`) to sit. Walking first plays the stock standing animation;
 opening inventory interrupts the pose. Other animated emote commands remain unavailable.
 
-Walk into the west Town Square portal to reach Bazaar, or the east Bazaar portal
-to return. Arrival uses the original map entrance and facing.
+Walk through the marked portals between Town Square, Bazaar, Arcade and Garrison.
+All five connections work in both directions, with the original entrance and facing.
 
-Intro missions are skipped. Combat, quests, shops, NPC dialogue, other town links,
+Intro missions are skipped. Combat, quests, shops, NPC dialogue, interior services,
 position persistence and other staff gameplay commands are not implemented. Reconnect
 to switch characters; login starts at the town spawn; portal travel uses its destination marker.
 
@@ -47,7 +47,7 @@ installation or database service is required. The first build downloads pinned,
 checksum-verified libraries; later builds use `build/deps/`. Downloads show progress
 and use up to three attempts with a 30-second deadline each. Keep `build/deps/`
 to avoid downloading again; `make clean` preserves it. Complete regular
-Town Square and Bazaar packs and JSON item definitions are checked in under
+Town Square, Bazaar, Arcade and Garrison packs and JSON item definitions are checked in under
 `defaults/maps/` and `defaults/items/`. `make defaults` prepares all local default
 resources without downloads; `make maps` prepares only maps. See [maps](docs/maps.md).
 

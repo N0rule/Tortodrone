@@ -152,6 +152,10 @@ message limits, rate limits, departure/re-entry and disconnected recipients.
 The portal fixture walks the original west Town Square/east Bazaar sensors, reads
 the actual forced receiver callback, exercises scene/zone RPCs and tagged arrival
 position/facing, and checks peer departure/rejoin and fresh baselines.
+The Haven oracle compares all four original native scenes, ten portal polygons,
+sensor settings and tagged arrival transforms. The Haven network fixture plans
+test-only walking routes over sampled collision and walks every directed link
+using original stock input, forced callbacks and move RPCs.
 The world fixture also calls the stock sit RPC, checks a persistent seated actor
 and its exact standing deadline, and compares the installed configuration/predictor.
 GM fixtures verify login/occupant role and support icon, broadcasts across maps,

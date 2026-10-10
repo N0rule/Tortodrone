@@ -30,7 +30,7 @@ public final class DefaultResourcesTest {
             Path fresh=home.resolve("fresh");
             DefaultResources.prepare(fresh,uri.resolve("/good"),infos::add,warnings::add);
             check(warnings.isEmpty() && requests.get()==1,"complete defaults download successfully");
-            check(SceneCatalog.load(fresh.resolve("defaults/maps")).scenes().size()==2,"downloaded original maps pass checksums and spawn validation");
+            check(SceneCatalog.load(fresh.resolve("defaults/maps")).scenes().size()==4,"downloaded original maps pass checksums and spawn validation");
             check(ItemCatalog.load(fresh.resolve("defaults/items/catalog.json")).entries().size()==9348,"all JSON definitions downloaded");
             check(Files.readString(fresh.resolve("defaults/future/example.txt")).equals("future resource"),"additional default directories are retained");
             check(!Files.exists(fresh.resolve("outside.txt")),"archive files outside root defaults ignored");

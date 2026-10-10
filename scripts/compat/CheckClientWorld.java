@@ -39,6 +39,8 @@ public final class CheckClientWorld {
                 project.resolve("scripts/compat/GameMasterConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/TellConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/PortalConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/HavenConnectionCheck.java").toString(),
+                project.resolve("scripts/compat/HavenCompatibility.java").toString(),
                 project.resolve("scripts/compat/ItemCatalogExport.java").toString(),project.resolve("scripts/compat/ItemCatalogCompatibility.java").toString(),
                 project.resolve("scripts/compat/ItemGrantConnectionCheck.java").toString()), "compile", "", 30);
             cp = scratch + File.pathSeparator + cp;
@@ -49,6 +51,9 @@ public final class CheckClientWorld {
             List<String> reader = new ArrayList<>(base);
             reader.addAll(List.of("WorldCompatibility", game.toString()));
             run(reader, "reader", "", 30);
+            var havenReader=new ArrayList<>(base);
+            havenReader.addAll(List.of("HavenCompatibility",game.toString()));
+            run(havenReader,"haven-reader","",45);
             var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("items").toString()));
             run(export,"item-export","",60);
             var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.json").toString()));
@@ -82,6 +87,10 @@ public final class CheckClientWorld {
             var portalCheck=new ArrayList<>(base);
             portalCheck.addAll(List.of("PortalConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
             try{run(portalCheck,"portals","",60);}
+            catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
+            var havenCheck=new ArrayList<>(base);
+            havenCheck.addAll(List.of("HavenConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
+            try{run(havenCheck,"haven-links","",180);}
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");

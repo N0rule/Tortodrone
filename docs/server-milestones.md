@@ -212,3 +212,69 @@ Character/PC/Default shape is a circle of radius .333333 with collision flags 4.
 Server-only MoveBody configuration is stripped from client exports; the client's
 SpawnActor(null) placeholder is expected stripping, not missing portal intent.
 Only these two verified rectangle sensors are enabled in this release.
+
+## Connected Haven (0.21.0)
+
+The same pinned archive supplies regular Arcade scene 3 (`%town:m.haven_arcade`)
+and Garrison scene 445 (`%town:m.haven_eastside`). Both decode as TownSceneConfig
+in the installed reader and use the existing peaceful town actor/schema. Collision
+packs are imported with the stock PC circle; no NPC handlers are executed.
+
+| Source | Area entry | Destination | Destination tag |
+| --- | --- | --- | --- |
+| Town Square | 6071 | Bazaar | from_town_square_west |
+| Bazaar | 3096 | Town Square | from_bazaar_east |
+| Town Square | 3540 | Arcade | from_town_square_north |
+| Arcade | 933 | Town Square | from_arcade_central |
+| Town Square | 6514 | Garrison | from_town_square_east |
+| Garrison | 3560 | Town Square | from_garrison_west |
+| Bazaar | 2742 | Arcade | from_bazaar_west |
+| Arcade | 934 | Bazaar | from_arcade_west |
+| Arcade | 2194 | Garrison | from_arcade_east |
+| Garrison | 3313 | Arcade | from_garrison_north |
+
+Every source reference is `Portals/Portal`, with Scene ID and the original
+ActionConfig.TaggedPortal argument. The installed common `area.dat` has
+IntersectionStart mask 65535 and DefaultShape expansion 0; its four parameters
+are Tag, Scene ID, Portal and Minimap Icon. None of these ten references override
+sensor settings or add a condition. The original quadrilaterals include a
+trapezoid and skewed edges; metadata format 2 preserves them. Format 1 rectangles
+remain supported. `HavenCompatibility` compares all native source vertices,
+destination placeable keys/tags/transforms and sensor settings, then compares
+native circle intersection at outward edge/corner samples.
+
+Buildings and doors without these standard direct links remain unavailable,
+including guild/hall/laboratory services and Arcade dungeon gates. Loading their
+geometry does not implement an NPC, guild, dungeon or quest service.
+
+## Remaining character protocol research (not implemented)
+
+The installed client routes TrainingSceneConfig through its dungeon controller,
+not the peaceful town controller. Archived `Master/Static/446` at the same pinned
+revision decodes as TrainingSceneConfig (version -1172213676). A combat milestone
+needs a subscribed PartyObject before place entry and the native Dungeoneer actor;
+the exact training party subtype, complete streaming fields and entry route still
+need verification. DungeonInputFrame carries held attack in flag mask 4 and an
+actionChanged timestamp. Proto Sword and Calibur configurations contain three-hit
+normal combos and a 3000 ms charge. Their configuration alone does not establish
+server timing, effects or damage. Preserve peaceful towns and do not activate
+training NPC handlers or invent targets/rewards to demonstrate combat.
+
+The stock trade invitation uses ProjectXSceneMarshaller service 6, method 4,
+with Name and ConfirmListener. IncomingNotification.TradeRequest carries Name,
+with key `TRADE_REQ:<name>`; SocialMarshaller method 5 responds with key, choice
+(0 reject, 1 accept) and ConfirmListener. TradeDialogInfo adds Name[] and tradeOid
+after its inherited DialogInfo fields. The subscribed TradeObject contains
+tradeService, firstItems, secondItems, orderings, crowns, energy, revision,
+accepted and completed after its object ID. TradeMarshaller methods 1–5 are
+accept(revision), add(itemId,count), remove(itemId,count), crowns(amount) and
+energy(amount), each with a confirm listener. Installed UI calls support transfer
+quantities for add/remove, but contain no server-side arithmetic implementation.
+
+Trade UI acceptance compares each side's accepted value to the current revision;
+completion refreshes its summary without automatically closing. Dialog close
+passes sceneDialogCreated to ProjectXSceneMarshaller method 1, so stale closes
+must not cancel newer dialogs. Native bag listeners handle item-set removals;
+the current server inventory codec will need removal events. Runtime trade OID
+allocation, service registration, request/dialog lifecycle and atomic storage
+remain unimplemented and require primary-agent design and regression coverage.

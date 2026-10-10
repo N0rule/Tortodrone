@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.20.0, schema 8
+## Checkpoint: 0.21.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -386,10 +386,10 @@ Complete and commit one verified milestone at a time:
    interaction, server-controlled destinations/proximity, safe departure/readiness
    and clean actor/chat membership in both views. Existing direct scene RPC travel
    is a foundation, not portal acceptance.
-4. **Connected Haven**: add remaining verified regular town packs/links (including
-   Arcade when its data is validated), and check boundaries/collision and non-NPC
-   interactables. Document NPC-dependent doors/features explicitly rather than
-   claiming the town is complete from geometry alone.
+4. **Connected Haven (0.21.0)**: Town Square, Bazaar, Arcade and Garrison, with all
+   ten standard directed portal links, original entrances and collision packs.
+   Guild/hall/laboratory services and dungeon gates remain unavailable; map loading
+   does not imply those services are implemented.
 5. **Basic weapons**: verify selection, one sword's normal combo and charge/heavy
    attack, timing/movement and peer effects in a scene where stock rules permit
    combat. Preserve peaceful town behavior. Damage needs an explicitly supported
@@ -496,12 +496,43 @@ view. Screenshots are under `local/research/2026-10-10/portal-acceptance/` (igno
 Both test clients and their temporary server were stopped; real state and the game
 installation were untouched.
 
+## Connected Haven towns (0.21.0)
+
+Added the pinned original Arcade (scene 3) and Garrison (scene 445) town layouts,
+matching stock-derived collision packs and ten tagged entrances. All ten directed
+standard portal links between Town Square, Bazaar, Arcade and Garrison are enabled.
+The source sensor quadrilaterals include trapezoids and skewed edges; metadata
+format 2 preserves their vertices, while format 1 rectangles remain supported.
+Pawn-circle intersection uses the polygon interior and closest edge/corner.
+Validation rejects duplicate, collinear, concave, self-intersecting, non-finite or
+oversized polygons. The existing membership, authentication, forced-move and
+readiness lifecycle is reused; schema remains 8.
+
+`HavenCompatibility` reads each original scene and installed sensor configuration,
+compares every native portal polygon/destination and tagged placeable transform,
+and independently checks circle intersections near outward edges/corners.
+`HavenConnectionCheck` walks all ten links with original stock input/callback/RPCs,
+using a test-only collision route planner. Its endpoint lies inside the sensor
+intersection, so movement's stop tolerance cannot miss a grazing boundary.
+Guild/hall/laboratory services and dungeon gates remain unavailable; map geometry
+does not implement their interactions, NPC behavior or mission state.
+
+Acceptance (2026-10-10): Java 25 `make build test` passes all 41 unit and five
+packaged integration checks. `make check-client-world` passes all 79 stock checks,
+including the native geometry oracle and walking all ten links with tagged
+arrivals, retained character identity/equipment and fresh scene baselines.
+Isolated original ProjectXApp clients rendered Garrison and Arcade arrivals,
+two knights together with walking animation, and return trips to Town Square.
+Screenshots are under `local/research/2026-10-10/haven-acceptance/` (ignored).
+Every test client/server was stopped and disposable deployment data removed;
+the installed game, owner preferences and real server data were untouched.
+
 ## Current limits and later work
 
-Town Square ↔ Bazaar portals use tagged arrival markers; login resets to spawn. Reconnect to switch characters.
+All four Haven towns connect through ten directed portals with tagged arrivals; login resets to spawn. Reconnect to switch characters.
 Static collision is sampled; no dynamic physics. Five starter items plus supported player-item grants, stacks and costume/trinket
 equipment; no drops, trade, crafting, item-use actions or loadout switching. No combat, quests, shops, NPC
-dialogue or other town portal links. Currencies start at zero, with no economy/regeneration.
+dialogue or interior services. Currencies start at zero, with no economy/regeneration.
 News/social feeds are empty. Account/character/currency management remains local;
 in-game staff commands are help, broadcast, item search and item grants. Binding has no unbinding service.
 

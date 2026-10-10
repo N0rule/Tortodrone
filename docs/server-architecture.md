@@ -201,7 +201,8 @@ instance timer; idle selected members remain visible without advancing. Re-entry
 restarts the timer. Positions remain transient.
 
 Automatic town portals are verified server metadata tied to an archived layout
-hash. Movement integration checks the PC circle against portal rectangles after
+hash. Movement integration checks the PC circle against portal rectangles or
+validated convex polygons after
 every collision substep, freezing at the first crossing. The scene snapshot retains
 the owned pawn's request until transfer, so mailbox coalescing cannot lose it.
 Session delivery validates current ownership, stops source readiness/chat/polling

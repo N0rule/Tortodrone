@@ -20,7 +20,9 @@ public final class DefaultResources {
     public static final URI SOURCE = URI.create("https://github.com/REPLACE-ME/tortodrone-defaults/archive/refs/heads/main.zip");
     private static final List<String> REQUIRED = List.of("maps/catalog.properties", "maps/haven/map.properties",
         "maps/haven/scene.dat", "maps/haven/walkability.gz", "maps/bazaar/map.properties",
-        "maps/bazaar/scene.dat", "maps/bazaar/walkability.gz", "items/catalog.json");
+        "maps/bazaar/scene.dat", "maps/bazaar/walkability.gz", "maps/arcade/map.properties",
+        "maps/arcade/scene.dat", "maps/arcade/walkability.gz", "maps/garrison/map.properties",
+        "maps/garrison/scene.dat", "maps/garrison/walkability.gz", "items/catalog.json");
     private static final long ARCHIVE_LIMIT=32_000_000, EXPANDED_LIMIT=128_000_000;
     private DefaultResources() { }
     public static List<String> missing(Path defaults) {
