@@ -19,6 +19,7 @@ import org.tortodrone.character.Knight;
 
 /** Desktop-only view; all expensive or blocking account work happens outside the Swing thread. */
 final class AdminWindow extends JFrame {
+    private record AccountRows(List<AccountStore.Summary> accounts, Map<Integer, List<String>> knightNames) { }
     private volatile AccountStore accounts;
     private final AccountTableModel model = new AccountTableModel();
     private final JTable table = new JTable(model);
@@ -51,7 +52,7 @@ final class AdminWindow extends JFrame {
         button(actions,"Delete knight",true,this::deleteKnight);
         footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
         addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { if (accounts != null) accounts.close(); } });
-        execute(() -> { accounts = new AccountStore(directory); return accounts.list(); },this::loaded);
+        execute(() -> { accounts = new AccountStore(directory); return loadRows(); },this::loaded);
     }
     private void button(JPanel panel,String text,boolean selection,Runnable action) {
         JButton button = new JButton(text); button.addActionListener(event -> { if (!busy) action.run(); }); panel.add(button); buttons.add(button); if (selection) selectedButtons.add(button);
@@ -63,10 +64,16 @@ final class AdminWindow extends JFrame {
         for (JButton button : buttons) button.setEnabled(!busy && accounts != null);
         for (JButton button : selectedButtons) button.setEnabled(!busy && selected() != null);
     }
-    private void loaded(List<AccountStore.Summary> rows) {
-        model.replace(rows); status.setText(rows.isEmpty() ? "No accounts. Create an account to enable normal login." : rows.size()+" accounts"); enableActions();
+    private AccountRows loadRows() throws IOException {
+        var rows = accounts.list(); var names = new HashMap<Integer, List<String>>();
+        for (var account : rows) names.put(account.id(), accounts.knights(account.username()).stream().map(Knight::name).toList());
+        return new AccountRows(rows, names);
     }
-    private void refresh() { execute(() -> accounts.list(),this::loaded); }
+    private void loaded(AccountRows rows) {
+        model.replace(rows.accounts(), rows.knightNames());
+        status.setText(rows.accounts().isEmpty() ? "No accounts. Create an account to enable normal login." : rows.accounts().size()+" accounts"); enableActions();
+    }
+    private void refresh() { execute(this::loadRows,this::loaded); }
     private JPanel form(Object... rows) {
         JPanel form = new JPanel(new GridLayout(0,2,10,10));
         for (int i=0;i<rows.length;i+=2) { form.add(new JLabel((String)rows[i])); form.add((Component)rows[i+1]); } return form;
@@ -79,7 +86,7 @@ final class AdminWindow extends JFrame {
         catch (IOException failure) { Arrays.fill(first,'\0'); message(failure.getMessage(),true); return; }
         finally { Arrays.fill(second,'\0'); }
         String name = username.getText(); boolean flag = gameMaster.isSelected();
-        execute(() -> { try { accounts.create(name,first,flag); return accounts.list(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Account created: "+name); });
+        execute(() -> { try { accounts.create(name,first,flag); return loadRows(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Account created: "+name); });
     }
     private void password() {
         var account = selected(); if (account == null) return;
@@ -89,7 +96,7 @@ final class AdminWindow extends JFrame {
         try { Passwords.validate(first); if (!Arrays.equals(first,second)) throw new IOException("Passwords do not match"); }
         catch (IOException failure) { Arrays.fill(first,'\0'); message(failure.getMessage(),true); return; }
         finally { Arrays.fill(second,'\0'); }
-        execute(() -> { try { accounts.setPassword(account.username(),first,account.id()); return accounts.list(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Password changed. Existing sessions will disconnect."); });
+        execute(() -> { try { accounts.setPassword(account.username(),first,account.id()); return loadRows(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Password changed. Existing sessions will disconnect."); });
     }
     private void check() {
         var account = selected(); if (account == null) return;
@@ -105,7 +112,7 @@ final class AdminWindow extends JFrame {
         JCheckBox flag = new JCheckBox("Game Master",account.gameMaster());
         if (JOptionPane.showConfirmDialog(this,flag,"Game Master status — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
         boolean gameMaster = flag.isSelected();
-        execute(() -> { accounts.setGameMaster(account.username(),gameMaster,account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Game Master status updated."); });
+        execute(() -> { accounts.setGameMaster(account.username(),gameMaster,account.id()); return loadRows(); },rows -> { loaded(rows); status.setText("Game Master status updated."); });
     }
     private void currency() {
         var account = selected(); if (account == null) return;
@@ -134,7 +141,7 @@ final class AdminWindow extends JFrame {
         var account = selected(); if (account == null) return;
         String typed = JOptionPane.showInputDialog(this,"Delete "+account.username()+" and "+account.knights()+" character(s)?\nType the username to confirm:","Delete account",JOptionPane.WARNING_MESSAGE);
         if (typed == null) return; if (!typed.equals(account.username())) { message("Username did not match. Account was not deleted.",true); return; }
-        execute(() -> { accounts.delete(account.username(),account.id()); return accounts.list(); },rows -> { loaded(rows); status.setText("Account and its characters deleted. Existing sessions will disconnect."); });
+        execute(() -> { accounts.delete(account.username(),account.id()); return loadRows(); },rows -> { loaded(rows); status.setText("Account and its characters deleted. Existing sessions will disconnect."); });
     }
     private void deleteKnight() {
         var account=selected();if(account==null)return;
@@ -146,7 +153,7 @@ final class AdminWindow extends JFrame {
             execute(()->accounts.worldProfile(account.username(),name),profile->{
                 String typed=JOptionPane.showInputDialog(this,"Delete "+name+" and its items/balances?\nThis account's sessions will disconnect. Type the exact knight name:","Delete knight",JOptionPane.WARNING_MESSAGE);
                 if(typed==null)return;if(!typed.equals(name)){message("Knight name did not match. Nothing was deleted.",true);return;}
-                execute(()->{accounts.deleteKnight(account.username(),name,account.id(),profile.worldId());return accounts.list();},rows->{loaded(rows);status.setText("Knight deleted: "+name);});
+                execute(()->{accounts.deleteKnight(account.username(),name,account.id(),profile.worldId());return loadRows();},rows->{loaded(rows);status.setText("Knight deleted: "+name);});
             });
         });
     }

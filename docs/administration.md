@@ -8,7 +8,7 @@ On niri, the GUI sets its Java window-manager compatibility flag automatically.
 
 ## Server terminal
 
-Enter commands in the running server, not the shell. A leading `/` is optional.
+Enter commands in the running server, not the shell. A leading `/` is optional. `ac` is an alias for `account` (for example, `ac list`).
 
 | Command | Action |
 | --- | --- |
@@ -17,7 +17,7 @@ Enter commands in the running server, not the shell. A leading `/` is optional.
 | `account create Alice [gm]` | Create; prompt twice for a password |
 | `account password Alice` | Reset password; prompt twice |
 | `account check Alice` | Check a supplied password |
-| `account gm Alice true` | Grant Game Master; `false` removes it |
+| `gm Alice`, `account gm Alice` | Toggle Game Master; append `true` or `false` to set explicitly |
 | `account delete Alice` | Delete account/characters after exact-username confirmation |
 | `knight list Alice` | Saved knights and account-local roster IDs |
 | `knight info Alice Saved-Knight` | Global identity, balances, items and equipped slots |
@@ -25,7 +25,7 @@ Enter commands in the running server, not the shell. A leading `/` is optional.
 | `currency give Alice Saved-Knight crowns 100` | Add currency |
 | `currency withdraw Alice Saved-Knight energy 5` | Withdraw; reject insufficient funds |
 | `items Calibur` | Find item references (first five matches) |
-| `giveitem Alice Saved-Knight 2 Weapon/Sword/Calibur` | Grant distinct unequipped equipment instances |
+| `giveitem Saved-Knight 2 Weapon/Sword/Calibur` | Grant distinct unequipped equipment instances |
 
 Interactive Up/Down recalls 100 commands in memory. Password/confirmation prompts
 and unrecognized input never enter history. Passwords are hidden in a terminal
@@ -33,7 +33,8 @@ and never command arguments. Redirected stdin supplies complete UTF-8 lines;
 EOF leaves the server running. Logs preserve the active prompt.
 
 Game Masters use `!help` to list supported chat commands, normal scene chat `!items Calibur` and
-`!giveitem Alice Saved-Knight 2 Weapon/Sword/Calibur`. The result is private to the
+`!giveitem Saved-Knight 2 Weapon/Sword/Calibur`. Targets use globally unique knight names;
+the previous account-qualified `giveitem` form remains supported in console and chat. The result is private to the
 sender. An unknown GM `!` command returns “Unknown command. Use !help for available
 commands.” Normal players, including staff whose role was revoked, send all `!`
 text as ordinary scene chat; it never invokes a staff command or shows its help.
@@ -41,7 +42,7 @@ Console/CLI commands are local administration and do not require an account
 role. The CLI accepts `--items Calibur` and
 `--give-item Alice Saved-Knight 2 "Weapon/Sword/Calibur"`; only shell commands quote
 multiword references. See [catalogue preparation and supported item limits](game-data.md).
-The Swing manager does not yet have an item-grant dialog.
+The Swing manager and `--list-accounts` list each account’s knight names, separated by commas. It does not yet have an item-grant dialog.
 
 For headless administration, run `java -jar build/tortodrone-admin.jar --help`.
 Its CLI supports list/create/check/reset/delete/role actions, with `--data` before
@@ -86,6 +87,15 @@ rows are removed. Picker deletion still refuses online knights.
 - Password storage uses a random salt and PBKDF2-HMAC-SHA256, 600,000 iterations,
   over the stock client's password transform. Neither plaintext nor reusable
   transform is stored. Keys are independent of accounts.
+
+## Server logs
+
+`normal` records startup/readiness, account/character lifecycle, warnings and errors.
+Unavailable maps/items produce one resource-fallback warning describing the effect.
+`debug` also records configuration/storage paths, default-resource recovery details,
+scene IDs, connection lifecycle and protocol message types. Each connection logs
+its disconnection once. Neither mode records passwords or authentication payloads.
+Set `log-mode=normal` or `log-mode=debug` in `data/server.properties` and restart.
 
 ## State and backup
 

@@ -116,7 +116,6 @@ final class ClientSession {
                     }
                 }
             }
-            log.debug("Client disconnected");
         } finally {
             world.close();
             if (subscription != null) subscription.close();

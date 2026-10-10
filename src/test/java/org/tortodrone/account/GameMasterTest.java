@@ -21,6 +21,15 @@ public final class GameMasterTest {
                     check(!lease.gameMaster()&&lease.current(),"cross-process removal revokes immediately without disconnecting");
                     tool.setGameMaster("Staff",true,identity.id());
                     check(lease.gameMaster(),"cross-process role restoration is visible");
+                    check(!tool.toggleGameMaster("staff")&&!lease.gameMaster(),"case-insensitive toggle removes current role immediately");
+                    check(tool.toggleGameMaster("Staff")&&lease.gameMaster(),"toggle restores role immediately");
+                    var workers=java.util.concurrent.Executors.newFixedThreadPool(2);
+                    try {
+                        for(var future:workers.invokeAll(List.<java.util.concurrent.Callable<Boolean>>of(
+                            ()->server.toggleGameMaster("Staff"),()->tool.toggleGameMaster("Staff"))))future.get();
+                    }finally{workers.shutdownNow();}
+                    check(lease.gameMaster(),"two concurrent toggles preserve original role");
+                    try{tool.toggleGameMaster("Missing");throw new AssertionError("Missing account toggled");}catch(IOException expected){}
                     try{tool.setGameMaster("Player",true,identity.id());throw new AssertionError("Stale target accepted");}catch(IOException expected){}
                     check(!AccountStoreTest.login(server,"Player","player-password").gameMaster(),"guarded role update cannot promote another account");
                     tool.setPassword("Staff","new-password".toCharArray());

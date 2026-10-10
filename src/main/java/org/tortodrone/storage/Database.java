@@ -179,6 +179,18 @@ public final class Database {
             event(c,id,gameMaster ? "game master granted" : "game master removed"); return null;
         });
     }
+    /** Toggle atomically with other local tools; no stale read/modify/write window. */
+    public boolean toggleGameMaster(String username) throws IOException {
+        return write(c -> {
+            int id=requireId(c,username);
+            boolean enabled;
+            try(var s=c.prepareStatement("UPDATE accounts SET game_master=1-game_master,revision=revision+1 WHERE id=? RETURNING game_master")) {
+                s.setInt(1,id);try(var r=s.executeQuery()){r.next();enabled=r.getBoolean(1);}
+            }
+            event(c,id,enabled ? "game master granted" : "game master removed");
+            return enabled;
+        });
+    }
     public void delete(String username,int expectedId) throws IOException {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
@@ -321,7 +333,14 @@ public final class Database {
                 s.setInt(1,actorAccount);s.setLong(2,actorRevision);
                 try(var r=s.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}
             }
-            int account=requireId(c,username),knight;
+            int account,knight;
+            if (username == null) {
+                // Global name lookup shares the grant transaction and permission check.
+                try (var s=c.prepareStatement("SELECT account_id FROM knights WHERE name_key=?")) {
+                    s.setString(1,knightName.toLowerCase(Locale.ROOT));
+                    try (var r=s.executeQuery()) { if(!r.next())throw new IOException("No such knight");account=r.getInt(1); }
+                }
+            } else account=requireId(c,username);
             if(expectedAccount>=0&&account!=expectedAccount)throw new IOException("Account changed; refresh");
             try(var s=c.prepareStatement("SELECT id FROM knights WHERE account_id=? AND name_key=?")) {
                 s.setInt(1,account);s.setString(2,knightName.toLowerCase(Locale.ROOT));

@@ -28,7 +28,7 @@ public final class AdminIntegrationTest {
             command(admin,directory,"",false,"Use --help","--create-account","OldAlias","--admin");
             command(admin,directory,"owner-password\n",true,"Password matches.","--check-password","Owner");
             command(admin,directory,"wrong-password\n",true,"Password does not match.","--check-password","Owner");
-            command(admin,directory,"",true,"1\tOwner\ttrue\t0","--list-accounts");
+            command(admin,directory,"",true,"1\tOwner\ttrue\t","--list-accounts");
             command(admin,directory,"invalid\n",false,"did not match","--delete-account","Owner");
             command(admin,directory,"bad\nbad\n",false,"8–128","--set-password","Owner");
             Path data = directory.resolve("data"), config = data.resolve("server.properties");
@@ -40,6 +40,7 @@ public final class AdminIntegrationTest {
                     TestClient.authenticate(socket,key,"Player","player-password",true,(peer,wire,oid) -> CharacterScenario.session(peer,wire,oid,true));
                 }
                 Database database = new Database(data,false); check(database.roster(2).size() == 1,"live-created account owns saved characters");
+                command(admin,directory,"",true,"2\tPlayer\tfalse\tSaved-Knight","--list-accounts");
                 command(admin,directory,"",true,"Game Master status changed.","--set-gm","Player","true");
                 check(database.identity("Player").gameMaster(),"desktop service role change visible while server runs");
                 var ready = new CompletableFuture<Void>();
@@ -89,7 +90,7 @@ public final class AdminIntegrationTest {
                 check(running.process.isAlive(),"administration does not stop server");
             }
             String log = Files.readString(data.resolve("logs/latest.log")); check(!log.contains("player-password") && !log.contains("changed-password") && !log.contains(TestClient.passwordHash("player-password")),"passwords and transforms never logged");
-            command(admin,directory,"",true,"1\tOwner\ttrue\t0","--list-accounts");
+            command(admin,directory,"",true,"1\tOwner\ttrue\t","--list-accounts");
             Path elsewhere = directory.resolve("elsewhere"); Files.createDirectories(elsewhere);
             command(admin,elsewhere,"",true,"Owner","--data",data.toString(),"--list-accounts"); check(!Files.exists(elsewhere.resolve("data")),"explicit data selection never uses shell working directory");
             System.out.println("PASS: packaged admin JAR, create/list/check/reset/admin/delete, shared live SQLite, session revocation and data paths");

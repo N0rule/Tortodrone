@@ -49,8 +49,12 @@ public final class AdminApplication {
                 (u,k,c,n)->accounts.grantItems(u,k,c,n,-1,-1)));return;
         }
         if (args.length == 1 && args[0].equals("--list-accounts")) {
-            System.out.println("ID\tUsername\tGame Master\tCharacters");
-            for (var a : accounts.list()) System.out.println(a.id()+"\t"+a.username()+"\t"+a.gameMaster()+"\t"+a.knights()); return;
+            System.out.println("ID\tUsername\tGame Master\tKnights");
+            for (var a : accounts.list()) {
+                String names=String.join(", ",accounts.knights(a.username()).stream().map(org.tortodrone.character.Knight::name).toList());
+                System.out.println(a.id()+"\t"+a.username()+"\t"+a.gameMaster()+"\t"+names);
+            }
+            return;
         }
         if (args.length < 2) throw new IOException("Use --help for account commands");
         String username = args[1]; var input = new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8));

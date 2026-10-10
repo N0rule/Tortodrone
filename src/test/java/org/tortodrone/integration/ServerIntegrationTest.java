@@ -164,9 +164,22 @@ public final class ServerIntegrationTest {
             }
         }
         String log=Files.readString(directory.resolve("data/logs/latest.log"));
-        check(log.contains("Default resource download failed")&&log.contains("Maps unavailable")
+        check(log.contains("Resource fallback: maps unavailable")
             &&log.contains("using built-in starter definitions")&&log.contains("Done! Listening"),"unavailable defaults warn while normal login/character persistence still work");
+        check(log.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1
+            &&!log.contains("Default resource download failed")&&!log.contains("Missing default resources")&&!log.contains("/DEBUG]:"),
+            "normal mode reports missing defaults once without recovery diagnostics");
         check(database(directory.resolve("data")).roster(1).size()==1,"missing defaults do not discard saved characters");
+        Path debugLog=directory.resolve("data/logs/latest.log");Files.delete(debugLog);
+        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        try(var server=new Running(jar,config,directory,java.util.List.of("-Dhttps.proxyHost=127.0.0.1","-Dhttps.proxyPort=1"))) {
+            server.ready();
+            server.send("stop\n");check(server.process.waitFor(10,TimeUnit.SECONDS),"debug fallback server stops");
+        }
+        String debug=Files.readString(debugLog);
+        check(debug.contains("Default resource download failed")&&debug.contains("Missing default resources")
+            &&debug.contains("Account database:")&&debug.contains("Scene IDs:"),"debug mode includes recovery and storage diagnostics");
+        check(debug.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1,"debug fallback warning is consolidated");
     }
 
     private static void defaultWorkflow(Path jar, Path directory) throws Exception {

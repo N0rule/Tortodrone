@@ -80,11 +80,15 @@ public final class Server {
     }
 
     private static void run(ServerSettings settings, Path dataDirectory, ServerLog log) throws Exception {
-        org.tortodrone.resources.DefaultResources.prepare(dataDirectory.getParent(),log::info,log::warn);
+        var recoveryWarnings = new java.util.ArrayList<String>();
+        org.tortodrone.resources.DefaultResources.prepare(dataDirectory.getParent(),log::debug,
+            message -> { recoveryWarnings.add(message); log.debug(message); });
+        var fallbacks = new java.util.ArrayList<String>();
         org.tortodrone.world.SceneRegistry scenes;
         try { scenes=org.tortodrone.world.SceneRegistry.system(); }
         catch(IOException missing) {
-            log.warn("Maps unavailable: "+missing.getMessage()+"; login and administration remain available");
+            log.debug("Maps unavailable: " + missing.getMessage());
+            fallbacks.add("maps unavailable (world entry disabled)");
             scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.empty());
             org.tortodrone.world.SceneRegistry.install(scenes);
         }
@@ -96,8 +100,15 @@ public final class Server {
             catalog=org.tortodrone.character.ItemCatalog.deployment(dataDirectory);
             if (itemSource != null) log.debug("Item catalog: " + itemSource);
         }
-        catch(IOException invalid) { log.warn("Item definitions unavailable: "+invalid.getMessage()+"; using built-in starter definitions");catalog=org.tortodrone.character.ItemCatalog.starter(); }
-        if(itemSource==null)log.warn("Missing defaults/items/catalog.json; using built-in starter definitions");
+        catch(IOException invalid) {
+            log.debug("Item definitions unavailable: " + invalid.getMessage());
+            fallbacks.add("item definitions invalid (using built-in starter definitions)");
+            catalog=org.tortodrone.character.ItemCatalog.starter();
+        }
+        if(itemSource==null)fallbacks.add("item catalog missing (using built-in starter definitions)");
+        if(!fallbacks.isEmpty())log.warn("Resource fallback: " + String.join("; ",fallbacks)
+            + "; login and administration remain available. Check defaults/; use log-mode=debug for details.");
+        else if(!recoveryWarnings.isEmpty())log.warn("Default resource recovery incomplete; using available local maps/items. Use log-mode=debug for details.");
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");
@@ -111,6 +122,7 @@ public final class Server {
                     + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));
                 log.debug("Public key: " + keys.resolve("public.txt"));
+                log.debug("Account database: " + accounts.databaseFile());
                 accept(listener, key, log, accounts,settings.maxClients());
             }
         }

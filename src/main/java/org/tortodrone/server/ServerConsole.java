@@ -65,12 +65,12 @@ final class ServerConsole implements AutoCloseable {
             log.info(ItemCommands.execute(String.join(" ",words),accounts.catalog(),
                 (user,name,config,count)->accounts.grantItems(user,name,config,count,-1,-1)));
         } else if (words.length == 1 && command.equals("help")) {
-            log.info("Commands: help | status | stop | account list | account create <username> [gm]");
+            log.info("Commands: help | status | stop | account (alias: ac) list | account create <username> [gm]");
             log.info("knight list <username> | knight info <username> <knight-name>");
             log.info("knight delete <username> <knight-name> (exact knight-name confirmation)");
             log.info("currency <give|withdraw> <username> <knight-name> <crowns|energy> <amount>");
-            log.info("items <search> | giveitem <username> <knight-name> <1-20> <catalogue ID or exact item config>");
-            log.info("account password <username> | account check <username> | account gm <username> <true|false> | account delete <username>");
+            log.info("items <search> | giveitem <knight-name> <1-20> <catalogue ID or exact item config>");
+            log.info("account password <username> | account check <username> | gm <username> [true|false] | account gm <username> [true|false] | account delete <username>");
         } else if (words.length == 1 && command.equals("status")) {
             log.info("Server running. Accounts: " + accounts.list().size());
         } else if (words.length == 1 && command.equals("stop")) {
@@ -79,7 +79,12 @@ final class ServerConsole implements AutoCloseable {
             currency(words);
         } else if (command.equals("knight")) {
             knight(words);
-        } else if (command.equals("account")) {
+        } else if (command.equals("gm")) {
+            String[] accountWords = new String[words.length+1];
+            accountWords[0]="account";accountWords[1]="gm";
+            System.arraycopy(words,1,accountWords,2,words.length-1);
+            account(accountWords);
+        } else if (command.equals("account") || command.equals("ac")) {
             account(words);
         } else throw new IOException("Unknown command or arguments. Type help for commands.");
     }
@@ -126,8 +131,12 @@ final class ServerConsole implements AutoCloseable {
         }
         if (words.length < 3) throw usage();
         String name = words[2]; AccountStore.validateUsername(name);
+        if (words[1].equals("gm") && words.length == 3) {
+            boolean enabled=accounts.toggleGameMaster(name);
+            log.info("Game Master status changed: " + name + " = " + enabled); return;
+        }
         if (words[1].equals("gm") && words.length == 4 && (words[3].equals("true") || words[3].equals("false"))) {
-            accounts.setGameMaster(name, Boolean.parseBoolean(words[3])); log.info("Game Master status changed: " + name); return;
+            accounts.setGameMaster(name, Boolean.parseBoolean(words[3])); log.info("Game Master status changed: " + name + " = " + words[3]); return;
         }
         if (words[1].equals("delete") && words.length == 3) {
             var selected = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account"));

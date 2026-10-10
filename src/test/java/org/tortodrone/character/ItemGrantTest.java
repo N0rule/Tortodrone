@@ -17,7 +17,7 @@ public final class ItemGrantTest {
             var db=new Database(home,false);var characters=new CharacterStore(db,2,"Alice");
             var knight=characters.create(choices("Alice-Knight"));var before=characters.worldProfile(knight.name(),1);
             var entry=accounts.catalog().require("weapon/sword/proto sword");
-            var after=db.grantItems("Alice",knight.name(),2,before.worldId(),entry,2,1,1);
+            var after=db.grantItems(null,knight.name().toLowerCase(Locale.ROOT),2,before.worldId(),entry,2,1,1);
             check(after.items().size()==7&&Arrays.equals(before.equipment(),after.equipment()),"grants add distinct unequipped instances, preserving loadout");
             var added=after.items().stream().filter(i->!i.starter()).toList();
             check(added.size()==2&&added.stream().noneMatch(WorldProfile.Item::bound),"granted items start unbound and are not part of creator kit");
@@ -25,10 +25,10 @@ public final class ItemGrantTest {
             refused(()->db.equip(1,1,1,added.get(0).id(),6));
             db.equip(2,1,1,added.get(0).id(),null);
             accounts.setGameMaster("Staff",false);var unchanged=db.worldProfile(2,1,1);long counter=counter(db);
-            refused(()->db.grantItems("Alice",knight.name(),2,before.worldId(),entry,1,1,1));
+            refused(()->db.grantItems(null,knight.name(),2,before.worldId(),entry,1,1,1));
             check(db.worldProfile(2,1,1).equals(unchanged)&&counter(db)==counter,"revocation denies mutation/allocation");
             accounts.setGameMaster("Staff",true);accounts.setPassword("Staff","changed-password".toCharArray());
-            refused(()->db.grantItems("Alice",knight.name(),2,before.worldId(),entry,1,1,1));
+            refused(()->db.grantItems(null,knight.name(),2,before.worldId(),entry,1,1,1));
             refused(()->accounts.grantItems("Alice",knight.name(),"Not/An Item",1,-1,-1));
             refused(()->db.grantItems("Alice",knight.name(),99,before.worldId(),entry,1,-1,-1));
             refused(()->db.grantItems("Alice",knight.name(),2,999,entry,1,-1,-1));

@@ -41,7 +41,7 @@ public final class AccountStore implements AutoCloseable {
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
-        validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
+        if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);
     }
     public Path databaseFile() { return database == null ? null : database.file(); }
@@ -97,6 +97,14 @@ public final class AccountStore implements AutoCloseable {
         if (database != null) { database.gameMaster(username,gameMaster,expectedId); return; }
         Stored old = require(username,expectedId);
         memory.put(canonical(username),new Stored(old.id(),old.username(),old.password(),gameMaster,old.revision(),old.characters()));
+    }
+    public synchronized boolean toggleGameMaster(String username) throws IOException {
+        validateUsername(username);
+        if(database!=null)return database.toggleGameMaster(username);
+        Stored old=require(username,-1);
+        boolean enabled=!old.gameMaster();
+        setGameMaster(username,enabled,old.id());
+        return enabled;
     }
     public void delete(String username) throws IOException { delete(username,-1); }
     public synchronized void delete(String username,int expectedId) throws IOException {
