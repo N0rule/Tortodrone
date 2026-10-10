@@ -41,7 +41,7 @@ public final class LoadBenchmark {
             case "--clients" -> sizes=Arrays.stream(args[++i].split(",")).mapToInt(Integer::parseInt).toArray();
             case "--session-only" -> town=false;
             case "--instances" -> instances=Integer.parseInt(args[++i]);
-            default -> throw new IllegalArgumentException("Usage: make benchmark BENCHMARK_ARGS='[--seconds 20] [--clients 50,100,200,300] [--session-only] [--instances 1]'");
+            default -> throw new IllegalArgumentException("Usage: gradlew benchmark --args='[--seconds 20] [--clients 50,100,200,300] [--session-only] [--instances 1]'");
         }
         if(instances<1||instances>16)throw new IllegalArgumentException("instances: 1–16");
         if(seconds<1||seconds>300||sizes.length==0||Arrays.stream(sizes).anyMatch(n->n<1||n>1000))throw new IllegalArgumentException("seconds: 1–300; clients: 1–1000");

@@ -28,7 +28,7 @@ Follow the **owner's latest task** and current Git diff first; don't redo work u
 
 ## Build and performance
 
-Run `make build test` with **JDK 25**; the installed game is never modified. Use disposable test environments. `make benchmark BENCHMARK_ARGS='--instances 4 --clients 300'` measures synthetic workload; see [development](development.md) for other modes, limits and graphical procedures. Historical local 20-s/300-player runs reached **18.45 deltas/client/s (1 instance)** and **19.71 (4 instances)** after shared simulation, but dense-scene replication used substantial bandwidth. These numbers are a *checkpoint*, not a performance guarantee.
+Run `./gradlew build` with **JDK 25**; the installed game is never modified. Use disposable test environments. `./gradlew benchmark --args='--instances 4 --clients 300'` measures synthetic workload; see [development](development.md) for other modes, limits and graphical procedures. Historical local 20-s/300-player runs reached **18.45 deltas/client/s (1 instance)** and **19.71 (4 instances)** after shared simulation, but dense-scene replication used substantial bandwidth. These numbers are a *checkpoint*, not a performance guarantee.
 
 ## Documentation on demand (do not preload)
 

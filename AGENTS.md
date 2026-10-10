@@ -9,7 +9,7 @@ Read this file and [docs/PROJECT.md](docs/PROJECT.md) first. Check `git status -
 - Develop only the Java server and local admin tools. Never alter installed game, client, launcher or their real preferences. Normal username/password only; no Steam/guest auth.
 - Protect accounts, characters, SQLite, keys, preferences and running sessions. Use disposable deployments/data for all tests; never stop the owner's processes. Do not commit secrets, game assets, runtime data or build output.
 - Persistent repository tools are Java; throwaway probes belong in `/tmp`. Derive protocol and gameplay behavior from upstream evidence and the **unchanged stock client**, never invented wire fields, quests or rewards.
-- Work in one verifiable milestone at a time. Preserve unrelated Git edits. Run `make build test` and stock-client/graphical checks when applicable; cleanup only processes you started. Review diffs, commit major finished milestones, bump `VERSION` for behavioral releases only; **do not push, merge or delete branches** without approval.
+- Work in one verifiable milestone at a time. Preserve unrelated Git edits. Run `./gradlew build` and stock-client/graphical checks when applicable; cleanup only processes you started. Review diffs, commit major finished milestones, bump `VERSION` for behavioral releases only; **do not push, merge or delete branches** without approval.
 - No implicit database migration: refuse unsupported schemas without modifying existing data. Ask only for consequential owner decisions.
 
 ## Subagents (conserve primary-model usage)

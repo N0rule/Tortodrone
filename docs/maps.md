@@ -4,7 +4,7 @@ The server loads `defaults/maps/` beside its JAR before opening its listener;
 custom `maps/` takes precedence. No map files
 are bundled in either JAR. Complete local defaults avoid all startup downloads. The complete regular
 Town Square, Bazaar, Arcade and Garrison packs live in `defaults/maps/`, including original compressed
-scene exports and matching collision masks. `make maps` verifies their checksums
+scene exports and matching collision masks. `./gradlew prepareMaps` verifies their checksums
 and copies missing files into `build/defaults/maps/`, without accessing an archive repository
 or download cache. Existing destination files are preserved.
 
@@ -40,7 +40,7 @@ The client scene-version argument remains a cache version, never an instance sel
 Original archive paths and checksums are recorded in [dependency notices](dependencies.md).
 Obtaining another scene export is maintainer work. Add a verified pack under
 `defaults/maps/<name>/`; preparation discovers folders automatically, with no Java
-name list to edit. Use `make defaults` to copy maps, items and any future directories.
+name list to edit. Use `./gradlew prepareDefaults` to copy maps, items and any future directories.
 Town Square uses the regular 2017 export, rather than the snowy static export.
 Scene revisions are signed client integers; a negative revision is valid.
 

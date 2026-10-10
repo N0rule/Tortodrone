@@ -20,7 +20,7 @@ directory as the optional final argument for another snapshot. The exporter read
 the installation locally and never downloads game assets.
 
 The checked-in default definitions live in `defaults/items/catalog.json` and are
-copied by `make defaults`. Both applications prefer custom `items/catalog.json`
+copied by `./gradlew prepareDefaults`. Both applications prefer custom `items/catalog.json`
 beside their JARs, then use the default catalogue. Server startup warns and uses
 built-in starter definitions if neither is usable. Restart after changing definitions;
 preserve custom catalogues across updates. The game is not a runtime dependency.

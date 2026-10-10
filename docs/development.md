@@ -5,26 +5,26 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ## Build and tests
 
 ```sh
-make build                 # server and local admin JARs
-make build test            # full regression (Java 25)
-make test-unit
-make test-integration
-make defaults              # copy default maps/items without overwriting custom files
-make maps
-make clean                 # preserves build/data/ and build/deps/
+./gradlew buildServer buildAdmin # server and local admin JARs, no tests
+./gradlew build                  # both JARs and full regression (Java 25)
+./gradlew testUnit
+./gradlew testIntegration
+./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
+./gradlew prepareMaps
+./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
 ```
 
-No Maven/Gradle. Pinned/checksum-verified SQLite/JLine downloads are cached in `build/deps/`. For headless Linux: `env -u DISPLAY make build test` (not a substitute for graphical tests). Avoid `JAVA_TOOL_OPTIONS`: startup output can break packaged fixture assertions. Tests must use disposable deployments; `make server` or `make admin` starts real processes/data. Persistent compat tools are **Java**; throwaway work goes under `/tmp`.
+The pinned Gradle Wrapper uses Java 25. Dependency/plugin checksums are in `gradle/verification-metadata.xml`; downloads are cached in Gradle user home. Use `.\gradlew.bat` on Windows. For headless Linux: `env -u DISPLAY ./gradlew build` (not a substitute for graphical tests). Avoid `JAVA_TOOL_OPTIONS`: startup output can break packaged fixture assertions. Tests must use disposable deployments; `./gradlew runServer` or `./gradlew runAdmin` starts real processes/data. Persistent compat tools are **Java**; throwaway work goes under `/tmp`.
 
-Before commit: add focused regression, run `make build test`, run relevant compat/graphical checks, inspect `git diff` and `git diff --check`; update only current docs, commit major milestones, bump `VERSION` for behavioral releases only. Record commands/results, actual limitations and stopped processes.
+Before commit: add focused regression, run `./gradlew build`, run relevant compat/graphical checks, inspect `git diff` and `git diff --check`; update only current docs, commit major milestones, bump `VERSION` for behavioral releases only. Record commands/results, actual limitations and stopped processes.
 
 ## Load testing
 
 ```sh
-make benchmark
-make benchmark BENCHMARK_ARGS='--seconds 60 --clients 50,100,200,300'
-make benchmark BENCHMARK_ARGS='--session-only --clients 50,100,200,300'
-make benchmark BENCHMARK_ARGS='--instances 4 --clients 300'
+./gradlew benchmark
+./gradlew benchmark --args='--seconds 60 --clients 50,100,200,300'
+./gradlew benchmark --args='--session-only --clients 50,100,200,300'
+./gradlew benchmark --args='--instances 4 --clients 300'
 ```
 
 Fixture copies JARs/defaults into disposable `/tmp` deployments, raises `max-clients` locally, enters town or session-only, sends movement/pings and cleans up its own clients/server. Default 20 s after ramp; `--instances` 1–16. Runs server at 512 MiB heap and 256 KiB thread stacks, measures ping percentiles, updates/client/s, CPU, RSS, thread count, bytes, readiness/failures. Run on idle machine; local synthetic benchmarks **do not prove** production WAN performance, smooth rendering, dynamic combat or long-run stability. 300-player snapshot is in [milestone](PROJECT.md); older detailed measurements are in Git history.
@@ -32,7 +32,7 @@ Fixture copies JARs/defaults into disposable `/tmp` deployments, raises `max-cli
 ## Stock compatibility and graphics
 
 ```sh
-make build test
+./gradlew build
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
@@ -43,4 +43,4 @@ Graphical acceptance is authorized only in an **isolated** environment: disposab
 
 ## Source/resource rules
 
-`VERSION` is bundled in both JARs. `build/.build/` is scratch packaging; `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.
+`VERSION` is bundled in both JARs. `.build/gradle/` is scratch output; `build/defaults/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.

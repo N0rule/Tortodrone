@@ -32,6 +32,11 @@ public final class BuildTools {
                 Path source=project.resolve(maps?"defaults/maps":"defaults");
                 Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(maps?"build/defaults/maps":"build/defaults");
                 verifyMaps(project);
+                if (Files.notExists(source, LinkOption.NOFOLLOW_LINKS)) {
+                    System.out.println("Optional default source is absent: " + source + "; continuing without it");
+                    return;
+                }
+                if (!Files.isDirectory(source)) throw new IOException("Default source is not a directory: " + source);
                 try(var paths=Files.walk(source)) {
                     for(Path file:paths.filter(Files::isRegularFile).sorted().toList()) {
                         if(Files.isSymbolicLink(file) || !file.toRealPath().startsWith(source.toRealPath()))throw new IOException("Default file escapes its source tree");
@@ -48,7 +53,12 @@ public final class BuildTools {
         return values;
     }
     private static void verifyMaps(Path project) throws Exception {
-        try(var folders=Files.list(project.resolve("defaults/maps"))) {
+        Path maps = project.resolve("defaults/maps");
+        if (Files.notExists(maps, LinkOption.NOFOLLOW_LINKS)) {
+            System.out.println("Optional map source is absent: " + maps + "; continuing without maps");
+            return;
+        }
+        try(var folders=Files.list(maps)) {
             for(Path pack:folders.filter(Files::isDirectory).toList()) {
                 var descriptor = properties(pack.resolve("map.properties"));
                 verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
@@ -58,7 +68,9 @@ public final class BuildTools {
     }
     private static void copyMissing(Path source, Path target) throws IOException {
         Files.createDirectories(target.toAbsolutePath().getParent());
-        if (!Files.exists(target)) Files.copy(source, target);
+        if (!Files.exists(target, LinkOption.NOFOLLOW_LINKS)) {
+            try { Files.copy(source, target); } catch (FileAlreadyExistsException preserved) { }
+        }
     }
     static void fetch(Path target, String url, String digest) throws Exception {
         fetch(target, url, digest, Duration.ofSeconds(30));
@@ -101,7 +113,7 @@ public final class BuildTools {
                     }
                     System.out.println("Download attempt " + attempt + " failed: " + failure.getMessage());
                 }
-                throw new IOException("Could not download " + target + " after 3 attempts; check your connection and rerun make build", failure);
+                throw new IOException("Could not download " + target + " after 3 attempts; check your connection and rerun the dependency preparation command", failure);
             } finally {
                 // A body can stall after headers arrive. Cancel transfers before closing the client.
                 client.shutdownNow();

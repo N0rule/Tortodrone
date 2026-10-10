@@ -14,7 +14,8 @@ import static org.tortodrone.support.TestWire.check;
 
 public final class DefaultResourcesTest {
     public static void main(String[] args) throws Exception {
-        Path home=Files.createTempDirectory("tortodrone-default-download-");
+        // macOS temp paths can include system directory aliases; keep the disposable root canonical.
+        Path home=Files.createTempDirectory("tortodrone-default-download-").toRealPath();
         var server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
         var requests=new AtomicInteger(); var warnings=new ArrayList<String>(); var infos=new ArrayList<String>();
         byte[] good=archive(false),bad=archive(true);
@@ -47,9 +48,16 @@ public final class DefaultResourcesTest {
             DefaultResources.prepare(unsafe,uri.resolve("/bad"),infos::add,warnings::add);
             check(warnings.getLast().contains("Unsafe archive path") && !Files.exists(unsafe.resolve("defaults")),"unsafe archive rejected before deployment files are published");
             Path symlink=home.resolve("symlink"),outside=home.resolve("owner");Files.createDirectories(outside);
-            Files.createDirectories(symlink.resolve("defaults"));Files.createSymbolicLink(symlink.resolve("defaults/maps"),outside);
-            DefaultResources.prepare(symlink,uri.resolve("/good"),infos::add,warnings::add);
-            try(var files=Files.list(outside)){check(files.findAny().isEmpty(),"download cannot write through a destination symlink");}
+            Files.createDirectories(symlink.resolve("defaults"));
+            boolean symlinks=false;
+            try { Files.createSymbolicLink(symlink.resolve("defaults/maps"),outside); symlinks=true; }
+            catch (UnsupportedOperationException | IOException unavailableLink) {
+                System.out.println("SKIP: destination symlink test (symlinks unavailable)");
+            }
+            if (symlinks) {
+                DefaultResources.prepare(symlink,uri.resolve("/good"),infos::add,warnings::add);
+                try(var files=Files.list(outside)){check(files.findAny().isEmpty(),"download cannot write through a destination symlink");}
+            }
             long start=System.nanoTime();
             DefaultResources.prepare(home.resolve("slow"),uri.resolve("/slow"),infos::add,warnings::add);
             check(warnings.getLast().contains("timed out") && (System.nanoTime()-start)/1_000_000_000L<12,"stalled response body cannot block startup indefinitely");

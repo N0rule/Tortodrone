@@ -109,7 +109,7 @@ public final class ServerIntegrationTest {
             checkLogFormat(log);
             check(log.contains("Server stopped."), "clean shutdown log");
             String publicValue=Files.readString(state.resolve("keys/public.txt")).trim();
-            check(log.lines().filter(line->line.contains("Public key (game.publicKey): "+publicValue)).count()==1,
+            check(log.lines().filter(line->line.contains("Public key : "+publicValue)).count()==1,
                 "new public key is copyable and logged when generated");
             check(!log.contains(java.util.Base64.getEncoder().encodeToString(identity)),"private key never logged");
             check(!log.contains("password=") && !log.contains(TestClient.passwordHash("tortodrone")) && !log.contains("private-test-ident")
@@ -124,7 +124,7 @@ public final class ServerIntegrationTest {
                 }
             }
             // Reject mismatched and incomplete keys without replacing the server's identity.
-            check(Files.readString(state.resolve("logs/latest.log")).lines().filter(line->line.contains("Public key (game.publicKey): ")).count()==1,
+            check(Files.readString(state.resolve("logs/latest.log")).lines().filter(line->line.contains("Public key : ")).count()==1,
                 "reopening existing keys does not repeat the public key");
             Files.writeString(state.resolve("keys/public.txt"), "mismatched");
             rejected(jar, config, directory, "does not match", "mismatched keypair");

@@ -11,3 +11,4 @@
 # Build output and editors (JARs are not globally ignored)
 build/
 .build/
+.gradle/

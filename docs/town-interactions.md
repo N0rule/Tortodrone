@@ -40,7 +40,7 @@ Interior controllers also require health/status entries and an elevator return d
 
 The server currently uses TCP only. On the first interior entry, a native `UpdateThrottleMessage` raises that connection's client send limit to 100 messages per second. Native unreliable input otherwise falls back to the same TCP queue as travel and keepalive requests, behind the client's default ten-message limit. The stock acknowledgement is decoded without granting any service or changing player data. This is this server's bounded TCP transport policy, not an implementation of stock UDP or its separate flood guard.
 
-The repository's `defaults/maps/` contains the four town packs. Interior exports are prepared locally into a seven-map deployment tree; no game assets or generated scene packs are committed. `make maps` prepares only bundled defaults and preserves existing local files. The prepared tree belongs in the deployment's `maps/` directory, which takes precedence over `defaults/maps/`.
+The repository's `defaults/maps/` contains the four town packs. Interior exports are prepared locally into a seven-map deployment tree; no game assets or generated scene packs are committed. `./gradlew prepareMaps` prepares only bundled defaults and preserves existing local files. The prepared tree belongs in the deployment's `maps/` directory, which takes precedence over `defaults/maps/`.
 
 To prepare a fresh local tree, use a new output path and a reusable source cache:
 
@@ -57,7 +57,7 @@ NPC behavior, combat, quests, shops, crafting, gates, dungeon rewards, and newly
 
 ## Required validation
 
-Run `make build test`, then the installed-reader and disposable network checks against the prepared seven-map tree:
+Run `./gradlew build`, then the installed-reader and disposable network checks against the prepared seven-map tree:
 
 ```sh
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights" \

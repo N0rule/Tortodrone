@@ -12,7 +12,7 @@ public final class MapPreparationIntegrationTest {
         Path home = Files.createTempDirectory("tortodrone-offline-maps-test-");
         try {
             offlinePreparation(home);
-            System.out.println("PASS: offline map preparation, edited-pack preservation and corrupt-source refusal");
+            System.out.println("PASS: offline map preparation, edited-pack preservation, missing-source handling, owner symlinks and corrupt-source refusal");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -36,6 +36,29 @@ public final class MapPreparationIntegrationTest {
         Files.writeString(edited, Files.readString(edited).replace("instances=1", "instances=2"));
         byte[] preserved = Files.readAllBytes(edited);
         check(runMaps(project, tool, "prepared maps") == 0 && Arrays.equals(preserved, Files.readAllBytes(edited)), "edited deployment pack preserved");
+        // Optional packs can be omitted from a source distribution without blocking preparation.
+        Path saved = project.resolve("saved maps");
+        Files.move(source, saved);
+        check(runMaps(project, tool, "missing maps") == 0 && !Files.exists(project.resolve("missing maps")),
+            "absent optional map source warns and succeeds without inventing resources");
+        Files.writeString(source, "invalid source directory");
+        check(runMaps(project, tool, "invalid maps") != 0 && !Files.exists(project.resolve("invalid maps")),
+            "present malformed map source is refused rather than treated as optional absence");
+        Files.delete(source);
+        Files.move(saved, source);
+        // Preserve a dangling owner-file symlink rather than following or replacing it.
+        Path outside = project.resolve("owner file that does not exist");
+        Path linked = project.resolve("prepared maps/haven/scene.dat");
+        Files.delete(linked);
+        boolean symlinks = false;
+        try { Files.createSymbolicLink(linked, outside); symlinks = true; }
+        catch (UnsupportedOperationException | java.io.IOException unavailable) {
+            System.out.println("SKIP: owner-file symlink test (symlinks unavailable)");
+        }
+        if (symlinks) {
+            check(runMaps(project, tool, "prepared maps") == 0 && Files.isSymbolicLink(linked)
+                && !Files.exists(outside), "dangling owner-file symlink preserved without writing its target");
+        }
         Files.write(source.resolve("haven/scene.dat"), new byte[]{1, 2, 3});
         check(runMaps(project, tool, "damaged maps") != 0 && !Files.exists(project.resolve("damaged maps")),
             "damaged source rejected before producing a partial deployment");
