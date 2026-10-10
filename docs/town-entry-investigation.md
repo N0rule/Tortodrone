@@ -79,4 +79,4 @@ accepted; their networking checks passed. All test clients/servers stopped; real
 accounts, characters, keys, preferences and game files were preserved. Repeat
 relevant graphical checks after future movement/scene changes; do not assume all
 possible intermittent symptoms are ruled out. See [workflow](development.md) and
-[next milestone](world-entry-plan.md).
+[next milestone](PROJECT.md).

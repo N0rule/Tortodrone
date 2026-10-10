@@ -25,7 +25,7 @@ Use the normal username/password form with a locally created account; there is
 no default login on fresh installations. Steam/guest login is unsupported. Create
 or select a knight to enter Haven directly. Equipment and balances persist;
 position resets to spawn. Reconnect to change characters. See
-[current gameplay limits](world-entry-plan.md) and [administration](administration.md).
+[current gameplay limits](PROJECT.md) and [administration](administration.md).
 
 ## Troubleshooting
 

@@ -1,7 +1,7 @@
 # Current server feature research
 
 Implementation record for the owner's ordered tasks, begun from `b025566` / 0.7.1
-on 2026-10-08. The [checkpoint](world-entry-plan.md) owns current feature status;
+on 2026-10-08. The [checkpoint](PROJECT.md) owns current feature status;
 this file keeps evidence, decisions and limitations needed by later agents.
 
 ## 1. Item binding (0.7.2)

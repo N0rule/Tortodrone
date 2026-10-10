@@ -9,7 +9,7 @@ They do not supply a verified drop-in implementation of today's game server.
 This dated review began at `d1e57ac`, version 0.7.0. It contributed to the
 [0.7.1 entry fixes](town-entry-investigation.md), now checked graphically and merged.
 Availability findings below are from 2026-10-08, not a live directory.
-The [checkpoint plan](world-entry-plan.md) defines current acceptance and next work;
+The [checkpoint plan](PROJECT.md) defines current acceptance and next work;
 obsolete client experiments have been removed.
 
 ## Verification method and limits
@@ -37,12 +37,8 @@ Useful source snapshots:
 | [Vilya](https://github.com/threerings/vilya/tree/af199f6eae7569b03ec1b74b585b615871f165f7) | `af199f6eae7569b03ec1b74b585b615871f165f7` | Fresh shallow checkout; scene/zone directors, providers, managers and callbacks |
 | [ReferenceServer preservation](https://github.com/excal69/reference-server/tree/d66e3bd7b62b7fa5418c39911164e5528740ff48) | `d66e3bd7b62b7fa5418c39911164e5528740ff48` | README, repository tree and selected server files; no build, execution or copied implementation |
 
-GitHub's license detection is incomplete. Narya/Vilya/Nenya carry LGPL terms;
-Clyde's README and source carry BSD terms. Third-party wrappers have separate
-licenses that do not relicense their bundled libraries or game-derived content.
-Consult actual file notices before importing anything. Current Tortodrone codecs
-remain independently implemented; existing layout provenance is in
-[dependency notices](dependencies.md).
+Current Tortodrone codecs remain independently implemented;
+existing layout provenance is in [dependency notices](dependencies.md).
 
 ## Requested resources
 
