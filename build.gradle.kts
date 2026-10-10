@@ -8,8 +8,8 @@ plugins {
 version = providers.fileContents(layout.projectDirectory.file("VERSION")).asText.get().trim()
 repositories { mavenCentral() }
 
-// Runtime data and customized defaults live in build/. Never clean that directory.
-layout.buildDirectory.set(layout.projectDirectory.dir(".build/gradle"))
+// Generated Gradle outputs live in a dedicated root tree; deployment data stays under build/.
+layout.buildDirectory.set(layout.projectDirectory.dir(".build"))
 java { toolchain { languageVersion.set(JavaLanguageVersion.of(25)) } }
 tasks.withType<JavaCompile>().configureEach {
     options.release.set(25)

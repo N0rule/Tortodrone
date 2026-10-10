@@ -43,4 +43,4 @@ Graphical acceptance is authorized only in an **isolated** environment: disposab
 
 ## Source/resource rules
 
-`VERSION` is bundled in both JARs. `.build/gradle/` is scratch output; `build/defaults/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.
+`VERSION` is bundled in both JARs. `gradle.properties` enables Gradle’s configuration cache. `.build/` is scratch output; `build/defaults/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.

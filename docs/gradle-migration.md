@@ -8,7 +8,7 @@ networking, storage schema, authentication or game logic changes are part of thi
 
 ## Changed files
 
-Added `build.gradle.kts`, `settings.gradle.kts`, `gradlew`, `gradlew.bat`,
+Added `build.gradle.kts`, `settings.gradle.kts`, `gradle.properties`, `gradlew`, `gradlew.bat`,
 `gradle/wrapper/gradle-wrapper.jar`, `gradle/wrapper/gradle-wrapper.properties`,
 `gradle/verification-metadata.xml`, `.gitattributes` and this migration record.
 Updated `.gitignore`, `README.md`, `AGENTS.md`, `docs/PROJECT.md`,
@@ -65,7 +65,7 @@ warn and succeed. Present malformed sources and incomplete/corrupt supplied pack
 and admin packaging are independent of preparation. The runtime downloader URL/fallback are
 unchanged; a missing map still prevents world entry rather than server login/admin startup.
 
-Gradle scratch files are under `.build/gradle/`. The public `build/` tree is a deployment tree,
+Gradle build output is under `.build/`, separate from runtime deployment data under `build/`. The configuration cache is enabled in `gradle.properties` to reuse the configured task graph. The public `build/` tree is a deployment tree,
 so `clean` removes only known generated JARs, temporary JARs, the legacy scratch subtree and Gradle's fixed `build/reports/dependency-verification/` report directory.
 Do not put persistent files in either scratch subtree. Data, keys, configuration, custom maps,
 prepared defaults, old dependency cache and unknown deployment files are preserved.
@@ -85,6 +85,12 @@ verification was enabled normally, not bypassed.
   dependencies execute and are the actual test suite. Packaged integration includes server startup
   with no optional defaults, offline download fallback, login/character persistence, admin operations,
   console commands, restarts and key/config/data protection.
+- Follow-up output relocation: Gradle's build directory is now the repository root `.build/`, while
+  executable JARs remain under `build/`. `gradle.properties` enables configuration cache; repeated
+  `buildServer buildAdmin`, `runServer --args=--version`, and `runAdmin --args=--version` invocations
+  reused it. `./gradlew --offline --max-workers=1 build` passed all 49 unit programs and five
+  integration/build-tool programs with the cache enabled. A disposable clean probe confirmed generated
+  `.build/` content is removed while synthetic persistent-data sentinels remain byte-for-byte intact.
 - `./gradlew --offline integrationMaps testBuildTools prepareMaps runServer --args=--help runAdmin
   --args=--version benchmark --args='--seconds 1 --clients 2 --instances 1' --warning-mode=all`:
   passed, including preparation regressions and a two-client town benchmark (2 ready,
@@ -115,7 +121,7 @@ The final resource test canonicalizes its disposable temp root and conditionally
 assertions when the OS/filesystem denies link creation (e.g. Windows without symlink permission).
 The resource test also passed when run through an aliased temporary directory:
 `java --enable-native-access=ALL-UNNAMED -Djava.io.tmpdir=/tmp/tortodrone-temp-alias -cp
-build/tortodrone.jar:.build/gradle/classes/java/test org.tortodrone.resources.DefaultResourcesTest`.
+build/tortodrone.jar:.build/classes/java/test org.tortodrone.resources.DefaultResourcesTest`.
 This simulates a path alias on Linux; it is not a macOS execution result.
 Application Java code and the runtime recovery URL/fallback were not changed.
 
