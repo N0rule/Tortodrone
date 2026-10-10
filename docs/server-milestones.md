@@ -189,3 +189,26 @@ fixture calls the original RPC on creation/reconnect and checks the actor timeli
 Only Sit is accepted; unsupported action names cannot supply arbitrary activities.
 The per-membership simulation owns state and immediate ownership/readiness/auth
 checks protect the RPC. No saved state or schema changes are required.
+
+## Automatic town portals (0.20.0)
+
+Verified primary flow:
+[Clyde IntersectionStart handler](https://github.com/threerings/clyde/blob/23758c9ff6b67e5c1b5b940e25670de09ef8efd2/core/src/main/java/com/threerings/tudey/server/logic/HandlerLogic.java#L549)
+activates the intersecting pawn;
+[MoveBody](https://github.com/threerings/clyde/blob/23758c9ff6b67e5c1b5b940e25670de09ef8efd2/core/src/main/java/com/threerings/tudey/server/logic/ActionLogic.java#L581)
+selects the configured destination and server portal key.
+[Tudey entry](https://github.com/threerings/clyde/blob/23758c9ff6b67e5c1b5b940e25670de09ef8efd2/core/src/main/java/com/threerings/tudey/server/TudeySceneManager.java#L984)
+uses that key's tagged transform for position and facing.
+[Vilya forced move](https://github.com/threerings/vilya/blob/af199f6eae7569b03ec1b74b585b615871f165f7/core/src/main/java/com/threerings/whirled/zone/client/ZoneDirector.java#L256)
+leaves the old controller and invokes the same-zone scene move for these Haven maps.
+The request's second integer is the cached scene version, not a portal/instance ID.
+
+The pinned regular Town Square layout has AreaEntry 6071 targeting scene 2,
+`from_town_square_west`; Bazaar has AreaEntry 3096 targeting scene 1,
+`from_bazaar_east`. Their exact rectangle vertices and destination entries
+1550/3874 were read with unchanged installed scene/configuration classes.
+Both sensors have IntersectionStart mask 65535 and expansion 0. The installed
+Character/PC/Default shape is a circle of radius .333333 with collision flags 4.
+Server-only MoveBody configuration is stripped from client exports; the client's
+SpawnActor(null) placeholder is expected stripping, not missing portal intent.
+Only these two verified rectangle sensors are enabled in this release.

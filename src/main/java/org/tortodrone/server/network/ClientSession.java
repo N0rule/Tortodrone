@@ -157,6 +157,8 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if(world.departingScene(invocation.oid())&&invocation.service()==10
+                    &&invocation.method()==1&&invocation.arguments().isEmpty())return;
             if(invocation.service()==org.tortodrone.world.SceneChat.SERVICE) {
                 world.speak(invocation);return;
             }

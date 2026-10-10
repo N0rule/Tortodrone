@@ -15,6 +15,8 @@ public final class TownMovement {
     private record Frame(int timestamp, float rotation, float direction, int flags) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
     private final CollisionMap terrain;
+    private final ScenePortals portals;
+    private ScenePortals.Trigger portal;
     private float x, y, rotation, direction;
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
@@ -25,8 +27,16 @@ public final class TownMovement {
             SceneRegistry.defaultEntry().map().spawnY());
     }
     public TownMovement(CollisionMap terrain,float spawnX,float spawnY) {
+        this(terrain,spawnX,spawnY,0);
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY,float facing) {
+        this(terrain,spawnX,spawnY,facing,ScenePortals.EMPTY);
+    }
+    public TownMovement(CollisionMap terrain,float spawnX,float spawnY,float facing,ScenePortals portals) {
         if(!terrain.walkable(spawnX,spawnY))throw new IllegalArgumentException("Invalid scene spawn");
-        this.terrain=terrain;x=spawnX;y=spawnY;
+        if(!Float.isFinite(facing))throw new IllegalArgumentException("Invalid scene facing");
+        this.terrain=terrain;this.portals=java.util.Objects.requireNonNull(portals);x=spawnX;y=spawnY;
+        rotation=normalize(facing);
     }
 
     /** Clear input on scene entry/re-entry without moving the character. */
@@ -42,7 +52,7 @@ public final class TownMovement {
 
     public boolean accept(int stamp, float facing, float heading, int inputFlags,
             int sceneTime, long now) {
-        if (!Float.isFinite(facing) || !Float.isFinite(heading)
+        if (portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
                 || Math.abs((long) (stamp - sceneTime)) > 10000
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
@@ -56,6 +66,7 @@ public final class TownMovement {
     /** A scene RPC starts only this actor's verified, non-targetable Sit emote. */
     public boolean sit(int sceneTime, long now) {
         advance(sceneTime, now);
+        if(portal!=null)return false;
         if (activity != 0 && activity != SIT) return false;
         if (activity != SIT) setActivity(SIT, timestamp);
         updateFlags();
@@ -65,9 +76,11 @@ public final class TownMovement {
     /** Integrate each input segment only when its timestamp is due. */
     public void advance(int sceneTime, long now) {
         if (sceneTime - timestamp < 0) return;
+        if(portal!=null||detectPortal(sceneTime))return;
         while (!pending.isEmpty() && sceneTime - pending.peekFirst().timestamp() >= 0) {
             var frame = pending.removeFirst();
             if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
+            if(portal!=null)return;
             if (activity == 0) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
@@ -106,8 +119,16 @@ public final class TownMovement {
             if (terrain.walkable(nx, ny)) { x = nx; y = ny; }
             else if (terrain.walkable(nx, y)) x = nx;
             else if (terrain.walkable(x, ny)) y = ny;
+            if(detectPortal(target))return;
         }
     }
+    private boolean detectPortal(int sceneTime) {
+        for(var trigger:portals.triggers())if(trigger.intersects(x,y)) {
+            portal=trigger;resetInput(sceneTime);return true;
+        }
+        return false;
+    }
+    public ScenePortals.Trigger portal(){return portal;}
 
     public float x() { return x; }
     public float y() { return y; }

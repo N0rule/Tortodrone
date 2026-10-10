@@ -3,7 +3,7 @@
 This is the feature/acceptance handoff. Read `VERSION` and Git for the exact
 checkout; update this file as completed milestones change behavior or limits.
 
-## Checkpoint: 0.19.0, schema 8
+## Checkpoint: 0.20.0, schema 8
 
 Normal login → saved knight creation/selection → Haven Town Square → movement,
 mouse facing and multiplayer → durable bound starter equipment and per-knight
@@ -17,7 +17,7 @@ See [current feature research](server-milestones.md).
 0.8.0 moves scene geometry/collision out of the JAR into validated external packs.
 Town Square and Bazaar load through the same catalog, with distinct runtime
 instances and isolated occupants. Original zone/scene RPC travel is supported;
-portal interaction remains future work. [Map preparation](maps.md) requires no
+automatic Town Square ↔ Bazaar portals follow in 0.20.0. [Map preparation](maps.md) requires no
 manual scene drawing or runtime downloads.
 
 0.8.1 enforces one authenticated connection per account. A successful password
@@ -382,7 +382,7 @@ Complete and commit one verified milestone at a time:
    and a shared bounded chat budget.
 2. **Character actions**: `/sit` is implemented in 0.19.0; add other commands only
    after verifying their stock configuration, routing and rendering separately.
-3. **Portal round trip**: Town Square ↔ Bazaar through their actual stock portal
+3. **Portal round trip (0.20.0)**: Town Square ↔ Bazaar through their actual stock portal
    interaction, server-controlled destinations/proximity, safe departure/readiness
    and clean actor/chat membership in both views. Existing direct scene RPC travel
    is a foundation, not portal acceptance.
@@ -460,12 +460,48 @@ interruption/closing. Two isolated stock graphical clients rendered `/sit` and
 opened/closed while seated. Screenshots are ignored under
 `local/research/2026-10-09/sit-acceptance/`; disposable clients/server were stopped.
 
+## Automatic Town Square ↔ Bazaar portals (0.20.0)
+
+Walking into the west Town Square or east Bazaar portal initiates the stock
+forced scene transition. Source AreaEntry IDs 6071/3096 and destination tagged
+PlaceableEntry IDs 1550/3874 are verified against the pinned archived layouts and
+installed configuration. The portal is an IntersectionStart sensor, not an NPC,
+click action or client-selected destination. Circle-versus-rectangle checks use
+the verified PC radius .333333 and run at movement substeps, retaining the first
+crossing even during a delayed simulation tick.
+
+Optional server-only `portals.properties` metadata is tied to the layout digest.
+Loading validates destinations/tags, finite walkable arrivals, facing, bounded
+rectangles and arrival positions outside destination sensors. Custom packs without
+metadata retain direct scene RPC travel. The installed client strips the server-only
+MoveBody action; its resulting SpawnActor(null) placeholder is expected and does
+not make those archived portal parameters invalid.
+
+The simulation freezes the owned pawn and retains its portal request in immutable
+snapshots. Session delivery rechecks authenticated ownership, leaves chat/polling
+and sends the existing two-integer Zone receiver callback. The matching stock
+scene/zone move RPC consumes the server's arrival marker; its cache-version argument
+cannot select a position or instance. Source frames already in flight are dropped
+until destination readiness; another scene's inputs are still rejected. Membership,
+recipient baselines and generation guards reset on transfer. No schema/storage
+changes, position persistence, NPC interactions or client modifications.
+
+Acceptance (2026-10-10): Java 25 `make build test` passes 41 unit and five
+integration checks; the installed-stock harness passes all 64 checks. Its reconnect
+fixture now retires the previous connection's observer before resetting shared
+baseline history, fixing a reproduced late-callback failure in the fixture.
+Two disposable stock graphical clients verified walking into Bazaar, its native
+loading screen and arrival, the return portal, and the returning knight in the peer
+view. Screenshots are under `local/research/2026-10-10/portal-acceptance/` (ignored).
+Both test clients and their temporary server were stopped; real state and the game
+installation were untouched.
+
 ## Current limits and later work
 
-Configured town maps/spawns; positions reset on entry. Reconnect to switch characters.
+Town Square ↔ Bazaar portals use tagged arrival markers; login resets to spawn. Reconnect to switch characters.
 Static collision is sampled; no dynamic physics. Five starter items plus supported player-item grants, stacks and costume/trinket
 equipment; no drops, trade, crafting, item-use actions or loadout switching. No combat, quests, shops, NPC
-dialogue or portal gameplay. Currencies start at zero, with no economy/regeneration.
+dialogue or other town portal links. Currencies start at zero, with no economy/regeneration.
 News/social feeds are empty. Account/character/currency management remains local;
 in-game staff commands are help, broadcast, item search and item grants. Binding has no unbinding service.
 

@@ -32,7 +32,7 @@ packaged tests that check exact command output.
 `make server` and `make admin` launch real tools using `build/data/`; use temporary
 copies of the JARs for tests instead. Tests have Java `main` methods and names
 ending in `Test`; shared synthetic wire helpers live in `src/test/java/org/tortodrone/support/`.
-The current suite has 39 unit and five integration checks. It covers persistence,
+The current suite has 41 unit and five integration checks. It covers persistence,
 schema refusal/transaction rollback, ownership/revocation, protocol bounds, character/session
 lifecycle, town input/deltas, local administration and packaged shutdown/restart.
 The map preparation check uses a temporary source tree without game files or
@@ -149,6 +149,9 @@ names, sender echo, emote mode and isolation across instances and map transition
 Tell fixtures use the stock global marshaller, private player-object reader and
 success/failure listener, checking cross-map delivery, reply, offline names,
 message limits, rate limits, departure/re-entry and disconnected recipients.
+The portal fixture walks the original west Town Square/east Bazaar sensors, reads
+the actual forced receiver callback, exercises scene/zone RPCs and tagged arrival
+position/facing, and checks peer departure/rejoin and fresh baselines.
 The world fixture also calls the stock sit RPC, checks a persistent seated actor
 and its exact standing deadline, and compares the installed configuration/predictor.
 GM fixtures verify login/occupant role and support icon, broadcasts across maps,

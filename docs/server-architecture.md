@@ -200,6 +200,20 @@ cleanup cannot remove a replacement. The last entered member leaving stops the
 instance timer; idle selected members remain visible without advancing. Re-entry
 restarts the timer. Positions remain transient.
 
+Automatic town portals are verified server metadata tied to an archived layout
+hash. Movement integration checks the PC circle against portal rectangles after
+every collision substep, freezing at the first crossing. The scene snapshot retains
+the owned pawn's request until transfer, so mailbox coalescing cannot lose it.
+Session delivery validates current ownership, stops source readiness/chat/polling
+and sends ZoneDecoder method 1 with zone/scene IDs. Both current town maps share
+zone 1; the stock ZoneDirector leaves its controller and uses the ordinary scene
+move RPC. Its cached scene version remains a cache hint, never an entrance key.
+The server retains the chosen destination/tag; only that destination can consume
+the pending journey. Arrival creates movement at the verified marker position/yaw.
+Source input/chat/readiness already queued before the callback is ignored until
+the destination enters; unrelated targets remain unauthorized. Subscription and
+actor/occupant baselines restart normally. Disconnect detaches a pending pawn.
+
 One `WorldStatePoller` checks revisions/roles every 250 ms with one metadata query
 per deployment, outside simulation/session locks. It loads inventories only for
 changed revisions, then validates the exact subscription before applying results.

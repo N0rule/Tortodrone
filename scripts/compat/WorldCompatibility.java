@@ -97,6 +97,12 @@ public final class WorldCompatibility {
             .getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");
         manager.init();
+        var pc=manager.a(com.threerings.tudey.config.ActorConfig.class,
+            new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Character/PC/Default")).ai(manager);
+        if(!(pc.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle)
+                ||circle.radius!=ScenePortals.PAWN_RADIUS||pc.collisionFlags!=4||!pc.rotateShape)
+            throw new AssertionError("Installed PC collision shape differs from portal sensor assumptions");
+        System.out.println("PASS: stock PC circle radius/collision flags match authoritative portal sensor geometry");
         // Stock town builder: include shield, carry it away, omit weapon, use level model/costumes.
         var stock=player.a(manager,true,true,-1,true,false,Boolean.TRUE);
         if(!stock.equals(reference(model)))throw new AssertionError("Equipped model differs: "+stock+" vs "+model);

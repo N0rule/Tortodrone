@@ -13,10 +13,17 @@ public final class SceneCatalogTest {
         try {
             Path maps=home.resolve("maps");
             refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("build/defaults/maps"),maps);
+            copy(Path.of("defaults/maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==2 && catalog.entry().id()==1,"external Haven and Bazaar load without installed game");
             check(catalog.scene(2).collision().walkable(catalog.scene(2).spawnX(),catalog.scene(2).spawnY()),"verified Bazaar spawn");
+            check(catalog.scene(1).portals().entrances().containsKey("from_bazaar_east")
+                &&catalog.scene(2).portals().entrances().containsKey("from_town_square_west"),
+                "default portal metadata is loaded with matching archived layouts");
+            var arrival=catalog.scene(2).portals().entrances().get("from_town_square_west");
+            check(arrival.id()==1550&&arrival.x()==16.5f&&arrival.y()==7.5f
+                &&Math.abs(arrival.rotation()+1.570796f)<.00001f,
+                "default entrance ID, position and facing are validated and retained");
             byte[] layout=catalog.scene(1).layout();layout[0]=0;
             check(catalog.scene(1).layout()[0]==(byte)0xfa,"layout snapshots are immutable");
             Path manifest=maps.resolve("haven/map.properties");
@@ -35,15 +42,50 @@ public final class SceneCatalogTest {
             change(maps.resolve("bazaar/map.properties"),"zone-name","Other");refuse(()->SceneCatalog.load(maps));
             change(maps.resolve("bazaar/map.properties"),"zone-name",catalog.scene(2).zoneName());
             change(maps.resolve("bazaar/map.properties"),"kind","dungeon");refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            Path havenPortals=maps.resolve("haven/portals.properties"),bazaarPortals=maps.resolve("bazaar/portals.properties");
+            change(havenPortals,"layout-sha256","0".repeat(64));refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(bazaarPortals,"entrance.from_town_square_west.x","NaN");refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(bazaarPortals,"entrance.from_town_square_west.x","9999");refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(havenPortals,"entrances","from_bazaar_east,duplicate");
+            change(havenPortals,"entrance.duplicate.id","3874");
+            change(havenPortals,"entrance.duplicate.x","-30.5");
+            change(havenPortals,"entrance.duplicate.y","0.5");
+            change(havenPortals,"entrance.duplicate.rotation","0");
+            refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(bazaarPortals,"entrance.from_town_square_west.rotation","4");
+            refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(bazaarPortals,"trigger.3096.scene","99");refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(bazaarPortals,"trigger.3096.entrance","missing_arrival");refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            change(havenPortals,"entrance.from_bazaar_east.x","-38.5");
+            change(havenPortals,"entrance.from_bazaar_east.y","-1.5");
+            refuse(()->SceneCatalog.load(maps));
+            copy(Path.of("defaults/maps"),maps);
+            Files.delete(maps.resolve("haven/portals.properties"));
+            Files.delete(maps.resolve("bazaar/portals.properties"));
+            var legacy=SceneCatalog.load(maps);
+            check(legacy.scene(1).portals().equals(ScenePortals.EMPTY)
+                &&legacy.scene(2).portals().equals(ScenePortals.EMPTY),
+                "custom map packs without portal metadata remain compatible");
             Path jar=Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             try(var archive=new JarFile(jar.toFile())) {
                 check(archive.getEntry("scenes/town-square.dat")==null&&archive.getEntry("town-walkability.gz")==null,
                     "runtime map geometry/collision are outside the JAR");
             }
-            System.out.println("PASS: external map catalog, distinct scene instances, immutable templates, checksums, spawn/bounds and unsupported scene validation");
+            System.out.println("PASS: external map catalog, portal metadata/hash/destination validation, legacy packs, scene instances, immutable templates, checksums and spawn validation");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
     private static void copy(Path source,Path target)throws IOException {
+        if(Files.exists(target))try(var paths=Files.walk(target)){
+            for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);
+        }
         try(var paths=Files.walk(source)){for(var p:paths.toList()){
             Path out=target.resolve(source.relativize(p));if(Files.isDirectory(p))Files.createDirectories(out);else Files.copy(p,out);
         }}

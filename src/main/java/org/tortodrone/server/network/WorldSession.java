@@ -41,6 +41,10 @@ final class WorldSession implements AutoCloseable {
     private WorldStatePoller.Registration persistence;
     private boolean subscribed, entered, closed;
     private Short forcedReceiver;
+    private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
+    private PortalMove portalMove;
+    private ScenePortals.Entrance arrival;
+    private int departedSceneOid;
     private Set<Integer> occupants = Set.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
 
@@ -69,6 +73,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized boolean selected() { return knight != null; }
     synchronized boolean ownsScene(int oid) { return selected() && scene.oid()==oid; }
+    synchronized boolean departingScene(int oid) { return !closed&&departedSceneOid!=0&&departedSceneOid==oid; }
 
     static boolean active(int accountId, int knightId) {
         synchronized (ACTIVE) {
@@ -120,7 +125,8 @@ final class WorldSession implements AutoCloseable {
         Short receiver = receivers.get(SceneRegistry.ZONE_RECEIVER);
         if (receiver == null) forcedReceiver = null;
         if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
-            output.send(() -> codec.forceScene(oid, receiver,scene));
+            var destination=portalMove==null?scene:portalMove.destination();
+            output.send(() -> codec.forceScene(oid, receiver,destination));
             forcedReceiver = receiver;
         }
     }
@@ -177,14 +183,19 @@ final class WorldSession implements AutoCloseable {
             return;
         }
         try {
+            try{characters.worldProfile(knight.name(),authRevision,profile);}
+            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             int target=zone?(Integer)args.get(1):(Integer)args.get(0);
             var next=scenes.destination(target,profile.worldId());
             if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(next.map().zone())))
                 throw new IOException("Scene does not belong to that zone");
+            if(portalMove!=null&&next!=portalMove.destination())throw new IOException("Finish the current portal journey first");
             if(next!=scene) {
                 leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;membership.close();scene=next;created=SceneClock.now();attach();
+                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();scene=next;
+                arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
+                created=SceneClock.now();attach();
             }
             output.send(() -> codec.sceneMove(oid, listener.requestId(), zone,scene,scenes.catalog()));
             output.send(() -> codec.sceneLocation(oid,scene));
@@ -225,6 +236,7 @@ final class WorldSession implements AutoCloseable {
         var snapshot = place.simulation().snapshot();
         synchronized (this) {
             if(scene!=place||closed)throw new IOException("Scene changed during subscription");
+            if(portalMove!=null)throw new IOException("Scene is departing through a portal");
             output.send(() -> codec.scene(message, scene, snapshot.actors()));
             leaveChat();
             lastSnapshot = null;
@@ -240,9 +252,11 @@ final class WorldSession implements AutoCloseable {
 
     /** The stock controller sends enteredPlace after attaching its scene-delta listener. */
     synchronized void entered() throws IOException {
+        if(portalMove!=null)return; // A source readiness RPC may already be queued before forceScene.
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
+        departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
         lastStamp = SceneClock.now();
@@ -281,6 +295,7 @@ final class WorldSession implements AutoCloseable {
         SceneChat.Membership sender;
         int place,generation;
         synchronized(this) {
+            if(departingScene(request.oid()))return;
             if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
             if(request.service()!=SceneChat.SERVICE||request.method()!=1||request.arguments().size()!=2
                     ||!(request.arguments().get(0) instanceof String)||!(request.arguments().get(1) instanceof Byte))
@@ -356,6 +371,9 @@ final class WorldSession implements AutoCloseable {
     }
 
     synchronized void input(SessionDecoder.Input input) throws IOException {
+        // Old frames can already be in flight when the server forces a portal move.
+        // Ignore only the known departing scene until the destination becomes ready.
+        if(!closed&&!socket.isClosed()&&departedSceneOid!=0&&input.oid()==departedSceneOid)return;
         if (closed || socket.isClosed() || !subscribed || !entered || input.oid() != scene.oid()) {
             throw new SessionDecoder.Rejected("Unauthorized movement input");
         }
@@ -404,6 +422,20 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
             delta.added(),delta.updated(),delta.removed(),delta.baseline()));
         lastStamp=reference=stamp;lastSnapshot=current;
+        var trigger=current.portal(profile.worldId());
+        if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
+    }
+    /** Simulation selects the destination; the normal stock move callback loads its scene. */
+    private void beginPortal(ScenePortals.Trigger trigger)throws IOException {
+        try{characters.worldProfile(knight.name(),authRevision,profile);}
+        catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        var destination=scenes.destination(trigger.destination(),profile.worldId());
+        var entrance=destination.map().portals().entrances().get(trigger.entrance());
+        if(entrance==null)throw new IOException("Portal destination is unavailable");
+        portalMove=new PortalMove(destination,entrance);departedSceneOid=scene.oid();
+        leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        short receiver=forcedReceiver;
+        output.send(()->codec.forceScene(oid,receiver,destination));
     }
     /** Batch metadata is validated against this exact subscription before publication.
      * Changed inventory loads without holding the session or simulation lock. */
@@ -448,7 +480,8 @@ final class WorldSession implements AutoCloseable {
     private void updateAppearance(){rebuildAppearance();membership.appearance(actorAppearance());}
     private ActorState actorAppearance() {
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
-            scene.map().spawnX(),scene.map().spawnY(),0,0,0,0,created,appearance,gameMaster);
+            arrival==null?scene.map().spawnX():arrival.x(),arrival==null?scene.map().spawnY():arrival.y(),
+            arrival==null?0:arrival.rotation(),0,0,0,created,appearance,gameMaster);
     }
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }

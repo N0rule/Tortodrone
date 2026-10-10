@@ -57,7 +57,28 @@ public final class SceneSimulationTest {
                 one.close();check(a.playerCount()==1,"late close cannot detach a replacement membership");
             }
         }finally{one.close();two.close();isolated.close();}
-        System.out.println("PASS: shared scene ticks/snapshots/deltas, cached appearance, movement readiness, pause/re-entry, instance isolation and idle lifecycle");
+        portals(map,model);
+        System.out.println("PASS: shared scene ticks/snapshots/deltas, cached appearance, movement readiness, portals, pause/re-entry, instance isolation and idle lifecycle");
+    }
+    private static void portals(SceneCatalog.MapScene map,StarterCatalog.Model model)throws Exception {
+        var simulation=new SceneRegistry.Instance(702,0,map).simulation();
+        var publications=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        int start=SceneClock.now();
+        var arrival=new ActorState(4,1004,"Traveller",257,start,-38.25f,.4f,1.5f,0,0,0,start,model,false);
+        try(var traveller=simulation.join(arrival,publications::add);
+                var peer=simulation.join(actor(5,start,map,model),s->{})) {
+            check(simulation.snapshot().actors().getFirst().rotation()==1.5f,"scene retains trusted arrival facing");
+            check(simulation.snapshot().portal(4)==null,"unentered actor cannot trigger travel");
+            traveller.enter();peer.enter();var crossing=next(publications);
+            check(crossing.portal(4)!=null&&crossing.portal(4).destination()==2
+                &&crossing.portal(5)==null,"only the intersecting pawn owns its portal request");
+            float x=crossing.actors().getFirst().x();int time=SceneClock.now();
+            check(!traveller.input(time,0,0,1,time,System.nanoTime()/1_000_000L)
+                &&!traveller.sit(time,System.nanoTime()/1_000_000L),"departing pawn cannot move or sit");
+            traveller.pause();traveller.enter();var later=next(publications);
+            check(later.portal(4)==crossing.portal(4)&&later.actors().getFirst().x()==x,
+                "coalescing and readiness changes retain a frozen portal request");
+        }
     }
     private static ActorState actor(int id,int start,SceneCatalog.MapScene map,StarterCatalog.Model model) {
         return new ActorState(id,1000+id,"Test-"+id,257,start,map.spawnX(),map.spawnY(),0,0,0,0,start,model,false);

@@ -20,9 +20,11 @@ public final class SceneSimulation {
         private final Map<Integer,ActorState> byId;
         private final Set<Integer> occupants;
         private final Map<Integer,Boolean> roles;
+        private final Map<Integer,ScenePortals.Trigger> portals;
         private final Delta common, initial;
-        private Snapshot(int stamp, List<ActorState> actors, Snapshot previous) {
+        private Snapshot(int stamp, List<ActorState> actors, Map<Integer,ScenePortals.Trigger> portals, Snapshot previous) {
             timestamp=stamp;this.actors=List.copyOf(actors);
+            this.portals=Map.copyOf(portals);
             var index=new LinkedHashMap<Integer,ActorState>();var permissions=new HashMap<Integer,Boolean>();
             for(var actor:actors){index.put(actor.id(),actor);permissions.put(actor.id(),actor.gameMaster());}
             byId=Collections.unmodifiableMap(index);occupants=byId.keySet();roles=Map.copyOf(permissions);
@@ -34,6 +36,7 @@ public final class SceneSimulation {
         public List<ActorState> actors(){return actors;}
         public Set<Integer> occupants(){return occupants;}
         public Map<Integer,Boolean> roles(){return roles;}
+        public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
         public Delta delta(Snapshot previous) {
             if(previous==null)return initial;
             return previous.identity==predecessor?common:calculate(previous);
@@ -57,19 +60,20 @@ public final class SceneSimulation {
         private final TownMovement movement;
         private final Consumer<Snapshot> publish;
         private boolean entered, detached;
+        private ScenePortals.Trigger portal;
         private Membership(ActorState actor,Consumer<Snapshot> publish) {
             appearance=actor;this.publish=publish;
-            movement=new TownMovement(instance.map().collision(),instance.map().spawnX(),instance.map().spawnY());
+            movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
         }
         public void enter(){synchronized(SceneSimulation.this){check();entered=true;start();}}
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();movement.resetInput(SceneClock.now());}}
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&movement.accept(stamp,facing,heading,flags,sceneTime,now);}
+            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,sceneTime,now);}
         }
         public boolean sit(int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&movement.sit(sceneTime,now);}
+            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
         }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
@@ -97,7 +101,9 @@ public final class SceneSimulation {
     public synchronized int playerCount(){return members.size();}
     public synchronized long tickCount(){return tickCount;}
     private Snapshot capture(int stamp,Snapshot baseline) {
-        return new Snapshot(stamp,members.values().stream().map(Membership::actor).toList(),baseline);
+        var portals=new HashMap<Integer,ScenePortals.Trigger>();
+        for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
+        return new Snapshot(stamp,members.values().stream().map(Membership::actor).toList(),portals,baseline);
     }
     private void start() {
         if(timer!=null)return;
@@ -118,7 +124,10 @@ public final class SceneSimulation {
             if(previous!=null&&stamp-previous.timestamp()<=0)return;
             // All authoritative entities advance before capture. Future AI/combat/dynamic
             // collision stages run here once per instance, independent of observer count.
-            for(var member:members.values())if(member.entered)member.movement.advance(stamp,now);
+            for(var member:members.values())if(member.entered&&member.portal==null) {
+                member.movement.advance(stamp,now);
+                member.portal=member.movement.portal();
+            }
             publication=capture(stamp,previous);previous=publication;tickCount++;
             recipients=members.values().stream().filter(m->m.entered).toList();
         }

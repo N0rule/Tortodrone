@@ -40,6 +40,9 @@ public class WorldConnectionCheck {
   tasks.clear();snapshots.clear();primaryChat.clear();scene=null;last=null;deltas=repeatedAdds=configReplacements=0;
   System.setProperty("com.threerings.io.enumPolicy","ORDINAL");Thread dispatch=Thread.currentThread();at queue=new at(){public void postRunnable(Runnable r){tasks.add(r);}public boolean isDispatchThread(){return Thread.currentThread()==dispatch;}public boolean isRunning(){return true;}};
   var client=new Client(new ProjectXCredentials(new Name("LanPlayer"),"lan-test-password"),queue);client.b("127.0.0.1",new int[]{Integer.parseInt(args[0])},new int[0]);client.dr(Files.readString(Path.of(args[1])).trim());client.ds("world-fixture");client.dt("projectx");client.xg();
+  // Closing a stock connection can still post its last network callback to this shared queue.
+  // Retire its observer before the next run resets the scene's baseline history.
+  boolean[] observing={true};
   try {
    waitFor(client::isLoggedOn);var player=(PlayerObject)client.xc();System.out.println("PASS: real client normal login");
    Class<?> receiver=Class.forName("com.threerings.whirled.zone.a.f");Object receiverInstance=java.lang.reflect.Proxy.newProxyInstance(receiver.getClassLoader(),new Class[]{receiver},(proxy,method,values)->null);var decoder=Class.forName("com.threerings.whirled.zone.a.a").getConstructor(receiver).newInstance(receiverInstance);client.xd().a((com.threerings.presents.client.w)decoder);
@@ -50,7 +53,7 @@ public class WorldConnectionCheck {
    for(var item:player.items)if(!item.Cs())throw new AssertionError("Starter not bound on "+(fresh?"creation":"reconnect"));
    System.out.println("PASS: "+(fresh?"creation":"reconnect")+" selects durable identity and five bound starter items");
    Zone move=moveScene(client,1);if(move.model.sceneId!=1||!(move.model instanceof TudeySceneModel)||move.oid!=(isolation?11:10))throw new AssertionError("Town Square instance invalid");
-   player.a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){received(e);}});
+   player.a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){if(observing[0])received(e);}});
    subscribePrimary(client,move.oid);waitFor(()->scene!=null);
    if(deltas!=0)throw new AssertionError("Scene deltas sent before enteredPlace");
    scene.tudeySceneService.adB();waitFor(()->deltas>0);if(last.aej()==null||last.aej().length!=1||last.aej()[0].vw()!=player.pawnId)throw new AssertionError("Actor not received");
@@ -147,7 +150,7 @@ public class WorldConnectionCheck {
    if(fresh)try(var accounts=new org.tortodrone.account.AccountStore(Path.of(args[1]).getParent().getParent())){accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100,-1,-1);accounts.currency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,25,-1,-1);}
    waitFor(()->player.crowns==100&&player.energy==25);System.out.println("PASS: local administration changes live crowns and energy counters");
    multiplayer(args,queue,fresh,player,client);
-  }finally{client.Q(false);}
+  }finally{observing[0]=false;client.Q(false);}
  }
  static void peaceful(com.threerings.projectx.data.actor.Knight actor) {
   var model=(com.threerings.config.ConfigReference<?>)actor.Mv().kW().get("Model");

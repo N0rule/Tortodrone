@@ -8,7 +8,7 @@ import java.util.*;
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
     public record MapScene(int id,int zone,String zoneName,String name,String image,int version,
-            float spawnX,float spawnY,int instances,CollisionMap collision,byte[] layout) {
+            float spawnX,float spawnY,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
         public MapScene { layout=layout.clone(); }
         @Override public byte[] layout(){return layout.clone();}
     }
@@ -44,7 +44,8 @@ public final class SceneCatalog {
                 float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");
                 if(!collision.walkable(x,y))throw new IOException("Map spawn is not walkable: "+id);
                 var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),
-                    integer(p,"version"),x,y,number(p,"instances",1,16),collision,layout);
+                    integer(p,"version"),x,y,number(p,"instances",1,16),collision,layout,
+                    ScenePortals.load(folder,required(p,"scene-sha256"),collision));
                 if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
             }
         }
@@ -53,6 +54,14 @@ public final class SceneCatalog {
         for(var scene:scenes.values()) {
             String previous=zones.putIfAbsent(scene.zone(),scene.zoneName());
             if(previous!=null&&!previous.equals(scene.zoneName()))throw new IOException("Conflicting names for one zone");
+            for(var portal:scene.portals().triggers()) {
+                var destination=scenes.get(portal.destination());
+                if(destination==null||!destination.portals().entrances().containsKey(portal.entrance()))
+                    throw new IOException("Portal destination scene or entrance is unavailable");
+                var entrance=destination.portals().entrances().get(portal.entrance());
+                if(destination.portals().triggers().stream().anyMatch(t->t.intersects(entrance.x(),entrance.y())))
+                    throw new IOException("Portal arrival would immediately trigger another transfer");
+            }
         }
         if(scenes.values().stream().mapToInt(MapScene::instances).sum()>128)throw new IOException("Too many scene instances");
         return new SceneCatalog(scenes,entry);
