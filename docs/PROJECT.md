@@ -1,6 +1,6 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.1, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.2, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
@@ -21,6 +21,15 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 Advanced Training Hall, Laboratory and Hall of Heroes require local packs: `./gradlew prepareArchive -PgameDir="/path/to/Spiral Knights" -ParchiveDir="/path/to/reference-inputs"` prepares the persistent ignored `local/defaults/archive-maps/` source and all seven scenes in `build/defaults/maps/`. `buildServer -PgameDir=...` also performs first-time archive preparation; later plain builds reuse that source offline. The owner's regular 2017 Haven geometry and F3 dashboard are preserved. Bundled numeric combat defaults contain 382 weapons, 123 shields, 1,827 authored attack graphs and level-zero equipment control modifiers. Interiors support normal/charged/chained attacks, shielding/bash/regen, weapon switching, dodge and bullet/bomb/orbital emissions. See [town player behavior](town-player-behavior.md) for specialized fire gaps and sampled collision limits. Without prepared local maps, bundled defaults contain four towns; conflicting custom edits and active-server map changes are refused.
 
 Follow the **owner's latest task** and current Git diff first; don't redo work under way. Relevant reported problems: incoming trade Accept/Reject/Hide notification; inspect another knight and privacy/equipment rules; concurrent travel through the same gate leaving one player unable to move; logout/reconnect town or position behavior. For reconnect, **research original game's location semantics before adding exact-coordinate persistence**. Trade and scene changes need stock wire evidence, two-client testing and transactional/ownership checks. Do not infer a new feature's completion from client UI elements alone.
+
+The 0.25.2 collision milestone checks all crossed cells of the sampled static grid
+for bullets and collision-enabled orbitals, preventing skipped walls while
+preserving authored orbital wall-passing flags. It does not recover exact shapes or
+moving-target hits. A 180-second isolated stock-client launch established basic
+Haven scene rendering; combat graphics and animations remain unverified. Sealed
+Sword's stripped condition also wraps a monster spawn table, so a generic
+conditional wrapper alone would not complete that weapon. Agent carriers and
+modern loop execution remain unsupported; see [town player behavior](town-player-behavior.md).
 
 ## Architecture and correctness essentials
 

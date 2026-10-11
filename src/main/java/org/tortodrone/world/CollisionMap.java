@@ -32,4 +32,30 @@ public final class CollisionMap {
         if(col<0||row<0||col>width-1||row>height-1)return false;
         return walkable.get(Math.round(row)*width+Math.round(col));
     }
+    /** Traverses the sampled grid; this does not recover the original collision shapes. */
+    public boolean walkableSegment(float fromX,float fromY,float toX,float toY) {
+        if(!walkable(fromX,fromY)||!walkable(toX,toY))return false;
+        // Use the same float coordinate conversion and rounding as walkable().
+        double x=(fromX-minX)/step,y=(fromY-minY)/step;
+        double endX=(toX-minX)/step,endY=(toY-minY)/step;
+        int col=Math.round((float)x),row=Math.round((float)y);
+        int endCol=Math.round((float)endX),endRow=Math.round((float)endY);
+        double dx=endX-x,dy=endY-y;
+        int sx=Double.compare(dx,0),sy=Double.compare(dy,0);
+        double deltaX=dx==0?Double.POSITIVE_INFINITY:1/Math.abs(dx);
+        double deltaY=dy==0?Double.POSITIVE_INFINITY:1/Math.abs(dy);
+        double nextX=dx==0?Double.POSITIVE_INFINITY:(col+sx*.5-x)/dx;
+        double nextY=dy==0?Double.POSITIVE_INFINITY:(row+sy*.5-y)/dy;
+        while(col!=endCol||row!=endRow){
+            double crossX=col==endCol?Double.POSITIVE_INFINITY:nextX;
+            double crossY=row==endRow?Double.POSITIVE_INFINITY:nextY;
+            // Math.round assigns an exact corner to the higher row and column,
+            // which can be a side cell when the axes travel in opposite directions.
+            if(crossX==crossY&&!walkable.get(Math.max(row,row+sy)*width+Math.max(col,col+sx)))return false;
+            if(crossX<=crossY){col+=sx;nextX+=deltaX;}
+            if(crossY<=crossX){row+=sy;nextY+=deltaY;}
+            if(!walkable.get(row*width+col))return false;
+        }
+        return true;
+    }
 }

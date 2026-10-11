@@ -70,7 +70,7 @@ public final class SceneWeapons {
                 int from=Math.max(previous,shot.created);float distance=shot.spec.speed()*Math.max(0,end-from)/1000f;
                 int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
                 for(int n=0;n<steps;n++){float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
-                    if(!terrain.walkable(x,y)){destroy(shot,stamp,false);break;}shot.x=x;shot.y=y;}
+                    if(!terrain.walkableSegment(shot.x,shot.y,x,y)){destroy(shot,stamp,false);break;}shot.x=x;shot.y=y;}
             }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,Math.max(previous,shot.created),owners.get(shot.source.ownerId));
             if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
@@ -98,14 +98,9 @@ public final class SceneWeapons {
             if(orbit.compound()){float second=orbit.secondStartingRotation()+shot.rotation+spin(next-shot.created,orbit.secondSpeed(),orbit.alternateSpin()&&(shot.created&1)==1);
                 rx+=orbit.secondOrbitRadius()*(float)Math.cos(second);ry+=orbit.secondOrbitRadius()*(float)Math.sin(second);}
             float x=cx+rx,y=cy+ry;
-            if((shot.spec.flags()&2)==0&&!clearPath(shot.x,shot.y,x,y)){shot.collided=next;destroy(shot,next,false);break;}
+            if((shot.spec.flags()&2)==0&&!terrain.walkableSegment(shot.x,shot.y,x,y)){shot.collided=next;destroy(shot,next,false);break;}
             shot.relativeX=rx;shot.relativeY=ry;shot.x=x;shot.y=y;from=next;
         }
-    }
-    private boolean clearPath(float fromX,float fromY,float x,float y){
-        int steps=Math.max(1,(int)Math.ceil(Math.hypot(x-fromX,y-fromY)/.05));
-        for(int i=1;i<=steps;i++)if(!terrain.walkable(fromX+(x-fromX)*i/steps,fromY+(y-fromY)*i/steps))return false;
-        return true;
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
     private void destroy(Shot shot,int stamp,boolean fizzle){shot.destroyed=stamp;shot.fizzle=fizzle;

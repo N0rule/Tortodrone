@@ -29,8 +29,12 @@ game assets remain outside the repository.
 
 This is a limited player-combat implementation. There are no hostile actors or
 player damage targets, so projectiles do not create hits, health loss, loot, drops or
-rewards. Projectile travel uses the imported sampled static collision map; it does
-not implement exact moving-knight projectile hit detection. Town and interior NPC
+rewards. Projectile travel traverses the imported sampled static collision grid,
+checking every crossed cell instead of only movement endpoints or fixed-distance
+samples. This prevents bullets with large authored movement steps and short orbital
+diagonal crossings from skipping blocked cells. The grid still approximates the
+original collision shapes; projectile radius, exact impact position and timing, and
+moving-knight projectile hit detection remain unsupported. Town and interior NPC
 services, shops, crafting, missions and general dungeon progression are outside this
 scope.
 
@@ -46,10 +50,29 @@ available client schema does not establish their server execution rules.
 Unsupported actions are counted in the export report instead of being silently
 treated as a successful shot.
 
+Sealed Sword requires more than a conditional wrapper. Inspection of the unchanged
+2026 client configuration found an empty `ConditionConfig.Tagged` condition and a
+true branch of `DungeonActionConfig.TableSpawn`, referencing
+`Monster/Attacks/Sword(BreakSeal)` (arguments `Chance=0.25`, `Power=60`), with no else
+branch. The archive's restored `attack.xml` records a `Random` condition with
+probability `0.85`, but that historical server overlay is not the installed client's
+complete execution graph. Monster spawn tables and their actors are outside this
+interior player-control milestone. Neither the stripped condition nor the table
+is treated as an ordinary projectile or an unconditional successful shot.
+
+Evidence: archive HEAD `566636e022c7356c62ea6fcc1aba37aa4e9e38dc`,
+`vendor/clyde-spiralstudio/core/src/main/java/com/threerings/tudey/config/ActionConfig.java:579`
+and `core/src/main/java/com/threerings/tudey/server/logic/ActionLogic.java:655`
+under the same Clyde root establish generic branching;
+`vendor/reference-server/reference-server-server-development/rsrc/rsrc/config/attack.xml:50947`
+and `docs/WORKLOG.md:18522` identify the restored condition. The installed
+`projectx-pcode.jar` SHA-256 was
+`391a51cef0446f55d461bdb8f942ca9dba44e6e4138acdcd69ab2024297f543c`.
+
 Focused regressions can be run with:
 
 ```sh
-./gradlew unitworld_KnightCombatTest unitworld_SceneWeaponsTest unitworld_WeaponCatalogTest unitworld_FireCatalogTest
+./gradlew unitworld_CollisionMapTest unitworld_KnightCombatTest unitworld_SceneWeaponsTest unitworld_WeaponCatalogTest unitworld_FireCatalogTest
 ./gradlew unitcharacter_ItemCatalogTest unitserver_ItemCommandsTest unitworld_EquipmentCatalogTest
 ```
 
@@ -61,10 +84,16 @@ java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
 
 It uses disposable server data and checks accepted object and item schemas. Passing
 network or stock-reader checks does not establish graphical rendering, animations or
-complete combat behavior; no graphical combat acceptance is claimed here. A bounded
-isolated graphical launch authenticated and selected regular Haven; resource loading
-reached 16% within the 35-second window, so scene rendering and animations were
-inconclusive. Only the spawned tests were stopped.
+complete combat behavior; no graphical combat acceptance is claimed here. The first
+isolated graphical launch reached 16% loading within 35 seconds. A second isolated
+launch of the 0.25.1 baseline with a 180-second window authenticated and selected
+regular Haven; its
+1920x1080 framebuffer showed the rendered Town Square, fountain, scenery and game
+HUD. The initial Spiral Uplink window remained open with missing news-image
+placeholders. This establishes basic Haven rendering only; combat rendering,
+animations, peer views and graphical transitions remain unverified. Each launch
+used disposable server data, home/preferences and native extraction, and read the
+installed resources without modification. Only the spawned tests were stopped.
 
 The 0.25.1 small checks passed the focused controller, fire/equipment catalogue and
 grant regressions; the stock reader preserved 60 representative real projectile/effect
@@ -72,7 +101,23 @@ argument shapes, including orbital actor deltas and equipment modifier deltas.
 `InteriorConnectionCheck ... --weapons` passed native Arsenal equip/input/emission
 for Calibur, Proto Gun and Blast Bomb against a disposable seven-map server.
 
-Release validation: the final `./gradlew build` passed (66 tasks, including the
+0.25.1 release validation: the final `./gradlew build` passed (66 tasks, including the
 owner's F3 admin regression). The weapon-only shield compatibility fix then passed
 the focused controller/fire/equipment tests and stock modifier reader. No benchmarks
 or full catalogue graphics runs were used.
+
+0.25.2 validation: the new large-step bullet fixture failed against the original
+implementation before the sweep fix. `./gradlew unitworld_CollisionMapTest
+unitworld_SceneWeaponsTest` passed after the fix; the final `./gradlew build`
+passed all 67 tasks, including the exact mixed-direction corner regression and
+orbital collision/wall-passing flag checks. The disposable stock-client run of
+`FireCompatibility defaults/combat/fires.json` passed all 60 representative
+projectile/effect shapes; `InteriorConnectionCheck port public-key 127.0.0.1
+maps-dir --weapons` passed Calibur, Proto Gun and Blast Bomb equip/input/emission.
+`git diff --check` passed. The graphical baseline launch used
+`bash /tmp/tortodrone-parity-graphical.sh`; its screenshot stayed outside the
+repository at `/tmp/tortodrone-parity-graphical.png`. The focused network/reader
+run used `bash /tmp/tortodrone-parity-stock.sh`. Their disposable servers and
+spawned client processes were stopped; no owner sessions were touched. No
+benchmark, full catalogue graphical check or exact-shape collision comparison was
+run.

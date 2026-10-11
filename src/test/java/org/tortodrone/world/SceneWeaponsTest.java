@@ -1,7 +1,9 @@
 package org.tortodrone.world;
 
 import java.nio.file.*;
+import java.io.*;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 import org.tortodrone.character.StarterCatalog;
 
 /** Small scene-clock regression: native emissions, expiry and observer-independent ownership. */
@@ -77,7 +79,43 @@ public final class SceneWeaponsTest {
         var recursiveOwner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,1300,model);
         weapons.advance(1301,List.of(recursiveOwner));weapons.advance(1302,List.of(recursiveOwner));
         check(weapons.actors().stream().anyMatch(a->a.created()==1302),"recursive detonation resolves matching authored config without infinite catalogue expansion");
-        System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect and owned cleanup");
+        blockedCellCannotBeSkipped();
+        System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
+    }
+    private static void blockedCellCannotBeSkipped()throws Exception {
+        Path file=Files.createTempFile("tortodrone-projectile-collision-",".gz");
+        try {
+            // A one-cell wall lies between two clear endpoints within one authored step.
+            try(var out=new DataOutputStream(new GZIPOutputStream(Files.newOutputStream(file)))){
+                out.writeInt(0x54445731);out.writeInt(5);out.writeInt(1);
+                out.writeFloat(0);out.writeFloat(0);out.writeFloat(.1f);out.writeByte(0b11011);
+            }
+            var terrain=CollisionMap.read(file);
+            var model=new StarterCatalog.Model("Fixture",Map.of());
+            var bullet=new FireCatalog.ActorSpec("BULLET",model,1000,8,1,0,0,0,1,null);
+            var weapons=new SceneWeapons(terrain);weapons.catalog(new FireCatalog(List.of(attack("Fast",bullet)),Map.of()));
+            var owner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,292,100,model);
+            weapons.attack(10,new KnightCombat.AttackStart("Fast",292,100,0,500));
+            weapons.advance(101,List.of(owner));weapons.advance(150,List.of(owner));
+            var shot=weapons.actors().getFirst();
+            check(shot.projectile().destroyed()==150,"bullet cannot skip a blocked collision cell with a large maxStep");
+            check(!shot.projectile().fizzle()&&shot.x()<.15f,"static impact stays on the near side and retains native impact state");
+            weapons.cancel(10);
+            var orbit=new FireCatalog.OrbitSpec(0,0,0,8,500,1000,"SOURCE",false,null,null,null);
+            var disk=new FireCatalog.ActorSpec("ORBITAL_BULLET",model,1000,0,0,0,0,0,1,null,orbit);
+            var passing=new FireCatalog.ActorSpec("ORBITAL_BULLET",model,1000,0,0,2,0,0,1,null,orbit);
+            weapons.catalog(new FireCatalog(List.of(attack("Disk",disk),attack("Passing",passing)),Map.of()));
+            weapons.attack(10,new KnightCombat.AttackStart("Disk",292,200,0,500));
+            weapons.attack(10,new KnightCombat.AttackStart("Passing",292,200,0,500));
+            var orbitOwner=new ActorState(10,1001,"Fixture",257,200,0,0,0,0,0,292,200,model);
+            weapons.advance(201,List.of(orbitOwner));weapons.advance(250,List.of(orbitOwner));
+            var collided=weapons.actors().stream().filter(a->(a.flags()&2)==0).findFirst().orElseThrow();
+            var clear=weapons.actors().stream().filter(a->(a.flags()&2)!=0).findFirst().orElseThrow();
+            check(collided.projectile().destroyed()<=250&&collided.projectile().orbit().collided()>0,
+                "orbital terrain collision publishes native collision and destruction stamps");
+            check(clear.projectile().destroyed()==Integer.MAX_VALUE&&clear.x()>.3f,
+                "authored orbital wall-passing flag still bypasses static terrain");
+        } finally {Files.delete(file);}
     }
     private static FireCatalog.AttackFire attack(String weapon,FireCatalog.ActorSpec actor){
         var model=new StarterCatalog.Model("Fixture",Map.of());
