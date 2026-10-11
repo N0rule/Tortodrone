@@ -645,7 +645,7 @@ final class WorldSession implements AutoCloseable {
         if(!place.map().town())membership.combat(weapons,scenes.equipment(),profile);
     }
     private void rebuildAppearance() {
-        var model=scene.map().town()?StarterCatalog.town(knight,profile,characters.catalog()):StarterCatalog.equipped(knight,profile,characters.catalog());
+        var model=scene.map().town()?StarterCatalog.town(knight,profile,characters.catalog()):StarterCatalog.interior(knight,profile,characters.catalog());
         appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
             Map.of("Model",model,"Height",model.arguments().get("Height")));
     }

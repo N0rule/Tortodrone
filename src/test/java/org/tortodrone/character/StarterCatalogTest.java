@@ -45,6 +45,11 @@ public final class StarterCatalogTest {
             "town carries shield on back with empty hands");
         check(StarterCatalog.equipped(knight,profile).arguments().containsKey("Weapon")
             && profile.equipment()[6]!=0 && profile.equipment()[7]!=0,"peaceful stance preserves equipped weapons and preview");
+        var interior=StarterCatalog.interior(knight,profile,ItemCatalog.starter()).arguments();
+        check(interior.containsKey("Helmet")&&interior.containsKey("Armor")
+            && !interior.containsKey("Weapon")&&!interior.containsKey("Weapon Idle")
+            && !interior.containsKey("Shield")&&!interior.containsKey("Shield Away"),
+            "interior body preserves armor without duplicating native weapon and shield attachments");
         var withoutShield=new WorldProfile(1,1,knight.id(),0,0,2,
             profile.items().stream().filter(i->i.slot()!=WorldProfile.Slot.SHIELD).toList());
         check(!StarterCatalog.town(knight,withoutShield,ItemCatalog.starter()).arguments().containsKey("Shield"),

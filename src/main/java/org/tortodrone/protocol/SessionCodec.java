@@ -723,7 +723,10 @@ public final class SessionCodec {
                 out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
                 out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+costume,Map.of()));}
             }
-            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(0);out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
+            // Stock Item.o / LevelItem.a compare this configuration ID, not the
+            // config name. A shared zero leaves the previous weapon's sprite and
+            // attack animations active after equipping a different weapon.
+            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
             out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0));

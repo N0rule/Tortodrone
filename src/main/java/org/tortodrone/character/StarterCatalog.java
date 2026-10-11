@@ -56,15 +56,21 @@ public final class StarterCatalog {
         return equipped(knight,profile,ItemCatalog.starter());
     }
     public static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog) {
-        return equipped(knight,profile,catalog,false);
+        return equipped(knight,profile,catalog,View.EQUIPPED);
     }
 
     /** Peaceful town appearance: empty hands and the equipped shield carried on the back. */
     public static Model town(Knight knight,WorldProfile profile,ItemCatalog catalog) {
-        return equipped(knight,profile,catalog,true);
+        return equipped(knight,profile,catalog,View.TOWN);
     }
 
-    private static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog,boolean town) {
+    /** Stock Dungeoneer sprites attach weapon and shield models from their actor fields. */
+    public static Model interior(Knight knight,WorldProfile profile,ItemCatalog catalog) {
+        return equipped(knight,profile,catalog,View.INTERIOR);
+    }
+    private enum View { EQUIPPED, TOWN, INTERIOR }
+
+    private static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog,View view) {
         var visible=new Knight(knight.id(),knight.name(),null,null,null,null,knight.costume(),knight.color(),knight.height(),knight.eye(),knight.createdAt());
         var args=new TreeMap<>(preview(visible).arguments());int color=256|knight.color();
         // Apply armor/helm before accessories; use the lowest occupied weapon slot.
@@ -74,12 +80,13 @@ public final class StarterCatalog {
             if(item.slot()==WorldProfile.Slot.HELM && profile.equipment()[3]!=0
                 || item.slot()==WorldProfile.Slot.ARMOR && profile.equipment()[4]!=0
                 || item.slot()==WorldProfile.Slot.SHIELD && profile.equipment()[15]!=0)continue;
-            if(item.slot().weapon()) {if(town||weapon)continue;weapon=true;}
+            if(view==View.INTERIOR&&(item.slot()==WorldProfile.Slot.SHIELD||item.slot()==WorldProfile.Slot.SHIELD_COSTUME))continue;
+            if(item.slot().weapon()) {if(view!=View.EQUIPPED||weapon)continue;weapon=true;}
             var entry=catalog.find(item.config());
             if(entry!=null)args.putAll(entry.arguments(color));
             if(item.accessory()!=null)add(args,item.accessory()+", "+knight.costume(),color);
         }
-        if(town)args.put("Shield Away","True");
+        if(view==View.TOWN)args.put("Shield Away","True");
         return new Model("character/pc/model_level.dat",args);
     }
 

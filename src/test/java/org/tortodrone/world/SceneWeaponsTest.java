@@ -80,7 +80,31 @@ public final class SceneWeaponsTest {
         weapons.advance(1301,List.of(recursiveOwner));weapons.advance(1302,List.of(recursiveOwner));
         check(weapons.actors().stream().anyMatch(a->a.created()==1302),"recursive detonation resolves matching authored config without infinite catalogue expansion");
         blockedCellCannotBeSkipped();
+        fireTracksAttackAnimationSpeed(map.collision());
         System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
+    }
+    private static void fireTracksAttackAnimationSpeed(CollisionMap terrain) {
+        var model=new StarterCatalog.Model("Fixture",Map.of());
+        var bullet=new FireCatalog.ActorSpec("BULLET",model,1000,0,.1f,0,0,0,1,null);
+        var action=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,bullet,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        var fire=new FireCatalog.AttackFire("Gun",292,model,2,List.of(new FireCatalog.FireRef(model,135,90,true,0,0,0,action,null)));
+        var weapons=new SceneWeapons(terrain);weapons.catalog(new FireCatalog(List.of(fire),Map.of()));
+        var hit=new WeaponCatalog.Attack(135,270,900,true,-1,-1,0,0);
+        var gun=new WeaponCatalog.Weapon("Gun",1200,0,0,false,true,1,1,List.of(hit),null,null,null);
+        var byClass=new EnumMap<EquipmentCatalog.WeaponClass,EquipmentCatalog.Modifiers>(EquipmentCatalog.WeaponClass.class);
+        for(var type:EquipmentCatalog.WeaponClass.values())byClass.put(type,new EquipmentCatalog.Modifiers(0,0,.125f,0));
+        var gear=new EquipmentCatalog(List.of(new EquipmentCatalog.Entry("Gun",org.tortodrone.character.WorldProfile.Slot.GUN,byClass)));
+        var combat=new KnightCombat(new WeaponCatalog(List.of(gun),List.of(),2000),gear);
+        combat.equipment(new org.tortodrone.character.WorldProfile(10,1,1,0,0,1,List.of(
+            new org.tortodrone.character.WorldProfile.Item(1,org.tortodrone.character.WorldProfile.Slot.GUN,"Gun",null,0,6,true))));
+        combat.attacks(start->weapons.attack(10,start));combat.reset(100);combat.input(4,100,100,0,0,true);
+        var owner=new ActorState(10,1001,"Fixture",257,100,0,0,0,0,0,292,100,model);
+        // Native fire animation speed is fireSpeed * attackSpeed: land=120,
+        // delay=60 and refractory=40 after the 1.125 equipment multiplier.
+        weapons.advance(280,List.of(owner));check(weapons.actors().isEmpty(),"scaled native fire deadline remains strict");
+        weapons.advance(281,List.of(owner));check(weapons.actors().size()==1,"fire follows the equipment-scaled animation delay");
+        weapons.advance(320,List.of(owner));check(weapons.actors().size()==1,"scaled native refractory deadline remains strict");
+        weapons.advance(321,List.of(owner));check(weapons.actors().size()==2,"repeat fire follows the equipment-scaled animation rate");
     }
     private static void blockedCellCannotBeSkipped()throws Exception {
         Path file=Files.createTempFile("tortodrone-projectile-collision-",".gz");

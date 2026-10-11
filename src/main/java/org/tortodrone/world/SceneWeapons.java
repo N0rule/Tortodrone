@@ -46,7 +46,10 @@ public final class SceneWeapons {
                 if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
                 for(int i=0;i<run.loops.length;i++){
                     if(run.done[i])continue;var ref=run.attack.fireRefs().get(i);
-                    int delay=(int)(ref.delay()/run.attack.fireSpeed()),refractory=(int)(ref.refractory()/run.attack.fireSpeed());
+                    // Stock attack animations and server fire actions use the same
+                    // equipment multiplier, captured when the attack begins.
+                    float fireSpeed=run.attack.fireSpeed()*run.start.attackSpeed();
+                    int delay=(int)(ref.delay()/fireSpeed),refractory=(int)(ref.refractory()/fireSpeed);
                     int elapsed=stamp-run.start.started()-run.start.land();
                     if(elapsed<=delay+refractory*run.loops[i])continue;
                     int fired=run.start.started()+run.start.land()+delay+refractory*run.loops[i];

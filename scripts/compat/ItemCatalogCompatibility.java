@@ -83,7 +83,7 @@ public final class ItemCatalogCompatibility {
                 var nativeItem=original.a(ctx,e.stockId(),new ConfigReference<ItemConfig>(e.config()));
                 if(decoded==null||decoded.getClass()!=nativeItem.getClass()||decoded.getCount()!=(e.stackable()?17:1)
                     ||decoded.VC()!=e.permanent()||decoded.Cs()!=(e.locked()||e.permanent())||!decoded.Vx().getName().equals(e.config())
-                    ||decoded.w(manager)!=original)throw new AssertionError("Stock item mismatch: "+e.config());
+                    ||decoded.w(manager)!=original||!decoded.o(nativeItem))throw new AssertionError("Stock item mismatch: "+e.config());
                 if(e.variant()==ItemCatalog.Variant.SEED_ITEM&&(!(nativeItem instanceof com.threerings.projectx.item.data.SeedItem)
                     ||seed(nativeItem)!=e.seed()||seed(decoded)!=e.seed()))throw new AssertionError("Seed item metadata mismatch: "+e.config());
                 if(e.variant()==ItemCatalog.Variant.ITEM&&nativeItem instanceof com.threerings.projectx.item.data.SeedItem)
@@ -105,6 +105,9 @@ public final class ItemCatalogCompatibility {
         if(!player.a(manager,true,true,-1,true,false,Boolean.TRUE).equals(
                 WorldCompatibility.reference(StarterCatalog.town(knight,profile,catalog))))
             throw new AssertionError("Peaceful costume/shield composition differs from stock town builder");
+        if(!player.a(manager,false,false,-1,true,false,Boolean.TRUE).equals(
+                WorldCompatibility.reference(StarterCatalog.interior(knight,profile,catalog))))
+            throw new AssertionError("Interior body duplicates stock sprite weapon/shield attachments");
         // Read the rendered actor too: this exercises TransNormal fields on the wire.
         var codec=new org.tortodrone.protocol.SessionCodec(catalog);var model=StarterCatalog.equipped(knight,profile,catalog);
         var state=new org.tortodrone.world.ActorState(10,1001,knight.name(),257,100,0,-8,0,0,0,

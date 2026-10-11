@@ -13,7 +13,7 @@ public final class WeaponCompatibility {
     public static void main(String[] args)throws Exception {
         if(args.length!=2)throw new IllegalArgumentException("Usage: WeaponCompatibility item-catalog weapon-catalog");
         var items=ItemCatalog.load(Path.of(args[0]));var weapons=WeaponCatalog.load(Path.of(args[1]));
-        int checked=0;
+        int checked=0;var nativeWeapons=new ArrayList<com.threerings.projectx.item.data.LevelItem>();
         for(var slot:List.of(WorldProfile.Slot.SWORD,WorldProfile.Slot.GUN,WorldProfile.Slot.BOMB)) {
             var entry=items.entries().stream().filter(e->e.slot()==slot&&e.grantable()&&weapons.find(e.config())!=null).findFirst().orElseThrow();
             var shield=weapons.shields().stream().filter(s->s.health()>0).findFirst().orElseThrow();
@@ -34,6 +34,10 @@ public final class WeaponCompatibility {
             var nativeActor=(Dungeoneer)add.aej()[0];
             var nativeItem=(com.threerings.projectx.item.data.LevelItem)field(nativeActor,"_weapon");
             check(nativeItem!=null&&nativeItem.Vx().getName().equals(entry.config()),"native equipped weapon");
+            check((int)field(nativeItem,"_configId")==entry.stockId(),"native weapon configuration identity");
+            for(var previous:nativeWeapons)check(!com.threerings.projectx.item.data.LevelItem.a(previous,nativeItem,false),"different weapon types must refresh the native sprite");
+            check(com.threerings.projectx.item.data.LevelItem.a(nativeItem,nativeItem.VN(),false),"unchanged weapon copies must preserve the native sprite");
+            nativeWeapons.add(nativeItem);
             check(field(nativeActor,"_shield").equals(shield.config())&&(int)field(nativeActor,"_shieldMaxHealth")==shield.health(),"native shield fields");
             check((float)field(field(nativeActor,"_equipMod"),"_attackSpeed")==.12f,"native gear modifier object");
             var update=(SceneDeltaEvent)((EventNotification)in.qe()).yj();

@@ -40,7 +40,14 @@ public final class KnightCombat {
     private float shieldHealth;
     private int shieldHit=-300000,shieldRegenStart;
     private boolean bashSpent;
-    public record AttackStart(String config,int activity,int started,int land,int clear) { }
+    public record AttackStart(String config,int activity,int started,int land,int clear,float attackSpeed) {
+        public AttackStart(String config,int activity,int started,int land,int clear) {
+            this(config,activity,started,land,clear,1f);
+        }
+        public AttackStart {
+            if(!Float.isFinite(attackSpeed)||attackSpeed<=0)throw new IllegalArgumentException("Invalid attack speed");
+        }
+    }
     private java.util.function.Consumer<AttackStart> attackSink=ignored->{};
     public void attacks(java.util.function.Consumer<AttackStart> sink){attackSink=Objects.requireNonNull(sink);}
 
@@ -114,7 +121,7 @@ public final class KnightCombat {
         if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;}
         if((flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
             activity=BASH;started=time;attack=scaled(shieldDefinition.bash());impulseApplied=false;bashSpent=false;
-            attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear()));
+            attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear(),attackSpeed()));
         }
         if(canOverride()) {
             int index=(flags&56)>>>3;
@@ -136,7 +143,7 @@ public final class KnightCombat {
         chainCount=value==COOLDOWN?definition.maxChain()+1:count(time)+1;
         chainReset=time+(value!=COOLDOWN&&definition.chainCooldown()==0?selected.clear():selected.land()+definition.chainCooldown());
         activity=value;started=time;attack=selected;impulseApplied=false;
-        attackSink.accept(new AttackStart(weapon.config(),activity,started,attack.land(),attack.clear()));
+        attackSink.accept(new AttackStart(weapon.config(),activity,started,attack.land(),attack.clear(),attackSpeed()));
     }
     public void advance(int time,float facing) {
         if(attack!=null) {
