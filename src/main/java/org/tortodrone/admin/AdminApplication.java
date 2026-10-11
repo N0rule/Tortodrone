@@ -32,7 +32,7 @@ public final class AdminApplication {
                 Integer desktopExit = DesktopBootstrap.relaunchIfNeeded(location,launchArguments);
                 if (desktopExit != null) { if (desktopExit != 0) System.exit(desktopExit); return; }
                 if (GraphicsEnvironment.isHeadless()) throw new IOException("A graphical desktop is required. Run on the server PC's desktop, or use --help for terminal commands.");
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+                DesktopTheme.installDefault();
                 Path data = directory;
                 SwingUtilities.invokeLater(() -> new AdminWindow(data).setVisible(true));
             } else try (AccountStore accounts = new AccountStore(directory)) { command(accounts,args); }
@@ -42,7 +42,7 @@ public final class AdminApplication {
     }
     /** Opens a database-backed inspector on the EDT; loading remains in the window worker. */
     public static void openKnight(Path data,String knight) {
-        SwingUtilities.invokeLater(()->new AdminWindow(data,knight).setVisible(true));
+        SwingUtilities.invokeLater(()->{DesktopTheme.installDefault();new AdminWindow(data,knight).setVisible(true);});
     }
     private static void command(AccountStore accounts,String[] args) throws IOException {
         if(args[0].equals("--items")&&args.length<=2) {

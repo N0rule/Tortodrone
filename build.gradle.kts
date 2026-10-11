@@ -23,6 +23,8 @@ val launcher25 = javaToolchains.launcherFor { languageVersion.set(JavaLanguageVe
 dependencies {
     // JLine's aggregate classifier already contains its providers/native libraries.
     implementation("org.jline:jline:4.4.7:jdk11") { isTransitive = false }
+    implementation("com.formdev:flatlaf:3.7.2")
+    implementation("org.jfree:jfreechart:1.5.6")
     // Production uses java.sql and loads the driver at runtime.
     runtimeOnly("org.xerial:sqlite-jdbc:3.53.4.0") { isTransitive = false }
 }
@@ -46,6 +48,7 @@ fun ShadowJar.executableJar(filename: String, entryPoint: String) {
     // Ordinary duplicates keep the first resource; providers must all reach the merger.
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     filesMatching("META-INF/services/**") { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
+    from("licenses/JFreeChart-LGPL-2.1-or-later.txt") { into("META-INF/licenses") }
     mergeServiceFiles()
     exclude("META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA", "META-INF/INDEX.LIST",
         "module-info.class", "META-INF/versions/**/module-info.class")

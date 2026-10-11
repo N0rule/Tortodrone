@@ -3,6 +3,14 @@
 Both Tortodrone JARs bundle Xerial SQLite JDBC **3.53.4.0**, including SQLite native
 libraries. No separately installed SQLite service or library is required.
 
+The optional desktop UI bundles FlatLaf **3.7.2** (Apache License 2.0) and
+JFreeChart **1.5.6** (GNU Lesser General Public License 2.1 or later). FlatLaf supplies the
+dark/light Swing look and feel; JFreeChart supplies the in-memory Performance
+tab graphs. They are present in the executable JARs but are loaded only when a
+desktop window is opened. `--nogui` does not initialize Swing or chart classes.
+Both dependency licenses are retained in the executable JARs; JFreeChart's
+license text is also checked in at [licenses/JFreeChart-LGPL-2.1-or-later.txt](../licenses/JFreeChart-LGPL-2.1-or-later.txt).
+
 - Upstream: https://github.com/xerial/sqlite-jdbc
 - Artifact: https://repo.maven.apache.org/maven2/org/xerial/sqlite-jdbc/3.53.4.0/sqlite-jdbc-3.53.4.0.jar
 - SHA-256: `bcb1f51e36f940867e83342f9efbf5968ac44a6bef4d397bb4af7b17b45cd2fb`

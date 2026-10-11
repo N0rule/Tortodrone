@@ -62,6 +62,16 @@ database diagnostics and recent significant failure. It retains at most 120 metr
 samples and shows their heap range. These are operational measurements, not
 benchmark results or a guarantee of player capacity.
 
+The desktop defaults to FlatLaf Dark; **View** switches between dark and light
+themes in both the server window and account manager. The Performance tab keeps
+the text statistics and adds one-second CPU, heap (MiB) and authenticated-player
+charts. Select 1m, 5m, 30m or 1h; the in-memory history is capped at 3,600
+samples. Hover a point for its timestamp and full measured value. Pause graphs
+freezes their display while sampling continues; resuming refreshes from the
+retained history. CPU gaps remain gaps when the JVM cannot report that metric.
+Charts are not initialized in `--nogui` mode and samples are not written to the
+database.
+
 ## Docked console and logs
 
 The lower console has severity colors, case-insensitive text filtering, a Debug

@@ -21,6 +21,7 @@ final class ServerWindow extends JFrame implements AutoCloseable {
     private final ServerLog log;
     private final JLabel overview=new JLabel("Starting…"),warning=new JLabel(" ");
     private final JTextArea performance=new JTextArea(),sessionDetail=new JTextArea();
+    private final PerformanceCharts charts=new PerformanceCharts();
     private final DefaultTableModel playerModel=model("Session","Account ID","Username","Knight","Knight ID","Scene","Instance ID","Endpoint","Duration","State");
     private final DefaultTableModel sceneModel=model("Template ID","Instance ID","Name","Players","State");
     private final JTable players=new JTable(playerModel),scenes=new JTable(sceneModel);
@@ -44,14 +45,14 @@ final class ServerWindow extends JFrame implements AutoCloseable {
         ServerWindow[] result=new ServerWindow[1];
         try {
             SwingUtilities.invokeAndWait(()->{
-                try {UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());}catch(Exception ignored){ }
+                org.tortodrone.admin.DesktopTheme.installDefault();
                 result[0]=new ServerWindow(control,log);result[0].setVisible(true);
             });
         } catch(Exception error) {if(result[0]!=null)SwingUtilities.invokeLater(result[0]::close);throw error;}
         return result[0];
     }
     private ServerWindow(ServerControl control,ServerLog log) {
-        super("Tortodrone — Server control");this.control=control;this.log=log;
+        super("Tortodrone — Server control");this.control=control;this.log=log;setJMenuBar(org.tortodrone.admin.DesktopTheme.menuBar());
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);setMinimumSize(new Dimension(950,640));setSize(1200,850);setLocationByPlatform(true);
         JPanel root=new JPanel(new BorderLayout(10,10));root.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));setContentPane(root);
         JPanel heading=new JPanel(new BorderLayout());overview.setFont(overview.getFont().deriveFont(Font.BOLD,17));heading.add(overview,BorderLayout.NORTH);heading.add(warning);
@@ -62,11 +63,16 @@ final class ServerWindow extends JFrame implements AutoCloseable {
         JPanel playerTab=new JPanel(new BorderLayout(6,6));players.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);players.setAutoCreateRowSorter(true);
         playerTab.add(new JScrollPane(players));sessionDetail.setEditable(false);sessionDetail.setRows(5);JPanel detail=new JPanel(new BorderLayout());detail.add(new JScrollPane(sessionDetail));detail.add(admin,BorderLayout.SOUTH);playerTab.add(detail,BorderLayout.SOUTH);tabs.addTab("Players",playerTab);
         players.getSelectionModel().addListSelectionListener(e->selected());admin.addActionListener(e->{var session=selectedSession();if(session!=null&&session.knight()!=null)org.tortodrone.admin.AdminApplication.openKnight(control.dataDirectory(),session.knight());});
-        scenes.setAutoCreateRowSorter(true);tabs.addTab("Scenes",new JScrollPane(scenes));performance.setEditable(false);performance.setFont(new Font(Font.MONOSPACED,Font.PLAIN,13));tabs.addTab("Performance",new JScrollPane(performance));
+        scenes.setAutoCreateRowSorter(true);tabs.addTab("Scenes",new JScrollPane(scenes));performance.setEditable(false);performance.setLineWrap(true);performance.setWrapStyleWord(true);performance.setBorder(BorderFactory.createEmptyBorder(8,10,8,10));
+        JScrollPane stats=new JScrollPane(performance);stats.setPreferredSize(new Dimension(750,145));JPanel performanceTab=new JPanel(new BorderLayout(8,8));performanceTab.add(stats,BorderLayout.NORTH);performanceTab.add(charts,BorderLayout.CENTER);tabs.addTab("Performance",performanceTab);
         console.setFont(new Font(Font.MONOSPACED,Font.PLAIN,12));console.setCellRenderer(new DefaultListCellRenderer(){
             public Component getListCellRendererComponent(JList<?> list,Object value,int index,boolean selected,boolean focus){
                 super.getListCellRendererComponent(list,value,index,selected,focus);var event=(ServerLog.Event)value;setText(event.line());
-                if(!selected)setForeground(switch(event.level()){case "ERROR"->new Color(180,30,30);case "WARN"->new Color(150,95,0);case "DEBUG"->Color.GRAY;default->UIManager.getColor("List.foreground");});return this;
+                if(!selected)setForeground(switch(event.level()){
+                    case "ERROR"->org.tortodrone.admin.DesktopTheme.isDark()?new Color(255,125,125):new Color(180,35,35);
+                    case "WARN"->org.tortodrone.admin.DesktopTheme.isDark()?new Color(245,195,105):new Color(135,82,0);
+                    case "DEBUG"->UIManager.getColor("Label.disabledForeground");
+                    default->UIManager.getColor("List.foreground");});return this;
             }
         });
         JPanel consolePanel=new JPanel(new BorderLayout(6,6));consolePanel.add(new JScrollPane(console));
@@ -108,11 +114,12 @@ final class ServerWindow extends JFrame implements AutoCloseable {
         sceneModel.setRowCount(0);for(var template:state.templates())sceneModel.addRow(new Object[]{template.id(),null,template.name(),null,"Loaded template ("+template.kind()+")"});
         for(var s:state.scenes())sceneModel.addRow(new Object[]{s.templateId(),s.instanceId(),s.name(),s.players(),s.state()});
         samples.add(state.metrics());if(samples.size()>120)samples.removeFirst();var m=state.metrics();
+        charts.sample(m,(int)state.sessions().stream().filter(s->s.knightId()!=null).count(),System.currentTimeMillis());
         long min=samples.stream().mapToLong(RuntimeMetrics::heapUsed).min().orElse(0),max=samples.stream().mapToLong(RuntimeMetrics::heapUsed).max().orElse(0);
         performance.setText("Heap used / max: "+RuntimeMetrics.mib(m.heapUsed())+" / "+RuntimeMetrics.mib(m.heapMax())+" MiB\nHeap committed: "+RuntimeMetrics.mib(m.heapCommitted())+" MiB\nLogical CPUs: "+m.processors()+"\nProcess CPU: "+(m.processCpu()<0?"Unavailable":String.format(Locale.ROOT,"%.1f%%",100*m.processCpu()))+"\nJVM uptime: "+m.processUptime()/1000+"s\nSessions: "+state.sessions().size()+"\nInstances: "+state.scenes().size()+"\nResources: "+state.maps()+" templates, "+state.items()+" items\nRecent heap range ("+samples.size()+" samples, maximum 120): "+RuntimeMetrics.mib(min)+"–"+RuntimeMetrics.mib(max)+" MiB\nDatabase diagnostics: "+org.tortodrone.storage.Database.diagnostics()+"\nRecent significant failure: "+(log.recentFailure()==null?"None":log.recentFailure().message()));
     }
     private SessionRegistry.Snapshot selectedSession(){int row=players.getSelectedRow();if(row<0)return null;long id=((Number)playerModel.getValueAt(players.convertRowIndexToModel(row),0)).longValue();return sessions.stream().filter(s->s.id()==id).findFirst().orElse(null);}
     private void selected(){var s=selectedSession();admin.setEnabled(s!=null&&s.knight()!=null);sessionDetail.setText(s==null?"Select a connection":s.remote()+" · "+s.state()+"\nAccount: "+s.username()+" (#"+s.accountId()+") · Knight: "+s.knight()+" (#"+s.knightId()+") · roster ID: "+s.rosterId()+"\nScene: "+s.scene()+" · template ID: "+s.sceneId()+" · instance ID: "+s.instanceId()+"\nConnected: "+s.connectedAt()+" · last non-heartbeat request: "+s.lastActivity()+"\nClient protocol build: "+s.clientVersion());}
     private static String duration(Instant time){return time==null?"0s":Duration.between(time,Instant.now()).toSeconds()+"s";}
-    @Override public void close(){if(!SwingUtilities.isEventDispatchThread()){SwingUtilities.invokeLater(this::close);return;}if(closed)return;closed=true;timer.stop();worker.shutdown();try{subscription.close();}catch(Exception ignored){ }for(Window window:Window.getWindows())if(window!=this)window.dispose();dispose();}
+    @Override public void close(){if(!SwingUtilities.isEventDispatchThread()){SwingUtilities.invokeLater(this::close);return;}if(closed)return;closed=true;timer.stop();charts.close();worker.shutdown();try{subscription.close();}catch(Exception ignored){ }for(Window window:Window.getWindows())if(window!=this)window.dispose();dispose();}
 }

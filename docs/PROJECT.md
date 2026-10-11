@@ -1,12 +1,17 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.26.1, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-12, version 0.26.2, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.26.2 modernizes the local Swing server console and account manager with
+  FlatLaf dark/light themes and adds bounded, one-second CPU, JVM heap and
+  authenticated-player charts to Performance. Graph samples remain in memory;
+  `--nogui` does not load Swing or chart classes.
 
 - 0.26.1 restores the stock trade notification HUD by including native flag 32 in selected-world flags for the existing intro bypass, preserving it through GM/privacy updates. The current stock client posts an incoming chat notice; clicking the trade notification icon opens **No thanks / Let's trade!**. No mission completion or reward records are created. See [town interactions](town-interactions.md) for wire evidence and validation.
 

@@ -35,6 +35,7 @@ final class AdminWindow extends JFrame {
     AdminWindow(Path directory) { this(directory,null); }
     AdminWindow(Path directory,String initialKnight) {
         super("Tortodrone — Account Manager");
+        setJMenuBar(DesktopTheme.menuBar());
         requestedKnight=initialKnight;
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1000,600)); setSize(1400,760); setLocationByPlatform(true);
         JPanel content = new JPanel(new BorderLayout(12,12)); content.setBorder(BorderFactory.createEmptyBorder(16,16,16,16)); setContentPane(content);
