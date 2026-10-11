@@ -39,13 +39,21 @@ public final class TradeCompatibility {
         append(bytes,org.tortodrone.protocol.HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
         append(bytes,org.tortodrone.protocol.HandshakeCodec.authenticationResponse((short)2,true,"fixture","Alice"));
         append(bytes,codec.player((short)3,1002,1,"Alice"));append(bytes,codec.selected(1002,knight,first));
+        for(boolean gm:new boolean[]{true,false})for(boolean hidden:new boolean[]{true,false})
+            append(bytes,codec.playerFlags(1002,gm,hidden));
         append(bytes,codec.tradeNotification(1002,other.name(),true));append(bytes,codec.tradeDialog(1002,empty,987654L));
         append(bytes,codec.tradeObject((short)4,empty));append(bytes,codec.tradeChanges(empty,offered));append(bytes,codec.tradeChanges(offered,removed));
         append(bytes,codec.tradeNotification(1002,other.name(),false));append(bytes,codec.tradeDialog(1002,null,987654L));
         append(bytes,codec.itemChanges(1002,knight,first,new org.tortodrone.character.WorldProfile(10,1,1,100,40,2,List.of())));
         var input=new v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
         var player=(com.threerings.projectx.data.PlayerObject)((com.threerings.presents.net.ObjectResponse)input.qe()).yk();
-        apply(input,player);apply(input,player);
+        apply(input,player);
+        for(boolean gm:new boolean[]{true,false})for(boolean hidden:new boolean[]{true,false}) {
+            apply(input,player);
+            if(!player.bR(32)||player.bR(256)!=gm||player.bR(1024)!=hidden)
+                throw new AssertionError("Native notification HUD/role/privacy flags mismatch");
+        }
+        apply(input,player);
         if(player.notifications.size()!=1)throw new AssertionError("Native notification entry missing");
         apply(input,player);
         var dialog=(TradeDialogInfo)player.sceneDialog;

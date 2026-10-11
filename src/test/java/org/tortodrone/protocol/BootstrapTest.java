@@ -68,6 +68,22 @@ public final class BootstrapTest {
         check(config.get("dconfigService") == null && config.get("removed").equals(java.util.List.of()), "configuration schema");
         player = wire.snapshot(input(outgoing.player((short) 16, 201, 1, "test-player", java.util.Map.of("test-receiver", (short) 0))), (short) 16, 201);
         check(player.get("receivers").equals(java.util.List.of(java.util.Map.of("code", "test-receiver", "id", (short) 0))), "zero-based receiver snapshot");
+        // Role and inspection changes must keep the native notification HUD usable.
+        for (boolean gm : new boolean[]{true, false}) for (boolean hidden : new boolean[]{true, false}) {
+            DataInputStream flags = input(outgoing.playerFlags(201, gm, hidden));
+            check(wire.type(flags).equals(PREFIX + "EventNotification") && flags.readShort() == -1,
+                "player flags event envelope");
+            check(wire.type(flags).equals(TestWire.DOB + "CompoundEvent") && flags.readInt() == 201
+                && wire.type(flags).equals("com.threerings.util.StreamableArrayList") && flags.readInt() == 2,
+                "atomic flags and token update");
+            check(wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent") && flags.readInt() == 201
+                && wire.string(flags).equals("flags"), "player flags attribute");
+            check(wire.object(flags).equals(32 | (gm ? 256 : 0) | (hidden ? 1024 : 0)),
+                "notification HUD flag survives role/privacy changes without granting another role");
+            check(wire.type(flags).equals(TestWire.DOB + "AttributeChangedEvent") && flags.readInt() == 201
+                && wire.string(flags).equals("tokens") && wire.object(flags).equals(gm ? 8 : 0)
+                && flags.available() == 0, "support token stays independent of notification HUD");
+        }
         expectFailure(() -> new SessionCodec().bootstrap(0, 1, "127.0.0.1", 47624));
         System.out.println("PASS: bootstrap services, complete player/server/configuration schemas, persistent mappings, ping/pong, malformed messages");
     }

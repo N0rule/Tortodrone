@@ -16,6 +16,24 @@ Trade invitations are limited to two authenticated knights in the same scene. Ac
 
 The notification's Hide button dismisses its client popup while leaving the request pending; the stock client sends no trade response for Hide. Accept and Reject use the native response choices 1 and 0. Invitations expire after 60 seconds and incomplete trades after five minutes. Inventory changes or authentication revocation cancel an incomplete trade. Received stacks retain separate identities rather than merging with existing recipient stacks; capacity checks account for these slots.
 
+In the current installed client, incoming requests produce a chat notice and a
+trade notification icon in the HUD. Click that icon to open the native popup:
+**No thanks** rejects and **Let's trade!** accepts. This client does not open the
+popup automatically when the request arrives. Closing the popup leaves the
+invitation pending.
+
+Version 0.26.1 fixes the hidden notification controls. The stock HUD requires
+`PlayerObject.flags` bit 32 (the native tutorial-completion/HUD gate). The server
+now includes that bit in selected-world flag updates to match its existing direct
+entry into Haven, and preserves it across GM and inspection-privacy changes.
+This is a client UI flag for the intro bypass; it writes no mission completion,
+quest reward, or database schema change. Wire evidence: installed
+`com.threerings.projectx.client.hud.a.bv(boolean)` returns after hiding the
+controls when `PlayerObject.bR(32)` is false; notification director
+`com.threerings.projectx.social.client.m.Yq()` posts chat, and `ce(Class)` opens
+the popup from the icon. Installed `projectx-pcode.jar` SHA-256:
+`391a51cef0446f55d461bdb8f942ca9dba44e6e4138acdcd69ab2024297f543c`.
+
 When both sides accept, item and currency transfer for both owners runs in one SQLite `BEGIN IMMEDIATE` transaction. The server rechecks account ownership, inventory revisions, balances, and recipient capacity in that transaction. A failure rolls back both sides; trade completion does not partially deliver an offer.
 
 ## Inspection privacy
@@ -69,3 +87,23 @@ java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights" \
 The optional map argument runs the stock-client interior travel check in a disposable server deployment. Graphical acceptance is a separate step: launch unchanged stock clients with disposable preferences, cache, home, and server accounts; keep installed resources read-only; and exercise the native client calls through its run queue. Wait for the stock loading fade to finish before inspecting screenshots. Network and stock-reader fixtures do not prove rendering or animations.
 
 The isolated two-client graphical check on 2026-10-10 verified all seven areas rendering with their HUDs/minimaps, the sitting pose, peer Attack effect, inspection preview, and both trade views. All three native party exits received their destination scene models in about 1.2 seconds after the TCP fallback correction. Focus-checked keyboard input verified movement after returning to town and automatic walking entry/exit between Garrison and Hall of Heroes. Other portal routes are covered by the stock network fixture; this does not claim graphical coverage of every emote animation or every portal, or of the excluded systems.
+
+For 0.26.1 on 2026-10-11, the unchanged installed-client suite passed with
+`java scripts/compat/CheckClientWorld.java "/home/n0rule/.local/share/Steam/steamapps/common/Spiral Knights"`.
+This includes the native flag decoder checks, two-player offer revisions and
+atomic item/currency transfers, rejection, dialog cancellation, and disconnect
+cleanup. An isolated Linux graphical recipient with a second native network
+client verified the visible trade icon, real **No thanks / Let's trade!** button
+actions, notification removal, and trade-dialog rendering after the loading
+overlay finished. Throwaway Java probes were run with
+`java /tmp/CheckTradeRendering.java "/home/n0rule/.local/share/Steam/steamapps/common/Spiral Knights" /tmp/tortodrone-trade-final-0261`;
+logs and captures remain in that output folder. Both launchers cleaned up only
+their disposable processes/data. This check does not establish Windows/macOS
+rendering or automatic popup opening, which this installed client does not do.
+
+The first full build exposed a callback-only admin test reader rejecting class
+codes introduced inside inventory payloads it had skipped. Its helper now skips
+those unrelated events while retaining callback identity, method, status, and
+reason assertions; the native F3 authorization/grant checks also passed.
+The final `./gradlew build` passed on Java 25 (74 actionable tasks), and
+`git diff --check` passed.

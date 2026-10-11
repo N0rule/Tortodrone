@@ -297,7 +297,9 @@ public final class SessionCodec {
         return frame(out->{
             eventHeader(out,"CompoundEvent",clientOid);
             type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
-            attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt((enabled?256:0)|(inspectionHidden?1024:0));});
+            // The stock HUD requires TUTORIAL (32) before exposing notification
+            // controls. Knights enter Haven directly here, bypassing the intro.
+            attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt(32|(enabled?256:0)|(inspectionHidden?1024:0));});
             attribute(out,clientOid,"tokens",o->{type(o,"com.threerings.projectx.data.ProjectXTokenRing");o.writeInt(enabled?8:0);});
         });
     }

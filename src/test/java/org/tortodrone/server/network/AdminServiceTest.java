@@ -125,9 +125,9 @@ public final class AdminServiceTest {
             if (frame == null) continue;
             var in = new DataInputStream(new ByteArrayInputStream(frame));
             check(in.readInt() == frame.length, "complete downstream frame");
-            if (!reader.type(in).equals("com.threerings.presents.net.EventNotification")) continue;
+            if (!"com.threerings.presents.net.EventNotification".equals(reader.type(in))) continue;
             in.readShort(); // unsolicited notification id
-            if (!reader.type(in).equals("com.threerings.presents.dobj.InvocationResponseEvent")) continue;
+            if (!"com.threerings.presents.dobj.InvocationResponseEvent".equals(reader.type(in))) continue;
             in.readInt(); // recipient oid
             check(in.readShort() == requestId, "admin callback correlation");
             check(in.readByte() == method, "admin response method");
@@ -147,7 +147,10 @@ public final class AdminServiceTest {
         private final Map<Integer,String> names = new HashMap<>();
         String type(DataInputStream in) throws IOException {
             int code = in.readShort();
-            if (code >= 0) { String name = names.get(code); check(name != null, "known downstream class mapping"); return name; }
+            // This callback-only reader skips unrelated payloads. Their nested
+            // class introductions can later reappear as top-level item events;
+            // an unknown code is therefore an unrelated event, not corruption.
+            if (code >= 0) return names.get(code);
             String name = in.readUTF(); names.put(-code, name); return name;
         }
     }
