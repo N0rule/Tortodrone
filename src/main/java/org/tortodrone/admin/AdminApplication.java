@@ -40,6 +40,10 @@ public final class AdminApplication {
             System.err.println("Account manager: " + failure.getMessage()); System.exit(1);
         }
     }
+    /** Opens a database-backed inspector on the EDT; loading remains in the window worker. */
+    public static void openKnight(Path data,String knight) {
+        SwingUtilities.invokeLater(()->new AdminWindow(data,knight).setVisible(true));
+    }
     private static void command(AccountStore accounts,String[] args) throws IOException {
         if(args[0].equals("--items")&&args.length<=2) {
             System.out.println(org.tortodrone.server.ItemCommands.execute("items"+(args.length==2?" "+args[1]:""),accounts.catalog(),(u,k,c,n)->null));return;

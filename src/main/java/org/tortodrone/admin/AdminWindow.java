@@ -23,35 +23,41 @@ final class AdminWindow extends JFrame {
     private volatile AccountStore accounts;
     private final AccountTableModel model = new AccountTableModel();
     private final JTable table = new JTable(model);
+    private final JTextField accountSearch=new JTextField();
     private final JLabel status = new JLabel("Opening accounts…");
     private final List<JButton> buttons = new ArrayList<>();
     private final List<JButton> selectedButtons = new ArrayList<>();
-    private boolean busy;
+    private boolean busy, closed, replacing;
+    private AccountRows rows;
+    private String requestedKnight;
+    private final KnightPanel knightPanel=new KnightPanel(this);
 
-    AdminWindow(Path directory) {
+    AdminWindow(Path directory) { this(directory,null); }
+    AdminWindow(Path directory,String initialKnight) {
         super("Tortodrone — Account Manager");
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(760,420)); setSize(960,560); setLocationByPlatform(true);
+        requestedKnight=initialKnight;
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1000,600)); setSize(1400,760); setLocationByPlatform(true);
         JPanel content = new JPanel(new BorderLayout(12,12)); content.setBorder(BorderFactory.createEmptyBorder(16,16,16,16)); setContentPane(content);
         JPanel heading = new JPanel(new BorderLayout(8,8));
         JLabel title = new JLabel("Accounts"); title.setFont(title.getFont().deriveFont(Font.BOLD,24f)); heading.add(title,BorderLayout.NORTH);
         heading.add(new JLabel(directory.toAbsolutePath().normalize().resolve("tortodrone.db").toString()),BorderLayout.CENTER);
         JPanel searchPanel = new JPanel(new BorderLayout(8,0)); searchPanel.add(new JLabel("Search username:"),BorderLayout.WEST);
-        JTextField search = new JTextField(); searchPanel.add(search); heading.add(searchPanel,BorderLayout.SOUTH); content.add(heading,BorderLayout.NORTH);
+        JTextField search = accountSearch; searchPanel.add(search); heading.add(searchPanel,BorderLayout.SOUTH); content.add(heading,BorderLayout.NORTH);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); table.setRowHeight(28); table.setFillsViewportHeight(true);
         var sorter = new TableRowSorter<>(model); table.setRowSorter(sorter); table.getColumnModel().getColumn(0).setMaxWidth(80); table.getColumnModel().getColumn(2).setMaxWidth(80);
-        content.add(new JScrollPane(table));
+        JSplitPane split=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,new JScrollPane(table),knightPanel);split.setResizeWeight(.4);content.add(split);
         search.getDocument().addDocumentListener(new DocumentListener() {
             private void update() { sorter.setRowFilter(search.getText().isEmpty() ? null : RowFilter.regexFilter("(?i)"+Pattern.quote(search.getText()),1)); }
             public void insertUpdate(DocumentEvent event) { update(); } public void removeUpdate(DocumentEvent event) { update(); } public void changedUpdate(DocumentEvent event) { update(); }
         });
-        table.getSelectionModel().addListSelectionListener(event -> enableActions());
+        table.getSelectionModel().addListSelectionListener(event -> { enableActions(); if(!event.getValueIsAdjusting()&&!replacing&&!busy)selectAccount(); });
         JPanel footer = new JPanel(new BorderLayout(0,10)); JPanel actions = new JPanel(new GridLayout(2,4,6,6));
         button(actions,"Create account",false,this::create); button(actions,"Change password",true,this::password);
         button(actions,"Check password",true,this::check); button(actions,"Set Game Master",true,this::gameMaster);
         button(actions,"Currency",true,this::currency); button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
         button(actions,"Delete knight",true,this::deleteKnight);
         footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
-        addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { if (accounts != null) accounts.close(); } });
+        addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { closed=true; if (!busy && accounts != null) accounts.close(); } });
         execute(() -> { accounts = new AccountStore(directory); return loadRows(); },this::loaded);
     }
     private void button(JPanel panel,String text,boolean selection,Runnable action) {
@@ -70,8 +76,19 @@ final class AdminWindow extends JFrame {
         return new AccountRows(rows, names);
     }
     private void loaded(AccountRows rows) {
+        var previous=selected();this.rows=rows;replacing=true;
         model.replace(rows.accounts(), rows.knightNames());
-        status.setText(rows.accounts().isEmpty() ? "No accounts. Create an account to enable normal login." : rows.accounts().size()+" accounts"); enableActions();
+        int wanted=previous==null?-1:previous.id();
+        if(requestedKnight!=null) for(var entry:rows.knightNames().entrySet())if(entry.getValue().stream().anyMatch(n->n.equalsIgnoreCase(requestedKnight)))wanted=entry.getKey();
+        for(int i=0;i<model.getRowCount();i++)if(model.account(i).id()==wanted){int view=table.convertRowIndexToView(i);if(view>=0)table.setRowSelectionInterval(view,view);break;}
+        if(table.getSelectedRow()<0&&table.getRowCount()>0)table.setRowSelectionInterval(0,0);
+        replacing=false;
+        status.setText(rows.accounts().isEmpty() ? "No accounts. Create an account to enable normal login." : rows.accounts().size()+" accounts"); enableActions();selectAccount();
+    }
+    private void selectAccount() {
+        var selected=selected();if(selected==null||rows==null){knightPanel.clear();return;}
+        String requested=requestedKnight;requestedKnight=null;
+        knightPanel.account(selected,rows.knightNames().getOrDefault(selected.id(),List.of()),requested);
     }
     private void refresh() { execute(this::loadRows,this::loaded); }
     private JPanel form(Object... rows) {
@@ -114,28 +131,7 @@ final class AdminWindow extends JFrame {
         boolean gameMaster = flag.isSelected();
         execute(() -> { accounts.setGameMaster(account.username(),gameMaster,account.id()); return loadRows(); },rows -> { loaded(rows); status.setText("Game Master status updated."); });
     }
-    private void currency() {
-        var account = selected(); if (account == null) return;
-        execute(() -> accounts.knights(account.username()),knights -> {
-            if (knights.isEmpty()) { message("This account has no characters.",false); return; }
-            JComboBox<String> knight = new JComboBox<>(knights.stream().map(Knight::name).toArray(String[]::new));
-            if (JOptionPane.showConfirmDialog(this,form("Character",knight),"Character balances — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
-            String name = (String)knight.getSelectedItem();
-            execute(() -> accounts.worldProfile(account.username(),name),profile -> {
-                JComboBox<Currency> currency = new JComboBox<>(Currency.values());
-                JComboBox<String> operation = new JComboBox<>(new String[]{"Give","Withdraw"});
-                JTextField amount = new JTextField("1",12);
-                JPanel form = form("Current balances",new JLabel("Crowns: "+profile.crowns()+"  Energy: "+profile.energy()),"Currency",currency,"Operation",operation,"Amount",amount);
-                if (JOptionPane.showConfirmDialog(this,form,"Currency — "+name,JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
-                long value;
-                try { value=Long.parseLong(amount.getText().trim()); if(value<=0 || value>Integer.MAX_VALUE)throw new NumberFormatException(); }
-                catch(NumberFormatException invalid){message("Amount must be between 1 and 2147483647.",true);return;}
-                long delta = operation.getSelectedIndex()==0 ? value : -value;
-                Currency selectedCurrency=(Currency)currency.getSelectedItem();
-                execute(() -> accounts.currency(account.username(),name,selectedCurrency,delta,account.id(),profile.worldId()),result -> status.setText(name+" — Crowns: "+result.crowns()+" | Energy: "+result.energy()));
-            });
-        });
-    }
+    private void currency() { knightPanel.currency(); }
 
     private void delete() {
         var account = selected(); if (account == null) return;
@@ -157,20 +153,22 @@ final class AdminWindow extends JFrame {
             });
         });
     }
-    private void message(String text,boolean error) { JOptionPane.showMessageDialog(this,text,"Tortodrone",error ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE); }
-    @FunctionalInterface private interface Work<T> { T run() throws Exception; }
-    private <T> void execute(Work<T> work,Consumer<T> success) {
-        if (busy) return; busy = true; table.setEnabled(false); enableActions(); status.setText("Working…");
+    void message(String text,boolean error) { JOptionPane.showMessageDialog(this,text,"Tortodrone",error ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE); }
+    @FunctionalInterface interface Work<T> { T run() throws Exception; }
+    AccountStore accounts() { return accounts; }
+    boolean selectedAccount(int id) { var current=selected();return current!=null&&current.id()==id; }
+    <T> void execute(Work<T> work,Consumer<T> success) {
+        if (busy || closed) return; busy = true; table.setEnabled(false); accountSearch.setEnabled(false); knightPanel.busy(true); enableActions(); status.setText("Working…");
         new SwingWorker<T,Void>() {
             @Override protected T doInBackground() throws Exception { return work.run(); }
             @Override protected void done() {
-                busy = false; table.setEnabled(true);
-                try { success.accept(get()); }
+                busy = false; table.setEnabled(true); accountSearch.setEnabled(true); knightPanel.busy(false);
+                try { T value=get(); if (!closed) { status.setText("Ready."); success.accept(value); } }
                 catch (InterruptedException failure) { Thread.currentThread().interrupt(); status.setText("Operation interrupted."); }
                 catch (ExecutionException failure) {
                     String reason = failure.getCause() instanceof IOException ? failure.getCause().getMessage() : "Operation failed.";
-                    status.setText(reason); if (isDisplayable()) message(reason,true);
-                } finally { enableActions(); }
+                    if (!closed) { status.setText(reason); if (isDisplayable()) message(reason,true); }
+                } finally { if (closed && accounts != null) accounts.close(); else enableActions(); }
             }
         }.execute();
     }
