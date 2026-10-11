@@ -38,6 +38,7 @@ Run `./gradlew build` with **JDK 25**; the installed game is never modified. Use
 - [README](../README.md): install, run, config and backups.
 - [Architecture](server-architecture.md): deeper thread, state and wire invariants.
 - [Development](development.md): test commands, load-test configuration, stock-client/graphical isolation.
+- [Local archive reference](reference-inputs.md) and [retrieval index](reference-inputs-index.json): curated offline source, tools and capture evidence at the pinned local archive; read for feature research.
 - [Server research](server-research.md): upstream protocol evidence; [feature investigations](server-milestones.md) and [town-entry investigation](town-entry-investigation.md).
 - [Maps](maps.md), [game data](game-data.md), [admin](administration.md), [client connection](client-redirection.md), [dependencies](dependencies.md): read only for related tasks.
 - Historical full milestone/architecture/testing text is available in **Git history** (`git show HEAD:docs/PROJECT.md`, etc., if the current HEAD retains it), not duplicated under `docs/history/`.
