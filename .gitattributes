@@ -1,2 +1,8 @@
 /gradlew text eol=lf
 /gradlew.bat text eol=crlf
+
+# Manifests hash the exact on-disk bytes. Keep all default text resources at LF
+# regardless of core.autocrlf (including Windows checkouts).
+/defaults/**/*.properties text eol=lf
+/defaults/**/*.tsv text eol=lf
+/defaults/**/*.json text eol=lf

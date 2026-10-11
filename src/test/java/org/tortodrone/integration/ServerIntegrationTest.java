@@ -452,11 +452,35 @@ public final class ServerIntegrationTest {
         }
 
         @Override public void close() throws Exception {
+            // waitFor() establishes that the child has exited before Windows deletes its JAR.
+            if (!process.isAlive()) {
+                process.waitFor();
+                return;
+            }
+
+            boolean gracefulRequested = false;
+            try {
+                send("stop\n");
+                gracefulRequested = true;
+            } catch (IOException closedInput) {
+                // ConsoleIntegrationTest intentionally closes stdin to test EOF.
+                // The server is still alive; terminate it below instead.
+            }
+
+            if (gracefulRequested && process.waitFor(10, TimeUnit.SECONDS)) {
+                if (process.exitValue() != 0) {
+                    throw new AssertionError("Server exited with code " + process.exitValue());
+                }
+                return;
+            }
+
             process.destroy();
             if (!process.waitFor(5, TimeUnit.SECONDS)) {
                 process.destroyForcibly();
                 process.waitFor();
-                throw new AssertionError("Server failed to shut down cleanly");
+            }
+            if (gracefulRequested) {
+                throw new AssertionError("Server did not shut down gracefully after stop command");
             }
         }
     }

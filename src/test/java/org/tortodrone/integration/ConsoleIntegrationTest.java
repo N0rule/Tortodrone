@@ -109,10 +109,13 @@ public final class ConsoleIntegrationTest {
             }
             String log = Files.readString(directory.resolve("data/logs/latest.log"));
             check(log.contains("Server stopped.") && !log.contains("console-password") && !log.contains("inline-secret") && !log.contains("help-password") && !log.contains(TestClient.passwordHash("console-password")),"console logs lifecycle, never password arguments or prompts' values");
-            try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {
-                server.ready(); server.process.getOutputStream().close(); server.await("Terminal input closed; server remains running");
-                check(server.process.isAlive(),"redirected stdin EOF leaves service running");
+            ServerIntegrationTest.Running eofServer = new ServerIntegrationTest.Running(jar,config,directory);
+            try (eofServer) {
+                eofServer.ready(); eofServer.process.getOutputStream().close();
+                eofServer.await("Terminal input closed; server remains running");
+                check(eofServer.process.isAlive(),"redirected stdin EOF leaves service running");
             }
+            check(!eofServer.process.isAlive(),"EOF test subprocess exits before temporary JAR cleanup");
             System.out.println("PASS: running server terminal commands, password prompts, Game Master roles, reset revocation, delete confirmation, stop and closed stdin");
         } finally {
             worker.shutdownNow();

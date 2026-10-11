@@ -40,7 +40,7 @@ public final class Passwords {
         finally { Arrays.fill(bytes, (byte) 0); if (utf8.hasArray()) Arrays.fill(utf8.array(), (byte) 0); }
     }
     public static void validate(char[] password) throws IOException {
-        if (password == null || password.length < 8 || password.length > 128) throw new IOException("Passwords need 8–128 characters");
+        if (password == null || password.length < 8 || password.length > 128) throw new IOException("Passwords need 8-128 characters");
         for (char c : password) if (Character.isISOControl(c)) throw new IOException("Password contains control characters");
     }
 }

@@ -30,7 +30,7 @@ public final class AdminIntegrationTest {
             command(admin,directory,"wrong-password\n",true,"Password does not match.","--check-password","Owner");
             command(admin,directory,"",true,"1\tOwner\ttrue\t","--list-accounts");
             command(admin,directory,"invalid\n",false,"did not match","--delete-account","Owner");
-            command(admin,directory,"bad\nbad\n",false,"8–128","--set-password","Owner");
+            command(admin,directory,"bad\nbad\n",false,"8-128","--set-password","Owner");
             Path data = directory.resolve("data"), config = data.resolve("server.properties");
             Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
             try (var running = new ServerIntegrationTest.Running(server,config,directory)) {
