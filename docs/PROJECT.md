@@ -1,6 +1,6 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.6, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.26.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
@@ -8,9 +8,11 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 
 ## Current recorded baseline
 
+- 0.26.0 local administration milestone: automatic desktop server control with explicit `--gui`/`--nogui` modes, shared start/stop/exit lifecycle, verified live session identities, scene-template/instance snapshots, measured performance and bounded docked logs. Account manager adds selectable knights, searchable inventory/catalogue, grants, confirmed quantity/removal and Add/Remove/Set balances. Console adds `players`, `session`, `inspect`, `grant` and `set`; legacy forms remain supported. Item names/categories/aliases are derived from catalogue metadata without wire or JSON changes. UTF-8 size rotation is configurable. Linux full build, stock-client networking/rendering and isolated Swing acceptance passed; Windows/macOS remain unverified. See [audit, files and validation](administration-overhaul.md), [desktop controls](server-gui.md), [commands](commands.md) and [logging](logging.md).
+
 - 0.25.6 cleanup: accepted client handlers drain before account/log/deployment-lock cleanup; stock-tool subprocesses are confirmed exited before disposable files are removed, including interrupted waits. The preview tool uses the Gradle-built JAR. [Repository audit and remaining risks](repository-audit.md) records the findings and validation.
 
-- Java 25 Gradle Kotlin DSL build; executable server/admin JARs; isolated standalone regression suite. Normal resource-fallback warnings are consolidated; debug includes recovery/storage details. Console history includes invalid/incomplete input, with grouped and command-specific help. Startup hints use Gradle and respect the active log mode. Admin lists knight names; console supports `ac` and `gm <account>` toggles; console/chat grants accept globally unique knight names with legacy account-qualified forms retained.
+- Java 25 Gradle Kotlin DSL build; executable server/admin JARs; isolated standalone regression suite. Normal resource-fallback warnings are consolidated; debug includes recovery/storage details. Console history includes invalid/incomplete input, with grouped and command-specific help. Startup hints use Gradle and respect the active log mode. Admin lists knight names and browses their inventory; console supports `ac` and `gm <account>` toggles; console/chat grants accept globally unique knight names with legacy account-qualified forms retained.
 - RSA/AES authentication; one active session/account; case-insensitive unique knight names; persisted account/roster/character/inventory/currency; creation/selection/deletion; local admin and GM commands.
 - Four imported Haven districts: Town Square, Bazaar, Arcade, Garrison; **ten native portal transitions**, checked external map/collision packs, server-authoritative movement and static collision. Independent scene instances, shared `SceneSimulation` tick (**50 ms**) and per-recipient actor delta state, bounded output queues and shared revision/role polling.
 - Inventory, Arsenal, equipment/costumes/trinkets, binding/stacks, live visual updates; v2 catalogue grants 8,570 of 9,348 indexed definitions, including native seed artifacts and locked items; scene chat, private tells, broadcasts, sitting/emotes recorded through the last committed milestone as applicable. Intro missions bypassed **without inventing completion/rewards**.
@@ -41,7 +43,7 @@ modern loop execution remain unsupported; see [town player behavior](town-player
 
 ## Architecture and correctness essentials
 
-- `server/Server`, `server/network/{ClientSession,WorldSession,SessionOutput,WorldStatePoller}`: listener, login, connection/subscription lifecycle and output. `protocol/{HandshakeCodec,SessionCodec,SessionDecoder}`: Narya/Presents framing and serialized service/event messages.
+- `server/{Server,ServerControl,ServerOptions,ServerWindow,SessionRegistry,ServerLog}`, `server/network/{ClientSession,WorldSession,SessionOutput,WorldStatePoller}`: listener, login, connection/subscription lifecycle and output. `protocol/{HandshakeCodec,SessionCodec,SessionDecoder}`: Narya/Presents framing and serialized service/event messages.
 - `world/{SceneSimulation,SceneCatalog,SceneRegistry,TownMovement,CollisionMap}`: simulation, snapshots, maps/instances, server-side movement, portal crossing; scene instance owns mutable simulation state. `account/AccountStore`, `character/CharacterStore`, `storage/Database`: auth, characters, SQLite state; `admin/` and `resources/` for local administration/default packs.
 - **Identifiers have different scopes:** account-local roster, global knight/actor, item instance, scene object and connection-local distributed object; never exchange them blindly. Only authenticated owners may mutate private data; login takeover, auth revision and GM authorization checks must survive reconnect/disconnect races.
 - SQLite schema **8**, WAL, foreign keys, transaction rollback and `BEGIN IMMEDIATE` writes. Durable changes precede notifications. Never rewrite real data as a test or auto-migrate unrecognized schemas.
@@ -59,5 +61,5 @@ Run `./gradlew build` with **JDK 25**; the installed game is never modified. Use
 - [Development](development.md): test commands, load-test configuration, stock-client/graphical isolation.
 - [Local archive reference](reference-inputs.md) and [retrieval index](reference-inputs-index.json): curated offline source, tools and capture evidence at the pinned local archive; read for feature research.
 - [Server research](server-research.md): upstream protocol evidence; [feature investigations](server-milestones.md) and [town-entry investigation](town-entry-investigation.md).
-- [Maps](maps.md), [game data](game-data.md), [admin](administration.md), [client connection](client-redirection.md), [dependencies](dependencies.md): read only for related tasks.
+- [Server GUI](server-gui.md), [commands](commands.md), [logging](logging.md), [maps](maps.md), [game data](game-data.md), [admin](administration.md), [client connection](client-redirection.md), [dependencies](dependencies.md): read only for related tasks.
 - Historical full milestone/architecture/testing text is available in **Git history** (`git show HEAD:docs/PROJECT.md`, etc., if the current HEAD retains it), not duplicated under `docs/history/`.

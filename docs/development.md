@@ -28,6 +28,32 @@ The pinned Gradle Wrapper uses Java 25. Dependency/plugin checksums are in `grad
 
 Before commit: add focused regression, run `./gradlew build`, run relevant compat/graphical checks, inspect `git diff` and `git diff --check`; update only current docs, commit major milestones, bump `VERSION` for behavioral releases only. Record commands/results, actual limitations and stopped processes.
 
+## Opt-in local desktop acceptance
+
+The local Swing server/account-manager acceptance fixture is outside normal
+`build` and `test` tasks. Build its packaged code/classes, then choose a fresh,
+nonexistent output folder under `/tmp`:
+
+```sh
+./gradlew buildServer buildAdmin testClasses
+java --enable-native-access=ALL-UNNAMED -cp 'build/tortodrone.jar:.build/classes/java/test' org.tortodrone.server.DesktopCheck /tmp/tortodrone-desktop-check-0260
+```
+
+Run from the repository root on a real graphical desktop with Java 25. The fixture
+copies deployment/defaults into its disposable folder, creates test accounts,
+isolates home/preferences and runs only its own child JVM windows/server. It
+checks actual Swing windows, session snapshots, structured log display, command
+transactions, catalogue grants, balance changes and stop/start/exit. It retains
+`desktop.log` and component-rendered `server.png`, `scenes.png`, `performance.png`,
+`catalogue.png` and `inventory.png`. Its captures use Swing component rendering (`printAll`) rather
+than screen capture, avoiding the Wayland screencast portal. Review the captures;
+they do not prove native desktop compositor/focus behavior or game rendering.
+
+This fixture does not launch the stock game. Native stock-client graphical
+acceptance remains separate and follows the isolated procedures below. Linux
+Swing acceptance and unchanged-client rendering passed for 0.26.0; Windows/macOS
+graphical environments were unavailable. See [actual validation](administration-overhaul.md).
+
 ## Load testing
 
 ```sh

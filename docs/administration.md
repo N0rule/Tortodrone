@@ -1,17 +1,27 @@
 # Local administration
 
 Run `java -jar build/tortodrone-admin.jar` on the server PC. It manages accounts
-and per-knight currencies in the same SQLite database as the server, with no
+and per-knight inventory/currencies in the same SQLite database as the server, with no
 remote admin endpoint. It can run alongside the server once the database is
 initialized. Use `--data /path/to/server/data` if the JARs are stored separately.
 On niri, the GUI sets its Java window-manager compatibility flag automatically.
 
 ## Server terminal
 
+The server opens its local control window by default when a desktop is available;
+headless hosts use terminal mode. `--nogui` forces terminal hosting; `--gui`
+requires a desktop. Both accept `--config`; help/version do not open a window.
+See [server GUI and lifecycle](server-gui.md), [all local commands](commands.md)
+and [logging](logging.md). The GUI command field shares terminal command services,
+but password and confirmed deletion commands direct you to the account manager.
+
+
 Enter commands in the running server, not the shell. A leading `/` is optional. `ac` is an alias for `account` (for example, `ac list`).
 
 | Command | Action |
 | --- | --- |
+| `players`, `session <session-id>`, `inspect <knight-name>` | Live sessions, verified identities/locations and stored knight state |
+| `grant Saved-Knight crowns -25`, `set Saved-Knight energy 500` | Recommended relative/absolute balance changes by globally unique name |
 | `help`, `status`, `stop` | Commands, status/account count, clean shutdown |
 | `account list` | IDs, usernames, Game Master roles, character counts |
 | `account create Alice [gm]` | Create; prompt twice for a password |
@@ -47,7 +57,16 @@ Console/CLI commands are local administration and do not require an account
 role. The CLI accepts `--items Calibur` and
 `--give-item Alice Saved-Knight 2 "Weapon/Sword/Calibur"`; only shell commands quote
 multiword references. See [catalogue preparation and supported item limits](game-data.md).
-The Swing manager and `--list-accounts` list each account’s knight names, separated by commas. It does not yet have an item-grant dialog.
+The account list and `--list-accounts` show saved knight names. In the Swing
+manager, selecting an account opens its knight list; selecting a knight shows
+owner/roster/world IDs, balances and searchable inventory. Inventory rows show
+friendly names, actual catalogue types, canonical paths, instance IDs, quantities,
+binding and equipped slots. Add item searches the catalogue with category filters
+and paging, explains unavailable definitions and grants 1–20 unequipped items.
+Set quantity and Remove item require confirmation and use transactional identity
+checks; starter, permanent and equipped instances are protected. Currency supports
+Add, Remove and Set, including setting a balance to zero. Account/password/role and
+exact-name deletion actions retain their existing services and safeguards.
 
 For headless administration, run `java -jar build/tortodrone-admin.jar --help`.
 Its CLI supports list/create/check/reset/delete/role actions, with `--data` before
@@ -162,12 +181,17 @@ Master nameplate badge remains independent of these powers.
 
 ## Server logs
 
-`normal` records startup/readiness, account/character lifecycle, warnings and errors.
+`normal` records measured startup/readiness, connections, verified account/knight
+identities, scene transitions, administration outcomes, warnings and errors.
 Unavailable maps/items produce one resource-fallback warning describing the effect.
 `debug` also records configuration/storage paths, default-resource recovery details,
-scene IDs, connection lifecycle and protocol message types. Each connection logs
+scene/resource timings, storage diagnostics and protocol message types. Each connection logs
 its disconnection once. Neither mode records passwords or authentication payloads.
 Set `log-mode=normal` or `log-mode=debug` in `data/server.properties` and restart.
+UTF-8 `latest.log` rotates to numbered `server-N.log` files: `log-max-mib=10`
+(default, range 1–1024), `log-retention=5` (default, range 1–100). The GUI filter,
+pause, Clear view and Debug checkbox do not change disk logging. See
+[logging settings, ID scopes and privacy](logging.md).
 
 ## State and backup
 
@@ -185,7 +209,9 @@ accounts. Use a fresh data directory when adopting this release from an older
 schema; preserve the original data and keys as backups. No data is discarded by
 the tools.
 
-Item catalogues must use version 1 JSON. Regenerate an older catalogue with the Java exporter.
+Item catalogues are exported as version 2 JSON; version 1 reading remains supported.
+Derived friendly names, category aliases and inspection/search do not add JSON or
+wire fields. See [catalogue identity and availability](game-data.md).
 Equipped starters are bound; equipping applies the stored bind-on-equip rule and
 unequipping retains binding. Reopening never regrants kits or re-equips items.
 Preserve external `defaults/` and optional custom `items/` and `maps/` with the deployment.

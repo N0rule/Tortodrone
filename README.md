@@ -4,7 +4,7 @@ Clean-room **Java 25 Spiral Knights server emulator** plus local account manager
 
 ## Current state (verify `VERSION` and Git)
 
-At **0.25.6 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), ten native walking portals, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
+At **0.26.0 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), ten native walking portals, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
 
 **Not implemented at the recorded checkpoint:** general missions, NPC services, shops, crafting/item use, dungeon/gate gameplay, position persistence, custom news and broad social features. The [current project handoff](docs/PROJECT.md) records the supported scope and remaining limits; inspect Git before choosing work. Older milestone detail is available in Git history.
 
@@ -36,7 +36,7 @@ java -jar build/tortodrone-admin.jar
 java -jar build/tortodrone.jar
 ```
 
-Create a local account with the admin application before connecting. Type `stop` or Ctrl+C to stop the server. Both executable JARs include SQLite JDBC 3.53.4.0 and JLine 4.4.7, their service providers, native libraries and license notices. No manual classpath is needed.
+Create a local account with the admin application before connecting. The server opens its local control window when a desktop is available, and uses terminal mode on headless systems. Use `--nogui` for terminal hosting or `--gui` to require a desktop; either accepts `--config path/to/server.properties`. Toolkit initialization failure falls back to terminal mode. `--help` and `--version` print information without a window. In terminal mode, type `stop` or Ctrl+C to stop hosting. In graphical mode, Stop leaves the window available for Start; closing it confirms server shutdown and exit. See [desktop controls](docs/server-gui.md). Both executable JARs include SQLite JDBC 3.53.4.0 and JLine 4.4.7, their service providers, native libraries and license notices. No manual classpath is needed.
 
 Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 
@@ -46,6 +46,7 @@ Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 ./gradlew runServer               # packaged server, data beside build JAR
 ./gradlew runAdmin                # packaged admin (graphical desktop required)
 ./gradlew runServer --args="--help"
+./gradlew runServer --args="--nogui" # terminal mode; uses real build/data
 ./gradlew testUnit                # all standalone unit programs
 ./gradlew testIntegration         # disposable packaged server/admin and preparation tests
 ./gradlew test                    # both test groups; build also runs these
@@ -79,9 +80,11 @@ server-ip=0.0.0.0
 server-port=47624
 max-clients=16
 log-mode=normal
+log-max-mib=10
+log-retention=5
 ```
 
-`max-clients` range 1–1024; `--config` changes the settings-file path, **not** data directory. Logs: `data/logs/latest.log`. Admin manager accepts `--data /path/to/server/data`; it opens no network admin port. `help` in the server terminal lists commands. [Admin details](docs/administration.md), [item data](docs/game-data.md).
+`max-clients` range 1–1024; `--config` changes the settings-file path, **not** data directory. UTF-8 logs rotate from `data/logs/latest.log` to `server-1.log` and older numbered files; `log-max-mib` accepts 1–1024 and `log-retention` accepts 1–100. See [logging/privacy](docs/logging.md). Admin manager accepts `--data /path/to/server/data`; it opens no network admin port. `help` in the terminal or graphical command field lists commands. The account manager now browses accounts, knights and inventory, searches the item catalogue, grants unequipped items and adjusts item quantities and balances through the shared storage services. The server panel shows live sessions, scene templates/instances and measured performance, with docked logs. [Commands](docs/commands.md), [Admin details](docs/administration.md), [item data](docs/game-data.md).
 
 ## Backups, development and references
 

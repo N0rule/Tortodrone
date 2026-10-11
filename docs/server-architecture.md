@@ -1,11 +1,12 @@
 # Server architecture — concise map
 
-**Authoritative reference:** current Java 25 source, tests and Git. This describes the recorded 0.25.6 baseline; in-progress changes may differ. Earlier detailed architectural notes remain in Git history; consult them only if the current code and this summary are insufficient.
+**Authoritative reference:** current Java 25 source, tests and Git. This describes the 0.26.0 administration milestone; [validation and limits](administration-overhaul.md) record Linux acceptance. Earlier detailed architectural notes remain in Git history; consult them only if the current code and this summary are insufficient.
 
 ## Code map (`src/main/java/org/tortodrone/`)
 
 | Area | Entry points |
 | --- | --- |
+| Lifecycle/observability | `server/ServerOptions`, `ServerControl`, `ServerWindow`, `SessionRegistry`, `RuntimeMetrics`, `ServerLog` |
 | Listener/auth | `server/Server`, `ClientConnections`, `server/security/HandshakeKeys`, `server/network/SecureHandshake` |
 | Connection and routing | `server/network/ClientSession`, `WorldSession`, `SessionOutput`, `WorldStatePoller` |
 | Wire | `protocol/HandshakeCodec`, `SessionCodec`, `SessionDecoder` |
@@ -14,7 +15,7 @@
 | Instances/physics | `world/SceneCatalog`, `SceneRegistry`, `SceneSimulation`, `CollisionMap`, `TownMovement`, `ActorState`, `SceneClock` |
 | Interior controls/projectiles | `world/KnightCombat`, `SceneWeapons`, `WeaponCatalog`, `EquipmentCatalog`, `FireCatalog` |
 | Player trading | `server/network/PlayerTrades`, `storage/TradeTransfer` |
-| Resources/admin | `resources/DefaultResources`; `admin/AdminApplication`, `AdminWindow`; `config/ServerSettings` |
+| Resources/admin | `resources/DefaultResources`; `admin/AdminApplication`, `AdminWindow`, `KnightPanel`; `config/ServerSettings` |
 
 ## Hard invariants
 
@@ -26,6 +27,35 @@
 - Only owned subscriptions/object receivers may be registered; never publish another account's private roster or accept client coordinates/activities as authoritative. Register observer plus initial snapshot atomically with mutation ordering.
 - `SessionOutput` serializes in mapping/frame order; one writer and bounded 64-frame queue isolate slow clients; do not hold account/store/simulation locks during socket I/O or cross-session callbacks.
 - `ClientConnections` closes all owned sockets, then waits for handler cleanup before accounts, logs and the deployment lock are released. Main and the JVM shutdown hook drain without holding the registry/log monitors; main waits for the hook's final message if shutdown has started. Interrupted cleanup still drains and restores the interrupt flag. SQLite connections are scoped per operation rather than held by `AccountStore`.
+
+## Local control and observation
+
+`ServerOptions` selects AUTO desktop detection, explicit GUI or explicit terminal
+mode without changing listener/gameplay semantics. `ServerControl` owns lifecycle
+state and listener cancellation; the GUI observes snapshots rather than parsing
+logs. Stop drains the existing client/account cleanup path before another Start.
+Exit closes hosting and the desktop; there is no detached tray host. Terminal mode
+uses the same command services and exits after stopping.
+
+`SessionRegistry` stores operational connection identities, populated only after
+verified authentication/selection. Connection IDs, global knight/world IDs,
+account-local roster IDs and scene template/instance IDs remain distinct. It does
+not own authentication or gameplay state. Measured JVM/host metrics and SQLite
+operation diagnostics are observation, not capacity guarantees.
+
+Desktop storage and command work runs off the Swing thread. Account inventory
+mutations call the existing transactional services with captured account/world
+identity guards and publish through state revisions. Quantity/removal refuses
+starter, permanent and equipped items. Password/reset/delete use existing account
+services and confirmations; the graphical server command field redirects prompt
+operations to the account manager.
+
+Structured log subscribers enqueue into a bounded GUI queue (4096 events), with
+1500 retained view events and 120 metric samples. UTF-8 disk logs have configurable
+size/retention limits and POSIX access restrictions where supported. Database
+observers run after operation connection cleanup and never log SQL arguments or
+credentials. See [GUI lifecycle](server-gui.md), [command boundaries](commands.md)
+and [logging/privacy](logging.md).
 
 ## World and events
 
