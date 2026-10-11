@@ -3,7 +3,9 @@ package org.tortodrone.protocol;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /** A bounded, explicit Presents subset. Never loads classes named by the peer. */
 public final class SessionDecoder {
@@ -15,7 +17,12 @@ public final class SessionDecoder {
     private static final String DOB = "com.threerings.presents.dobj.";
     private static final String INV = "com.threerings.presents.data.InvocationMarshaller$";
     private final Types types;
+    private final Interns interns;
+    private final Map<Integer,String> mapped = new LinkedHashMap<>();
     private int nodes;
+
+    /** Single-table decoder for isolated fixtures; the connection mapping belongs to the caller. */
+    SessionDecoder(Types types) { this.types = types; interns = null; }
 
     public sealed interface Event permits Compound, Mutation, Invocation, Input { int oid(); }
     public record Compound(int oid, List<Event> events) implements Event { }
@@ -30,9 +37,17 @@ public final class SessionDecoder {
     public record Registration(String code, short id) { }
     public record Listener(String type, short requestId) { }
     public record EnumValue(String type, int ordinal) { }
+    /** Stock ConfigReference: an interned config name plus its streamed argument map. */
+    public record ConfigReference(String name, Map<String,Object> arguments) {
+        public ConfigReference {
+            arguments = arguments == null ? Map.of() : Map.copyOf(arguments);
+        }
+    }
 
     @FunctionalInterface interface Types { String read(DataInputStream in) throws IOException; }
-    SessionDecoder(Types types) { this.types = types; }
+    @FunctionalInterface interface Interns { String read(DataInputStream in) throws IOException; }
+
+    SessionDecoder(Types types, Interns interns) { this.types = types; this.interns = interns; }
 
     List<HandshakeCodec.SessionRequest> decode(byte[] body) throws IOException {
         DataInputStream in = new DataInputStream(new ByteArrayInputStream(body));
@@ -138,6 +153,8 @@ public final class SessionDecoder {
             case "java.lang.Long" -> in.readLong();
             case "java.lang.Float" -> in.readFloat();
             case "com.threerings.util.Name" -> string(in);
+            case "com.threerings.config.ConfigReference" -> configReference(in,depth);
+            case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
             case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List" -> values(in, depth);
             case "com.threerings.projectx.data.ProjectXCodes$KnightHeight" -> enumeration(in, type, 5);
             case "com.threerings.projectx.data.ProjectXCodes$EyeType" -> enumeration(in, type, 47);
@@ -159,6 +176,36 @@ public final class SessionDecoder {
         };
     }
 
+    private SessionDecoder.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
+        String name=intern(in);
+        return new SessionDecoder.ConfigReference(name,argumentMap(in,depth));
+    }
+    private Map<String,Object> argumentMap(DataInputStream in,int depth)throws IOException {
+        limit(depth);
+        check("com.threerings.config.ArgumentMap".equals(types.read(in)),"Expected argument map");
+        return argumentEntries(in,depth);
+    }
+    private Map<String,Object> argumentEntries(DataInputStream in,int depth)throws IOException {
+        int size=count(in);var arguments=new LinkedHashMap<String,Object>();
+        for(int index=0;index<size;index++) {
+            String key=intern(in);
+            check(key!=null,"Missing argument map key");
+            arguments.put(key,value(in,depth+1));
+        }
+        return Collections.unmodifiableMap(arguments);
+    }
+    /** Narya string interning: a positive code repeats, a negative code introduces a new string.
+     * The mapping belongs to the connection like the class codes, not to a single frame. */
+    private String intern(DataInputStream in)throws IOException {
+        if(interns!=null)return interns.read(in);
+        int code=in.readShort();
+        if(code<0) {
+            check(-code==mapped.size()+1,"Sequential string intern mapping");
+            String value=in.readUTF();mapped.put(-code,value);return value;
+        }
+        String value=mapped.get(code);
+        check(value!=null,"Known string intern mapping");return value;
+    }
     private void limit(int depth) throws IOException {
         check(depth <= 8 && ++nodes <= 512, "Session nesting or element limit exceeded");
     }

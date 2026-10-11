@@ -89,6 +89,73 @@ rows are removed. Picker deletion still refuses online knights.
   changes update online player/occupant metadata within about 250 ms; permission
   checks read storage immediately. Normal players cannot broadcast or grant roles.
   Password reset/deletion revokes sessions within about 250 ms and blocks stale saves.
+- The original stock F3 Game Master dashboard opens for such accounts; see
+  [Game Master dashboard](#game-master-dashboard) below.
+
+## Game Master dashboard
+
+The unmodified client's own **F3** dashboard, `AdminDashboard`, is served by the stock
+`com.threerings.projectx.admin.data.ProjectXAdminMarshaller`. The server advertises it as
+service 13 in the bootstrap notification, so `requireService` resolves it exactly as the
+shipped client expects. No custom panel, endpoint or protocol is involved.
+
+### Give your own account the role
+
+Roles live on the **account**, never on a knight, and are only assigned explicitly from the
+server side. Choose one:
+
+```sh
+# While the server is stopped (local tool, disposable data for tests):
+java -jar build/tortodrone-admin.jar --create-account Alice --gm
+java -jar build/tortodrone-admin.jar --set-gm Alice true
+
+# In the running server's terminal:
+gm Alice                 # or: account gm Alice true
+```
+
+Revoke with `gm Alice false`, `--set-gm Alice false`, or `account gm Alice false`. The change
+takes effect for a logged-in account within about 250 ms; a knight keeps its appearance and
+position. Nothing grants the role automatically, and ordinary accounts never see the dashboard.
+
+### Open ItemCreator
+
+1. Point the stock client at this server (`game.endpoint`, `game.port`,
+   `game.publicKey` = `build/data/keys/public.txt`).
+2. Log in with the Game Master account and select a knight.
+3. Press **F3**. The dashboard lists the tools the account's token tier unlocks.
+4. Choose **ItemCreator**, browse the client's own item configurations, set *Count*,
+   leave *Locked* and *Expire Days* clear, and press **Create**.
+5. The item appears in the knight's inventory immediately, is unequipped, and is stored in
+   `tortodrone.db`. Reconnect to verify it persists.
+
+Failures are reported in the admin chat panel: unknown references, a quantity above the
+server's 20-per-grant limit, expiry and locked modifiers that this server does not store.
+
+### What the server checks
+
+Every administrative call is authorized again on the server, even though the client already
+hides tools the token does not unlock. A grant resolves the reference through the deployed
+item catalogue, re-reads the caller's stored Game Master role inside the same SQLite
+transaction, inserts the items for the caller's own knight, writes an item audit event and
+publishes the resulting inventory change. A revoked account, a plain account and an unknown
+reference are each refused with a reason; none of them changes the inventory.
+
+### Supported and unsupported tools
+
+| Dashboard tool | Stock RPC id | Status |
+| --- | --- | --- |
+| ItemCreator | 7 `createItem` | Supported; real, persistent, unequipped grant |
+| SpriteCreator | 8 `createSprite` | Refused: no battle-sprite storage on this server |
+| ActorSpawner | 47 `spawnActor` | Refused: needs the stock actor-subsystem |
+| EffectFirer | 9 `fireEffect` | Refused: accounts are not granted the ADMIN token ring |
+| PlaceBrowser, PrefabTester, SceneTester, SceneSaver | 14, 50, 51, 48 | Refused: those distributed objects do not exist here |
+| NodeCommander, ServerConfigurator, RuntimeAdjuster, BulkMailer, PeerAdministrator, LoadTester | various | Refused: multi-node administration is out of scope |
+
+Anything unsupported answers the stock confirm listener with
+“This admin tool is not available yet”, so the dashboard never waits for a missing callback.
+The client's own permission model is unchanged: the account token ring still gates the
+dashboard (a support-plus account, never the ADMIN token ring), and the per-knight Game
+Master nameplate badge remains independent of these powers.
 - Password storage uses a random salt and PBKDF2-HMAC-SHA256, 600,000 iterations,
   over the stock client's password transform. Neither plaintext nor reusable
   transform is stored. Keys are independent of accounts.

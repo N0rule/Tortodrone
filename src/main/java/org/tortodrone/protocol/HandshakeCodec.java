@@ -9,6 +9,7 @@ public final class HandshakeCodec {
     public static final int MAX_FRAME = 65536;
     private static final String PREFIX = "com.threerings.presents.net.";
     private final Map<Integer, String> classes = new HashMap<>();
+    private final Map<Integer, String> interns = new HashMap<>();
 
     public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
                           String version, String timezone) { }
@@ -116,7 +117,24 @@ public final class HandshakeCodec {
 
     public java.util.List<SessionRequest> sessionRequests(byte[] body) throws IOException {
         require(body.length <= MAX_FRAME - 4, "Session frame too large");
-        return new SessionDecoder(this::nullableType).decode(body);
+        return new SessionDecoder(this::nullableType, this::interned).decode(body);
+    }
+
+    /** Stock ConfigReference names and argument keys are interned per connection, not per frame. */
+    private String interned(DataInputStream in) throws IOException {
+        int code = in.readShort();
+        if (code == 0) return null;
+        if (code < 0) {
+            require(interns.size() < 256, "Too many string intern mappings");
+            require(code != Short.MIN_VALUE && -code == interns.size() + 1, "Invalid string intern mapping");
+            String value = in.readUTF();
+            require(value.length() <= 256, "Interned string too long");
+            interns.put(-code, value);
+            return value;
+        }
+        String value = interns.get(code);
+        require(value != null, "Known string intern mapping");
+        return value;
     }
 
     private static String nullableString(DataInputStream in) throws IOException {

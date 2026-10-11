@@ -70,6 +70,8 @@ Both JARs keep `data/` beside themselves; copy `build/defaults/` beside them whe
 
 KnightLauncher settings: `game.endpoint=127.0.0.1` (or reachable server IP), `game.port=47624`, `game.publicKey` = entire contents of `build/data/keys/public.txt`. [Connection help](docs/client-redirection.md).
 
+**Stock F3 GM dashboard:** grant the role server-side (`--set-gm Alice true` or the terminal `gm Alice`), log in with that account, press **F3** and use the client's own **ItemCreator** to create real, persistent inventory items. Nothing grants this automatically; plain accounts are refused. [Admin details](docs/administration.md).
+
 Stop the server before editing `build/data/server.properties`:
 
 ```properties

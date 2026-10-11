@@ -2,7 +2,9 @@ package org.tortodrone.server.network;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.protocol.SessionDecoder;
@@ -51,7 +53,71 @@ public final class SessionTest {
         ownership(1004, "receivers", "Unauthorized object mutation");
         ownership(1002, "crowns", "Unauthorized object mutation");
         duplicateReceivers();
-        System.out.println("PASS: bounded events/batches/collections/enums, null arguments, foreign object/field mutations, duplicate receivers");
+        configReferences();
+        internedReferences();
+        System.out.println("PASS: bounded events/batches/collections/enums, null arguments, foreign object/field mutations, duplicate receivers, config references and connection interning");
+    }
+
+    /** A live connection reuses its interned config names across frames, like its class codes. */
+    private static void internedReferences() throws Exception {
+        TestWire.Writer writer = new TestWire.Writer();
+        HandshakeCodec connection = new HandshakeCodec();
+        var names = new ArrayList<String>();
+        for (int code : new int[] {-1, 1}) {
+            byte[] body = writer.body(out -> {
+                writer.message(out, "ForwardEventRequest", 7);
+                writer.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3);
+                out.writeInt(org.tortodrone.protocol.SessionCodec.ADMIN_SERVICE); out.writeByte(7);
+                out.writeBoolean(true); out.writeInt(2);
+                writer.type(out, "com.threerings.config.ConfigReference");
+                out.writeShort(code); if (code < 0) out.writeUTF("Gear/Shield/Proto Shield");
+                writer.type(out, "com.threerings.config.ArgumentMap"); out.writeInt(0);
+                writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(22);
+            });
+            names.add(((SessionDecoder.ConfigReference) ((SessionDecoder.Invocation)
+                connection.sessionRequests(body).getFirst().event()).arguments().get(0)).name());
+        }
+        if (!names.get(0).equals("Gear/Shield/Proto Shield") || !names.get(0).equals(names.get(1)))
+            throw new AssertionError("Interned config name not reused across frames: " + names);
+        TestWire.check(true, "connection intern mapping");
+    }
+
+    /** Stock ConfigReference: interned config name plus a streamed argument map, reusing intern codes. */
+    private static void configReferences() throws Exception {
+        TestWire.Writer writer = new TestWire.Writer();
+        byte[] body = writer.body(out -> {
+            writer.message(out, "ForwardEventRequest", 7);
+            writer.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3);
+            out.writeInt(org.tortodrone.protocol.SessionCodec.ADMIN_SERVICE); out.writeByte(7);
+            out.writeBoolean(true); out.writeInt(3);
+            writer.type(out, "com.threerings.config.ConfigReference");
+            out.writeShort(-1); out.writeUTF("Gear/Shield/Proto Shield"); // new intern
+            writer.type(out, "com.threerings.config.ArgumentMap"); out.writeInt(1);
+            out.writeShort(-2); out.writeUTF("Colorization"); // new intern
+            writer.type(out, "java.lang.Integer"); out.writeInt(7);
+            writer.type(out, "com.threerings.config.ConfigReference");
+            out.writeShort(1); // repeated interned config name
+            writer.type(out, "com.threerings.config.ArgumentMap"); out.writeInt(0);
+            writer.type(out, TestWire.INV + "ConfirmMarshaller"); out.writeShort(22);
+        });
+        var invocation = (SessionDecoder.Invocation) new HandshakeCodec().sessionRequests(body).getFirst().event();
+        var arguments = invocation.arguments();
+        TestWire.check(arguments.get(0).equals(new SessionDecoder.ConfigReference(
+            "Gear/Shield/Proto Shield", Map.of("Colorization", 7))), "config reference name and arguments");
+        TestWire.check(arguments.get(1).equals(new SessionDecoder.ConfigReference(
+            "Gear/Shield/Proto Shield", Map.of())), "repeated interned config reference");
+        TestWire.check(((SessionDecoder.Listener) arguments.get(2)).requestId() == 22, "config reference listener");
+        rejected(out -> {
+            TestWire.Writer nested = new TestWire.Writer();
+            nested.message(out, "ForwardEventRequest", 7);
+            nested.type(out, TestWire.DOB + "InvocationRequestEvent"); out.writeInt(3);
+            out.writeInt(org.tortodrone.protocol.SessionCodec.ADMIN_SERVICE); out.writeByte(7);
+            out.writeBoolean(true); out.writeInt(1);
+            nested.type(out, "com.threerings.config.ConfigReference");
+            out.writeShort(-1); out.writeUTF("Gear/Shield/Proto Shield");
+            nested.type(out, "com.threerings.config.ArgumentMap"); out.writeInt(1);
+            out.writeShort(0); // missing interned argument key
+        });
     }
 
     private static void ownership(int oid, String field, String reason) throws Exception {

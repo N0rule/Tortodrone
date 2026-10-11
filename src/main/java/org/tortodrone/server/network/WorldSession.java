@@ -311,6 +311,49 @@ final class WorldSession implements AutoCloseable {
         }
     }
 
+    /** Stock admin service, resolved by the client from the bootstrap; every call is authorized here. */
+    synchronized void admin(SessionDecoder.Invocation request) throws IOException {
+        if(request.service()!=SessionCodec.ADMIN_SERVICE||request.oid()!=SessionCodec.INVOCATION_OID)return;
+        var args=request.arguments();
+        SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
+        String failure=null;
+        if(request.method()!=7) {
+            // Unknown tools must not leave the stock dashboard waiting for a callback.
+            if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,"This admin tool is not available yet"));}
+            return;
+        }
+        if(listener==null)throw new SessionDecoder.Rejected("Missing item creation confirmation listener");
+        failure=createItem(args);
+        if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
+    }
+
+    /** ProjectXAdminMarshaller.createItem(config, quantity, locked, expireDays), stock method seven. */
+    private String createItem(List<Object> args)throws IOException {
+        if(args.size()!=5||!(args.get(0) instanceof SessionDecoder.ConfigReference reference)
+                ||reference.name()==null||!(args.get(1) instanceof Integer quantity)
+                ||!(args.get(2) instanceof Boolean locked)||!(args.get(3) instanceof Integer expireDays))
+            return "Invalid item creation request";
+        try {
+            if(!selected())return "Select a knight first";
+            // The stored grant re-checks this account's privileges in the same transaction.
+            if(!roles.gameMaster())return "Game Master permission required";
+            if(quantity<1||quantity>ItemCatalog.GRANT_LIMIT)
+                return "Quantity must be between 1 and "+ItemCatalog.GRANT_LIMIT;
+            if(expireDays>0)return "Item expiry is not supported yet";
+            var entry=characters.catalog().require(reference.name());
+            if(locked&&!entry.locked()&&!entry.permanent())
+                return "Locked items are not supported for this catalogue entry";
+            try{characters.worldProfile(knight.name(),authRevision);}
+            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+            var before=profile;
+            profile=characters.grantItems(characters.username(),knight.name(),entry.config(),quantity,authRevision);
+            output.send(()->codec.itemChanges(oid,knight,before,profile));
+            log.info("Admin created "+quantity+" x "+entry.config());
+            return null;
+        }catch(IOException refused){return refused.getMessage();}
+    }
+
     private void equip(List<Object> args) throws IOException {
         if (args.size() != 4 || !(args.get(0) instanceof Long item)
                 || !(args.get(1) instanceof SessionDecoder.EnumValue location)

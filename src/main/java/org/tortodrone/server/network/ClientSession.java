@@ -187,6 +187,11 @@ final class ClientSession {
             }
             if(invocation.service()==3&&invocation.method()==2){world.broadcast(invocation);return;}
             if(invocation.service()==3&&invocation.method()==3){world.tell(invocation);return;}
+            if(invocation.service()==SessionCodec.ADMIN_SERVICE) {
+                if(invocation.oid()!=SessionCodec.INVOCATION_OID)
+                    throw new SessionDecoder.Rejected("Invalid admin invocation target");
+                world.admin(invocation);return;
+            }
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());

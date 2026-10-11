@@ -14,6 +14,7 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 - Inventory, Arsenal, equipment/costumes/trinkets, binding/stacks, live visual updates; scene chat, private tells, broadcasts, sitting/emotes recorded through the last committed milestone as applicable. Intro missions bypassed **without inventing completion/rewards**.
 - Trade and same-scene inspection/privacy are implemented; see [town interactions](town-interactions.md) for their recorded scope. Do **not** assume combat, NPCs, shops, quests, crafting, general gate/dungeons, custom news, location persistence or full social functionality works.
 - Packet audit 0.24.1: stock loot-report/party setting enums decode into clean unsupported-operation callbacks instead of disconnecting; settings persistence and general parties remain unsupported. See [audit evidence and limits](protocol-audit.md).
+- **Original F3 Game Master dashboard**: the stock `ProjectXAdminMarshaller` is advertised as bootstrap service 13 and implemented for ItemCreator only (`createItem`, method 7): real catalogue resolution, a stored Game Master account check inside the grant transaction, unequipped instances, item audit events and live inventory publication. The server authorizes every call independently; other dashboard tools answer with a clear unsupported-operation message. Account tokens stay support-plus (ring bit 8), never the ADMIN ring bit, and remain independent of the per-knight badge. See [administration](administration.md).
 
 ## Current work / next validation
 

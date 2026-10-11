@@ -25,6 +25,8 @@ public final class SessionCodec {
     public static final int SERVER_OID = 1;
     public static final int CONFIG_OID = 2;
     public static final int INVOCATION_OID = 3;
+    /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
+    public static final int ADMIN_SERVICE = 13;
     /** Handles needed by current login observers; operations remain explicitly limited. */
     public static final java.util.List<String> SERVICES = java.util.List.of(
         "com.threerings.projectx.data.KnightMarshaller",
@@ -38,7 +40,8 @@ public final class SessionCodec {
         "com.threerings.projectx.item.data.ItemMarshaller",
         "com.threerings.projectx.uplink.data.UplinkMarshaller",
         "com.threerings.projectx.social.data.FeedMarshaller",
-        "com.threerings.projectx.social.data.SocialMarshaller");
+        "com.threerings.projectx.social.data.SocialMarshaller",
+        "com.threerings.projectx.admin.data.ProjectXAdminMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int INTERIOR_TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -76,9 +79,16 @@ public final class SessionCodec {
             out.writeBoolean(true); out.writeInt(1); out.writeInt(port);
             out.writeBoolean(true); out.writeInt(0); // No datagram endpoints advertised.
             // Current build: server, exchange, PvP, PvP info, mission, open hall,
-            // admin, status, place browser, client timings. No nodePulseOid field.
+            // admin, status, place browser, client timings.
             out.writeInt(SERVER_OID);
-            for (int i = 1; i < 10; i++) out.writeInt(0);
+            out.writeInt(0); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
+            out.writeInt(0); out.writeInt(0); // mission, open hall
+            // Stock ProjectXSession only names the admin object for ADMIN-tier accounts. A
+            // support-plus account keeps zero and still reaches the admin service, which is
+            // addressed through the bootstrap service entry above.
+            out.writeInt(0); // admin
+            out.writeInt(0); out.writeInt(0); // status, place browser
+            out.writeInt(0); // client timings
         });
     }
 

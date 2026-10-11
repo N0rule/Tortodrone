@@ -32,7 +32,6 @@ public final class ArchiveTownExport {
         new Pack(437,"laboratory","Master/Static/437","level","5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0",null,null),
         new Pack(449,"hall_of_heroes","Master/Static/449","level","fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6",null,null));
     private static final Set<Integer> TOWNS=Set.of(1,2,3,445);
-    private static final String STOCK_DEFAULT="stock_default";
     private static final List<Route> INTERIOR_ROUTES=List.of(
         new Route(1,294,"level_start","Portals/To Advanced Training"),
         new Route(445,437,"level_start","Portals/To Laboratory"),
@@ -205,8 +204,13 @@ public final class ArchiveTownExport {
             Entrance entrance=new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw);
             if(!Float.isFinite(yaw)||!collision.walkable(entrance.x,entrance.y))
                 throw new IOException("Town destination marker is not walkable: scene="+scene.sceneId+" tag="+tag);
-            if(!marker.defaultEntrance&&tag.isBlank())throw new IOException("Native non-default destination has no tag: scene="+scene.sceneId+" entry="+entrance.id);
-            else if(!marker.defaultEntrance&&result.putIfAbsent(tag,entrance)!=null)throw new IOException("Duplicate town destination tag: scene="+scene.sceneId+" tag="+tag);
+            // The default entrance may itself carry the tag a portal names; it is then the
+            // exact arrival, not the generic fallback.
+            if(tag.isBlank()) {
+                if(!marker.defaultEntrance)throw new IOException("Native non-default destination has no tag: scene="+scene.sceneId+" entry="+entrance.id);
+            }
+            else if(result.putIfAbsent(tag,entrance)!=null)
+                throw new IOException("Duplicate town destination tag: scene="+scene.sceneId+" tag="+tag);
         }
         if(result.isEmpty()&&defaults.isEmpty())throw new IOException("Town scene has no native destination markers: "+scene.sceneId);
         return new TownArrivals(Map.copyOf(result),List.copyOf(defaults));
@@ -249,8 +253,9 @@ public final class ArchiveTownExport {
         if(arrivals.defaults.size()!=1)
             throw new IOException("Native portal tag has no marker and stock default entrance is not unique: scene="+scene+
                 " tag="+tag+" markers="+arrivals.tagged.keySet()+" defaults="+arrivals.defaults.size());
-        if(arrivals.tagged.containsKey(STOCK_DEFAULT))throw new IOException("Reserved fallback tag collides with a native marker in scene "+scene);
-        return new Arrival(STOCK_DEFAULT,arrivals.defaults.getFirst());
+        // An arrival keeps the source scene's own portal tag, which is what the destination
+        // metadata and the stock reader both name; never a reserved alias of our own.
+        return new Arrival(tag,arrivals.defaults.getFirst());
     }
 
     private static void addEntrance(Map<String,Entrance> entrances,String tag,Entrance entrance,int scene)throws IOException {
