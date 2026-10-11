@@ -96,11 +96,11 @@ public final class CombatRenderingCheck {
             if(stage==0){started=now;stage=1;return;}
             if(stage==1&&now-started>5_000_000_000L){capture("haven");System.out.println("RENDER: Haven loaded; normal move to Training Hall");app.GF().bl(294);stage=2;return;}
             if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){started=now;stage=3;return;}
-            if(stage==3&&now-started>2_000_000_000L){capture("training-idle");moveX=view.PO().acU().tz().x;moveY=view.PO().acU().tz().y;flags(view,1);started=now;stage=8;return;}
-            if(stage==8&&now-started>150_000_000L){flags(view,0);started=now;stage=9;return;}
+            if(stage==3&&now-started>2_000_000_000L){capture("training-idle");moveX=view.PO().acU().tz().x;moveY=view.PO().acU().tz().y;moveNorth(view,true);started=now;stage=8;return;}
+            if(stage==8&&now-started>1_000_000_000L){moveNorth(view,false);started=now;stage=9;return;}
             if(stage==9&&now-started>1_000_000_000L){
                 var server=authoritative.get(app.CT().pawnId);
-                if(server==null||Math.hypot(server.tz().x-moveX,server.tz().y-moveY)<.1)throw new AssertionError("Training movement was not replicated");
+                if(server==null||server.tz().y<moveY+2)throw new AssertionError("Native movement did not reach the training corridor away from its south exit");
                 capture("training-movement");System.out.println("CHECK: native controlled movement and authoritative position");stage=4;
             }
             if(stage==4){
@@ -177,6 +177,13 @@ public final class CombatRenderingCheck {
         // Stimulate only this application's controller; its unchanged frame builder,
         // local prediction and network transport remain active. No global input.
         field(view.acn(),"_flags").setInt(view.acn(),flags);
+    }
+    private static void moveNorth(View view,boolean moving)throws Exception{
+        // Stock aO(float) derives keyboard heading from bOD[0]-bOD[1] (Y)
+        // and bOD[3]-bOD[2] (X). Exercise the own controller's north axis,
+        // away from the authored south portal, before repeated combat lunges.
+        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());
+        Arrays.fill(axes,0);axes[0]=moving?1:0;flags(view,moving?1:0);
     }
     // The stock jar contains both a package and a class named tudey.a;
     // Java source cannot name its obfuscated view/sprite types directly.

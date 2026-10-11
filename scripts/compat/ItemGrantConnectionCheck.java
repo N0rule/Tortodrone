@@ -78,9 +78,44 @@ public final class ItemGrantConnectionCheck {
                 var invalidReply=new WorldConnectionCheck.Reply();service.a(stack.VA(),6,invalidReply);
                 WorldConnectionCheck.waitFor(()->invalidReply.done);
                 if(invalidReply.reason==null||player.player.equipment[6]==stack.VA())throw new AssertionError("Material equipped as a weapon");
+                // Local inventory administration must reach the unchanged client's native observers.
+                var stored=tools.worldProfile("ItemPlayer","Grant-Knight");
+                tools.itemQuantity("ItemPlayer","Grant-Knight",stack.VA(),6,stored.accountId(),stored.worldId());
+                WorldConnectionCheck.waitFor(()->find(player,material).getCount()==6);
+                tools.itemQuantity("ItemPlayer","Grant-Knight",stack.VA(),10,stored.accountId(),stored.worldId());
+                WorldConnectionCheck.waitFor(()->find(player,material).getCount()==10);
+                var recipe=find(player,"Recipe/Sword/Calibur Recipe");
+                tools.itemQuantity("ItemPlayer","Grant-Knight",recipe.VA(),0,stored.accountId(),stored.worldId());
+                WorldConnectionCheck.waitFor(()->player.player.items.size()==9);
+                if(java.util.stream.StreamSupport.stream(player.player.items.spliterator(),false).anyMatch(i->i.VA()==recipe.VA()))throw new AssertionError("Removed recipe remains in client inventory");
+                tools.grantItems("ItemPlayer","Grant-Knight","Recipe/Sword/Calibur Recipe",1,stored.accountId(),stored.worldId());
+                WorldConnectionCheck.waitFor(()->player.player.items.size()==10);
+                for(var slot:List.of(org.tortodrone.character.WorldProfile.Slot.ARMOR_COSTUME,org.tortodrone.character.WorldProfile.Slot.SHIELD_COSTUME)) {
+                    var definition=tools.catalog().entries().stream().filter(e->e.slot()==slot&&e.grantable()).findFirst().orElseThrow();
+                    int beforeCount=player.player.items.size();tools.grantItems("ItemPlayer","Grant-Knight",definition.config(),1,-1,-1);
+                    WorldConnectionCheck.waitFor(()->player.player.items.size()==beforeCount+1);
+                    var cosmetic=find(player,definition.config());var equipCosmetic=new WorldConnectionCheck.Reply();service.a(cosmetic.VA(),slot.initialIndex(),equipCosmetic);
+                    WorldConnectionCheck.waitFor(()->equipCosmetic.done&&player.player.equipment[slot.initialIndex()]==cosmetic.VA());
+                    if(equipCosmetic.reason!=null)throw new AssertionError("Native costume equip refused: "+equipCosmetic.reason);
+                }
+                var invalidCostume=new WorldConnectionCheck.Reply();service.a(hat.VA(),0,invalidCostume);WorldConnectionCheck.waitFor(()->invalidCostume.done);
+                if(invalidCostume.reason==null||player.player.equipment[3]!=hat.VA())throw new AssertionError("Costume helmet accepted in ordinary helmet slot");
+                for(int slot:new int[]{3,4,15}) {
+                    long id=player.player.equipment[slot];var unequip=new WorldConnectionCheck.Reply();service.a(id,com.threerings.projectx.item.data.ItemCodes.Location.ARSENAL,0,unequip);
+                    WorldConnectionCheck.waitFor(()->unequip.done&&player.player.equipment[slot]==0);
+                    // The native saved loadout covers only its first twelve slots;
+                    // shield costume lives in the separate player equipment array.
+                    var loadout=player.player.loadouts.f("").equipment;
+                    if(unequip.reason!=null||(slot<loadout.length&&loadout[slot]!=0))throw new AssertionError("Costume unequip missed native loadout observer");
+                    var reEquip=new WorldConnectionCheck.Reply();service.a(id,slot,reEquip);WorldConnectionCheck.waitFor(()->reEquip.done&&player.player.equipment[slot]==id);
+                    if(reEquip.reason!=null)throw new AssertionError("Costume re-equip refused");
+                }
+                var currentKnight=tools.knights("ItemPlayer").stream().filter(k->k.name().equals("Grant-Knight")).findFirst().orElseThrow();
+                var appearance=WorldCompatibility.reference(org.tortodrone.character.StarterCatalog.town(currentKnight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
+                WorldConnectionCheck.waitFor(()->appearance.equals(player.actor.Mv().kW().get("Model")));
             }
             try(var reconnect=new GameMasterConnectionCheck.Endpoint(args,queue,"ItemPlayer","Grant-Knight")) {
-                if(reconnect.player.items.size()!=10||find(reconnect,"Material/Brimstone").getCount()!=10||reconnect.player.equipment[3]==0||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
+                if(reconnect.player.items.size()!=12||find(reconnect,"Material/Brimstone").getCount()!=10||(reconnect.player.equipment[3]==0||reconnect.player.equipment[4]==0||reconnect.player.equipment[15]==0)||!WorldConnectionCheck.bound(reconnect.player,reconnect.player.equipment[6]))throw new AssertionError("Reconnect lost owned grant/binding/loadout");
                 // The picker renders the AvailableKnight model verbatim; it must show the current outfit, not the creation one.
                 var knight=tools.knights("ItemPlayer").stream().filter(k->k.name().equals("Grant-Knight")).findFirst().orElseThrow();
                 var expected=WorldCompatibility.reference(org.tortodrone.character.StarterCatalog.equipped(knight,tools.worldProfile("ItemPlayer","Grant-Knight"),tools.catalog()));
@@ -89,7 +124,7 @@ public final class ItemGrantConnectionCheck {
                 if(!actual.equals(expected))
                     throw new AssertionError("Character select preview differs from the equipped appearance:\n actual "+actual+"\n expected "+expected);
             }
-            System.out.println("PASS: stock GM help/unknown-command feedback, normal/revoked ! chat, private item commands, Arsenal observers, cross-map grants, equip/binding, offline/ID grants, costumes, stacks/recipes and reconnect persistence");
+            System.out.println("PASS: stock GM help/unknown-command feedback, normal/revoked ! chat, private item commands, Arsenal observers, cross-map grants, equip/binding, offline/ID grants, costume slots 3/4/15 equip/unequip/live appearance, inventory adjustment/removal, stacks/recipes and reconnect persistence");
         }
     }
     static Item find(GameMasterConnectionCheck.Endpoint endpoint,String config) {
