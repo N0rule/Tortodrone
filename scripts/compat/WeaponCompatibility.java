@@ -18,8 +18,9 @@ public final class WeaponCompatibility {
             var entry=items.entries().stream().filter(e->e.slot()==slot&&e.grantable()&&weapons.find(e.config())!=null).findFirst().orElseThrow();
             var shield=weapons.shields().stream().filter(s->s.health()>0).findFirst().orElseThrow();
             var item=new WorldProfile.Item(45,slot,entry.config(),null,0,6,true);
-            var first=new KnightCombat.State(item,shield.config(),null,shield.health(),1,700,0,null);
-            var changed=new KnightCombat.State(null,null,null,0,2,800,1000,new KnightCombat.Impulse(150,625,5,0));
+            var modifiers=new EquipmentCatalog.Modifiers(.08f,.04f,.12f,-.5f);
+            var first=new KnightCombat.State(item,shield.config(),null,shield.health(),1,700,0,null,shield.health(),-300000,0,modifiers,EquipmentCatalog.Modifiers.ZERO);
+            var changed=new KnightCombat.State(null,null,null,0,2,800,1000,new KnightCombat.Impulse(150,625,5,0),0,-300000,0,EquipmentCatalog.Modifiers.ZERO,modifiers);
             var model=new StarterCatalog.Model("Character/PC/Level",Map.of());
             var a=new ActorState(51,1001,"Fixture",257,100,0,0,0,0,0,292,100,model,false,first);
             var b=new ActorState(51,1001,"Fixture",257,100,1,0,1,0,0,286,150,model,false,changed);
@@ -34,10 +35,12 @@ public final class WeaponCompatibility {
             var nativeItem=(com.threerings.projectx.item.data.LevelItem)field(nativeActor,"_weapon");
             check(nativeItem!=null&&nativeItem.Vx().getName().equals(entry.config()),"native equipped weapon");
             check(field(nativeActor,"_shield").equals(shield.config())&&(int)field(nativeActor,"_shieldMaxHealth")==shield.health(),"native shield fields");
+            check((float)field(field(nativeActor,"_equipMod"),"_attackSpeed")==.12f,"native gear modifier object");
             var update=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
             var applied=(Dungeoneer)update.aek()[0].apply(nativeActor);
             check(field(applied,"_weapon")==null&&field(applied,"_shield")==null,"delta clears old weapon and shield");
             check((int)field(applied,"_chainCount")==2&&(int)field(applied,"_chainResetTime")==800&&(int)field(applied,"_nextDodge")==1000,"delta updates chains and dodge");
+            check((float)field(field(applied,"_equipMod"),"_attackSpeed")==0&&(float)field(field(applied,"_weaponMod"),"_attackSpeed")==.12f,"delta replaces both native modifier objects");
             Object impulse=field(applied,"_impulse");
             check(impulse!=null&&(int)field(impulse,"_started")==150&&(int)field(impulse,"_duration")==625,"native dodge impulse");
             check((int)field(applied,"_activity")==286&&in.available()==0,"exact stock stream framing");checked++;

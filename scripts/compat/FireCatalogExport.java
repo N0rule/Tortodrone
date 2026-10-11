@@ -33,7 +33,7 @@ public final class FireCatalogExport {
         var entries = new ArrayList<AttackFire>();
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
-            if (!playerDefinition(config.getConfigId(), config.getName(), item.name, item.icon)) continue;
+            if (!playerDefinition(config.getConfigId(), item)) continue;
             if (item instanceof ItemConfig.Weapon weapon) addWeapon(manager, config.getName(), weapon, entries);
             else if (item instanceof ItemConfig.Shield shield) addShield(manager, config.getName(), shield, entries);
         }
@@ -98,14 +98,14 @@ public final class FireCatalogExport {
             return new Action(Kind.FIRE_EFFECT, model(firePrefired.effect), null, target(firePrefired.location), "", "",
                 0,0,0,0,false,0,0,0,0,false,List.of(),"");
         }
-        if (action instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify)
-            return unsupported(action);
+        if (action instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified)
+            return readPrespawned(manager, modified);
         if (action instanceof DungeonActionConfig.MultiSpawnPrespawned multi) {
             var children = new ArrayList<Action>();
             if (multi.spawns != null) for (DungeonActionConfig.SpawnPrespawned spawn : multi.spawns) {
                 Action converted = readPrespawned(manager, spawn); if (converted != null) children.add(converted);
             }
-            return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+            return new Action(Kind.MULTI_PRESPAWNED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
         }
         if (action instanceof DungeonActionConfig.SpawnPrespawned spawn) return readPrespawned(manager, spawn);
         if (action instanceof ActionConfig.Compound compound) {
@@ -115,16 +115,29 @@ public final class FireCatalogExport {
             }
             return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,compound.stopOnFailure,children,"");
         }
+        if (action instanceof ActionConfig.Random random) {
+            // Equal positive weights retain the stock uniform draw (Wrench Wand's
+            // two sounds and a null spawn); other weighted graphs stay explicit.
+            if (random.actions != null && random.actions.length == 0) return noop();
+            if (random.actions == null) return unsupported(action);
+            if (random.actions.length == 1 && random.actions[0] != null
+                    && Float.isFinite(random.actions[0].weight) && random.actions[0].weight > 0f)
+                return readAction(manager, random.actions[0].action);
+            var choices=new ArrayList<Action>();float weight=-1;
+            for(var entry:random.actions){if(entry==null||!Float.isFinite(entry.weight)||entry.weight<=0f||weight>=0&&entry.weight!=weight)return unsupported(action);
+                weight=entry.weight;var child=readAction(manager,entry.action);choices.add(child==null?noop():child);}
+            return new Action(Kind.RANDOM_EQUAL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,choices,"");
+        }
         if (action instanceof ActionConfig.FireEffect effect) {
             return new Action(Kind.FIRE_EFFECT,model(effect.effect),null,target(effect.location),"","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
         }
         if (action instanceof ActionConfig.SpawnActor spawn) {
-            if (spawn.actor == null) return unsupported(action);
+            if (spawn.actor == null) return noop();
             ActorConfig config = manager.a(ActorConfig.class,spawn.actor);
             ActorConfig.Original actor = config == null ? null : config.ai(manager);
             if (actor == null) throw new IOException("Unresolved actor reference " + spawn.actor.getName());
             ActorSpec spec = actor(manager,spawn.actor,actor);
-            Kind kind = spec.nativeType().equals("BULLET") || spec.nativeType().equals("BOMB") ? Kind.EMIT_PROJECTILE
+            Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE
                 : action instanceof ActionConfig.SpawnRandomTranslatedActor ? Kind.RANDOM_TRANSLATED
                 : action instanceof ActionConfig.SpawnFacingActor ? Kind.SPAWN_FACING : Kind.SPAWN_ACTOR;
             if(kind==Kind.EMIT_PROJECTILE) projectileCount++;
@@ -139,19 +152,28 @@ public final class FireCatalogExport {
         return unsupported(action);
     }
     private static Action readPrespawned(ConfigManager manager, DungeonActionConfig.SpawnPrespawned spawn) throws Exception {
-        if (spawn == null || spawn.actor == null) return null;
+        // SpawnPrespawned.shouldPreExecute() is exactly actor != null in the stock archive.
+        if (spawn == null || spawn.actor == null) return noop();
         ActorConfig config = manager.a(ActorConfig.class, spawn.actor);
         ActorConfig.Original original = config == null ? null : config.ai(manager);
         if (original == null) throw new IOException("Unresolved prespawned actor " + spawn.actor.getName());
         ActorSpec spec = actor(manager, spawn.actor, original);
-        Kind kind = spec.nativeType().equals("BULLET") || spec.nativeType().equals("BOMB") ? Kind.EMIT_PROJECTILE : Kind.SPAWN_ACTOR;
+        Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE : Kind.SPAWN_ACTOR;
         if (kind == Kind.EMIT_PROJECTILE) projectileCount++;
         float x=0,y=0;
         if (spawn instanceof DungeonActionConfig.SpawnTransformedPrespawned transformed && transformed.translation != null) {
             x=transformed.translation.x; y=transformed.translation.y;
         }
+        String parameter = ""; List<String> values = List.of();
+        if (spawn instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified) {
+            parameter = modified.parameter;
+            values = modified.values == null ? List.of() : Arrays.asList(modified.values.clone());
+        }
         return new Action(kind,null,spec,target(spawn.location),"","",x,y,spawn.rotation,spawn.rotationVariance,
-            spawn.relative,0,0,0,0,false,List.of(),"");
+            spawn.relative,0,0,0,0,false,List.of(),"",parameter,values);
+    }
+    private static Action noop() {
+        return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
     }
     private static Action unsupported(ActionConfig action) throws IOException {
         String type=action.getClass().getName();
@@ -159,16 +181,32 @@ public final class FireCatalogExport {
         return new Action(Kind.UNSUPPORTED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),type);
     }
     private static ActorSpec actor(ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor) throws Exception {
-        String type; int fuse=0; float speed=0,maxStep=-1,ox=0,oy=0,height=0;Action detonation=null;
+        String type; int fuse=0; float speed=0,maxStep=-1,ox=0,oy=0,height=0;Action detonation=null; OrbitSpec orbit=null;
         String refName=reference.getName();
-        if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
+        if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$CompoundOrbitalBullet")) {
+            type = "COMPOUND_ORBITAL_BULLET"; orbit = orbital(actor, true); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
+        }
+        else if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$OrbitalBullet")) {
+            type = "ORBITAL_BULLET"; orbit = orbital(actor, false); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
+        }
+        else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
         com.threerings.tudey.data.actor.Actor nativeActor=actor.a(reference,0,0,new Vector2f(),0f);
         nativeActor.init(manager);
         int flags=intField(nativeActor,"_flags");
         if(nativeActor instanceof com.threerings.tudey.data.actor.Mobile)maxStep=floatField(nativeActor,"_maxStep");
-        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation);
+        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit);
+    }
+    private static boolean isProjectile(String type) { return type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
+    private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }
+    private static OrbitSpec orbital(Object config,boolean compound)throws IOException {
+        Object follow=field(config,"follow");
+        if(!(follow instanceof Enum<?> value))throw new IOException("Invalid stock orbital follow enum");
+        return new OrbitSpec(floatField(config,"orbitRadius"),floatField(config,"speed"),floatField(config,"startingRotation"),
+            floatField(config,"flightSpeed"),intField(config,"outDuration"),intField(config,"lifespan"),value.name(),
+            (Boolean)readField(config,"alternateSpin"),compound?floatField(config,"secondOrbitRadius"):null,
+            compound?floatField(config,"secondSpeed"):null,compound?floatField(config,"secondStartingRotation"):null);
     }
     private static String target(TargetConfig target) { return target==null?"":target.getClass().getSimpleName(); }
 
@@ -215,13 +253,17 @@ public final class FireCatalogExport {
     }
     private static int intField(Object value,String name)throws IOException{Object field=field(value,name);if(field instanceof Number n)return n.intValue();throw new IOException("Missing stock actor integer "+name);}
     private static float floatField(Object value,String name)throws IOException{Object field=field(value,name);if(field instanceof Number n&&Float.isFinite(n.floatValue()))return n.floatValue();throw new IOException("Missing stock actor float "+name);}
-    private static Object field(Object value,String name)throws IOException {
+    private static Object field(Object value,String name)throws IOException { return readField(value,name); }
+    private static Object readField(Object value,String name)throws IOException {
         for(Class<?> type=value.getClass();type!=null;type=type.getSuperclass())try{Field field=type.getDeclaredField(name);field.setAccessible(true);return field.get(value);}catch(NoSuchFieldException absent){}catch(ReflectiveOperationException|RuntimeException failure){throw new IOException("Cannot read stock runtime field "+name,failure);}
         throw new IOException("Stock runtime field not found: "+name);
     }
-    private static boolean playerDefinition(int id,String config,String name,Object icon) {
-        String path=config.toLowerCase(Locale.ROOT);
-        return id!=0&&name!=null&&!name.isBlank()&&icon!=null&&!path.contains("/parts/")&&!path.contains("/dev/")
-            &&!path.contains("(dev)")&&!path.contains("/test")&&!path.contains("/pvp/")&&!path.contains("ideal sword");
+    private static boolean playerDefinition(int id, ItemConfig.Original item) {
+        boolean eligibleSlot = item instanceof ItemConfig.Weapon weapon
+            && weapon.h(6, false)
+            && (item instanceof ItemConfig.Sword || item instanceof ItemConfig.Handgun || item instanceof ItemConfig.Bomb)
+            || item instanceof ItemConfig.Shield shield && shield.h(2, false);
+        return id != 0 && item.name != null && !item.name.isBlank() && item.icon != null
+            && item.expireDays == 0 && (item.expireEvent == null || item.expireEvent.isBlank()) && eligibleSlot;
     }
 }

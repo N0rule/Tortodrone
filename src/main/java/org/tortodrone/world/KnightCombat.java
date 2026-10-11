@@ -14,12 +14,19 @@ public final class KnightCombat {
         }
     }
     public record State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,
-            int chainCount,int chainReset,int nextDodge,Impulse impulse,float shieldHealth,int shieldHit,int shieldRegenStart) {
+            int chainCount,int chainReset,int nextDodge,Impulse impulse,float shieldHealth,int shieldHit,int shieldRegenStart,
+            EquipmentCatalog.Modifiers equipmentModifiers,EquipmentCatalog.Modifiers weaponModifiers) {
+        public State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,int chainCount,int chainReset,int nextDodge,Impulse impulse,float shieldHealth,int shieldHit,int shieldRegenStart) {
+            this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart,EquipmentCatalog.Modifiers.ZERO,EquipmentCatalog.Modifiers.ZERO);
+        }
         public State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,int chainCount,int chainReset,int nextDodge,Impulse impulse) {
             this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldMaximum,-300000,0);
         }
     }
     private final WeaponCatalog catalog;
+    private final EquipmentCatalog modifiers;
+    private WorldProfile profile;
+    private EquipmentCatalog.Modifiers equipmentModifiers=EquipmentCatalog.Modifiers.ZERO,weaponModifiers=EquipmentCatalog.Modifiers.ZERO;
     private List<WorldProfile.Item> equipment=List.of();
     private WorldProfile.Item weapon;
     private String shield,shieldCostume;
@@ -37,8 +44,10 @@ public final class KnightCombat {
     private java.util.function.Consumer<AttackStart> attackSink=ignored->{};
     public void attacks(java.util.function.Consumer<AttackStart> sink){attackSink=Objects.requireNonNull(sink);}
 
-    public KnightCombat(WeaponCatalog catalog) { this.catalog=Objects.requireNonNull(catalog);dodgeCooldown=catalog.dodgeCooldown(); }
+    public KnightCombat(WeaponCatalog catalog) { this(catalog,EquipmentCatalog.empty()); }
+    public KnightCombat(WeaponCatalog catalog,EquipmentCatalog modifiers) { this.catalog=Objects.requireNonNull(catalog);this.modifiers=Objects.requireNonNull(modifiers);dodgeCooldown=catalog.dodgeCooldown(); }
     public void equipment(WorldProfile profile) {
+        this.profile=profile;
         equipment=profile.items().stream().filter(i->i.equippedSlot()!=null).toList();
         String previousShield=shield;
         shield=equipped(2)==null?null:equipped(2).config();
@@ -47,12 +56,14 @@ public final class KnightCombat {
         if(!Objects.equals(previousShield,shield)){shieldHealth=shieldDefinition==null?0:shieldDefinition.health();shieldHit=-300000;shieldRegenStart=0;}
         int slot=weapon==null?6:equipment.stream().filter(i->i.id()==weapon.id()).map(WorldProfile.Item::equippedSlot).findFirst().orElse(6);
         select(slot);
+        updateModifiers();
     }
     private WorldProfile.Item equipped(int slot) { return equipment.stream().filter(i->i.equippedSlot()==slot).findFirst().orElse(null); }
     private void select(int slot) {
         var item=equipped(slot);
         if(Objects.equals(item,weapon))return;
         weapon=item;definition=item==null?null:catalog.find(item.config());chainCount=chainReset=0;
+        updateModifiers();
         // Re-equipping cannot leave an old weapon's charge or attack running.
         if(activity!=DEFENSE)clear(started);
     }
@@ -63,14 +74,24 @@ public final class KnightCombat {
     public boolean canOverride(){return activity==0||activity==DEFENSE;}
     public boolean allowsMovement(){return activity==0||activity==CHARGE||activity==DEFENSE||attack!=null&&attack.blended()&&definition!=null&&definition.blended();}
     public boolean allowsRotation(int time){return allowsMovement()||attack!=null&&time-started>=attack.rearm();}
-    public float movementScale(){return activity==DEFENSE&&shieldDefinition!=null?1+shieldDefinition.defendingSpeed():activity==CHARGE&&definition!=null?definition.chargingSpeed():activity>=INCOMPLETE&&definition!=null?definition.attackingSpeed():1;}
-    public State state(){return new State(weapon,shield,shieldCostume,shieldDefinition==null?0:shieldDefinition.health(),chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart);}
+    private void updateModifiers(){if(profile==null)return;try{var pair=modifiers.forKnight(profile,weapon);equipmentModifiers=pair.equipment();weaponModifiers=pair.weapon();
+            // Older deployments may have only the weapon catalogue. Preserve its
+            // verified shield slowdown until the full equipment export is supplied.
+            if(modifiers.isEmpty()&&shieldDefinition!=null)equipmentModifiers=new EquipmentCatalog.Modifiers(0,0,0,shieldDefinition.defendingSpeed());}
+        catch(java.io.IOException invalid){throw new IllegalArgumentException("Equipped item has no verified control metadata",invalid);}}
+    private float attackSpeed(){return EquipmentCatalog.attackSpeedMultiplier(equipmentModifiers,weaponModifiers);}
+    private WeaponCatalog.Attack scaled(WeaponCatalog.Attack attack){if(attack==null)return null;float speed=attackSpeed();
+        return new WeaponCatalog.Attack((int)(attack.land()/speed),(int)(attack.rearm()/speed),(int)(attack.clear()/speed),attack.blended(),
+            attack.impulseDelay()<0?-1:(int)(attack.impulseDelay()/speed),attack.impulseDuration(),attack.impulseX(),attack.impulseY());}
+    public float movementScale(){float base=EquipmentCatalog.speedMultiplier(equipmentModifiers,weaponModifiers);
+        return base*(activity==DEFENSE?EquipmentCatalog.defenseSpeedMultiplier(equipmentModifiers):activity==CHARGE&&definition!=null?definition.chargingSpeed():activity>=INCOMPLETE&&definition!=null?definition.attackingSpeed():1);}
+    public State state(){return new State(weapon,shield,shieldCostume,shieldDefinition==null?0:shieldDefinition.health(),chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart,equipmentModifiers,weaponModifiers);}
     private int currentShieldHealth(int time){return shieldDefinition==null?0:Math.min(shieldDefinition.health(),(int)Math.ceil(Math.max(shieldHealth,shieldHealth+(time-shieldHit-shieldRegenStart)*(float)shieldDefinition.health()/shieldDefinition.regenTime())));}
     public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
         advance(time,facing);
         if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<2)select(6+index);}return;}
         if(activity==CHARGE&&(flags&4)==0) {
-            if(definition!=null)startAttack(time-started>=definition.chargeTime()?CHARGED:nextNormal(time),time);
+            if(definition!=null)startAttack(time-started>=EquipmentCatalog.chargeTimeMillis(definition.chargeTime(),equipmentModifiers,weaponModifiers)?CHARGED:nextNormal(time),time);
             else clear(time);
         }
         if(activity==DEFENSE&&(flags&64)==0)clear(time);
@@ -92,7 +113,7 @@ public final class KnightCombat {
         }
         if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;}
         if((flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
-            activity=BASH;started=time;attack=shieldDefinition.bash();impulseApplied=false;bashSpent=false;
+            activity=BASH;started=time;attack=scaled(shieldDefinition.bash());impulseApplied=false;bashSpent=false;
             attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear()));
         }
         if(canOverride()) {
@@ -111,7 +132,9 @@ public final class KnightCombat {
         if(value==CHARGE){if(canCharge()){activity=CHARGE;started=time;attack=null;}return;}
         WeaponCatalog.Attack selected=switch(value){case INCOMPLETE->definition.incomplete();case CHARGED->definition.charged();case COOLDOWN->definition.cooldown();default->value>=NORMAL&&value-NORMAL<definition.attacks().size()?definition.attacks().get(value-NORMAL):null;};
         if(selected==null){clear(time);return;}
-        chainCount=count(time)+1;chainReset=time+(definition.chainCooldown()==0?selected.clear():selected.land()+definition.chainCooldown());
+        selected=scaled(selected);
+        chainCount=value==COOLDOWN?definition.maxChain()+1:count(time)+1;
+        chainReset=time+(value!=COOLDOWN&&definition.chainCooldown()==0?selected.clear():selected.land()+definition.chainCooldown());
         activity=value;started=time;attack=selected;impulseApplied=false;
         attackSink.accept(new AttackStart(weapon.config(),activity,started,attack.land(),attack.clear()));
     }

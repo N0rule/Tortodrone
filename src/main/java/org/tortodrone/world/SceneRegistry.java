@@ -19,6 +19,9 @@ public final class SceneRegistry {
     }
     private final SceneCatalog catalog;
     private WeaponCatalog weapons=WeaponCatalog.empty();
+    private EquipmentCatalog equipment=EquipmentCatalog.empty();
+    public EquipmentCatalog equipment(){return equipment;}
+    public void equipment(EquipmentCatalog catalog){equipment=Objects.requireNonNull(catalog);}
     private FireCatalog fires=FireCatalog.empty();
     public FireCatalog fires(){return fires;}
     public void fires(FireCatalog catalog){fires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().fires(catalog);}

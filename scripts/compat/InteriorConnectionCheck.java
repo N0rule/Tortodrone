@@ -26,8 +26,8 @@ public final class InteriorConnectionCheck {
     private InteriorConnectionCheck() { }
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 4) throw new IllegalArgumentException(
-            "Usage: InteriorConnectionCheck port public-key [host maps-dir]");
+        if (args.length < 2 || args.length > 5 || args.length==5&&!args[4].equals("--weapons")) throw new IllegalArgumentException(
+            "Usage: InteriorConnectionCheck port public-key [host maps-dir [--weapons]]");
         System.setProperty("com.threerings.io.enumPolicy", "ORDINAL");
         dispatchThread = Thread.currentThread();
         queue = new at() {
@@ -44,6 +44,9 @@ public final class InteriorConnectionCheck {
         requireScene(maps, 449, "level");
 
         String key = Files.readString(Path.of(args[1])).trim();
+        if(args.length==5){try(var endpoint=new Endpoint(host,Integer.parseInt(args[0]),key,"LanPlayer","Town-Knight")){
+            endpoint.enter(294);endpoint.entered();endpoint.awaitActor();endpoint.weaponControls();
+        }return;}
         try (Endpoint lan = new Endpoint(host, Integer.parseInt(args[0]), key, "LanPlayer", "Town-Knight");
              Endpoint peer = new Endpoint(host, Integer.parseInt(args[0]), key, "PeerPlayer", "Peer-Knight")) {
             lan.enter(1); peer.enter(1);
@@ -264,6 +267,30 @@ public final class InteriorConnectionCheck {
         Actor actor() { Actor value = actors.get(player.pawnId); if (value == null) throw new AssertionError("Missing controlled actor"); return value; }
         Map<Integer, Actor> currentActors() { return actors; }
         boolean modelIs(int id) { return model != null && model.sceneId == id; }
+        void weaponControls() throws Exception {
+            for(String config:List.of("Weapon/Sword/Calibur","Weapon/Handgun/Proto Gun","Weapon/Bomb/Blast Bomb")){
+                long itemId=0;for(var item:player.items)if(item.Vx().getName().equals(config)){itemId=item.VA();break;}
+                if(itemId==0)throw new AssertionError("Fixture must grant "+config);
+                var reply=new Confirm();client.bU(com.threerings.projectx.item.client.L.class).a(itemId,6,reply);await(()->reply.done);
+                if(reply.reason!=null)throw new AssertionError("Arsenal equip refused: "+reply.reason);
+                await(()->{try{return ((com.threerings.projectx.item.data.Item)field(actor(),"_weapon")).Vx().getName().equals(config);}catch(Exception e){return false;}});
+                int start=last.QY()+100;
+                place.a(last.QY(),last.QY(),new InputFrame[]{new com.threerings.projectx.dungeon.data.DungeonInputFrame(start,0,0,4,start)});
+                if(config.contains("/Bomb/")){
+                    await(()->{try{return (int)field(actor(),"_activity")==283;}catch(Exception e){return false;}});
+                    int stop=last.QY()+150;place.a(last.QY(),last.QY(),new InputFrame[]{new com.threerings.projectx.dungeon.data.DungeonInputFrame(stop,0,0,0,stop)});
+                }
+                await(()->{try{int activity=(int)field(actor(),"_activity");return activity>=289&&activity!=291;}catch(Exception e){return false;}});
+                if(config.contains("/Handgun/")||config.contains("/Bomb/"))await(()->actors.values().stream().anyMatch(a->!(a instanceof Dungeoneer)));
+                System.out.println("PASS: stock Arsenal equips "+config+" and native input produces its authored attack"+(config.contains("/Sword/")?"":" and projectile"));
+                int stop=last.QY()+100;place.a(last.QY(),last.QY(),new InputFrame[]{new com.threerings.projectx.dungeon.data.DungeonInputFrame(stop,0,0,0,stop)});
+                await(()->{try{return (int)field(actor(),"_activity")==0;}catch(Exception e){return false;}});
+            }
+        }
+        private Object field(Object object,String name)throws Exception{
+            for(Class<?> type=object.getClass();type!=null;type=type.getSuperclass())try{var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(object);}catch(NoSuchFieldException ignored){}
+            throw new NoSuchFieldException(name);
+        }
 
         private void receive(SceneDeltaEvent event) {
             if (last != null && (event.QY() <= last.QY() || event.aeh() != last.QY())) throw new AssertionError("Delta does not reference previous scene baseline");

@@ -71,8 +71,8 @@ public final class SceneSimulation {
             movement.resetInput(actor.created());
         }
         public void enter(){synchronized(SceneSimulation.this){check();entered=true;start();}}
-        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;movement.resetInput(SceneClock.now());stopIfIdle();}}
-        public void resetInput(){synchronized(SceneSimulation.this){check();movement.resetInput(SceneClock.now());}}
+        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());movement.resetInput(SceneClock.now());stopIfIdle();}}
+        public void resetInput(){synchronized(SceneSimulation.this){check();weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
             return input(stamp,facing,heading,flags,stamp,sceneTime,now);
         }
@@ -80,11 +80,15 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
-            synchronized(SceneSimulation.this){check();if(combat!=null)combat.equipment(profile);}
+            synchronized(SceneSimulation.this){check();if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+                if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}}
         }
         public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
+            combat(catalog,EquipmentCatalog.empty(),profile);
+        }
+        public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
-                combat=new KnightCombat(catalog);combat.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
+                combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}

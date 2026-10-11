@@ -30,7 +30,7 @@ public final class WeaponCatalogExport {
         var weapons = new ArrayList<Weapon>(); var shields = new ArrayList<Shield>();
         for (var config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
-            if (!playerDefinition(config.getConfigId(), config.getName(), item.name, item.icon)) continue;
+            if (!playerDefinition(config.getConfigId(), item)) continue;
             if (item instanceof ItemConfig.Weapon weapon) weapons.add(readWeapon(manager, config.getName(), weapon));
             else if (item instanceof ItemConfig.Shield shield) shields.add(readShield(manager, config.getName(), shield));
         }
@@ -94,10 +94,12 @@ public final class WeaponCatalogExport {
             impulse == null || impulse.translation == null ? 0f : impulse.translation.y);
     }
 
-    private static boolean playerDefinition(int id, String config, String name, Object icon) {
-        String path = config.toLowerCase(Locale.ROOT);
-        return id != 0 && name != null && !name.isBlank() && icon != null
-            && !path.contains("/parts/") && !path.contains("/dev/") && !path.contains("(dev)")
-            && !path.contains("/test") && !path.contains("/pvp/") && !path.contains("ideal sword");
+    private static boolean playerDefinition(int id, ItemConfig.Original item) {
+        boolean eligibleSlot = item instanceof ItemConfig.Weapon weapon
+            && weapon.h(6, false)
+            && (item instanceof ItemConfig.Sword || item instanceof ItemConfig.Handgun || item instanceof ItemConfig.Bomb)
+            || item instanceof ItemConfig.Shield shield && shield.h(2, false);
+        return id != 0 && item.name != null && !item.name.isBlank() && item.icon != null
+            && item.expireDays == 0 && (item.expireEvent == null || item.expireEvent.isBlank()) && eligibleSlot;
     }
 }

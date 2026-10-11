@@ -642,7 +642,7 @@ final class WorldSession implements AutoCloseable {
     private void attach() {
         rebuildAppearance();var place=scene;
         membership=place.simulation().join(actorAppearance(),snapshot->offer(place,snapshot));
-        if(!place.map().town())membership.combat(weapons,profile);
+        if(!place.map().town())membership.combat(weapons,scenes.equipment(),profile);
     }
     private void rebuildAppearance() {
         var model=scene.map().town()?StarterCatalog.town(knight,profile,characters.catalog()):StarterCatalog.equipped(knight,profile,characters.catalog());

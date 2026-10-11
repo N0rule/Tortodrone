@@ -12,10 +12,12 @@ public final class SceneWeapons {
     }
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
-        float x,y;int destroyed=Integer.MAX_VALUE;boolean fizzle;
+        float x,y,relativeX,relativeY;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
         Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;}
-        ActorState snapshot(){var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,spec.height(),spec.speed(),spec.maxStep(),source.ownerId,fizzle);
-            return new ActorState(id,source.ownerOid,"",0,created,x,y,rotation,rotation,spec.flags()|(spec.nativeType().equals("BULLET")?2:0)|(fizzle?4:0),0,created,spec.config(),false,null,p);}
+        ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),0,relativeX,relativeY,collided,rotation,source.ownerId);
+            var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,spec.height(),spec.speed(),spec.maxStep(),source.ownerId,fizzle,orbit);
+            int flags=spec.flags()|(spec.nativeType().equals("BULLET")?2:0)|(fizzle?(orbit==null?4:8):0)|(returning?4:0);
+            return new ActorState(id,source.ownerOid,"",0,created,x,y,rotation,rotation,flags,0,created,spec.config(),false,null,p);}
     }
     private final CollisionMap terrain;
     private final Map<Integer,List<Run>> runs=new HashMap<>();
@@ -32,6 +34,7 @@ public final class SceneWeapons {
         if(list.size()<MAX_RUNS)list.add(new Run(start,attack));
     }
     public void cancel(int owner){runs.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
+    public void cancelAttacks(int owner){runs.remove(owner);}
     public List<ActorState> actors(){return shots.values().stream().map(Shot::snapshot).toList();}
     public List<SceneEffect> effects(){return List.copyOf(effects);}
     public void advance(int stamp,List<ActorState> players){
@@ -39,13 +42,18 @@ public final class SceneWeapons {
         for(var iterator=runs.entrySet().iterator();iterator.hasNext();){var e=iterator.next();var actor=owners.get(e.getKey());if(actor==null){iterator.remove();continue;}
             var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.id(),actor.clientOid());
             e.getValue().removeIf(run->{
+                int cutoff=run.start.started()+run.start.clear();
+                if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
                 for(int i=0;i<run.loops.length;i++){
                     if(run.done[i])continue;var ref=run.attack.fireRefs().get(i);
                     int delay=(int)(ref.delay()/run.attack.fireSpeed()),refractory=(int)(ref.refractory()/run.attack.fireSpeed());
                     int elapsed=stamp-run.start.started()-run.start.land();
                     if(elapsed<=delay+refractory*run.loops[i])continue;
                     int fired=run.start.started()+run.start.land()+delay+refractory*run.loops[i];
-                    execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0);
+                    // A later activity can cancel an attack before its land time. Events
+                    // already due before that transition still execute on this scene tick.
+                    if(fired>=cutoff){run.done[i]=true;continue;}
+                    execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
                     run.loops[i]++;
                     if(refractory<=0)run.done[i]=true;
                 }
@@ -54,26 +62,65 @@ public final class SceneWeapons {
             });if(e.getValue().isEmpty())iterator.remove();
         }
         int previous=lastStamp==0?stamp:lastStamp;
-        for(var iterator=shots.values().iterator();iterator.hasNext();){var shot=iterator.next();
-            if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=100)iterator.remove();continue;}
+        // Detonation can add child projectiles; advance only the tick's existing actors.
+        for(var shot:List.copyOf(shots.values())){
+            if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=100)shots.remove(shot.id);continue;}
             int end=Math.min(stamp,shot.created+shot.spec.fuse());
             if(shot.spec.nativeType().equals("BULLET")){
                 int from=Math.max(previous,shot.created);float distance=shot.spec.speed()*Math.max(0,end-from)/1000f;
                 int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
                 for(int n=0;n<steps;n++){float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
                     if(!terrain.walkable(x,y)){destroy(shot,stamp,false);break;}shot.x=x;shot.y=y;}
-            }
-            if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),shot.spec.nativeType().equals("BULLET"));
+            }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,Math.max(previous,shot.created),owners.get(shot.source.ownerId));
+            if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
     }
+    // Transcribed from the archive's 2026-compatible OrbitalBulletAdvancer:
+    // fly the centre out, home to the owner, and compute the orbit at 1/60 s steps.
+    private void advanceOrbit(Shot shot,int end,int from,ActorState home){
+        var orbit=shot.spec.orbit();
+        float remaining=Math.max(0,end-from)/1000f;
+        while(remaining>0&&shot.destroyed==Integer.MAX_VALUE){
+            float rest=Math.max(remaining-.016666668f,0),elapsed=remaining-rest;
+            int next=end-(int)(rest*1000);remaining=rest;
+            float cx,cy;
+            if(next-shot.created<=orbit.outDuration()){
+                float distance=orbit.flightSpeed()*(next-shot.created)/1000f;
+                cx=shot.originX+(float)Math.cos(shot.rotation)*distance;cy=shot.originY+(float)Math.sin(shot.rotation)*distance;
+            }else{
+                shot.returning=true;cx=shot.x-shot.relativeX;cy=shot.y-shot.relativeY;
+                if(home!=null){float dx=home.x()-cx,dy=home.y()-cy,distance=(float)Math.hypot(dx,dy),step=orbit.flightSpeed()*elapsed;
+                    if(distance<=step){cx=home.x();cy=home.y();}else if(distance>0){cx+=dx*step/distance;cy+=dy*step/distance;}}
+            }
+            float angle=orbit.startingRotation()+shot.rotation+spin(next-shot.created,orbit.angularSpeed(),orbit.alternateSpin()&&(shot.created&1)==1);
+            float rx=orbit.radius()*(float)Math.cos(angle),ry=orbit.radius()*(float)Math.sin(angle);
+            if(orbit.compound()){float second=orbit.secondStartingRotation()+shot.rotation+spin(next-shot.created,orbit.secondSpeed(),orbit.alternateSpin()&&(shot.created&1)==1);
+                rx+=orbit.secondOrbitRadius()*(float)Math.cos(second);ry+=orbit.secondOrbitRadius()*(float)Math.sin(second);}
+            float x=cx+rx,y=cy+ry;
+            if((shot.spec.flags()&2)==0&&!clearPath(shot.x,shot.y,x,y)){shot.collided=next;destroy(shot,next,false);break;}
+            shot.relativeX=rx;shot.relativeY=ry;shot.x=x;shot.y=y;from=next;
+        }
+    }
+    private boolean clearPath(float fromX,float fromY,float x,float y){
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(x-fromX,y-fromY)/.05));
+        for(int i=1;i<=steps;i++)if(!terrain.walkable(fromX+(x-fromX)*i/steps,fromY+(y-fromY)*i/steps))return false;
+        return true;
+    }
+    private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
     private void destroy(Shot shot,int stamp,boolean fizzle){shot.destroyed=stamp;shot.fizzle=fizzle;
-        if(!fizzle&&shot.spec.detonation()!=null)execute(shot.spec.detonation(),new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.source.ownerOid),stamp,0);}
+        var detonation=catalog.detonation(shot.spec);
+        if(!fizzle&&detonation!=null)execute(detonation,new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.source.ownerOid),stamp,0);}
     private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth){
-        if(action==null||depth>32)return false;
-        if(action.kind()==FireCatalog.Kind.COMPOUND){boolean result=true;for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1);result&=success;if(!success&&action.stopOnFailure())break;}return result;}
+        return execute(action,source,stamp,depth,stamp);
+    }
+    private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth,int seed){
+        if(action==null||depth>96)return false;
+        if(action.kind()==FireCatalog.Kind.RANDOM_EQUAL){return action.children().isEmpty()||execute(action.children().get(java.util.concurrent.ThreadLocalRandom.current().nextInt(action.children().size())),source,stamp,depth+1,seed);}
+        if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
+            for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
         if(!sourceTarget(action.targetType()))return false;
-        if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
+        if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
         if(action.kind()==FireCatalog.Kind.UNSUPPORTED&&nonTargetAction(action.unsupportedType()))return true;
         if(action.kind()!=FireCatalog.Kind.EMIT_PROJECTILE)return false;
         if(!action.facingType().isEmpty())return false; // Targeted shots require actual resolved targets.
@@ -88,7 +135,15 @@ public final class SceneWeapons {
                 long key=((long)dx<<32)^(dy&0xffffffffL);float px=x+dx*action.stepSize(),py=y+dy*action.stepSize();
                 if(locations.add(key)&&(action.collisionMask()==0||terrain.walkable(px,py))){x=px;y=py;placed=true;break;}}
                 if(!placed)continue;}
-            var spec=action.actor();float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
+            var spec=action.actor();
+            // Stock preExecute uses the authored fire timestamp (incremented for
+            // MultiSpawnPrespawned), also selecting Pollinator's pollen colour.
+            if(!action.parameter().isEmpty()&&!action.values().isEmpty()){
+                var arguments=new HashMap<>(spec.config().arguments());arguments.put(action.parameter(),action.values().get(Math.floorMod(seed,action.values().size())));
+                var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
+                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit());
+            }
+            float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
             if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
             while(shots.containsKey(nextId))nextId++;

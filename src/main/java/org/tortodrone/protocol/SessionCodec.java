@@ -770,7 +770,7 @@ public final class SessionCodec {
             type(out,"com.threerings.projectx.dungeon.data.ImmutableStatusModifiers");
             for(int i=0;i<8;i++)out.writeFloat(1);out.writeFloat(0);
             for(int i=0;i<4;i++)out.writeBoolean(true);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(true);out.writeInt(0);
-            for(int n=0;n<2;n++){type(out,"com.threerings.projectx.item.data.ImmutableEquipmentModifiers");for(int i=0;i<4;i++)out.writeFloat(0);}
+            equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
     }
     private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline,boolean interior)throws IOException {
@@ -784,8 +784,8 @@ public final class SessionCodec {
         boolean combatChanged=interior&&(a.combat()!=null||baseline!=null&&baseline.combat()!=null);
         out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(1);
         // Mutable Dungeoneer fields: weapon 16, shields 17/18, health 22/23,
-        // impulse 24, chain 27/28 and dodge deadline 31. Id/created are DeltaFinal.
-        if(interior){out.writeByte(combatChanged?0xf7:0);out.writeByte(combatChanged?0x99:0);out.writeByte(0);}
+        // impulse 24, chain 27/28, dodge deadline 31 and modifiers 33/34. Id/created are DeltaFinal.
+        if(interior){out.writeByte(combatChanged?0xf7:0);out.writeByte(combatChanged?0x99:0);out.writeByte(combatChanged?6:0);}
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
         out.writeInt(a.activity());out.writeInt(a.activityStarted());
@@ -793,22 +793,32 @@ public final class SessionCodec {
             var combat=a.combat();weapon(out,a.id(),combat);value(out,combat==null?null:combat.shield());value(out,combat==null?null:combat.shieldCostume());
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
             out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());out.writeInt(combat==null?0:combat.nextDodge());
+            equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
+    }
+    private void equipmentModifiers(DataOutputStream out,org.tortodrone.world.EquipmentCatalog.Modifiers modifiers)throws IOException {
+        var value=modifiers==null?org.tortodrone.world.EquipmentCatalog.Modifiers.ZERO:modifiers;
+        type(out,"com.threerings.projectx.item.data.ImmutableEquipmentModifiers");
+        out.writeFloat(value.chargeTime());out.writeFloat(value.speed());out.writeFloat(value.attackSpeed());out.writeFloat(value.defendingSpeed());
     }
     private void projectile(DataOutputStream out,ActorState actor)throws IOException {
         var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
-        type(out,"com.threerings.projectx.dungeon.data.actor."+(bullet?"Bullet":"Bomb"));
+        type(out,"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
         value(out,p.config());out.writeInt(actor.id());out.writeInt(p.created());out.writeInt(p.destroyed());
         vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
+        if(p.orbit()!=null){var orbit=p.orbit();out.writeFloat(orbit.radius());out.writeInt(orbit.followId());
+            vector(out,p.originX(),p.originY());vector(out,orbit.relativeX(),orbit.relativeY());out.writeInt(orbit.collided());out.writeFloat(orbit.originalRotation());
+            out.writeInt(p.ownerOid());out.writeInt(orbit.homeTargetId());out.writeInt(0);out.writeInt(p.faction());return;}
         if(bullet){out.writeFloat(p.maxStep());out.writeFloat(actor.direction());vector(out,p.originX(),p.originY());out.writeFloat(p.z());}
         out.writeInt(p.ownerOid());out.writeInt(0);if(bullet)out.writeInt(p.faction());else out.writeFloat(p.z());
     }
     private void projectileDelta(DataOutputStream out,ActorState actor)throws IOException {
         var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
-        out.writeInt(actor.id());type(out,"com.threerings.projectx.dungeon.data.actor."+(bullet?"Bullet":"Bomb"));
+        out.writeInt(actor.id());type(out,"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
         // Actor: destroyed, translation, rotation, flags. Origin, id and created are final.
-        out.writeByte(0x1e);if(bullet)out.writeByte(0);
+        out.writeByte(0x1e);if(p.orbit()!=null)out.writeByte(3);else if(bullet)out.writeByte(0);
         out.writeInt(p.destroyed());vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
+        if(p.orbit()!=null){vector(out,p.orbit().relativeX(),p.orbit().relativeY());out.writeInt(p.orbit().collided());}
     }
     private void effect(DataOutputStream out,SceneEffect effect)throws IOException {
         type(out,"com.threerings.tudey.data.effect.Effect");value(out,effect.config());out.writeInt(effect.timestamp());out.writeShort(0);

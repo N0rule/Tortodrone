@@ -11,11 +11,12 @@ bundled into the server, and nothing writes to the installation or real preferen
 Use a JDK capable of reading the installed classes (Java 25 for the tested game):
 
 ```sh
+./gradlew shadowJar
 java scripts/StockTools.java items "/path/to/Spiral Knights"
 ```
 
-This builds both server tools and creates **build/items/catalog.json** and
-**build/items/provenance.tsv**. Output must be a fresh directory; pass a different
+Build the server JAR first; the exporter then creates **build/items/catalog.json**
+and **build/items/provenance.tsv**. Output must be a fresh directory; pass a different
 directory as the optional final argument for another snapshot. The exporter reads
 the installation locally and never downloads game assets.
 
@@ -25,31 +26,42 @@ beside their JARs, then use the default catalogue. Server startup warns and uses
 built-in starter definitions if neither is usable. Restart after changing definitions;
 preserve custom catalogues across updates. The game is not a runtime dependency.
 
-The tested installation provides **9,348 definitions**, including **8,454 grantable
-player items**: 905 normal equipment references, 2,421 costumes, 93 trinkets and
-5,035 plain inventory definitions. The latter include materials, recipes, accessory
-and variant tickets, minerals, tokens, rarity items, sprite eggs, cosmetic upgrades,
-boxes and consumables. Counts depend on the installed version.
+The checked-in v2 snapshot contains **9,348 definitions**, of which **8,570 are
+grantable** under the current native-record and model-argument rules. Counts describe
+the tested installation and may differ in another installed version. V2 records the
+stock item subtype (`variant`), an optional artifact seed, and the independent
+`locked` state.
 
-Grants require a nonzero stock ID, usable display metadata and a supported stock
-item record. Equipment additionally requires verified slot rules and representable
-model arguments. Unobtainable/event/permanent player gear is allowed when it passes
-those checks; stock `creatable` is not treated as an obtainability restriction.
-Internal parts, developer/test/PvP definitions, expiring items, dungeon-only pickups
-and unimplemented specialized records (furniture, seed/artifact, gift-box and
-upgrading records) remain indexed but unavailable for grants. This is a conservative
-compatibility policy, not a guarantee that every item animation or gameplay action
-has been exercised. Accessory tickets may derive their names from accessory definitions.
+Grantable entries need a nonzero stock ID, usable display metadata and a supported
+stock item record. Equipment also needs a verified slot and representable model
+arguments. Stock `creatable` is not an obtainability filter: event or permanent gear
+is grantable when it meets those checks. Unsupported definitions remain indexed but
+cannot be granted.
 
-The UTF-8 JSON document has `format: "tortodrone-items"`, `version: 1`, and an
+The exported subtype and inventory slot select the native item record. Equipment,
+costume and trinket slots use `LevelItem`. For generic inventory, `SEED_ITEM` uses
+`SeedItem` with its 64-bit seed, `LEVEL_ITEM` uses `LevelItem`, and `ITEM` uses the
+common `Item` record. Upgrade variants are indexed only. Artifacts are grantable only
+when a seed-item subtype and seed are present. Other generic records can be granted
+when their stock type is supported. `permanent` and `locked` are distinct stock flags;
+permanent entries are always locked. Artifact, Mineral, Token and TokenArtifact
+records default to locked, while v2 preserves the stock lock state for other entries.
+Locked records can be granted, but their instances retain the lock and cannot be
+traded. Binding is separate: permanent gear is bound when created, and `bindOnEquip`
+gear becomes bound when equipped.
+
+The UTF-8 JSON document has `format: "tortodrone-items"`, `version: 2`, and an
 `items` array. Each item records `config`, `stockId`, `type`, `nameKey`, `rarity`,
 `stackable`, `slot` (null means index only), `bindOnEquip`, `permanent`, and
-`modelArguments`. Values are readable JSON rather than Base64. Model references,
+`modelArguments`, plus `locked`, `variant`, and `seed`. Values are readable JSON
+rather than Base64. Model references,
 normal/translated colorizations, player colors and finite floats carry explicit
 `type` objects; strings, integers and booleans use native JSON values. This preserves
 the exact stock wire types. Unknown fields/types, duplicates, invalid flags and
 oversized/deep data are rejected. TSV/CSV is not a runtime catalogue format; obtain
-a fresh JSON export rather than migrating account/character data.
+a fresh JSON export rather than migrating account/character data. V1 catalogues remain
+readable with stock-derived lock defaults; artifact entries without v2 seed metadata
+remain indexed but are not grantable.
 
 Stock IDs may be signed and are distinct from persistent item instance IDs.
 Only unique nonzero IDs resolve; exact references remain case insensitive.
@@ -63,14 +75,16 @@ In normal scene chat, a current Game Master can type:
 ```text
 !help
 !items Calibur
-!giveitem Alice Alice-Knight 2 Weapon/Sword/Calibur
-!giveitem Alice Alice-Knight 2 1157187935
+!giveitem Alice-Knight 2 Weapon/Sword/Calibur
+!giveitem Alice-Knight 2 1157187935
 ```
 
-Use the **account username and saved knight name**, then quantity and the exact
-config reference or catalogue ID shown by `items`. The example ID is Calibur in
-the tested installation; consult your exported catalogue. Config names can contain spaces; chat and server terminal
-commands consume the remaining text as the reference, without quotation marks.
+Use a globally unique saved **knight name**, then quantity and the exact config
+reference or catalogue ID shown by `items`. The example ID is Calibur in the tested
+installation; consult your exported catalogue. Config names can contain spaces; chat
+and server terminal commands consume the remaining text as the reference, without
+quotation marks. The previous account-qualified form remains supported, for example
+`!giveitem Alice Alice-Knight 2 Weapon/Sword/Calibur`.
 The command and its result stay private to the sender. Unknown, unsupported or
 invalid requests do not mutate inventories. Permission is rechecked in the write
 transaction, including authentication revision and live GM revocation. Unknown GM
@@ -82,14 +96,14 @@ The local server terminal uses the same syntax without `!`:
 
 ```text
 items Calibur
-giveitem Alice Alice-Knight 2 Weapon/Sword/Calibur
+giveitem Alice-Knight 2 Weapon/Sword/Calibur
 ```
 
 The administration CLI also works while the server is running:
 
 ```sh
 java -jar build/tortodrone-admin.jar --items Calibur
-java -jar build/tortodrone-admin.jar --give-item Alice Alice-Knight 2 "Weapon/Sword/Calibur"
+java -jar build/tortodrone-admin.jar --give-item Alice-Knight 2 "Weapon/Sword/Calibur"
 ```
 
 Grants give 1–20 units per request. Equipment creates distinct, unequipped,
@@ -109,12 +123,13 @@ Audit rows identify the GM account; local console/CLI grants use a null actor.
 Knight deletion removes its item/audit rows. Creator edits affect only original
 starter cosmetics, retaining additional items of the same type.
 
-This milestone implements storage, stacking, equipment/costume presentation and
-grants. Crafting, learning recipes, opening boxes, using tickets/consumables, sprite
-hatching, accessory attachment, combat damage, drops, trade, weapon switching,
-levelling and random variants remain unavailable; grants do not implement those actions. The lowest equipped
-weapon slot remains the visible held weapon. Catalogue rarity/model information
-does not imply server combat stats have been implemented.
+Storage, stacking, equipment/costume presentation and grants are implemented. Verified
+weapon controls and authored projectile emissions are described in
+[town player behavior](town-player-behavior.md). Crafting, learning recipes, opening
+boxes, using tickets/consumables, sprite hatching, accessory attachment, hostile
+targets, damage, drops, levelling and random variants remain unavailable; granting an
+item does not implement its use action. The lowest equipped weapon slot remains the
+visible held weapon. Item rarity/model metadata does not establish combat statistics.
 
 ## Index every installed file
 
@@ -171,3 +186,9 @@ checks exercise grants by ID, costume slots, plain recipes, stack merges and
 reconnect. The isolated graphical check accepted Steam Knight Mask and Cool
 Hexoskeleton icons/binding/world models, a live Brimstone stack update to 10 and
 movement after closing Arsenal. Unsupported item-use actions remain unavailable.
+
+Run focused item, equipment and combat regressions as listed in [town player behavior](town-player-behavior.md). The unchanged
+stock-reader check is `java scripts/compat/CheckClientWorld.java "/path/to/Spiral
+Knights"`; it uses disposable server data and checks emitted schemas. Network and
+schema acceptance do not establish graphical rendering, animations or complete
+gameplay behavior.

@@ -1582,6 +1582,48 @@ A	Weapon/Sword/Iceburst Brandish	NORMAL	1	200	433	766	false	100	150	1.25	0.0
 A	Weapon/Sword/Iceburst Brandish	NORMAL	2	200	877	877	false	100	150	2.0	0.0
 A	Weapon/Sword/Iceburst Brandish	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
 A	Weapon/Sword/Iceburst Brandish	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 0	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 0	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 0	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 0	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 0	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 0	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 0 (SHD)	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 0 (SHD)	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 0 (SHD)	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 0 (SHD)	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 0 (SHD)	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 0 (SHD)	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 1	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 1	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 1	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 1	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 1	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 1	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 2	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 2	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 2	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 2	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 2	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 2	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 3	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 3	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 3	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 3	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 3	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 3	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 4	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 4	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 4	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 4	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 4	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 4	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Ideal Sword 5	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ideal Sword 5	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ideal Sword 5	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ideal Sword 5	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ideal Sword 5	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ideal Sword 5	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
 W	Weapon/Sword/Jalovec	3000	2	0	true	false	1.0	0.83
 A	Weapon/Sword/Jalovec	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
 A	Weapon/Sword/Jalovec	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
@@ -2049,78 +2091,11 @@ A	Weapon/Sword/_Frost Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
 A	Weapon/Sword/_Frost Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
 A	Weapon/Sword/_Frost Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
 A	Weapon/Sword/_Frost Sword	CHARGED	0	571	921	1810	false	300	200	1.0	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Blue	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Green	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Orange	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Pink	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Azure	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Blue	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Green	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Orange	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Pink	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Red	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Violet	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Yellow	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Bug/Roly-Poly, Cool	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Divine	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Dusky	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Fancy	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Heavy	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Honey	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Military	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Prismatic	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Regal	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Shadow	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Toasty	0	6000	2000	0.0	0.0
-S	Costume/Shield/Bug/Roly-Poly, Volcanic	0	6000	2000	0.0	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Clockworks	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Cool	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Divine	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Dusky	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Fancy	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Heavy	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Military	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Prismatic	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Regal	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Shadow	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Toasty	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Clockworks/Clock Blocker, Volcanic	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Blazing	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Curse	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Dazed	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Electric	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Glacial	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Lovely	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Slumber	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Vile	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Great Defender/Great Defender, Volcanic	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Illuminating Ward/Illuminating Ward	0	6000	3000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Cool	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Divine	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Dusky	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Fancy	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Heavy	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Military	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Prismatic	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Regal	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Shadow	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Toasty	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Lite/Hololite Shield, Volcanic	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Obsidian Obstacle/Obsidian Obstacle	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Obsidian Obstacle/Obsidian Obstacle, Amber	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Shrouded Crest/Shrouded Crest	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Shrouded Crest/Shrouded Crest, Curse	0	6000	2000	-0.5	0.0
-S	Costume/Shield/Spell Book/Spell Book, Cool	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Divine	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Dusky	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Fancy	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Heavy	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Military	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Prismatic	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Regal	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Shadow	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Toasty	0	6000	2000	0.0	0.0
-S	Costume/Shield/Spell Book/Spell Book, Volcanic	0	6000	2000	0.0	0.0
+S	Gear/Shield/(Dev) Deadzone	10000	6000	3000	0.0	0.0
+S	Gear/Shield/(Dev) Nuke-Pave	10000	6000	3000	-0.5	0.0
+S	Gear/Shield/(Dev) OOO Crest	50	6000	3000	-0.5	0.0
+S	Gear/Shield/(Dev) Shield Bracelet	50	6000	3000	-0.5	0.0
+S	Gear/Shield/(Dev) Translocator	10000	6000	3000	0.0	0.0
 S	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	50	6000	3000	-0.5	0.5
 A	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
 S	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	50	6000	3000	-0.5	0.5

@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|scene|interiors game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|interiors|archive-towns game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath(), game = Path.of(args[1]).toAbsolutePath();
         if (!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) throw new IOException("Missing installed stock game JAR");
         String fixture;
@@ -33,6 +33,12 @@ public final class StockTools {
                 if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");
                 fixture="WeaponCatalogExport";
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
+            case "equipment" -> {
+                if(args.length!=4)throw new IllegalArgumentException("equipment expects game-directory grant-catalog.json fresh-output-directory");
+                fixture="EquipmentCatalogExport";
+                fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
             }
             case "archive-towns" -> {
                 if(args.length!=4)throw new IllegalArgumentException("archive-towns expects game-directory archive-root fresh-output-directory");
