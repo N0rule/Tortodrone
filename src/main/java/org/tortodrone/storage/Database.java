@@ -22,6 +22,17 @@ public final class Database {
     public record Summary(int id, String username, boolean gameMaster, int knights, long createdAt) { }
     public record RosterState(List<Knight> knights,int next,long revision) { }
     public record WorldState(int accountId,int knightId,int worldId,String name,long revision,long authRevision,boolean gameMaster) { }
+    public record Diagnostics(long operations,long slowOperations,long failures,long rollbacks,long maximumMillis) { }
+    private static final java.util.concurrent.atomic.AtomicLong operations=new java.util.concurrent.atomic.AtomicLong(),slow=new java.util.concurrent.atomic.AtomicLong(),failures=new java.util.concurrent.atomic.AtomicLong(),rollbacks=new java.util.concurrent.atomic.AtomicLong(),maximum=new java.util.concurrent.atomic.AtomicLong();
+    public static Diagnostics diagnostics(){return new Diagnostics(operations.get(),slow.get(),failures.get(),rollbacks.get(),maximum.get());}
+    @FunctionalInterface public interface Observer {void completed(String operation,long millis,boolean failed);}
+    private volatile Observer observer=(operation,millis,failed)->{};
+    public void observe(Observer observer){this.observer=Objects.requireNonNull(observer);}
+    private void measured(String kind,long start,boolean failed){
+        long elapsed=(System.nanoTime()-start)/1000000;operations.incrementAndGet();maximum.accumulateAndGet(elapsed,Math::max);
+        if(elapsed>=100)slow.incrementAndGet();if(failed)failures.incrementAndGet();
+        try{observer.completed(kind,elapsed,failed);}catch(RuntimeException ignored){ }
+    }
     private final Path file;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
@@ -55,19 +66,24 @@ public final class Database {
         return connection;
     }
     public <T> T read(Work<T> work) throws IOException {
-        try (Connection connection = connect()) { return work.run(connection); }
-        catch (SQLException e) { throw failure(e); }
+        long start=System.nanoTime();boolean failed=true;
+        try (Connection connection=connect()) {T result=work.run(connection);failed=false;return result;}
+        catch(SQLException error){throw failure(error);}
+        finally{measured("read",start,failed);}
     }
     public <T> T write(Work<T> work) throws IOException {
-        try (Connection connection = connect(); Statement statement = connection.createStatement()) {
+        long start=System.nanoTime();boolean failed=true;
+        try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
             try {
-                T value = work.run(connection); statement.execute("COMMIT"); return value;
-            } catch (SQLException | IOException | RuntimeException e) {
-                try { statement.execute("ROLLBACK"); } catch (SQLException suppressed) { e.addSuppressed(suppressed); }
-                throw e;
+                T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
+            } catch(SQLException|IOException|RuntimeException error) {
+                rollbacks.incrementAndGet();
+                try{statement.execute("ROLLBACK");}catch(SQLException rollback){error.addSuppressed(rollback);}
+                throw error;
             }
-        } catch (SQLException e) { throw failure(e); }
+        } catch(SQLException error){throw failure(error);}
+        finally{measured("write",start,failed);}
     }
     private int version() throws IOException {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });
@@ -282,30 +298,74 @@ public final class Database {
         return worldProfile(accountId,knightId,-1);
     }
 
+    private record Target(int account, int knight) { }
+    private static Target target(Connection c, String username, String knightName) throws SQLException, IOException {
+        try (var s=c.prepareStatement("SELECT k.account_id,k.id FROM knights k JOIN accounts a ON a.id=k.account_id WHERE k.name_key=?" + (username==null ? "" : " AND a.name_key=?"))) {
+            s.setString(1,knightName.toLowerCase(Locale.ROOT));
+            if(username!=null)s.setString(2,username.toLowerCase(Locale.ROOT));
+            try(var r=s.executeQuery()){if(!r.next())throw new IOException("No such knight");return new Target(r.getInt(1),r.getInt(2));}
+        }
+    }
+    private static WorldProfile administrativeProfile(Connection c, String username, String knightName,
+            int expectedAccount, int expectedWorld) throws SQLException, IOException {
+        var target=target(c,username,knightName);
+        if(expectedAccount>=0&&target.account()!=expectedAccount)throw new IOException("Account changed; refresh");
+        var profile=WorldProfiles.load(c,target.account(),target.knight(),-1);
+        if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
+        return profile;
+    }
+    public WorldProfile inspectKnight(String username, String knightName) throws IOException {
+        return read(c->{c.setAutoCommit(false);var result=administrativeProfile(c,username,knightName,-1,-1);c.commit();return result;});
+    }
     public WorldProfile currency(String username,String knightName,int expectedAccount,int expectedWorld,
             org.tortodrone.character.Currency currency,long delta) throws IOException {
-        if (delta==0 || delta<-Integer.MAX_VALUE || delta>Integer.MAX_VALUE) throw new IOException("Amount must be between 1 and 2147483647");
+        return balance(username,knightName,expectedAccount,expectedWorld,currency,delta,false);
+    }
+    public WorldProfile setCurrency(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.Currency currency,long amount) throws IOException {
+        return balance(username,knightName,expectedAccount,expectedWorld,currency,amount,true);
+    }
+    private WorldProfile balance(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.Currency currency,long amount,boolean absolute) throws IOException {
+        Objects.requireNonNull(currency);
+        if(absolute ? amount<0||amount>Integer.MAX_VALUE : amount==0||amount<-Integer.MAX_VALUE||amount>Integer.MAX_VALUE)
+            throw new IOException(absolute ? "Balance must be between 0 and 2147483647" : "Amount must be between 1 and 2147483647");
         return write(c -> {
-            int accountId=requireId(c,username);
-            if (expectedAccount>=0 && accountId!=expectedAccount) throw new IOException("Account changed; refresh the account list");
-            int knightId;
-            try (PreparedStatement s=c.prepareStatement("SELECT id FROM knights WHERE account_id=? AND name_key=?")) {
-                s.setInt(1,accountId);s.setString(2,knightName.toLowerCase(Locale.ROOT));
-                try(ResultSet r=s.executeQuery()){if(!r.next())throw new IOException("No such knight");knightId=r.getInt(1);}
-            }
-            var profile=WorldProfiles.load(c,accountId,knightId,-1);
-            if(expectedWorld>=0 && profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh the character list");
-            long balance=(currency==org.tortodrone.character.Currency.CROWNS?profile.crowns():profile.energy())+delta;
+            var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            long previous=currency==org.tortodrone.character.Currency.CROWNS?profile.crowns():profile.energy();
+            long balance=absolute?amount:previous+amount, delta=balance-previous;
             if(balance<0)throw new IOException("Insufficient "+currency.name().toLowerCase(Locale.ROOT));
             if(balance>Integer.MAX_VALUE)throw new IOException("Balance exceeds the supported limit");
             String column=currency==org.tortodrone.character.Currency.CROWNS?"crowns":"energy";
-            try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET "+column+"=?,state_revision=state_revision+1 WHERE world_id=?")) {
+            try(var s=c.prepareStatement("UPDATE world_characters SET "+column+"=?,state_revision=state_revision+1 WHERE world_id=?")) {
                 s.setLong(1,balance);s.setInt(2,profile.worldId());s.executeUpdate();
             }
-            try(PreparedStatement s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) VALUES(?,?,?,?,?)")) {
+            try(var s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) VALUES(?,?,?,?,?)")) {
                 s.setInt(1,profile.worldId());s.setString(2,column);s.setLong(3,delta);s.setLong(4,balance);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
             }
-            return WorldProfiles.load(c,accountId,knightId,-1);
+            event(c,profile.accountId(),"currency "+(absolute?"set":"grant")+"; world="+profile.worldId()+"; "+column+"="+balance+"; delta="+delta);
+            return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
+        });
+    }
+    /** Local administrator quantity/removal, audited and published by the existing revision poller. */
+    public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,
+            long itemId,int quantity,org.tortodrone.character.ItemCatalog catalog) throws IOException {
+        if(quantity<0||quantity>9999)throw new IOException("Quantity must be between 0 and 9999");
+        return write(c->{
+            var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
+            if(item.starter()||item.permanent()||item.equippedSlot()!=null)
+                throw new IOException("Starter, permanent or equipped items cannot be removed or adjusted; unequip ordinary items in the client first");
+            var definition=catalog.find(item.config());
+            if(quantity>1&&(definition==null||!definition.stackable()))throw new IOException("This item is not stackable");
+            if(quantity==0)try(var s=c.prepareStatement("DELETE FROM inventory_items WHERE world_id=? AND item_id=?")){s.setInt(1,profile.worldId());s.setLong(2,itemId);s.executeUpdate();}
+            else try(var s=c.prepareStatement("UPDATE inventory_items SET count=? WHERE world_id=? AND item_id=?")){s.setInt(1,quantity);s.setInt(2,profile.worldId());s.setLong(3,itemId);s.executeUpdate();}
+            try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
+            try(var s=c.prepareStatement("INSERT INTO item_events(world_id,actor_account,config,quantity,first_item_id,created_at) VALUES(?,NULL,?,?,?,?)")){
+                s.setInt(1,profile.worldId());s.setString(2,item.config());s.setInt(3,quantity-item.count());s.setLong(4,itemId);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
+            }
+            event(c,profile.accountId(),"inventory quantity; world="+profile.worldId()+"; item="+itemId+"; count="+quantity);
+            return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
     public WorldProfile equip(int accountId,int knightId,long revision,long itemId,Integer slot) throws IOException {

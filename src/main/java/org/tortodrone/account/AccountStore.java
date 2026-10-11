@@ -44,6 +44,7 @@ public final class AccountStore implements AutoCloseable {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);
     }
+    public void observeDatabase(Database.Observer observer) {if(database!=null)database.observe(observer);}
     public Path databaseFile() { return database == null ? null : database.file(); }
 
     public synchronized List<Summary> list() throws IOException {
@@ -72,9 +73,23 @@ public final class AccountStore implements AutoCloseable {
     }
 
     public synchronized WorldProfile currency(String username,String knight,Currency currency,long delta,int expectedAccount,int expectedWorld) throws IOException {
-        validateUsername(username);
+        if(username!=null)validateUsername(username);
         if(database==null)throw new IOException("Currency requires SQLite storage");
         return database.currency(username,knight,expectedAccount,expectedWorld,currency,delta);
+    }
+    public WorldProfile setCurrency(String username,String knight,Currency currency,long amount,int expectedAccount,int expectedWorld) throws IOException {
+        if(username!=null)validateUsername(username);
+        if(database==null)throw new IOException("Currency requires SQLite storage");
+        return database.setCurrency(username,knight,expectedAccount,expectedWorld,currency,amount);
+    }
+    public WorldProfile inspectKnight(String name) throws IOException {
+        if(database==null)throw new IOException("Inspection requires SQLite storage");
+        return database.inspectKnight(null,name);
+    }
+    public WorldProfile itemQuantity(String username,String knight,long item,int quantity,int expectedAccount,int expectedWorld) throws IOException {
+        validateUsername(username);
+        if(database==null)throw new IOException("Inventory administration requires SQLite storage");
+        return database.itemQuantity(username,knight,expectedAccount,expectedWorld,item,quantity,catalog);
     }
     public void create(String username,char[] password) throws IOException { create(username,password,false); }
     public synchronized void create(String username,char[] password,boolean gameMaster) throws IOException {
