@@ -1,6 +1,5 @@
 import java.io.*;
 import java.nio.file.*;
-import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -81,15 +80,7 @@ public final class CheckClientWorld {
             Path serverLog = scratch.resolve("server.log");
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), serverLog);
             server.getOutputStream().close();
-            String port = null;
-            long deadline = System.nanoTime() + Duration.ofSeconds(15).toNanos();
-            while (System.nanoTime() < deadline) {
-                var match = Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)").matcher(Files.readString(serverLog));
-                if (match.find()) { port = match.group(1); break; }
-                if (!server.isAlive()) throw new IOException("Temporary server failed:\n" + tail(serverLog));
-                Thread.sleep(50);
-            }
-            if (port == null) throw new IOException("Temporary server readiness timeout:\n" + tail(serverLog));
+            String port = ready(server, serverLog);
             List<String> network = new ArrayList<>(base);
             network.addAll(List.of("WorldConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString()));
             try { run(network, "network", "", 60); }
@@ -151,15 +142,7 @@ public final class CheckClientWorld {
             Path isolatedLog = scratch.resolve("isolated-server.log");
             Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), isolatedLog);
             isolated.getOutputStream().close();
-            port = null;
-            deadline = System.nanoTime() + Duration.ofSeconds(15).toNanos();
-            while (System.nanoTime() < deadline) {
-                var match = Pattern.compile("Listening on 127\\.0\\.0\\.1:(\\d+)").matcher(Files.readString(isolatedLog));
-                if (match.find()) { port = match.group(1); break; }
-                if (!isolated.isAlive()) throw new IOException("Temporary instance server failed:\n" + tail(isolatedLog));
-                Thread.sleep(50);
-            }
-            if (port == null) throw new IOException("Temporary instance server readiness timeout");
+            port = ready(isolated, isolatedLog);
             List<String> accountCheck = new ArrayList<>(base);
             accountCheck.addAll(List.of("AccountConnectionCheck", port, scratch.resolve("data/keys/public.txt").toString()));
             try { run(accountCheck,"account-sessions","",45); }
@@ -187,7 +170,8 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(tradeLog));throw failure;}
         } finally {
             stopChildren();
-            Runtime.getRuntime().removeShutdownHook(cleanup);
+            try { Runtime.getRuntime().removeShutdownHook(cleanup); }
+            catch (IllegalStateException shuttingDown) { /* The registered hook is already stopping the children. */ }
             try (var paths = Files.walk(scratch)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
             }
@@ -229,12 +213,30 @@ public final class CheckClientWorld {
         return text.substring(Math.max(0, text.length() - 9000));
     }
     private static synchronized void stopChildren() {
-        for (int i = CHILDREN.size() - 1; i >= 0; i--) {
-            Process process = CHILDREN.get(i);
-            if (!process.isAlive()) continue;
-            process.destroy();
-            try { if (!process.waitFor(5, TimeUnit.SECONDS)) { process.destroyForcibly(); process.waitFor(5, TimeUnit.SECONDS); } }
-            catch (InterruptedException interrupted) { process.destroyForcibly(); Thread.currentThread().interrupt(); }
+        boolean interrupted = Thread.interrupted();
+        try {
+            for (int i = CHILDREN.size() - 1; i >= 0; i--) interrupted = stopChild(CHILDREN.get(i), interrupted);
+        } finally {
+            if (Thread.interrupted()) interrupted = true;
+            if (interrupted) Thread.currentThread().interrupt();
         }
+    }
+    private static boolean stopChild(Process process, boolean interrupted) {
+        if (!process.isAlive()) return interrupted;
+        process.destroy();
+        try {
+            if (!process.waitFor(5, TimeUnit.SECONDS) && process.isAlive()) process.destroyForcibly();
+        } catch (InterruptedException e) {
+            interrupted = true;
+            process.destroyForcibly();
+        }
+        while (process.isAlive()) {
+            try { process.waitFor(); }
+            catch (InterruptedException e) {
+                interrupted = true;
+                process.destroyForcibly();
+            }
+        }
+        return interrupted;
     }
 }

@@ -61,7 +61,8 @@ val adminJar = tasks.register<ShadowJar>("adminJar") {
 // Compile the existing Java preparation tool and its standalone regression together.
 val buildTools = sourceSets.create("buildTools") {
     java.setSrcDirs(listOf("scripts"))
-    java.include("BuildTools.java", "BuildToolsTest.java")
+    java.include("BuildTools.java", "BuildToolsTest.java", "StockTools.java", "ProcessCleanupTest.java",
+        "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java")
     resources.setSrcDirs(emptyList<String>())
 }
 fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) {
@@ -207,10 +208,17 @@ val testBuildTools = tasks.register<JavaExec>("testBuildTools") {
     mainClass.set("BuildToolsTest")
     workingDir = projectDir
 }
+val testProcessCleanup = tasks.register<JavaExec>("testProcessCleanup") {
+    usesService(regressionExecution)
+    javaLauncher.set(launcher25)
+    classpath = buildTools.runtimeClasspath
+    mainClass.set("ProcessCleanupTest")
+    workingDir = projectDir
+}
 val testIntegration = tasks.register("testIntegration") {
     group = "verification"
     description = "Run isolated packaged application, map and download regressions."
-    dependsOn(integrationPrograms, testBuildTools)
+    dependsOn(integrationPrograms, testBuildTools, testProcessCleanup)
     mustRunAfter(testUnit)
 }
 // There are no JUnit classes. Keep Gradle's conventional test/check/build entry points useful.

@@ -17,7 +17,8 @@ public final class StockTools {
                 if (args.length != 2) throw new IllegalArgumentException("previews expects only a game directory");
                 fixture = "PreviewCompatibility";
                 fixtureArgs.add(project.resolve("src/main/resources/starter-models.txt").toString());
-                run(List.of("make", "build-server"));
+                if (!Files.isRegularFile(project.resolve("build/tortodrone.jar")))
+                    throw new IOException("Build the server JAR before checking previews: ./gradlew buildServer");
             }
             case "items" -> {
                 if (args.length > 3) throw new IllegalArgumentException("items expects game directory [fresh-output-directory]");
@@ -94,15 +95,40 @@ public final class StockTools {
         try {
             if (!child.waitFor(180, TimeUnit.SECONDS)) throw new IOException("Stock tool timed out");
             if (child.exitValue() != 0) throw new IOException("Stock tool failed with exit " + child.exitValue());
+        } catch (InterruptedException interrupted) {
+            Thread.currentThread().interrupt();
+            throw interrupted;
         } finally {
             stop(child);
-            Runtime.getRuntime().removeShutdownHook(cleanup);
+            try { Runtime.getRuntime().removeShutdownHook(cleanup); }
+            catch (IllegalStateException shuttingDown) { /* The registered hook is already stopping the child. */ }
         }
     }
     private static void stop(Process child) {
-        if (!child.isAlive()) return;
-        child.destroy();
-        try { if (!child.waitFor(5, TimeUnit.SECONDS)) { child.destroyForcibly(); child.waitFor(5, TimeUnit.SECONDS); } }
-        catch (InterruptedException e) { child.destroyForcibly(); Thread.currentThread().interrupt(); }
+        boolean interrupted = Thread.interrupted();
+        try {
+            if (!child.isAlive()) return;
+            child.destroy();
+            try {
+                if (!child.waitFor(5, TimeUnit.SECONDS)) child.destroyForcibly();
+            } catch (InterruptedException e) {
+                interrupted = true;
+                child.destroyForcibly();
+            }
+            interrupted = awaitExit(child, interrupted);
+        } finally {
+            if (Thread.interrupted()) interrupted = true;
+            if (interrupted) Thread.currentThread().interrupt();
+        }
+    }
+    private static boolean awaitExit(Process child, boolean interrupted) {
+        while (child.isAlive()) {
+            try { child.waitFor(); }
+            catch (InterruptedException e) {
+                interrupted = true;
+                child.destroyForcibly();
+            }
+        }
+        return interrupted;
     }
 }

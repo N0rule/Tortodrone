@@ -9,6 +9,7 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ./gradlew build                  # both JARs and full regression (Java 25)
 ./gradlew testUnit
 ./gradlew testIntegration
+./gradlew testProcessCleanup     # deterministic graceful/forced/interrupted child cleanup
 ./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
 ./gradlew prepareMaps
 ./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # maintainer re-export that republishes the interiors into defaults/maps
@@ -16,6 +17,12 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ```
 
 Standalone regression JVMs share one Gradle build-service slot, including when the configuration cache is reused. This avoids CPU contention from RSA/password hashing triggering local socket deadlines. Compilation and packaging retain normal worker scheduling; each fixture still runs its own concurrent scenarios. No `--max-workers=1` flag is needed for `build`, `testUnit` or `testIntegration`.
+
+`testIntegration` includes `testProcessCleanup`. It compiles the standalone stock
+launchers separately from the shipped JARs and checks child exit and interrupted
+cleanup with deterministic process doubles. Stock launchers wait for exit after
+forcible termination before deleting their disposable trees. Run `buildServer`
+before `StockTools previews`, as for item export.
 
 The pinned Gradle Wrapper uses Java 25. Dependency/plugin checksums are in `gradle/verification-metadata.xml`; downloads are cached in Gradle user home. Use `.\gradlew.bat` on Windows. For headless Linux: `env -u DISPLAY ./gradlew build` (not a substitute for graphical tests). Avoid `JAVA_TOOL_OPTIONS`: startup output can break packaged fixture assertions. Tests must use disposable deployments; `./gradlew runServer` or `./gradlew runAdmin` starts real processes/data. Persistent compat tools are **Java**; throwaway work goes under `/tmp`.
 
