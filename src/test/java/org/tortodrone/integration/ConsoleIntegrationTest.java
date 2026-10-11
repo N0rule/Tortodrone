@@ -61,7 +61,7 @@ public final class ConsoleIntegrationTest {
                 server.send("knight info Alice Missing-Knight\n"); server.await("No such knight");
                 check(db.worldProfile(1,1,1).items().size()==5,"console inspection does not modify or regrant inventory");
                 server.send("items Proto Sword\ngiveitem Alice Console-Knight 2 Weapon/Sword/Proto Sword\n");
-                server.await("1 matches; Weapon/Sword/Proto Sword");server.await("Granted 2 x Weapon/Sword/Proto Sword");
+                server.await("1 matches; page 1/1; Proto Sword [Sword] [id=1132943168] sw:proto-sword");server.await("Granted 2 x Proto Sword");
                 check(db.worldProfile(1,1,1).items().size()==7,"console grants persist distinct owned item instances");
                 server.send("giveitem Alice Console-Knight 0 Weapon/Sword/Proto Sword\n");server.await("Quantity must be between 1 and 20");
                 check(db.worldProfile(1,1,1).items().size()==7,"invalid console quantity does not grant items");

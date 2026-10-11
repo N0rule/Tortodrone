@@ -54,7 +54,7 @@ public final class AdminIntegrationTest {
                 disconnected.get(10,TimeUnit.SECONDS);
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","player-password",false,(a,b,c) -> {}); }
                 command(admin,directory,"",true,"Saved-Knight","--list-knights","Player");
-                command(admin,directory,"",true,"Weapon/Sword/Proto Sword","--items","Proto Sword");
+                command(admin,directory,"",true,"Proto Sword [Sword] [id=1132943168] sw:proto-sword","--items","Proto Sword");
                 command(admin,directory,"",true,"Granted 2","--give-item","Player","Saved-Knight","2","Weapon/Sword/Proto Sword");
                 check(database.worldProfile(2,1,2).items().size()==7,"CLI grants persist instances while server remains running");
                 command(admin,directory,"wrong-name\n",false,"did not match","--delete-knight","Player","Saved-Knight");

@@ -192,3 +192,32 @@ stock-reader check is `java scripts/compat/CheckClientWorld.java "/path/to/Spira
 Knights"`; it uses disposable server data and checks emitted schemas. Network and
 schema acceptance do not establish graphical rendering, animations or complete
 gameplay behavior.
+
+## Local catalogue identities and browsing
+
+`items <search> [--page N]` searches friendly names, aliases, canonical paths,
+stock IDs, extracted name keys and types. `items category <type> [--page N]`
+filters the exact extracted type; each command displays five entries per page.
+`items info <reference>` inspects a definition, including definitions that cannot
+be granted, and explains their availability. These commands do not grant items.
+
+Friendly names are derived from the final canonical path segment, rather than
+localized client text. Categories use the exported `type`, including separate
+HelmCostume, ArmorCostume and ShieldCostume categories. Aliases are derived at
+load time as `category-prefix:name-slug` (for example `sw`, `gun`, `bomb`,
+`helm`, `armor`, `acc`, `mat` and `recipe`, otherwise the exact type slug); they are not extracted stock identifiers or
+additional JSON fields. When several entries share that alias, every member gets
+a suffix containing its stock ID and a SHA-256 digest of its case-insensitive
+canonical path. This makes collision choices deterministic even when source
+ordering changes; stock ID zero does not uniquely identify an item.
+
+Grants accept an exact canonical path, derived alias, stock ID or exact friendly
+name. Ambiguous IDs and names list explicit alias/path choices. Unsupported
+entries remain inspectable, while grants retain the existing native-record and
+model-argument restrictions. Derived aliases may change if a catalogue adds a
+new collision; canonical paths remain the preferred persistent references.
+
+Colliding aliases use a reserved `@<stock-id>-<12-hex-path-digest>` suffix;
+uniqueness is validated. Ambiguity feedback is bounded to five choices. Aliases
+are reproducible within a catalogue snapshot; adding a new name collision can
+change the formerly unsuffixed alias. Canonical paths remain the durable identity.

@@ -11,7 +11,7 @@ public final class ItemCommands {
     public static String chat(String line,ItemCatalog catalog,Grant grant)throws IOException {
         String command=line.strip().split("\\s+",2)[0].toLowerCase(java.util.Locale.ROOT);
         return switch(command) {
-            case "help" -> "GM commands: !help; !items <search>; !giveitem <knight-name> <1-20> <catalogue ID or exact item config>; /broadcast <message>.";
+            case "help" -> "GM commands: !help; !items <search> [--page N]; !items info <reference>; !items category <type>; !giveitem <knight-name> <1-20> <catalogue ID or exact item config>; /broadcast <message>.";
             case "items", "giveitem" -> execute(line,catalog,grant);
             default -> throw new IOException("Unknown command. Use !help for available commands.");
         };
@@ -19,9 +19,23 @@ public final class ItemCommands {
     public static String execute(String line,ItemCatalog catalog,Grant grant)throws IOException {
         var head=line.strip().split("\\s+",2);
         if(head[0].equalsIgnoreCase("items")) {
-            String query=head.length==2?head[1]:"";var matches=catalog.search(query);
-            String rows=String.join("; ",matches.stream().limit(5).map(e->e.config()+" [id="+e.stockId()+"]"+(e.grantable()?"":" [index only]")).toList());
-            return matches.size()+" matches"+(rows.isEmpty()?"":"; "+rows)+(matches.size()>5?"; narrow the search or consult items/catalog.json":"");
+            String query=head.length==2?head[1].strip():"";
+            if(query.toLowerCase(java.util.Locale.ROOT).startsWith("info ")) {
+                var e=catalog.inspect(query.substring(5));
+                return describe(catalog,e)+"; path="+e.config()+"; slot="+e.slot()+"; variant="+e.variant()+"; stackable="+e.stackable()+"; bindOnEquip="+e.bindOnEquip()+"; locked="+e.locked()+"; permanent="+e.permanent();
+            }
+            int page=1;var option=java.util.regex.Pattern.compile("(?:^|\\s)--page\\s+(\\S+)$").matcher(query);
+            if(option.find()) {
+                try { page=Integer.parseInt(option.group(1));if(page<1)throw new NumberFormatException(); }
+                catch(NumberFormatException invalid){throw new IOException("Page must be a positive integer");}
+                query=query.substring(0,option.start()).strip();
+            }
+            String category=null;
+            if(query.toLowerCase(java.util.Locale.ROOT).startsWith("category ")) {category=query.substring(9).strip();query="";}
+            var results=catalog.page(query,category,page,5);
+            String rows=String.join("; ",results.entries().stream().map(e->describe(catalog,e)).toList());
+            return results.total()+" matches; page "+page+"/"+Math.max(1,(results.total()+4)/5)+(rows.isEmpty()?"":"; "+rows);
+
         }
         var words=line.strip().split("\\s+",4);
         if(words.length!=4||!words[0].equalsIgnoreCase("giveitem"))throw usage();
@@ -37,7 +51,11 @@ public final class ItemCommands {
         int count;try{count=Integer.parseInt(quantity);}catch(NumberFormatException invalid){throw new IOException("Quantity must be between 1 and 20");}
         if(count<1||count>ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
         var entry=catalog.require(reference);grant.give(user,knight,entry.config(),count);
-        return "Granted "+count+" x "+entry.config()+" to "+(user==null?"":user+"/")+knight+" (unequipped).";
+        return "Granted "+count+" x "+entry.displayName()+" to "+(user==null?"":user+"/")+knight+" (unequipped).";
+    }
+    private static String describe(ItemCatalog catalog,ItemCatalog.Entry entry) {
+        return entry.displayName()+" ["+entry.category()+"] [id="+entry.stockId()+"] "+catalog.alias(entry)
+            +(entry.grantable()?"":" [index only: "+entry.unavailableReason()+"]");
     }
     private static IOException usage() {
         return new IOException("Usage: giveitem <knight-name> <1-20> <catalogue ID or exact item config>; legacy: giveitem <username> <knight-name> <1-20> <item>; items <search>");
