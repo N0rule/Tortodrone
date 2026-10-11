@@ -14,7 +14,7 @@ public final class WeaponCatalogTest {
             var bash = new WeaponCatalog.Attack(400, 250, 800, false, 0, 625, 5, 0);
             var weapon = new WeaponCatalog.Weapon("Weapon/Sword/Proto Sword", 3000, 3, 500, true, false,
                 1f, 1.25f, List.of(normal, normal, normal), null, charged, null);
-            var shield = new WeaponCatalog.Shield("Shield/Proto", 100, 8000, 3000, 0.9f, 0.5f, bash);
+            var shield = new WeaponCatalog.Shield("Shield/Proto", 100, 8000, 3000, -0.5f, 0.5f, bash);
             Path file = root.resolve("weapons.tsv");
             WeaponCatalog.write(file, List.of(weapon), List.of(shield), 2500);
             var loaded = WeaponCatalog.load(file);

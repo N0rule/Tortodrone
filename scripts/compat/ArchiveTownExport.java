@@ -12,7 +12,8 @@ import org.tortodrone.world.ScenePortals;
 
 /** Exports a pinned seven-scene Haven catalog from a local scene-archive checkout. */
 public final class ArchiveTownExport {
-    private record Pack(int id,String folder,String path,String kind,String digest) { }
+    /** Optional verified spawn keeps a bundle's documented arrival point; null derives the closest walkable sample. */
+    private record Pack(int id,String folder,String path,String kind,String digest,Float spawnX,Float spawnY) { }
     private record Entrance(int id,float x,float y,float rotation) { }
     private record Point(float x,float y) { }
     private record Route(int source,int destination,String tag,String areaName) { }
@@ -21,13 +22,15 @@ public final class ArchiveTownExport {
     private record Arrival(String tag,Entrance entrance) { }
 
     private static final List<Pack> PACKS=List.of(
-        new Pack(1,"haven","Master/Static/1","town","045528ddd9bb3c3a940586b28a3c9c3c5a3b3d2db47345f86d47ea0cc3db874f"),
-        new Pack(2,"bazaar","Master/Static/2","town","e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033"),
-        new Pack(3,"arcade","Master/Static/3","town","dff99bfbbba7d37cf5585746e8883e3f6c09cfadec7ffe39ac19327a42b22b9f"),
-        new Pack(445,"garrison","Master/Static/445","town","a1e3e970b31c59d2aa661ed6bd836fe578cb08bf46e64533febec8566286b9a1"),
-        new Pack(294,"advanced_training","Master/Static/294","training","d0cf0863721970d15090f613d217495ceaa18fbf125813ff9d105b16966f2619"),
-        new Pack(437,"laboratory","Master/Static/437","level","5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0"),
-        new Pack(449,"hall_of_heroes","Master/Static/449","level","fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6"));
+        // The bundled entry scene is the regular 2017 Town Square, not the snowy master revision;
+        // its verified spawn stays the documented arrival point instead of the closest sample to the origin.
+        new Pack(1,"haven","Legacy/BukkitBoss/2017/1","town","26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57",0f,-8f),
+        new Pack(2,"bazaar","Master/Static/2","town","e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033",null,null),
+        new Pack(3,"arcade","Master/Static/3","town","dff99bfbbba7d37cf5585746e8883e3f6c09cfadec7ffe39ac19327a42b22b9f",null,null),
+        new Pack(445,"garrison","Master/Static/445","town","a1e3e970b31c59d2aa661ed6bd836fe578cb08bf46e64533febec8566286b9a1",null,null),
+        new Pack(294,"advanced_training","Master/Static/294","training","d0cf0863721970d15090f613d217495ceaa18fbf125813ff9d105b16966f2619",null,null),
+        new Pack(437,"laboratory","Master/Static/437","level","5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0",null,null),
+        new Pack(449,"hall_of_heroes","Master/Static/449","level","fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6",null,null));
     private static final Set<Integer> TOWNS=Set.of(1,2,3,445);
     private static final String STOCK_DEFAULT="stock_default";
     private static final List<Route> INTERIOR_ROUTES=List.of(
@@ -65,7 +68,7 @@ public final class ArchiveTownExport {
         try {
             for(Pack pack:PACKS) {
                 Path folder=staging.resolve(pack.folder);
-                ScenePackExport.main(new String[]{game.toString(),sourceFiles.get(pack).toString(),folder.toString(),"1","Haven"});
+                ScenePackExport.main(sceneArgs(game,sourceFiles.get(pack),folder,pack));
                 Properties descriptor=properties(folder.resolve("map.properties"));
                 if(Integer.parseInt(descriptor.getProperty("scene-id"))!=pack.id
                     ||!pack.kind.equals(descriptor.getProperty("kind")))
@@ -83,6 +86,7 @@ public final class ArchiveTownExport {
             var arrivals=exportTownPortals(folders,scenes,manager);
             exportInteriorRoutes(folders,scenes,manager,arrivals);
             validateNetwork(folders);
+            verifyBundledTowns(project,folders);
             verifyKnownPortalMetadata(project,folders);
 
             Properties manifest=sourceManifest(project,archive,sourceFiles,staging);
@@ -358,6 +362,37 @@ public final class ArchiveTownExport {
         String key="owned."+relative;String current=properties.getProperty(key);
         var values=new TreeSet<String>();if(current!=null&&!current.isBlank())values.addAll(Arrays.asList(current.split(",")));
         values.add(digest);properties.setProperty(key,String.join(",",values));
+    }
+
+    private static String[] sceneArgs(Path game,Path archived,Path folder,Pack pack) {
+        var args=new ArrayList<>(List.of(game.toString(),archived.toString(),folder.toString(),"1","Haven"));
+        if(pack.spawnX()!=null) {
+            args.add(Float.toString(pack.spawnX()));
+            args.add(Float.toString(pack.spawnY()));
+        }
+        return args.toArray(String[]::new);
+    }
+
+    /** A prepared source must reproduce every bundled town pack, or a rebuild would silently replace its geometry. */
+    private static void verifyBundledTowns(Path project,Map<Integer,Path> folders) throws Exception {
+        Path bundled=project.resolve("defaults/maps");
+        for(Pack pack:PACKS) {
+            Path reference=bundled.resolve(pack.folder);
+            if(!Files.isRegularFile(reference.resolve("map.properties"),LinkOption.NOFOLLOW_LINKS))continue;
+            Properties prepared=properties(folders.get(pack.id).resolve("map.properties"));
+            Properties expected=properties(reference.resolve("map.properties"));
+            for(String key:List.of("kind","scene-id","zone-id","zone-name","name","image","instances",
+                "version","scene-sha256","collision-sha256"))
+                if(!Objects.equals(expected.getProperty(key),prepared.getProperty(key)))
+                    throw new IOException("Prepared "+pack.folder+" map differs from the bundled pack: "+key+" is "
+                        +prepared.getProperty(key)+", expected "+expected.getProperty(key));
+            for(String key:List.of("spawn-x","spawn-y"))
+                if(Float.parseFloat(expected.getProperty(key))!=Float.parseFloat(prepared.getProperty(key)))
+                    throw new IOException("Prepared "+pack.folder+" map differs from the bundled pack: "+key+" is "
+                        +prepared.getProperty(key)+", expected "+expected.getProperty(key));
+            if(!digest(folders.get(pack.id).resolve("scene.dat")).equals(digest(reference.resolve("scene.dat"))))
+                throw new IOException("Prepared "+pack.folder+" scene export differs from the bundled map");
+        }
     }
 
     private static void verifyKnownPortalMetadata(Path project,Map<Integer,Path> folders)throws Exception {

@@ -122,7 +122,9 @@ public final class BuildTools {
                         throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
                     copies.add(new Copy(file,target,true));
                 } else if(original==null&&Files.exists(target,LinkOption.NOFOLLOW_LINKS)) {
-                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Prepared map conflicts with existing path: " + target);
+                    // An owner's special path (dangling symlink, directory, device) is never written
+                    // through or replaced; keep it exactly as the offline preparation always did.
+                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))continue;
                     if(Files.mismatch(target,file)==-1)continue;
                     if(!archiveOwns(ownership,relative,target)) {
                         if(ownership!=null&&ownership.containsKey("source."+relative.toString().replace('\\','/')))

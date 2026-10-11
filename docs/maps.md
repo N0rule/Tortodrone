@@ -90,3 +90,15 @@ Advanced Training Hall, Laboratory and Hall of Heroes are not bundled in the fou
 This reads the installed stock client without changing it, checks pinned archive digests, and publishes a fresh ignored `local/defaults/maps/` source. It then prepares all seven scenes and matching town entry/return links under `build/defaults/maps/`. `./gradlew buildServer -PgameDir="/path/to/Spiral Knights"` also performs first-time export; subsequent `buildServer`, `prepareMaps` and `prepareDefaults` reuse the source offline without needing the game path. Source downloads are cached in `build/stock-scenes/`. The local source and deployment survive `clean`. Without a local source, builds retain the four bundled towns.
 
 An existing local source is reused rather than regenerated. Use `-PinteriorsOutput=/path/to/fresh/maps` and optionally `-PsceneCache=/path/to/cache` to export a separate fresh tree; only the standard `local/defaults/maps/` source is picked up automatically by ordinary builds. Deploy the complete `build/defaults/` tree beside the JAR, and restart the server yourself when ready. Map updates refuse a deployment whose server lock is held. A custom `maps/` beside the JAR still takes precedence. Never merge only the interior folders: the town entrance and return metadata must travel with them. Generated packs remain local and are not committed. See [solo interior scope](town-interactions.md).
+
+## Prepare the local scene archive
+
+`prepareInteriors` downloads just the three interior packs. `prepareArchive` exports all seven Haven scenes from a local scene-archive checkout instead:
+
+```sh
+./gradlew prepareArchive -PgameDir="/path/to/Spiral Knights"
+```
+
+The archive root defaults to `../reference-inputs` (`-ParchiveDir` overrides it) and must contain `Master/Static`; a `vendor/scene-archive/` checkout is accepted too. The export reads the installed stock client without changing it and publishes the ignored `local/defaults/archive-maps/` source with `scene-source.properties` digests. That source takes precedence over `local/defaults/maps/` and over the bundled packs for every later `prepareMaps`, `prepareDefaults` and `buildServer`, with no game path or network needed afterwards.
+
+The four town packs must keep the checked-in geometry: Town Square stays the regular 2017 export, and the export refuses to publish a source whose town scene, descriptor, collision digest or spawn differs from the bundled pack. A prepared source therefore can never silently replace the bundled scenes on a rebuild; updating one is explicit work in `defaults/maps/` together with its checksums and fixtures. An existing `local/defaults/archive-maps/` is reused, so re-exporting means deleting that directory first; because the fresh source restarts its ownership history, also delete `build/defaults/maps/` when a previous build installed different geometry, otherwise the pinned entry scene keeps its old layout and the movement regression reports it.
