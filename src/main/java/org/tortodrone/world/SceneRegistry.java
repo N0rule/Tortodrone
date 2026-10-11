@@ -18,6 +18,12 @@ public final class SceneRegistry {
         public SceneSimulation simulation(){return simulation;}
     }
     private final SceneCatalog catalog;
+    private WeaponCatalog weapons=WeaponCatalog.empty();
+    private FireCatalog fires=FireCatalog.empty();
+    public FireCatalog fires(){return fires;}
+    public void fires(FireCatalog catalog){fires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().fires(catalog);}
+    public WeaponCatalog weapons(){return weapons;}
+    public void weapons(WeaponCatalog catalog){weapons=Objects.requireNonNull(catalog);}
     private final Map<Integer,List<Instance>> instances=new HashMap<>();
     private record InteriorKey(int scene,int worldId){}
     private final Map<InteriorKey,Instance> interiors=new HashMap<>();
@@ -50,7 +56,7 @@ public final class SceneRegistry {
             var key=new InteriorKey(scene,worldId);var existing=interiors.get(key);
             if(existing!=null)return existing;
             var oid=interiorOids.pollFirst();if(oid==null)throw new IOException("Interior capacity is full; try again later");
-            var created=new Instance(oid,0,map);interiors.put(key,created);return created;
+            var created=new Instance(oid,0,map);created.simulation().fires(fires);interiors.put(key,created);return created;
         }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
     }

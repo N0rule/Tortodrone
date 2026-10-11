@@ -17,23 +17,26 @@ public final class SceneSimulation {
         private final int timestamp;
         private final Object identity=new Object(), predecessor;
         private final List<ActorState> actors;
+        private final List<SceneEffect> effects;
         private final Map<Integer,ActorState> byId;
         private final Set<Integer> occupants;
         private final Map<Integer,Boolean> roles;
         private final Map<Integer,ScenePortals.Trigger> portals;
         private final Delta common, initial;
-        private Snapshot(int stamp, List<ActorState> actors, Map<Integer,ScenePortals.Trigger> portals, Snapshot previous) {
-            timestamp=stamp;this.actors=List.copyOf(actors);
+        private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects, Map<Integer,ScenePortals.Trigger> portals, Snapshot previous) {
+            timestamp=stamp;this.actors=List.copyOf(actors);this.effects=List.copyOf(effects);
             this.portals=Map.copyOf(portals);
             var index=new LinkedHashMap<Integer,ActorState>();var permissions=new HashMap<Integer,Boolean>();
-            for(var actor:actors){index.put(actor.id(),actor);permissions.put(actor.id(),actor.gameMaster());}
-            byId=Collections.unmodifiableMap(index);occupants=byId.keySet();roles=Map.copyOf(permissions);
+            for(var actor:actors){index.put(actor.id(),actor);if(actor.projectile()==null)permissions.put(actor.id(),actor.gameMaster());}
+            byId=Collections.unmodifiableMap(index);occupants=Set.copyOf(permissions.keySet());roles=Map.copyOf(permissions);
             predecessor=previous==null?null:previous.identity;
             initial=new Delta(this.actors,List.of(),new int[0],List.of(),Map.of());
             common=previous==null?initial:calculate(previous);
         }
         public int timestamp(){return timestamp;}
         public List<ActorState> actors(){return actors;}
+        public List<ActorState> players(){return actors.stream().filter(a->a.projectile()==null).toList();}
+        public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);return effects.stream().filter(e->e.sequence()>last).toList();}
         public Set<Integer> occupants(){return occupants;}
         public Map<Integer,Boolean> roles(){return roles;}
         public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
@@ -48,7 +51,7 @@ public final class SceneSimulation {
                 var old=previous.byId.get(actor.id());
                 if(old==null)added.add(actor);else {
                     // Stock prediction mutates activity on its reference: transmit every actor.
-                    updated.add(actor);if(old.gameMaster()!=actor.gameMaster())changed.add(actor);
+                    if(actor.projectile()==null||!actor.equals(old))updated.add(actor);if(actor.projectile()==null&&old.gameMaster()!=actor.gameMaster())changed.add(actor);
                 }
             }
             int[] removed=previous.byId.keySet().stream().filter(id->!byId.containsKey(id)).mapToInt(Integer::intValue).toArray();
@@ -58,6 +61,7 @@ public final class SceneSimulation {
     public final class Membership implements AutoCloseable {
         private ActorState appearance;
         private final TownMovement movement;
+        private KnightCombat combat;
         private final Consumer<Snapshot> publish;
         private boolean entered, detached;
         private ScenePortals.Trigger portal;
@@ -70,7 +74,17 @@ public final class SceneSimulation {
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();movement.resetInput(SceneClock.now());}}
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
-            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,sceneTime,now);}
+            return input(stamp,facing,heading,flags,stamp,sceneTime,now);
+        }
+        public boolean input(int stamp,float facing,float heading,int flags,int actionChanged,int sceneTime,long now) {
+            synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
+        }
+        public void equipment(org.tortodrone.character.WorldProfile profile) {
+            synchronized(SceneSimulation.this){check();if(combat!=null)combat.equipment(profile);}
+        }
+        public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
+            synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
+                combat=new KnightCombat(catalog);combat.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
@@ -84,17 +98,19 @@ public final class SceneSimulation {
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
-                movement.rotation(),movement.direction(),movement.flags(),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster());
+                movement.rotation(),movement.direction(),movement.flags(),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState());
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
-        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;members.remove(appearance.id(),this);stopIfIdle();}}
+        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());members.remove(appearance.id(),this);stopIfIdle();}}
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
+    private final SceneWeapons weapons;
+    public synchronized void fires(FireCatalog catalog){weapons.catalog(catalog);}
     private ScheduledExecutorService timer;
     private Snapshot previous;
     private long tickCount;
-    public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);}
+    public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);weapons=new SceneWeapons(instance.map().collision());}
     public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
         var membership=new Membership(actor,Objects.requireNonNull(publish));members.put(actor.id(),membership);return membership;
@@ -106,7 +122,8 @@ public final class SceneSimulation {
     private Snapshot capture(int stamp,Snapshot baseline) {
         var portals=new HashMap<Integer,ScenePortals.Trigger>();
         for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
-        return new Snapshot(stamp,members.values().stream().map(Membership::actor).toList(),portals,baseline);
+        var actors=new ArrayList<ActorState>();members.values().forEach(m->actors.add(m.actor()));actors.addAll(weapons.actors());
+        return new Snapshot(stamp,actors,weapons.effects(),portals,baseline);
     }
     private void start() {
         if(timer!=null)return;
@@ -131,6 +148,7 @@ public final class SceneSimulation {
                 member.movement.advance(stamp,now);
                 member.portal=member.movement.portal();
             }
+            weapons.advance(stamp,members.values().stream().filter(m->m.entered).map(Membership::actor).toList());
             publication=capture(stamp,previous);previous=publication;tickCount++;
             recipients=members.values().stream().filter(m->m.entered).toList();
         }

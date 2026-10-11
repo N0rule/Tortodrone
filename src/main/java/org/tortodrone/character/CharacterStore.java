@@ -211,7 +211,7 @@ public final class CharacterStore {
     public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
             WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
         if(database==null||first.accountId()!=accountId)throw new IOException("Invalid trade owner");
-        return database.trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy);
+        return database.trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy,catalog);
     }
 
     private int indexOf(String name) {

@@ -12,7 +12,7 @@ public final class TownMovement {
     // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     private static final int MAX_PENDING = 256;
-    private record Frame(int timestamp, float rotation, float direction, int flags) { }
+    private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
     private final CollisionMap terrain;
     private final ScenePortals portals;
@@ -21,6 +21,10 @@ public final class TownMovement {
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
+    private KnightCombat combat;
+
+    public void combat(KnightCombat controller){combat=java.util.Objects.requireNonNull(controller);}
+    public KnightCombat.State combatState(){return combat==null?null:combat.state();}
 
     public TownMovement() {
         this(SceneRegistry.defaultEntry().map().collision(),SceneRegistry.defaultEntry().map().spawnX(),
@@ -48,15 +52,20 @@ public final class TownMovement {
         activity = 0;
         activityStarted = sceneTime;
         inputSeen = false;
+        if(combat!=null)combat.reset(sceneTime);
     }
 
     public boolean accept(int stamp, float facing, float heading, int inputFlags,
             int sceneTime, long now) {
+        return accept(stamp,facing,heading,inputFlags,stamp,sceneTime,now);
+    }
+    public boolean accept(int stamp,float facing,float heading,int inputFlags,int actionChanged,int sceneTime,long now) {
         if (portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
                 || Math.abs((long) (stamp - sceneTime)) > 10000
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
-        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & 3));
+        if(combat!=null&&Math.abs((long)actionChanged-stamp)>600000)return false;
+        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?3:4095),actionChanged));
         lastTimestamp = stamp;
         lastInputAt = now;
         inputSeen = true;
@@ -75,7 +84,8 @@ public final class TownMovement {
         if(portal!=null)return false;
         // Text-only emotes use the normal chat bubble path and must not clear a pose.
         if (!emote.animated()) return true;
-        if (activity == INVENTORY || activity == INVENTORY_END) return false;
+        if (activity == INVENTORY || activity == INVENTORY_END || combat!=null&&!combat.canOverride()) return false;
+        if(combat!=null)combat.reset(timestamp);
         if (activity != emote.activity() || emote.activity()!=SIT)
             setActivity(emote.activity(), timestamp);
         updateFlags();
@@ -90,20 +100,24 @@ public final class TownMovement {
             var frame = pending.removeFirst();
             if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
             if(portal!=null)return;
-            if (activity == 0 || activityAllowsMovement()) rotation = frame.rotation();
+            if ((activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsRotation(timestamp))) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
             if (activity != 0 && !activityAllowsMovement() && (inputFlags & 1) != 0) {
                 var emote = PlayerEmotes.byActivity(activity);
                 if(emote!=null)setActivity(emote.endActivity(),timestamp);
             }
-            if ((inputFlags & 2) != 0 && activity != INVENTORY) setActivity(INVENTORY, timestamp);
+            if ((inputFlags & 2) != 0 && activity != INVENTORY && (combat==null||combat.canOverride())) {
+                if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);
+            }
             else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            if(combat!=null)combat.input(inputFlags,frame.actionChanged(),timestamp,rotation,direction,activity==0);
             updateFlags();
         }
         if (now - lastInputAt > 500) {
             inputFlags = 0;
             if (activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
+            if(combat!=null)combat.input(0,timestamp,timestamp,rotation,direction,activity==0);
             updateFlags();
         }
         moveTo(sceneTime);
@@ -124,18 +138,22 @@ public final class TownMovement {
             updateFlags();
         }
         int elapsed = target - timestamp;
-        timestamp = target;
-        if ((flags & 2) == 0) return;
         // Match the client's small collision substeps instead of one large 50 ms jump.
         while (elapsed > 0) {
             int step = Math.min(elapsed, 16);
             elapsed -= step;
-            float distance = SPEED * step / 1000f;
-            float nx = x + (float) Math.cos(direction) * distance;
-            float ny = y + (float) Math.sin(direction) * distance;
+            int previous=timestamp;timestamp+=step;
+            if(combat!=null){combat.advance(timestamp,rotation);updateFlags();}
+            float distance = (flags&2)==0?0:SPEED * step / 1000f*(combat==null?1:combat.movementScale());
+            float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
+            var impulse=combat==null?null:combat.state().impulse();
+            if(impulse!=null){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
+            float nx = x + dx;
+            float ny = y + dy;
             if (terrain.walkable(nx, ny)) { x = nx; y = ny; }
             else if (terrain.walkable(nx, y)) x = nx;
             else if (terrain.walkable(x, ny)) y = ny;
+            if(combat!=null)combat.retireImpulse(timestamp);
             if(detectPortal(target))return;
         }
     }
@@ -152,8 +170,8 @@ public final class TownMovement {
     public float rotation() { return rotation; }
     public float direction() { return direction; }
     public int flags() { return flags; }
-    public int activity() { return activity; }
-    public int activityStarted() { return activityStarted; }
+    public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
+    public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
     private void setActivity(int value, int started) {
         activity = value;
         activityStarted = started;
@@ -163,7 +181,7 @@ public final class TownMovement {
         return emote!=null&&emote.allowsMovement();
     }
     private void updateFlags() {
-        flags = (activity == 0 || activityAllowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
+        flags = (activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
     }
     private static float normalize(float angle) {
         return (float) Math.IEEEremainder(angle, Math.PI * 2);

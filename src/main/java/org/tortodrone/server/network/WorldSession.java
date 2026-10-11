@@ -24,6 +24,7 @@ final class WorldSession implements AutoCloseable {
     private final long authRevision;
     private final SessionLog log;
     private final SceneRegistry scenes;
+    private final WeaponCatalog weapons;
     @FunctionalInterface interface RoleSource { boolean gameMaster()throws IOException; }
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
@@ -70,6 +71,7 @@ final class WorldSession implements AutoCloseable {
         authRevision = revision;
         this.log = log;
         this.scenes = scenes;
+        this.weapons=scenes.weapons();
         this.roles=roles;
     }
 
@@ -342,7 +344,7 @@ final class WorldSession implements AutoCloseable {
         synchronized (this) {
             if(scene!=place||closed)throw new IOException("Scene changed during subscription");
             if(portalMove!=null)throw new IOException("Scene is departing through a portal");
-            output.send(() -> codec.scene(message, scene, snapshot.actors()));
+            output.send(() -> codec.scene(message, scene, snapshot.players()));
             leaveChat();
             lastSnapshot = null;
             reference = acknowledge = 0;
@@ -507,7 +509,7 @@ final class WorldSession implements AutoCloseable {
         ping = (short) Math.max(0, Math.min(Short.MAX_VALUE, (long) sceneTime - input.smoothedTime()));
         for (var frame : input.frames()) {
             if (membership.input(frame.timestamp(), frame.rotation(), frame.direction(),
-                    frame.flags(), sceneTime, now)) acknowledge = frame.timestamp();
+                    frame.flags(),frame.actionChanged(), sceneTime, now)) acknowledge = frame.timestamp();
         }
     }
 
@@ -539,11 +541,12 @@ final class WorldSession implements AutoCloseable {
         // Subscription already announces occupants; the first reliable delta has no baseline.
         var changedRoles=lastSnapshot==null?current.actors().stream().filter(a->occupantRoles.containsKey(a.id())&&occupantRoles.get(a.id())!=a.gameMaster()).toList():delta.changedRoles();
         if(!changedRoles.isEmpty())output.send(()->codec.occupantRoles(scene.oid(),changedRoles));
-        if(!current.occupants().equals(occupants)){output.send(()->codec.occupants(scene.oid(),current.actors()));occupants=current.occupants();}
+        if(!current.occupants().equals(occupants)){output.send(()->codec.occupants(scene.oid(),current.players()));occupants=current.occupants();}
         occupantRoles=current.roles();
+        var effects=current.effectsSince(lastSnapshot);
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
-            delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town()));
+            delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town(),effects));
         lastStamp=reference=stamp;lastSnapshot=current;
         var trigger=current.portal(profile.worldId());
         if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
@@ -596,13 +599,14 @@ final class WorldSession implements AutoCloseable {
     private void attach() {
         rebuildAppearance();var place=scene;
         membership=place.simulation().join(actorAppearance(),snapshot->offer(place,snapshot));
+        if(!place.map().town())membership.combat(weapons,profile);
     }
     private void rebuildAppearance() {
-        var model=StarterCatalog.town(knight,profile,characters.catalog());
+        var model=scene.map().town()?StarterCatalog.town(knight,profile,characters.catalog()):StarterCatalog.equipped(knight,profile,characters.catalog());
         appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
             Map.of("Model",model,"Height",model.arguments().get("Height")));
     }
-    private void updateAppearance(){rebuildAppearance();membership.appearance(actorAppearance());}
+    private void updateAppearance(){rebuildAppearance();membership.equipment(profile);membership.appearance(actorAppearance());}
     private ActorState actorAppearance() {
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
             arrival==null?scene.map().spawnX():arrival.x(),arrival==null?scene.map().spawnY():arrival.y(),

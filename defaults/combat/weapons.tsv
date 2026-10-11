@@ -1,0 +1,2359 @@
+TORTODRONE-COMBAT	1
+C	8000
+W	Weapon/Bomb/Ash of Agni	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Ash of Agni	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Ash of Agni	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Big Angry Bomb	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Big Angry Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Big Angry Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Blast Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Blast Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Blast Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Celestial Vortex	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Celestial Vortex	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Celestial Vortex	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Cold Snap	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Cold Snap	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Cold Snap	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Crystal Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Crystal Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Crystal Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Dark Briar Barrage	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Dark Briar Barrage	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Dark Briar Barrage	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Dark Matter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Dark Matter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Dark Matter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Charcoaler	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Charcoaler	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Charcoaler	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Charcoaler, Tech Pink	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Charcoaler, Tech Pink	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Charcoaler, Tech Pink	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Charcoaler, Tech Yellow	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Charcoaler, Tech Yellow	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Charcoaler, Tech Yellow	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Crystal Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Crystal Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Crystal Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Dark Matter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Dark Matter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Dark Matter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Shard Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Shard Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Shard Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deadly Splinter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deadly Splinter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deadly Splinter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Deconstructor	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Deconstructor	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Deconstructor	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Electron Bomb	2500	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Electron Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Electron Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Electron Charge	2000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Electron Charge	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Electron Charge	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Electron Vortex	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Electron Vortex	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Electron Vortex	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Fiery Atomizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Fiery Atomizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Fiery Atomizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Fiery Vaporizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Fiery Vaporizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Fiery Vaporizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Fiery Vaporizer Mk II	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Fiery Vaporizer Mk II	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Fiery Vaporizer Mk II	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Firecracker	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Firecracker	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Firecracker	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Freezing Atomizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Freezing Atomizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Freezing Atomizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Freezing Vaporizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Freezing Vaporizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Freezing Vaporizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Freezing Vaporizer Mk II	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Freezing Vaporizer Mk II	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Freezing Vaporizer Mk II	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Graviton Bomb	2500	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Graviton Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Graviton Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Graviton Charge	2000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Graviton Charge	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Graviton Charge	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Graviton Vortex	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Graviton Vortex	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Graviton Vortex	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Haze Bomb	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Haze Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Haze Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Haze Bomb Mk II	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Haze Bomb Mk II	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Haze Bomb Mk II	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Haze Burst	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Haze Burst	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Haze Burst	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Heavy Crystal Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Heavy Crystal Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Heavy Crystal Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Heavy Dark Matter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Heavy Dark Matter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Heavy Dark Matter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Heavy Deconstructor	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Heavy Deconstructor	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Heavy Deconstructor	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Heavy Shard Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Heavy Shard Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Heavy Shard Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Heavy Splinter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Heavy Splinter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Heavy Splinter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Humbug Hazer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Humbug Hazer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Humbug Hazer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Ionized Salt Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Ionized Salt Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Ionized Salt Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Irontech Bomb	2500	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Irontech Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Irontech Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Irontech Destroyer	2500	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Irontech Destroyer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Irontech Destroyer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Jack Froster	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Jack Froster	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Jack Froster	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Lightning Capacitor	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Lightning Capacitor	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Lightning Capacitor	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Master Blast Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Master Blast Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Master Blast Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Nitronome	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Nitronome	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Nitronome	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Obsidian Crusher	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Obsidian Crusher	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Obsidian Crusher	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Piggy Banker/Piggy Banker	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Piggy Banker/Piggy Banker	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Piggy Banker/Piggy Banker	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Piggy Banker/Piggy Banker, Grey	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Piggy Banker/Piggy Banker, Grey	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Piggy Banker/Piggy Banker, Grey	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Plasma Capacitor	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Plasma Capacitor	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Plasma Capacitor	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Pot O' Crowns	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Pot O' Crowns	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Pot O' Crowns	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Powder Keg	3000	0	0	true	true	0.1	0.6
+A	Weapon/Bomb/Powder Keg	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Powder Keg	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Proto Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Proto Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Proto Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Punkin Cinnamug	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Punkin Cinnamug	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Punkin Cinnamug	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Radiant Sun Shards	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Radiant Sun Shards	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Radiant Sun Shards	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Rock Salt Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Rock Salt Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Rock Salt Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Scalding Hot Cocoa	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Scalding Hot Cocoa	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Scalding Hot Cocoa	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Scintillating Sun Shards	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Scintillating Sun Shards	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Scintillating Sun Shards	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Shard Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Shard Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Shard Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Shivermist Buster	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Shivermist Buster	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Shivermist Buster	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Shocking Salt Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Shocking Salt Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Shocking Salt Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Sloppy Shard Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Sloppy Shard Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Sloppy Shard Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Slumber Smogger	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Slumber Smogger	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Slumber Smogger	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Slumber Smogger Mk II	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Slumber Smogger Mk II	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Slumber Smogger Mk II	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Slumber Squall	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Slumber Squall	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Slumber Squall	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Spike Shower	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Spike Shower	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Spike Shower	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Spine Cone	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Spine Cone	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Spine Cone	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Splinter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Splinter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Splinter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Stagger Storm	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Stagger Storm	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Stagger Storm	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Static Capacitor	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Static Capacitor	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Static Capacitor	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Static Flash	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Static Flash	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Static Flash	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Sun Shards	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Sun Shards	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Sun Shards	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Super Blast Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Super Blast Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Super Blast Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Super Crystal Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Super Crystal Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Super Crystal Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Super Dark Matter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Super Dark Matter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Super Dark Matter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Super Shard Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Super Shard Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Super Shard Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Super Splinter Bomb	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Super Splinter Bomb	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Super Splinter Bomb	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Torpor Tantrum	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Torpor Tantrum	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Torpor Tantrum	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Toxic Atomizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Toxic Atomizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Toxic Atomizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Toxic Vaporizer	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Toxic Vaporizer	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Toxic Vaporizer	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Toxic Vaporizer Mk II	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Toxic Vaporizer Mk II	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Toxic Vaporizer Mk II	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Twisted Spine Cone	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Twisted Spine Cone	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Twisted Spine Cone	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Venom Veiler	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Venom Veiler	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Venom Veiler	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Virulent Seedling	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Virulent Seedling	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Virulent Seedling	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Virulent Seedling, Tech Azure	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Virulent Seedling, Tech Azure	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Virulent Seedling, Tech Azure	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Voltaic Tempest	3000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Voltaic Tempest	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Voltaic Tempest	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Warmaster Bomb 1	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Warmaster Bomb 1	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Warmaster Bomb 1	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Warmaster Bomb 2	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Warmaster Bomb 2	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Warmaster Bomb 2	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Bomb/Warmaster Bomb 3	2000	0	0	true	true	0.1	0.9
+A	Weapon/Bomb/Warmaster Bomb 3	INCOMPLETE	0	0	383	633	true	-1	-1	0.0	0.0
+A	Weapon/Bomb/Warmaster Bomb 3	CHARGED	0	0	200	400	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Antigua	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Antigua	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Antigua	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Arcana	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Arcana	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Arcana	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Arcana	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Arcana	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Arcana	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Arcana	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Argent Peacemaker	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Argent Peacemaker	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Autogun	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Autogun	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Autogun	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Autogun	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Autogun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Autogun	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Autogun	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Biohazard	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Biohazard	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Biohazard	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Biohazard	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Biohazard	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Biohazard	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Biohazard	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Black Chaingun	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Black Chaingun	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Black Chaingun	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Black Chaingun	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Black Chaingun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Black Chaingun	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Black Chaingun	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Blackhawk	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Blackhawk	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blackhawk	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Blazing Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Blazing Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blazing Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blazing Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blazing Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blazing Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Blazing Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Blight Needle	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Blight Needle	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blight Needle	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blight Needle	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blight Needle	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blight Needle	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blight Needle	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Blitz Needle	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Blitz Needle	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blitz Needle	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blitz Needle	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blitz Needle	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blitz Needle	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Blitz Needle	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Breach Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Breach Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Breach Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Breach Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Breach Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Breach Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Breach Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Buccaneer Broadsider	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Buccaneer Broadsider	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Buccaneer Broadsider	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Buccaneer Broadsider	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Buccaneer Broadsider	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Buccaneer Broadsider	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Callahan	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Callahan	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Callahan	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Callahan	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Callahan	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Callahan	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Catalyzer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Catalyzer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Catalyzer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Catalyzer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Catalyzer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Catalyzer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Catalyzer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Celestial Orbitgun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Celestial Orbitgun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Celestial Orbitgun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Celestial Orbitgun (OLD)	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Celestial Orbitgun (OLD)	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Chilling Duelist	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Chilling Duelist	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Cryo Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Cryo Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryo Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryo Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryo Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Cryo Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Cryotech Alchemer	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Cryotech Alchemer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Cryotech Alchemer	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Cryotech Alchemer Mk II	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Cryotech Alchemer Mk II	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer Mk II	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer Mk II	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Cryotech Alchemer Mk II	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Cryotech Alchemer Mk II	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Dark Chaingun	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Dark Chaingun	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Dark Chaingun	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Dark Chaingun	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Dark Chaingun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Dark Chaingun	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Dark Chaingun	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Elemental Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Elemental Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Elemental Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Elemental Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Elemental Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Elemental Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Elemental Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Fiery Diskgun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Fiery Diskgun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Diskgun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Diskgun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Diskgun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Diskgun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Fiery Diskgun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Fiery Pepperbox	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Fiery Pepperbox	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Pepperbox	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Pepperbox	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Pepperbox	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Pepperbox	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fiery Pepperbox	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Firo Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Firo Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firo Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firo Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firo Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Firo Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Firotech Alchemer	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Firotech Alchemer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Firotech Alchemer	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Firotech Alchemer Mk II	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Firotech Alchemer Mk II	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer Mk II	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer Mk II	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Firotech Alchemer Mk II	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Firotech Alchemer Mk II	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Flaming Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Flaming Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Flaming Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Flaming Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Flaming Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Flaming Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Flaming Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Freezing Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Freezing Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Freezing Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Freezing Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Freezing Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Freezing Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Freezing Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Frost Gun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Frost Gun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frost Gun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frost Gun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frost Gun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frost Gun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Frost Gun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Frozen Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Frozen Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frozen Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frozen Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frozen Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Frozen Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Frozen Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Fusion Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Fusion Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fusion Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fusion Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fusion Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Fusion Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Fusion Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Gigawatt Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Gigawatt Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gigawatt Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gigawatt Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gigawatt Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gigawatt Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Gigawatt Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Gilded Griffin	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Gilded Griffin	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Grim Repeater	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Grim Repeater	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Grim Repeater	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Grim Repeater	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Grim Repeater	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Grim Repeater	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Grim Repeater	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Hail Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Hail Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Hail Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Hail Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Hail Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Hail Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Heavy Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Heavy Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Heavy Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Heavy Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Heavy Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Heavy Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Heavy Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Industrial Catalyzer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Industrial Catalyzer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Industrial Catalyzer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Industrial Catalyzer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Industrial Catalyzer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Industrial Catalyzer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Industrial Catalyzer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Iron Slug	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Iron Slug	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Iron Slug	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Iron Slug	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Iron Slug	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Iron Slug	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Kilowatt Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Kilowatt Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Kilowatt Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Kilowatt Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Kilowatt Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Kilowatt Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Kilowatt Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Magma Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Magma Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Magma Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Magma Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Magma Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Magma Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Magnus	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Magnus	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Magnus	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Magnus	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Magnus	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Magnus	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Master Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Master Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Master Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Master Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Master Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Master Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Master Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Mega Magnus	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Mega Magnus	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Magnus	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Magnus	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Magnus	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Mega Magnus	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Mega Tundrus	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Mega Tundrus	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Tundrus	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Tundrus	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Mega Tundrus	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Mega Tundrus	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Needle Shot	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Needle Shot	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Needle Shot	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Needle Shot	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Needle Shot	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Needle Shot	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Needle Shot	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Neutralizer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Neutralizer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Neutralizer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Neutralizer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Neutralizer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Neutralizer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Neutralizer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Nog Blaster	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Nog Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nog Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nog Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nog Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Nog Blaster	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Nova Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Nova Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nova Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nova Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Nova Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Nova Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Obsidian Carbine	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Obsidian Carbine	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Overcharged Mixmaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Overcharged Mixmaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Overcharged Mixmaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Overcharged Mixmaster (OLD)	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Overcharged Mixmaster (OLD)	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Blue	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Blue	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Blue	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Blue	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Blue	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Divine	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Divine	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Divine	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Divine	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Divine	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Gold	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Gold	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Gold	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Gold	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Gold	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Green	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Green	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Green	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Green	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Green	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Grey	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Grey	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Grey	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Grey	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Grey	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Pink	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Pink	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Pink	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Pink	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Pink	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Purple	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Purple	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Purple	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Purple	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Purple	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Red	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Red	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Red	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Red	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Red	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pepperbox	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Pepperbox	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pepperbox	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pepperbox	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pepperbox	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pepperbox	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pepperbox	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Peppermint Repeater	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Peppermint Repeater	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Peppermint Repeater	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Peppermint Repeater	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Peppermint Repeater	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Peppermint Repeater	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Peppermint Repeater	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Permafroster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Permafroster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Permafroster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Permafroster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Permafroster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Permafroster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Permafroster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Phantamos	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Phantamos	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Phantamos	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Phantamos	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Phantamos	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Phantamos	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Phantamos	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pierce Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Pierce Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pierce Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pierce Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pierce Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pierce Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Pierce Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Plague Needle	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Plague Needle	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Plague Needle	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Plague Needle	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Plague Needle	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Plague Needle	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Plague Needle	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Polaris	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Polaris	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Polaris	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Polaris	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Polaris	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Polaris	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Polaris	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pollinator	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Pollinator	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Pollinator	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pollinator, Tech Violet	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Pollinator, Tech Violet	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator, Tech Violet	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator, Tech Violet	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator, Tech Violet	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pollinator, Tech Violet	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Pollinator, Tech Violet	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Prisma Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Prisma Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prisma Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prisma Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prisma Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Prisma Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Prismatech Alchemer	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Prismatech Alchemer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Prismatech Alchemer	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Prismatech Alchemer Mk II	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Prismatech Alchemer Mk II	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer Mk II	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer Mk II	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Prismatech Alchemer Mk II	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Prismatech Alchemer Mk II	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Proto Duelist	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Duelist	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Proto Gun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Proto Gun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Gun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Gun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Gun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Proto Gun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Proto Gun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Pummel Gun	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Pummel Gun	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Pummel Gun	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Pummel Gun	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Pummel Gun	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Pummel Gun	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Punch Gun	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Punch Gun	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Punch Gun	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Punch Gun	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Punch Gun	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Punch Gun	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Radiant Pulsar	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Radiant Pulsar	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Radiant Pulsar	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Radiant Pulsar	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Radiant Pulsar	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Radiant Pulsar	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Radiant Pulsar	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Raptor	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Raptor	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Raptor	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Riftlocker	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Riftlocker	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Riftlocker	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Riftlocker	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Riftlocker	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Riftlocker	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Riftlocker	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Sentenza	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Sentenza	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Sentenza	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Shadow Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Shadow Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Shadow Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Shadow Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Shadow Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadow Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Shadow Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Shadowtech Alchemer	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Shadowtech Alchemer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Shadowtech Alchemer	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Shadowtech Alchemer Mk II	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Shadowtech Alchemer Mk II	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer Mk II	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer Mk II	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Shadowtech Alchemer Mk II	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Shadowtech Alchemer Mk II	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Silversix	2500	6	600	false	true	0.75	1.0
+A	Weapon/Handgun/Silversix	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	NORMAL	3	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	NORMAL	4	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	NORMAL	5	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	CHARGED	0	285	2785	3085	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Silversix	COOLDOWN	0	0	622	622	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Slicer/Mandolin	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Slicer/Mandolin	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Mandolin	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Mandolin	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Mandolin	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Mandolin	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Slicer/Mandolin	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Slicer/Slicer	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Slicer/Slicer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Slicer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Slicer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Slicer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Slicer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Slicer/Slicer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Slicer/Thricer Slicer	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Slicer/Thricer Slicer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Slicer/Twicer Slicer	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Slicer/Twicer Slicer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Spiral Soaker	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Spiral Soaker	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Spiral Soaker, Tech Blue	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Blue	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Spiral Soaker, Tech Violet	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spiral Soaker, Tech Violet	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Spitfire	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Spitfire	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spitfire	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spitfire	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spitfire	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Spitfire	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Spitfire	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Static Diskgun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Static Diskgun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Static Diskgun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Static Diskgun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Static Diskgun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Static Diskgun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Static Diskgun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Storm Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Storm Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Storm Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Storm Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Storm Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Storm Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Strike Needle	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Strike Needle	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Strike Needle	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Strike Needle	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Strike Needle	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Strike Needle	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Strike Needle	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Stun Gun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Stun Gun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Stun Gun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Stun Gun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Stun Gun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Stun Gun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Stun Gun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Super Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Super Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Super Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Super Stun Gun	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Super Stun Gun	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Stun Gun	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Stun Gun	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Stun Gun	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Super Stun Gun	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Super Stun Gun	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Supernova	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Supernova	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Supernova	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Supernova	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Supernova	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Supernova	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Supernova	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Barrier Cannon	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Barrier Cannon	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Barrier Cannon	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Barrier Cannon	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Barrier Cannon	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Barrier Cannon	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Feral Cannon	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Feral Cannon	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Feral Cannon	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Feral Cannon	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Feral Cannon	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Feral Cannon	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Gorgofist	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Gorgofist	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Gorgofist	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Gorgofist	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Gorgofist	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Gorgofist	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Grand Tortofist	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Grand Tortofist	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Grand Tortofist	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Grand Tortofist	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Grand Tortofist	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Grand Tortofist	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Grim Buster	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Grim Buster	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Grim Buster	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Grim Buster	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Grim Buster	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Grim Buster	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Mighty Cannon	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Mighty Cannon	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Mighty Cannon	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Mighty Cannon	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Mighty Cannon	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Mighty Cannon	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Nether Cannon	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Nether Cannon	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Nether Cannon	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Nether Cannon	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Nether Cannon	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Nether Cannon	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Omega Tortofist	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Omega Tortofist	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Omega Tortofist	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Omega Tortofist	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Omega Tortofist	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Omega Tortofist	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Primal Buster	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Primal Buster	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Primal Buster	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Primal Buster	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Primal Buster	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Primal Buster	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Savage Tortofist	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Savage Tortofist	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Savage Tortofist	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Savage Tortofist	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Savage Tortofist	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Savage Tortofist	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Stoic Buster	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Stoic Buster	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Stoic Buster	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Stoic Buster	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Stoic Buster	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Stoic Buster	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tortafist/Wild Buster	2500	2	1000	false	true	1.0	1.0
+A	Weapon/Handgun/Tortafist/Wild Buster	NORMAL	0	291	719	1286	false	300	300	1.333	0.0
+A	Weapon/Handgun/Tortafist/Wild Buster	NORMAL	1	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Wild Buster	INCOMPLETE	0	194	708	1197	false	175	300	2.0	0.0
+A	Weapon/Handgun/Tortafist/Wild Buster	CHARGED	0	571	921	1921	false	650	500	-3.0	0.0
+A	Weapon/Handgun/Tortafist/Wild Buster	COOLDOWN	0	0	1417	1417	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Toxic Catalyzer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Toxic Catalyzer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Catalyzer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Catalyzer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Catalyzer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Catalyzer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Toxic Catalyzer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Toxic Needle	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Toxic Needle	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Needle	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Needle	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Needle	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Needle	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Toxic Needle	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Tundrus	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Tundrus	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Tundrus	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Tundrus	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Tundrus	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Tundrus	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Umbra Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Umbra Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbra Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbra Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbra Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Umbra Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Umbral Blaster	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Umbral Blaster	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbral Blaster	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbral Blaster	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbral Blaster	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Umbral Blaster	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Umbral Blaster	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Valiance	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Valiance	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Valiance	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Valiance (Bladed)	3000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Valiance (Bladed)	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance (Bladed)	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance (Bladed)	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Valiance (Bladed)	INCOMPLETE	0	200	1100	1101	true	100	150	2.0	0.0
+A	Weapon/Handgun/Valiance (Bladed)	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Valiance (Bladed)	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Virulent Catalyzer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Virulent Catalyzer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Virulent Catalyzer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Virulent Catalyzer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Virulent Catalyzer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Virulent Catalyzer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Virulent Catalyzer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Volatile Catalyzer	1000	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Volatile Catalyzer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volatile Catalyzer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volatile Catalyzer	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volatile Catalyzer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volatile Catalyzer	CHARGED	0	250	967	967	false	250	300	-0.667	0.0
+A	Weapon/Handgun/Volatile Catalyzer	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Volcanic Pepperbox	2500	2	1200	false	true	0.75	1.0
+A	Weapon/Handgun/Volcanic Pepperbox	NORMAL	0	150	870	1403	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volcanic Pepperbox	NORMAL	1	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volcanic Pepperbox	NORMAL	2	27	747	1280	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volcanic Pepperbox	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volcanic Pepperbox	CHARGED	0	333	2233	2233	false	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volcanic Pepperbox	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Volt Driver	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Volt Driver	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volt Driver	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volt Driver	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Volt Driver	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Volt Driver	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Voltech Alchemer	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Voltech Alchemer	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Voltech Alchemer	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Voltech Alchemer Mk II	2500	2	600	false	true	0.75	1.0
+A	Weapon/Handgun/Voltech Alchemer Mk II	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer Mk II	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer Mk II	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Voltech Alchemer Mk II	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Voltech Alchemer Mk II	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Wildfire	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Wildfire	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Wildfire	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Wildfire	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Wildfire	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Wildfire	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Wildfire	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Winter Grave	2500	2	800	false	true	0.75	1.0
+A	Weapon/Handgun/Winter Grave	NORMAL	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Winter Grave	NORMAL	1	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Winter Grave	INCOMPLETE	0	218	601	1090	false	300	200	-0.25	0.0
+A	Weapon/Handgun/Winter Grave	CHARGED	0	500	1499	1499	false	600	300	-1.5	0.0
+A	Weapon/Handgun/Winter Grave	COOLDOWN	0	0	933	933	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Cool	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Cool	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Cool	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Cool	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Cool	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Divine	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Divine	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Divine	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Divine	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Divine	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Military	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Military	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Military	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Military	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Military	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Regal	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Regal	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Regal	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Regal	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Regal	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic	1600	0	0	true	true	0.75	1.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic	NORMAL	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic	INCOMPLETE	0	450	743	1410	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic	CHARGED	0	1100	1233	1900	false	1101	300	-0.667	0.0
+A	Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic	COOLDOWN	0	0	1133	1133	true	-1	-1	0.0	0.0
+W	Weapon/Handgun/Zapper	2500	3	500	false	true	0.75	1.0
+A	Weapon/Handgun/Zapper	NORMAL	0	164	416	948	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Zapper	NORMAL	1	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Zapper	NORMAL	2	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Zapper	INCOMPLETE	0	0	252	784	true	-1	-1	0.0	0.0
+A	Weapon/Handgun/Zapper	CHARGED	0	285	1002	1002	false	286	300	-0.667	0.0
+A	Weapon/Handgun/Zapper	COOLDOWN	0	0	944	944	true	-1	-1	0.0	0.0
+W	Weapon/Sword/Acheron	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Acheron	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Acheron	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Acheron	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Acheron	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Acheron	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Advanced Cautery Sword	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Advanced Cautery Sword	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Advanced Cautery Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Advanced Cautery Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Advanced Cautery Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Advanced Cautery Sword	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Alpha Claw Gauntlet	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Alpha Claw Gauntlet	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Alpha Claw Gauntlet, Grey	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Alpha Claw Gauntlet, Grey	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Amputator	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Amputator	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Amputator	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Amputator	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Amputator	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Amputator	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Amputator (Calibur)	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Amputator (Calibur)	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Amputator (Calibur)	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Amputator (Calibur)	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Amputator (Calibur)	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Amputator (Calibur)	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Arc Razor	2500	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Arc Razor	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Arc Razor	NORMAL	1	200	433	766	false	50	200	1.75	0.0
+A	Weapon/Sword/Arc Razor	NORMAL	2	200	877	877	false	50	200	2.5	0.0
+A	Weapon/Sword/Arc Razor	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Arc Razor	CHARGED	0	666	799	1825	false	-1	-1	0.0	0.0
+W	Weapon/Sword/Ascended Calibur	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Ascended Calibur	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ascended Calibur	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Ascended Calibur	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Ascended Calibur	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Ascended Calibur	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Avenger	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Avenger	NORMAL	0	291	649	1162	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Avenger	NORMAL	1	291	1283	1283	false	0	350	1.5	0.0
+A	Weapon/Sword/Avenger	INCOMPLETE	0	318	676	1189	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Avenger	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Barbarous Thorn Blade	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Barbarous Thorn Blade	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Barbarous Thorn Blade	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Barbarous Thorn Blade	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Barbarous Thorn Blade	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Barbarous Thorn Blade	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Beast Basher	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Beast Basher	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Beast Basher	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Beast Basher	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Beast Basher	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Beast Basher	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Big Beast Basher	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Big Beast Basher	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Big Beast Basher	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Big Beast Basher	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Big Beast Basher	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Big Beast Basher	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Blazebrand	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Blazebrand	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Blazebrand	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Blazebrand	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Blazebrand	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Blazebrand	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Blizzbrand	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Blizzbrand	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Blizzbrand	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Blizzbrand	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Blizzbrand	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Blizzbrand	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Boltbrand	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Boltbrand	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Boltbrand	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Boltbrand	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Boltbrand	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Boltbrand	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Bolted Blade	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Bolted Blade	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Bolted Blade	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Bolted Blade	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Bolted Blade	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Bolted Blade	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Brandish	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Brandish	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Brandish	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Brandish	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Brandish	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Brandish	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Caladbolg	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Caladbolg	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Caladbolg	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Caladbolg	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Caladbolg	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Caladbolg	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Calibur	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Calibur	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Calibur	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Calibur	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Calibur	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Calibur	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Cautery Sword	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Cautery Sword	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cautery Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Cautery Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Cautery Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Cautery Sword	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Celestial Saber	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Celestial Saber	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Celestial Saber	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Celestial Saber	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Celestial Saber	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Celestial Saber	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Cleaver, Freeze	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Cleaver, Freeze	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cleaver, Freeze	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Cleaver, Freeze	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cleaver, Freeze	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Cleaver, Stun	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Cleaver, Stun	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cleaver, Stun	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Cleaver, Stun	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cleaver, Stun	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Cold Iron Carver	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Cold Iron Carver	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cold Iron Carver	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Cold Iron Carver	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Cold Iron Carver	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Cold Iron Carver	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Cold Iron Vanquisher	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Cold Iron Vanquisher	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cold Iron Vanquisher	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Cold Iron Vanquisher	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Cold Iron Vanquisher	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Cold Iron Vanquisher	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Combuster	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Combuster	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Combuster	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Combuster	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Combuster	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Combuster	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Cutter	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Cutter	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Cutter	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Cutter	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Cutter	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Cutter	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Cutter	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Cutter	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Daring Rigadoon	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Daring Rigadoon	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Daring Rigadoon	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Daring Rigadoon	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Daring Rigadoon	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Daring Rigadoon	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Dark Thorn Blade	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Dark Thorn Blade	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Dark Thorn Blade	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Dark Thorn Blade	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Dark Thorn Blade	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Dark Thorn Blade	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Deadly Candy Poker	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Deadly Candy Poker	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Deadly Candy Poker	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Deadly Candy Poker	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Deadly Candy Poker	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Deadly Candy Poker	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Divine Avenger	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Divine Avenger	NORMAL	0	291	649	1162	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Divine Avenger	NORMAL	1	291	1283	1283	false	0	350	1.5	0.0
+A	Weapon/Sword/Divine Avenger	INCOMPLETE	0	318	676	1189	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Divine Avenger	CHARGED	0	800	1033	1922	false	50	150	-0.75	0.0
+W	Weapon/Sword/Dread Captain Cutlass	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Dread Captain Cutlass	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Dread Captain Cutlass	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Dread Captain Cutlass	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Dread Captain Cutlass	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Dread Captain Cutlass	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Dread Captain Cutlass	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Dread Captain Cutlass	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Dread Venom Striker	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Dread Venom Striker	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Dread Venom Striker	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Dread Venom Striker	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Dread Venom Striker	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Dread Venom Striker	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Dread Venom Striker	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Dread Venom Striker	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Fang of Vog	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Fang of Vog	NORMAL	0	280	538	982	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Fang of Vog	NORMAL	1	280	538	982	false	100	150	1.25	0.0
+A	Weapon/Sword/Fang of Vog	NORMAL	2	280	1080	1080	false	100	150	2.0	0.0
+A	Weapon/Sword/Fang of Vog	INCOMPLETE	0	175	433	877	false	0	175	1.0	0.0
+A	Weapon/Sword/Fang of Vog	CHARGED	0	571	921	1810	false	300	200	1.0	0.0
+W	Weapon/Sword/Faust	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Faust	NORMAL	0	291	649	1162	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Faust	NORMAL	1	291	1283	1283	false	0	350	1.5	0.0
+A	Weapon/Sword/Faust	INCOMPLETE	0	318	676	1189	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Faust	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Fearless Rigadoon	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Fearless Rigadoon	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Fearless Rigadoon	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Fearless Rigadoon	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Fearless Rigadoon	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Fearless Rigadoon	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Fierce Flamberge	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Fierce Flamberge	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Fierce Flamberge	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Fierce Flamberge	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Fierce Flamberge	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Fierce Flamberge	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Final Flourish	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Final Flourish	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Final Flourish	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Final Flourish	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Final Flourish	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Final Flourish	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Fireburst Brandish	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Fireburst Brandish	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Fireburst Brandish	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Fireburst Brandish	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Fireburst Brandish	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Fireburst Brandish	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Firestorm Skeggox	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Firestorm Skeggox	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Firestorm Skeggox	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Firestorm Skeggox	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Firestorm Skeggox	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Firestorm Skeggox	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Flamberge	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Flamberge	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Flamberge	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Flamberge	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Flamberge	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Flamberge	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Flourish	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Flourish	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Flourish	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Flourish	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Flourish	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Flourish	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Furious Flamberge	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Furious Flamberge	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Furious Flamberge	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Furious Flamberge	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Furious Flamberge	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Furious Flamberge	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Furious Fork	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Furious Fork	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Furious Fork	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Furious Fork	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Furious Fork	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Furious Fork	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Furious Fork, Tech Green	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Furious Fork, Tech Green	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Green	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Green	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Green	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Green	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Furious Fork, Tech Red	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Furious Fork, Tech Red	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Red	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Red	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Red	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Furious Fork, Tech Red	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Glacius	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Glacius	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Glacius	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Glacius	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Glacius	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Glacius	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Gram	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Gram	NORMAL	0	350	773	1328	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Gram	NORMAL	1	350	1439	1440	false	0	350	1.5	0.0
+A	Weapon/Sword/Gram	INCOMPLETE	0	318	741	1296	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Gram	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Gran Faust	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Gran Faust	NORMAL	0	291	649	1162	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Gran Faust	NORMAL	1	291	1283	1283	false	0	350	1.5	0.0
+A	Weapon/Sword/Gran Faust	INCOMPLETE	0	318	676	1189	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Gran Faust	CHARGED	0	800	1033	1922	false	50	100	-0.75	0.0
+W	Weapon/Sword/Grand Flourish	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Grand Flourish	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Grand Flourish	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Grand Flourish	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Grand Flourish	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Grand Flourish	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Grintovec	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Grintovec	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Grintovec	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Grintovec	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Grintovec	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Hatchet	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Hatchet	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Hatchet	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Hatchet	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Hatchet	CHARGED	0	933	1989	2489	false	933	200	1.0	0.0
+W	Weapon/Sword/Heavy Hatchet	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Heavy Hatchet	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Heavy Hatchet	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Heavy Hatchet	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Heavy Hatchet	CHARGED	0	933	1989	2489	false	933	200	1.0	0.0
+W	Weapon/Sword/Honor Blade 1	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Honor Blade 1	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Honor Blade 1	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Honor Blade 1	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Honor Blade 1	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Honor Blade 1	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Honor Blade 2	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Honor Blade 2	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Honor Blade 2	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Honor Blade 2	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Honor Blade 2	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Honor Blade 2	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Honor Blade 3	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Honor Blade 3	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Honor Blade 3	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Honor Blade 3	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Honor Blade 3	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Honor Blade 3	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Honor Blade 4	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Honor Blade 4	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Honor Blade 4	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Honor Blade 4	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Honor Blade 4	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Honor Blade 4	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Hot Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Hot Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Hot Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Hot Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Hot Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Hot Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Hunting Blade	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Hunting Blade	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Hunting Blade	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Hunting Blade	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Hunting Blade	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Hunting Blade	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Hunting Blade	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Hunting Blade	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Ice Axe	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Ice Axe	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ice Axe	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Ice Axe	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Ice Axe	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Iceburst Brandish	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Iceburst Brandish	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Iceburst Brandish	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Iceburst Brandish	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Iceburst Brandish	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Iceburst Brandish	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Jalovec	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Jalovec	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Jalovec	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Jalovec	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Jalovec	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Kamarin	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Kamarin	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Kamarin	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Kamarin	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Kamarin	CHARGED	0	933	1989	2489	false	933	200	2.0	0.0
+W	Weapon/Sword/Khorovod	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Khorovod	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Khorovod	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Khorovod	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Khorovod	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Leviathan Blade	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Leviathan Blade	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Leviathan Blade	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Leviathan Blade	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Leviathan Blade	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Leviathan Blade	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Nightblade	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Nightblade	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Nightblade	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Nightblade	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Nightblade	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Nightblade	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Amethyst	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Amethyst	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Amethyst	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Amethyst	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Amethyst	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Aquamarine	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Aquamarine	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Aquamarine	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Aquamarine	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Aquamarine	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Blue	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Blue	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Blue	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Blue	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Blue	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Citrine	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Citrine	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Citrine	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Citrine	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Citrine	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Curse	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Curse	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Curse	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Curse	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Curse	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Dangerous	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Dangerous	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Dangerous	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Dangerous	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Dangerous	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Diamond	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Diamond	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Diamond	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Diamond	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Diamond	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Divine	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Divine	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Divine	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Divine	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Divine	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Emerald	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Emerald	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Emerald	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Emerald	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Emerald	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Garnet	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Garnet	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Garnet	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Garnet	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Garnet	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Glacial	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Glacial	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Glacial	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Glacial	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Glacial	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Gold	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Gold	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Gold	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Gold	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Gold	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Green	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Green	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Green	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Green	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Green	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Hazardous	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Hazardous	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hazardous	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hazardous	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hazardous	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Heavy	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Heavy	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Heavy	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Heavy	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Heavy	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Hunter	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Hunter	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hunter	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hunter	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Hunter	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Opal	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Opal	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Opal	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Opal	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Opal	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Pearl	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Pearl	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pearl	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pearl	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pearl	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Peridot	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Peridot	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Peridot	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Peridot	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Peridot	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Pink	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Pink	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pink	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pink	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Pink	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Purple	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Purple	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Purple	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Purple	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Purple	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Red	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Red	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Red	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Red	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Red	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Ruby	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Ruby	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Ruby	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Ruby	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Ruby	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Sapphire	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Sapphire	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Sapphire	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Sapphire	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Sapphire	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Shadow	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Shadow	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Shadow	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Shadow	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Shadow	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Turquoise	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Turquoise	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Turquoise	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Turquoise	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Turquoise	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Node Slime/Node Slime, Volcanic	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Node Slime/Node Slime, Volcanic	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Volcanic	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Volcanic	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Node Slime/Node Slime, Volcanic	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Obsidian Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Obsidian Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Obsidian Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Obsidian Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Obsidian Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Obsidian Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Proto Blade	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Proto Blade	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Proto Blade	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Proto Blade	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Proto Blade	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Proto Blade	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Proto Blade	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Proto Blade	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Proto Sword	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Proto Sword	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Proto Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Proto Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Proto Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Proto Sword	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Red Saber	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Red Saber	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Red Saber	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Red Saber	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Red Saber	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Red Saber	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Red Saber	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Red Saber	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Rigadoon	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Rigadoon	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Rigadoon	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Rigadoon	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Rigadoon	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Rigadoon	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Robo Wrecker	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Robo Wrecker	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Robo Wrecker	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Robo Wrecker	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Robo Wrecker	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Robo Wrecker	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Rocket Hammer 1	3000	3	0	true	false	1.0	0.85
+A	Weapon/Sword/Rocket Hammer 1	NORMAL	0	318	609	990	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Rocket Hammer 1	NORMAL	1	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 1	NORMAL	2	233	1288	1289	false	0	350	1.5	0.0
+A	Weapon/Sword/Rocket Hammer 1	INCOMPLETE	0	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 1	CHARGED	0	933	2989	3048	false	800	150	2.0	0.0
+W	Weapon/Sword/Rocket Hammer 2	3000	3	0	true	false	1.0	0.85
+A	Weapon/Sword/Rocket Hammer 2	NORMAL	0	318	609	990	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Rocket Hammer 2	NORMAL	1	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 2	NORMAL	2	233	1288	1289	false	0	350	1.5	0.0
+A	Weapon/Sword/Rocket Hammer 2	INCOMPLETE	0	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 2	CHARGED	0	933	2989	3048	false	800	150	2.0	0.0
+W	Weapon/Sword/Rocket Hammer 3	3000	3	0	true	false	1.0	0.85
+A	Weapon/Sword/Rocket Hammer 3	NORMAL	0	318	609	990	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Rocket Hammer 3	NORMAL	1	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 3	NORMAL	2	233	1288	1289	false	0	350	1.5	0.0
+A	Weapon/Sword/Rocket Hammer 3	INCOMPLETE	0	50	450	672	false	50	350	4.667	0.0
+A	Weapon/Sword/Rocket Hammer 3	CHARGED	0	933	2989	3048	false	800	150	2.0	0.0
+W	Weapon/Sword/Rugged Robo Wrecker	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Rugged Robo Wrecker	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Rugged Robo Wrecker	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Rugged Robo Wrecker	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Rugged Robo Wrecker	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Rugged Robo Wrecker	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Scissor Blades	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Scissor Blades	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Scissor Blades	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Scissor Blades	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Scissor Blades	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Scissor Blades	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Sealed Sword	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Sealed Sword	NORMAL	0	291	649	1162	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sealed Sword	NORMAL	1	291	1283	1283	false	0	350	1.5	0.0
+A	Weapon/Sword/Sealed Sword	INCOMPLETE	0	318	676	1189	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sealed Sword	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Searing Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Searing Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Searing Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Searing Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Searing Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Searing Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Shockburst Brandish	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Shockburst Brandish	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Shockburst Brandish	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Shockburst Brandish	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Shockburst Brandish	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Shockburst Brandish	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Shocking Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Shocking Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Shocking Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Shocking Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Shocking Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Shocking Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Silent Nightblade	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Silent Nightblade	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Silent Nightblade	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Silent Nightblade	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Silent Nightblade	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Silent Nightblade	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Slime Slasher	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Slime Slasher	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Slime Slasher	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Slime Slasher	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Slime Slasher	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Slime Slasher	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Snarble Barb	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Snarble Barb	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Snarble Barb	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Snarble Barb	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Snarble Barb	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Snarble Barb	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Spur	2500	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Spur	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Spur	NORMAL	1	200	433	766	false	50	200	1.75	0.0
+A	Weapon/Sword/Spur	NORMAL	2	200	877	877	false	50	200	2.5	0.0
+A	Weapon/Sword/Spur	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Spur	CHARGED	0	666	799	1825	false	-1	-1	0.0	0.0
+W	Weapon/Sword/Squall Caller	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Squall Caller	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Squall Caller	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Squall Caller	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Squall Caller	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Squall Caller	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Static Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Static Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Static Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Static Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Static Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Static Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Striker	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Striker	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Striker	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Striker	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Striker	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Striker	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Striker	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Striker	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Sudaruska	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Sudaruska	NORMAL	0	291	679	1212	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sudaruska	NORMAL	1	291	1396	1397	false	0	350	1.5	0.0
+A	Weapon/Sword/Sudaruska	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sudaruska	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Super Slime Slasher	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Super Slime Slasher	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Super Slime Slasher	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Super Slime Slasher	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Super Slime Slasher	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Super Slime Slasher	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Sweet Dreams	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow	CHARGED	0	526	876	1765	false	300	200	1.0	0.0
+W	Weapon/Sword/Swift Flourish	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Swift Flourish	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Swift Flourish	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Swift Flourish	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Swift Flourish	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Swift Flourish	CHARGED	0	526	1526	2459	false	500	750	4.0	0.0
+W	Weapon/Sword/Tempered Calibur	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Tempered Calibur	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Tempered Calibur	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Tempered Calibur	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Tempered Calibur	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Tempered Calibur	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/The Ban Stick	1500	3	0	true	false	1.0	1.0
+A	Weapon/Sword/The Ban Stick	NORMAL	0	200	433	1100	false	-1	-1	0.0	0.0
+A	Weapon/Sword/The Ban Stick	NORMAL	1	200	433	1100	false	100	150	1.25	0.0
+A	Weapon/Sword/The Ban Stick	NORMAL	2	200	1100	1101	false	100	150	2.0	0.0
+A	Weapon/Sword/The Ban Stick	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/The Ban Stick	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Thwack Hammer	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Thwack Hammer	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Thwack Hammer	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Thwack Hammer	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Thwack Hammer	CHARGED	0	933	1989	2489	false	933	200	2.0	0.0
+W	Weapon/Sword/Triglav	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Triglav	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Triglav	NORMAL	1	318	1423	1424	false	0	350	1.5	0.0
+A	Weapon/Sword/Triglav	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Triglav	CHARGED	0	933	1989	2489	false	933	200	3.0	0.0
+W	Weapon/Sword/Troika	3000	2	0	true	false	1.0	0.83
+A	Weapon/Sword/Troika	NORMAL	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Troika	NORMAL	1	318	1373	1374	false	0	350	1.5	0.0
+A	Weapon/Sword/Troika	INCOMPLETE	0	318	706	1239	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Troika	CHARGED	0	933	1989	2489	false	933	200	2.0	0.0
+W	Weapon/Sword/Turbillion	2500	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Turbillion	NORMAL	0	200	433	1100	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Turbillion	NORMAL	1	200	433	1100	false	50	200	1.75	0.0
+A	Weapon/Sword/Turbillion	NORMAL	2	200	1100	1101	false	50	200	2.5	0.0
+A	Weapon/Sword/Turbillion	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Turbillion	CHARGED	0	800	933	1959	false	-1	-1	0.0	0.0
+W	Weapon/Sword/Twisted Snarble Barb	3000	3	0	true	false	1.0	0.9
+A	Weapon/Sword/Twisted Snarble Barb	NORMAL	0	194	349	882	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Twisted Snarble Barb	NORMAL	1	175	317	650	false	100	150	1.0	0.0
+A	Weapon/Sword/Twisted Snarble Barb	NORMAL	2	200	1000	1000	false	100	250	3.0	0.0
+A	Weapon/Sword/Twisted Snarble Barb	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Twisted Snarble Barb	CHARGED	0	666	899	1788	false	50	100	-0.75	0.0
+W	Weapon/Sword/Untimely Scythe/Untimely Scythe	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow	CHARGED	0	454	804	1693	false	300	200	1.0	0.0
+W	Weapon/Sword/Vile Striker	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Vile Striker	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Vile Striker	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Vile Striker	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Vile Striker	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Vile Striker	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Vile Striker	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Vile Striker	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Voltedge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Voltedge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Voltedge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Voltedge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Voltedge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Voltedge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Wild Hunting Blade	2000	5	0	true	false	1.0	1.0
+A	Weapon/Sword/Wild Hunting Blade	NORMAL	0	175	361	657	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Wild Hunting Blade	NORMAL	1	175	361	657	false	100	150	1.25	0.0
+A	Weapon/Sword/Wild Hunting Blade	NORMAL	2	175	361	657	false	50	200	1.25	0.0
+A	Weapon/Sword/Wild Hunting Blade	NORMAL	3	175	361	657	false	50	200	1.5	0.0
+A	Weapon/Sword/Wild Hunting Blade	NORMAL	4	175	837	837	false	50	200	2.5	0.0
+A	Weapon/Sword/Wild Hunting Blade	INCOMPLETE	0	175	361	657	false	0	175	1.0	0.0
+A	Weapon/Sword/Wild Hunting Blade	CHARGED	0	500	2117	3006	false	2000	100	2.0	0.0
+W	Weapon/Sword/Winmillion	2500	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Winmillion	NORMAL	0	200	433	1100	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Winmillion	NORMAL	1	200	433	1100	false	50	200	1.75	0.0
+A	Weapon/Sword/Winmillion	NORMAL	2	200	1100	1101	false	50	200	2.5	0.0
+A	Weapon/Sword/Winmillion	INCOMPLETE	0	175	408	1075	false	0	175	1.0	0.0
+A	Weapon/Sword/Winmillion	CHARGED	0	800	933	1959	false	-1	-1	0.0	0.0
+W	Weapon/Sword/Winter's Edge	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Winter's Edge	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Winter's Edge	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Winter's Edge	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Winter's Edge	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Winter's Edge	CHARGED	0	526	759	1648	false	500	150	1.0	0.0
+W	Weapon/Sword/Wrench Wand	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/Wrench Wand	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/Wrench Wand	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/Wrench Wand	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/Wrench Wand	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/Wrench Wand	CHARGED	0	526	1442	1442	false	500	200	1.0	0.0
+W	Weapon/Sword/_Frost Sword	3000	3	0	true	false	1.0	1.0
+A	Weapon/Sword/_Frost Sword	NORMAL	0	200	433	766	false	-1	-1	0.0	0.0
+A	Weapon/Sword/_Frost Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
+A	Weapon/Sword/_Frost Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
+A	Weapon/Sword/_Frost Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
+A	Weapon/Sword/_Frost Sword	CHARGED	0	571	921	1810	false	300	200	1.0	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Blue	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Green	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Orange	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, ShadowTech Pink	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Azure	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Blue	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Green	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Orange	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Pink	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Red	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Violet	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Airbraker Shield/Airbraker Shield, Tech Yellow	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Bug/Roly-Poly, Cool	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Divine	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Dusky	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Fancy	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Heavy	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Honey	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Military	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Prismatic	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Regal	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Shadow	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Toasty	0	6000	2000	0.0	0.0
+S	Costume/Shield/Bug/Roly-Poly, Volcanic	0	6000	2000	0.0	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Clockworks	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Cool	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Divine	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Dusky	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Fancy	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Heavy	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Military	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Prismatic	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Regal	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Shadow	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Toasty	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Clockworks/Clock Blocker, Volcanic	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Blazing	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Curse	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Dazed	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Electric	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Glacial	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Lovely	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Slumber	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Vile	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Great Defender/Great Defender, Volcanic	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Illuminating Ward/Illuminating Ward	0	6000	3000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Cool	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Divine	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Dusky	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Fancy	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Heavy	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Military	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Prismatic	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Regal	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Shadow	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Toasty	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Lite/Hololite Shield, Volcanic	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Obsidian Obstacle/Obsidian Obstacle	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Obsidian Obstacle/Obsidian Obstacle, Amber	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Shrouded Crest/Shrouded Crest	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Shrouded Crest/Shrouded Crest, Curse	0	6000	2000	-0.5	0.0
+S	Costume/Shield/Spell Book/Spell Book, Cool	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Divine	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Dusky	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Fancy	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Heavy	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Military	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Prismatic	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Regal	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Shadow	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Toasty	0	6000	2000	0.0	0.0
+S	Costume/Shield/Spell Book/Spell Book, Volcanic	0	6000	2000	0.0	0.0
+S	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	50	6000	3000	-0.5	0.5
+A	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	50	6000	3000	-0.5	0.5
+A	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash	50	6000	3000	-0.5	0.5
+A	Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash	50	6000	3000	-0.5	0.5
+A	Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash	50	6000	3000	-0.5	0.5
+A	Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Aegis	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Aegis	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Airbraker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Airbraker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Ancient Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Ancient Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Barbarous Thorn Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Barbarous Thorn Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Barrier Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Barrier Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Blackened Crest	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Blackened Crest	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Blazebreak Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Blazebreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Blizzbreaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Blizzbreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Boosted Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Boosted Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Bristling Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Bristling Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Brute Jelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Brute Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Celestial Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Celestial Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Circuit Breaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Circuit Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Crest of Almire	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Crest of Almire	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Crystalline Defender	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Crystalline Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Dark Thorn Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Dark Thorn Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Defender	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Dragon Scale Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Dragon Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Drake Scale Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Drake Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Dread Skelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Dread Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Emberbreak Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Emberbreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Feral Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Feral Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Firebreak Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Firebreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Force Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Force Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Frostbreaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Frostbreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Gorgomega	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Gorgomega	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Grand Tortoise	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Grand Tortoise	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Great Defender	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Great Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Green Ward	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Green Ward	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Grey Owlite Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Grey Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Grim Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Grim Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Heater Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Heater Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Heavy Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Heavy Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Honor Shield 1	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Honor Shield 1	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Honor Shield 2	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Honor Shield 2	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Honor Shield 3	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Honor Shield 3	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Honor Shield 4	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Honor Shield 4	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Horned Owlite Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Horned Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Icebreaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Icebreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Iron Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Iron Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Ironmight Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Ironmight Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Jelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Mighty Defender	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Mighty Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Mighty Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Mighty Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Nether Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Nether Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Amethyst	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Amethyst	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Aquamarine	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Aquamarine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Blue	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Blue	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Citrine	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Citrine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Curse	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Curse	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Dangerous	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Dangerous	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Diamond	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Diamond	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Divine	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Divine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Emerald	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Emerald	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Garnet	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Garnet	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Glacial	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Glacial	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Gold	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Gold	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Green	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Green	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Hazardous	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Hazardous	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Heavy	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Heavy	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Hunter	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Hunter	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Opal	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Opal	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Pearl	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Pearl	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Peridot	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Peridot	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Pink	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Pink	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Purple	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Purple	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Red	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Ruby	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Ruby	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Sapphire	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Sapphire	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Shadow	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Shadow	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Turquoise	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Turquoise	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Node Slime/Node Slime, Volcanic	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Node Slime/Node Slime, Volcanic	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Omega Shell	62	6000	3000	-0.5	0.5
+A	Gear/Shield/Omega Shell	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Omegaward	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Omegaward	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Owlite Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Power Mitt	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Power Mitt	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Primal Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Primal Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Proto Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Proto Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Raider Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Raider Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Rock Jelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Rock Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Royal Jelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Royal Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Savage Tortoise	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Savage Tortoise	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Scale Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Scarlet Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Scarlet Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Scary Skelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Scary Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Shining Ward	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Shining Ward	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Ship Wheel	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Ship Wheel	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Sinister Skelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Sinister Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Skelly Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Stoic Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Stoic Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Stone Tortoise	62	6000	3000	-0.5	0.5
+A	Gear/Shield/Stone Tortoise	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Stop Sign	50	6000	3000	-1.0	0.5
+A	Gear/Shield/Stop Sign	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Surge Breaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Surge Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Swiftstrike Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Swiftstrike Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/The Bitter End	50	6000	3000	-0.5	0.5
+A	Gear/Shield/The Bitter End	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/The Bitter End, Red	50	6000	3000	-0.5	0.5
+A	Gear/Shield/The Bitter End, Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Thwacker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Thwacker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Twisted Targe	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Twisted Targe	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Volcanic Plate Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Volcanic Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Volt Breaker Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Volt Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Wild Shell	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Wild Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
+S	Gear/Shield/Wise Owlite Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Wise Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
+S	Gear/Shield/Wyvern Scale Shield	50	6000	3000	-0.5	0.5
+A	Gear/Shield/Wyvern Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0

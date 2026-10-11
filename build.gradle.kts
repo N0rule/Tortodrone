@@ -97,12 +97,27 @@ val prepareInteriors = tasks.register<Exec>("prepareInteriors") {
     }
     finalizedBy(prepareDefaults)
 }
+val prepareArchive = tasks.register<Exec>("prepareArchive") {
+    group = "build setup"
+    description = "Prepare newer Haven and connected interiors from a read-only local Spiral archive."
+    workingDir = projectDir
+    dependsOn(serverJar)
+    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
+    val archiveDirectory = providers.gradleProperty("archiveDir").getOrElse("../reference-inputs")
+    val source = layout.projectDirectory.dir("local/defaults/archive-maps").asFile.absolutePath
+    commandLine(launcher25.get().executablePath.asFile.absolutePath,"scripts/StockTools.java",
+        "archive-towns",gameDirectory,archiveDirectory,source)
+    onlyIf("Archive defaults have not already been exported") { !File(source).exists() }
+    doFirst { if(gameDirectory.isBlank())throw GradleException("Specify the read-only stock game directory with -PgameDir=/path/to/Spiral Knights") }
+    finalizedBy(prepareDefaults)
+}
+prepareDefaults.configure { mustRunAfter(prepareArchive) }
 prepareDefaults.configure { mustRunAfter(prepareInteriors) }
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare external defaults."
     dependsOn(serverJar, prepareDefaults)
-    if (providers.gradleProperty("gameDir").isPresent) dependsOn(prepareInteriors)
+    if (providers.gradleProperty("gameDir").isPresent) dependsOn(prepareArchive)
 }
 val buildAdmin = tasks.register("buildAdmin") {
     group = "build"

@@ -8,13 +8,26 @@ import java.util.*;
 public final class ItemCatalog {
     public static final int INVENTORY_LIMIT = 256, GRANT_LIMIT = 20;
     public enum PlayerColor { VALUE }
+    /** Stock Item subclasses which carry state beyond the common Item fields. */
+    public enum Variant { ITEM, LEVEL_ITEM, SEED_ITEM, UPGRADE_ITEM }
     public record Entry(String config, int stockId, String type, String nameKey, int rarity,
-            boolean stackable, WorldProfile.Slot slot, boolean bindOnEquip, boolean permanent, Map<String,Object> modelArgs) {
-        public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,boolean bindOnEquip,Map<String,Object> modelArgs) {
-            this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,false,modelArgs);
+            boolean stackable, WorldProfile.Slot slot, boolean bindOnEquip, boolean permanent,
+            boolean locked, Variant variant, Long seed, Map<String,Object> modelArgs) {
+        public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,
+                boolean bindOnEquip,boolean permanent,Map<String,Object> modelArgs) {
+            this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,permanent,stockLocked(type,permanent),Variant.ITEM,null,modelArgs);
         }
-        public Entry { modelArgs = Map.copyOf(modelArgs); }
-        public boolean grantable() { return slot != null && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty())); }
+        public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,boolean bindOnEquip,Map<String,Object> modelArgs) {
+            this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,false,stockLocked(type,false),Variant.ITEM,null,modelArgs);
+        }
+        public Entry {
+            Objects.requireNonNull(variant); modelArgs = Map.copyOf(modelArgs);
+            if ((variant==Variant.SEED_ITEM)!=(seed!=null)) throw new IllegalArgumentException("Seed item metadata mismatch");
+            if (permanent && !locked) throw new IllegalArgumentException("Permanent stock items are locked");
+        }
+        public boolean grantable() { return slot != null && variant!=Variant.UPGRADE_ITEM
+            && (!type.equals("Artifact") || variant==Variant.SEED_ITEM&&seed!=null)
+            && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty())); }
         public Map<String,Object> arguments(int color) { return resolve(modelArgs,color); }
     }
     private final Map<String,Entry> entries;
@@ -59,6 +72,9 @@ public final class ItemCatalog {
     public Entry find(String config) { return entries.get(config.toLowerCase(Locale.ROOT)); }
     public static void write(Path file,Collection<Entry> entries)throws IOException { ItemCatalogJson.write(file,entries); }
     public static ItemCatalog load(Path file)throws IOException { return ItemCatalogJson.load(file); }
+    static boolean stockLocked(String type,boolean permanent) {
+        return permanent||Set.of("Artifact","Mineral","Token","TokenArtifact").contains(type);
+    }
     private static Map<String,Object> resolve(Map<String,Object> args,int color) {
         var result=new TreeMap<String,Object>();
         args.forEach((k,v)->result.put(k,v==PlayerColor.VALUE?color:v instanceof StarterCatalog.Model m

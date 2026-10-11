@@ -350,7 +350,7 @@ public final class Database {
             if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
             // Stack only plain inventory items with identical grant flags; equipment stays distinct.
             var stack=entry.stackable()?profile.items().stream().filter(i->i.config().equals(entry.config())
-                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&!i.bound()&&!i.permanent()
+                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&i.bound()==(entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
                 &&i.equippedSlot()==null&&i.count()+quantity<=9999).findFirst().orElse(null):null;
             int instances=stack!=null?0:entry.stackable()?1:quantity;
             if(profile.items().size()+instances>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
@@ -364,7 +364,7 @@ public final class Database {
                 for(int i=0;i<instances;i++) {
                     long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
                     s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
-                    s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,entry.permanent());s.executeUpdate();
+                    s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,entry.locked()||entry.permanent());s.executeUpdate();
                 }
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
@@ -377,8 +377,12 @@ public final class Database {
     }
     public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
             WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy)throws IOException {
+        return trade(first,firstAuth,firstItems,firstCrowns,firstEnergy,second,secondAuth,secondItems,secondCrowns,secondEnergy,org.tortodrone.character.ItemCatalog.starter());
+    }
+    public List<WorldProfile> trade(WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,int firstCrowns,int firstEnergy,
+            WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,int secondCrowns,int secondEnergy,org.tortodrone.character.ItemCatalog catalog)throws IOException {
         var a=Map.copyOf(firstItems);var b=Map.copyOf(secondItems);
-        return write(c->TradeTransfer.commit(c,first,firstAuth,a,firstCrowns,firstEnergy,second,secondAuth,b,secondCrowns,secondEnergy));
+        return write(c->TradeTransfer.commit(c,first,firstAuth,a,firstCrowns,firstEnergy,second,secondAuth,b,secondCrowns,secondEnergy,catalog));
     }
 
     public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision) throws IOException {

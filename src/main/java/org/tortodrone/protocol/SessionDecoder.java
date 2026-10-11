@@ -22,7 +22,11 @@ public final class SessionDecoder {
     public record Mutation(int oid, String operation, String field, Object value) implements Event { }
     public record Invocation(int oid, int service, int method, List<Object> arguments) implements Event { }
     public record Input(int oid,int acknowledge,int smoothedTime,List<InputFrame> frames) implements Event { }
-    public record InputFrame(int timestamp,float rotation,float direction,int flags) { }
+    public record InputFrame(int timestamp,float rotation,float direction,int flags,int actionChanged) {
+        public InputFrame(int timestamp,float rotation,float direction,int flags) {
+            this(timestamp,rotation,direction,flags,timestamp);
+        }
+    }
     public record Registration(String code, short id) { }
     public record Listener(String type, short requestId) { }
     public record EnumValue(String type, int ordinal) { }
@@ -83,9 +87,9 @@ public final class SessionDecoder {
                     ||"com.threerings.projectx.dungeon.data.DungeonInputFrame".equals(frameType);
                 check(extended||"com.threerings.tudey.data.InputFrame".equals(frameType),"Expected input frame");
                 int stamp=in.readInt();float rotation=in.readFloat(),direction=in.readFloat();int flags=in.readInt();
-                if(extended)in.readInt(); // actionChanged: combat/action execution is not available in town.
+                int actionChanged=extended?in.readInt():stamp;
                 check(Float.isFinite(rotation)&&Float.isFinite(direction),"Invalid input angles");
-                frames.add(new InputFrame(stamp,rotation,direction,flags));
+                frames.add(new InputFrame(stamp,rotation,direction,flags,actionChanged));
             }
             return new Input(oid,ack,time,List.copyOf(frames));
         }

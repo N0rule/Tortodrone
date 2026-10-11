@@ -8,19 +8,27 @@ import java.util.*;
 public final class Json {
     private Json() { }
     public static Object parse(String text) throws IOException {
-        var parser = new Parser(text);
+        return parse(text,32);
+    }
+    public static Object parse(String text,int maxDepth) throws IOException {
+        if(maxDepth<1||maxDepth>128)throw new IllegalArgumentException("Invalid JSON depth limit");
+        var parser = new Parser(text,maxDepth);
         Object value = parser.value(0);
         parser.space();
         if (parser.at != text.length()) throw new IOException("Trailing JSON data");
         return value;
     }
     public static String stringify(Object value) throws IOException {
+        return stringify(value,32);
+    }
+    public static String stringify(Object value,int maxDepth) throws IOException {
+        if(maxDepth<1||maxDepth>128)throw new IllegalArgumentException("Invalid JSON depth limit");
         var out = new StringBuilder();
-        write(out, value, 0);
+        write(out, value, 0,maxDepth);
         return out.toString();
     }
-    private static void write(StringBuilder out, Object value, int depth) throws IOException {
-        if (depth > 32) throw new IOException("JSON nesting exceeds limit");
+    private static void write(StringBuilder out, Object value, int depth,int maxDepth) throws IOException {
+        if (depth > maxDepth) throw new IOException("JSON nesting exceeds limit");
         if (value == null) out.append("null");
         else if (value instanceof String text) {
             out.append('"');
@@ -44,23 +52,23 @@ public final class Json {
             }
             for (var entry : sorted.entrySet()) {
                 if (comma) out.append(','); comma = true;
-                write(out, entry.getKey(), depth+1); out.append(':'); write(out, entry.getValue(), depth+1);
+                write(out, entry.getKey(), depth+1,maxDepth); out.append(':'); write(out, entry.getValue(), depth+1,maxDepth);
             }
             out.append('}');
         } else if (value instanceof List<?> list) {
             out.append('['); boolean comma = false;
-            for (Object item : list) { if (comma) out.append(','); comma = true; write(out, item, depth+1); }
+            for (Object item : list) { if (comma) out.append(','); comma = true; write(out, item, depth+1,maxDepth); }
             out.append(']');
         } else throw new IOException("Unsupported JSON value");
     }
     private static final class Parser {
-        private final String text; private int at, nodes;
-        Parser(String text) { this.text = text; }
+        private final String text; private final int maxDepth; private int at, nodes;
+        Parser(String text,int maxDepth) { this.text = text;this.maxDepth=maxDepth; }
         void space() { while (at < text.length() && " \r\n\t".indexOf(text.charAt(at)) >= 0) at++; }
         IOException invalid() { return new IOException("Invalid JSON at offset " + at); }
         Object value(int depth) throws IOException {
             space();
-            if (depth > 32 || ++nodes > 3_000_000 || at == text.length()) throw invalid();
+            if (depth > maxDepth || ++nodes > 3_000_000 || at == text.length()) throw invalid();
             char c = text.charAt(at);
             if (c == '"') return string();
             if (c == '{') {

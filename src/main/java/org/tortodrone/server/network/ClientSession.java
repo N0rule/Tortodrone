@@ -41,7 +41,7 @@ final class ClientSession {
 
     private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters, SessionOutput output, long authRevision, AccountStore.Session session) throws Exception {
-        SessionCodec outgoing = new SessionCodec();
+        SessionCodec outgoing = new SessionCodec(characters.catalog());
         int clientOid = Math.addExact(1000, Math.multiplyExact(2,connectionId));
         output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
         log.debug("BootstrapNotification sent; clientOid=" + clientOid + "; services=" + SessionCodec.SERVICES.size());

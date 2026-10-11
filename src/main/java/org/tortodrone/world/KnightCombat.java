@@ -1,0 +1,136 @@
+package org.tortodrone.world;
+
+import java.util.*;
+import org.tortodrone.character.WorldProfile;
+
+/** Stock 2026 interior input state. Peaceful town Knights never instantiate this controller. */
+public final class KnightCombat {
+    public static final int CHARGE=283, DEFENSE=284, DODGE=286, BASH=287,
+        INCOMPLETE=289, CHARGED=290, COOLDOWN=291, NORMAL=292;
+    public record Impulse(int started,int duration,float x,float y) {
+        public float fraction(int time) {
+            float t=Math.clamp((time-started)/(float)duration,0,1);
+            return 2*t-t*t;
+        }
+    }
+    public record State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,
+            int chainCount,int chainReset,int nextDodge,Impulse impulse,float shieldHealth,int shieldHit,int shieldRegenStart) {
+        public State(WorldProfile.Item weapon,String shield,String shieldCostume,int shieldMaximum,int chainCount,int chainReset,int nextDodge,Impulse impulse) {
+            this(weapon,shield,shieldCostume,shieldMaximum,chainCount,chainReset,nextDodge,impulse,shieldMaximum,-300000,0);
+        }
+    }
+    private final WeaponCatalog catalog;
+    private List<WorldProfile.Item> equipment=List.of();
+    private WorldProfile.Item weapon;
+    private String shield,shieldCostume;
+    private WeaponCatalog.Weapon definition;
+    private WeaponCatalog.Shield shieldDefinition;
+    private WeaponCatalog.Attack attack;
+    private int activity,started,chainCount,chainReset,nextDodge;
+    private Impulse impulse;
+    private boolean impulseApplied;
+    private int dodgeCooldown;
+    private float shieldHealth;
+    private int shieldHit=-300000,shieldRegenStart;
+    private boolean bashSpent;
+    public record AttackStart(String config,int activity,int started,int land,int clear) { }
+    private java.util.function.Consumer<AttackStart> attackSink=ignored->{};
+    public void attacks(java.util.function.Consumer<AttackStart> sink){attackSink=Objects.requireNonNull(sink);}
+
+    public KnightCombat(WeaponCatalog catalog) { this.catalog=Objects.requireNonNull(catalog);dodgeCooldown=catalog.dodgeCooldown(); }
+    public void equipment(WorldProfile profile) {
+        equipment=profile.items().stream().filter(i->i.equippedSlot()!=null).toList();
+        String previousShield=shield;
+        shield=equipped(2)==null?null:equipped(2).config();
+        shieldCostume=equipped(15)==null?null:equipped(15).config();
+        shieldDefinition=shield==null?null:catalog.findShield(shield);
+        if(!Objects.equals(previousShield,shield)){shieldHealth=shieldDefinition==null?0:shieldDefinition.health();shieldHit=-300000;shieldRegenStart=0;}
+        int slot=weapon==null?6:equipment.stream().filter(i->i.id()==weapon.id()).map(WorldProfile.Item::equippedSlot).findFirst().orElse(6);
+        select(slot);
+    }
+    private WorldProfile.Item equipped(int slot) { return equipment.stream().filter(i->i.equippedSlot()==slot).findFirst().orElse(null); }
+    private void select(int slot) {
+        var item=equipped(slot);
+        if(Objects.equals(item,weapon))return;
+        weapon=item;definition=item==null?null:catalog.find(item.config());chainCount=chainReset=0;
+        // Re-equipping cannot leave an old weapon's charge or attack running.
+        if(activity!=DEFENSE)clear(started);
+    }
+    public void reset(int time) { clear(time);chainCount=chainReset=0;impulse=null; }
+    private void clear(int time) { activity=0;started=time;attack=null;impulseApplied=false; }
+    public int activity(){return activity;}
+    public int started(){return started;}
+    public boolean canOverride(){return activity==0||activity==DEFENSE;}
+    public boolean allowsMovement(){return activity==0||activity==CHARGE||activity==DEFENSE||attack!=null&&attack.blended()&&definition!=null&&definition.blended();}
+    public boolean allowsRotation(int time){return allowsMovement()||attack!=null&&time-started>=attack.rearm();}
+    public float movementScale(){return activity==DEFENSE&&shieldDefinition!=null?1+shieldDefinition.defendingSpeed():activity==CHARGE&&definition!=null?definition.chargingSpeed():activity>=INCOMPLETE&&definition!=null?definition.attackingSpeed():1;}
+    public State state(){return new State(weapon,shield,shieldCostume,shieldDefinition==null?0:shieldDefinition.health(),chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart);}
+    private int currentShieldHealth(int time){return shieldDefinition==null?0:Math.min(shieldDefinition.health(),(int)Math.ceil(Math.max(shieldHealth,shieldHealth+(time-shieldHit-shieldRegenStart)*(float)shieldDefinition.health()/shieldDefinition.regenTime())));}
+    public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
+        advance(time,facing);
+        if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<2)select(6+index);}return;}
+        if(activity==CHARGE&&(flags&4)==0) {
+            if(definition!=null)startAttack(time-started>=definition.chargeTime()?CHARGED:nextNormal(time),time);
+            else clear(time);
+        }
+        if(activity==DEFENSE&&(flags&64)==0)clear(time);
+        // ActiveAdvancer updates the current attack before Dungeoneer evaluates a
+        // new attack. A held press at rearm must charge instead of chaining again.
+        if(attack!=null&&canCharge()&&time-started>=attack.rearm()&&(flags&4)!=0&&changed<=started&&activity!=COOLDOWN) {
+            started+=attack.rearm();activity=CHARGE;attack=null;
+        }
+        boolean rearmed=attack!=null&&time-started>=attack.rearm()&&activity!=COOLDOWN;
+        if((flags&1024)!=0&&time>nextDodge&&activity!=CHARGE&&activity!=DEFENSE&&attack==null&&activity!=DODGE) {
+            activity=DODGE;started=time;nextDodge=time+dodgeCooldown;attack=null;
+            float angle=(flags&1)!=0?direction:facing;
+            impulse=new Impulse(time,625,(float)Math.cos(angle)*5,(float)Math.sin(angle)*5);impulseApplied=true;
+        }
+        if((flags&4)!=0&&definition!=null&&(activity==0||rearmed)
+                &&(definition.maxChain()==0||count(time)<definition.maxChain())) {
+            if(changed>=started)startAttack(definition.attacks().isEmpty()?CHARGE:activity>=NORMAL?nextNormal(time):NORMAL,time);
+            else if(canCharge()&&changed+350<started){activity=CHARGE;started=time;attack=null;}
+        }
+        if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;}
+        if((flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
+            activity=BASH;started=time;attack=shieldDefinition.bash();impulseApplied=false;bashSpent=false;
+            attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear()));
+        }
+        if(canOverride()) {
+            int index=(flags&56)>>>3;
+            // The current server owns two unlocked native weapon slots, 6 and 7.
+            if(index<2)select(6+index);
+        }
+    }
+    private boolean canCharge(){return definition!=null&&definition.charged()!=null&&definition.incomplete()!=null;}
+    private int count(int time){return time>=chainReset?0:chainCount;}
+    private int nextNormal(int time) {
+        if(definition.attacks().isEmpty())return INCOMPLETE;
+        int idx=count(time);return NORMAL+(definition.cycle()?idx%definition.attacks().size():Math.min(idx,definition.attacks().size()-1));
+    }
+    private void startAttack(int value,int time) {
+        if(value==CHARGE){if(canCharge()){activity=CHARGE;started=time;attack=null;}return;}
+        WeaponCatalog.Attack selected=switch(value){case INCOMPLETE->definition.incomplete();case CHARGED->definition.charged();case COOLDOWN->definition.cooldown();default->value>=NORMAL&&value-NORMAL<definition.attacks().size()?definition.attacks().get(value-NORMAL):null;};
+        if(selected==null){clear(time);return;}
+        chainCount=count(time)+1;chainReset=time+(definition.chainCooldown()==0?selected.clear():selected.land()+definition.chainCooldown());
+        activity=value;started=time;attack=selected;impulseApplied=false;
+        attackSink.accept(new AttackStart(weapon.config(),activity,started,attack.land(),attack.clear()));
+    }
+    public void advance(int time,float facing) {
+        if(attack!=null) {
+            if(activity==BASH&&!bashSpent&&shieldDefinition!=null&&time>=started+attack.land()) {
+                shieldHealth=Math.max(0,(int)(currentShieldHealth(time)-shieldDefinition.bashHealthPct()*shieldDefinition.health()));
+                shieldHit=time;shieldRegenStart=shieldDefinition.regenDelay();bashSpent=true;
+            }
+            if(!impulseApplied&&attack.impulseDuration()>0&&time>=started+attack.impulseDelay()) {
+                float cos=(float)Math.cos(facing),sin=(float)Math.sin(facing);
+                impulse=new Impulse(started+attack.impulseDelay(),attack.impulseDuration(),attack.impulseX()*cos-attack.impulseY()*sin,attack.impulseX()*sin+attack.impulseY()*cos);impulseApplied=true;
+            }
+            if(definition!=null&&activity!=BASH&&activity!=COOLDOWN&&definition.cooldown()!=null&&definition.maxChain()>0&&chainCount==definition.maxChain()&&time>=started+attack.rearm()) {
+                int end=started+attack.rearm();startAttack(COOLDOWN,end);
+            }
+            if(attack!=null&&time>=started+attack.clear())clear(started+attack.clear());
+        }else if(activity==DODGE&&time>=started+625)clear(started+625);
+        // Keep a completed impulse through its final integration interval; movement retires it.
+    }
+    public void retireImpulse(int time){if(impulse!=null&&time>=impulse.started()+impulse.duration())impulse=null;}
+}

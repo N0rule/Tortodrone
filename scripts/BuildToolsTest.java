@@ -70,6 +70,16 @@ public final class BuildToolsTest {
                 try (var files = Files.list(home.resolve("deps"))) {
                     check(files.noneMatch(p -> p.getFileName().toString().contains(".download-")), "temporary downloads cleaned up");
                 }
+                Path oldMap=home.resolve("maps/haven/scene.dat");Files.createDirectories(oldMap.getParent());
+                byte[] oldBytes="previous archive map".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                Files.write(oldMap,oldBytes);
+                String oldMapDigest=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(oldBytes));
+                var ownership=new Properties();ownership.setProperty("owned.haven/scene.dat",oldMapDigest);
+                check(BuildTools.archiveOwns(ownership,Path.of("haven/scene.dat"),oldMap),
+                    "previous generated archive map is a replacement baseline");
+                ownership.setProperty("owned.haven/scene.dat","0".repeat(64));
+                check(!BuildTools.archiveOwns(ownership,Path.of("haven/scene.dat"),oldMap),
+                    "archive replacement ownership does not permit unrelated deployment edits");
                 System.out.println("PASS: dependency cache, HTTP retries, checksum refusal, stalled-body deadlines and cleanup");
             } finally {
                 release.countDown(); server.stop(0);

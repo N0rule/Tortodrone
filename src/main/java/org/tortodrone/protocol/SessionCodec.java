@@ -11,10 +11,14 @@ import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.Knight;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.character.WorldProfile;
+import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.world.KnightCombat;
 import org.tortodrone.world.TownMovement;
 import org.tortodrone.world.ActorState;
 import org.tortodrone.world.SceneRegistry;
 import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.world.SceneEffect;
+import org.tortodrone.world.FireCatalog;
 
 /** Downstream session messages after the secure and authentication responses. */
 public final class SessionCodec {
@@ -40,8 +44,10 @@ public final class SessionCodec {
     private static final String PREFIX = "com.threerings.presents.net.";
     private final Map<String, Integer> classes = new HashMap<>();
     private final Map<String, Integer> interns = new HashMap<>();
-
-    public SessionCodec() {
+    private final ItemCatalog itemCatalog;
+    public SessionCodec(){this(ItemCatalog.starter());}
+    public SessionCodec(ItemCatalog catalog) {
+        itemCatalog=java.util.Objects.requireNonNull(catalog);
         // HandshakeCodec has already introduced these five downstream mappings.
         classes.put(PREFIX + "SecureResponse", 1);
         classes.put(PREFIX + "AuthResponseData", 2);
@@ -330,7 +336,7 @@ public final class SessionCodec {
     }
 
     void value(DataOutputStream out,Object value) throws IOException {
-        if (value == null) { out.writeShort(0);
+        if (value == null || value==FireCatalog.NullValue.INSTANCE) { out.writeShort(0);
         } else if (value instanceof Long number) { type(out,"java.lang.Long"); out.writeLong(number);
         } else if (value instanceof Boolean flag) { type(out,"java.lang.Boolean"); out.writeBoolean(flag);
         } else if (value instanceof StarterCatalog.Model model) {
@@ -349,7 +355,32 @@ public final class SessionCodec {
             type(out,"java.lang.Integer"); out.writeInt(number);
         } else if (value instanceof String text) {
             type(out,"java.lang.String"); out.writeUTF(text);
+        } else if(value instanceof FireCatalog.EnumValue enumeration) {
+            if(enumeration.ordinal()<0||enumeration.ordinal()>255)throw new IOException("Unsupported enum ordinal");
+            type(out,enumeration.type());out.writeByte(enumeration.ordinal());
+        } else if(value instanceof FireCatalog.DataValue object) {
+            type(out,object.type());for(var field:object.fields())streamField(out,field);
+        } else if(value instanceof FireCatalog.ListValue array) {
+            if(array.componentType().startsWith("java.util."))throw new IOException("Unsupported streamed collection");
+            type(out,"[L"+array.componentType()+";");out.writeInt(array.values().size());for(var element:array.values())value(out,element);
+        } else if(value instanceof FireCatalog.MapValue map) {
+            type(out,"java.util.HashMap");out.writeInt(map.values().size());for(var entry:new java.util.TreeMap<>(map.values()).entrySet()){value(out,entry.getKey());value(out,entry.getValue());}
         } else throw new IOException("Unsupported preview argument");
+    }
+
+    private void streamField(DataOutputStream out,FireCatalog.FieldValue field)throws IOException {
+        Object v=field.value();switch(field.type()) {
+            case "boolean" -> out.writeBoolean((Boolean)v);
+            case "byte" -> out.writeByte(((Number)v).intValue());
+            case "short" -> out.writeShort(((Number)v).intValue());
+            case "char" -> out.writeChar(((Number)v).intValue());
+            case "int" -> out.writeInt(((Number)v).intValue());
+            case "long" -> out.writeLong(((Number)v).longValue());
+            case "float" -> out.writeFloat(((Number)v).floatValue());
+            case "double" -> out.writeDouble(((Number)v).doubleValue());
+            case "java.lang.String" -> {out.writeBoolean(v!=FireCatalog.NullValue.INSTANCE);if(v!=FireCatalog.NullValue.INSTANCE)out.writeUTF((String)v);}
+            default -> value(out,v);
+        }
     }
 
     private void intern(DataOutputStream out, String value) throws IOException {
@@ -641,12 +672,17 @@ public final class SessionCodec {
     }
     public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
             short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior)throws IOException {
+        return sceneDelta(oid,sceneOid,acknowledge,ping,reference,timestamp,elapsed,added,updated,removed,baseline,interior,List.of());
+    }
+    public byte[] sceneDelta(int oid,int sceneOid,int acknowledge,short ping,int reference,int timestamp,
+            short elapsed,List<ActorState> added,List<ActorState> updated,int[] removed,Map<Integer,ActorState> baseline,boolean interior,List<SceneEffect> effects)throws IOException {
         return frame(out -> {
             type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
             out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
             if(added.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.data.actor.Actor;");out.writeInt(added.size());for(var a:added)actor(out,a,interior);}
             if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior);}
-            out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);out.writeShort(0);
+            out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);
+            if(effects.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size());for(var effect:effects)effect(out,effect);}
         });
     }
 
@@ -665,15 +701,22 @@ public final class SessionCodec {
         for(var item:profile.items())item(out,knight,profile.worldId(),item);
     }
     private void item(DataOutputStream out,Knight knight,int worldId,WorldProfile.Item item)throws IOException {
-            type(out,"com.threerings.projectx.item.data."+(item.slot()==WorldProfile.Slot.OTHER?"Item":"LevelItem"));
-            if(item.slot()!=WorldProfile.Slot.OTHER) {
+            item(out,knight==null?null:knight.costume(),worldId,item);
+    }
+    private void item(DataOutputStream out,String costume,int worldId,WorldProfile.Item item)throws IOException {
+            var definition=itemCatalog.find(item.config());
+            boolean seeded=item.slot()==WorldProfile.Slot.OTHER&&definition!=null&&definition.variant()==ItemCatalog.Variant.SEED_ITEM;
+            type(out,"com.threerings.projectx.item.data."+(item.slot()==WorldProfile.Slot.OTHER?seeded?"SeedItem":definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM?"LevelItem":"Item":"LevelItem"));
+            if(seeded)out.writeLong(definition.seed());
+            boolean level=item.slot()!=WorldProfile.Slot.OTHER||definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM;
+            if(level) {
                 out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
-                out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+knight.costume(),Map.of()));}
+                out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+costume,Map.of()));}
             }
             out.writeLong(item.id());out.writeInt(worldId);out.writeInt(0);out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
-            out.writeByte((item.bound() ? 2 : 0) | (item.permanent() ? 1 : 0));
+            out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0));
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
@@ -703,13 +746,17 @@ public final class SessionCodec {
         type(out,"com.threerings.projectx.data.PlayerObject$Type");out.writeByte(actor.gameMaster()?2:0);out.writeInt(actor.color());out.writeShort(0);type(out,"com.threerings.projectx.data.ProjectXCodes$PrestigeRank");out.writeByte(0);out.writeInt(1);
     }
     private void actor(DataOutputStream out,ActorState a,boolean interior)throws IOException {
+        if(a.projectile()!=null){projectile(out,a);return;}
         type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());
         out.writeShort(0);out.writeShort(0);out.writeShort(0);out.writeShort(0);string(out,null);out.writeInt(0);out.writeShort(0);
         if(interior) {
-            out.writeShort(0);string(out,null);string(out,null);out.writeShort(0);
-            out.writeInt(0);out.writeInt(-300000);out.writeFloat(0);out.writeInt(0);out.writeShort(0);
-            for(int i=0;i<7;i++)out.writeInt(0);
+            var combat=a.combat();
+            weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());out.writeShort(0);
+            out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
+            out.writeInt(0);out.writeInt(0);
+            out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
+            out.writeInt(0);out.writeInt(0);out.writeInt(combat==null?0:combat.nextDodge());
             type(out,"com.threerings.projectx.dungeon.data.ImmutableStatusModifiers");
             for(int i=0;i<8;i++)out.writeFloat(1);out.writeFloat(0);
             for(int i=0;i<4;i++)out.writeBoolean(true);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(true);out.writeInt(0);
@@ -718,16 +765,51 @@ public final class SessionCodec {
     }
     private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline,boolean interior)throws IOException {
         // ActorDelta is final: its typed array omits a per-element type header.
+        if(a.projectile()!=null){projectileDelta(out,a);return;}
         out.writeInt(a.id());type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");
         boolean configChanged = baseline == null || !a.config().equals(baseline.config());
         // Preserve the reference's config object on ordinary movement; update it for actual gear changes.
         // The stock controller predicts directly on its first snapshot. Always replace activity
         // fields so that local inventory prediction cannot leak into subsequent delta baselines.
+        boolean combatChanged=interior&&(a.combat()!=null||baseline!=null&&baseline.combat()!=null);
         out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(1);
-        if(interior){out.writeByte(0);out.writeByte(0);out.writeByte(0);}
+        // Mutable Dungeoneer fields: weapon 16, shields 17/18, health 22/23,
+        // impulse 24, chain 27/28 and dodge deadline 31. Id/created are DeltaFinal.
+        if(interior){out.writeByte(combatChanged?0xf7:0);out.writeByte(combatChanged?0x99:0);out.writeByte(0);}
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
         out.writeInt(a.activity());out.writeInt(a.activityStarted());
+        if(combatChanged) {
+            var combat=a.combat();weapon(out,a.id(),combat);value(out,combat==null?null:combat.shield());value(out,combat==null?null:combat.shieldCostume());
+            out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
+            out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());out.writeInt(combat==null?0:combat.nextDodge());
+        }
+    }
+    private void projectile(DataOutputStream out,ActorState actor)throws IOException {
+        var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
+        type(out,"com.threerings.projectx.dungeon.data.actor."+(bullet?"Bullet":"Bomb"));
+        value(out,p.config());out.writeInt(actor.id());out.writeInt(p.created());out.writeInt(p.destroyed());
+        vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
+        if(bullet){out.writeFloat(p.maxStep());out.writeFloat(actor.direction());vector(out,p.originX(),p.originY());out.writeFloat(p.z());}
+        out.writeInt(p.ownerOid());out.writeInt(0);if(bullet)out.writeInt(p.faction());else out.writeFloat(p.z());
+    }
+    private void projectileDelta(DataOutputStream out,ActorState actor)throws IOException {
+        var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
+        out.writeInt(actor.id());type(out,"com.threerings.projectx.dungeon.data.actor."+(bullet?"Bullet":"Bomb"));
+        // Actor: destroyed, translation, rotation, flags. Origin, id and created are final.
+        out.writeByte(0x1e);if(bullet)out.writeByte(0);
+        out.writeInt(p.destroyed());vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
+    }
+    private void effect(DataOutputStream out,SceneEffect effect)throws IOException {
+        type(out,"com.threerings.tudey.data.effect.Effect");value(out,effect.config());out.writeInt(effect.timestamp());out.writeShort(0);
+        vector(out,effect.x(),effect.y());out.writeFloat(effect.rotation());out.writeInt(effect.ownerOid());
+    }
+    private void weapon(DataOutputStream out,int bag,KnightCombat.State combat)throws IOException {
+        if(combat==null||combat.weapon()==null)out.writeShort(0);else item(out,(String)null,bag,combat.weapon());
+    }
+    private void impulse(DataOutputStream out,KnightCombat.Impulse impulse)throws IOException {
+        if(impulse==null){out.writeShort(0);return;}
+        type(out,"com.threerings.projectx.dungeon.data.actor.Impulse");out.writeInt(impulse.started());out.writeInt(impulse.duration());vector(out,impulse.x(),impulse.y());
     }
     private void vector(DataOutputStream out,float x,float y)throws IOException{type(out,"com.threerings.math.Vector2f");out.writeFloat(x);out.writeFloat(y);}
 

@@ -8,18 +8,20 @@ import org.tortodrone.resources.Json;
 
 /** Human-readable item metadata with explicit types for stock model arguments. */
 final class ItemCatalogJson {
-    private static final Set<String> FIELDS = Set.of("config", "stockId", "type", "nameKey", "rarity", "stackable", "slot", "bindOnEquip", "permanent", "modelArguments");
+    private static final Set<String> FIELDS_V1 = Set.of("config", "stockId", "type", "nameKey", "rarity", "stackable", "slot", "bindOnEquip", "permanent", "modelArguments");
+    private static final Set<String> FIELDS_V2 = Set.of("config", "stockId", "type", "nameKey", "rarity", "stackable", "slot", "bindOnEquip", "permanent", "locked", "variant", "seed", "modelArguments");
     static void write(Path file, Collection<ItemCatalog.Entry> entries) throws IOException {
         if (entries.size()>50_000) throw new IOException("Item catalogue exceeds limits");
         try (var out=Files.newBufferedWriter(file, StandardOpenOption.CREATE_NEW)) {
-            out.write("{\n  \"format\": \"tortodrone-items\",\n  \"version\": 1,\n  \"items\": [\n");
+            out.write("{\n  \"format\": \"tortodrone-items\",\n  \"version\": 2,\n  \"items\": [\n");
             boolean comma=false;
             for (var entry:entries.stream().sorted(Comparator.comparing(ItemCatalog.Entry::config)).toList()) {
                 var row=new LinkedHashMap<String,Object>();
                 row.put("config",entry.config()); row.put("stockId",entry.stockId()); row.put("type",entry.type());
                 row.put("nameKey",entry.nameKey()); row.put("rarity",entry.rarity()); row.put("stackable",entry.stackable());
                 row.put("slot",entry.slot()==null?null:entry.slot().name()); row.put("bindOnEquip",entry.bindOnEquip());
-                row.put("permanent",entry.permanent()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
+                row.put("permanent",entry.permanent()); row.put("locked",entry.locked()); row.put("variant",entry.variant().name());
+                row.put("seed",entry.seed()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
                 if (comma) out.write(",\n"); comma=true; out.write("    "+Json.stringify(row));
             }
             out.write("\n  ]\n}\n");
@@ -29,17 +31,22 @@ final class ItemCatalogJson {
         if (Files.size(file)>32_000_000) throw new IOException("Item catalogue exceeds size limit");
         try {
             var root=object(Json.parse(Files.readString(file)),Set.of("format","version","items"));
-            if (!"tortodrone-items".equals(root.get("format")) || integer(root.get("version"))!=1)
+            int version=integer(root.get("version"));
+            if (!"tortodrone-items".equals(root.get("format")) || (version!=1&&version!=2))
                 throw new IOException("Unsupported JSON item catalogue");
             if (!(root.get("items") instanceof List<?> rows)) throw new IOException("Invalid item list");
             var entries=new ArrayList<ItemCatalog.Entry>();
             for (Object value:rows) {
-                var row=object(value,FIELDS);
+                var row=object(value,version==1?FIELDS_V1:FIELDS_V2);
                 String config=text(row.get("config"),512),type=text(row.get("type"),512),name=text(row.get("nameKey"),1024);
                 int rarity=integer(row.get("rarity")); if (rarity < -1 || rarity > 10) throw new IOException("Invalid item rarity");
                 WorldProfile.Slot slot=row.get("slot")==null?null:WorldProfile.Slot.valueOf(text(row.get("slot"),32));
+                boolean permanent=bool(row.get("permanent"));
+                boolean locked=version==1?ItemCatalog.stockLocked(type,permanent):bool(row.get("locked"));
+                ItemCatalog.Variant variant=version==1?ItemCatalog.Variant.ITEM:ItemCatalog.Variant.valueOf(text(row.get("variant"),32));
+                Long seed=version==1||row.get("seed")==null?null:longInteger(row.get("seed"));
                 entries.add(new ItemCatalog.Entry(config,integer(row.get("stockId")),type,name,rarity,
-                    bool(row.get("stackable")),slot,bool(row.get("bindOnEquip")),bool(row.get("permanent")),
+                    bool(row.get("stackable")),slot,bool(row.get("bindOnEquip")),permanent,locked,variant,seed,
                     decode(row.get("modelArguments"),0,new int[]{0})));
             }
             return new ItemCatalog(entries);
@@ -102,5 +109,9 @@ final class ItemCatalogJson {
     private static int integer(Object value) throws IOException {
         if (!(value instanceof BigDecimal n)) throw new IOException("Invalid item integer");
         try { return n.intValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
+    }
+    private static long longInteger(Object value) throws IOException {
+        if (!(value instanceof BigDecimal n)) throw new IOException("Invalid item integer");
+        try { return n.longValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
     }
 }

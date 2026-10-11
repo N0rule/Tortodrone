@@ -3,6 +3,7 @@ import java.nio.file.*;
 import java.security.*;
 import java.util.*;
 import com.threerings.config.*;
+import com.threerings.projectx.dungeon.config.DungeonItemConfig;
 import com.threerings.projectx.item.config.*;
 import org.tortodrone.character.*;
 
@@ -20,15 +21,13 @@ public final class ItemCatalogExport {
         for(var config:manager.bd(ItemConfig.class).kK()) {
             var item=config.w(manager);WorldProfile.Slot slot=null;
             // A stock ID, display name/icon and a player-facing definition are required.
-            // Creatable is a stock tooling flag, not an ownership/obtainability test.
-            String path=config.getName().toLowerCase(Locale.ROOT);
             boolean named=item.name!=null&&!item.name.isBlank()
                 ||item instanceof ItemConfig.AccessoryTicket ticket&&ticket.accessory!=null&&manager.a(AccessoryConfig.class,ticket.accessory)!=null;
             boolean player=config.getConfigId()!=0&&named&&item.icon!=null
-                &&item.expireDays==0&&(item.expireEvent==null||item.expireEvent.isBlank())
-                &&!path.contains("/parts/")&&!path.contains("/dev/")&&!path.contains("(dev)")
-                &&!path.contains("/test")&&!path.contains("/pvp/")&&!path.contains("ideal sword");
-            if(player&&item instanceof ItemConfig.Level&&!item.stackable) {
+                &&item.expireDays==0&&(item.expireEvent==null||item.expireEvent.isBlank());
+            boolean levelOther=item instanceof ItemConfig.MetaMineral||item instanceof DungeonItemConfig.Present;
+            if(player&&levelOther)slot=WorldProfile.Slot.OTHER;
+            else if(player&&item instanceof ItemConfig.Level&&!item.stackable) {
                 if(item instanceof ItemConfig.HelmCostume&&item.h(3,false))slot=WorldProfile.Slot.HELM_COSTUME;
                 else if(item instanceof ItemConfig.ArmorCostume&&item.h(4,false))slot=WorldProfile.Slot.ARMOR_COSTUME;
                 else if(item instanceof ItemConfig.ShieldCostume&&item.h(15,false))slot=WorldProfile.Slot.SHIELD_COSTUME;
@@ -39,8 +38,7 @@ public final class ItemCatalogExport {
                 else if(item instanceof ItemConfig.Sword&&item.h(6,false))slot=WorldProfile.Slot.SWORD;
                 else if(item instanceof ItemConfig.Handgun&&item.h(6,false))slot=WorldProfile.Slot.GUN;
                 else if(item instanceof ItemConfig.Bomb&&item.h(6,false))slot=WorldProfile.Slot.BOMB;
-            }else if(player&&plainPlayerType(item.getClass().getSimpleName())
-                &&(!Set.of("Capsule","Vial").contains(item.getClass().getSimpleName())||config.creatable))slot=WorldProfile.Slot.OTHER;
+            }else if(player&&plainPlayerType(item.getClass().getSimpleName()))slot=WorldProfile.Slot.OTHER;
             Map<String,Object> model=Map.of();
             if(slot!=null&&slot!=WorldProfile.Slot.OTHER) {
                 var a=new ArgumentMap();var b=new ArgumentMap();item.a(256,a);item.a(257,b);
@@ -50,9 +48,17 @@ public final class ItemCatalogExport {
                 String parameter=switch(slot==null?WorldProfile.Slot.SWORD:slot){case HELM,HELM_COSTUME->"Helmet";case ARMOR,ARMOR_COSTUME->"Armor";case SHIELD,SHIELD_COSTUME->"Shield";case TRINKET,OTHER->null;default->"Weapon";};
                 if(parameter!=null&&!(model.get(parameter) instanceof StarterCatalog.Model)) {slot=null;model=Map.of();}
             }
+            boolean permanent=item instanceof ItemConfig.Level l&&l.isPermanent
+                ||item instanceof ItemConfig.Artifact;
+            boolean locked=permanent||item instanceof ItemConfig.Token||item instanceof ItemConfig.Mineral
+                ||item instanceof ItemConfig.Craft craft&&craft.locked;
+            ItemCatalog.Variant variant=item instanceof ItemConfig.Artifact?ItemCatalog.Variant.SEED_ITEM
+                :levelOther?ItemCatalog.Variant.LEVEL_ITEM
+                :item instanceof ItemConfig.Upgrade?ItemCatalog.Variant.UPGRADE_ITEM:ItemCatalog.Variant.ITEM;
+            Long seed=item instanceof ItemConfig.Artifact artifact?artifact.seed:null;
             entries.add(new ItemCatalog.Entry(config.getName(),config.getConfigId(),item.getClass().getSimpleName(),
                 item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,
-                item instanceof ItemConfig.Level l&&l.isPermanent,model));
+                permanent,locked,variant,seed,model));
         }
         Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.json"),entries);
         String facts="# Read-only stock metadata; not game assets.\n";
@@ -65,7 +71,7 @@ public final class ItemCatalogExport {
         System.out.println("PASS: indexed "+loaded.entries().size()+" definitions, "+loaded.entries().stream().filter(ItemCatalog.Entry::grantable).count()+" grantable player item references");
     }
     static boolean plainPlayerType(String type) {
-        return Set.of("Craft","Recipe","Mineral","Token","Ticket","AccessoryTicket","VariantTicket",
+        return Set.of("ActionItem","Craft","Recipe","Mineral","Token","Artifact","Ticket","AccessoryTicket","VariantTicket","InstantAction",
             "SpriteEgg","Harness","Color","Eye","Height","Lockbox","Pack","GuildBond","GuildHallGlobalTicket",
             "RenameGuild","RenameKnight","WrappingPaper","AnimatedAction","Lift","SpawnActor","TokenArtifact",
             "Capsule","Vial").contains(type);

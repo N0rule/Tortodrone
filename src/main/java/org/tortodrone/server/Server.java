@@ -94,6 +94,9 @@ public final class Server {
         }
         log.debug("Scene IDs: " + scenes.catalog().scenes().stream()
             .map(org.tortodrone.world.SceneCatalog.MapScene::id).toList());
+        scenes.weapons(org.tortodrone.world.WeaponCatalog.deployment(dataDirectory));
+        scenes.fires(org.tortodrone.world.FireCatalog.deployment(dataDirectory));
+        if(scenes.weapons().weapons().isEmpty())fallbacks.add("weapon controls unavailable (export defaults/combat/weapons.tsv)");
         org.tortodrone.character.ItemCatalog catalog;
         Path itemSource=org.tortodrone.character.ItemCatalog.source(dataDirectory);
         try {

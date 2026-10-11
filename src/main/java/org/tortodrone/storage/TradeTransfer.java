@@ -11,10 +11,10 @@ final class TradeTransfer {
     private TradeTransfer() { }
     static List<WorldProfile> commit(Connection c,WorldProfile first,long firstAuth,Map<Long,Integer> firstItems,
             int firstCrowns,int firstEnergy,WorldProfile second,long secondAuth,Map<Long,Integer> secondItems,
-            int secondCrowns,int secondEnergy)throws SQLException,IOException {
+            int secondCrowns,int secondEnergy,ItemCatalog catalog)throws SQLException,IOException {
         if(first.accountId()==second.accountId()||first.worldId()==second.worldId())throw new IOException("Cannot trade with yourself");
         var a=current(c,first,firstAuth);var b=current(c,second,secondAuth);
-        validate(a,firstItems,firstCrowns,firstEnergy);validate(b,secondItems,secondCrowns,secondEnergy);
+        validate(a,firstItems,firstCrowns,firstEnergy,catalog);validate(b,secondItems,secondCrowns,secondEnergy,catalog);
         capacity(a,firstItems,secondItems.size());capacity(b,secondItems,firstItems.size());
         int ac=balance(a.crowns(),firstCrowns,secondCrowns),ae=balance(a.energy(),firstEnergy,secondEnergy);
         int bc=balance(b.crowns(),secondCrowns,firstCrowns),be=balance(b.energy(),secondEnergy,firstEnergy);
@@ -29,12 +29,13 @@ final class TradeTransfer {
             throw new IOException("Inventory or account changed; start a new trade");
         return actual;
     }
-    static void validate(WorldProfile owner,Map<Long,Integer> offered,int crowns,int energy)throws IOException {
+    static void validate(WorldProfile owner,Map<Long,Integer> offered,int crowns,int energy,ItemCatalog catalog)throws IOException {
         if(offered.size()>15)throw new IOException("A trade can offer at most 15 item stacks");
         if(crowns<0||crowns>owner.crowns()||energy<0||energy>owner.energy())throw new IOException("Insufficient trade currency");
         for(var entry:offered.entrySet()) {
             var item=owner.items().stream().filter(i->i.id()==entry.getKey()).findFirst().orElseThrow(()->new IOException("Item is not owned"));
-            if(item.bound()||item.permanent()||item.starter()||item.equippedSlot()!=null)
+            var definition=catalog.find(item.config());
+            if(definition!=null&&(definition.locked()||definition.permanent())||item.bound()||item.permanent()||item.starter()||item.equippedSlot()!=null)
                 throw new IOException("Bound, starter and equipped items cannot be traded");
             if(entry.getValue()==null||entry.getValue()<1||entry.getValue()>item.count())throw new IOException("Invalid trade item quantity");
         }

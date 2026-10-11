@@ -59,13 +59,18 @@ public final class BuildTools {
     private record Copy(Path source, Path target, boolean replace) { }
     private static void prepare(Path project, Path output, boolean mapsOnly) throws Exception {
         Path bundled=project.resolve("defaults/maps"), local=project.resolve("local/defaults/maps");
-        boolean prepared=Files.exists(local,LinkOption.NOFOLLOW_LINKS);
-        Path mapSource=prepared?local:bundled, mapOutput=mapsOnly?output:output.resolve("maps");
-        if(prepared)verifyPreparedMaps(local);
+        Path archive=project.resolve("local/defaults/archive-maps");
+        boolean prepared=Files.exists(archive,LinkOption.NOFOLLOW_LINKS)||Files.exists(local,LinkOption.NOFOLLOW_LINKS);
+        Path mapSource=Files.exists(archive,LinkOption.NOFOLLOW_LINKS)?archive:Files.exists(local,LinkOption.NOFOLLOW_LINKS)?local:bundled;
+        Path mapOutput=mapsOnly?output:output.resolve("maps");
+        if(prepared)verifyPreparedMaps(mapSource);
+        if(mapSource.equals(archive)&&!Files.isRegularFile(archive.resolve("scene-source.properties"),LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("Incomplete archive map source: missing scene-source.properties in " + archive);
         verifyMaps(mapSource);
         var copies=new ArrayList<Copy>();
-        plan(mapSource,mapOutput,prepared?bundled:null,copies,null);
-        if(!mapsOnly)plan(project.resolve("defaults"),output,null,copies,Path.of("maps"));
+        Properties ownership=prepared?archiveOwnership(mapSource):null;
+        plan(mapSource,mapOutput,prepared?bundled:null,copies,null,ownership);
+        if(!mapsOnly)plan(project.resolve("defaults"),output,null,copies,Path.of("maps"),sourceOwnership(project.resolve("defaults"),"default-source.properties"));
         // Hold an existing deployment's lock before changing maps; never stop a live server.
         Path lockFile=(Path.of("defaults").equals(mapOutput.getParent().getFileName())
             ?mapOutput.getParent().getParent():mapOutput.getParent()).resolve("data/server.lock");
@@ -84,7 +89,7 @@ public final class BuildTools {
                 } else copyMissing(copy.source,copy.target);
             }
         }
-        if(prepared)System.out.println("Prepared local maps: " + local + " -> " + mapOutput);
+        if(prepared)System.out.println("Prepared local maps: " + mapSource + " -> " + mapOutput);
     }
     private static void verifyPreparedMaps(Path maps) throws IOException {
         if(!Files.isRegularFile(maps.resolve("catalog.properties"),LinkOption.NOFOLLOW_LINKS))
@@ -94,7 +99,7 @@ public final class BuildTools {
                 if(!Files.isRegularFile(maps.resolve(pack).resolve(file),LinkOption.NOFOLLOW_LINKS))
                     throw new IOException("Incomplete prepared map source: missing " + pack + "/" + file);
     }
-    private static void plan(Path source,Path output,Path baseline,List<Copy> copies,Path skip) throws IOException {
+    private static void plan(Path source,Path output,Path baseline,List<Copy> copies,Path skip,Properties ownership) throws Exception {
         if(Files.notExists(source,LinkOption.NOFOLLOW_LINKS)) {
             System.out.println("Optional default source is absent: " + source + "; continuing without it");return;
         }
@@ -113,11 +118,67 @@ public final class BuildTools {
                 if(original!=null&&Files.isRegularFile(original)&&Files.mismatch(original,file)!=-1) {
                     if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Prepared map conflicts with existing file: " + target);
                     if(Files.mismatch(target,file)==-1)continue;
-                    if(Files.mismatch(target,original)!=-1)throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
+                    if(Files.mismatch(target,original)!=-1&&!archiveOwns(ownership,relative,target))
+                        throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
+                    copies.add(new Copy(file,target,true));
+                } else if(original==null&&Files.exists(target,LinkOption.NOFOLLOW_LINKS)) {
+                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Prepared map conflicts with existing path: " + target);
+                    if(Files.mismatch(target,file)==-1)continue;
+                    if(!archiveOwns(ownership,relative,target)) {
+                        if(ownership!=null&&ownership.containsKey("source."+relative.toString().replace('\\','/')))
+                            throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
+                        continue;
+                    }
                     copies.add(new Copy(file,target,true));
                 }
             }
         }
+    }
+    private static Properties archiveOwnership(Path maps) throws IOException {
+        return sourceOwnership(maps,"scene-source.properties");
+    }
+    private static Properties sourceOwnership(Path maps,String manifestName) throws IOException {
+        Path manifest=maps.resolve(manifestName);
+        if(Files.notExists(manifest,LinkOption.NOFOLLOW_LINKS))return null;
+        if(Files.isSymbolicLink(manifest)||!Files.isRegularFile(manifest)||Files.size(manifest)>65536)
+            throw new IOException("Invalid archive source manifest: "+manifest);
+        Properties values=properties(manifest);
+        if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported archive source manifest format");
+        if(values.stringPropertyNames().stream().noneMatch(key->key.startsWith("source.")))
+            throw new IOException("Archive source manifest contains no source file checksums");
+        for(String key:values.stringPropertyNames())if(key.startsWith("source.")) {
+            String relative=key.substring("source.".length());Path rel=Path.of(relative);
+            if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
+                throw new IOException("Invalid source path in archive manifest: "+relative);
+            String expected=values.getProperty(key);
+            if(expected==null||!expected.matches("[0-9a-f]{64}"))throw new IOException("Invalid source digest in archive manifest: "+relative);
+            Path source=maps.resolve(rel).normalize();
+            if(!source.startsWith(maps.normalize())||!Files.isRegularFile(source,LinkOption.NOFOLLOW_LINKS)
+                ||!expected.equals(fileDigest(source)))throw new IOException("Archive map source differs from its manifest: "+relative);
+        }
+        for(String key:values.stringPropertyNames())if(key.startsWith("owned.")) {
+            String relative=key.substring("owned.".length());Path rel=Path.of(relative);
+            if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
+                throw new IOException("Invalid owned path in archive manifest: "+relative);
+            for(String digest:values.getProperty(key).split(","))if(!digest.matches("[0-9a-f]{64}"))
+                throw new IOException("Invalid owned digest in archive manifest: "+relative);
+        }
+        return values;
+    }
+    static boolean archiveOwns(Properties ownership,Path relative,Path target)throws IOException {
+        if(ownership==null)return false;
+        String key="owned."+relative.toString().replace('\\','/'),expected=ownership.getProperty(key);
+        if(expected==null)return false;
+        String actual=fileDigest(target);
+        for(String digest:expected.split(","))if(digest.equals(actual))return true;
+        return false;
+    }
+    private static String fileDigest(Path file)throws IOException {
+        try {
+            var hash=java.security.MessageDigest.getInstance("SHA-256");
+            try(var in=Files.newInputStream(file)) {byte[] buffer=new byte[65536];for(int n;(n=in.read(buffer))!=-1;)hash.update(buffer,0,n);}
+            return java.util.HexFormat.of().formatHex(hash.digest());
+        } catch(java.security.NoSuchAlgorithmException impossible) { throw new AssertionError(impossible); }
     }
     private static void copyMissing(Path source, Path target) throws IOException {
         Files.createDirectories(target.toAbsolutePath().getParent());

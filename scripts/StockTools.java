@@ -23,7 +23,24 @@ public final class StockTools {
                 if (args.length > 3) throw new IllegalArgumentException("items expects game directory [fresh-output-directory]");
                 fixture = "ItemCatalogExport";
                 fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/items").toString());
-                run(List.of("make", "build"));
+                if(!Files.isRegularFile(project.resolve("build/tortodrone.jar")))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
+            }
+            case "fires" -> {
+                if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
+                fixture="FireCatalogExport"; fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
+            case "weapons" -> {
+                if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");
+                fixture="WeaponCatalogExport";
+                fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
+            case "archive-towns" -> {
+                if(args.length!=4)throw new IllegalArgumentException("archive-towns expects game-directory archive-root fresh-output-directory");
+                fixture="ArchiveTownExport";
+                fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
+                sources.add(project.resolve("scripts/compat/ArchiveTownExport.java"));
             }
             case "scene" -> {
                 if (args.length != 6 && args.length != 8) throw new IllegalArgumentException("scene expects game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y]");
