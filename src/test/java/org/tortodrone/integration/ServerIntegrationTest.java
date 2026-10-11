@@ -50,6 +50,7 @@ public final class ServerIntegrationTest {
             Path generated = directory.resolve("generated/server.properties");
             check(ServerSettings.load(generated).port() == 47624, "default port");
             check(Files.exists(generated), "first-start configuration generation");
+            launchModes(sourceJar,directory.resolve("launch-modes"));
             defaultWorkflow(jar, directory.resolve("default-start"));
             missingDefaultsWorkflow(sourceJar,directory.resolve("missing-defaults"));
             shutdownWorkflow(sourceJar,directory.resolve("shutdown-start"));
@@ -235,6 +236,7 @@ public final class ServerIntegrationTest {
             && log.contains("/INFO]: Normal login accepted") && log.contains("/INFO]: Character saved"), "normal lifecycle and save logs");
         check(!log.contains("/DEBUG]") && !log.contains("SecureRequest") && !log.contains("PongResponse")
             && !log.contains("snapshot sent") && !log.contains("InvocationRequestEvent"), "normal mode suppresses verbose protocol logs");
+        check(log.contains("Connected | session=")&&log.contains("Disconnected | session=")&&log.contains("account=tortodrone (#1)")&&log.contains("rosterId=")&&!log.contains("client-cpu"),"normal logs correlate verified account and distinct knight identities without client hardware claims");
         check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
         try (var entries = Files.list(deployment)) {
             check(entries.count() == 3, "deployment contains the JAR, external maps and data directory");
@@ -370,7 +372,7 @@ public final class ServerIntegrationTest {
 
     private static ProcessBuilder command(Path jar, Path config, Path directory) {
         String javaExecutable = Path.of(System.getProperty("java.home"), "bin", "java").toString();
-        ProcessBuilder process = new ProcessBuilder(javaExecutable, "-jar", jar.toString());
+        ProcessBuilder process = new ProcessBuilder(javaExecutable, "-jar", jar.toString(), "--nogui");
         if (config != null) process.command().addAll(java.util.List.of("--config", config.toString()));
         return process.directory(directory.toFile()).redirectErrorStream(true);
     }
@@ -392,6 +394,18 @@ public final class ServerIntegrationTest {
         Properties properties = new Properties();
         try (var source = Files.newInputStream(file)) { properties.load(source); }
         return properties;
+    }
+
+    private static void launchModes(Path source,Path directory) throws Exception {
+        Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");org.tortodrone.support.TestDeployment.copyServer(source,jar);
+        var explicit=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-Djava.awt.headless=true","-jar",jar.toString(),"--gui").redirectErrorStream(true).start();
+        try {check(explicit.waitFor(10,TimeUnit.SECONDS),"explicit headless GUI refusal exits");String output=new String(explicit.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);check(explicit.exitValue()!=0&&output.contains("--gui requires an available graphical desktop"),"explicit GUI refuses headless environment");check(!Files.exists(directory.resolve("data")),"GUI refusal never touches runtime data");}
+        finally{if(explicit.isAlive()){explicit.destroyForcibly();explicit.waitFor();}}
+        Path config=directory.resolve("mode.properties");Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\n");
+        try(var server=new Running(jar,config,directory,java.util.List.of("-Djava.awt.headless=true"),false)){server.ready();}
+        Path classes=directory.resolve("terminal-classes.log");
+        try(var server=new Running(jar,config,directory,java.util.List.of("-Djava.awt.headless=false","-Xlog:class+load=info:file="+classes))){server.ready();}
+        String loaded=Files.readString(classes);check(!loaded.contains("javax.swing.")&&!loaded.contains("java.awt.Toolkit"),"nogui never loads Swing or initializes the desktop toolkit even with headless=false");
     }
 
     private static void shutdownWorkflow(Path sourceJar, Path directory) throws Exception {
@@ -432,8 +446,9 @@ public final class ServerIntegrationTest {
         Running(Path jar, Path config, Path directory) throws IOException {
             this(jar,config,directory,java.util.List.of());
         }
-        Running(Path jar, Path config, Path directory,java.util.List<String> jvmOptions) throws IOException {
-            var builder=command(jar,config,directory);builder.command().addAll(1,jvmOptions);
+        Running(Path jar, Path config, Path directory,java.util.List<String> jvmOptions) throws IOException {this(jar,config,directory,jvmOptions,true);}
+        Running(Path jar,Path config,Path directory,java.util.List<String> jvmOptions,boolean terminal) throws IOException {
+            var builder=command(jar,config,directory);if(!terminal)builder.command().remove("--nogui");builder.command().addAll(1,jvmOptions);
             process = builder.start();
             Thread reader = new Thread(() -> {
                 try (var input = new BufferedReader(new InputStreamReader(process.getInputStream()))) {

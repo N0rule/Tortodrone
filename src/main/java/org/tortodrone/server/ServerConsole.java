@@ -16,14 +16,32 @@ final class ServerConsole implements AutoCloseable {
     private final Runnable stop;
     private final BooleanSupplier running;
     private final ConsoleInput input;
-    private boolean closed;
+    private volatile boolean closed;
+    private final ServerControl control;
+    private final Object executionLock=new Object();
+    private final Prompts prompts;
+    interface Prompts { char[] password(String prompt) throws IOException; String confirmation(int limit) throws IOException; }
 
     ServerConsole(AccountStore accounts, ServerLog log, Runnable stop, BooleanSupplier running) {
-        this.accounts = accounts; this.log = log; this.stop = stop; this.running = running;
-        input = new ConsoleInput(log);
+        this(accounts,log,stop,running,null,true);
+    }
+    ServerConsole(AccountStore accounts,ServerLog log,Runnable stop,BooleanSupplier running,ServerControl control,boolean terminal) {
+        this.accounts=accounts;this.log=log;this.stop=stop;this.running=running;this.control=control;
+        input=terminal?new ConsoleInput(log):null;
+        prompts=new Prompts() {
+            public char[] password(String prompt) throws IOException {
+                if(input==null)throw new IOException("Open the account manager to enter passwords in graphical mode");
+                return input.password(prompt,log);
+            }
+            public String confirmation(int limit) throws IOException {
+                if(input==null)throw new IOException("Open the account manager for confirmed deletion in graphical mode");
+                return input.confirmation(limit);
+            }
+        };
     }
 
     void start() {
+        if(input==null)return;
         log.setConsoleOutput(input::printAbove);
         Thread thread = new Thread(this::readCommands, "ServerConsole");
         thread.setDaemon(true); thread.start();
@@ -37,8 +55,7 @@ final class ServerConsole implements AutoCloseable {
                     if (line == null) { log.debug("Terminal input closed; server remains running"); return; }
                     if (!running.getAsBoolean()) return;
                     line = line.trim(); if (line.isEmpty()) continue;
-                    if (line.startsWith("/")) line = line.substring(1);
-                    execute(line.split("\\s+"));
+                    executeLine(line);
                 } catch (IOException failure) {
                     log.warn(failure.getMessage());
                 }
@@ -52,11 +69,25 @@ final class ServerConsole implements AutoCloseable {
         } finally { close(); }
     }
 
-    @Override public synchronized void close() {
+    @Override public void close() {
+        if(input==null){synchronized(executionLock){closeInput();}}else closeInput();
+    }
+    private synchronized void closeInput() {
         if (closed) return;
         closed = true;
         log.setConsoleOutput(null);
-        input.close();
+        if(input!=null)input.close();
+    }
+
+    void executeLine(String line) throws IOException {
+        if(input==null){synchronized(executionLock){dispatch(line);}}else dispatch(line);
+    }
+    private void dispatch(String line) throws IOException {
+        if(closed||!running.getAsBoolean())throw new IOException("Server is not running");
+        line=line.strip();if(line.startsWith("/"))line=line.substring(1);
+        if(line.isEmpty())return;
+        if(line.length()>4096)throw new IOException("Command is too long");
+        execute(line.split("\\s+"));
     }
 
     private void execute(String[] words) throws IOException {
@@ -70,7 +101,7 @@ final class ServerConsole implements AutoCloseable {
         }
         boolean group=command.equals("account")||command.equals("knight")||command.equals("currency");
         if(ConsoleHelp.known(command) && words.length==1 && !command.equals("items")
-                && !command.equals("status") && !command.equals("stop")) {
+                && !command.equals("status") && !command.equals("stop") && !command.equals("players")) {
             showHelp(ConsoleHelp.topic(command,""));return;
         }
         if(ConsoleHelp.known(command)&&words.length==2&&words[1].equalsIgnoreCase("--help")) {
@@ -94,9 +125,35 @@ final class ServerConsole implements AutoCloseable {
                 throw failure;
             }
         } else if (words.length == 1 && command.equals("status")) {
-            log.info("Server running. Accounts: " + accounts.list().size());
+            if(control==null)log.info("Server running. Accounts: " + accounts.list().size());
+            else {
+                var status=control.snapshot();var metrics=status.metrics();
+                log.info("Tortodrone "+status.version()+" | "+status.state()+" | "+status.endpoint()+" | uptime="+status.uptimeSeconds()+"s");
+                log.info("Sessions: "+status.sessions().size()+" | Players: "+status.sessions().stream().filter(p->p.knightId()!=null).count()+" | Maps: "+status.maps()+" | Items: "+status.items()+" | Instances: "+status.scenes().size());
+                log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB | Accounts: "+accounts.list().size());
+            }
         } else if (words.length == 1 && command.equals("stop")) {
             log.info("Stopping server…"); stop.run();
+        } else if(command.equals("grant")||command.equals("set")) {
+            if(words.length!=4)throw new IOException(ConsoleHelp.usage(words));
+            long amount;try{amount=Long.parseLong(words[3]);}catch(NumberFormatException invalid){throw new IOException("Amount must be a whole number");}
+            var result=command.equals("grant")?accounts.currency(null,words[1],Currency.parse(words[2]),amount,-1,-1)
+                :accounts.setCurrency(null,words[1],Currency.parse(words[2]),amount,-1,-1);
+            log.info("Currency "+command+" | knight="+words[1]+" (#"+result.worldId()+") | accountId="+result.accountId()+" | Crowns: "+result.crowns()+" | Energy: "+result.energy());
+        } else if(command.equals("players")&&words.length==1) {
+            if(control==null)throw new IOException("Session monitoring unavailable");
+            log.info("Session | Account | Knight | Scene | Duration | State");
+            for(var player:control.sessions().snapshots())log.info(player.id()+" | "+player.username()+" (#"+player.accountId()+") | "+player.knight()+" (#"+player.knightId()+") | "+player.scene()+" (template="+player.sceneId()+", instance="+player.instanceId()+") | "+duration(player.connectedAt())+" | "+player.state());
+            log.info("Sessions: "+control.sessions().snapshots().size());
+        } else if(command.equals("session")&&words.length==2) {
+            if(control==null)throw new IOException("Session monitoring unavailable");
+            long id;try{id=Long.parseLong(words[1]);}catch(NumberFormatException invalid){throw new IOException("Session ID must be a whole number");}
+            var player=control.sessions().find(id);if(player==null)throw new IOException("No such active session");
+            log.info(player.toString());
+        } else if(command.equals("inspect")&&words.length==2) {
+            var profile=accounts.inspectKnight(words[1]);
+            log.info("Knight "+words[1]+" | knightId="+profile.worldId()+" | rosterId="+profile.knightId()+" | accountId="+profile.accountId()+" | Crowns: "+profile.crowns()+" | Energy: "+profile.energy()+" | Items: "+profile.items().size());
+            if(control!=null)control.sessions().snapshots().stream().filter(p->java.util.Objects.equals(p.knightId(),profile.worldId())).forEach(p->log.info("Online | session="+p.id()+" | scene="+p.scene()+" | instanceId="+p.instanceId()));
         } else if (command.equals("currency")) {
             currency(words);
         } else if (command.equals("knight")) {
@@ -124,13 +181,13 @@ final class ServerConsole implements AutoCloseable {
             var profile = accounts.worldProfile(words[2],words[3]);
             log.info("Knight " + words[3] + ": account=" + profile.accountId() + ", roster ID=" + profile.knightId() + ", world ID=" + profile.worldId());
             log.info("Crowns: " + profile.crowns() + " | Energy: " + profile.energy());
-            for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config()
+            for (var item : profile.items()) log.info(item.slot() + " | item=" + item.id() + " | " + item.config().substring(item.config().lastIndexOf('/')+1) + " | path=" + item.config()
                 + (item.accessory() == null ? "" : " | accessory=" + item.accessory()) + " | heat=" + item.heat() + " | equipped=" + item.equippedSlot());
         } else if(words.length==4&&words[1].equals("delete")) {
             var profile=accounts.worldProfile(words[2],words[3]);
             var name=accounts.knights(words[2]).stream().filter(k->k.id()==profile.knightId()).findFirst().orElseThrow(()->new IOException("Knight changed; refresh"));
             log.info("Delete "+name.name()+" and all its items/balances? Type the exact knight name to confirm:");
-            if(!name.name().equals(input.confirmation(16)))throw new IOException("Deletion confirmation did not match");
+            if(!name.name().equals(prompts.confirmation(16)))throw new IOException("Deletion confirmation did not match");
             if(!running.getAsBoolean())return;
             accounts.deleteKnight(words[2],name.name(),profile.accountId(),profile.worldId());
             log.info("Knight deleted: "+name.name()+"; this account's sessions will disconnect.");
@@ -172,20 +229,20 @@ final class ServerConsole implements AutoCloseable {
         if (words[1].equals("delete") && words.length == 3) {
             var selected = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account"));
             log.info("Delete " + selected.username() + " and " + selected.knights() + " character(s)? Type the exact username to confirm:");
-            if (!selected.username().equals(input.confirmation(32))) throw new IOException("Deletion confirmation did not match");
+            if (!selected.username().equals(prompts.confirmation(32))) throw new IOException("Deletion confirmation did not match");
             if (!running.getAsBoolean()) return;
             accounts.delete(name, selected.id()); log.info("Account deleted: " + selected.username()); return;
         }
         // Capture the selected identity before prompting; deletion/recreation must not redirect a reset.
         int expectedId = -1;
         if (!create) expectedId = accounts.list().stream().filter(a -> a.username().equalsIgnoreCase(name)).findFirst().orElseThrow(() -> new IOException("No such account")).id();
-        char[] password = input.password("Password: ",log), confirmation = null;
+        char[] password = prompts.password("Password: "), confirmation = null;
         try {
             if (check) {
                 if (running.getAsBoolean()) log.info(accounts.checkPassword(name, password) ? "Password matches." : "Password does not match.");
                 return;
             }
-            confirmation = input.password("Confirm password: ",log);
+            confirmation = prompts.password("Confirm password: ");
             if (!Arrays.equals(password, confirmation)) throw new IOException("Passwords do not match");
             if (!running.getAsBoolean()) return;
             if (create) accounts.create(name, password, words.length == 4);
@@ -195,6 +252,8 @@ final class ServerConsole implements AutoCloseable {
             Arrays.fill(password, '\0'); if (confirmation != null) Arrays.fill(confirmation, '\0');
         }
     }
+
+    private static String duration(java.time.Instant start) {return start==null?"0s":java.time.Duration.between(start,java.time.Instant.now()).toSeconds()+"s";}
 
     private void showHelp(java.util.List<String> lines) { lines.forEach(log::info); }
 

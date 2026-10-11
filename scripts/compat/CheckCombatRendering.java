@@ -68,7 +68,7 @@ public final class CheckCombatRendering {
             seed.addAll(List.of("CombatRenderingCheck", "--seed", scratch.resolve("data").toString()));
             run(seed, "seed", 45, scratch);
 
-            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), serverLog, scratch);
+            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog, scratch);
             server.getOutputStream().close();
             String port = ready(server, serverLog, Duration.ofSeconds(30));
             Path publicKey = scratch.resolve("data/keys/public.txt");

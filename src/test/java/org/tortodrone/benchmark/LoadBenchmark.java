@@ -80,7 +80,7 @@ public final class LoadBenchmark {
     private static boolean run(Path home,int count,int seconds,boolean town,int instances,Path report)throws Exception {
         Files.writeString(home.resolve("data/server.properties"),"server-ip=127.0.0.1\nserver-port=0\nlog-mode=normal\nmax-clients="+count+"\n");
         Path log=home.resolve("server-"+count+".log");
-        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString())
+        server=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-Xmx512m","-Xss256k","-jar",home.resolve("tortodrone.jar").toString(),"--nogui")
             .redirectErrorStream(true).redirectOutput(log.toFile()).start();
         int port=0;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(20);
         while(System.nanoTime()<deadline) {

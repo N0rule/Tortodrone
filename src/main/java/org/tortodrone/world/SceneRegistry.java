@@ -47,6 +47,19 @@ public final class SceneRegistry {
         }
     }
     public SceneCatalog catalog(){return catalog;}
+    public record Status(int templateId,int instanceId,String name,int players,String state) { }
+    public synchronized List<Status> statuses() {
+        var result=new ArrayList<Status>();
+        // Interior templates are instantiated per owner; their unused prototype is not active.
+        for(var copies:instances.values())for(var instance:copies)if(instance.map().town())
+            result.add(status(instance));
+        for(var instance:interiors.values())result.add(status(instance));
+        return result.stream().sorted(Comparator.comparingInt(Status::templateId).thenComparingInt(Status::instanceId)).toList();
+    }
+    private static Status status(Instance instance) {
+        int players=instance.simulation().playerCount();
+        return new Status(instance.map().id(),instance.oid(),instance.map().name(),players,players==0?"Idle":"Active");
+    }
     public Instance entry(){return instances.get(catalog.entry().id()).get(0);}
     public Instance instance(int scene,int index)throws IOException {
         var copies=instances.get(scene);
@@ -66,6 +79,10 @@ public final class SceneRegistry {
     public synchronized void release(Instance scene,int worldId) {
         if(scene==null||scene.map().town())return;
         if(interiors.remove(new InteriorKey(scene.map().id(),worldId),scene))interiorOids.addLast(scene.oid());
+    }
+    public static SceneRegistry deployment(Path data) throws IOException {
+        Path root=data.toAbsolutePath().normalize().getParent(),maps=root.resolve("maps");
+        return new SceneRegistry(SceneCatalog.load(Files.exists(maps)?maps:root.resolve("defaults/maps")));
     }
     public static synchronized SceneRegistry system()throws IOException {
         if(system==null) {

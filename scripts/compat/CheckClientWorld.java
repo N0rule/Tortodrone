@@ -78,7 +78,7 @@ public final class CheckClientWorld {
             Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n");
             for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
             Path serverLog = scratch.resolve("server.log");
-            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), serverLog);
+            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog);
             server.getOutputStream().close();
             String port = ready(server, serverLog);
             List<String> network = new ArrayList<>(base);
@@ -121,7 +121,7 @@ public final class CheckClientWorld {
                     &&Files.isDirectory(prepared.resolve("laboratory"))&&Files.isDirectory(prepared.resolve("hall_of_heroes"))) {
                 copyTree(prepared,scratch.resolve("maps"));
                 Path interiorLog=scratch.resolve("interior-server.log");
-                Process interiorServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString()),interiorLog);
+                Process interiorServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString(),"--nogui"),interiorLog);
                 interiorServer.getOutputStream().close();
                 String interiorPort=ready(interiorServer,interiorLog);
                 var interiorCheck=new ArrayList<>(base);
@@ -140,7 +140,7 @@ public final class CheckClientWorld {
             properties.setProperty("instances", "2");
             try (var out = Files.newOutputStream(descriptor)) { properties.store(out, "Disposable instance check"); }
             Path isolatedLog = scratch.resolve("isolated-server.log");
-            Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString()), isolatedLog);
+            Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), isolatedLog);
             isolated.getOutputStream().close();
             port = ready(isolated, isolatedLog);
             List<String> accountCheck = new ArrayList<>(base);
@@ -162,7 +162,7 @@ public final class CheckClientWorld {
             tradeSeed.addAll(List.of("TradeConnectionCheck","--seed",scratch.resolve("data").toString(),scratch.resolve("trade.properties").toString()));
             run(tradeSeed,"seed-trade","",15);
             Path tradeLog=scratch.resolve("trade-server.log");
-            Process tradeServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString()),tradeLog);
+            Process tradeServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString(),"--nogui"),tradeLog);
             tradeServer.getOutputStream().close();String tradePort=ready(tradeServer,tradeLog);
             var tradeCheck=new ArrayList<>(base);
             tradeCheck.addAll(List.of("TradeConnectionCheck",tradePort,scratch.resolve("data/keys/public.txt").toString(),scratch.resolve("trade.properties").toString()));

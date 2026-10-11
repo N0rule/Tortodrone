@@ -8,7 +8,12 @@ final class ConsoleHelp {
     private record Entry(String command, String action, String syntax, String description, String example) { }
     private static final List<Entry> ENTRIES = List.of(
         new Entry("help", "", "help [command] [action]", "Show all commands or help for one command.", "help account create"),
-        new Entry("status", "", "status", "Show server status and account count.", "status"),
+        new Entry("status", "", "status", "Show version, uptime, sessions, resources and memory.", "status"),
+        new Entry("players", "", "players", "List current TCP sessions, verified identities and locations.", "players"),
+        new Entry("session", "", "session <session-id>", "Inspect an active connection.", "session 1"),
+        new Entry("inspect", "", "inspect <knight-name>", "Inspect persistent identity, balances and inventory count.", "inspect Jane"),
+        new Entry("grant", "", "grant <knight-name> <crowns|energy> <signed-amount>", "Add/subtract atomically; insufficient funds and overflow are refused.", "grant Jane crowns -25"),
+        new Entry("set", "", "set <knight-name> <crowns|energy> <balance>", "Set an absolute balance atomically, from 0 to 2147483647.", "set Jane crowns 5000"),
         new Entry("stop", "", "stop", "Shut down the server cleanly.", "stop"),
         new Entry("account", "list", "account list", "List accounts and Game Master roles.", "ac list"),
         new Entry("account", "create", "account create <username> [gm]", "Create an account; enter its password at the prompts.", "account create Alice"),
@@ -22,7 +27,7 @@ final class ConsoleHelp {
         new Entry("knight", "delete", "knight delete <username> <knight-name>", "Delete a knight after exact-name confirmation.", "knight delete Alice Jane"),
         new Entry("currency", "give", "currency give <username> <knight-name> <crowns|energy> <amount>", "Add currency to a knight.", "currency give Alice Jane crowns 100"),
         new Entry("currency", "withdraw", "currency withdraw <username> <knight-name> <crowns|energy> <amount>", "Withdraw currency; the balance cannot become negative.", "currency withdraw Alice Jane energy 5"),
-        new Entry("items", "", "items [search]", "Search the item catalog; narrow the search for more results.", "items Proto Sword"),
+        new Entry("items", "", "items [search | category <type> | info <reference>] [--page N]", "Search and inspect names, aliases, stock IDs, references and availability.", "items Proto Sword"),
         new Entry("giveitem", "", "giveitem <knight-name> <1-20> <catalogue ID or exact item config>", "Grant unequipped items by unique knight name. The account-qualified form also works.", "giveitem Jane 2 Weapon/Sword/Proto Sword")
     );
 
@@ -44,6 +49,8 @@ final class ConsoleHelp {
         lines.add("  account (alias: ac)     List, create, check, reset or delete accounts; manage GM roles.");
         lines.add("  gm                      Toggle or set an account's Game Master role.");
         lines.add("  knight                  List, inspect or delete saved knights.");
+        lines.add("  players | session | inspect   Inspect live connections and saved knights.");
+        lines.add("  grant | set             Change balances by unique knight name.");
         lines.add("  currency                Give or withdraw crowns/energy.");
         lines.add("  items | giveitem        Find items or grant them to a knight.");
         lines.add("Try: help account create. You can also type account, account help, or account create --help.");

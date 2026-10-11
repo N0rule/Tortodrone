@@ -25,7 +25,7 @@ public final class ConsoleIntegrationTest {
             try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {
                 int port = server.ready(); Database db = new Database(directory.resolve("data"),false);
                 check(db.list().isEmpty(),"fresh server does not seed a default account");
-                server.send("help\nstatus\n"); server.await("Server console commands:"); server.await("Server running. Accounts: 0");
+                server.send("help\nstatus\n"); server.await("Server console commands:"); server.await(" | RUNNING | "); server.await("| Accounts: 0");
                 for(String command:new String[]{"account","ac","account create","help account create","account create --help"}) {
                     server.send(command+"\n");server.await("Example: account create Alice");
                 }
@@ -58,6 +58,14 @@ public final class ConsoleIntegrationTest {
                 server.await("Insufficient energy");
                 check(db.worldProfile(1,1,1).crowns()==60 && db.worldProfile(1,1,1).energy()==25,
                     "console gives and withdraws persist, insufficient funds leave counters unchanged");
+                server.send("/set Console-Knight crowns 5000\n/grant Console-Knight crowns -25\n/grant Console-Knight energy 50\n");
+                server.await("Currency set | knight=Console-Knight (#1) | accountId=1 | Crowns: 5000");
+                server.await("Currency grant | knight=Console-Knight (#1) | accountId=1 | Crowns: 4975 | Energy: 75");
+                server.send("/grant Console-Knight energy -76\n/set Console-Knight energy -1\n/inspect Console-Knight\n/players\n/session 999\n");
+                server.await("Insufficient energy");server.await("Balance must be between 0 and 2147483647");
+                server.await("Knight Console-Knight | knightId=1 | rosterId=1 | accountId=1 | Crowns: 4975 | Energy: 75 | Items: 5");
+                server.await("Sessions: 0");server.await("No such active session");
+                check(db.worldProfile(1,1,1).crowns()==4975&&db.worldProfile(1,1,1).energy()==75,"concise global balance commands, absolute set and invalid operations preserve storage");
                 server.send("knight info Alice Missing-Knight\n"); server.await("No such knight");
                 check(db.worldProfile(1,1,1).items().size()==5,"console inspection does not modify or regrant inventory");
                 server.send("items Proto Sword\ngiveitem Alice Console-Knight 2 Weapon/Sword/Proto Sword\n");
@@ -90,6 +98,9 @@ public final class ConsoleIntegrationTest {
                     } catch (Exception failure) { ready.completeExceptionally(failure); throw new RuntimeException(failure); }
                 });
                 ready.get(10,TimeUnit.SECONDS);
+                server.send("/players\n/session 1\n");
+                server.await("1 | Alice (#1)");server.await("Snapshot[id=1");
+
                 server.send("account password Alice\nchanged-console-password\nchanged-console-password\n"); server.await("Password changed: Alice"); disconnected.get(10,TimeUnit.SECONDS);
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Alice","console-password",false,(a,b,c) -> {}); }
                 server.send("account check Alice\nchanged-console-password\n"); server.await("Password matches.");
@@ -104,7 +115,7 @@ public final class ConsoleIntegrationTest {
                 server.send("help gm\n");server.await("Example: gm Alice");
                 check(db.identity("help").gameMaster(),"explicit help does not toggle role");
                 server.send("account delete help\nhelp\n");server.await("Account deleted: help");
-                server.send("/status\n"); server.await("Server running. Accounts: 1");
+                server.send("/status\n"); server.await("| Accounts: 1");
                 server.send("/stop\n"); check(server.process.waitFor(10,TimeUnit.SECONDS) && server.process.exitValue() == 0,"stop command exits cleanly without Ctrl+C");
             }
             String log = Files.readString(directory.resolve("data/logs/latest.log"));

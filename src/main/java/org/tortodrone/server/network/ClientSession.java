@@ -57,6 +57,7 @@ final class ClientSession {
             while ((body = HandshakeCodec.readFrame(socket.getInputStream())) != null) {
                 long receivedAt = System.currentTimeMillis();
                 for (HandshakeCodec.SessionRequest request : incoming.sessionRequests(body)) {
+                    if (!request.type().equals("PingRequest") && !request.type().equals("ThrottleUpdatedMessage")) log.activity();
                     if(!session.current())throw new IOException("Session replaced");
                     switch (request.type()) {
                         case "ThrottleUpdatedMessage" -> log.debug("Client acknowledged TCP input throttle update");
@@ -253,7 +254,7 @@ final class ClientSession {
                         var roster=characters.available();
                         output.send(() -> outgoing.rosterChanged(clientOid, roster));
                     }
-                    log.info("Character deleted; available knights=" + characters.roster().size());
+                    log.info("Character deleted; accountId="+characters.accountId()+"; knight="+args.get(0)+"; available knights=" + characters.roster().size());
                 }
             }
         } else {
@@ -288,7 +289,11 @@ final class ClientSession {
                         var roster=characters.available();
                         output.send(() -> outgoing.rosterChanged(clientOid, roster));
                     }
-                    log.info("Character saved; available knights=" + characters.roster().size());
+                    var savedName=(String)args.get(1);
+                    var saved=characters.roster().stream().filter(k->k.name().equalsIgnoreCase(savedName)).findFirst();
+                    log.info("Character saved; accountId="+characters.accountId()+"; knight="+savedName+"; rosterId="+(saved.isEmpty()?"unavailable":saved.get().id())+"; available knights="+characters.roster().size());
+                    try {if(characters.hasWorldStorage())log.info("Knight stored; knightId="+characters.worldProfile(savedName,authRevision).worldId());}
+                    catch(IOException|CharacterStore.Refused unavailable){log.debug("Stored knight identity unavailable after save; "+unavailable.getClass().getSimpleName());}
                     // The stock creator waits for selection and scene events after success.
                     if(characters.hasWorldStorage() && receivers.containsKey(org.tortodrone.world.SceneRegistry.ZONE_RECEIVER)) {
                         try { world.select((String)args.get(1),receivers); }

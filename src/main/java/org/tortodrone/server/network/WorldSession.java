@@ -145,6 +145,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {
+        long selectionStarted=System.nanoTime();
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
         if(scenes.catalog().scenes().isEmpty())throw new IOException("Maps are unavailable; install default maps and restart the server");
@@ -172,7 +173,10 @@ final class WorldSession implements AutoCloseable {
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
         receiverChanged(receivers);
-        log.info("Character selected; world ID=" + profile.worldId() + "; scene=" + scene.map().id() + "; instance="+scene.index());
+        log.selected(knight.id(),profile.worldId(),knight.name());
+        log.info("Character selected; knight=" + knight.name() + " (#" + profile.worldId() + "); rosterId="+knight.id());
+        monitorScene();
+        log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
     /** Call outside the CharacterStore publication lock to preserve session/account lock order. */
@@ -266,6 +270,7 @@ final class WorldSession implements AutoCloseable {
     }
 
     private void move(List<Object> args, boolean zone) throws IOException {
+        long transitionStarted=System.nanoTime();
         int count = zone ? 4 : 3;
         if (args.size() != count || !(args.get(count - 1) instanceof SessionDecoder.Listener listener)
                 || !listener.type().endsWith(zone ? "$ZoneMoveMarshaller" : "$SceneMoveMarshaller")) {
@@ -297,6 +302,7 @@ final class WorldSession implements AutoCloseable {
                 reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();scenes.release(scene,profile.worldId());scene=next;
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
+                monitorScene();
             }
             if(!scene.map().town()&&!interiorThrottleSent) {
                 // Keep native level inputs from accumulating ahead of travel/keepalive
@@ -306,6 +312,7 @@ final class WorldSession implements AutoCloseable {
             output.send(() -> codec.sceneParty(oid,scene));
             output.send(() -> codec.sceneMove(oid, listener.requestId(), zone,scene,scenes.catalog()));
             output.send(() -> codec.sceneLocation(oid,scene));
+            log.debug("Scene transition initialized; duration-ms="+((System.nanoTime()-transitionStarted)/1000000));
         } catch(IOException error) {
             output.send(() -> codec.invocationFailure(oid,listener.requestId(),error.getMessage()));
         }
@@ -349,7 +356,7 @@ final class WorldSession implements AutoCloseable {
             var before=profile;
             profile=characters.grantItems(characters.username(),knight.name(),entry.config(),quantity,authRevision);
             output.send(()->codec.itemChanges(oid,knight,before,profile));
-            log.info("Admin created "+quantity+" x "+entry.config());
+            log.info("Created "+quantity+" x "+entry.displayName()+"; knightId="+profile.worldId()+"; config="+entry.config());
             return null;
         }catch(IOException refused){return refused.getMessage();}
     }
@@ -657,6 +664,10 @@ final class WorldSession implements AutoCloseable {
     }
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
+    private void monitorScene() {
+        log.scene(scene.map().id(),scene.oid(),scene.map().name());
+        log.info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
+    }
     @Override public synchronized void close() {
         leaveChat();
         closed = true;

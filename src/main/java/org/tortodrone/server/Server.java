@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.PrivateKey;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicLong;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.config.ServerSettings;
 import org.tortodrone.server.network.SecureHandshake;
@@ -28,7 +27,7 @@ public final class Server {
         int exitCode = 0;
         try {
             if (args.length == 1 && args[0].equals("--help")) {
-                System.out.println("Usage: java -jar tortodrone.jar [--config path/to/server.properties | --version | --help]");
+                System.out.println("Usage: java -jar tortodrone.jar [--gui | --nogui] [--config path/to/server.properties] | --version | --help");
                 System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for desktop account management.");
                 return;
             }
@@ -39,10 +38,13 @@ public final class Server {
             Path location = Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
-            Path config;
-            if (args.length == 2 && args[0].equals("--config")) config = Path.of(args[1]);
-            else if (args.length == 0) config = dataDirectory.resolve("server.properties");
-            else throw new IOException("Use --help for server options; type help in the running server terminal");
+            ServerOptions options=ServerOptions.parse(args,dataDirectory.resolve("server.properties"));
+            boolean desktop=options.desktopRequested();
+            if(desktop) {
+                Integer desktopExit=org.tortodrone.admin.DesktopBootstrap.relaunchIfNeeded(location,args,Server.class.getName());
+                if(desktopExit!=null){if(desktopExit!=0)System.exit(desktopExit);return;}
+            }
+            Path config=options.config();
             Files.createDirectories(dataDirectory);
             try (FileChannel channel = FileChannel.open(dataDirectory.resolve("server.lock"),
                     StandardOpenOption.CREATE, StandardOpenOption.WRITE);
@@ -55,7 +57,23 @@ public final class Server {
                 log.debug("Log mode: " + settings.logMode().name().toLowerCase(java.util.Locale.ROOT));
                 log.debug("Configuration: " + config.toAbsolutePath().normalize());
                 log.debug("Data directory: " + dataDirectory);
-                run(settings, dataDirectory, log);
+                log.configure(settings.logMaxMiB()*1048576L,settings.logRetention());
+                ServerControl control=new ServerControl(version(),dataDirectory);
+                AutoCloseable window=null;
+                if(desktop) {
+                    try {window=ServerWindow.open(control,log);}
+                    catch(Exception | java.awt.AWTError failed) {
+                        log.warn("Graphical interface unavailable: "+failed.getClass().getSimpleName()+"; starting terminal mode");
+                        desktop=false;
+                    }
+                }
+                try {
+                    while(control.awaitStart(desktop)) {
+                        try {run(settings,dataDirectory,log,control,desktop);}
+                        catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!desktop)throw failed;}
+                        finally{control.stopped();}
+                    }
+                } finally {if(window!=null)window.close();}
             }
         } catch (Exception e) {
             String message = "Server startup failed: " + e.getMessage();
@@ -77,13 +95,16 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log) throws Exception {
+    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop) throws Exception {
+        long startup=System.nanoTime();
+        hostDiagnostics(log);
         var recoveryWarnings = new java.util.ArrayList<String>();
         org.tortodrone.resources.DefaultResources.prepare(dataDirectory.getParent(),log::debug,
             message -> { recoveryWarnings.add(message); log.debug(message); });
         var fallbacks = new java.util.ArrayList<String>();
         org.tortodrone.world.SceneRegistry scenes;
-        try { scenes=org.tortodrone.world.SceneRegistry.system(); }
+
+        try { scenes=org.tortodrone.world.SceneRegistry.deployment(dataDirectory);org.tortodrone.world.SceneRegistry.install(scenes); }
         catch(IOException missing) {
             log.debug("Maps unavailable: " + missing.getMessage());
             fallbacks.add("maps unavailable (world entry disabled)");
@@ -122,26 +143,32 @@ public final class Server {
             PrivateKey key = HandshakeKeys.loadOrCreate(keys);
             if(generate)log.info("Public key : "+Files.readString(keys.resolve("public.txt")).trim());
             try (AccountStore accounts = new AccountStore(dataDirectory,true,catalog)) {
+                log.debug("Resources and database initialization elapsed-ms="+((System.nanoTime()-startup)/1000000)+"; weapons="+scenes.weapons().weapons().size());
+                accounts.observeDatabase((operation,millis,failed)->{
+                    if(failed)log.warn("Database operation failed; operation="+operation+"; duration-ms="+millis);
+                    else if(millis>=100)log.debug("Slow database operation; operation="+operation+"; duration-ms="+millis);
+                });
                 accounts.watchSessions();
+                log.info("Database: SQLite WAL; schema="+org.tortodrone.storage.Database.SCHEMA_VERSION);
                 log.info("Loaded " + scenes.catalog().scenes().size() + " maps, "
                     + catalog.entries().size() + " items, " + accounts.list().size() + " accounts");
                 listener.bind(new InetSocketAddress(address, settings.port()));
                 log.debug("Public key: " + keys.resolve("public.txt"));
                 log.debug("Account database: " + accounts.databaseFile());
-                accept(listener, key, log, accounts,settings.maxClients());
+                control.resources(scenes,catalog.entries().size());
+                accept(listener,key,log,accounts,settings.maxClients(),control,desktop,startup);
             }
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts,int maxClients)
+            AccountStore accounts,int maxClients,ServerControl control,boolean desktop,long startup)
             throws IOException {
         ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
-        AtomicLong ids = new AtomicLong();
-        ServerConsole console = new ServerConsole(accounts, log, () -> {
-            try { listener.close(); } catch (IOException ignored) { }
-        }, () -> !listener.isClosed());
+        ServerConsole console = new ServerConsole(accounts,log,control::stop,()->!listener.isClosed(),control,!desktop);
+        control.listening(listener,console);
+        if(listener.isClosed()){console.close();log.info("Server stopped; startup cancelled.");return;}
         Thread shutdown = new Thread(() -> {
             console.close();
             try { listener.close(); } catch (IOException ignored) { }
@@ -156,6 +183,7 @@ public final class Server {
         try {
             log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
+            log.info("Server ready ("+String.format(java.util.Locale.ROOT,"%.3fs",(System.nanoTime()-startup)/1e9)+")");
             log.info("Type help for server commands.");
             console.start();
             while (!listener.isClosed()) {
@@ -171,10 +199,10 @@ public final class Server {
                     log.warn("Connection limit reached");
                     continue;
                 }
-                long id = ids.incrementAndGet();
+                long id = control.nextSessionId();
                 clients.start(client, "Client-" + id, () -> {
                     try {
-                        receive(client, id, key, listener.getLocalPort(), log, accounts);
+                        receive(client, id, key, listener.getLocalPort(), log, accounts,control.sessions());
                     } finally {
                         slots.release();
                     }
@@ -193,30 +221,46 @@ public final class Server {
         }
     }
 
+    private static void hostDiagnostics(ServerLog log) {
+        var metrics=RuntimeMetrics.capture();
+        log.info("OS: "+System.getProperty("os.name")+" ("+System.getProperty("os.arch")+")");
+        log.info("Java: "+System.getProperty("java.runtime.version")+" / "+System.getProperty("java.vendor"));
+        log.info("CPU: "+metrics.processors()+" logical processors");
+        log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB");
+        log.debug("Host: os-version="+System.getProperty("os.version")+"; physical-total="+metrics.physicalTotal()+"; physical-free="+metrics.physicalFree()+"; process-uptime-ms="+metrics.processUptime()+"; process-cpu="+metrics.processCpu());
+        log.debug("Garbage collectors: "+java.lang.management.ManagementFactory.getGarbageCollectorMXBeans().stream().map(java.lang.management.GarbageCollectorMXBean::getName).toList());
+    }
+
     private static void receive(Socket client, long id, PrivateKey key, int port,
-            ServerLog log, AccountStore accounts) {
+            ServerLog log, AccountStore accounts,SessionRegistry sessions) {
+        long connected=System.nanoTime();String reason="remote closed";
+        sessions.connected(id,client.getRemoteSocketAddress());
+        log.info("Connected | session="+id+" | endpoint="+client.getRemoteSocketAddress());
         log.debug("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
             client.setSoTimeout(15000);
-            SessionLog sessionLog = new SessionLog() {
-                @Override public void debug(String message) { log.debug(message); }
-                @Override public void info(String message) { log.info(message); }
-                @Override public void warn(String message) { log.warn(message); }
-            };
+            SessionLog sessionLog = sessions.observe(id,new SessionLog() {
+                @Override public void debug(String message) { log.debug(message+" | session="+id); }
+                @Override public void info(String message) { log.info(message+" | session="+id); }
+                @Override public void warn(String message) { log.warn(message+" | session="+id); }
+            });
             // A wildcard listener uses the concrete local interface of this connection.
             SecureHandshake.run(client, key, sessionLog, true,
                 Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, accounts);
         } catch (SocketTimeoutException e) {
-            log.debug("Client idle timeout");
+            reason="idle timeout";log.debug("Client idle timeout | session="+id);
         } catch (java.security.GeneralSecurityException e) {
-            log.warn("Secure exchange failed; check the launcher's public key");
+            reason="secure exchange rejected";log.warn("Secure exchange failed; check the launcher's public key");
         } catch (IOException e) {
-            log.debug("Protocol/I/O rejected: " +
+            reason=client.isClosed()?"server closed or session invalidated":"protocol/I/O rejected";log.debug("Protocol/I/O rejected: " +
                 (e instanceof org.tortodrone.protocol.SessionDecoder.Rejected ? e.getMessage() : e.getClass().getSimpleName()));
         } catch (Exception e) {
-            log.warn("Handshake rejected: " + e.getClass().getSimpleName());
+            reason="handshake rejected";log.warn("Handshake rejected: " + e.getClass().getSimpleName());
         } finally {
-            log.debug("Client disconnected");
+            var identity=sessions.find(id);
+            log.info("Disconnected | session="+id+" | account="+(identity==null||identity.accountId()==null?"unverified":identity.username()+" (#"+identity.accountId()+")")+" | duration="+((System.nanoTime()-connected)/1000000000)+"s | reason="+reason);
+            sessions.disconnected(id);
+            log.debug("Client disconnected | session="+id);
         }
     }
 }

@@ -39,6 +39,7 @@ public final class SecureHandshake {
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
         HandshakeCodec.Request request = codec.request(body);
+        log.authenticating(request.version());
         log.debug("SecureRequest decoded; frame=" + (body.length + 4) + " bytes; messageId=" + request.messageId());
         Cipher rsa = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         rsa.init(Cipher.DECRYPT_MODE, key);
@@ -93,10 +94,11 @@ public final class SecureHandshake {
                 : "rejected")
                 + "; frame=" + authResponse.length + " bytes");
             if (!accepted) {
-                log.warn("Normal login rejected");
+                log.warn("Normal login rejected; reason=invalid credentials or unsupported login");
                 return;
             }
-            log.info("Normal login accepted; accountId=" + account.id());
+            log.authenticated(account.id(), account.username());
+            log.info("Normal login accepted; account=" + account.username() + " (#" + account.id() + "); accountId=" + account.id());
             // Do not retain negotiated secrets for the unencrypted distributed-object session.
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
