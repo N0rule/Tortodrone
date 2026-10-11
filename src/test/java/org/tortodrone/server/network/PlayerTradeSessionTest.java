@@ -60,7 +60,7 @@ public final class PlayerTradeSessionTest {
                 a.tradeInvocation(rpc(10,6,4,"Bob-Knight",confirm()));sa.await("account changed");
             }
             System.out.println("PASS: stock trade routing, invitation/readiness, offer revision invalidation, exactly-once commit, stale close, travel and immediate storage/authentication cancellation");
-        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+        }finally{WorldStatePoller.awaitStopped();try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static void ready(WorldSession world,String name)throws Exception {world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();}
     private static Knight choices(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
