@@ -139,6 +139,10 @@ public final class SessionDecoder {
             case "com.threerings.projectx.data.ProjectXCodes$EyeType" -> enumeration(in, type, 47);
             case "com.threerings.projectx.item.data.ItemCodes$Location" -> enumeration(in,type,4);
             case "com.threerings.projectx.data.Pref" -> enumeration(in, type, 3);
+            // Stock Knight/Social options requests carry these ordinals even when
+            // the operation is unsupported. Decode so its listener can be refused.
+            case "com.threerings.projectx.data.LootReportLevel",
+                 "com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty" -> enumeration(in, type, 3);
             case "com.threerings.presents.client.InvocationReceiver$Registration" ->
                 new Registration(string(in), in.readShort());
             case INV + "ListenerMarshaller", INV + "ConfirmMarshaller", INV + "ResultMarshaller",

@@ -1,6 +1,6 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-10, version 0.24.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.24.1, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
@@ -12,7 +12,8 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 - RSA/AES authentication; one active session/account; case-insensitive unique knight names; persisted account/roster/character/inventory/currency; creation/selection/deletion; local admin and GM commands.
 - Four imported Haven districts: Town Square, Bazaar, Arcade, Garrison; **ten native portal transitions**, checked external map/collision packs, server-authoritative movement and static collision. Independent scene instances, shared `SceneSimulation` tick (**50 ms**) and per-recipient actor delta state, bounded output queues and shared revision/role polling.
 - Inventory, Arsenal, equipment/costumes/trinkets, binding/stacks, live visual updates; scene chat, private tells, broadcasts, sitting/emotes recorded through the last committed milestone as applicable. Intro missions bypassed **without inventing completion/rewards**.
-- At this recorded checkpoint, do **not** assume trade, inspect, combat, NPCs, shops, quests, crafting, gate/dungeons, custom news, location persistence or full social functionality works. Verify any later/uncommitted implementations before treating them as complete.
+- Trade and same-scene inspection/privacy are implemented; see [town interactions](town-interactions.md) for their recorded scope. Do **not** assume combat, NPCs, shops, quests, crafting, general gate/dungeons, custom news, location persistence or full social functionality works.
+- Packet audit 0.24.1: stock loot-report/party setting enums decode into clean unsupported-operation callbacks instead of disconnecting; settings persistence and general parties remain unsupported. See [audit evidence and limits](protocol-audit.md).
 
 ## Current work / next validation
 
@@ -31,7 +32,7 @@ Follow the **owner's latest task** and current Git diff first; don't redo work u
 
 ## Build and performance
 
-Run `./gradlew build` with **JDK 25**; the installed game is never modified. Use disposable test environments. `./gradlew benchmark --args='--instances 4 --clients 300'` measures synthetic workload; see [development](development.md) for other modes, limits and graphical procedures. Historical local 20-s/300-player runs reached **18.45 deltas/client/s (1 instance)** and **19.71 (4 instances)** after shared simulation, but dense-scene replication used substantial bandwidth. These numbers are a *checkpoint*, not a performance guarantee.
+Run `./gradlew build` with **JDK 25**; the installed game is never modified. Use disposable test environments. `./gradlew benchmark --args='--instances 4 --clients 300'` measures synthetic workload; see [development](development.md) for other modes, limits and graphical procedures. The 0.24.1 audit's local 20-s/300-player runs completed with zero failures and **19.65 deltas/client/s (1 instance)** / **19.85 (4 instances)**, but dense-scene replication used **64.6 MiB/s aggregate** downstream (four instances: **16.5 MiB/s**). See [audit measurements and limits](protocol-audit.md); these short results are not a performance guarantee.
 
 ## Documentation on demand (do not preload)
 

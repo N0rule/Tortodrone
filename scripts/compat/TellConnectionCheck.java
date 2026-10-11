@@ -27,7 +27,7 @@ public final class TellConnectionCheck {
         if(reply.reason!=null||reply.idle!=0||reply.away!=null)throw new AssertionError("Unexpected tell result: "+reply.reason);
     }
     static void failure(Reply reply,String expected) {
-        if(reply.reason==null||!reply.reason.contains(expected)||reply.idle!=-1)throw new AssertionError("Expected tell refusal: "+expected);
+        if(reply.reason==null||!reply.reason.contains(expected)||reply.idle!=-1)throw new AssertionError("Expected tell refusal: "+expected+", got reason="+reply.reason+", idle="+reply.idle);
     }
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
@@ -49,6 +49,10 @@ public final class TellConnectionCheck {
             failure(tell(sender,"Peer-Knight","x".repeat(257)),"256 characters");
             target.enter(1);success(tell(sender,"Peer-Knight","after travel"));WorldConnectionCheck.waitFor(()->incoming.size()==2);
             target.client.xb().b(target.scene.xL(),target.subscription);
+            // Stock unsubscribe queues a local object action. Dispatch it before
+            // posting the RPC that acts as a server-side ordering barrier.
+            boolean[] dispatched={false};queue.postRunnable(()->dispatched[0]=true);
+            WorldConnectionCheck.waitFor(()->dispatched[0]);
             String[] barrier={null};target.broadcast("unsubscribe barrier",reason->barrier[0]=reason);
             WorldConnectionCheck.waitFor(()->barrier[0]!=null);
             failure(tell(sender,"Peer-Knight","unsubscribed"),"not online");

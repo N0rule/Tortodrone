@@ -50,6 +50,7 @@ public class WorldConnectionCheck {
   boolean[] observing={true};
   try {
    waitFor(client::isLoggedOn);var player=(PlayerObject)client.xc();System.out.println("PASS: real client normal login");
+   refusedStockOptions(client,player);
    Class<?> receiver=Class.forName("com.threerings.whirled.zone.a.f");Object receiverInstance=java.lang.reflect.Proxy.newProxyInstance(receiver.getClassLoader(),new Class[]{receiver},(proxy,method,values)->null);var decoder=Class.forName("com.threerings.whirled.zone.a.a").getConstructor(receiver).newInstance(receiverInstance);client.xd().a((com.threerings.presents.client.w)decoder);
    // A round-trip ensures receiver registration arrives before the save request.
    Reply validation=new Reply();((aU)client.bU(aU.class)).f(new Name("Town-Knight"),validation);waitFor(()->validation.done);
@@ -66,6 +67,7 @@ public class WorldConnectionCheck {
    if(!((com.threerings.projectx.data.actor.Knight)last.aej()[0]).Np())throw new AssertionError("Spawn activity blocks controls");
    if(player.loadouts.isEmpty())throw new AssertionError("Current loadout missing");
    peaceful(controlled(player));
+   refusedStockOptions(client,player);
    System.out.println("PASS: zone callback loads original Town Square, scene subscription and controlled actor");
    // Loading can postpone input/acknowledgement for longer than the old 40-snapshot history.
    waitFor(()->deltas>=45);
@@ -156,6 +158,28 @@ public class WorldConnectionCheck {
    waitFor(()->player.crowns==100&&player.energy==25);System.out.println("PASS: local administration changes live crowns and energy counters");
    multiplayer(args,queue,fresh,player,client);
   }finally{observing[0]=false;client.Q(false);}
+ }
+ static void refusedStockOptions(Client client,PlayerObject player)throws Exception {
+  var knight=(aU)client.bU(aU.class);
+  int flags=player.flags,crowns=player.crowns,energy=player.energy,party=player.partyOid;
+  long[] equipment=player.equipment.clone();var report=player.lootReportLevel;var prefs=player.prefs;
+  for(var level:LootReportLevel.values()) {
+   Reply reply=new Reply();knight.a(Pref.LOOT_CHAT_FILTER,level,reply);waitFor(()->reply.done);
+   if(reply.reason==null||!reply.reason.contains("Server operation not implemented yet")||!client.isLoggedOn())
+    throw new AssertionError("Loot-report option did not fail cleanly: "+reply.reason);
+  }
+  var social=client.bU(com.threerings.projectx.social.client.G.class);
+  for(var difficulty:com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.values()) {
+   Reply reply=new Reply();social.a(false,difficulty,true,reply);waitFor(()->reply.done);
+   if(reply.reason==null||!reply.reason.contains("Server operation not implemented yet")||!client.isLoggedOn())
+    throw new AssertionError("Party option did not fail cleanly: "+reply.reason);
+  }
+  Reply validation=new Reply();knight.f(new Name("AuditNameCheck"),validation);waitFor(()->validation.done);
+  if(validation.reason!=null||!client.isLoggedOn()||player.flags!=flags||player.crowns!=crowns
+    ||player.energy!=energy||player.partyOid!=party||!Arrays.equals(player.equipment,equipment)
+    ||player.lootReportLevel!=report||player.prefs!=prefs)
+   throw new AssertionError("Option refusal changed player state or broke a subsequent supported RPC");
+  System.out.println("PASS: stock loot/party option requests receive all six refusals, retain player state and accept subsequent RPCs");
  }
  static void peaceful(com.threerings.projectx.data.actor.Knight actor) {
   var model=(com.threerings.config.ConfigReference<?>)actor.Mv().kW().get("Model");

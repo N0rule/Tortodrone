@@ -32,6 +32,8 @@ public final class GameMasterConnectionCheck {
             var reply=new WorldConnectionCheck.Reply();((aU)client.bU(aU.class)).b(new Name(knight),null,reply);
             WorldConnectionCheck.waitFor(()->reply.done);if(reply.reason!=null)throw new AssertionError(reply.reason);
             player.a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent event){
+                // Source-scene frames may already be queued when travel clears this fixture.
+                if(scene==null||event.aee()!=scene.xL())return;
                 if(event.aej()!=null)for(var added:event.aej())if(added.vw()==player.pawnId)actor=added;
                 if(event.aek()!=null)for(var update:event.aek())if(update.vw()==player.pawnId)actor=(com.threerings.tudey.data.actor.Actor)update.apply(actor);
             }});
@@ -59,7 +61,7 @@ public final class GameMasterConnectionCheck {
             return null;
         }
         void broadcast(String text,A.b listener){client.bU(com.threerings.crowd.chat.client.j.class).a(text,listener);}
-        public void close(){if(client.isLoggedOn())client.Q(false);}
+        public void close(){scene=null;actor=null;if(client.isLoggedOn())client.Q(false);}
     }
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
