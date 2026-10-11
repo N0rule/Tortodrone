@@ -1,6 +1,6 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.2, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.5, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
@@ -25,9 +25,15 @@ Follow the **owner's latest task** and current Git diff first; don't redo work u
 The 0.25.2 collision milestone checks all crossed cells of the sampled static grid
 for bullets and collision-enabled orbitals, preventing skipped walls while
 preserving authored orbital wall-passing flags. It does not recover exact shapes or
-moving-target hits. A 180-second isolated stock-client launch established basic
-Haven scene rendering; combat graphics and animations remain unverified. Sealed
-Sword's stripped condition also wraps a monster spawn table, so a generic
+moving-target hits. The 0.25.3 combat rendering fixes serialize native item
+configuration IDs, remove duplicate held equipment from interior body models and
+align fire delays/refractory periods with the native attack-speed multiplier.
+The 0.25.5 projectile elevation fix preserves the native unspecified-floor sentinel;
+the client applies authored bullet height once, keeping gun particles at the barrel.
+`CheckCombatRendering` provides a repeatable isolated stock graphical fixture;
+see [development](development.md) for usage and [town player behavior](town-player-behavior.md)
+for the acceptance record and limits. Sealed Sword's stripped condition also wraps
+a monster spawn table, so a generic
 conditional wrapper alone would not complete that weapon. Agent carriers and
 modern loop execution remain unsupported; see [town player behavior](town-player-behavior.md).
 

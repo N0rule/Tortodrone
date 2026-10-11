@@ -37,12 +37,30 @@ Fixture copies JARs/defaults into disposable `/tmp` deployments, raises `max-cli
 ```sh
 ./gradlew build
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
+java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/combat-render-check
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
 These use the **unchanged installed client classes/resources** as an oracle; stock network fixture ≠ graphical acceptance. When relevant, run the task-specific Java compatibility tools under `scripts/compat/` and document exact output. `WeaponCompatibility` checks Dungeoneer equipment modifier state/deltas; `FireCompatibility combat/fires.json` samples real projectile/effect argument shapes, including orbital deltas. `InteriorConnectionCheck port public-key host maps-dir --weapons` is a small native Arsenal/input/emission check; its disposable LanPlayer/Town-Knight fixture needs Calibur, Proto Gun and Blast Bomb grants. `CheckClientWorld` includes `AdminConnectionCheck`, which drives the original F3 admin dashboard through the stock client: login, service resolution from the bootstrap, the ItemCreator `createItem` RPC, live grant delivery, per-call authorization after a role revocation, refusal reasons and reconnect persistence. All of it uses disposable accounts/data and reads the installed game read-only.
 
 Graphical acceptance is authorized only in an **isolated** environment: disposable server, accounts, game preferences/cache/home/native/temp extraction and endpoint/public key. Read installed game read-only; never patch launcher/client or overwrite real preferences. On niri, `_JAVA_AWT_WM_NONREPARENTING=1`; verify test window/process/focus before synthetic input, then check both local/peer views, movement, inventory/equipment and actual scene transitions. Set stock `resource_dir` to installed read-only `rsrc/` and `java.io.tmpdir` to disposable writable path. Known caveats: niri vsync and virtual gamepad detection; see Git history for earlier environment notes. **Stop only spawned tests**; record inconclusive behavior honestly.
+
+`CheckCombatRendering` requires Java 25, a graphical desktop, the built server JAR
+and all seven prepared maps. Its optional output directory must be fresh and outside
+the repository and installed game; omitting it creates a fresh `/tmp` directory.
+The launcher isolates server data, accounts, home/preferences, cache and native
+extraction, then cleans up only its child processes and sandbox. It retains logs and
+PNG captures in the output directory. The unchanged native controller sends movement,
+sword/gun/bomb presses and charges, defense, bash and dodge. The fixture checks native
+equipment identity, body attachment composition, authoritative activities, playing
+activity animations and visible server projectile sprites. It requests normal scene
+changes from Haven to Training and back; it does not test walking through portals.
+The fixture disables vsync in its disposable preferences before native startup to
+avoid niri frame pacing stalls. Keep the disposable test window focused; the fixture
+refuses unfocused combat checks because slow sampling distorts short presses and poses.
+Review the captured pixels as
+well: animation playback and sprite visibility flags alone do not prove rendering.
+This fixture does not test keyboard bindings, peer views or every catalogue weapon.
 
 ## Source/resource rules
 

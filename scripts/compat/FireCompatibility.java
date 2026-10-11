@@ -19,14 +19,19 @@ public final class FireCompatibility {
         int checked=0;
         for(var spec:selected.values()) {
             var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),0,.25f,.5f,0,.75f,51);
-            var model=spec.config();var p=new ProjectileState(spec.nativeType(),model,1001,100,Integer.MAX_VALUE,0,0,spec.height(),spec.speed(),spec.maxStep(),51,false,orbit);
+            var model=spec.config();var p=new ProjectileState(spec.nativeType(),model,1001,100,Integer.MAX_VALUE,0,0,ProjectileState.UNSPECIFIED_Z,spec.speed(),spec.maxStep(),51,false,orbit);
             var actor=new ActorState(71,1001,"",0,100,0,0,0,0,spec.flags(),0,100,model,false,null,p);
             var event=read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(actor),List.of(),new int[0],Map.of(),true));
             check(field(event.aej()[0],"_config").equals(reference(model)),"exact projectile config arguments: "+model.name());checked++;
+            if(orbit==null){
+                Object nativeActor=event.aej()[0];
+                check((float)field(nativeActor,"_z")==Float.NEGATIVE_INFINITY
+                    &&!(boolean)nativeActor.getClass().getMethod("Rf").invoke(nativeActor),"native floor Z is unspecified: "+model.name());
+            }
             if(orbit!=null){var nativeActor=event.aej()[0];
                 check(nativeActor.getClass().getSimpleName().equals(p.nativeClass()),"native orbital class");
                 check((int)field(nativeActor,"_homeTargetId")==51&&(int)field(nativeActor,"_clientOid")==1001&&(float)field(nativeActor,"_oRot")==.75f,"orbital ownership and original rotation");
-                var ended=new ProjectileState(spec.nativeType(),model,1001,100,200,0,0,spec.height(),spec.speed(),spec.maxStep(),51,true,
+                var ended=new ProjectileState(spec.nativeType(),model,1001,100,200,0,0,ProjectileState.UNSPECIFIED_Z,spec.speed(),spec.maxStep(),51,true,
                     new ProjectileState.Orbit(spec.orbit().radius(),0,1,2,175,.75f,51));
                 var updated=new ActorState(71,1001,"",0,100,3,4,0,0,12,0,100,model,false,null,ended);
                 var update=read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,200,(short)50,List.of(),List.of(updated),new int[0],Map.of(71,actor),true));

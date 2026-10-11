@@ -11,6 +11,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.imageio.ImageIO;
 import org.lwjgl.BufferUtils;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.Knight;
@@ -39,7 +40,7 @@ public final class CombatRenderingCheck {
     private final Set<Integer> previousActors=new HashSet<>();
     private final ExecutorService images=Executors.newSingleThreadExecutor();
     private final List<Future<?>> writes=new ArrayList<>();
-    private int stage,index,frames,lastStamp,actionStamp;
+    private int stage,index,frames,lastStamp,actionStamp,requiredStarted;
     private float moveX,moveY;
     private long deadline,started,nextFrame;
     private boolean listening,released,projectile,aftermath,done,passed;
@@ -58,6 +59,9 @@ public final class CombatRenderingCheck {
         var copy=new Properties();copy.putAll((Properties)properties.get(config));
         copy.setProperty("server_host","127.0.0.1");copy.setProperty("server_ports",args[0]);
         copy.setProperty("key.public",Files.readString(Path.of(args[1])).trim());properties.set(config,copy);
+        // Native startup re-applies this preference after construction. This is
+        // the launcher's disposable preferences root, never the owner's settings.
+        com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
         var app=new ProjectXApp("LanPlayer","lan-test-password",false,"Town-Knight",null,null,null,null);
         app.setTitle("Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]));
@@ -87,6 +91,8 @@ public final class CombatRenderingCheck {
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
+            if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
+                throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
             if(stage==0){started=now;stage=1;return;}
             if(stage==1&&now-started>5_000_000_000L){capture("haven");System.out.println("RENDER: Haven loaded; normal move to Training Hall");app.GF().bl(294);stage=2;return;}
             if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){started=now;stage=3;return;}
@@ -115,21 +121,24 @@ public final class CombatRenderingCheck {
                 var body=(com.threerings.config.ConfigReference<?>)view.PO().acU().Mv().kW().get("Model");
                 if(body==null||body.kW().containsKey("Weapon")||body.kW().containsKey("Shield")||body.kW().containsKey("Weapon Idle"))throw new AssertionError("Interior base model duplicates held equipment");
                 activities.clear();renderedActivities.clear();animations.clear();capturedProjectiles.clear();frames=0;projectile=false;released=false;aftermath=false;lastAnimation="";
-                previousActors.clear();previousActors.addAll(authoritative.keySet());actionStamp=lastStamp;
+                previousActors.clear();previousActors.addAll(authoritative.keySet());actionStamp=lastStamp;requiredStarted=Integer.MAX_VALUE;
                 started=now;nextFrame=now+60_000_000L;flags(view,ACTIONS.get(index).flags);stage=6;
                 System.out.println("ACTION: "+ACTIONS.get(index).name);return;
             }
             if(stage==6){
                 var action=ACTIONS.get(index);int elapsed=(int)((now-started)/1_000_000L);
-                if(!released&&elapsed>=action.held){flags(view,0);released=true;}
+                if(!released&&elapsed>=action.held){flags(view,0);released=true;frames=0;nextFrame=now+60_000_000L;}
                 var own=view.PO();int activity=((Dungeoneer)own.acU()).adU();
                 var names=new TreeSet<String>();playing(own.acL(),names,0);
                 String state=activity+":"+names;
                 if(!state.equals(lastAnimation)){System.out.println("ANIMATION: "+action.name+" "+elapsed+"ms "+state);lastAnimation=state;}
                 if(activity!=0&&activityPlaying(own,activity)){if(renderedActivities.add(activity))capture(action.name+"-activity-"+activity);animations.addAll(names);}
-                if(now>=nextFrame&&frames<12){capture(action.name+"-"+String.format(Locale.ROOT,"%02d",frames++));nextFrame=now+120_000_000L;}
+                if(now>=nextFrame&&frames<12){capture(action.name+(released?"-release-":"-")+String.format(Locale.ROOT,"%02d",frames++));nextFrame=now+120_000_000L;}
                 if(!aftermath&&action.name.equals("bomb-charge")&&elapsed>action.held+1800){capture("bomb-charge-aftermath");aftermath=true;}
-                for(var actor:authoritative.values())if(!previousActors.contains(actor.vw())&&actor.adX()>=actionStamp
+                // A held gun press fires normally before entering charge. Only
+                // projectiles born after the required release activity qualify.
+                for(var actor:authoritative.values())if(activities.contains(action.required)
+                    &&!previousActors.contains(actor.vw())&&actor.adX()>=Math.max(actionStamp,requiredStarted)
                     &&Set.of("Bullet","Bomb","OrbitalBullet","CompoundOrbitalBullet").contains(actor.getClass().getSimpleName())
                     &&(int)field(actor,"_clientOid").get(actor)==app.CT().xL()){
                     var sprite=view.gk(actor.vw());
@@ -147,7 +156,10 @@ public final class CombatRenderingCheck {
                 }
                 if(elapsed>action.held+10000)throw new AssertionError(action.name+" failed to return to idle");
             }
-            if(stage==7&&view.sceneId()==1){capture("haven-return");finishImages();passed=done=true;System.out.println("PASS: stock graphical Haven/Training/return transitions, nine combat actions, native animations and server projectile sprites");app.shutdown();}
+            // Scene identity changes before its first rendered frame. Let Haven
+            // settle before saving the return image and reporting completion.
+            if(stage==7&&view.sceneId()==1){started=now;stage=10;return;}
+            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();passed=done=true;System.out.println("PASS: stock graphical Haven/Training/return transitions, nine combat actions, native animations and server projectile sprites");app.shutdown();}
         }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdownNow();app.shutdown();}
     }
     private void receive(SceneDeltaEvent event){
@@ -156,7 +168,10 @@ public final class CombatRenderingCheck {
         if(event.aej()!=null)for(var actor:event.aej())authoritative.put(actor.vw(),(Actor)actor.copy(null));
         if(event.aek()!=null)for(var delta:event.aek()){Actor old=authoritative.get(delta.vw());if(old!=null)authoritative.put(delta.vw(),(Actor)delta.apply(old));}
         if(event.ael()!=null)for(int id:event.ael())authoritative.remove(id);
-        if(stage==6&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own)activities.add(own.adU());
+        if(stage==6&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own){
+            activities.add(own.adU());
+            if(own.adU()==ACTIONS.get(index).required)requiredStarted=own.adV();
+        }
     }
     private static void flags(View view,int flags)throws Exception{
         // Stimulate only this application's controller; its unchanged frame builder,

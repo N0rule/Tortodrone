@@ -15,7 +15,9 @@ public final class SceneWeapons {
         float x,y,relativeX,relativeY;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
         Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;}
         ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),0,relativeX,relativeY,collided,rotation,source.ownerId);
-            var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,spec.height(),spec.speed(),spec.maxStep(),source.ownerId,fizzle,orbit);
+            // Native _z is the source's floor elevation, not the authored bullet
+            // height. Knights have no explicit Z; their client resolves the floor.
+            var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,ProjectileState.UNSPECIFIED_Z,spec.speed(),spec.maxStep(),source.ownerId,fizzle,orbit);
             int flags=spec.flags()|(spec.nativeType().equals("BULLET")?2:0)|(fizzle?(orbit==null?4:8):0)|(returning?4:0);
             return new ActorState(id,source.ownerOid,"",0,created,x,y,rotation,rotation,flags,0,created,spec.config(),false,null,p);}
     }

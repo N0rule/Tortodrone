@@ -19,6 +19,39 @@ with the native modifier objects sent to the client. Older deployments with only
 weapon catalogue retain their verified shield slowdown. Controls are driven by
 stock input state; the server advances their timing on its scene clock.
 
+The 0.25.3 rendering fixes preserve each item's exported native configuration ID.
+Previously every item was serialized with ID zero; the installed client's
+`Item.o(Item)` / `LevelItem.a(...)` identity comparison therefore treated different
+weapons as unchanged and kept the old weapon model and attack animations after an
+Arsenal switch. Interior body models now omit weapon and shield arguments because
+the stock Dungeoneer sprite attaches those models separately. This removes the sword
+remaining visible alongside a newly equipped gun. Town appearance keeps its existing
+composition. Fire delays and refractory periods now use the same captured equipment
+attack-speed multiplier as the native animation, including the authored fire speed.
+
+The unchanged stock reader checks configuration identity and the current client's
+interior player-model builder. Archive corroboration is in
+`analyzed-2011/com/threerings/projectx/dungeon/server/LevelSceneManager.java:124`
+(body model without held equipment),
+`analyzed-2011/com/threerings/projectx/dungeon/client/sprite/DungeoneerSprite.java:107`
+(separate weapon/shield attachments) and
+`analyzed-2011/com/threerings/projectx/dungeon/server/logic/AttackLogic.java:182`
+(fire delay/refractory scaling). Current installed bytecode independently establishes
+the item-ID comparison and animation/fire speed product; the historical item schema
+alone does not establish the modern identity rule.
+
+The 0.25.5 elevation fix keeps native Bullet/Bomb `_z` at negative infinity when
+fired by a knight. This is the stock sentinel for an unspecified floor elevation,
+which the client resolves from the scene. Previously the server wrote authored
+projectile height into `_z`; the current Bullet sprite then added the configuration
+height again, making gun particles travel above the barrel. Authored height remains
+in the native actor configuration and is applied once. The installed
+`com.threerings.projectx.dungeon.data.actor.Bullet` constructor and `Rf()` method
+establish the sentinel; `com.threerings.projectx.dungeon.client.a.c.b(Actor)` adds
+the authored height to an explicit source Z or to the resolved scene floor. Native
+Dungeoneer/Knight/Pawn actors do not provide explicit Z. The historical Bullet
+schema lacks this modern field, so current installed bytecode is authoritative here.
+
 The checked local export contains **382 weapon definitions and 123 shields**. Its
 authored fire catalogue covers **1,827 attacks, 2,667 fire references and 2,120
 projectile emissions**. Supported emissions preserve stock bullet, bomb and orbital
@@ -80,20 +113,16 @@ The broader unchanged-client check is:
 
 ```sh
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
+java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/combat-render-check
 ```
 
-It uses disposable server data and checks accepted object and item schemas. Passing
-network or stock-reader checks does not establish graphical rendering, animations or
-complete combat behavior; no graphical combat acceptance is claimed here. The first
-isolated graphical launch reached 16% loading within 35 seconds. A second isolated
-launch of the 0.25.1 baseline with a 180-second window authenticated and selected
-regular Haven; its
-1920x1080 framebuffer showed the rendered Town Square, fountain, scenery and game
-HUD. The initial Spiral Uplink window remained open with missing news-image
-placeholders. This establishes basic Haven rendering only; combat rendering,
-animations, peer views and graphical transitions remain unverified. Each launch
-used disposable server data, home/preferences and native extraction, and read the
-installed resources without modification. Only the spawned tests were stopped.
+The first command uses disposable server data and checks accepted object and item
+schemas. Network or stock-reader checks alone do not establish graphical rendering.
+The second launches the unchanged graphical client in an isolated deployment and
+retains logs and screenshots; keep its test window focused and review the captures.
+It stimulates only that application's native controller, without global keyboard or
+mouse input. See [development](development.md) for isolation and acceptance limits.
+The earlier 0.25.1 graphical launch established basic Haven rendering only.
 
 The 0.25.1 small checks passed the focused controller, fire/equipment catalogue and
 grant regressions; the stock reader preserved 60 representative real projectile/effect
@@ -121,3 +150,48 @@ run used `bash /tmp/tortodrone-parity-stock.sh`. Their disposable servers and
 spawned client processes were stopped; no owner sessions were touched. No
 benchmark, full catalogue graphical check or exact-shape collision comparison was
 run.
+
+0.25.3/0.25.4 combat rendering validation: the fire-timing regression failed against
+the original unscaled implementation, and the native weapon-identity check failed
+with shared zero IDs. After the fixes, the focused combat/body-model tests passed.
+Before the elevation fix, `./gradlew build` passed all 67 tasks (3m 25s), including
+the newer map preparation and cross-platform account changes. `WeaponCompatibility`
+passed native sword/gun/bomb identity, actor state and projectile/effect deltas.
+`ItemCatalogCompatibility ... --sample` passed all 9,348 metadata records, 113
+selected native item identity/class/count/binding references, 85 model samples across
+three colours, 73 starter fallbacks and the native interior body builder.
+`bash /tmp/tortodrone-parity-stock.sh` passed 60 real fire reference shapes and native
+Arsenal equip/input/emission for Calibur, Proto Gun and Blast Bomb. `git diff --check`
+passed. Graphical validation uses the checked-in Java launcher, not that network
+fixture; its captures and logs remain outside the repository.
+
+0.25.5 final validation: the new floor-elevation regression failed against the
+previous committed `SceneWeapons` implementation. `./gradlew unitworld_SceneWeaponsTest
+unitworld_KnightCombatTest` passed after the fix, and the final `./gradlew build`
+passed all 67 tasks (3m 28s). The disposable stock check passed all 60 fire reference
+shapes, now also asserting the native unspecified-Z sentinel and `Rf()==false` for
+bullets/bombs, and Calibur/Proto Gun/Blast Bomb native Arsenal equip/input/emission.
+The graphical command was:
+
+```sh
+java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-muzzle-fixed
+```
+
+It passed native movement, sword/gun/bomb normal and charged actions, defense, bash,
+dodge, activity-specific animation playback and owned server projectile sprites.
+Captured pixels were inspected for the sword swing, gun without a sword attachment,
+normal/charged gun particles at the corrected height, bomb detonation, shield effects,
+dodge and rendered Haven/Training scenes. The return capture waits for Haven to
+settle; charged releases have their own frame sequences. Earlier vsync stalls made
+short presses and charge timing inconclusive; the fixture now disables vsync in its
+disposable preferences before native startup and rejects unfocused combat checks.
+The native UI logged a transient unmanaged-window removal warning during scene
+changes; it did not prevent the completed checks. Logs and captures remain at the
+output path above, and only spawned tests were stopped.
+
+This establishes these local combat renderings with three representative weapons.
+It does not establish peer combat views, keyboard bindings, walking through portals,
+the full weapon catalogue, exact muzzle alignment at every facing/character height,
+or duplicate-free local prediction under all network delays. Specialized Agent
+weapons, Sealed Sword and modern loop semantics remain unsupported as described
+above. No performance benchmark or exact-shape projectile collision check was run.

@@ -23,6 +23,8 @@ public final class SceneWeaponsTest {
         weapons.advance(150,List.of(owner));check(weapons.actors().isEmpty(),"stock fire deadline is strict");
         weapons.advance(151,List.of(owner));check(weapons.actors().size()==1,"one native gun bullet at land deadline");
         var first=weapons.actors().getFirst();check(first.projectile().faction()==10&&first.clientOid()==1001,"faction and controller derive from owned knight");
+        check(first.projectile().z()==ProjectileState.UNSPECIFIED_Z,
+            "bullet resolves floor Z in the client instead of adding authored height twice");
         weapons.advance(251,List.of(owner));check(weapons.actors().getFirst().x()>first.x(),"projectile advances once on scene clock");
         weapons.advance(351,List.of(owner));check(weapons.actors().getFirst().projectile().fizzle(),"fuse expiry marks bullet fizzle");
         check(weapons.effects().isEmpty(),"expired bullet cannot invent hit rewards or effects");
@@ -30,6 +32,8 @@ public final class SceneWeaponsTest {
         weapons.attack(10,new KnightCombat.AttackStart("Bomb",292,500,0,500));
         var later=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,500,model);
         weapons.advance(501,List.of(later));check(weapons.actors().size()==1,"bomb drop is a native bomb actor");
+        check(weapons.actors().getFirst().projectile().z()==ProjectileState.UNSPECIFIED_Z,
+            "bomb preserves the native floor-resolution sentinel");
         weapons.advance(701,List.of(later));check(weapons.effects().size()==1&&weapons.effects().getFirst().ownerOid()==1001,"bomb detonation emits authored native effect");
         check(weapons.actors().stream().anyMatch(a->a.projectile()!=null&&a.projectile().created()==700),"detonation child projectile is queued without mutating the active iteration");
         weapons.cancel(10);check(weapons.actors().isEmpty(),"detach clears only owner's ephemeral actors");
