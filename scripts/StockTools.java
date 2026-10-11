@@ -58,7 +58,7 @@ public final class StockTools {
                 if (args.length < 2 || args.length > 4)
                     throw new IllegalArgumentException("interiors expects game-directory [fresh-maps-output-directory [source-cache-directory]]");
                 fixture = "HavenInteriorsExport";
-                Path output=args.length>=3?Path.of(args[2]).toAbsolutePath():project.resolve("local/defaults/maps");
+                Path output=args.length>=3?Path.of(args[2]).toAbsolutePath():project.resolve("build/interiors-export");
                 Path cache=args.length==4?Path.of(args[3]).toAbsolutePath():project.resolve("build/stock-scenes");
                 fixtureArgs.add(cache.toString());fixtureArgs.add(output.toString());
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));

@@ -57,20 +57,18 @@ public final class BuildTools {
         }
     }
     private record Copy(Path source, Path target, boolean replace) { }
+    /** Map provenance manifest checked in beside the packs it pins. */
+    private static final String MAP_MANIFEST = "scene-source.properties";
     private static void prepare(Path project, Path output, boolean mapsOnly) throws Exception {
-        Path bundled=project.resolve("defaults/maps"), local=project.resolve("local/defaults/maps");
-        Path archive=project.resolve("local/defaults/archive-maps");
-        boolean prepared=Files.exists(archive,LinkOption.NOFOLLOW_LINKS)||Files.exists(local,LinkOption.NOFOLLOW_LINKS);
-        Path mapSource=Files.exists(archive,LinkOption.NOFOLLOW_LINKS)?archive:Files.exists(local,LinkOption.NOFOLLOW_LINKS)?local:bundled;
+        // One checked-in source for every machine: no local export directory can change a build.
+        Path mapSource=project.resolve("defaults/maps");
         Path mapOutput=mapsOnly?output:output.resolve("maps");
-        if(prepared)verifyPreparedMaps(mapSource);
-        if(mapSource.equals(archive)&&!Files.isRegularFile(archive.resolve("scene-source.properties"),LinkOption.NOFOLLOW_LINKS))
-            throw new IOException("Incomplete archive map source: missing scene-source.properties in " + archive);
         verifyMaps(mapSource);
         var copies=new ArrayList<Copy>();
-        Properties ownership=prepared?archiveOwnership(mapSource):null;
-        plan(mapSource,mapOutput,prepared?bundled:null,copies,null,ownership);
-        if(!mapsOnly)plan(project.resolve("defaults"),output,null,copies,Path.of("maps"),sourceOwnership(project.resolve("defaults"),"default-source.properties"));
+        Properties ownership=sourceOwnership(mapSource,MAP_MANIFEST);
+        plan(mapSource,mapOutput,copies,null,ownership);
+        if(!mapsOnly)plan(project.resolve("defaults"),output,copies,Path.of("maps"),
+            sourceOwnership(project.resolve("defaults"),"default-source.properties"));
         // Hold an existing deployment's lock before changing maps; never stop a live server.
         Path lockFile=(Path.of("defaults").equals(mapOutput.getParent().getFileName())
             ?mapOutput.getParent().getParent():mapOutput.getParent()).resolve("data/server.lock");
@@ -89,17 +87,9 @@ public final class BuildTools {
                 } else copyMissing(copy.source,copy.target);
             }
         }
-        if(prepared)System.out.println("Prepared local maps: " + mapSource + " -> " + mapOutput);
+        System.out.println("Prepared maps: " + mapSource + " -> " + mapOutput);
     }
-    private static void verifyPreparedMaps(Path maps) throws IOException {
-        if(!Files.isRegularFile(maps.resolve("catalog.properties"),LinkOption.NOFOLLOW_LINKS))
-            throw new IOException("Incomplete prepared map source: missing catalog.properties in " + maps);
-        for(String pack:List.of("haven","bazaar","arcade","garrison","advanced_training","laboratory","hall_of_heroes"))
-            for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties"))
-                if(!Files.isRegularFile(maps.resolve(pack).resolve(file),LinkOption.NOFOLLOW_LINKS))
-                    throw new IOException("Incomplete prepared map source: missing " + pack + "/" + file);
-    }
-    private static void plan(Path source,Path output,Path baseline,List<Copy> copies,Path skip,Properties ownership) throws Exception {
+    private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership) throws Exception {
         if(Files.notExists(source,LinkOption.NOFOLLOW_LINKS)) {
             System.out.println("Optional default source is absent: " + source + "; continuing without it");return;
         }
@@ -114,30 +104,14 @@ public final class BuildTools {
                 for(Path parent=target.getParent();parent!=null;parent=parent.getParent())
                     if(Files.isSymbolicLink(parent))throw new IOException("Default output contains a symlink directory: " + parent);
                 if(Files.notExists(target,LinkOption.NOFOLLOW_LINKS)) {copies.add(new Copy(file,target,false));continue;}
-                Path original=baseline==null?null:baseline.resolve(relative);
-                if(original!=null&&Files.isRegularFile(original)&&Files.mismatch(original,file)!=-1) {
-                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Prepared map conflicts with existing file: " + target);
-                    if(Files.mismatch(target,file)==-1)continue;
-                    if(Files.mismatch(target,original)!=-1&&!archiveOwns(ownership,relative,target))
-                        throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
-                    copies.add(new Copy(file,target,true));
-                } else if(original==null&&Files.exists(target,LinkOption.NOFOLLOW_LINKS)) {
-                    // An owner's special path (dangling symlink, directory, device) is never written
-                    // through or replaced; keep it exactly as the offline preparation always did.
-                    if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))continue;
-                    if(Files.mismatch(target,file)==-1)continue;
-                    if(!archiveOwns(ownership,relative,target)) {
-                        if(ownership!=null&&ownership.containsKey("source."+relative.toString().replace('\\','/')))
-                            throw new IOException("Prepared map conflicts with custom edits: " + target + "; use a fresh deployment directory");
-                        continue;
-                    }
-                    copies.add(new Copy(file,target,true));
-                }
+                // An owner's special path (dangling symlink, directory, device) is never written
+                // through or replaced; keep it exactly as the offline preparation always did.
+                if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))continue;
+                if(Files.mismatch(target,file)==-1)continue;
+                // Only files this source published before are upgraded; edited packs keep their bytes.
+                if(archiveOwns(ownership,relative,target))copies.add(new Copy(file,target,true));
             }
         }
-    }
-    private static Properties archiveOwnership(Path maps) throws IOException {
-        return sourceOwnership(maps,"scene-source.properties");
     }
     private static Properties sourceOwnership(Path maps,String manifestName) throws IOException {
         Path manifest=maps.resolve(manifestName);

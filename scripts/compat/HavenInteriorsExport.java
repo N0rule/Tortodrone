@@ -60,6 +60,8 @@ public final class HavenInteriorsExport {
             var generated=new HashMap<Integer,Path>();
             for(Pack pack:INTERIORS) {
                 Path folder=staging.resolve(pack.directory);
+                // The checked-in source already carries these packs; re-derive them from scratch.
+                deleteTree(folder);
                 ScenePackExport.main(new String[]{game.toString(),sources.get(pack.id).toString(),folder.toString(),"1","Haven"});
                 Properties map=properties(folder.resolve("map.properties"));
                 if(Integer.parseInt(map.getProperty("scene-id"))!=pack.id||!pack.kind.equals(map.getProperty("kind")))

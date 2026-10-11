@@ -46,7 +46,15 @@ preparation and running do not depend on the archive's availability.
 - Arcade SHA-256: `dff99bfbbba7d37cf5585746e8883e3f6c09cfadec7ffe39ac19327a42b22b9f`
 - Garrison: `Master/Static/445`, revision `-1605078030`
 - Garrison SHA-256: `a1e3e970b31c59d2aa661ed6bd836fe578cb08bf46e64533febec8566286b9a1`
-- Offline source packs: `defaults/maps/{haven,bazaar,arcade,garrison}/`
+- Advanced Training Hall: `Master/Static/294`, revision `286`
+- Advanced Training Hall SHA-256: `d0cf0863721970d15090f613d217495ceaa18fbf125813ff9d105b16966f2619`
+- Laboratory: `Master/Static/437`, revision `2079419070`
+- Laboratory SHA-256: `5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0`
+- Hall of Heroes: `Master/Static/449`, revision `801204775`
+- Hall of Heroes SHA-256: `fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6`
+- Offline source packs: `defaults/maps/{haven,bazaar,arcade,garrison,advanced_training,laboratory,hall_of_heroes}/`
+- Source checksum manifest: `defaults/maps/scene-source.properties`, recording each pack's archive path,
+  scene digest and the generations this source published; preparation refuses a source that no longer matches it
 - Runtime: `build/defaults/maps/<pack>/scene.dat`; neither JAR contains maps
 
 The archive provides no repository license file at the pinned revision. The

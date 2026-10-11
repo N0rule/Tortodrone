@@ -21,9 +21,9 @@ public final class SceneCatalogTest {
             }
             copy(Path.of("defaults/maps"),maps);
             var catalog=SceneCatalog.load(maps);
-            check(catalog.scenes().size()==4 && catalog.entry().id()==1,"all four Haven towns load without installed game");
-            check(catalog.scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==10,
-                "all ten directed links connect the four archived Haven towns");
+            check(catalog.scenes().size()==7 && catalog.entry().id()==1,"all seven Haven scenes load without installed game");
+            check(catalog.scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==16,
+                "thirteen town links plus three interior exits connect the seven archived Haven scenes");
             check(catalog.scene(2).collision().walkable(catalog.scene(2).spawnX(),catalog.scene(2).spawnY()),"verified Bazaar spawn");
             check(catalog.scene(1).portals().entrances().containsKey("from_bazaar_east")
                 &&catalog.scene(2).portals().entrances().containsKey("from_town_square_west"),
@@ -76,11 +76,14 @@ public final class SceneCatalogTest {
             change(havenPortals,"entrance.from_bazaar_east.y","-1.5");
             refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
-            for(String folder:List.of("haven","bazaar","arcade","garrison"))
-                Files.delete(maps.resolve(folder+"/portals.properties"));
+            try(var folders=Files.list(maps)) {
+                for(Path folder:folders.filter(Files::isDirectory).toList())
+                    Files.delete(folder.resolve("portals.properties"));
+            }
             var legacy=SceneCatalog.load(maps);
             check(legacy.scene(1).portals().equals(ScenePortals.EMPTY)
-                &&legacy.scene(2).portals().equals(ScenePortals.EMPTY),
+                &&legacy.scene(2).portals().equals(ScenePortals.EMPTY)
+                &&legacy.scene(294).portals().equals(ScenePortals.EMPTY),
                 "custom map packs without portal metadata remain compatible");
             Path jar=Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             try(var archive=new JarFile(jar.toFile())) {

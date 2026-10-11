@@ -336,8 +336,9 @@ public final class ArchiveTownExport {
 
     private static Properties sourceManifest(Path project,Path archive,Map<Pack,Path> sources,Path staging)throws Exception {
         Properties p=new Properties();p.setProperty("format",FORMAT);
-        var existing=project.resolve("local/defaults/archive-maps/scene-source.properties");
-        if(Files.notExists(existing,LinkOption.NOFOLLOW_LINKS))existing=project.resolve("local/defaults/maps/scene-source.properties");
+        // The checked-in source keeps its provenance manifest and ownership history; a fresh
+        // generation records this generation's digests as the replacement baseline.
+        var existing=project.resolve("defaults/maps/scene-source.properties");
         if(Files.isRegularFile(existing,LinkOption.NOFOLLOW_LINKS)) {
             Properties old=properties(existing);
             for(String key:old.stringPropertyNames())if(key.startsWith("owned."))p.setProperty(key,old.getProperty(key));
@@ -348,12 +349,9 @@ public final class ArchiveTownExport {
             addOwned(p,"scene-source.properties",digest(existing));
         }
         Path bundled=project.resolve("defaults/maps");
-        Path previousLocal=project.resolve("local/defaults/maps");
         for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties")) {
             String rel=pack.folder+"/"+file;Path original=bundled.resolve(rel);
             if(Files.isRegularFile(original))addOwned(p,rel,digest(original));
-            Path previous=previousLocal.resolve(rel);
-            if(Files.isRegularFile(previous,LinkOption.NOFOLLOW_LINKS)&&!Files.isSymbolicLink(previous))addOwned(p,rel,digest(previous));
             Path current=staging.resolve(rel);p.setProperty("source."+rel,digest(current));
         }
         for(Pack pack:PACKS) {

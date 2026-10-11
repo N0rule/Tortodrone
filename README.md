@@ -51,12 +51,12 @@ Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 ./gradlew test                    # both test groups; build also runs these
 ./gradlew prepareDefaults         # verify/copy local maps and item defaults
 ./gradlew prepareMaps             # verify/copy only local maps
-./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # prepare seven scenes in build/defaults/maps
+./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # maintainer re-export of the interior packs into defaults/maps
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ./gradlew clean                   # removes generated artifacts; preserves persistent state
 ```
 
-Benchmarks are never part of `build` or `test`. Resource preparation is offline and verifies source map checksums before copying. Prepare interiors once with the stock game path above (or pass `-PgameDir` to `buildServer`); subsequent ordinary builds include all seven scenes under `build/defaults/maps` using the persistent `local/defaults/maps` source. Existing custom files are preserved; unchanged bundled portal files receive the matching interior links, while conflicting edits fail before copying. Use `-PdefaultsOutput="/path/to/disposable/defaults"` to select a preparation destination (`prepareMaps` takes the maps directory itself). Missing optional source directories produce a warning; corrupt supplied maps fail preparation. `compileJava` and `buildAdmin` do not require optional maps or downloads for maps.
+Benchmarks are never part of `build` or `test`. Resource preparation is offline and verifies source map checksums before copying. The checked-in `defaults/maps/` is the one map source, so `build`, `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes under `build/defaults/maps` with no game path, archive or extra directory. Existing custom files are preserved; a pack this source published earlier is upgraded in place, and owner-edited files keep their bytes rather than failing preparation. Use `-PdefaultsOutput="/path/to/disposable/defaults"` to select a preparation destination (`prepareMaps` takes the maps directory itself). Missing optional source directories produce a warning; corrupt supplied maps fail preparation. `compileJava` and `buildAdmin` do not require optional maps or downloads for maps.
 
 **Offline builds:** the first build needs access to the Gradle distribution, plugin portal and Maven Central. Once the Wrapper, plugin, dependency artifacts and metadata are cached, `./gradlew --offline build` works with a local JDK 25. Legacy `build/deps` files alone do not populate Gradle's cache. Preparing local defaults needs the Wrapper/build tooling cached but no third-party runtime dependencies. The optional server startup recovery URL is unchanged and remains a placeholder; use local `defaults/` rather than relying on it.
 
@@ -64,7 +64,7 @@ Benchmarks are never part of `build` or `test`. Resource preparation is offline 
 
 The [migration record](docs/gradle-migration.md) maps every old Make target and records verification.
 
-Advanced Training Hall, Laboratory and Hall of Heroes are exported locally with `prepareInteriors` once; ordinary builds then include all seven scenes in `build/defaults/maps/` with verified native entry/return links. See [map preparation](docs/maps.md) for first-time setup and protection of custom files.
+Advanced Training Hall, Laboratory and Hall of Heroes are part of the checked-in defaults, so ordinary builds prepare all seven scenes in `build/defaults/maps/` with verified native entry/return links. `prepareInteriors` and `prepareArchive` are maintainer re-exports that publish fresh packs into `defaults/maps/`. See [map preparation](docs/maps.md) for first-time setup and protection of custom files.
 
 Both JARs keep `data/` beside themselves; copy `build/defaults/` beside them when deploying. Preserve `data/` (especially keys/DB) and customized `defaults/`. The optional startup default-resource downloader points to a placeholder repository; missing maps prevent world entry but not login/admin. See [maps](docs/maps.md).
 

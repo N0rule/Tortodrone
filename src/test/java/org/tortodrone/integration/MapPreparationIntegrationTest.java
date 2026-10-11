@@ -4,6 +4,7 @@ import java.nio.file.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.StandardOpenOption;
+import java.security.MessageDigest;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import org.tortodrone.world.SceneCatalog;
@@ -15,8 +16,8 @@ public final class MapPreparationIntegrationTest {
         Path home = Files.createTempDirectory("tortodrone-offline-maps-test-");
         try {
             offlinePreparation(home);
-            localMapPreparation(home);
-            System.out.println("PASS: offline map preparation, local map upgrades, edited-pack preservation, missing-source handling, owner symlinks and corrupt-source refusal");
+            checkedInSourcePreparation(home);
+            System.out.println("PASS: offline map preparation, checked-in source preparation, published-pack upgrades, edited-pack preservation, deployment lock, added packs, missing-source handling, owner symlinks and corrupt-source refusal");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -69,104 +70,105 @@ public final class MapPreparationIntegrationTest {
         check(!Files.exists(project.resolve("build/deps")), "offline preparation creates no download cache");
     }
 
-    private static void localMapPreparation(Path home) throws Exception {
-        Path project=home.resolve("local map source project");
-        Path bundled=project.resolve("defaults/maps"),local=project.resolve("local/defaults/maps");
-        copyTree(Path.of("defaults/maps"),bundled);
+    private static void checkedInSourcePreparation(Path home) throws Exception {
+        Path project=home.resolve("checked-in map source project");
+        Path maps=project.resolve("defaults/maps");
+        copyTree(Path.of("defaults/maps"),maps);
         Files.writeString(project.resolve("defaults/items-source-marker.txt"),"bundled item resources remain included\n");
         Path tool=project.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tool);
         Path mapsOutput=project.resolve("deployment/defaults/maps");
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"bundled baseline maps prepare before local maps exist");
-        Path conflict=project.resolve("conflicting maps");copyTree(mapsOutput,conflict);
-
-        copyTree(bundled,local);
-        Path sourcePortals=local.resolve("haven/portals.properties");
-        Files.writeString(sourcePortals,Files.readString(sourcePortals)+"\n# local source update\n");
-        makeSyntheticPack(local,"advanced_training",900);
-        makeSyntheticPack(local,"laboratory",901);
-        makeSyntheticPack(local,"hall_of_heroes",902);
-
-        byte[] baselinePortals=Files.readAllBytes(mapsOutput.resolve("haven/portals.properties"));
-        Path lockFile=project.resolve("deployment/data/server.lock");Files.createDirectories(lockFile.getParent());
-        Files.createFile(lockFile);
-        try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
-            check(runTool(project,tool,"maps",mapsOutput.toString())!=0
-                &&!Files.exists(mapsOutput.resolve("advanced_training"))
-                &&Arrays.equals(baselinePortals,Files.readAllBytes(mapsOutput.resolve("haven/portals.properties"))),
-                "active deployment lock refuses local map updates before changing any map");
-        }
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"maps preparation selects the complete local source after the deployment unlocks");
+        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"maps prepare from the checked-in source alone");
         var catalog=SceneCatalog.load(mapsOutput);
-        check(catalog.scenes().size()==7&&catalog.scene(900).id()==900&&catalog.scene(901).id()==901
-            &&catalog.scene(902).id()==902,"local source adds three independent packs to the four towns");
-        check(Arrays.equals(Files.readAllBytes(mapsOutput.resolve("haven/portals.properties")),
-            Files.readAllBytes(sourcePortals)),"local town portal metadata upgrades the bundled baseline copy");
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"local maps preparation is repeatable");
-
-        Path custom=mapsOutput.resolve("haven/map.properties");
-        Files.writeString(custom,Files.readString(custom).replace("instances=1","instances=2"));
-        byte[] customDescriptor=Files.readAllBytes(custom);
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0
-            &&Arrays.equals(customDescriptor,Files.readAllBytes(custom)),"custom destination descriptor remains untouched on local-source repeat");
+        check(catalog.scenes().size()==7,"the checked-in source prepares all seven Haven scenes");
+        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"checked-in source preparation is repeatable");
 
         Path defaultsOutput=project.resolve("prepared defaults");
         check(runTool(project,tool,"defaults",defaultsOutput.toString())==0
             &&SceneCatalog.load(defaultsOutput.resolve("maps")).scenes().size()==7
             &&Files.readString(defaultsOutput.resolve("items-source-marker.txt")).contains("bundled item resources"),
-            "defaults preparation also selects local maps while retaining other defaults");
+            "defaults preparation prepares the checked-in maps while retaining other defaults");
 
-        Path conflictPortals=conflict.resolve("haven/portals.properties");
-        Files.writeString(conflictPortals,Files.readString(conflictPortals)+"\n# owner edit\n");
-        byte[] ownerPortal=Files.readAllBytes(conflictPortals);
-        check(runTool(project,tool,"maps",conflict.toString())!=0
-            &&!Files.exists(conflict.resolve("advanced_training"))
-            &&Arrays.equals(ownerPortal,Files.readAllBytes(conflictPortals)),
-            "conflicting town portal edit refuses the local upgrade before installing any new pack");
+        Path locked=project.resolve("locked deployment");
+        Path lockFile=locked.resolve("data/server.lock");Files.createDirectories(lockFile.getParent());
+        Files.createFile(lockFile);
+        try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
+            check(runTool(project,tool,"maps",locked.resolve("maps").toString())!=0
+                &&!Files.exists(locked.resolve("maps")),
+                "active deployment lock refuses map updates before changing any map");
+        }
+        check(runTool(project,tool,"maps",locked.resolve("maps").toString())==0,"preparation proceeds once the deployment unlocks");
 
-        Path damaged=home.resolve("corrupt local maps project");
+        // Packs this source published earlier are upgraded; edited packs keep their bytes.
+        Path upgraded=project.resolve("previous generation");
+        check(runTool(project,tool,"maps",upgraded.toString())==0,"previous generation prepares from the checked-in source");
+        Path upgradedPortals=upgraded.resolve("haven/portals.properties");
+        byte[] published=Files.readAllBytes(upgradedPortals);
+        byte[] earlier=("# previous generation\n"+new String(published,java.nio.charset.StandardCharsets.UTF_8))
+            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        Files.write(upgradedPortals,earlier);
+        var manifest=properties(maps.resolve("scene-source.properties"));
+        manifest.setProperty("owned.haven/portals.properties",manifest.getProperty("owned.haven/portals.properties")
+            +","+HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(earlier)));
+        try(var out=Files.newOutputStream(maps.resolve("scene-source.properties"))) {manifest.store(out,"ownership covers an earlier generation");}
+        check(runTool(project,tool,"maps",upgraded.toString())==0
+            &&Arrays.equals(published,Files.readAllBytes(upgradedPortals)),
+            "a pack this source published earlier is upgraded on preparation");
+        byte[] custom=("# owner edit\n"+new String(published,java.nio.charset.StandardCharsets.UTF_8))
+            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        Files.write(upgradedPortals,custom);
+        Path descriptor=upgraded.resolve("haven/map.properties");
+        Files.writeString(descriptor,Files.readString(descriptor).replace("instances=1","instances=4"));
+        byte[] customDescriptor=Files.readAllBytes(descriptor);
+        check(runTool(project,tool,"maps",upgraded.toString())==0
+            &&Arrays.equals(custom,Files.readAllBytes(upgradedPortals))
+            &&Arrays.equals(customDescriptor,Files.readAllBytes(descriptor)),
+            "edited packs and descriptors are preserved instead of replaced or refused");
+
+        makeSyntheticPack(maps,"training_yard",905);
+        Path discovered=project.resolve("discovered pack");
+        check(runTool(project,tool,"maps",discovered.toString())==0
+            &&SceneCatalog.load(discovered).scene(905).id()==905,
+            "an added source pack is discovered without a name list to edit");
+
+        Path damaged=home.resolve("corrupt map source project");
         copyTree(Path.of("defaults/maps"),damaged.resolve("defaults/maps"));
-        copyTree(local,damaged.resolve("local/defaults/maps"));
-        Files.write(damaged.resolve("local/defaults/maps/arcade/scene.dat"),new byte[]{1,2,3});
+        Files.write(damaged.resolve("defaults/maps/arcade/scene.dat"),new byte[]{1,2,3});
         Path damagedTool=damaged.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),damagedTool);
         Path damagedOutput=damaged.resolve("output maps");
         check(runTool(damaged,damagedTool,"maps",damagedOutput.toString())!=0&&!Files.exists(damagedOutput),
-            "corrupt local source is rejected before creating output");
+            "damaged source is rejected before creating output");
 
-        Path missingPack=home.resolve("missing local pack project");
+        Path tampered=home.resolve("tampered map source project");
+        copyTree(Path.of("defaults/maps"),tampered.resolve("defaults/maps"));
+        Files.writeString(tampered.resolve("defaults/maps/laboratory/portals.properties"),
+            Files.readString(tampered.resolve("defaults/maps/laboratory/portals.properties"))+"# stray edit\n");
+        Path tamperedTool=tampered.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tamperedTool);
+        Path tamperedOutput=tampered.resolve("output maps");
+        check(runTool(tampered,tamperedTool,"maps",tamperedOutput.toString())!=0&&!Files.exists(tamperedOutput),
+            "a source pack that no longer matches its checksum manifest is rejected before creating output");
+
+        Path missingPack=home.resolve("missing map source project");
         copyTree(Path.of("defaults/maps"),missingPack.resolve("defaults/maps"));
-        copyTree(local,missingPack.resolve("local/defaults/maps"));
-        deleteTree(missingPack.resolve("local/defaults/maps/advanced_training"));
+        deleteTree(missingPack.resolve("defaults/maps/hall_of_heroes"));
         Path missingTool=missingPack.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),missingTool);
         Path missingOutput=missingPack.resolve("output maps");
         check(runTool(missingPack,missingTool,"maps",missingOutput.toString())!=0&&!Files.exists(missingOutput),
-            "local source missing a required scene pack is rejected before creating output");
+            "source missing a pinned scene pack is rejected before creating output");
 
-        Path missingPortals=home.resolve("missing local portals project");
-        copyTree(Path.of("defaults/maps"),missingPortals.resolve("defaults/maps"));
-        copyTree(local,missingPortals.resolve("local/defaults/maps"));
-        Files.delete(missingPortals.resolve("local/defaults/maps/laboratory/portals.properties"));
-        Path missingPortalsTool=missingPortals.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),missingPortalsTool);
-        Path missingPortalsOutput=missingPortals.resolve("output maps");
-        check(runTool(missingPortals,missingPortalsTool,"maps",missingPortalsOutput.toString())!=0&&!Files.exists(missingPortalsOutput),
-            "local source missing portal metadata is rejected before creating output");
-
-        Path linked=home.resolve("symlinked local maps project");
+        Path linked=home.resolve("symlinked map source project");
         copyTree(Path.of("defaults/maps"),linked.resolve("defaults/maps"));
-        copyTree(local,linked.resolve("local/defaults/maps"));
-        Path localMap=linked.resolve("local/defaults/maps");
         boolean sourceSymlink=false;
-        try {Files.createSymbolicLink(localMap.resolve("source-link"),localMap.resolve("haven/map.properties"));sourceSymlink=true;}
+        try {Files.createSymbolicLink(linked.resolve("defaults/maps/source-link"),linked.resolve("defaults/maps/haven/map.properties"));sourceSymlink=true;}
         catch(UnsupportedOperationException|java.io.IOException unavailable) {
-            System.out.println("SKIP: local source symlink test (symlinks unavailable)");
+            System.out.println("SKIP: source symlink test (symlinks unavailable)");
         }
         if(sourceSymlink) {
             Path linkedTool=linked.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),linkedTool);
             Path linkedOutput=linked.resolve("output maps");
             check(runTool(linked,linkedTool,"maps",linkedOutput.toString())!=0&&!Files.exists(linkedOutput),
-                "local source symlink is rejected before creating output");
+                "source symlink is rejected before creating output");
         }
     }
-
     private static void copyTree(Path source,Path target)throws Exception {
         try(var paths=Files.walk(source)) {
             for(Path path:paths.toList()) {

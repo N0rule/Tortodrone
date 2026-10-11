@@ -40,9 +40,9 @@ Interior controllers also require health/status entries and an elevator return d
 
 The server currently uses TCP only. On the first interior entry, a native `UpdateThrottleMessage` raises that connection's client send limit to 100 messages per second. Native unreliable input otherwise falls back to the same TCP queue as travel and keepalive requests, behind the client's default ten-message limit. The stock acknowledgement is decoded without granting any service or changing player data. This is this server's bounded TCP transport policy, not an implementation of stock UDP or its separate flood guard.
 
-The repository's `defaults/maps/` contains the four town packs. Interior exports are prepared into an ignored `local/defaults/maps/` source; no game assets or generated scene packs are committed. Once prepared, `buildServer`, `prepareDefaults` and `prepareMaps` include all seven scenes under `build/defaults/maps/`, along with their matching portal metadata. Custom files are preserved and conflicting portal edits are refused before copying.
+The repository's `defaults/maps/` contains all seven packs: the four towns and the three interiors, together with `catalog.properties` and the `scene-source.properties` provenance manifest. Those compiled scene packs are committed; no game meshes, textures, audio or installed JARs are. Ordinary `buildServer`, `prepareDefaults` and `prepareMaps` copy all seven scenes into `build/defaults/maps/` with their matching portal metadata, needing no game path, archive or extra source. Custom files are preserved; a file the source published earlier is upgraded in place, while an owner-edited pack keeps its bytes instead of failing preparation.
 
-To enable these rooms beside the local server JAR, run `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"` once, or provide `-PgameDir` on the first `buildServer`. Later plain builds reuse the source offline. The server loads `build/defaults/maps/` automatically unless a custom `build/maps/` overrides it. Existing prepared sources are reused; use `-PinteriorsOutput` for a separate fresh export. Without a prepared local source, builds include only the four bundled towns.
+To enable these rooms beside the local server JAR, nothing extra is needed: an ordinary build already prepares all seven scenes from the checked-in source. Re-deriving the interior packs from a stock client is maintainer work with `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"`, which republishes them into `defaults/maps/`; `-PinteriorsOutput` selects a separate staging tree and `-PsceneCache` a reusable source cache. The server loads `build/defaults/maps/` automatically unless a custom `build/maps/` overrides it.
 
 To prepare a fresh local tree directly, use a new output path and a reusable source cache:
 
@@ -51,7 +51,7 @@ java scripts/StockTools.java interiors "/path/to/Spiral Knights" \
   /tmp/tortodrone-haven-seven-maps /tmp/tortodrone-scene-cache
 ```
 
-The output directory must not already exist. The exporter copies the four town packs, fetches and checks the three pinned archives into the source cache, then verifies the stock scene configuration and native portal routes. `build/` is ignored local output; inspect and deploy the generated tree without adding it to Git.
+The output directory must not already exist. The exporter copies the checked-in town packs verbatim, fetches and checks the three pinned archives into the source cache, re-derives the three interior packs from the stock client, then verifies the stock scene configuration and native portal routes. `build/` is ignored local output; inspect and deploy the generated tree without adding it to Git.
 
 ## Outside this milestone
 
