@@ -4,9 +4,9 @@ Clean-room **Java 25 Spiral Knights server emulator** plus local account manager
 
 ## Current state (verify `VERSION` and Git)
 
-At **0.21.0 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), ten native walking portals, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Intro missions are bypassed without fabricated completion/rewards.
+At **0.25.6 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), ten native walking portals, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
 
-**Not implemented at the recorded checkpoint:** combat, missions, NPC services, shops, crafting/item use, dungeon/gate gameplay, position persistence, trade, custom news and broad social features. Some of these may be **in-progress in uncommitted source**; inspect Git before choosing work. The [current project handoff](docs/PROJECT.md) is the concise checkpoint; older milestone detail is available in Git history.
+**Not implemented at the recorded checkpoint:** general missions, NPC services, shops, crafting/item use, dungeon/gate gameplay, position persistence, custom news and broad social features. The [current project handoff](docs/PROJECT.md) records the supported scope and remaining limits; inspect Git before choosing work. Older milestone detail is available in Git history.
 
 ## Build, run and connect
 
@@ -85,6 +85,6 @@ log-mode=normal
 
 ## Backups, development and references
 
-Stop server and manager; copy the **whole `data/` directory** (SQLite WAL and keys). Only current schema 8 and JSON item catalogue format v1 are supported; no old-DB imports/migrations. Never discard original state while testing.
+Stop server and manager; copy the **whole `data/` directory** (SQLite WAL and keys). Only current schema 8 is supported; JSON item catalogue v2 is written, with v1 reading retained. No old-DB imports/migrations. Never discard original state while testing.
 
 Start coding with [AGENTS.md](AGENTS.md) and [project handoff](docs/PROJECT.md); consult [architecture](docs/server-architecture.md) and [development](docs/development.md) for invariants, tests, stock-client checks, benchmarks and cleanup. See [upstream research](docs/server-research.md) only when the task needs it. Do not load all historical documents into agent context.

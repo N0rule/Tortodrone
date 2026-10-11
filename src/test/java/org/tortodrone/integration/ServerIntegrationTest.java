@@ -52,6 +52,7 @@ public final class ServerIntegrationTest {
             check(Files.exists(generated), "first-start configuration generation");
             defaultWorkflow(jar, directory.resolve("default-start"));
             missingDefaultsWorkflow(sourceJar,directory.resolve("missing-defaults"));
+            shutdownWorkflow(sourceJar,directory.resolve("shutdown-start"));
             rejected(jar, null, directory, "Use --help", "removed account startup option", "--list-accounts");
             managementWorkflow(jar, directory.resolve("management-start"));
             accountWorkflow(jar, directory.resolve("account-start"));
@@ -391,6 +392,31 @@ public final class ServerIntegrationTest {
         Properties properties = new Properties();
         try (var source = Files.newInputStream(file)) { properties.load(source); }
         return properties;
+    }
+
+    private static void shutdownWorkflow(Path sourceJar, Path directory) throws Exception {
+        Files.createDirectories(directory);
+        Path jar = directory.resolve("tortodrone.jar");
+        org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
+        Path config = directory.resolve("data/server.properties");
+        Files.createDirectories(config.getParent());
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        try (Running server = new Running(jar, config, directory);
+             Socket unfinished = new Socket("127.0.0.1", server.ready())) {
+            unfinished.setSoTimeout(10000);
+            unfinished.getOutputStream().write(0); // Leave a handshake blocked mid-frame.
+            server.await("Client connected from");
+            server.send("stop\n");
+            check(unfinished.getInputStream().read() == -1, "stop closes unfinished handshake socket");
+            check(server.process.waitFor(10, TimeUnit.SECONDS) && server.process.exitValue() == 0,
+                "stop drains client handler before process exit");
+        }
+        String log = Files.readString(directory.resolve("data/logs/latest.log"));
+        int disconnected = log.indexOf("Client disconnected");
+        int stopped = log.indexOf("Server stopped.");
+        check(disconnected >= 0 && stopped > disconnected, "handler cleanup precedes final shutdown log");
+        check(log.lines().filter(line -> line.contains("Server stopped.")).count() == 1,
+            "shutdown message is written exactly once");
     }
 
     private static PublicKey publicKey(String value) throws Exception {

@@ -3,7 +3,6 @@ package org.tortodrone.server.network;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
-import org.tortodrone.protocol.HandshakeCodec;
 
 /** Serialize codec mappings and frames together; a slow reader cannot block other accounts. */
 final class SessionOutput implements AutoCloseable {

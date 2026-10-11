@@ -12,8 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.security.PrivateKey;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 import org.tortodrone.account.AccountStore;
@@ -138,7 +136,7 @@ public final class Server {
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
             AccountStore accounts,int maxClients)
             throws IOException {
-        Set<Socket> clients = ConcurrentHashMap.newKeySet();
+        ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
         AtomicLong ids = new AtomicLong();
         ServerConsole console = new ServerConsole(accounts, log, () -> {
@@ -146,13 +144,10 @@ public final class Server {
         }, () -> !listener.isClosed());
         Thread shutdown = new Thread(() -> {
             console.close();
-            // The main thread may finish as soon as the listener closes. Keep its
-            // log cleanup waiting until the shutdown message has been written.
+            try { listener.close(); } catch (IOException ignored) { }
+            clients.close();
+            // Joins must finish before taking the log monitor used by handlers.
             synchronized (log) {
-                try { listener.close(); } catch (IOException ignored) { }
-                for (Socket client : clients) {
-                    try { client.close(); } catch (IOException ignored) { }
-                }
                 log.info("Server stopped.");
                 log.close();
             }
@@ -177,25 +172,24 @@ public final class Server {
                     continue;
                 }
                 long id = ids.incrementAndGet();
-                clients.add(client);
-                new Thread(() -> {
+                clients.start(client, "Client-" + id, () -> {
                     try {
                         receive(client, id, key, listener.getLocalPort(), log, accounts);
                     } finally {
-                        clients.remove(client);
                         slots.release();
                     }
-                }, "Client-" + id).start();
+                });
             }
         } finally {
             console.close();
-            for (Socket client : clients) {
-                try { client.close(); } catch (IOException ignored) { }
-            }
+            clients.close();
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdown);
                 log.info("Server stopped.");
-            } catch (IllegalStateException ignored) { /* The shutdown hook owns the final message. */ }
+            } catch (IllegalStateException shuttingDown) {
+                // Keep main's account/log/lock cleanup behind the hook's final message.
+                ClientConnections.await(shutdown);
+            }
         }
     }
 

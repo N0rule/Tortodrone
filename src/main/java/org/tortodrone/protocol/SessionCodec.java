@@ -704,7 +704,6 @@ public final class SessionCodec {
     }
     private void name(DataOutputStream out,String name)throws IOException{type(out,"com.threerings.util.Name");string(out,name);}
     private void longs(DataOutputStream out,long[] values)throws IOException{type(out,"[J");out.writeInt(values.length);for(long v:values)out.writeLong(v);}
-    private void ints(DataOutputStream out,int[] values)throws IOException{type(out,"[I");out.writeInt(values.length);for(int v:values)out.writeInt(v);}
     private static void primitiveInts(DataOutputStream out,int[] values)throws IOException{out.writeBoolean(true);out.writeInt(values.length);for(int v:values)out.writeInt(v);}
     private void items(DataOutputStream out,Knight knight,WorldProfile profile)throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(profile.items().size());

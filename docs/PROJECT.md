@@ -1,12 +1,14 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.5, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-11, version 0.25.6, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.25.6 cleanup: accepted client handlers drain before account/log/deployment-lock cleanup; stock-tool subprocesses are confirmed exited before disposable files are removed, including interrupted waits. The preview tool uses the Gradle-built JAR. [Repository audit and remaining risks](repository-audit.md) records the findings and validation.
 
 - Java 25 Gradle Kotlin DSL build; executable server/admin JARs; isolated standalone regression suite. Normal resource-fallback warnings are consolidated; debug includes recovery/storage details. Console history includes invalid/incomplete input, with grouped and command-specific help. Startup hints use Gradle and respect the active log mode. Admin lists knight names; console supports `ac` and `gm <account>` toggles; console/chat grants accept globally unique knight names with legacy account-qualified forms retained.
 - RSA/AES authentication; one active session/account; case-insensitive unique knight names; persisted account/roster/character/inventory/currency; creation/selection/deletion; local admin and GM commands.
