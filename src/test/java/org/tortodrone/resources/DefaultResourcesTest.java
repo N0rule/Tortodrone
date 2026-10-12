@@ -15,6 +15,8 @@ import static org.tortodrone.support.TestWire.check;
 public final class DefaultResourcesTest {
     public static void main(String[] args) throws Exception {
         // macOS temp paths can include system directory aliases; keep the disposable root canonical.
+        check(DefaultResources.SOURCE.equals(URI.create("https://github.com/N0rule/Tortodrone/archive/refs/heads/main.zip")),
+            "startup recovery uses the Tortodrone main branch archive");
         Path home=Files.createTempDirectory("tortodrone-default-download-").toRealPath();
         var server=HttpServer.create(new InetSocketAddress("127.0.0.1",0),0);
         var requests=new AtomicInteger(); var warnings=new ArrayList<String>(); var infos=new ArrayList<String>();
@@ -22,6 +24,9 @@ public final class DefaultResourcesTest {
         var releaseSlow=new CountDownLatch(1);
         server.createContext("/good",exchange->{requests.incrementAndGet();exchange.sendResponseHeaders(200,good.length);try(var out=exchange.getResponseBody()){out.write(good);}});
         server.createContext("/bad",exchange->{exchange.sendResponseHeaders(200,bad.length);try(var out=exchange.getResponseBody()){out.write(bad);}});
+        // github.com responds with an HTTP redirect to the actual repository ZIP download.
+        server.createContext("/redirect",exchange->{exchange.getResponseHeaders().add("Location", "/good");exchange.sendResponseHeaders(302,-1);exchange.close();});
+        server.createContext("/private",exchange->{exchange.sendResponseHeaders(404,-1);exchange.close();});
         server.createContext("/slow",exchange->{exchange.sendResponseHeaders(200,0);try {
             exchange.getResponseBody().write(1);exchange.getResponseBody().flush();releaseSlow.await();
         } catch(InterruptedException interrupted){Thread.currentThread().interrupt();} finally {exchange.close();}});
@@ -37,6 +42,16 @@ public final class DefaultResourcesTest {
             check(!Files.exists(fresh.resolve("outside.txt")),"archive files outside root defaults ignored");
             DefaultResources.prepare(fresh,uri.resolve("/missing"),infos::add,warnings::add);
             check(requests.get()==1 && warnings.isEmpty(),"complete local defaults require no request");
+            Path redirected=home.resolve("redirected");
+            DefaultResources.prepare(redirected,uri.resolve("/redirect"),infos::add,warnings::add);
+            check(requests.get()==2 && warnings.isEmpty() &&
+                SceneCatalog.load(redirected.resolve("defaults/maps")).scenes().size()==7 &&
+                ItemCatalog.load(redirected.resolve("defaults/items/catalog.json")).entries().size()==9348,
+                "GitHub-style redirected archive restores valid maps and items");
+            Path privateRepo=home.resolve("private-repo");
+            DefaultResources.prepare(privateRepo,uri.resolve("/private"),infos::add,warnings::add);
+            check(warnings.getLast().contains("HTTP 404") && !Files.exists(privateRepo.resolve("defaults")),
+                "private repository returns a warning without publishing incomplete defaults");
             Path partial=home.resolve("partial"),custom=partial.resolve("defaults/maps/haven/map.properties");
             Files.createDirectories(custom.getParent());Files.writeString(custom,"owner-edited descriptor");
             DefaultResources.prepare(partial,uri.resolve("/good"),infos::add,warnings::add);
@@ -65,7 +80,7 @@ public final class DefaultResourcesTest {
             server.stop(0);
             DefaultResources.prepare(home.resolve("offline"),uri.resolve("/good"),infos::add,warnings::add);
             check(warnings.getLast().contains("continuing with available local resources"),"offline connection does not interrupt startup");
-            System.out.println("PASS: complete and offline default downloads, warm startup, future directories, owner-file preservation, path validation and symlink refusal");
+            System.out.println("PASS: Tortodrone source, redirected GitHub-style archive, private-repository warning, complete and offline downloads, warm startup, owner preservation and path safety");
         } finally {
             releaseSlow.countDown();
             server.stop(0);
@@ -75,13 +90,13 @@ public final class DefaultResourcesTest {
     private static byte[] archive(boolean unsafe) throws IOException {
         var bytes=new ByteArrayOutputStream();
         try(var zip=new ZipOutputStream(bytes)) {
-            if(unsafe){zip.putNextEntry(new ZipEntry("repo/defaults/../../escaped.txt"));zip.write(1);zip.closeEntry();}
+            if(unsafe){zip.putNextEntry(new ZipEntry("Tortodrone-main/defaults/../../escaped.txt"));zip.write(1);zip.closeEntry();}
             else {
                 try(var paths=Files.walk(Path.of("defaults"))){for(Path path:paths.filter(Files::isRegularFile).toList()) {
-                    zip.putNextEntry(new ZipEntry("repo/"+path.toString().replace('\\','/')));Files.copy(path,zip);zip.closeEntry();
+                    zip.putNextEntry(new ZipEntry("Tortodrone-main/"+path.toString().replace('\\','/')));Files.copy(path,zip);zip.closeEntry();
                 }}
-                zip.putNextEntry(new ZipEntry("repo/defaults/future/example.txt"));zip.write("future resource".getBytes());zip.closeEntry();
-                zip.putNextEntry(new ZipEntry("repo/outside.txt"));zip.write(1);zip.closeEntry();
+                zip.putNextEntry(new ZipEntry("Tortodrone-main/defaults/future/example.txt"));zip.write("future resource".getBytes());zip.closeEntry();
+                zip.putNextEntry(new ZipEntry("Tortodrone-main/outside.txt"));zip.write(1);zip.closeEntry();
             }
         }
         return bytes.toByteArray();

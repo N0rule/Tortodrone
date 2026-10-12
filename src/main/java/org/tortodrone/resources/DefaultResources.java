@@ -16,8 +16,9 @@ import org.tortodrone.world.SceneCatalog;
 
 /** Optional startup recovery of external defaults. No deployment files are replaced. */
 public final class DefaultResources {
-    // Replace this placeholder once the repository hosting root/defaults/ exists.
-    public static final URI SOURCE = URI.create("https://github.com/REPLACE-ME/tortodrone-defaults/archive/refs/heads/main.zip");
+    // Public repository snapshot: GitHub redirects archive requests to its ZIP host.
+    // Before the repository is public, unauthenticated startup recovery will warn and continue.
+    public static final URI SOURCE = URI.create("https://github.com/N0rule/Tortodrone/archive/refs/heads/main.zip");
     private static final List<String> REQUIRED = List.of("maps/catalog.properties", "maps/haven/map.properties",
         "maps/haven/scene.dat", "maps/haven/walkability.gz", "maps/bazaar/map.properties",
         "maps/bazaar/scene.dat", "maps/bazaar/walkability.gz", "maps/arcade/map.properties",

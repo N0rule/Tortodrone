@@ -37,9 +37,12 @@ manifest is refused instead of prepared.
 | `walkability.gz` | Server collision samples derived from that scene and installed configurations |
 | `portals.properties` | Optional verified server trigger polygons/rectangles and tagged arrival positions/facing, tied to the layout digest |
 
-Missing default files trigger a bounded startup download from the hardcoded placeholder
-repository in `DefaultResources.SOURCE`. Only root `defaults/` is imported, including
-items and future directories; existing files are preserved. Download failures warn
+Missing default files trigger a bounded startup download from the repository's
+`main` branch ZIP (`https://github.com/N0rule/Tortodrone/archive/refs/heads/main.zip`),
+configured in `DefaultResources.SOURCE`. GitHub redirects the request to its ZIP
+download host. Unauthenticated recovery works only when this repository is public;
+while private, the request fails with a warning. Only root `defaults/` is imported,
+including items and future directories; existing files are preserved. Download failures warn
 and continue. If maps remain missing or invalid, the server starts with login and
 local tools available and refuses world entry clearly. Checksums, supported scene
 kinds and walkable spawns are still required before loading any geometry.
