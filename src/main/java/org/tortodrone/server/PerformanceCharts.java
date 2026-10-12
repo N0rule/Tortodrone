@@ -28,15 +28,17 @@ final class PerformanceCharts extends JPanel implements AutoCloseable {
     private final DateAxis[] axes = new DateAxis[3];
     private final ChartPanel[] charts = new ChartPanel[3];
     private final JComboBox<String> range = new JComboBox<>(new String[]{"1m", "5m", "30m", "1h"});
-    private final JCheckBox pause = new JCheckBox("Pause graphs");
+    private final JToggleButton pause = new JToggleButton("Pause graphs");
+    private final JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
+    private final JLabel status = new JLabel("Live · one sample per second");
     private final Runnable themeListener = this::applyTheme;
 
     PerformanceCharts() {
         super(new BorderLayout(8, 8));
-        JPanel controls = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 2));
         controls.add(new JLabel("Time range"));
         controls.add(range);
         controls.add(pause);
+        controls.add(status);
         add(controls, BorderLayout.NORTH);
         JPanel plots = new JPanel(new GridLayout(0, 1, 8, 8));
         plots.setBorder(BorderFactory.createEmptyBorder(0, 2, 2, 2));
@@ -62,20 +64,26 @@ final class PerformanceCharts extends JPanel implements AutoCloseable {
             charts[i].setPreferredSize(new Dimension(700, 230));
             charts[i].setMinimumDrawWidth(200);
             charts[i].setMinimumDrawHeight(120);
+            charts[i].setMaximumDrawWidth(2400);
+            charts[i].setMaximumDrawHeight(800);
+            charts[i].setDomainZoomable(false);charts[i].setRangeZoomable(false);
+            charts[i].setPopupMenu(null);
+            if(i==2)((NumberAxis)plot.getRangeAxis()).setStandardTickUnits(NumberAxis.createIntegerTickUnits());
             plots.add(charts[i]);
         }
-        JScrollPane scroll = new JScrollPane(plots);
-        scroll.getVerticalScrollBar().setUnitIncrement(18);
-        add(scroll, BorderLayout.CENTER);
+        add(plots, BorderLayout.CENTER);
         range.addActionListener(event -> updateRange());
         pause.addActionListener(event -> {
             pause.setText(pause.isSelected() ? "Resume graphs" : "Pause graphs");
+            status.setText(pause.isSelected()?"Paused · collection continues":"Live · one sample per second");
             if (!pause.isSelected()) refreshSeries();
         });
         DesktopTheme.addListener(themeListener);
         updateRange();
         applyTheme();
     }
+
+    JComponent controls(){return controls;}
 
     private static TimeSeries series(String name, int limit) {
         TimeSeries series = new TimeSeries(name);

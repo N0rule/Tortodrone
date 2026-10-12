@@ -40,11 +40,12 @@ Account/data/key preservation and schema refusal rules remain unchanged.
 
 ## Players, scenes and performance
 
-The Players table lists live session IDs, account IDs/names, selected knight names
-and global IDs, scene locations, instance IDs, remote endpoints, durations and
-state. Selection shows roster ID, template ID, connection time, last non-heartbeat
-request time and client protocol build. Unauthenticated sessions have no verified
-account/knight identity. These fields come from session snapshots, not parsed logs.
+The Players table shows session ID, username, knight, scene, duration and state.
+Search filters by username, knight or scene. Selection shows the endpoint,
+account/knight/roster/template/instance IDs, connection and request times and client
+protocol build below the table. Live refreshes preserve selection. Unauthenticated
+sessions have no verified account/knight identity. These fields come from service
+snapshots, not parsed logs.
 
 **Open knight in account manager** opens the selected saved knight in the local
 account manager. **Account manager** opens it without a selected knight. Its
@@ -64,18 +65,22 @@ benchmark results or a guarantee of player capacity.
 
 The desktop defaults to FlatLaf Dark; **View** switches between dark and light
 themes in both the server window and account manager. The Performance tab keeps
-the text statistics and adds one-second CPU, heap (MiB) and authenticated-player
-charts. Select 1m, 5m, 30m or 1h; the in-memory history is capped at 3,600
+the measured statistics as read-only fields and adds one-second CPU, heap (MiB)
+and authenticated-player charts. Select 1m, 5m, 30m or 1h; the in-memory history is capped at 3,600
 samples. Hover a point for its timestamp and full measured value. Pause graphs
 freezes their display while sampling continues; resuming refreshes from the
 retained history. CPU gaps remain gaps when the JVM cannot report that metric.
 Charts are not initialized in `--nogui` mode and samples are not written to the
 database.
 
+Performance uses one scrolling page with fixed graph controls. Live updates do
+not reset the scroll position. Diagnostics can be expanded when needed. The
+Console toggle hides the dock to give the dashboard more room.
+
 ## Docked console and logs
 
 The lower console has severity colors, case-insensitive text filtering, a Debug
-visibility checkbox, Pause, Auto-scroll, Clear view, Copy and Open log directory.
+visibility checkbox, Pause, Auto-scroll, Clear, Copy and Logs folder.
 It keeps 1500 recent events and consumes a bounded 4096-event queue; overflow drops
 older queued events. Pause freezes rendering while collection continues, so paused
 history can still roll over. Clear view clears retained UI history, not disk files.
@@ -84,12 +89,28 @@ Auto-scroll follows newly rendered rows. Debug changes visibility only; it does 
 turn on server debug logging. Unsupported desktop directory opening reports a
 warning with the log directory; it does not prevent hosting.
 
+Scrolling up or dragging the scrollbar disables Auto-scroll; with it disabled, new events preserve the visible history
+and selected rows. Re-enable Auto-scroll to follow the latest output. The command
+field supports Enter and an explicit Run button.
+
 The command field dispatches the same [local commands](commands.md) off the Swing
 thread. Up/Down recalls 100 entries; Tab completes a uniquely matching command
 name. History is in memory and includes invalid input. The GUI command field
 cannot prompt for passwords or exact deletion confirmations; it reports that those
 operations must use the account manager. Do not enter passwords into command text.
 The local command field is not an in-game chat interface.
+
+## Account manager layout
+
+Account search matches usernames and knight names. Account creation, refresh,
+password, role and account deletion actions sit beside the account list. Knight
+refresh/deletion, currency and inventory actions sit with the selected knight.
+Inventory shows common fields; instance IDs, binding/protection flags and the
+canonical path are available in the selected-item details. Protected starter,
+permanent and equipped items disable quantity/removal actions with an explanation.
+Refreshing the same knight or changing balances preserves inventory selection.
+The catalogue shows paging totals, unavailable-item reasons and a no-match hint;
+Escape closes it and Enter activates an enabled Grant button.
 
 ## Verification scope
 

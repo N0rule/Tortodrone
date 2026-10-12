@@ -44,10 +44,14 @@ copies deployment/defaults into its disposable folder, creates test accounts,
 isolates home/preferences and runs only its own child JVM windows/server. It
 checks actual Swing windows, session snapshots, structured log display, command
 transactions, catalogue grants, balance changes and stop/start/exit. It retains
-`desktop.log` and component-rendered `server.png`, `scenes.png`, `performance.png`,
+`desktop.log` and component-rendered `server.png`, `scenes.png`, `performance.png`, `performance-light.png`,
 `catalogue.png` and `inventory.png`. Its captures use Swing component rendering (`printAll`) rather
 than screen capture, avoiding the Wayland screencast portal. Review the captures;
 they do not prove native desktop compositor/focus behavior or game rendering.
+
+The 0.26.3 fixture also checks stable performance scrolling, graph pause/resume,
+theme switching/resizing, log selection during new output, protected inventory
+actions, selection across balance/manual refresh and newly created account focus.
 
 This fixture does not launch the stock game. Native stock-client graphical
 acceptance remains separate and follows the isolated procedures below. Linux

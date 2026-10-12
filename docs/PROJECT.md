@@ -1,12 +1,16 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-12, version 0.26.2, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-12, version 0.26.3, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.26.3 fixes local desktop interaction: stable read-only Performance fields,
+  one scrolling page, a collapsible console, live table/log selection preservation,
+  grouped account/knight actions, inventory detail fields and refresh preservation.
 
 - 0.26.2 modernizes the local Swing server console and account manager with
   FlatLaf dark/light themes and adds bounded, one-second CPU, JVM heap and

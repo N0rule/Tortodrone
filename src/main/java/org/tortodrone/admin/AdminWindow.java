@@ -25,11 +25,14 @@ final class AdminWindow extends JFrame {
     private final JTable table = new JTable(model);
     private final JTextField accountSearch=new JTextField();
     private final JLabel status = new JLabel("Opening accounts…");
+    private final JLabel accountCount=new JLabel(" ");
+    private final DesktopWidgets.Details accountDetails=new DesktopWidgets.Details("Username","Account ID","Created");
     private final List<JButton> buttons = new ArrayList<>();
     private final List<JButton> selectedButtons = new ArrayList<>();
     private boolean busy, closed, replacing;
     private AccountRows rows;
     private String requestedKnight;
+    private String requestedUsername;
     private final KnightPanel knightPanel=new KnightPanel(this);
 
     AdminWindow(Path directory) { this(directory,null); }
@@ -40,24 +43,24 @@ final class AdminWindow extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1000,600)); setSize(1400,760); setLocationByPlatform(true);
         JPanel content = new JPanel(new BorderLayout(12,12)); content.setBorder(BorderFactory.createEmptyBorder(16,16,16,16)); setContentPane(content);
         JPanel heading = new JPanel(new BorderLayout(8,8));
-        JLabel title = new JLabel("Accounts"); title.setFont(title.getFont().deriveFont(Font.BOLD,24f)); heading.add(title,BorderLayout.NORTH);
-        heading.add(new JLabel(directory.toAbsolutePath().normalize().resolve("tortodrone.db").toString()),BorderLayout.CENTER);
-        JPanel searchPanel = new JPanel(new BorderLayout(8,0)); searchPanel.add(new JLabel("Search username:"),BorderLayout.WEST);
-        JTextField search = accountSearch; searchPanel.add(search); heading.add(searchPanel,BorderLayout.SOUTH); content.add(heading,BorderLayout.NORTH);
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); table.setRowHeight(28); table.setFillsViewportHeight(true);
+        JLabel title = new JLabel("Account manager"); title.setFont(title.getFont().deriveFont(Font.BOLD,24f)); heading.add(title,BorderLayout.NORTH);
+        JLabel location=new JLabel("Local accounts, knights and inventory");location.setToolTipText(directory.toAbsolutePath().normalize().resolve("tortodrone.db").toString());heading.add(location);content.add(heading,BorderLayout.NORTH);
+        JTextField search = accountSearch;DesktopWidgets.searchField(search,"Find username or knight");
+        DesktopWidgets.configureTable(table);
         var sorter = new TableRowSorter<>(model); table.setRowSorter(sorter); table.getColumnModel().getColumn(0).setMaxWidth(80); table.getColumnModel().getColumn(2).setMaxWidth(80);
-        JSplitPane split=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,new JScrollPane(table),knightPanel);split.setResizeWeight(.4);content.add(split);
+        for(int c:new int[]{5,4,0})table.removeColumn(table.getColumnModel().getColumn(c));table.moveColumn(1,2);table.getColumnModel().getColumn(2).setHeaderValue("GM");table.getColumnModel().getColumn(2).setPreferredWidth(45);
+        JPanel accountPane=new JPanel(new BorderLayout(0,10));accountPane.setMinimumSize(new Dimension(310,0));
+        JPanel accountHeading=new JPanel(new BorderLayout(0,8));accountHeading.add(new JLabel("Accounts"),BorderLayout.NORTH);accountHeading.add(search);JPanel listActions=new JPanel(new GridLayout(1,2,6,0));button(listActions,"Create account",false,this::create);button(listActions,"Refresh",false,this::refresh);accountHeading.add(listActions,BorderLayout.SOUTH);accountPane.add(accountHeading,BorderLayout.NORTH);
+        accountPane.add(new JScrollPane(table));
+        JPanel accountFooter=new JPanel(new BorderLayout(0,8));accountFooter.add(accountDetails,BorderLayout.NORTH);JPanel actions=new JPanel(new GridLayout(0,2,6,6));
+        button(actions,"Change password",true,this::password);button(actions,"Check password",true,this::check);button(actions,"Set Game Master",true,this::gameMaster);button(actions,"Delete account",true,this::delete);accountFooter.add(actions);accountFooter.add(accountCount,BorderLayout.SOUTH);accountPane.add(accountFooter,BorderLayout.SOUTH);
+        JSplitPane split=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,accountPane,knightPanel);split.setResizeWeight(.28);split.setDividerLocation(350);split.setContinuousLayout(true);content.add(split);
         search.getDocument().addDocumentListener(new DocumentListener() {
-            private void update() { sorter.setRowFilter(search.getText().isEmpty() ? null : RowFilter.regexFilter("(?i)"+Pattern.quote(search.getText()),1)); }
+            private void update() { sorter.setRowFilter(search.getText().isEmpty() ? null : RowFilter.regexFilter("(?i)"+Pattern.quote(search.getText()),1,3));accountCount.setText(table.getRowCount()+" of "+model.getRowCount()+" accounts"); }
             public void insertUpdate(DocumentEvent event) { update(); } public void removeUpdate(DocumentEvent event) { update(); } public void changedUpdate(DocumentEvent event) { update(); }
         });
         table.getSelectionModel().addListSelectionListener(event -> { enableActions(); if(!event.getValueIsAdjusting()&&!replacing&&!busy)selectAccount(); });
-        JPanel footer = new JPanel(new BorderLayout(0,10)); JPanel actions = new JPanel(new GridLayout(2,4,6,6));
-        button(actions,"Create account",false,this::create); button(actions,"Change password",true,this::password);
-        button(actions,"Check password",true,this::check); button(actions,"Set Game Master",true,this::gameMaster);
-        button(actions,"Currency",true,this::currency); button(actions,"Delete account",true,this::delete); button(actions,"Refresh",false,this::refresh);
-        button(actions,"Delete knight",true,this::deleteKnight);
-        footer.add(actions,BorderLayout.NORTH); footer.add(status,BorderLayout.SOUTH); content.add(footer,BorderLayout.SOUTH);
+        status.setBorder(BorderFactory.createEmptyBorder(6,0,0,0));content.add(status,BorderLayout.SOUTH);
         addWindowListener(new WindowAdapter() { @Override public void windowClosed(WindowEvent event) { closed=true; if (!busy && accounts != null) accounts.close(); } });
         execute(() -> { accounts = new AccountStore(directory); return loadRows(); },this::loaded);
     }
@@ -70,6 +73,7 @@ final class AdminWindow extends JFrame {
     private void enableActions() {
         for (JButton button : buttons) button.setEnabled(!busy && accounts != null);
         for (JButton button : selectedButtons) button.setEnabled(!busy && selected() != null);
+        var selected=selected();accountDetails.value("Username",selected==null?"Select an account":selected.username());accountDetails.value("Account ID",selected==null?null:selected.id());accountDetails.value("Created",selected==null?null:java.time.Instant.ofEpochMilli(selected.createdAt()).atZone(java.time.ZoneId.systemDefault()).toLocalDateTime().withSecond(0).withNano(0));
     }
     private AccountRows loadRows() throws IOException {
         var rows = accounts.list(); var names = new HashMap<Integer, List<String>>();
@@ -78,13 +82,15 @@ final class AdminWindow extends JFrame {
     }
     private void loaded(AccountRows rows) {
         var previous=selected();this.rows=rows;replacing=true;
+        if(requestedUsername!=null)accountSearch.setText("");
         model.replace(rows.accounts(), rows.knightNames());
         int wanted=previous==null?-1:previous.id();
+        if(requestedUsername!=null)for(var account:rows.accounts())if(account.username().equals(requestedUsername))wanted=account.id();requestedUsername=null;
         if(requestedKnight!=null) for(var entry:rows.knightNames().entrySet())if(entry.getValue().stream().anyMatch(n->n.equalsIgnoreCase(requestedKnight)))wanted=entry.getKey();
         for(int i=0;i<model.getRowCount();i++)if(model.account(i).id()==wanted){int view=table.convertRowIndexToView(i);if(view>=0)table.setRowSelectionInterval(view,view);break;}
         if(table.getSelectedRow()<0&&table.getRowCount()>0)table.setRowSelectionInterval(0,0);
         replacing=false;
-        status.setText(rows.accounts().isEmpty() ? "No accounts. Create an account to enable normal login." : rows.accounts().size()+" accounts"); enableActions();selectAccount();
+        accountCount.setText(table.getRowCount()+" of "+model.getRowCount()+" accounts");status.setText(rows.accounts().isEmpty() ? "No accounts. Create an account to enable normal login." : "Select an account to manage its knights."); enableActions();selectAccount();
     }
     private void selectAccount() {
         var selected=selected();if(selected==null||rows==null){knightPanel.clear();return;}
@@ -104,7 +110,7 @@ final class AdminWindow extends JFrame {
         catch (IOException failure) { Arrays.fill(first,'\0'); message(failure.getMessage(),true); return; }
         finally { Arrays.fill(second,'\0'); }
         String name = username.getText(); boolean flag = gameMaster.isSelected();
-        execute(() -> { try { accounts.create(name,first,flag); return loadRows(); } finally { Arrays.fill(first,'\0'); } },rows -> { loaded(rows); status.setText("Account created: "+name); });
+        execute(() -> { try { accounts.create(name,first,flag); return loadRows(); } finally { Arrays.fill(first,'\0'); } },rows -> { requestedUsername=name;loaded(rows); status.setText("Account created: "+name); });
     }
     private void password() {
         var account = selected(); if (account == null) return;
@@ -140,19 +146,14 @@ final class AdminWindow extends JFrame {
         if (typed == null) return; if (!typed.equals(account.username())) { message("Username did not match. Account was not deleted.",true); return; }
         execute(() -> { accounts.delete(account.username(),account.id()); return loadRows(); },rows -> { loaded(rows); status.setText("Account and its characters deleted. Existing sessions will disconnect."); });
     }
-    private void deleteKnight() {
+    void deleteKnight() {
         var account=selected();if(account==null)return;
-        execute(()->accounts.knights(account.username()),knights->{
-            if(knights.isEmpty()){message("This account has no characters.",false);return;}
-            var choice=new JComboBox<>(knights.stream().map(Knight::name).toArray(String[]::new));
-            if(JOptionPane.showConfirmDialog(this,form("Character",choice),"Delete knight — "+account.username(),JOptionPane.OK_CANCEL_OPTION)!=JOptionPane.OK_OPTION)return;
-            String name=(String)choice.getSelectedItem();
+        String name=knightPanel.selectedKnight();if(name==null)return;
             execute(()->accounts.worldProfile(account.username(),name),profile->{
                 String typed=JOptionPane.showInputDialog(this,"Delete "+name+" and its items/balances?\nThis account's sessions will disconnect. Type the exact knight name:","Delete knight",JOptionPane.WARNING_MESSAGE);
                 if(typed==null)return;if(!typed.equals(name)){message("Knight name did not match. Nothing was deleted.",true);return;}
                 execute(()->{accounts.deleteKnight(account.username(),name,account.id(),profile.worldId());return loadRows();},rows->{loaded(rows);status.setText("Knight deleted: "+name);});
             });
-        });
     }
     void message(String text,boolean error) { JOptionPane.showMessageDialog(this,text,"Tortodrone",error ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE); }
     @FunctionalInterface interface Work<T> { T run() throws Exception; }
