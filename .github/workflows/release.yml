@@ -1,0 +1,143 @@
+name: Build and release Tortodrone
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag to build and publish (for example v0.26.3)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build, test, and package (Java 25)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out the requested revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Build and run the full regression suite
+        shell: bash
+        run: |
+          chmod +x ./gradlew
+          ./gradlew --no-daemon build
+
+      - name: Verify release tag against VERSION
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n' < VERSION)"
+          if [[ "$RELEASE_TAG" != "v$version" ]]; then
+            echo "Release tag '$RELEASE_TAG' must equal v$version from VERSION." >&2
+            exit 1
+          fi
+          if ! git show-ref --verify --quiet "refs/tags/$RELEASE_TAG"; then
+            echo "Refusing to release: '$RELEASE_TAG' is not an existing Git tag." >&2
+            exit 1
+          fi
+          tag_commit="$(git rev-parse "refs/tags/$RELEASE_TAG^{commit}")"
+          if [[ "$tag_commit" != "$(git rev-parse HEAD)" ]]; then
+            echo "The checked-out commit does not match the release tag." >&2
+            exit 1
+          fi
+
+      - name: Assemble portable release archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '\r\n' < VERSION)"
+          package="Tortodrone-v$version"
+          root="dist/$package"
+          mkdir -p "$root"
+          test -s build/tortodrone.jar
+          test -s build/tortodrone-admin.jar
+          test -f build/defaults/maps/catalog.properties
+          test -f build/defaults/items/catalog.json
+          cp build/tortodrone.jar build/tortodrone-admin.jar "$root/"
+          cp -a build/defaults "$root/defaults"
+          cp VERSION README.md "$root/"
+          cat > "$root/START-HERE.txt" <<'EOF'
+          Tortodrone — portable Java 25 distribution
+
+          Install Java 25 and make sure 'java' is on your PATH.
+          Run the local account manager:
+              java -jar tortodrone-admin.jar
+          Run the game server:
+              java -jar tortodrone.jar
+          For headless hosting:
+              java -jar tortodrone.jar --nogui
+
+          Keep the two JARs and defaults/ together in this directory.
+          Persistent data/ is created beside the JARs and is NEVER included in
+          release archives. Back up data/ (including keys and database), and
+          preserve custom defaults/ when upgrading an existing installation.
+          See README.md for configuration and client connection instructions.
+          EOF
+          (
+            cd dist
+            zip -q -r "$package.zip" "$package"
+            tar -czf "$package.tar.gz" "$package"
+            unzip -tq "$package.zip"
+            tar -tzf "$package.tar.gz" > /dev/null
+            sha256sum "$package.zip" "$package.tar.gz" > SHA256SUMS.txt
+            sha256sum -c SHA256SUMS.txt
+          )
+
+      - name: Upload release archives for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: tortodrone-distribution
+          path: |
+            dist/*.zip
+            dist/*.tar.gz
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download validated distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: tortodrone-distribution
+          path: dist
+
+      - name: Publish existing tag as a release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum -c SHA256SUMS.txt
+          gh release create "$RELEASE_TAG" ./*.zip ./*.tar.gz SHA256SUMS.txt \
+            --repo "$REPO" --verify-tag --generate-notes \
+            --title "Tortodrone $RELEASE_TAG"
