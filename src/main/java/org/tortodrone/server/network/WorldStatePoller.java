@@ -38,9 +38,15 @@ final class WorldStatePoller {
         }
         return registration;
     }
-    private static synchronized void remove(Registration registration) {
-        registrations.remove(registration);
-        if(registrations.isEmpty()&&timer!=null){timer.shutdownNow();retiring.add(timer);timer=null;}
+    private static void remove(Registration registration) {
+        ScheduledExecutorService stopped=null;
+        synchronized(WorldStatePoller.class){
+            registrations.remove(registration);
+            if(registrations.isEmpty()&&timer!=null){stopped=timer;retiring.add(stopped);timer=null;}
+        }
+        // terminated() runs under the executor's lock and acquires the registry monitor.
+        // Never hold that monitor while shutdownNow() acquires the executor's lock.
+        if(stopped!=null)stopped.shutdownNow();
     }
     /** Test teardown can wait until an in-flight SQLite snapshot releases its connection. */
     static void awaitStopped() throws InterruptedException {
