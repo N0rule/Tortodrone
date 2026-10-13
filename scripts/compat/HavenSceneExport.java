@@ -330,17 +330,17 @@ public final class HavenSceneExport {
         if(Files.isRegularFile(existing,LinkOption.NOFOLLOW_LINKS)) {
             Properties old=properties(existing);
             for(String key:old.stringPropertyNames())if(key.startsWith("owned.")||key.startsWith("capture."))p.setProperty(key,old.getProperty(key));
-            for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties")) {
+            for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties","content.properties","static-collision.properties")) {
                 String rel=pack.folder+"/"+file;String previous=old.getProperty("source."+rel);
                 if(previous!=null)addOwned(p,rel,previous);
             }
             addOwned(p,"scene-source.properties",digest(existing));
         }
         Path bundled=project.resolve("defaults/maps");
-        for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties")) {
+        for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties","content.properties","static-collision.properties")) {
             String rel=pack.folder+"/"+file;Path original=bundled.resolve(rel);
             if(Files.isRegularFile(original))addOwned(p,rel,digest(original));
-            Path current=staging.resolve(rel);p.setProperty("source."+rel,digest(current));
+            Path current=staging.resolve(rel);if(Files.isRegularFile(current))p.setProperty("source."+rel,digest(current));
         }
         p.setProperty("provenance","verified-scene-source-2026-10-12");
         return p;

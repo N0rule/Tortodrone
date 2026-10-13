@@ -21,7 +21,41 @@ public final class TownMovement {
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
+    private int interactionChange=-1;
+    private int interactionMillis=670;
+    public void interactionDuration(int millis){if(millis<0||millis>10000)throw new IllegalArgumentException("Invalid interaction duration");interactionMillis=millis;}
     private KnightCombat combat;
+    private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
+    public void status(SceneStatus.Modifiers modifiers){status=modifiers;}
+    private org.tortodrone.character.StarterCatalog.Model activityData;
+    private java.util.function.IntPredicate throwing=stamp->false;
+    public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
+    public boolean lift(int stamp){
+        if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(268,stamp);updateFlags();return true;
+    }
+    public void thrown(boolean drop,int stamp){if(combat!=null)combat.reset(stamp);setActivity(drop?271:270,stamp);updateFlags();}
+    public org.tortodrone.character.StarterCatalog.Model activityData(){return activityData;}
+    public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
+        if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(5,stamp);activityData=item;updateFlags();return true;
+    }
+    private java.util.function.IntPredicate interaction=stamp->false;
+    private java.util.function.BiPredicate<Float,Float> dynamicCollision=(x,y)->true;
+    private SceneCollision staticCollision=SceneCollision.empty();
+    private int collisionMask=43;
+    private static final Object PAWN_SHAPE=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
+        java.util.List.of(new FireCatalog.FieldValue("radius","float",ScenePortals.PAWN_RADIUS)));
+    public void staticCollision(SceneCollision geometry,int mask){staticCollision=java.util.Objects.requireNonNull(geometry);collisionMask=mask;}
+    private boolean walkable(float toX,float toY){
+        if(staticCollision.isEmpty())return terrain.walkable(toX,toY);
+        if(!staticCollision.floorSupported(toX,toY)||!staticCollision.clearSegment(collisionMask,PAWN_SHAPE,x,y,toX,toY,0))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(toX-x,toY-y)/.1));
+        for(int i=1;i<steps;i++)if(!staticCollision.floorSupported(x+(toX-x)*i/steps,y+(toY-y)*i/steps))return false;
+        return true;
+    }
+    public void interaction(java.util.function.IntPredicate handler){interaction=java.util.Objects.requireNonNull(handler);}
+    public void dynamicCollision(java.util.function.BiPredicate<Float,Float> predicate){dynamicCollision=java.util.Objects.requireNonNull(predicate);}
 
     public void combat(KnightCombat controller){combat=java.util.Objects.requireNonNull(controller);}
     public KnightCombat.State combatState(){return combat==null?null:combat.state();}
@@ -100,18 +134,25 @@ public final class TownMovement {
             var frame = pending.removeFirst();
             if (frame.timestamp() - timestamp > 0) moveTo(frame.timestamp());
             if(portal!=null)return;
-            if ((activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsRotation(timestamp))) rotation = frame.rotation();
+            if (status.canRotate()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsRotation(timestamp))) rotation = frame.rotation();
             direction = frame.direction();
             inputFlags = frame.flags();
             if (activity != 0 && !activityAllowsMovement() && (inputFlags & 1) != 0) {
                 var emote = PlayerEmotes.byActivity(activity);
                 if(emote!=null)setActivity(emote.endActivity(),timestamp);
             }
-            if ((inputFlags & 2) != 0 && activity != INVENTORY && (combat==null||combat.canOverride())) {
+            if ((inputFlags & 2) != 0 && activity != INVENTORY && (activity==0||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
                 if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);
             }
             else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
-            if(combat!=null)combat.input(inputFlags,frame.actionChanged(),timestamp,rotation,direction,activity==0);
+            if(activity==269&&(inputFlags&4)!=0&&frame.actionChanged()>=activityStarted&&throwing.test(timestamp))inputFlags&=~4;
+            boolean freshAction=(inputFlags&4)!=0&&frame.actionChanged()>interactionChange;
+            if(freshAction)interactionChange=frame.actionChanged();
+            if(activity==0&&(combat==null||combat.canOverride())&&freshAction&&interaction.test(timestamp)){
+                inputFlags&=~4;if(combat!=null)combat.reset(timestamp);
+                if(activity==0)setActivity(2,timestamp);
+            }
+            if(combat!=null)combat.input(inputFlags,frame.actionChanged(),timestamp,rotation,direction,activity==0&&status.canAttack());
             updateFlags();
         }
         if (now - lastInputAt > 500) {
@@ -124,7 +165,8 @@ public final class TownMovement {
     }
 
     private void moveTo(int target) {
-        int duration = activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
+        int duration = activity==270||activity==271?767:activity == 5 ? 1433 : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();
@@ -144,15 +186,15 @@ public final class TownMovement {
             elapsed -= step;
             int previous=timestamp;timestamp+=step;
             if(combat!=null){combat.advance(timestamp,rotation);updateFlags();}
-            float distance = (flags&2)==0?0:SPEED * step / 1000f*(combat==null?1:combat.movementScale());
+            float distance = (flags&2)==0?0:SPEED * step / 1000f*status.speed()*(combat==null?1:combat.movementScale());
             float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
             var impulse=combat==null?null:combat.state().impulse();
             if(impulse!=null){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
             float nx = x + dx;
             float ny = y + dy;
-            if (terrain.walkable(nx, ny)) { x = nx; y = ny; }
-            else if (terrain.walkable(nx, y)) x = nx;
-            else if (terrain.walkable(x, ny)) y = ny;
+            if (walkable(nx, ny)&&dynamicCollision.test(nx,ny)) { x = nx; y = ny; }
+            else if (walkable(nx, y)&&dynamicCollision.test(nx,y)) x = nx;
+            else if (walkable(x, ny)&&dynamicCollision.test(x,ny)) y = ny;
             if(combat!=null)combat.retireImpulse(timestamp);
             if(detectPortal(target))return;
         }
@@ -173,15 +215,17 @@ public final class TownMovement {
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
     private void setActivity(int value, int started) {
+        activityData=null;
         activity = value;
         activityStarted = started;
     }
     private boolean activityAllowsMovement() {
+        if(activity==269)return true;
         var emote=PlayerEmotes.byActivity(activity);
         return emote!=null&&emote.allowsMovement();
     }
     private void updateFlags() {
-        flags = (activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
+        flags = status.canMove()&&(activity == 0 || activityAllowsMovement()) && (combat==null||combat.allowsMovement()) && (inputFlags & 1) != 0 ? 2 : 0;
     }
     private static float normalize(float angle) {
         return (float) Math.IEEEremainder(angle, Math.PI * 2);

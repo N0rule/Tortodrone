@@ -11,9 +11,11 @@ public final class CheckCombatRendering {
     private static Path scratch;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 1 || args.length > 2) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir]");
+        if (args.length < 1 || args.length > 3) {
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only]");
         }
+        boolean trainingOnly=Arrays.asList(args).contains("--training-only");
+        String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.equals("--training-only")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
         if (!Files.isRegularFile(game.resolve("full.dat")) ||
@@ -26,8 +28,8 @@ public final class CheckCombatRendering {
         requireMaps(defaults);
 
         Path output;
-        if (args.length == 2) {
-            output = Path.of(args[1]).toAbsolutePath().normalize();
+        if (outputArgument != null) {
+            output = Path.of(outputArgument).toAbsolutePath().normalize();
             rejectUnsafeOutput(output, project, game);
             if (Files.exists(output)) throw new IOException("Output directory already exists: " + output);
             Files.createDirectories(output);
@@ -93,9 +95,10 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
+            if(trainingOnly)graphical.add("--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
-            if (!client.waitFor(240, TimeUnit.SECONDS)) {
+            if (!client.waitFor(trainingOnly?320:240, TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
             String log = Files.readString(clientLog);

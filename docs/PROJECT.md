@@ -1,12 +1,21 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-13, version 0.27.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-13, version 0.28.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.28.0 adds prepared Training Hall actors and reusable scene mechanics: damageable
+  respawning test cubes, tagged switches/doors and trap cycles, temporary pickups, health,
+  status conditions, lift objects, breakable/stateful blocks and Konway’s authored conversation.
+  Relative projectile facing restores the stock Needle Gun fire base. See [Training Hall](training-hall.md)
+  for local evidence, checks and the remaining parity limits.
+  Stock graphical acceptance verifies Konway, visible vial quickbar/use/throw and Needle facing;
+  separate native collision masks, inactive block pads, healing and statue snapping address the
+  playtest failures. Java 25 offline build and focused native-reader checks pass.
 
 - 0.27.0 replaces all seven Haven defaults with verified modern captures, rederives collision,
   retains authored spawn facing and updates all 18 native routes. Captured town/zone localization
@@ -32,13 +41,13 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 - RSA/AES authentication; one active session/account; case-insensitive unique knight names; persisted account/roster/character/inventory/currency; creation/selection/deletion; local admin and GM commands.
 - Four imported Haven districts: Town Square, Bazaar, Arcade, Garrison; **twelve directed native town transitions**, checked external map/collision packs, server-authoritative movement and static collision. Independent scene instances, shared `SceneSimulation` tick (**50 ms**) and per-recipient actor delta state, bounded output queues and shared revision/role polling.
 - Inventory, Arsenal, equipment/costumes/trinkets, binding/stacks, live visual updates; v2 catalogue grants 8,570 of 9,348 indexed definitions, including native seed artifacts and locked items; scene chat, private tells, broadcasts, sitting/emotes recorded through the last committed milestone as applicable. Intro missions bypassed **without inventing completion/rewards**.
-- Trade and same-scene inspection/privacy are implemented; see [town interactions](town-interactions.md) for their recorded scope. Interior knight controls and authored weapons are implemented within [the recorded limits](town-player-behavior.md). NPCs, shops, quests, crafting, general gate/dungeons, custom news, location persistence and full social functionality remain outside that scope.
+- Trade and same-scene inspection/privacy are implemented; see [town interactions](town-interactions.md) for their recorded scope. Interior knight controls and authored weapons are implemented within [the recorded limits](town-player-behavior.md). General NPC services, shops, quests, crafting, general gate/dungeons, custom news, location persistence and full social functionality remain outside that scope.
 - Packet audit 0.24.1: stock loot-report/party setting enums decode into clean unsupported-operation callbacks instead of disconnecting; settings persistence and general parties remain unsupported. See [audit evidence and limits](protocol-audit.md).
 - **Original F3 Game Master dashboard**: the stock `ProjectXAdminMarshaller` is advertised as bootstrap service 13 and implemented for ItemCreator only (`createItem`, method 7): real catalogue resolution, a stored Game Master account check inside the grant transaction, unequipped instances, item audit events and live inventory publication. The server authorizes every call independently; other dashboard tools answer with a clear unsupported-operation message. Account tokens stay support-plus (ring bit 8), never the ADMIN ring bit, and remain independent of the per-knight badge. See [administration](administration.md).
 
 ## Modern map checkpoint / next work
 
-The seven default Haven scenes now use the hash-verified 2026-10-12 official gameplay captures from local `Sniffed` evidence: Town Square 1, Bazaar 2, Arcade 3, Garrison 445, Training 294, Laboratory 30893 and the four-star Hall of Heroes 318. All geometry, collision and 18 directed native routes were replaced together; ordinary builds use these checked-in packs offline. `prepareHaven -PgameDir=... -PcapturedScenes=... -PhavenOutput=...` rebuilds a fresh staging tree from local verified binaries. Historical archive/interior exporters and automatic publication were removed. Authored default positions and rotations are retained. Owner-edited deployed files keep their bytes and held deployment locks refuse map changes. All 14 captured binaries were recovered and stock-decoded; seven additional scenes remain unintegrated, including the private guild hall. NPC/shop/mission mechanics are not supplied by map geometry. See [maps](maps.md) for current hashes, source provenance and validation limits.
+The seven default Haven scenes now use the hash-verified 2026-10-12 official gameplay captures from local `Sniffed` evidence: Town Square 1, Bazaar 2, Arcade 3, Garrison 445, Training 294, Laboratory 30893 and the four-star Hall of Heroes 318. All geometry, collision and 18 directed native routes were replaced together; ordinary builds use these checked-in packs offline. `prepareHaven -PgameDir=... -PcapturedScenes=... -PhavenOutput=...` rebuilds a fresh staging tree from local verified binaries. Historical archive/interior exporters and automatic publication were removed. Authored default positions and rotations are retained. Owner-edited deployed files keep their bytes and held deployment locks refuse map changes. All 14 captured binaries were recovered and stock-decoded; seven additional scenes remain unintegrated, including the private guild hall. Training has a separately hash-pinned content pack; other rooms still need their own prepared content. NPC/shop/mission mechanics are not supplied by map geometry. See [maps](maps.md) for current hashes, source provenance and validation limits.
 
 Bundled numeric combat defaults still contain 382 weapons, 123 shields, 1,827 authored attack graphs and level-zero equipment control modifiers. Existing interior combat and the F3 dashboard are preserved within their recorded limits.
 

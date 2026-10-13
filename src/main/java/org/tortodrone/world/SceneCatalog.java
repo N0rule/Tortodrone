@@ -8,7 +8,14 @@ import java.util.*;
 /** External immutable map packs. Templates are distinct from runtime place objects. */
 public final class SceneCatalog {
     public record MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
-            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
+            float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content,SceneCollision staticCollision) {
+        public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals,SceneContent content){
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,content,SceneCollision.empty());
+        }
+        public MapScene(int id,int zone,String zoneName,String name,String image,String kind,int version,
+                float spawnX,float spawnY,float spawnRotation,int instances,CollisionMap collision,byte[] layout,ScenePortals portals) {
+            this(id,zone,zoneName,name,image,kind,version,spawnX,spawnY,spawnRotation,instances,collision,layout,portals,SceneContent.empty());
+        }
         public MapScene { layout=layout.clone(); }
         @Override public byte[] layout(){return layout.clone();}
         public boolean town(){return kind.equals("town");}
@@ -45,12 +52,16 @@ public final class SceneCatalog {
                 if(layout.length<16 || layout[0]!=(byte)0xfa || layout[1]!=(byte)0xce || layout[2]!=(byte)0xaf || layout[3]!=0x0e)
                     throw new IOException("Invalid archived scene header");
                 checked(folder,"walkability.gz",required(p,"collision-sha256"),1024*1024);
+                if(p.containsKey("content-sha256"))checked(folder,"content.properties",required(p,"content-sha256"),4_000_000);
+                else if(Files.exists(folder.resolve("content.properties")))throw new IOException("Scene content requires a pinned checksum");
+                if(p.containsKey("static-collision-sha256"))checked(folder,"static-collision.properties",required(p,"static-collision-sha256"),4_000_000);
+                else if(Files.exists(folder.resolve("static-collision.properties")))throw new IOException("Static collision requires a pinned checksum");
                 var collision=CollisionMap.read(folder.resolve("walkability.gz"));
                 float x=coordinate(p,"spawn-x"),y=coordinate(p,"spawn-y");
                 if(!collision.walkable(x,y))throw new IOException("Map spawn is not walkable: "+id);
                 var scene=new MapScene(id,zone,required(p,"zone-name"),required(p,"name"),required(p,"image"),kind,
                     integer(p,"version"),x,y,rotation(p),number(p,"instances",1,16),collision,layout,
-                    ScenePortals.load(folder,required(p,"scene-sha256"),collision));
+                    ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")));
                 if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
             }
         }

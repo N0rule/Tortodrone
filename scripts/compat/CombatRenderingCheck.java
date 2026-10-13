@@ -15,11 +15,17 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.opengl.GL11;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.character.Knight;
+import org.tortodrone.world.CollisionMap;
+import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.world.FireCatalog;
 
 /** Unchanged native controller/sprite/framebuffer probe; launched only by CheckCombatRendering. */
 public final class CombatRenderingCheck {
     private record Action(String name,String weapon,int flags,int held,int required,boolean projectile) { }
+    private record Heading(float rotation,float variance) { }
+    private final Map<Integer,List<Heading>> needleHeadings=new HashMap<>();
     private static final String SWORD="Weapon/Sword/Calibur", GUN="Weapon/Handgun/Proto Gun", BOMB="Weapon/Bomb/Blast Bomb";
+    private static final String NEEDLE="Weapon/Handgun/Blitz Needle";
     private static final List<Action> ACTIONS=List.of(
         new Action("sword",SWORD,4,120,292,false),
         new Action("sword-charge",SWORD,4,4000,290,false),
@@ -30,10 +36,13 @@ public final class CombatRenderingCheck {
         new Action("bomb-charge",BOMB,4,4000,290,true),
         new Action("defense",SWORD,64,700,284,false),
         new Action("bash",SWORD,2048,120,287,false),
-        new Action("dodge",SWORD,1024,120,286,false));
+        new Action("dodge",SWORD,1024,120,286,false),
+        new Action("blitz-needle",NEEDLE,4,120,292,true),
+        new Action("blitz-needle-charge",NEEDLE,4,4000,290,true));
     private final ProjectXApp app;
     private final Path output;
     private final boolean peer;
+    private final boolean trainingOnly;
     private float peerStartX,peerStartY;
     private float peerRenderedX,peerRenderedY;
     private boolean peerBaseline,peerMotion;
@@ -50,16 +59,32 @@ public final class CombatRenderingCheck {
     private float moveX,moveY;
     private long deadline,started,nextFrame,lastStatus;
     private boolean listening,released,projectile,aftermath,done,passed;
+    private boolean needleFacingReady,needleNormalSeen,needleChargedSeen;
+    private float needleNormalFacing;
+    private long trainingSince;
+    private int konwayActor,konwayRouteIndex;
+    private List<float[]> konwayRoute=List.of();
+    private long konwayStarted;
+    private Confirm conversationResponse;
+    private String initialConversationMessage;
+    private SceneCatalog.MapScene trainingMap;
+    private int vialPickupActor;
+    private long vialItemId,vialSearchSince,vialLiftActor,vialQuickbarAwaitSince,vialQuickbarSettled;
+    private String vialItemConfig;
+    private int vialCountBefore;
+    private boolean vialThrownCaptured;
+    private Confirm vialQuickbarReply,vialUseReply;
     private Confirm equip;
     private String lastAnimation="";
     private Throwable failure;
 
-    private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer){this.app=app;this.output=output;this.peer=peer;deadline=System.nanoTime()+(peer?360:230)*1_000_000_000L;}
+    private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?360:trainingOnly?300:260)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
         if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
-        boolean peer=args.length==4&&args[0].equals("--peer");
+        boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        if(args.length!=3)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
+        boolean trainingOnly=!peer&&args.length==4&&args[3].equals("--training-only");
+        if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
         var configField=Class.forName("com.threerings.projectx.util.a").getDeclaredField("bMw");configField.setAccessible(true);
@@ -72,7 +97,7 @@ public final class CombatRenderingCheck {
         com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
-        var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer);
+        var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
         timer.scheduleAtFixedRate(new TimerTask(){public void run(){if(pending.compareAndSet(false,true))app.getRunQueue().postRunnable(()->{try{probe.tick();}finally{pending.set(false);}});}},50,40);
@@ -89,7 +114,7 @@ public final class CombatRenderingCheck {
                     "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));}
                 finally{Arrays.fill(password,'\0');}
             }
-            for(String item:List.of(SWORD,GUN,BOMB))store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
+            for(String item:List.of(SWORD,GUN,BOMB,NEEDLE))store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
     private void tick(){
@@ -107,7 +132,8 @@ public final class CombatRenderingCheck {
             if(now-lastStatus>5_000_000_000L){
                 lastStatus=now;Object current=app.Gu();
                 System.out.println("STATE: peer="+peer+" stage="+stage+" actors="+authoritative.size()
-                    +" view="+(current==null?"none":current.getClass().getName())+" loading="+app.GF().mG());
+                    +" view="+(current==null?"none":current.getClass().getName())+" loading="+app.GF().mG()
+                    +(stage==20?konwayState(viewPawn()):""));
             }
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
@@ -140,7 +166,8 @@ public final class CombatRenderingCheck {
                 }
                 if(!visible)throw new AssertionError("Primary client did not render its peer knight");
                 capture("haven-shared-movement");System.out.println("CHECK: two graphical clients render shared Town Square and replicated movement");
-                app.GF().bl(TOUR[tour]);stage=11;return;
+                if(trainingOnly){app.GF().bl(294);stage=2;}
+                else{app.GF().bl(TOUR[tour]);stage=11;}return;
             }
             if(stage==11&&view.sceneId()==TOUR[tour]){started=now;stage=12;return;}
             if(stage==12&&view.sceneId()==TOUR[tour]&&now-started>3_000_000_000L){
@@ -149,17 +176,196 @@ public final class CombatRenderingCheck {
                 else{app.GF().bl(294);stage=2;}
                 return;
             }
-            if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){started=now;stage=3;return;}
+            if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){
+                var kinds=new HashSet<String>();for(var actor:authoritative.values())if(actor.vw()!=app.CT().pawnId)kinds.add(actor.getClass().getSimpleName());
+                if(trainingSince==0)trainingSince=now;
+                boolean complete=List.of("Monster","Stranger","Trap","Pickup").stream().allMatch(kinds::contains);
+                if(!complete){if(now-trainingSince>10_000_000_000L)throw new AssertionError("Training Hall is missing native Monster, Stranger, Trap or Pickup actors; saw "+kinds);return;}
+                boolean configured=true;
+                for(String kind:List.of("Monster","Stranger","Trap","Pickup")){
+                    boolean found=false;
+                    for(var actor:authoritative.values())if(actor.getClass().getSimpleName().equals(kind)){
+                        var sprite=view.gk(actor.vw());if(sprite!=null&&sprite.acL().getConfig()!=null){found=true;break;}
+                    }
+                    configured&=found;
+                }
+                if(!configured){if(now-trainingSince>10_000_000_000L)throw new AssertionError("Training actors did not initialize native sprites");return;}
+                System.out.println("CHECK: Training Hall renders Monster, Stranger (Konway), Trap and Pickup actor sprites");started=now;stage=3;return;}
             if(stage==3&&now-started>2_000_000_000L){capture("training-idle");moveX=view.PO().acU().tz().x;moveY=view.PO().acU().tz().y;moveNorth(view,true);started=now;stage=8;return;}
             if(stage==8&&now-started>1_000_000_000L){moveNorth(view,false);started=now;stage=9;return;}
             if(stage==9&&now-started>1_000_000_000L){
                 var server=authoritative.get(app.CT().pawnId);
                 if(server==null||server.tz().y<moveY+2)throw new AssertionError("Native movement did not reach the training corridor away from its south exit");
-                capture("training-movement");System.out.println("CHECK: native controlled movement and authoritative position");stage=4;
+                capture("training-movement");System.out.println("CHECK: native controlled movement and authoritative position");
+                var stranger=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.data.actor.Stranger)
+                    .filter(a->a.Mv().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
+                    .filter(a->Math.hypot(a.tz().x-5.818864,a.tz().y-2.6403537)<.05).findFirst()
+                    .orElseThrow(()->new AssertionError("Authored Konway actor is missing from its verified Training Hall position"));
+                konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("defaults/maps")).scene(294);
+                konwayRoute=routeTo(trainingMap,server.tz().x,server.tz().y,stranger.tz().x,stranger.tz().y);
+                konwayRouteIndex=0;konwayStarted=now;stage=20;return;
             }
+            if(stage==20){
+                var own=authoritative.get(app.CT().pawnId);var npc=authoritative.get(konwayActor);
+                if(own==null||npc==null)throw new AssertionError("Training actors disappeared while approaching Konway");
+                if(now-konwayStarted>45_000_000_000L)throw new AssertionError("Native Training movement timed out approaching Konway"+konwayState(own));
+                if(konwayRouteIndex<konwayRoute.size()){
+                    float[] point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+                    if(Math.hypot(dx,dy)<.30){konwayRouteIndex++;moveToward(view,0,0,false);return;}
+                    moveToward(view,dx,dy,true);return;
+                }
+                // The final native movement intent faces the authored Stranger; it also
+                // closes the last few centimetres needed by the stock interaction range.
+                float dx=npc.tz().x-own.tz().x,dy=npc.tz().y-own.tz().y;
+                Object interaction=field(own,"_actionEntity").get(own);
+                if(interaction instanceof com.threerings.tudey.data.EntityKey.Actor key&&key.vw()==konwayActor){moveToward(view,dx,dy,false);flags(view,4);started=now;stage=21;return;}
+                if(Math.hypot(dx,dy)>.82)moveToward(view,dx,dy,true);
+                else moveToward(view,dx,dy,false);
+                return;
+            }
+            if(stage==21){
+                var dialog=app.CT().sceneDialog;
+                if(dialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
+                    flags(view,0);
+                    if(!"n.atg_greeter".equals(info.name)||info.responses==null||info.responses.length!=2)
+                        throw new AssertionError("Unexpected native Konway opening dialog: "+info.name+" responses="+Arrays.toString(info.responses));
+                    initialConversationMessage=info.message;started=now;stage=24;return;
+                }
+                if(now-started>8_000_000_000L)throw new AssertionError("Native interaction did not open Konway's ConversationDialogInfo");
+                return;
+            }
+            if(stage==24&&now-started>600_000_000L){
+                if(!(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info)
+                        ||!Objects.equals(info.message,initialConversationMessage))throw new AssertionError("Konway opening dialog changed before its native capture");
+                capture("training-konway-dialog");conversationResponse=new Confirm();info.conversationService.f(0,conversationResponse);started=now;stage=22;return;
+            }
+            if(stage==22){
+                if(conversationResponse.reason!=null)throw new AssertionError("Konway response refused: "+conversationResponse.reason);
+                if(!conversationResponse.done)return;
+                if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo next
+                        &&!Objects.equals(next.message,initialConversationMessage)){
+                    if(now-started<600_000_000L)return;
+                    if(next.responses==null||next.responses.length!=1)throw new AssertionError("Konway's authored part 2a response list changed");
+                    capture("training-konway-followup");
+                    Object place=field(app.Gu(),"bJl").get(app.Gu());
+                    if(!(place instanceof com.threerings.projectx.data.ProjectXSceneObject scene))throw new AssertionError("Missing native Training scene service");
+                    scene.projectXSceneService.R(app.CT().sceneDialogCreated);started=now;stage=23;return;
+                }
+                if(now-started>8_000_000_000L)throw new AssertionError("Native Konway first response did not reach the authored follow-up node");
+                return;
+            }
+            if(stage==23){
+                if(app.CT().sceneDialog!=null&&now-started>5_000_000_000L)throw new AssertionError("Native scene service did not close Konway dialog");
+                if(app.CT().sceneDialog==null&&now-started>250_000_000L){
+                    System.out.println("CHECK: native Konway approach, interaction, first response, part 2a and scene-service close");
+                    var own=authoritative.get(app.CT().pawnId);
+                    konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,moveX,moveY+3);konwayRouteIndex=0;konwayStarted=now;stage=26;
+                }
+                return;
+            }
+            if(stage==26){
+                var own=authoritative.get(app.CT().pawnId);
+                if(now-konwayStarted>45_000_000_000L)throw new AssertionError("Native movement did not return from Konway");
+                if(konwayRouteIndex<konwayRoute.size()){
+                    var point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+                    if(Math.hypot(dx,dy)<.30){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);
+                    return;
+                }
+                System.out.println("CHECK: returned to the safe Training corridor after Konway");
+                vialSearchSince=now;stage=27;return;
+            }
+            if(stage==27){
+                if(vialItemConfig!=null&&findItemId(vialItemConfig)!=0){assignVialQuickbar(now);return;}
+                if(now-vialSearchSince>15_000_000_000L)throw new AssertionError("No native Training Vial pickup became available");
+                var own=authoritative.get(app.CT().pawnId);
+                var pickup=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Pickup"))
+                    .filter(a->a.Mv().getName().startsWith("Item/Pickups/Vial/"))
+                    .filter(a->(Math.abs(Math.abs(a.tz().x)-9.5)<.1||Math.abs(Math.abs(a.tz().x)-18.5)<.1)
+                        &&List.of(.5,2.5,4.5,-1.5).stream().anyMatch(y->Math.abs(a.tz().y-y)<.1))
+                    .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElse(null);
+                if(pickup==null)return;
+                vialPickupActor=pickup.vw();vialItemConfig=pickup.Mv().getName().replaceFirst("^Item/Pickups/","Pickup/");
+                vialCountBefore=itemCount(vialItemConfig);vialItemId=0;
+                konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,pickup.tz().x,pickup.tz().y);konwayRouteIndex=0;konwayStarted=now;stage=28;return;
+            }
+            if(stage==28){
+                var own=authoritative.get(app.CT().pawnId);var pickup=authoritative.get(vialPickupActor);
+                if(now-konwayStarted>45_000_000_000L)throw new AssertionError("Native movement timed out approaching Training Vial");
+                if(findItemId(vialItemConfig)!=0){assignVialQuickbar(now);return;}
+                if(pickup==null){stage=27;vialSearchSince=now;return;}
+                if(konwayRouteIndex<konwayRoute.size()){
+                    var point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+                    if(Math.hypot(dx,dy)<.30){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);
+                    return;
+                }
+                float dx=pickup.tz().x-own.tz().x,dy=pickup.tz().y-own.tz().y;
+                if(Math.hypot(dx,dy)>.70){moveToward(view,dx,dy,true);return;}
+                moveToward(view,0,0,false);
+                assignVialQuickbar(now);return;
+            }
+            if(stage==29){
+                if(vialQuickbarReply.reason!=null)throw new AssertionError("Move Vial to quickbar slot 3 refused: "+vialQuickbarReply.reason);
+                if(!vialQuickbarReply.done||app.CT().quickbar[3]!=vialItemId){if(now-started>8_000_000_000L)throw new AssertionError("Native quickbar did not assign the picked Vial to slot 3");return;}
+                if(vialQuickbarSettled==0){vialQuickbarSettled=now;return;}
+                if(now-vialQuickbarSettled<1_000_000_000L)return;
+                Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
+                Object panel=field(hud,"aSM").get(hud);
+                var party=(com.threerings.projectx.dungeon.data.PartyObject)app.GQ().CW();
+                System.out.println("QUICKBAR: hud="+hud.getClass().getName()+" panel="+panel+" member="+app.GQ().Px()
+                    +" pickups="+(party==null?"no-party":party.hasPickups)+" oid="+app.CT().partyOid);
+                if(!(panel instanceof com.threerings.projectx.dungeon.client.QuickbarPanel bar)||!bar.isVisible()||bar.getParent()==null)
+                    throw new AssertionError("Native QuickbarPanel is not attached and visible after vial assignment");
+                capture("training-vial-quickbar");System.out.println("CHECK: native Vial pickup and four-slot quickbar assignment, id="+vialItemId);
+                vialUseReply=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(vialItemId,(Object)null,vialUseReply);
+                started=now;stage=30;return;
+            }
+            if(stage==30){
+                if(vialUseReply.reason!=null)throw new AssertionError("Native Vial use refused: "+vialUseReply.reason);
+                var own=authoritative.get(app.CT().pawnId);
+                if(vialUseReply.done&&own instanceof Dungeoneer knight&&field(knight,"_lift").getInt(knight)!=0&&knight.adU()==269){
+                    capture("training-vial-held");vialLiftActor=field(knight,"_lift").getInt(knight);flags(view,4);started=now;stage=31;return;
+                }
+                if(now-started>8_000_000_000L)throw new AssertionError("Native Vial did not enter held activity 269 with a lift id");
+                return;
+            }
+            if(stage==31&&now-started>180_000_000L){flags(view,0);started=now;stage=32;return;}
+            if(stage==32){
+                var own=authoritative.get(app.CT().pawnId);Actor thrown=null;
+                for(var actor:authoritative.values())if(actor.vw()==vialLiftActor&&actor instanceof com.threerings.projectx.dungeon.data.actor.DungeonLift
+                        &&actor.Mv().getName().equals("Dynamic/Lift Objects/Throwing Vial")&&actor.bR(2)
+                        &&field(actor,"_faction").getInt(actor)==app.CT().pawnId){thrown=actor;break;}
+                if(thrown!=null){
+                    var sprite=view.gk(thrown.vw());if(sprite==null||sprite.acL().getConfig()==null)throw new AssertionError("Thrown native Vial has no rendered sprite");
+                    if(own instanceof Dungeoneer knight&&field(knight,"_lift").getInt(knight)==0){
+                        if(!vialThrownCaptured){vialLiftActor=thrown.vw();capture("training-vial-thrown");vialThrownCaptured=true;}
+                        started=now;stage=34;return;
+                    }
+                }
+                if(now-started>8_000_000_000L)throw new AssertionError("Native throw did not create a faction-owned Dynamic/Lift Objects/Throwing Vial actor");
+                return;
+            }
+            if(stage==34){
+                if(itemCount(vialItemConfig)!=vialCountBefore-1){if(now-started>8_000_000_000L)throw new AssertionError("Native Vial use did not consume exactly one item");return;}
+                System.out.println("CHECK: native Vial hold/throw, DungeonLift flags and faction, one item consumed");
+                var own=authoritative.get(app.CT().pawnId);var pos=own.tz();konwayRoute=routeTo(trainingMap,pos.x,pos.y,moveX,moveY+3);konwayRouteIndex=0;konwayStarted=now;stage=33;return;
+            }
+            if(stage==33){
+                var own=authoritative.get(app.CT().pawnId);
+                if(now-konwayStarted>45_000_000_000L)throw new AssertionError("Native movement did not return from the Vial pickup");
+                if(konwayRouteIndex<konwayRoute.size()){
+                    var point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+                    if(Math.hypot(dx,dy)<.30){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);
+                    return;
+                }
+                moveNorth(view,false);stage=4;return;
+            }
+            if(stage==17&&now-started>700_000_000L){moveEast(view,false);started=now;needleFacingReady=true;stage=18;return;}
+            if(stage==18&&now-started>500_000_000L){stage=4;return;}
             if(stage==4){
-                if(index==ACTIONS.size()){capture("training-complete");app.GF().bl(1);stage=7;return;}
-                var action=ACTIONS.get(index);equip=new Confirm();long id=0;
+                if(index==ACTIONS.size()){capture("training-complete");if(trainingOnly){finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, focused Training Hall actors and native combat actions including Blitz Needle normal/charged projectiles");app.shutdown();}else{app.GF().bl(1);stage=7;}return;}
+                var action=ACTIONS.get(index);
+                if(action.name.equals("blitz-needle-charge")&&!needleFacingReady){moveEast(view,true);started=now;stage=17;return;}
+                equip=new Confirm();long id=0;
                 for(var item:app.CT().items)if(item.Vx().getName().equals(action.weapon)){id=item.VA();break;}
                 if(id==0)throw new AssertionError("Missing seeded weapon "+action.weapon);
                 app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,6,equip);started=now;stage=5;return;
@@ -197,6 +403,18 @@ public final class CombatRenderingCheck {
                     &&(int)field(actor,"_clientOid").get(actor)==app.CT().xL()){
                     var sprite=view.gk(actor.vw());
                     if(sprite!=null&&sprite.acL().getConfig()!=null&&sprite.acL().isVisible()&&capturedProjectiles.add(actor.vw())){
+                        if(action.name.startsWith("blitz-needle")){
+                            var shooter=authoritative.get(app.CT().pawnId);float facing=shooter.tA(),shot=actor.tA();
+                            float difference=(float)Math.atan2(Math.sin(shot-facing),Math.cos(shot-facing));
+                            if(needleHeadings.isEmpty())loadNeedleHeadings();
+                            if(needleHeadings.getOrDefault(action.required,List.of()).stream().noneMatch(band->
+                                Math.abs(Math.atan2(Math.sin(difference-band.rotation()),Math.cos(difference-band.rotation())))<=band.variance()/2+.035))
+                                throw new AssertionError(action.name+" projectile rotation "+shot+" does not match native controller facing "+facing+" and authored spread");
+                            if(action.name.equals("blitz-needle")){needleNormalFacing=facing;needleNormalSeen=true;}
+                            else{if(!needleNormalSeen||Math.abs(Math.atan2(Math.sin(facing-needleNormalFacing),Math.cos(facing-needleNormalFacing)))<.5)
+                                throw new AssertionError("Blitz Needle normal and charged shots did not use two native controller headings");needleChargedSeen=true;}
+                            System.out.println("CHECK: "+action.name+" projectile rotation matches native facing "+facing+" and authored spread");
+                        }
                         projectile=true;System.out.println("PROJECTILE: "+action.name+" "+actor.getClass().getSimpleName()+" "+actor.Mv());
                         capture(action.name+"-projectile-"+capturedProjectiles.size());
                     }
@@ -213,8 +431,10 @@ public final class CombatRenderingCheck {
             // Scene identity changes before its first rendered frame. Let Haven
             // settle before saving the return image and reporting completion.
             if(stage==7&&view.sceneId()==1){started=now;stage=10;return;}
-            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, nine combat actions, native animations and server projectile sprites");app.shutdown();}
-        }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdownNow();app.shutdown();}
+            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, eleven combat actions, native animations and server projectile sprites");app.shutdown();}
+        }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdown();
+            try{images.awaitTermination(15,TimeUnit.SECONDS);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
+            images.shutdownNow();app.shutdown();}
     }
     private void peerTick(View view)throws Exception {
         if(!Files.exists(output.resolve("peer-ready"))){capture("town-peer");Files.writeString(output.resolve("peer-ready"),"");}
@@ -256,7 +476,104 @@ public final class CombatRenderingCheck {
         // and bOD[3]-bOD[2] (X). Exercise the own controller's north axis,
         // away from the authored south portal, before repeated combat lunges.
         float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());
-        Arrays.fill(axes,0);axes[0]=moving?1:0;flags(view,moving?1:0);
+        Arrays.fill(axes,0);axes[0]=1;face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
+    }
+    private static void moveEast(View view,boolean moving)throws Exception{
+        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());
+        Arrays.fill(axes,0);axes[3]=1;face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
+    }
+    private static void moveToward(View view,float dx,float dy,boolean moving)throws Exception{
+        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());Arrays.fill(axes,0);
+        float length=(float)Math.hypot(dx,dy);if(length>0){dx/=length;dy/=length;
+            if(dy>0)axes[0]=dy;else axes[1]=-dy;if(dx>0)axes[3]=dx;else axes[2]=-dx;}
+        if(length>0)face(view,axes);flags(view,moving?1:0);
+    }
+    private static void face(View view,float[] axes)throws Exception{
+        Object controller=view.acn();for(Class<?> type=controller.getClass();type!=null;type=type.getSuperclass())try{
+            var method=type.getDeclaredMethod("k",float[].class);method.setAccessible(true);method.invoke(controller,(Object)axes);return;
+        }catch(NoSuchMethodException ignored){}throw new NoSuchMethodException("Native controller facing helper");
+    }
+    private static List<float[]> routeTo(SceneCatalog.MapScene map,float x,float y,float targetX,float targetY){
+        record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}
+        Cell start=new Cell(Math.round(x*4),Math.round(y*4));var previous=new HashMap<Cell,Cell>();var pending=new ArrayDeque<Cell>();
+        previous.put(start,null);pending.add(start);Cell end=null;int[][] directions={{1,0},{-1,0},{0,1},{0,-1}};
+        while(!pending.isEmpty()){
+            Cell here=pending.removeFirst();
+            if(Math.hypot(here.wx()-targetX,here.wy()-targetY)<=1.9){end=here;break;}
+            for(var d:directions){Cell next=new Cell(here.x()+d[0],here.y()+d[1]);float nx=next.wx(),ny=next.wy();
+                if(Math.abs(next.x())>320||Math.abs(next.y())>320||previous.containsKey(next)||!map.collision().walkable(nx,ny)
+                    ||map.portals().triggers().stream().anyMatch(t->t.intersects(nx,ny)))continue;
+                previous.put(next,here);pending.addLast(next);
+            }
+        }
+        if(end==null)throw new AssertionError("No collision-walkable native route to Konway");
+        var cells=new ArrayList<Cell>();for(Cell p=end;p!=null;p=previous.get(p))cells.add(p);Collections.reverse(cells);
+        var result=new ArrayList<float[]>();float px=x,py=y;
+        for(int i=1;i<cells.size();){int far=i;
+            for(int j=i;j<cells.size();j++){Cell candidate=cells.get(j);if(Math.hypot(candidate.wx()-px,candidate.wy()-py)>1.25
+                    ||!map.collision().walkableSegment(px,py,candidate.wx(),candidate.wy())
+                    ||!clearOfPortals(map,px,py,candidate.wx(),candidate.wy()))break;far=j;}
+            Cell point=cells.get(far);result.add(new float[]{point.wx(),point.wy()});px=point.wx();py=point.wy();i=far+1;
+        }
+        return List.copyOf(result);
+    }
+    private String konwayState(Actor own){
+        if(own==null)return " konway=own-missing";
+        var npc=authoritative.get(konwayActor);if(npc==null)return " konway=npc-missing own="+own.tz();
+        try{
+            Object action=field(own,"_actionEntity").get(own),description=field(own,"_actionDesc").get(own);
+            Object controller=new View(app.Gu()).acn();
+            String key=action instanceof com.threerings.tudey.data.EntityKey.Actor actor?Integer.toString(actor.vw()):String.valueOf(action);
+            String waypoint=konwayRouteIndex<konwayRoute.size()?Arrays.toString(konwayRoute.get(konwayRouteIndex)):"complete";
+            return " konwayPos="+own.tz()+" npc="+npc.tz()+" dist="+Math.hypot(npc.tz().x-own.tz().x,npc.tz().y-own.tz().y)
+                +" facing="+own.tA()+" actionEntity="+key+" actionDesc="+description+" controller="+controller.getClass().getName()
+                +" route="+konwayRouteIndex+"/"+konwayRoute.size()+" waypoint="+waypoint;
+        }catch(Exception error){return " konway diagnostics failed="+error;}
+    }
+    private Actor viewPawn(){return authoritative.get(app.CT().pawnId);}
+    private void loadNeedleHeadings()throws Exception{
+        for(var attack:FireCatalog.load(Path.of("defaults/combat/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
+            var headings=new ArrayList<Heading>();for(var fire:attack.fireRefs())collectNeedleHeadings(fire.action(),headings);
+            needleHeadings.put(attack.activity(),List.copyOf(headings));
+        }
+    }
+    private static void collectNeedleHeadings(FireCatalog.Action action,List<Heading> headings){
+        if(action.kind()==FireCatalog.Kind.EMIT_PROJECTILE&&action.actor().nativeType().equals("BULLET")){
+            if(!action.relative())throw new AssertionError("Needle fire action lost its captured relative facing");
+            headings.add(new Heading(action.rotation(),action.rotationVariance()));
+        }
+        for(var child:action.children())collectNeedleHeadings(child,headings);
+    }
+    private static boolean clearOfPortals(SceneCatalog.MapScene map,float ax,float ay,float bx,float by){
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(bx-ax,by-ay)/.05));
+        for(int i=0;i<=steps;i++){float f=(float)i/steps,x=ax+(bx-ax)*f,y=ay+(by-ay)*f;
+            if(map.portals().triggers().stream().anyMatch(t->t.intersects(x,y)))return false;}
+        return true;
+    }
+    private boolean assignVialQuickbar(long now)throws Exception{
+        vialItemId=findItemId(vialItemConfig);if(vialItemId==0)return false;
+        vialCountBefore=itemCount(vialItemConfig);
+        if(vialItemId>=0)throw new AssertionError("Training Vial pickup did not create a temporary native item id: "+vialItemId);
+        if(app.CT().quickbar==null||app.CT().quickbar.length!=4)
+            throw new AssertionError("Native quickbar is not a four-slot array");
+        if(Arrays.stream(app.CT().quickbar).noneMatch(id->id==vialItemId)){
+            if(vialQuickbarAwaitSince==0)vialQuickbarAwaitSince=now;
+            if(now-vialQuickbarAwaitSince>4_000_000_000L)throw new AssertionError("Collected Vial id "+vialItemId+" is absent from native quickbar "+Arrays.toString(app.CT().quickbar));
+            return false;
+        }
+        vialQuickbarReply=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class)
+            .a(vialItemId,com.threerings.projectx.item.data.ItemCodes.Location.QUICKBAR,3,vialQuickbarReply);
+        started=now;stage=29;return true;
+    }
+    private long findItemId(String config){
+        if(config==null)return 0;
+        for(var item:app.CT().items)if(item.Vx().getName().equals(config))return item.VA();
+        return 0;
+    }
+    private int itemCount(String config){
+        if(config==null)return 0;int count=0;
+        for(var item:app.CT().items)if(item.Vx().getName().equals(config))count+=item.getCount();
+        return count;
     }
     // The stock jar contains both a package and a class named tudey.a;
     // Java source cannot name its obfuscated view/sprite types directly.

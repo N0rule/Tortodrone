@@ -2,10 +2,19 @@ package org.tortodrone.world;
 
 import java.util.*;
 
-/** Scene-owned stock fire actions. No damage targets are synthesized in town interiors. */
+/** Scene-owned stock fire actions, with contact and damage resolved by instance entities. */
 public final class SceneWeapons {
+    public interface Targets {
+        boolean contact(float x,float y,int owner);
+        void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
+        default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
+    }
+    private Targets targets;
+    public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid) { }
+    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape) {
+        Pose(float x,float y,float rotation,int ownerId,int ownerOid){this(x,y,rotation,ownerId,ownerOid,null);}
+    }
     private static final class Run {
         final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;
         Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack){this.start=start;this.attack=attack;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
@@ -22,6 +31,11 @@ public final class SceneWeapons {
             return new ActorState(id,source.ownerOid,"",0,created,x,y,rotation,rotation,flags,0,created,spec.config(),false,null,p);}
     }
     private final CollisionMap terrain;
+    private SceneCollision staticCollision=SceneCollision.empty();
+    public void staticCollision(SceneCollision value){staticCollision=Objects.requireNonNull(value);}
+    private boolean clear(FireCatalog.ActorSpec spec,float fromX,float fromY,float toX,float toY,float rotation){
+        return staticCollision.isEmpty()||spec.collisionShape()==null?terrain.walkableSegment(fromX,fromY,toX,toY):staticCollision.clearSegment(spec.collisionMask(),spec.collisionShape(),fromX,fromY,toX,toY,rotation);
+    }
     private final Map<Integer,List<Run>> runs=new HashMap<>();
     private final Map<Integer,Shot> shots=new LinkedHashMap<>();
     private final ArrayDeque<SceneEffect> effects=new ArrayDeque<>();
@@ -37,6 +51,11 @@ public final class SceneWeapons {
     }
     public void cancel(int owner){runs.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
+    public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),source.clientOid()),stamp,0);}
+    public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
+        if(config==null)return;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();
+        effects.addLast(new SceneEffect(++sequence,config,stamp,source.x(),source.y(),source.rotation(),source.clientOid()));
+    }
     public List<ActorState> actors(){return shots.values().stream().map(Shot::snapshot).toList();}
     public List<SceneEffect> effects(){return List.copyOf(effects);}
     public void advance(int stamp,List<ActorState> players){
@@ -75,7 +94,9 @@ public final class SceneWeapons {
                 int from=Math.max(previous,shot.created);float distance=shot.spec.speed()*Math.max(0,end-from)/1000f;
                 int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
                 for(int n=0;n<steps;n++){float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
-                    if(!terrain.walkableSegment(shot.x,shot.y,x,y)){destroy(shot,stamp,false);break;}shot.x=x;shot.y=y;}
+                    if(!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){destroy(shot,stamp,false);break;}
+                    shot.x=x;shot.y=y;
+                    if(targets!=null&&targets.contact(x,y,shot.source.ownerId)){destroy(shot,stamp,false);break;}}
             }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,Math.max(previous,shot.created),owners.get(shot.source.ownerId));
             if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
@@ -103,14 +124,15 @@ public final class SceneWeapons {
             if(orbit.compound()){float second=orbit.secondStartingRotation()+shot.rotation+spin(next-shot.created,orbit.secondSpeed(),orbit.alternateSpin()&&(shot.created&1)==1);
                 rx+=orbit.secondOrbitRadius()*(float)Math.cos(second);ry+=orbit.secondOrbitRadius()*(float)Math.sin(second);}
             float x=cx+rx,y=cy+ry;
-            if((shot.spec.flags()&2)==0&&!terrain.walkableSegment(shot.x,shot.y,x,y)){shot.collided=next;destroy(shot,next,false);break;}
+            if((shot.spec.flags()&2)==0&&!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){shot.collided=next;destroy(shot,next,false);break;}
             shot.relativeX=rx;shot.relativeY=ry;shot.x=x;shot.y=y;from=next;
+            if(targets!=null&&targets.contact(x,y,shot.source.ownerId)){shot.collided=next;destroy(shot,next,false);}
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
     private void destroy(Shot shot,int stamp,boolean fizzle){shot.destroyed=stamp;shot.fizzle=fizzle;
         var detonation=catalog.detonation(shot.spec);
-        if(!fizzle&&detonation!=null)execute(detonation,new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.source.ownerOid),stamp,0);}
+        if(!fizzle&&detonation!=null)execute(detonation,new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.source.ownerOid,shot.spec.collisionShape()),stamp,0);}
     private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth){
         return execute(action,source,stamp,depth,stamp);
     }
@@ -120,6 +142,11 @@ public final class SceneWeapons {
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
         if(!sourceTarget(action.targetType()))return false;
+        if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
+            if(targets!=null){float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
+                targets.damage(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
+            return true;
+        }
         if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
         if(action.kind()==FireCatalog.Kind.UNSUPPORTED&&nonTargetAction(action.unsupportedType()))return true;
         if(action.kind()!=FireCatalog.Kind.EMIT_PROJECTILE)return false;
@@ -141,14 +168,14 @@ public final class SceneWeapons {
             if(!action.parameter().isEmpty()&&!action.values().isEmpty()){
                 var arguments=new HashMap<>(spec.config().arguments());arguments.put(action.parameter(),action.values().get(Math.floorMod(seed,action.values().size())));
                 var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
-                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit());
+                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape());
             }
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
             if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
             while(shots.containsKey(nextId))nextId++;
             var shot=new Shot(nextId++,spec,source,stamp,x,y,rotation);
-            if(terrain.walkable(x+ox,y+oy)){shot.x+=ox;shot.y+=oy;}
+            if(clear(spec,x,y,x+ox,y+oy,rotation)){shot.x+=ox;shot.y+=oy;}
             shots.put(shot.id,shot);result=true;
         }return result;
     }

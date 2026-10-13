@@ -50,12 +50,22 @@ public final class StockTools {
                 sources.add(project.resolve("scripts/compat/HavenSceneExport.java"));
             }
             case "scene" -> {
-                if (args.length != 6 && args.length != 8) throw new IllegalArgumentException("scene expects game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y]");
+                int count=args.length-(args[args.length-1].equals("--content")?1:0);
+                if (count != 6 && count != 8) throw new IllegalArgumentException("scene expects game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y] [--content]");
                 fixture = "ScenePackExport";
                 fixtureArgs.addAll(Arrays.asList(args).subList(2, args.length));
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
             }
             default -> throw new IllegalArgumentException("Unknown stock tool");
+        }
+        if(args[0].equals("scene")||args[0].equals("haven")){
+            sources.add(project.resolve("scripts/compat/SceneContentExport.java"));
+            sources.add(project.resolve("scripts/compat/SceneCollisionExport.java"));
+            sources.add(project.resolve("scripts/compat/ScenePlayerStatsExport.java"));
+            sources.add(project.resolve("scripts/compat/SceneMonsterExport.java"));
+            sources.add(project.resolve("scripts/compat/SceneItemExport.java"));
+            sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));
+            sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
         }
         if(sources.isEmpty())sources.add(project.resolve("scripts/compat/" + fixture + ".java"));
         Path scratch = Files.createTempDirectory("tortodrone-stock-tool-");

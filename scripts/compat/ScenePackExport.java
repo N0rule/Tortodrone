@@ -11,6 +11,8 @@ import com.threerings.math.*;
 /** Read-only stock configuration oracle. Exports a server map pack, never game assets. */
 public final class ScenePackExport {
     public static void main(String[] args)throws Exception {
+        boolean content=args.length>0&&args[args.length-1].equals("--content");
+        if(content)args=Arrays.copyOf(args,args.length-1);
         if(args.length!=5&&args.length!=7)throw new IllegalArgumentException(
             "Usage: ScenePackExport game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y]");
         Path source=Path.of(args[1]),out=Path.of(args[2]);
@@ -64,6 +66,12 @@ public final class ScenePackExport {
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
         p.setProperty("collision-sha256",digest(out.resolve("walkability.gz")));
+        if(content||kind.equals("training")){
+            SceneContentExport.export(Path.of(args[0]),manager,scene,out);
+            SceneCollisionExport.export(manager,scene,out);
+            p.setProperty("static-collision-sha256",digest(out.resolve("static-collision.properties")));
+            p.setProperty("content-sha256",digest(out.resolve("content.properties")));
+        }
         writeProperties(out.resolve("map.properties"),p);
         if(!kind.equals("town"))writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
         System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version+

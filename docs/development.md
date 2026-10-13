@@ -96,6 +96,16 @@ activity animations and visible server projectile sprites. Both clients observe 
 the peer must show displacement of the other knight's actual model transform. The primary tours
 all seven modern scenes through normal scene requests, exercises Training and returns to Haven.
 Walking through all 18 portals is covered by the separate stock networking fixture.
+Append `--training-only` for the focused Training run: native actor sprites, walking to
+Konway, both conversation nodes, vial pickup/quickbar/use/throw, and Blitz Needle
+normal/charged facing in two directions.
+`TrainingCompatibility` uses the stock reader for all prepared entity subtypes, non-empty
+knight/lift/status deltas, conversation frames and a few scene gameplay checks.
+`SceneCollisionCompatibility game-dir defaults/maps/advanced_training defaults/combat/fires.json`
+compares the prepared native masks, shapes and floor cells with the installed client.
+Compile it together with `FireCatalogExport` and `FireCompatibility`. When using temporary
+probe classes, put `.build/classes/java/main` before `/tmp` on the runtime classpath so an
+older temporary dependency cannot shadow the current server classes.
 The fixture disables vsync in its disposable preferences before native startup to
 avoid niri frame pacing stalls. Keep the disposable test window focused; the fixture
 refuses unfocused combat checks because slow sampling distorts short presses and poses.

@@ -11,8 +11,9 @@ Training Hall (294), Laboratory (30893), and the four-star Hall of Heroes varian
 scene binaries were decoded and their capture hashes verified. The town scenes include twelve
 directed native portal routes between the four districts; the six routes to and from the three
 interiors bring the total to eighteen. Descriptor spawns and rotations are the authored defaults.
-These layouts describe geometry and portal metadata only: missions, NPCs, shops, combat and rewards
-are not implemented by the maps.
+Layouts describe geometry and portal metadata. Training also supplies a separately hash-pinned
+`content.properties` pack for [scene actors and mechanics](training-hall.md). Other rooms need
+prepared content before those mechanics appear; missions, shops and rewards remain unsupported.
 
 ## Preparing defaults
 
@@ -25,12 +26,16 @@ also respect the deployment lock and refuse to change a running server's default
 
 Each scene directory has a `map.properties` descriptor, compressed `scene.dat`, derived
 `walkability.gz`, and (where applicable) `portals.properties`. `catalog.properties` selects the
-entry scene. Descriptor and portal metadata digests tie collision and triggers to the scene layout.
+entry scene. Optional `content.properties` and `static-collision.properties` require their respective
+`content-sha256` and `static-collision-sha256` descriptor pins and their own layout digests.
+Descriptor and portal metadata digests tie collision and triggers to the scene layout.
 Missing defaults can be recovered from the repository's `main` ZIP when available; if maps remain
 missing or invalid, login and local administration remain available while world entry is refused.
 
-Collision is a sampled approximation derived using the installed client's configuration and the
-stock player shape. Portal polygons and destination arrivals are checked against the captured scene
+The fallback collision grid is a sampled approximation derived using the installed client's
+configuration and stock player shape. Training's separate collision pack preserves tile flags,
+floor cells and placeable geometry so pawns and projectiles can apply their own native masks
+and shapes. Movement sweeps still sample at small intervals. Portal polygons and destination arrivals are checked against the captured scene
 and collision data. Scene IDs identify templates; each configured instance has its own distributed
 object ID, occupants, movement and entry baseline.
 
@@ -71,3 +76,8 @@ and hash-verified captures are not integrated.
 
 See [modern capture integration](modern-captures.md) for all 14 scene hashes, the replacement
 record, stock-client acceptance and dependent gameplay evidence gaps.
+
+Training content exports automatically. `java scripts/StockTools.java scene ... --content` also
+prepares native actor metadata for another room. Exported startup bindings and per-scene tags
+drive the shared runtime; unsupported actor types are refused. Server-only restored defaults
+are recorded in `defaults/combat/actor-rules.properties`, separate from captured geometry.

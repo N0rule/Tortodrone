@@ -71,7 +71,7 @@ public final class FireCatalogExport {
             }
             FireActionConfig fire = manager.a(FireActionConfig.class, fireRef.ref);
             if (fire == null) throw new IOException("Unresolved fire action " + fireRef.ref.getName());
-            Action action = readAction(manager, fire.action);
+            Action action = readFireAction(manager, fireRef.ref, fire);
             if (action == null) throw new IOException("Stock fire reference has no action: " + fireRef.ref.getName());
             int loop = fire instanceof FireActionConfig.Looped l ? l.maxLoop : 0;
             int success = fire instanceof FireActionConfig.IncreasingLooped l ? l.successIncrement : 0;
@@ -84,7 +84,7 @@ public final class FireCatalogExport {
         entries.add(new AttackFire(weapon,activity,attackModel,attack.fireSpeed,refs));
     }
 
-    private static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
+    static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
         if (action == null) return null;
         actionCount++;
         if (action instanceof DungeonActionConfig.FireAction fireAction) {
@@ -92,11 +92,22 @@ public final class FireCatalogExport {
             if (fire == null) throw new IOException("Unresolved nested fire action " + fireAction.fireAction);
             String name = fireAction.fireAction.getName();
             if (!NESTED_FIRES.add(name)) { UNSUPPORTED.merge("nested-fire-cycle",1,Integer::sum); return unsupported(action); }
-            try { return readAction(manager, fire.action); } finally { NESTED_FIRES.remove(name); }
+            try { return readFireAction(manager, fireAction.fireAction, fire); } finally { NESTED_FIRES.remove(name); }
         }
         if (action instanceof DungeonActionConfig.FirePrefired firePrefired) {
             return new Action(Kind.FIRE_EFFECT, model(firePrefired.effect), null, target(firePrefired.location), "", "",
                 0,0,0,0,false,0,0,0,0,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.DamageRegionFromPoint damage){
+            var data=new TreeMap<String,Object>();data.put("damage",argumentValue(damage.damage));
+            data.put("region",argumentValue(damage.region));
+            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegionFromPoint",data),null,
+                target(damage.location),"","",damage.translation.x,damage.translation.y,0,0,true,0,0,0,
+                damage.collisionMask,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.DamageRegion damage){
+            var data=new TreeMap<String,Object>();data.put("damage",argumentValue(damage.damage));data.put("region",argumentValue(damage.region));
+            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegion",data),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         }
         if (action instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified)
             return readPrespawned(manager, modified);
@@ -175,6 +186,56 @@ public final class FireCatalogExport {
     private static Action noop() {
         return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
     }
+    static Action readFireAction(ConfigManager manager, ConfigReference<FireActionConfig> reference,
+            FireActionConfig fire) throws Exception {
+        Action action = readAction(manager, fire.action);
+        if(reference.getName().equals("Traps and Hazards/Trap, floor")){
+            // Prepared Training content has depth zero: preserve the authored first
+            // tier's damage graph. Its stripped UP guard is enforced by Trap runtime.
+            if(!(fire.action instanceof ActionConfig.Compound compound)||compound.actions.length<1
+                ||!(compound.actions[0] instanceof ActionConfig.Conditional conditional))throw new IOException("Floor trap graph changed");
+            action=readAction(manager,conditional.action);
+            var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Damage Size");
+            for(var option:choice.options)if(option.name.equals(Objects.toString(reference.kW().get("Damage Size"),choice.choice))){
+                var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
+                Object shape=((Map<?,?>)field.get(option)).get("Damage Region");
+                if(shape==null)throw new IOException("Floor trap shape missing");
+                action=withShape(action,argumentValue(shape));
+            }
+        }
+        if(reference.getName().equals("Base/Damage Origin Transformed")||reference.getName().equals("Base/Damage Region Transformed")){
+            // The original base contains RegionConfig.Transformed -> Compound[Shape].
+            // RegionConfig's server-only shape is stripped, but each attack's Shape
+            // argument survives. Preserve that exact argument rather than the empty
+            // Default region prototype returned by the client configuration manager.
+            Object shape=reference.kW().get("Shape");
+            if(action.kind()!=Kind.DAMAGE_REGION||shape==null)throw new IOException("Verified transformed damage action changed shape");
+            var data=new TreeMap<>(action.config().arguments());data.put("shape",argumentValue(shape));
+            action=new Action(action.kind(),new StarterCatalog.Model(action.config().name(),data),action.actor(),action.targetType(),
+                action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),
+                action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),action.children(),action.unsupportedType(),action.parameter(),action.values());
+        }
+        // SpawnRotatedActor.relative is stripped to the class default (false) in the
+        // stock client. The original named base action explicitly has relative=true
+        // in both the local original and 2026 fire_action.xml. Restore that one binding;
+        // its absolute sibling and all other actions retain their authored semantics.
+        if (reference.getName().equals("Base/Spawn Relative Rotated Actor")) {
+            if (fire.action.getClass() != ActionConfig.SpawnRotatedActor.class
+                    || action.kind() != Kind.EMIT_PROJECTILE || !action.targetType().equals("Source"))
+                throw new IOException("Verified relative fire action changed shape");
+            return new Action(action.kind(), action.config(), action.actor(), action.targetType(),
+                action.facingType(), action.collisionSourceType(), action.x(), action.y(), action.rotation(),
+                action.rotationVariance(), true, action.count(), action.stepSize(), action.steps(),
+                action.collisionMask(), action.stopOnFailure(), action.children(), action.unsupportedType(),
+                action.parameter(), action.values());
+        }
+        return action;
+    }
+    private static Action withShape(Action action,Object shape){
+        var children=action.children().stream().map(a->withShape(a,shape)).toList();var config=action.config();
+        if(action.kind()==Kind.DAMAGE_REGION){var arguments=new TreeMap<>(config.arguments());arguments.put("shape",shape);config=new StarterCatalog.Model(config.name(),arguments);}
+        return new Action(action.kind(),config,action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+    }
     private static Action unsupported(ActionConfig action) throws IOException {
         String type=action.getClass().getName();
         UNSUPPORTED.merge(type,1,Integer::sum);
@@ -196,7 +257,7 @@ public final class FireCatalogExport {
         nativeActor.init(manager);
         int flags=intField(nativeActor,"_flags");
         if(nativeActor instanceof com.threerings.tudey.data.actor.Mobile)maxStep=floatField(nativeActor,"_maxStep");
-        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit);
+        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape));
     }
     private static boolean isProjectile(String type) { return type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
     private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }
@@ -210,10 +271,11 @@ public final class FireCatalogExport {
     }
     private static String target(TargetConfig target) { return target==null?"":target.getClass().getSimpleName(); }
 
-    private static StarterCatalog.Model model(ConfigReference<?> reference) throws IOException {
+    static StarterCatalog.Model model(ConfigReference<?> reference) throws IOException {
         if (reference == null) return null;
         return new StarterCatalog.Model(reference.getName(),arguments(reference.kW(),0,new IdentityHashMap<>(),new int[]{0}));
     }
+    static Object argumentValue(Object value)throws IOException{return argument(value,0,new IdentityHashMap<>(),new int[]{0});}
     private static Map<String,Object> arguments(Map<?,?> input,int depth,IdentityHashMap<Object,Boolean> visiting,int[] nodes)throws IOException {
         if(depth>12||input.size()>4096)throw new IOException("Stock fire arguments exceed bounds");
         var result=new TreeMap<String,Object>();
