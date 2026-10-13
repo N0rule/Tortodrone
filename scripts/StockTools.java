@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|interiors|archive-towns game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath(), game = Path.of(args[1]).toAbsolutePath();
         if (!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) throw new IOException("Missing installed stock game JAR");
         String fixture;
@@ -41,29 +41,19 @@ public final class StockTools {
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
             }
-            case "archive-towns" -> {
-                if(args.length!=4)throw new IllegalArgumentException("archive-towns expects game-directory archive-root fresh-output-directory");
-                fixture="ArchiveTownExport";
+            case "haven" -> {
+                if(args.length!=4)throw new IllegalArgumentException("haven expects game-directory captured-binaries-directory fresh-output-directory");
+                fixture="HavenSceneExport";
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
-                sources.add(project.resolve("scripts/compat/ArchiveTownExport.java"));
+                sources.add(project.resolve("scripts/compat/HavenSceneExport.java"));
             }
             case "scene" -> {
                 if (args.length != 6 && args.length != 8) throw new IllegalArgumentException("scene expects game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y]");
                 fixture = "ScenePackExport";
                 fixtureArgs.addAll(Arrays.asList(args).subList(2, args.length));
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
-            }
-            case "interiors" -> {
-                if (args.length < 2 || args.length > 4)
-                    throw new IllegalArgumentException("interiors expects game-directory [fresh-maps-output-directory [source-cache-directory]]");
-                fixture = "HavenInteriorsExport";
-                Path output=args.length>=3?Path.of(args[2]).toAbsolutePath():project.resolve("build/interiors-export");
-                Path cache=args.length==4?Path.of(args[3]).toAbsolutePath():project.resolve("build/stock-scenes");
-                fixtureArgs.add(cache.toString());fixtureArgs.add(output.toString());
-                sources.add(project.resolve("scripts/compat/ScenePackExport.java"));
-                sources.add(project.resolve("scripts/compat/HavenInteriorsExport.java"));
             }
             default -> throw new IllegalArgumentException("Unknown stock tool");
         }

@@ -70,7 +70,7 @@ public final class InteriorCompatibility {
         SceneRegistry.install(registry);
         var base = registry.entry().map();
         var map = new SceneCatalog.MapScene(base.id(), base.zone(), base.zoneName(), base.name(), base.image(), kind,
-            base.version(), base.spawnX(), base.spawnY(), base.instances(), base.collision(), base.layout(), base.portals());
+            base.version(), base.spawnX(), base.spawnY(), base.spawnRotation(), base.instances(), base.collision(), base.layout(), base.portals());
         var scene = new SceneRegistry.Instance(SCENE_OID, 0, map);
         var knight = new Knight(1, "Interior-Knight", "Gear/Helm/Spiral Sallet (Blue)",
             "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 1);
@@ -188,7 +188,7 @@ public final class InteriorCompatibility {
         if (server.disabledMissionPrefixes == null || !server.disabledMissionPrefixes.isEmpty())
             throw new AssertionError("Peaceful interior server snapshot unexpectedly carries mission-prefix state");
         TownSummary town = server.towns.iterator().next();
-        if (integer(town, "_townId") != 1 || town.defaultSceneId != 1 || !"Haven".equals(town.name) || !"town".equals(town.icon))
+        if (integer(town, "_townId") != 1 || town.defaultSceneId != 1 || !"m.haven".equals(town.name) || !"town".equals(town.icon))
             throw new AssertionError("Peaceful interior source town must be the stock home-town summary");
         GateSummary gate = server.gates.iterator().next();
         if (integer(gate, "_gateId") != 0 || !"".equals(field(gate, "_name")) || !"".equals(field(gate, "_icon")) ||

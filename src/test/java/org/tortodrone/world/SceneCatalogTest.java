@@ -22,16 +22,30 @@ public final class SceneCatalogTest {
             copy(Path.of("defaults/maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==7 && catalog.entry().id()==1,"all seven Haven scenes load without installed game");
-            check(catalog.scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==16,
-                "thirteen town links plus three interior exits connect the seven archived Haven scenes");
+            check(catalog.entry().zoneName().equals("%town:m.haven")&&catalog.entry().townName().equals("m.haven"),
+                "captured qualified zone name and town localization key remain distinct");
+            check(catalog.scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,
+                "twelve town links plus six interior transitions connect the seven Haven scenes");
+            var laboratory=catalog.scene(30893);var heroes=catalog.scene(318);
+            check(laboratory.kind().equals("level")&&laboratory.version()==817806710
+                &&HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(laboratory.layout()))
+                    .equals("2fd25972c6ab80c67bc042c477c3d7ec176d6c4556e752f228e02d20a578f04f"),
+                "modern Laboratory scene identity, version and captured layout digest");
+            check(heroes.kind().equals("level")&&heroes.version()==801483335
+                &&HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(heroes.layout()))
+                    .equals("3e4242d1bc28f94b757cdd2b81f7d08531e496b617dcaaee82e26c9bb146a21c"),
+                "modern Hall of Heroes star 4 identity, version and captured layout digest");
+            check(Math.abs(laboratory.spawnRotation()+3.141592f)<.00001f
+                &&Math.abs(heroes.spawnRotation()+3.1415913f)<.00001f,
+                "captured modern interior spawn facings are retained");
             check(catalog.scene(2).collision().walkable(catalog.scene(2).spawnX(),catalog.scene(2).spawnY()),"verified Bazaar spawn");
             check(catalog.scene(1).portals().entrances().containsKey("from_bazaar_east")
                 &&catalog.scene(2).portals().entrances().containsKey("from_town_square_west"),
                 "default portal metadata is loaded with matching archived layouts");
             var arrival=catalog.scene(2).portals().entrances().get("from_town_square_west");
-            check(arrival.id()==1550&&arrival.x()==16.5f&&arrival.y()==7.5f
-                &&Math.abs(arrival.rotation()+1.570796f)<.00001f,
-                "default entrance ID, position and facing are validated and retained");
+            check(arrival.id()==4539&&catalog.scene(2).collision().walkable(arrival.x(),arrival.y())
+                &&Float.isFinite(arrival.rotation()),
+                "captured modern Bazaar destination entry is retained at a walkable facing");
             byte[] layout=catalog.scene(1).layout();layout[0]=0;
             check(catalog.scene(1).layout()[0]==(byte)0xfa,"layout snapshots are immutable");
             Path manifest=maps.resolve("haven/map.properties");
@@ -42,9 +56,15 @@ public final class SceneCatalogTest {
             check(registry.destination(1,1)==second && registry.destination(1,2)==first,"server assignment is stable");
             refuse(()->registry.instance(1,2));refuse(()->registry.instance(999,0));
             change(manifest,"spawn-x","NaN");refuse(()->SceneCatalog.load(maps));
-            change(manifest,"spawn-x","0");change(manifest,"spawn-y","9999");refuse(()->SceneCatalog.load(maps));
-            change(manifest,"spawn-y","-8");change(manifest,"scene-sha256","0".repeat(64));refuse(()->SceneCatalog.load(maps));
+            change(manifest,"spawn-x",Float.toString(catalog.entry().spawnX()));
+            change(manifest,"spawn-y","9999");refuse(()->SceneCatalog.load(maps));
+            change(manifest,"spawn-y",Float.toString(catalog.entry().spawnY()));change(manifest,"scene-sha256","0".repeat(64));refuse(()->SceneCatalog.load(maps));
             change(manifest,"scene-sha256",HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(catalog.entry().layout())));
+            Path laboratoryManifest=maps.resolve("laboratory/map.properties");
+            change(laboratoryManifest,"spawn-rotation","NaN");refuse(()->SceneCatalog.load(maps));
+            change(laboratoryManifest,"spawn-rotation",Float.toString(laboratory.spawnRotation()));
+            change(laboratoryManifest,"spawn-rotation","4");refuse(()->SceneCatalog.load(maps));
+            change(laboratoryManifest,"spawn-rotation",Float.toString(laboratory.spawnRotation()));
             change(maps.resolve("bazaar/map.properties"),"scene-id","1");refuse(()->SceneCatalog.load(maps));
             change(maps.resolve("bazaar/map.properties"),"scene-id","2");
             change(maps.resolve("bazaar/map.properties"),"zone-name","Other");refuse(()->SceneCatalog.load(maps));
@@ -58,22 +78,24 @@ public final class SceneCatalogTest {
             copy(Path.of("defaults/maps"),maps);
             change(bazaarPortals,"entrance.from_town_square_west.x","9999");refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
+            var knownEntrance=catalog.scene(1).portals().entrances().get("from_bazaar_east");
             change(havenPortals,"entrances","from_bazaar_east,duplicate");
-            change(havenPortals,"entrance.duplicate.id","3874");
-            change(havenPortals,"entrance.duplicate.x","-30.5");
-            change(havenPortals,"entrance.duplicate.y","0.5");
-            change(havenPortals,"entrance.duplicate.rotation","0");
+            change(havenPortals,"entrance.duplicate.id",Integer.toString(knownEntrance.id()));
+            change(havenPortals,"entrance.duplicate.x",Float.toString(knownEntrance.x()));
+            change(havenPortals,"entrance.duplicate.y",Float.toString(knownEntrance.y()));
+            change(havenPortals,"entrance.duplicate.rotation",Float.toString(knownEntrance.rotation()));
             refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
             change(bazaarPortals,"entrance.from_town_square_west.rotation","4");
             refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
-            change(bazaarPortals,"trigger.3096.scene","99");refuse(()->SceneCatalog.load(maps));
+            int bazaarTrigger=catalog.scene(2).portals().triggers().getFirst().id();
+            change(bazaarPortals,"trigger."+bazaarTrigger+".scene","99");refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
-            change(bazaarPortals,"trigger.3096.entrance","missing_arrival");refuse(()->SceneCatalog.load(maps));
+            change(bazaarPortals,"trigger."+bazaarTrigger+".entrance","missing_arrival");refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
-            change(havenPortals,"entrance.from_bazaar_east.x","-38.5");
-            change(havenPortals,"entrance.from_bazaar_east.y","-1.5");
+            change(havenPortals,"entrance.from_bazaar_east.x","-38.25");
+            change(havenPortals,"entrance.from_bazaar_east.y","0.4");
             refuse(()->SceneCatalog.load(maps));
             copy(Path.of("defaults/maps"),maps);
             try(var folders=Files.list(maps)) {

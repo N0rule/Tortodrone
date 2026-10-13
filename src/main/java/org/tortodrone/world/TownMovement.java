@@ -28,7 +28,7 @@ public final class TownMovement {
 
     public TownMovement() {
         this(SceneRegistry.defaultEntry().map().collision(),SceneRegistry.defaultEntry().map().spawnX(),
-            SceneRegistry.defaultEntry().map().spawnY());
+            SceneRegistry.defaultEntry().map().spawnY(),SceneRegistry.defaultEntry().map().spawnRotation());
     }
     public TownMovement(CollisionMap terrain,float spawnX,float spawnY) {
         this(terrain,spawnX,spawnY,0);

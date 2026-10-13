@@ -48,7 +48,7 @@ public final class HavenConnectionCheck {
                 WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,trigger.destination()));
                 readySceneId=trigger.destination();
                 var destination=maps.scene(trigger.destination());var arrival=destination.portals().entrances().get(trigger.entrance());
-                PortalConnectionCheck.arrival(player,arrival.x(),arrival.y(),arrival.rotation());
+                PortalConnectionCheck.arrival(player,arrival);
                 if(player.pawnId!=identity||!Arrays.equals(player.equipment,equipment))throw new AssertionError("Travel changed character identity/equipment");
                 int idle=WorldConnectionCheck.deltas;WorldConnectionCheck.waitFor(()->WorldConnectionCheck.deltas>=idle+3);
                 if(PortalConnectionCheck.forced.size()!=1)throw new AssertionError("Arrival retriggered portal");

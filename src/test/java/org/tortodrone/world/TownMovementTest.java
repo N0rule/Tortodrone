@@ -5,17 +5,38 @@ import java.util.HexFormat;
 import static org.tortodrone.support.TestWire.check;
 
 public final class TownMovementTest {
-    public static void main(String[] args) throws Exception {
+    private static CollisionMap corridor;
+    private static TownMovement movement(){return new TownMovement(corridor,0,-8,0);}
+    public static void main(String[] args)throws Exception {
+        var fixture=java.nio.file.Files.createTempFile("tortodrone-movement-corridor-",".gz");
+        try {
+            // Timing/pose assertions use a controlled corridor; map geometry is verified separately.
+            int width=145,height=9;var clear=new java.util.BitSet(width*height);
+            for(int y=1;y<height-1;y++)for(int x=1;x<width-1;x++)clear.set(y*width+x);
+            try(var out=new java.io.DataOutputStream(new java.util.zip.GZIPOutputStream(java.nio.file.Files.newOutputStream(fixture)))) {
+                out.writeInt(0x54445731);out.writeInt(width);out.writeInt(height);
+                out.writeFloat(-1);out.writeFloat(-9);out.writeFloat(.25f);
+                out.write(java.util.Arrays.copyOf(clear.toByteArray(),(width*height+7)/8));
+            }
+            corridor=CollisionMap.read(fixture);verify();
+        } finally {java.nio.file.Files.deleteIfExists(fixture);}
+    }
+    private static void verify() throws Exception {
         byte[] scene = TownSquare.model();
         check(HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(scene))
-            .equals("26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57"), "pinned regular Town Square");
+            .equals("83115fa639bb1e55c93827772d2c46b929282c3641854c1ea5422e8cb0949ac2"), "captured modern Town Square");
         scene[0] ^= 1;
         check(scene[0] != TownSquare.model()[0], "callers cannot modify the cached scene");
         check(TownSquare.clock() > 0, "scene clock starts positive");
-        check(TownTerrain.walkable(0,-8), "verified spawn");
+        var entry=SceneRegistry.defaultEntry().map();
+        var arrival=new TownMovement();
+        check(arrival.x()==entry.spawnX()&&arrival.y()==entry.spawnY()
+            &&Math.abs(arrival.rotation()-entry.spawnRotation())<.00001f,
+            "default movement starts at the authored modern entrance and facing");
+        check(TownTerrain.walkable(0,-8), "clear movement test corridor");
         check(!TownTerrain.walkable(Float.NaN,0) && !TownTerrain.walkable(10000,0)
             && !TownTerrain.walkable(0,Float.POSITIVE_INFINITY), "invalid positions blocked");
-        var m = new TownMovement();
+        var m = movement();
         m.resetInput(100);
         check(m.accept(100,1.5f,0,1,100,1000), "first input accepted");
         m.advance(100,1000);
@@ -34,10 +55,10 @@ public final class TownMovementTest {
         for(int i=0;i<1000;i++) {
             check(m.accept(stamp,0,0,1,stamp,2000+i*50), "fresh frame");
             m.advance(stamp,2000+i*50); stamp+=50;
-            check(TownTerrain.walkable(m.x(),m.y()), "movement stays on walkable terrain");
+            check(corridor.walkable(m.x(),m.y()), "movement stays on walkable terrain");
         }
-        check(m.x()<35, "town geometry blocks an unlimited straight walk");
-        var future = new TownMovement();
+        check(m.x()<35, "corridor wall blocks an unlimited straight walk");
+        var future = movement();
         future.resetInput(100);
         check(future.accept(200,1.5f,0,1,100,1000), "future input enqueued");
         future.advance(150,1050);
@@ -57,11 +78,11 @@ public final class TownMovementTest {
         future.advance(341,1241);
         future.advance(350,1250);
         check(Math.abs(future.x()-before-.25f)<.00001, "scheduler jitter does not alter movement speed");
-        var bounded = new TownMovement();
+        var bounded = movement();
         bounded.resetInput(100);
         for(int i=0;i<256;i++) check(bounded.accept(1000+i,0,0,1,100,1000), "bounded future input");
         check(!bounded.accept(1256,0,0,1,100,1000), "future queue cannot grow without limit");
-        var inventory = new TownMovement();
+        var inventory = movement();
         inventory.resetInput(100);
         check(inventory.accept(100,1,0,3,100,1000), "inventory and move input accepted");
         inventory.advance(150,1050);
@@ -86,7 +107,7 @@ public final class TownMovementTest {
         inventory.resetInput(1200);
         check(inventory.activity()==0 && inventory.activityStarted()==1200 && inventory.flags()==0,
             "re-entry clears inventory activity");
-        var peaceful=new TownMovement();peaceful.resetInput(100);
+        var peaceful=movement();peaceful.resetInput(100);
         check(peaceful.accept(100,1,0,4|8|16|32,100,1000),"combat input remains bounded input");
         peaceful.advance(150,1050);
         check(peaceful.activity()==0&&peaceful.flags()==0&&peaceful.x()==0,"combat input cannot start town actions");
@@ -94,7 +115,7 @@ public final class TownMovementTest {
         peaceful.advance(200,1100);
         check(peaceful.activity()==0&&peaceful.flags()==2&&Math.abs(peaceful.x()-.25f)<.00001,
             "combat bits neither block walking nor become actor flags");
-        var seated=new TownMovement();seated.resetInput(100);
+        var seated=movement();seated.resetInput(100);
         check(seated.sit(100,1000),"idle knight can sit");
         seated.advance(10000,10000);
         check(seated.activity()==TownMovement.SIT&&seated.activityStarted()==100&&seated.x()==0,
@@ -117,7 +138,7 @@ public final class TownMovementTest {
             "inventory interrupts sitting and cannot be replaced by another sit");
         seated.resetInput(12100);
         check(seated.activity()==0&&seated.flags()==0,"scene transition clears the sitting activity and queued input");
-        var animated=new TownMovement();animated.resetInput(1000);
+        var animated=movement();animated.resetInput(1000);
         check(animated.emote(PlayerEmotes.find("Attack"),1000,1000),"catalogued emote starts");
         check(animated.activity()==9&&animated.activityStarted()==1000,"stock activity id and start time");
         check(animated.accept(1000,0,0,1,1000,1000),"movement begins during movement-enabled emote");
@@ -132,18 +153,18 @@ public final class TownMovementTest {
         animated.advance(1700,1700);
         check(animated.activity()==0&&animated.activityStarted()==1700&&animated.flags()==2
             &&Math.abs(animated.x()-3.5f)<.0001,"timed activity ends exactly and movement integrates across deadline");
-        var sleep=new TownMovement();sleep.resetInput(2000);
+        var sleep=movement();sleep.resetInput(2000);
         check(sleep.emote(PlayerEmotes.find("Sleep"),2000,2000)&&sleep.activity()==27
             &&sleep.activityStarted()==2000,"zero-duration blocked emote remains active");
         check(sleep.accept(2000,0,0,1,2000,2000),"movement can cancel Sleep");sleep.advance(2050,2050);
         check(sleep.activity()==0&&sleep.activityStarted()==2000&&sleep.flags()==2
             &&Math.abs(sleep.x()-.25f)<.0001,"Sleep without end animation clears to idle on movement");
-        var textEmote=new TownMovement();textEmote.resetInput(3000);
+        var textEmote=movement();textEmote.resetInput(3000);
         check(textEmote.emote(PlayerEmotes.find("Sit"),3000,3000),"animated pose starts");
         check(textEmote.emote(PlayerEmotes.find("Gaze"),3001,3001)
             &&textEmote.activity()==26&&textEmote.activityStarted()==3000,
             "chat-only emote leaves ongoing actor activity untouched");
-        var interrupted=new TownMovement();interrupted.resetInput(4000);
+        var interrupted=movement();interrupted.resetInput(4000);
         check(interrupted.emote(PlayerEmotes.find("Hello"),4000,4000),"emote can start before inventory");
         check(interrupted.accept(4050,0,0,2,4000,4000),"inventory input during emote accepted");
         interrupted.advance(4050,4050);
@@ -152,7 +173,7 @@ public final class TownMovementTest {
         check(!interrupted.emote(PlayerEmotes.find("Hello"),4051,4051),
             "emote cannot replace active inventory pose");
         var forged=new PlayerEmotes.Descriptor("forged",264,0,0,0,true,false,true,false,0);
-        check(!new TownMovement().emote(forged,5000,5000),"uncatalogued activity descriptors rejected");
+        check(!movement().emote(forged,5000,5000),"uncatalogued activity descriptors rejected");
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }

@@ -11,7 +11,7 @@ import com.threerings.tudey.shape.config.ShapeConfig;
 import org.tortodrone.world.ScenePortals;
 import org.tortodrone.world.CollisionMap;
 
-/** Read-only stock-client oracle for the four Haven towns and town-to-town portal metadata. */
+/** Read-only stock-client oracle for the seven modern Haven scenes and native portal metadata. */
 public final class HavenCompatibility {
     private static final float EPS = 0.000002f;
     private record V(float x, float y) { }
@@ -27,16 +27,17 @@ public final class HavenCompatibility {
             com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");
         manager.init();
 
-        int[] ids={1,2,3,445}; int totalTriggers=0,totalEntrances=0;
+        int[] ids={1,2,3,445,294,30893,318}; int totalTriggers=0,totalEntrances=0;
         for(int id:ids) {
-            Path folder=maps.resolve(switch(id){case 1->"haven";case 2->"bazaar";case 3->"arcade";default->"garrison";});
+            Path folder=maps.resolve(switch(id){case 1->"haven";case 2->"bazaar";case 3->"arcade";case 445->"garrison";case 294->"advanced_training";case 30893->"laboratory";default->"hall_of_heroes";});
             var props=properties(folder.resolve("map.properties"));
+            if(!"%town:m.haven".equals(props.getProperty("zone-name")))
+                throw new AssertionError("Haven zone name differs from the captured qualified Name");
             byte[] bytes=Files.readAllBytes(folder.resolve("scene.dat"));
             var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes); scene.init(manager);
             if(scene.sceneId!=id||scene.version!=Integer.parseInt(props.getProperty("version"))
-                ||!"town".equals(props.getProperty("kind"))
                 ||!Objects.equals(scene.name,props.getProperty("name"))
-                ||!(scene.adD() instanceof com.threerings.projectx.town.data.TownSceneConfig))
+                ||!sceneKind(scene.adD()).equals(props.getProperty("kind")))
                 throw new AssertionError("Stock scene identity/config mismatch for id "+id);
             String digest=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
             if(!digest.equals(props.getProperty("scene-sha256")))throw new AssertionError("Scene digest mismatch for "+id);
@@ -46,15 +47,21 @@ public final class HavenCompatibility {
             var server=ScenePortals.load(folder,digest,CollisionMap.read(folder.resolve("walkability.gz")));
             var archived=new HashMap<Integer,Portal>();
             var destinationEntrances=new HashMap<String,TudeySceneModel.PlaceableEntry>();
+            var defaultEntrances=new HashMap<Integer,TudeySceneModel.PlaceableEntry>();
             for(var entry:scene.adH()) {
                 if(entry instanceof TudeySceneModel.AreaEntry area) {
                     var ref=area.getReference();
-                    if(!ref.getName().equals("Portals/Portal"))continue;
-                    int dest=number(ref.kW().get("Scene ID"));
-                    String destTag=string(ref.kW().get("Tag"));
-                    var portalRef=(ActionConfig.TaggedPortal)ref.kW().get("Portal");
-                    String sourceTag=portalRef==null?null:portalRef.tag;
-                    if(sourceTag==null||destTag==null)throw new AssertionError("Portal reference arguments missing: "+area.getKey());
+                    int dest;String sourceTag;
+                    if(ref.getName().equals("Portals/Portal")) {
+                        dest=number(ref.kW().get("Scene ID"));
+                        String destTag=string(ref.kW().get("Tag"));
+                        var portalRef=(ActionConfig.TaggedPortal)ref.kW().get("Portal");
+                        sourceTag=portalRef==null?null:portalRef.tag;
+                        if(sourceTag==null||destTag==null)throw new AssertionError("Portal reference arguments missing: "+area.getKey());
+                    } else {
+                        Portal route=interiorRoute(id,ref.getName());if(route==null)continue;
+                        dest=route.destination;sourceTag=route.entrance;
+                    }
                     var verts=Arrays.stream(area.vertices).map(v->new V(v.x,v.y)).toList();
                     int areaId=((Number)area.getKey()).intValue();
                     archived.put(areaId,new Portal(areaId,dest,sourceTag,verts));
@@ -69,33 +76,42 @@ public final class HavenCompatibility {
                         String tag=string(placeRef.kW().get("Tag"));
                         if(tag==null||destinationEntrances.put(tag,place)!=null)throw new AssertionError("Missing/duplicate destination portal tag at "+place.getKey());
                     }
+                    if(place.placeable.a(manager,PlaceableConfig.class).q(manager).defaultEntrance)
+                        defaultEntrances.put(((Number)place.getKey()).intValue(),place);
                 }
             }
+            if(defaultEntrances.size()!=1)throw new AssertionError("Expected one authored default entrance in scene "+id);
+            var authored=defaultEntrances.values().iterator().next();var authoredPos=authored.transform.tD();
+            var authoredRot=authored.transform.tE();
+            float authoredYaw=(float)(2*Math.atan2(authoredRot.z,authoredRot.w));
+            if(Math.abs(Float.parseFloat(props.getProperty("spawn-x"))-authoredPos.x)>EPS
+                ||Math.abs(Float.parseFloat(props.getProperty("spawn-y"))-authoredPos.y)>EPS
+                ||angleDiff(Float.parseFloat(props.getProperty("spawn-rotation")),authoredYaw)>EPS)
+                throw new AssertionError("Map spawn differs from authored default entrance in scene "+id);
             compareTriggers(id,pp,archived,server.triggers());
             totalTriggers+=archived.size();
             var expectedTags=csv(pp.getProperty("entrances",""));
-            if(!destinationEntrances.keySet().containsAll(expectedTags)) throw new AssertionError("Destination entrance tag missing for scene "+id+": "+destinationEntrances.keySet());
             for(String tag:expectedTags) {
                 String p="entrance."+tag+".";
                 int key=Integer.parseInt(pp.getProperty(p+"id"));float x=Float.parseFloat(pp.getProperty(p+"x")),y=Float.parseFloat(pp.getProperty(p+"y")),rot=Float.parseFloat(pp.getProperty(p+"rotation"));
-                var place=destinationEntrances.get(tag);var tr=place.transform;var pos=tr.tD();var q=tr.tE();
+                var place=destinationEntrances.get(tag);
+                if(place==null)place=defaultEntrances.get(key);
+                if(place==null)throw new AssertionError("Destination entrance is neither a tagged nor native default marker: scene="+id+" tag="+tag);
+                var tr=place.transform;var pos=tr.tD();var q=tr.tE();
                 float actualRot=(float)(2*Math.atan2(q.z,q.w));
                 if(((Number)place.getKey()).intValue()!=key||Math.abs(pos.x-x)>EPS||Math.abs(pos.y-y)>EPS||angleDiff(actualRot,rot)>EPS)
                     throw new AssertionError("Destination entrance native placeable differs for scene "+id+" tag "+tag+" key "+place.getKey()+" at "+pos+" rot="+actualRot);
             }
             totalEntrances+=expectedTags.size();
-            System.out.println("PASS: scene="+id+" version="+scene.version+" name="+scene.name+" TownSceneConfig; portals="+archived.size()+" destination entrances="+expectedTags.size());
+            System.out.println("PASS: scene="+id+" version="+scene.version+" name="+scene.name+" "+scene.adD().getClass().getSimpleName()+"; portals="+archived.size()+" destination entrances="+expectedTags.size());
         }
         System.out.println("PASS: stock native scenes and server portal metadata match; "+totalTriggers+" portal triggers, "+totalEntrances+" entrances, sensor masks/defaults, and native circle-edge/corner intersections checked");
     }
 
     private static void compareTriggers(int sceneId,Properties pp,Map<Integer,Portal> nativePortals,List<ScenePortals.Trigger> parsed) {
-        // These specialized native entrances are verified by HavenInteriorsExport and
-        // walked by InteriorConnectionCheck; this oracle checks Portals/Portal town links.
-        var interiorIds=parsed.stream().filter(t->interiorEntry(sceneId,t)).map(t->Integer.toString(t.id())).collect(java.util.stream.Collectors.toSet());
-        var listed=new LinkedHashSet<>(csv(pp.getProperty("triggers","")));listed.removeAll(interiorIds);
-        var towns=parsed.stream().filter(t->!interiorIds.contains(Integer.toString(t.id()))).toList();
-        if(listed.size()!=nativePortals.size()||towns.size()!=nativePortals.size())throw new AssertionError("Portal count mismatch for "+sceneId);
+        var listed=new LinkedHashSet<>(csv(pp.getProperty("triggers","")));
+        if(listed.size()!=nativePortals.size()||parsed.size()!=nativePortals.size())
+            throw new AssertionError("Native portal count mismatch for "+sceneId);
         for(String raw:listed) {
             int id=Integer.parseInt(raw);var nativePortal=nativePortals.get(id);if(nativePortal==null)throw new AssertionError("Metadata names missing native portal "+id);
             int dest=Integer.parseInt(pp.getProperty("trigger."+id+".scene"));String tag=pp.getProperty("trigger."+id+".entrance");
@@ -109,11 +125,20 @@ public final class HavenCompatibility {
             for(int i=0;i<wanted.size();i++)if(Math.abs(server.vertices().get(i).x()-wanted.get(i).x)>EPS||Math.abs(server.vertices().get(i).y()-wanted.get(i).y)>EPS)throw new AssertionError("Server polygon vertex sequence mismatch at "+id);
         }
     }
-    private static boolean interiorEntry(int scene,ScenePortals.Trigger trigger) {
-        if(!trigger.entrance().equals("level_start"))return false;
-        return scene==1&&trigger.id()==3922&&trigger.destination()==294
-            ||scene==445&&(trigger.id()==3770&&trigger.destination()==437
-                ||trigger.id()==3568&&trigger.destination()==449);
+    private static String sceneKind(TudeySceneConfig config) {
+        if(config instanceof com.threerings.projectx.town.data.TownSceneConfig town)return town.getType();
+        if(config instanceof com.threerings.projectx.dungeon.data.TrainingSceneConfig training)return training.getType();
+        if(config instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level)return level.getType();
+        throw new AssertionError("Unsupported stock scene config "+config.getClass());
+    }
+    private static Portal interiorRoute(int scene,String name) {
+        if(scene==1&&name.equals("Portals/To Advanced Training"))return new Portal(0,294,"level_start",List.of());
+        if(scene==445&&name.equals("Portals/To Laboratory"))return new Portal(0,30893,"level_start",List.of());
+        if(scene==445&&name.equals("Portals/To Hall of Heroes"))return new Portal(0,318,"level_start",List.of());
+        if(scene==294&&name.equals("Portals/Leave Party"))return new Portal(0,1,"from_advanced_training",List.of());
+        if(scene==30893&&name.equals("Portals/Town Portal"))return new Portal(0,445,"from_lab",List.of());
+        if(scene==318&&name.equals("Portals/Town Portal"))return new Portal(0,445,"from_hoh",List.of());
+        return null;
     }
     private static void checkCircleIntersection(TudeySceneModel.AreaEntry area,ConfigManager manager,ScenePortals.Trigger serverTrigger) {
         Shape target=area.av(manager);

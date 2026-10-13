@@ -81,65 +81,27 @@ fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) 
 }
 val prepareDefaults = preparation("prepareDefaults", "defaults")
 preparation("prepareMaps", "maps")
-// Interior/town exports are maintainer commands that republish into the single
-// checked-in defaults/maps source; ordinary builds never read a local export tree.
-val defaultsMaps = layout.projectDirectory.dir("defaults/maps")
-val interiorsExport = providers.gradleProperty("interiorsOutput").getOrElse(
-    publicOutput.dir("interiors-export").asFile.absolutePath)
-val archiveExport = providers.gradleProperty("archiveOutput").getOrElse(
-    publicOutput.dir("archive-export").asFile.absolutePath)
-// Exports read the stock game without changing its assets/preferences, then republish the packs.
-val prepareInteriors = tasks.register<Exec>("prepareInteriors") {
+// Rebuild modern packs only from local hash-verified captured binaries. Publication is
+// explicit; neither a normal build nor a failed export may restore historical scenes.
+val prepareHaven = tasks.register<Exec>("prepareHaven") {
     group = "build setup"
-    description = "Re-export Haven interiors from the read-only stock game and publish them into defaults/maps; requires -PgameDir on first use."
+    description = "Rebuild modern Haven into a fresh staging directory using local captured scenes and stock configurations."
     workingDir = projectDir
     dependsOn(serverJar)
     val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
-    val sourceCache = providers.gradleProperty("sceneCache").getOrElse(publicOutput.dir("stock-scenes").asFile.absolutePath)
-    commandLine(launcher25.get().executablePath.asFile.absolutePath,
-        "scripts/StockTools.java", "interiors", gameDirectory, interiorsExport, sourceCache)
-    onlyIf("The interior export has not already been prepared") { !File(interiorsExport).exists() }
-    doFirst {
-        if (gameDirectory.isBlank()) throw GradleException("Specify the read-only stock game directory with -PgameDir=/path/to/Spiral Knights")
-    }
-    finalizedBy(publishInteriors)
-}
-val publishInteriors: TaskProvider<Copy> = tasks.register<Copy>("publishInteriors") {
-    group = "build setup"
-    description = "Publish the re-exported Haven interior packs into the checked-in defaults/maps source."
-    dependsOn(prepareInteriors)
-    from(File(interiorsExport))
-    into(defaultsMaps)
-    finalizedBy(prepareDefaults)
-}
-val prepareArchive = tasks.register<Exec>("prepareArchive") {
-    group = "build setup"
-    description = "Prepare newer Haven and connected interiors from a read-only local Spiral archive and publish them into defaults/maps."
-    workingDir = projectDir
-    dependsOn(serverJar)
-    val gameDirectory = providers.gradleProperty("gameDir").getOrElse("")
-    val archiveDirectory = providers.gradleProperty("archiveDir").getOrElse("../reference-inputs")
+    val capturedScenes = providers.gradleProperty("capturedScenes").getOrElse("")
+    val output = providers.gradleProperty("havenOutput").getOrElse(publicOutput.dir("haven-export").asFile.absolutePath)
     commandLine(launcher25.get().executablePath.asFile.absolutePath,"scripts/StockTools.java",
-        "archive-towns",gameDirectory,archiveDirectory,archiveExport)
-    onlyIf("Archive defaults have not already been exported") { !File(archiveExport).exists() }
-    doFirst { if(gameDirectory.isBlank())throw GradleException("Specify the read-only stock game directory with -PgameDir=/path/to/Spiral Knights") }
-    finalizedBy(publishArchive)
+        "haven",gameDirectory,capturedScenes,output)
+    doFirst {
+        if(gameDirectory.isBlank() || capturedScenes.isBlank())
+            throw GradleException("Specify -PgameDir and -PcapturedScenes (verified local <scene-id>.dat files); output must be fresh")
+    }
 }
-val publishArchive: TaskProvider<Copy> = tasks.register<Copy>("publishArchive") {
-    group = "build setup"
-    description = "Publish the exported Haven archive packs into the checked-in defaults/maps source."
-    dependsOn(prepareArchive)
-    from(File(archiveExport))
-    into(defaultsMaps)
-    finalizedBy(prepareDefaults)
-}
-prepareDefaults.configure { mustRunAfter(publishArchive) }
-prepareDefaults.configure { mustRunAfter(publishInteriors) }
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare external defaults."
     dependsOn(serverJar, prepareDefaults)
-    if (providers.gradleProperty("gameDir").isPresent) dependsOn(publishArchive)
 }
 val buildAdmin = tasks.register("buildAdmin") {
     group = "build"

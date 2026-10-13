@@ -63,17 +63,17 @@ or runtime dependency resolution. The single checked-in source `defaults/maps/` 
 any copy: each pack's `scene.dat`/`walkability.gz` digests against `map.properties`, and the packs
 against the `scene-source.properties` provenance manifest beside them. Existing files are
 retained, including a deployment's dangling owner-file symlinks, directories and other special
-paths, and an owner-edited pack keeps its bytes instead of failing; only a file this source
-published before (an `owned.*` digest) is upgraded, atomically in place. Absent optional source
-directories warn and succeed. Present malformed sources, a source missing a pinned pack and a
-pack that no longer matches its manifest still fail preparation before any output is written, and
-map updates take the deployment's `data/server.lock` and are refused while a server is running.
-The interior and archive exporters (`prepareInteriors`, `prepareArchive`) are maintainer commands
-that export into `build/interiors-export/` or `build/archive-export/` and republish the packs into
-`defaults/maps/` through the `publishInteriors` and `publishArchive` copy tasks, which then run
-`prepareDefaults`. Compilation
-and admin packaging are independent of preparation. The runtime downloader URL/fallback are
-unchanged; a missing map still prevents world entry rather than server login/admin startup.
+paths. Only known prior default generations (recorded by `owned.*` digests) are upgraded atomically
+in place; owner-edited packs keep their bytes. Absent optional source directories warn and succeed.
+Malformed sources, missing pinned packs and manifest mismatches fail before output is written.
+Map updates take the deployment's `data/server.lock` and are refused while a server is running.
+The current map source is based on local hash-verified official gameplay captures dated 2026-10-12.
+The former archive/interior re-export and publish tasks have been removed. `prepareHaven` invokes
+the existing Java converter with local captured scene binaries and writes only to a fresh staging
+directory; it is not part of ordinary builds and does not publish into `defaults/maps/`.
+Compilation and admin packaging are independent of map preparation. The runtime downloader
+URL/fallback are unchanged; a missing map still prevents world entry rather than server
+login/admin startup.
 
 Gradle build output is under `.build/`, separate from runtime deployment data under `build/`. The configuration cache is enabled in `gradle.properties` to reuse the configured task graph. The public `build/` tree is a deployment tree,
 so `clean` removes only known generated JARs, temporary JARs, the legacy scratch subtree and Gradle's fixed `build/reports/dependency-verification/` report directory.

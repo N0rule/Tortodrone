@@ -751,7 +751,7 @@ public final class SessionCodec {
     }
     private void townSummary(DataOutputStream out)throws IOException {
         var entry=SceneRegistry.system().entry().map();
-        type(out,"com.threerings.projectx.town.data.TownSummary");string(out,entry.zoneName());string(out,"town");
+        type(out,"com.threerings.projectx.town.data.TownSummary");string(out,entry.townName());string(out,"town");
         emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);string(out,null);
         out.writeInt(0);out.writeInt(entry.id());out.writeInt(entry.zone());
     }

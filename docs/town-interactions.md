@@ -1,6 +1,6 @@
-# Town interactions and solo interiors (0.22.0 scope)
+# Town interactions and solo interiors
 
-This milestone extends the existing four Haven towns with verified player interactions and three private interior areas. Its protocol and map data are derived from the unchanged installed client and pinned scene exports. It does not add a general party system or new quest content.
+This milestone extends the existing four Haven towns with verified player interactions and three private interior areas. Protocol behavior is derived from the unchanged installed client. Current checked-in layouts come from official gameplay captures dated 2026-10-12; the seven capture hashes are pinned in `defaults/maps/scene-source.properties`. It does not add a general party system or new quest content.
 
 ## Player emotes
 
@@ -44,40 +44,33 @@ The preference is stored in the existing metadata table under SQLite schema 8 an
 
 ## Seven prepared areas
 
-The four bundled town areas are Town Square (scene 1), Bazaar (2), Arcade (3), and Garrison (445). The additional stock areas are Advanced Training (294), Laboratory (437), and Hall of Heroes (449):
+The four bundled town areas are Town Square (scene 1), Bazaar (2), Arcade (3), and Garrison (445). The additional stock areas are Advanced Training (294), Laboratory (30893), and the four-star Hall of Heroes variant (318):
 
 | Town entry | Interior | Stock exit |
 | --- | --- | --- |
 | Town Square, area 3922 | Advanced Training, scene 294 | Area 1526 to Town Square |
-| Garrison, area 3770 | Laboratory, scene 437 | Area 945 to Garrison |
-| Garrison, area 3568 | Hall of Heroes, scene 449 | Area 2812 to Garrison |
+| Garrison, area 3770 | Laboratory, scene 30893 | Area 945 to Garrison |
+| Garrison, area 3568 | Hall of Heroes, scene 318 | Area 2812 to Garrison |
 
-The interior exports come from archive commit `ae49faf06788dd83b35a959306c9fe4c25688004`, scenes 294, 437, and 449. Each knight receives a private instance keyed by owner and interior template. The stock client expects native dungeon-party transport during interior loading, so the server supplies a one-knight `LevelPartyObject` with its native party identifier and exit operation. This supports loading and returning from a solo interior; it does not implement social parties, invitations, or shared multiplayer dungeon groups. At most 360 private interiors are active at once. Exiting or disconnecting releases that owner's instance for reuse.
+The current interior layouts are scenes 294, 30893, and 318; their hashes and capture versions are pinned in the source manifest. Each knight receives a private instance keyed by owner and interior template. The stock client expects native dungeon-party transport during interior loading, so the server supplies a one-knight `LevelPartyObject` with its native party identifier and exit operation. This supports loading and returning from a solo interior; it does not implement social parties, invitations, or shared multiplayer dungeon groups. At most 360 private interiors are active at once. Exiting or disconnecting releases that owner's instance for reuse.
 
 Interior controllers also require health/status entries and an elevator return destination. These peaceful scenes use a normalized living health value of 1/1, empty status, and an empty gate summary linked to the existing Haven town. This keeps the native HUD alive and labels the exit; it implements no combat statistics, gate floors, matchmaking, or rewards.
 
 The server currently uses TCP only. On the first interior entry, a native `UpdateThrottleMessage` raises that connection's client send limit to 100 messages per second. Native unreliable input otherwise falls back to the same TCP queue as travel and keepalive requests, behind the client's default ten-message limit. The stock acknowledgement is decoded without granting any service or changing player data. This is this server's bounded TCP transport policy, not an implementation of stock UDP or its separate flood guard.
 
-The repository's `defaults/maps/` contains all seven packs: the four towns and the three interiors, together with `catalog.properties` and the `scene-source.properties` provenance manifest. Those compiled scene packs are committed; no game meshes, textures, audio or installed JARs are. Ordinary `buildServer`, `prepareDefaults` and `prepareMaps` copy all seven scenes into `build/defaults/maps/` with their matching portal metadata, needing no game path, archive or extra source. Custom files are preserved; a file the source published earlier is upgraded in place, while an owner-edited pack keeps its bytes instead of failing preparation.
+The repository's `defaults/maps/` contains all seven packs: four towns and three interiors, with `catalog.properties` and the `scene-source.properties` provenance manifest. These scene packs are committed outside the JARs; game meshes, textures, audio and installed JARs are not. Ordinary `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes offline. Custom files are preserved; only known prior default generations can be upgraded in place, while owner-edited packs keep their bytes.
 
-To enable these rooms beside the local server JAR, nothing extra is needed: an ordinary build already prepares all seven scenes from the checked-in source. Re-deriving the interior packs from a stock client is maintainer work with `./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights"`, which republishes them into `defaults/maps/`; `-PinteriorsOutput` selects a separate staging tree and `-PsceneCache` a reusable source cache. The server loads `build/defaults/maps/` automatically unless a custom `build/maps/` overrides it.
+An ordinary build prepares all seven scenes from the checked-in source. To derive a new candidate set, use `prepareHaven` with the installed client, all seven local captured scene binaries, and a fresh output path. It verifies each capture hash and writes staging output only; it does not republish into `defaults/maps/`. The server loads `build/defaults/maps/` unless a custom `build/maps/` overrides it. See [map preparation](maps.md) for the command and safeguards.
 
-To prepare a fresh local tree directly, use a new output path and a reusable source cache:
-
-```sh
-java scripts/StockTools.java interiors "/path/to/Spiral Knights" \
-  /tmp/tortodrone-haven-seven-maps /tmp/tortodrone-scene-cache
-```
-
-The output directory must not already exist. The exporter copies the checked-in town packs verbatim, fetches and checks the three pinned archives into the source cache, re-derives the three interior packs from the stock client, then verifies the stock scene configuration and native portal routes. `build/` is ignored local output; inspect and deploy the generated tree without adding it to Git.
+There is no map-specific task in `buildServer`; it prepares the checked-in source only. Maps contain geometry and verified portal metadata, not NPCs, shops, missions, combat behavior or rewards. Private guild scene 528 is excluded.
 
 ## Outside this milestone
 
-NPC behavior, combat, quests, shops, crafting, gates, dungeon rewards, and newly invented rewards are not implemented. Guild Hall and Private Training Hall remain excluded. Friends, social parties, mail, auctions, chat channels, and multiplayer group interiors remain later work. The bundled areas and verified stock objects do not imply support for those systems.
+NPC behavior, quests, shops, crafting, gate progression, dungeon rewards, and newly invented rewards are not implemented. Interior combat has the limits recorded in [town player behavior](town-player-behavior.md). Guild Hall and Private Training Hall remain excluded. Friends, social parties, mail, auctions, chat channels, and multiplayer group interiors remain later work. The bundled areas and verified stock objects do not imply support for those systems.
 
 ## Required validation
 
-Run `./gradlew build`, then the installed-reader and disposable network checks against the prepared seven-map tree:
+Run `./gradlew build`, then the installed-reader and disposable network checks against a prepared seven-map tree when validating map behavior:
 
 ```sh
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights" \
@@ -86,9 +79,10 @@ java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights" \
 
 The optional map argument runs the stock-client interior travel check in a disposable server deployment. Graphical acceptance is a separate step: launch unchanged stock clients with disposable preferences, cache, home, and server accounts; keep installed resources read-only; and exercise the native client calls through its run queue. Wait for the stock loading fade to finish before inspecting screenshots. Network and stock-reader fixtures do not prove rendering or animations.
 
-The isolated two-client graphical check on 2026-10-10 verified all seven areas rendering with their HUDs/minimaps, the sitting pose, peer Attack effect, inspection preview, and both trade views. All three native party exits received their destination scene models in about 1.2 seconds after the TCP fallback correction. Focus-checked keyboard input verified movement after returning to town and automatic walking entry/exit between Garrison and Hall of Heroes. Other portal routes are covered by the stock network fixture; this does not claim graphical coverage of every emote animation or every portal, or of the excluded systems.
+The isolated two-client graphical check on 2026-10-10 verified the then-current seven scene packs rendering with their HUDs/minimaps, the sitting pose, peer Attack effect, inspection preview, and both trade views. It predates the 2026-10-12 map capture replacement and does not validate the current scene binaries. All three native party exits received their destination scene models in about 1.2 seconds after the TCP fallback correction. Focus-checked keyboard input verified movement after returning to town and automatic walking entry/exit between Garrison and Hall of Heroes. Other portal routes were covered by the stock network fixture; this does not claim graphical coverage of every emote animation or every portal, or of the excluded systems.
 
-For 0.26.1 on 2026-10-11, the unchanged installed-client suite passed with
+The following 0.26.1 validation record is from 2026-10-11, before the current map capture
+replacement; it is not validation of the refreshed scene packs. The unchanged installed-client suite passed with
 `java scripts/compat/CheckClientWorld.java "/home/n0rule/.local/share/Steam/steamapps/common/Spiral Knights"`.
 This includes the native flag decoder checks, two-player offer revisions and
 atomic item/currency transfers, rejection, dialog cancellation, and disconnect

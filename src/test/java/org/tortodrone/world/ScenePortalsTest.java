@@ -9,9 +9,9 @@ import static org.tortodrone.support.TestWire.check;
 public final class ScenePortalsTest {
     public static void main(String[] args)throws Exception {
         var portals=ScenePortals.load(Path.of("defaults/maps/haven"),
-            "26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57",
+            "83115fa639bb1e55c93827772d2c46b929282c3641854c1ea5422e8cb0949ac2",
             CollisionMap.read(Path.of("defaults/maps/haven/walkability.gz")));
-        var trigger=portals.triggers().getFirst();
+        var trigger=portals.triggers().stream().filter(t->t.id()==6071).findFirst().orElseThrow();
         check(trigger.intersects(-38.2f,0.4f),"pawn center inside portal rectangle intersects");
         check(trigger.intersects(-39.229614f-ScenePortals.PAWN_RADIUS,0.4f),
             "circle tangent to rectangle edge counts as intersection");

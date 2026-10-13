@@ -34,7 +34,8 @@ public final class PortalConnectionCheck {
             try(var peer=new GameMasterConnectionCheck.Endpoint(args,queue,"PeerPlayer","Peer-Knight")) {
                 WorldConnectionCheck.waitFor(()->peer.occupant(player.pawnId)!=null);
                 var identity=player.pawnId;var equipment=player.equipment.clone();
-                var town=maps.scene(1);var west=trigger(town,6071);var pawn=WorldConnectionCheck.controlled(player);
+                var town=maps.scene(1);var west=triggerTo(town,2);var bazaar=maps.scene(2);
+                var pawn=WorldConnectionCheck.controlled(player);
                 walk(player,route(town,west,pawn.tz().x,pawn.tz().y));
                 WorldConnectionCheck.waitFor(()->!forced.isEmpty());verifyForce(2);
                 var before=WorldConnectionCheck.controlled(player);float frozenX=before.tz().x,frozenY=before.tz().y;
@@ -42,16 +43,16 @@ public final class PortalConnectionCheck {
                 int time=WorldConnectionCheck.last.QY();
                 WorldConnectionCheck.scene.a(time,time,new com.threerings.tudey.data.InputFrame[]{new ProjectXInputFrame(time+1,0,0,1,0)});
                 WorldConnectionCheck.enterPrimary(client,player,sceneMove(client,2));
-                arrival(player,16.5f,7.5f,-(float)Math.PI/2);
+                arrival(player,bazaar.portals().entrances().get(west.entrance()));
                 WorldConnectionCheck.waitFor(()->peer.occupant(player.pawnId)==null);
-                if(!client.isLoggedOn()||!peer.client.isLoggedOn()||frozenX>-36.8f||Math.abs(frozenY)>3.3f)
+                if(!client.isLoggedOn()||!peer.client.isLoggedOn()||!west.intersects(frozenX,frozenY))
                     throw new AssertionError("Portal did not originate at the verified west sensor");
                 System.out.println("PASS: stock walking triggers Town Square west portal, force receiver and same-zone scene RPC load Bazaar at tagged arrival");
-                forced.clear();var bazaar=maps.scene(2);var east=trigger(bazaar,3096);pawn=WorldConnectionCheck.controlled(player);
+                forced.clear();var east=triggerTo(bazaar,1);pawn=WorldConnectionCheck.controlled(player);
                 walk(player,route(bazaar,east,pawn.tz().x,pawn.tz().y));
                 WorldConnectionCheck.waitFor(()->!forced.isEmpty());verifyForce(1);
                 WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,1));
-                arrival(player,-30.5f,.5f,(float)Math.PI/2);
+                arrival(player,town.portals().entrances().get(east.entrance()));
                 WorldConnectionCheck.waitFor(()->peer.occupant(player.pawnId)!=null);
                 if(player.pawnId!=identity||!Arrays.equals(player.equipment,equipment))throw new AssertionError("Portal changed character identity/equipment");
                 int idle=WorldConnectionCheck.deltas;WorldConnectionCheck.waitFor(()->WorldConnectionCheck.deltas>=idle+8);
@@ -64,15 +65,18 @@ public final class PortalConnectionCheck {
         if(forced.size()!=1||forced.getFirst()[0]!=1||forced.getFirst()[1]!=scene)
             throw new AssertionError("Unexpected forced destination: "+forced.size());
     }
-    static void arrival(PlayerObject player,float x,float y,float facing) {
+    static void arrival(PlayerObject player,ScenePortals.Entrance entrance) {
         var actor=WorldConnectionCheck.controlled(player);
-        if(Math.abs(actor.tz().x-x)>.001||Math.abs(actor.tz().y-y)>.001||Math.abs(actor.tA()-facing)>.001
+        if(entrance==null||Math.abs(actor.tz().x-entrance.x())>.001||Math.abs(actor.tz().y-entrance.y())>.001
+                ||angleDiff(actor.tA(),entrance.rotation())>.001
                 ||actor.adU()!=0||actor.bR(2))throw new AssertionError("Wrong portal arrival: "+actor);
     }
-    static ScenePortals.Trigger trigger(SceneCatalog.MapScene map,int id) {
-        return map.portals().triggers().stream().filter(portal->portal.id()==id).findFirst()
-            .orElseThrow(()->new AssertionError("Missing native portal "+map.id()+"/"+id));
+    static ScenePortals.Trigger triggerTo(SceneCatalog.MapScene map,int destination) {
+        var matches=map.portals().triggers().stream().filter(portal->portal.destination()==destination).toList();
+        if(matches.size()!=1)throw new AssertionError("Expected one native portal "+map.id()+" -> "+destination+", found "+matches.size());
+        return matches.getFirst();
     }
+    private static float angleDiff(float a,float b){float d=(a-b)%(2*(float)Math.PI);if(d>Math.PI)d-=2*Math.PI;if(d< -Math.PI)d+=2*Math.PI;return Math.abs(d);}
     record Cell(int x,int y){float wx(){return x*.25f;}float wy(){return y*.25f;}}
     static float[][] route(SceneCatalog.MapScene map,ScenePortals.Trigger target,float x,float y) {
         Cell start=new Cell(Math.round(x*4),Math.round(y*4));

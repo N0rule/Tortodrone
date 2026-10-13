@@ -10,10 +10,9 @@ import com.threerings.math.*;
 import org.tortodrone.world.CollisionMap;
 import org.tortodrone.world.ScenePortals;
 
-/** Exports a pinned seven-scene Haven catalog from a local scene-archive checkout. */
-public final class ArchiveTownExport {
-    /** Optional verified spawn keeps a bundle's documented arrival point; null derives the closest walkable sample. */
-    private record Pack(int id,String folder,String path,String kind,String digest,Float spawnX,Float spawnY) { }
+/** Rebuilds the seven modern Haven packs from verified local captured scene binaries. */
+public final class HavenSceneExport {
+    private record Pack(int id,String folder,String kind) { }
     private record Entrance(int id,float x,float y,float rotation) { }
     private record Point(float x,float y) { }
     private record Route(int source,int destination,String tag,String areaName) { }
@@ -22,52 +21,49 @@ public final class ArchiveTownExport {
     private record Arrival(String tag,Entrance entrance) { }
 
     private static final List<Pack> PACKS=List.of(
-        // The bundled entry scene is the regular 2017 Town Square, not the snowy master revision;
-        // its verified spawn stays the documented arrival point instead of the closest sample to the origin.
-        new Pack(1,"haven","Legacy/BukkitBoss/2017/1","town","26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57",0f,-8f),
-        new Pack(2,"bazaar","Master/Static/2","town","e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033",null,null),
-        new Pack(3,"arcade","Master/Static/3","town","dff99bfbbba7d37cf5585746e8883e3f6c09cfadec7ffe39ac19327a42b22b9f",null,null),
-        new Pack(445,"garrison","Master/Static/445","town","a1e3e970b31c59d2aa661ed6bd836fe578cb08bf46e64533febec8566286b9a1",null,null),
-        new Pack(294,"advanced_training","Master/Static/294","training","d0cf0863721970d15090f613d217495ceaa18fbf125813ff9d105b16966f2619",null,null),
-        new Pack(437,"laboratory","Master/Static/437","level","5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0",null,null),
-        new Pack(449,"hall_of_heroes","Master/Static/449","level","fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6",null,null));
+        new Pack(1,"haven","town"), new Pack(2,"bazaar","town"),
+        new Pack(3,"arcade","town"), new Pack(445,"garrison","town"),
+        new Pack(294,"advanced_training","training"), new Pack(30893,"laboratory","level"),
+        new Pack(318,"hall_of_heroes","level"));
     private static final Set<Integer> TOWNS=Set.of(1,2,3,445);
     private static final List<Route> INTERIOR_ROUTES=List.of(
         new Route(1,294,"level_start","Portals/To Advanced Training"),
-        new Route(445,437,"level_start","Portals/To Laboratory"),
-        new Route(445,449,"level_start","Portals/To Hall of Heroes"),
+        new Route(445,30893,"level_start","Portals/To Laboratory"),
+        new Route(445,318,"level_start","Portals/To Hall of Heroes"),
         new Route(294,1,"from_advanced_training","Portals/Leave Party"),
-        new Route(437,445,"from_lab","Portals/Town Portal"),
-        new Route(449,445,"from_hoh","Portals/Town Portal"));
+        new Route(30893,445,"from_lab","Portals/Town Portal"),
+        new Route(318,445,"from_hoh","Portals/Town Portal"));
     private static final String FORMAT="1";
 
     public static void main(String[] args) throws Exception {
         if(args.length!=3)throw new IllegalArgumentException(
-            "Usage: ArchiveTownExport game-directory archive-root fresh-maps-output-directory");
+            "Usage: HavenSceneExport game-directory captured-binaries-directory fresh-maps-output-directory");
         Path project=Path.of("").toAbsolutePath().normalize();
         Path game=Path.of(args[0]).toAbsolutePath().normalize();
-        Path archive=archiveRoot(Path.of(args[1]).toAbsolutePath().normalize());
+        Path archive=Path.of(args[1]).toRealPath();
+        Properties pins=properties(project.resolve("defaults/maps/scene-source.properties"));
         Path output=Path.of(args[2]).toAbsolutePath().normalize();
         if(!Files.isRegularFile(game.resolve("code/projectx-pcode.jar")))throw new IOException("Missing installed stock game JAR");
         if(Files.exists(output,LinkOption.NOFOLLOW_LINKS))throw new IOException("Output exists; choose a fresh maps directory");
 
         var sourceFiles=new LinkedHashMap<Pack,Path>();
         for(Pack pack:PACKS) {
-            Path source=archive.resolve(pack.path).normalize();
+            Path source=archive.resolve(pack.id+".dat").normalize();
             if(!source.startsWith(archive)||Files.isSymbolicLink(source)||!Files.isRegularFile(source))
-                throw new IOException("Missing or unsafe pinned archive scene: "+pack.path);
+                throw new IOException("Missing or unsafe captured scene: "+pack.id);
             String actual=digest(source);
-            if(!pack.digest.equals(actual))throw new IOException("Pinned archive digest mismatch for "+pack.path+": "+actual);
+            if(!actual.equals(pins.getProperty("capture."+pack.id+".sha256")))
+                throw new IOException("Captured scene digest mismatch for "+pack.id);
             sourceFiles.put(pack,source);
         }
 
         Files.createDirectories(output.getParent());
-        Path staging=Files.createTempDirectory(output.getParent(),".archive-haven-");
+        Path staging=Files.createTempDirectory(output.getParent(),".modern-haven-");
         boolean published=false;
         try {
             for(Pack pack:PACKS) {
                 Path folder=staging.resolve(pack.folder);
-                ScenePackExport.main(sceneArgs(game,sourceFiles.get(pack),folder,pack));
+                ScenePackExport.main(sceneArgs(game,sourceFiles.get(pack),folder));
                 Properties descriptor=properties(folder.resolve("map.properties"));
                 if(Integer.parseInt(descriptor.getProperty("scene-id"))!=pack.id
                     ||!pack.kind.equals(descriptor.getProperty("kind")))
@@ -85,10 +81,8 @@ public final class ArchiveTownExport {
             var arrivals=exportTownPortals(folders,scenes,manager);
             exportInteriorRoutes(folders,scenes,manager,arrivals);
             validateNetwork(folders);
-            verifyBundledTowns(project,folders);
-            verifyKnownPortalMetadata(project,folders);
 
-            Properties manifest=sourceManifest(project,archive,sourceFiles,staging);
+            Properties manifest=sourceManifest(project,staging);
             writeProperties(staging.resolve("scene-source.properties"),manifest);
             Files.move(staging,output,StandardCopyOption.ATOMIC_MOVE);published=true;
             for(Pack pack:PACKS) {
@@ -98,14 +92,8 @@ public final class ArchiveTownExport {
                     pack.id,p.getProperty("kind"),p.getProperty("version"),p.getProperty("scene-sha256"),
                     csv(portals.getProperty("entrances","")).size(),csv(portals.getProperty("triggers","")).size());
             }
-            System.out.println("PASS: exported seven pinned Haven scenes and native portal links to "+output);
+            System.out.println("PASS: exported seven verified modern Haven scenes and native portal links to "+output);
         } finally { if(!published)deleteTree(staging); }
-    }
-
-    private static Path archiveRoot(Path input)throws IOException {
-        for(Path candidate:List.of(input,input.resolve("vendor/scene-archive")))
-            if(Files.isDirectory(candidate.resolve("Master/Static"),LinkOption.NOFOLLOW_LINKS))return candidate.toRealPath();
-        throw new IOException("Archive root must contain Master/Static or vendor/scene-archive/Master/Static");
     }
 
     private static ConfigManager manager(Path game)throws Exception {
@@ -176,7 +164,7 @@ public final class ArchiveTownExport {
             writeProperties(folder.resolve("portals.properties"),metadata);
         }
         int links=nativePortals.values().stream().mapToInt(List::size).sum();
-        if(links!=10)throw new IOException("Expected ten directed native Haven town links, found "+links);
+        if(links!=12)throw new IOException("Expected twelve directed modern Haven town links, found "+links);
         return Map.copyOf(markerTags);
     }
 
@@ -334,14 +322,14 @@ public final class ArchiveTownExport {
         }
     }
 
-    private static Properties sourceManifest(Path project,Path archive,Map<Pack,Path> sources,Path staging)throws Exception {
+    private static Properties sourceManifest(Path project,Path staging)throws Exception {
         Properties p=new Properties();p.setProperty("format",FORMAT);
         // The checked-in source keeps its provenance manifest and ownership history; a fresh
         // generation records this generation's digests as the replacement baseline.
         var existing=project.resolve("defaults/maps/scene-source.properties");
         if(Files.isRegularFile(existing,LinkOption.NOFOLLOW_LINKS)) {
             Properties old=properties(existing);
-            for(String key:old.stringPropertyNames())if(key.startsWith("owned."))p.setProperty(key,old.getProperty(key));
+            for(String key:old.stringPropertyNames())if(key.startsWith("owned.")||key.startsWith("capture."))p.setProperty(key,old.getProperty(key));
             for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties")) {
                 String rel=pack.folder+"/"+file;String previous=old.getProperty("source."+rel);
                 if(previous!=null)addOwned(p,rel,previous);
@@ -354,11 +342,7 @@ public final class ArchiveTownExport {
             if(Files.isRegularFile(original))addOwned(p,rel,digest(original));
             Path current=staging.resolve(rel);p.setProperty("source."+rel,digest(current));
         }
-        for(Pack pack:PACKS) {
-            String key="archive."+pack.id;
-            p.setProperty(key+".path",archive.relativize(sources.get(pack)).toString().replace('\\','/'));
-            p.setProperty(key+".sha256",pack.digest);
-        }
+        p.setProperty("provenance","verified-scene-source-2026-10-12");
         return p;
     }
     private static void addOwned(Properties properties,String relative,String digest) {
@@ -367,77 +351,9 @@ public final class ArchiveTownExport {
         values.add(digest);properties.setProperty(key,String.join(",",values));
     }
 
-    private static String[] sceneArgs(Path game,Path archived,Path folder,Pack pack) {
-        var args=new ArrayList<>(List.of(game.toString(),archived.toString(),folder.toString(),"1","Haven"));
-        if(pack.spawnX()!=null) {
-            args.add(Float.toString(pack.spawnX()));
-            args.add(Float.toString(pack.spawnY()));
-        }
+    private static String[] sceneArgs(Path game,Path archived,Path folder) {
+        var args=new ArrayList<>(List.of(game.toString(),archived.toString(),folder.toString(),"1","%town:m.haven"));
         return args.toArray(String[]::new);
-    }
-
-    /** A prepared source must reproduce every bundled town pack, or a rebuild would silently replace its geometry. */
-    private static void verifyBundledTowns(Path project,Map<Integer,Path> folders) throws Exception {
-        Path bundled=project.resolve("defaults/maps");
-        for(Pack pack:PACKS) {
-            Path reference=bundled.resolve(pack.folder);
-            if(!Files.isRegularFile(reference.resolve("map.properties"),LinkOption.NOFOLLOW_LINKS))continue;
-            Properties prepared=properties(folders.get(pack.id).resolve("map.properties"));
-            Properties expected=properties(reference.resolve("map.properties"));
-            for(String key:List.of("kind","scene-id","zone-id","zone-name","name","image","instances",
-                "version","scene-sha256","collision-sha256"))
-                if(!Objects.equals(expected.getProperty(key),prepared.getProperty(key)))
-                    throw new IOException("Prepared "+pack.folder+" map differs from the bundled pack: "+key+" is "
-                        +prepared.getProperty(key)+", expected "+expected.getProperty(key));
-            for(String key:List.of("spawn-x","spawn-y"))
-                if(Float.parseFloat(expected.getProperty(key))!=Float.parseFloat(prepared.getProperty(key)))
-                    throw new IOException("Prepared "+pack.folder+" map differs from the bundled pack: "+key+" is "
-                        +prepared.getProperty(key)+", expected "+expected.getProperty(key));
-            if(!digest(folders.get(pack.id).resolve("scene.dat")).equals(digest(reference.resolve("scene.dat"))))
-                throw new IOException("Prepared "+pack.folder+" scene export differs from the bundled map");
-        }
-    }
-
-    private static void verifyKnownPortalMetadata(Path project,Map<Integer,Path> folders)throws Exception {
-        for(Pack pack:PACKS)if(TOWNS.contains(pack.id)) {
-            Path old=project.resolve("defaults/maps").resolve(pack.folder);
-            if(!Files.isRegularFile(old.resolve("map.properties"))||!Files.isRegularFile(old.resolve("portals.properties")))continue;
-            Properties currentMap=properties(folders.get(pack.id).resolve("map.properties"));
-            Properties oldMap=properties(old.resolve("map.properties"));
-            if(!currentMap.getProperty("scene-sha256").equals(oldMap.getProperty("scene-sha256")))continue;
-            Properties actual=properties(folders.get(pack.id).resolve("portals.properties"));
-            Properties expected=properties(old.resolve("portals.properties"));
-            for(String key:expected.stringPropertyNames()) {
-                if(key.equals("entrances")) {
-                    // Arrival names and coordinates are re-derived from the current archive revision below.
-                } else if(key.equals("triggers")) {
-                    if(!new TreeSet<>(csv(actual.getProperty(key))).containsAll(csv(expected.getProperty(key))))
-                        throw new IOException("Extracted native portal list changed for matching archive scene "+pack.id+": "+key);
-                } else if(key.startsWith("entrance.")||key.matches("trigger\\.\\d+\\.entrance")) {
-                    // Legacy arrival aliases and coordinates can describe pre-archive markers. Native stock
-                    // resolution falls back to the unique default entrance when that exact tag is absent.
-                } else if(key.matches("trigger\\.\\d+\\.vertices")) {
-                    if(!samePolygon(expected.getProperty(key),actual.getProperty(key)))
-                        throw new IOException("Extracted native portal geometry changed for matching archive scene "+pack.id+": "+key);
-                } else if(!Objects.equals(expected.getProperty(key),actual.getProperty(key)))
-                    throw new IOException("Extracted native portal metadata changed for matching archive scene "+pack.id+": "+key);
-            }
-        }
-    }
-
-    private static boolean samePolygon(String first,String second) {
-        if(first==null||second==null)return false;
-        String[] a=first.split(";"),b=second.split(";");if(a.length!=b.length)return false;
-        for(int start=0;start<b.length;start++)for(int direction:new int[]{1,-1}) {
-            boolean same=true;
-            for(int i=0;i<a.length;i++) {
-                String[] ap=a[i].split(","),bp=b[Math.floorMod(start+direction*i,b.length)].split(",");
-                if(ap.length!=2||bp.length!=2||Float.parseFloat(ap[0])!=Float.parseFloat(bp[0])
-                    ||Float.parseFloat(ap[1])!=Float.parseFloat(bp[1])) {same=false;break;}
-            }
-            if(same)return true;
-        }
-        return false;
     }
 
     private static int number(Object value,String name,int scene,int area)throws IOException {

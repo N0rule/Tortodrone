@@ -18,6 +18,8 @@ import org.tortodrone.world.*;
 
 /** Two stock clients exercise the native Haven interior links and party exit operation. */
 public final class InteriorConnectionCheck {
+    private static final int LABORATORY = 30893;
+    private static final int HALL_OF_HEROES = 318;
     private static final LinkedBlockingQueue<Runnable> TASKS = new LinkedBlockingQueue<>();
     private static final List<int[]> FORCED = new CopyOnWriteArrayList<>();
     private static Thread dispatchThread;
@@ -40,8 +42,8 @@ public final class InteriorConnectionCheck {
         var maps = SceneCatalog.load(mapsPath);
         requireScene(maps, 1, "town"); requireScene(maps, 2, "town");
         requireScene(maps, 3, "town"); requireScene(maps, 445, "town");
-        requireScene(maps, 294, "training"); requireScene(maps, 437, "level");
-        requireScene(maps, 449, "level");
+        requireScene(maps, 294, "training"); requireScene(maps, LABORATORY, "level");
+        requireScene(maps, HALL_OF_HEROES, "level");
 
         String key = Files.readString(Path.of(args[1])).trim();
         if(args.length==5){try(var endpoint=new Endpoint(host,Integer.parseInt(args[0]),key,"LanPlayer","Town-Knight")){
@@ -72,7 +74,7 @@ public final class InteriorConnectionCheck {
             }
 
             // Town Square -> Advanced Training Hall, using its archived sensor.
-            travelByWalk(lan, maps, 1, 3922, 294, "training");
+            travelByWalk(lan, maps, 1, 294, "training");
             // Same template for a second player must produce a separate live instance and baseline.
             peer.enter(294); peer.entered(); peer.awaitActor();
             if (peer.place.xL() == lan.place.xL()) throw new AssertionError("Two players shared a private training instance");
@@ -91,12 +93,12 @@ public final class InteriorConnectionCheck {
             checkForce(1, 1);
             lan.enter(1); lan.entered(); lan.awaitActor();
             System.out.println("PASS: native LevelPartyObject.partyService.h emits method 3 and returns from training");
-            travelByWalk(lan, maps, 294, 1526, 1, "town");
+            travelByWalk(lan, maps, 294, 1, "town");
 
-            travelByWalk(lan, maps, 445, 3770, 437, "level");
-            travelByWalk(lan, maps, 437, 945, 445, "town");
-            travelByWalk(lan, maps, 445, 3568, 449, "level");
-            travelByWalk(lan, maps, 449, 2812, 445, "town");
+            travelByWalk(lan, maps, 445, LABORATORY, "level");
+            travelByWalk(lan, maps, LABORATORY, 445, "town");
+            travelByWalk(lan, maps, 445, HALL_OF_HEROES, "level");
+            travelByWalk(lan, maps, HALL_OF_HEROES, 445, "town");
             System.out.println("PASS: all six new interior links used their native walking sensors or stock party exit");
         }
     }
@@ -106,16 +108,16 @@ public final class InteriorConnectionCheck {
         if (!map.kind().equals(kind)) throw new AssertionError("Scene " + id + " has kind " + map.kind() + ", expected " + kind);
     }
 
-    private static void travelByWalk(Endpoint endpoint, SceneCatalog catalog, int sourceId, int triggerId,
+    private static void travelByWalk(Endpoint endpoint, SceneCatalog catalog, int sourceId,
             int destinationId, String destinationKind) throws Exception {
         var source = catalog.scene(sourceId);
-        var trigger = source.portals().triggers().stream().filter(p -> p.id() == triggerId).findFirst()
-            .orElseThrow(() -> new AssertionError("Missing native trigger " + sourceId + "/" + triggerId));
-        if (trigger.destination() != destinationId) throw new AssertionError("Wrong native link destination for " + sourceId + "/" + triggerId);
+        var candidates = source.portals().triggers().stream().filter(p -> p.destination() == destinationId).toList();
+        if (candidates.size() != 1) throw new AssertionError("Expected one native link " + sourceId + " -> " + destinationId + ", found " + candidates.size());
+        var trigger = candidates.getFirst();
         endpoint.enter(sourceId); endpoint.entered(); endpoint.awaitActor();
         var actor = endpoint.actor();
         if (source.town() ? !(actor instanceof com.threerings.projectx.data.actor.Knight) : !(actor instanceof Dungeoneer))
-            throw new AssertionError("Wrong actor type before link " + sourceId + "/" + triggerId + ": " + actor.getClass());
+            throw new AssertionError("Wrong actor type before link " + sourceId + "/" + destinationId + ": " + actor.getClass());
         FORCED.clear();
         float[][] path = route(source, trigger, actor.tz().x, actor.tz().y);
         endpoint.walk(path);
@@ -129,15 +131,16 @@ public final class InteriorConnectionCheck {
             throw new AssertionError("Interior destination did not decode as generic ProjectXSceneObject");
         var expected = catalog.scene(destinationId).portals().entrances().get(trigger.entrance());
         var arrival = endpoint.actor();
-        if (Math.abs(arrival.tz().x - expected.x()) > .002 || Math.abs(arrival.tz().y - expected.y()) > .002 || arrival.bR(2))
-            throw new AssertionError("Wrong tagged arrival or active movement after link " + sourceId + "/" + triggerId + ": " + arrival);
+        if (Math.abs(arrival.tz().x - expected.x()) > .002 || Math.abs(arrival.tz().y - expected.y()) > .002
+                ||Math.abs(Math.IEEEremainder(arrival.tA()-expected.rotation(),2*Math.PI))>.002||arrival.bR(2))
+            throw new AssertionError("Wrong tagged arrival or active movement after link " + sourceId + "/" + destinationId + ": " + arrival);
         if (destinationKind.equals("level") || destinationKind.equals("training")) {
             if (!(arrival instanceof Dungeoneer) || endpoint.party == null || endpoint.party.getClass() != LevelPartyObject.class)
                 throw new AssertionError("Interior entry did not subscribe native party and Dungeoneer actor");
             int expectedParty = 500 + endpoint.place.xL();
             if (endpoint.party.xL() != expectedParty) throw new AssertionError("Unexpected interior party oid " + endpoint.party.xL());
         }
-        System.out.println("PASS: stock walking link " + sourceId + "/" + triggerId + " -> " + destinationId + "/" + trigger.entrance()
+        System.out.println("PASS: stock walking link " + sourceId + "/" + trigger.id() + " -> " + destinationId + "/" + trigger.entrance()
             + " with tagged arrival, actor type and fresh baseline");
     }
 
@@ -240,10 +243,10 @@ public final class InteriorConnectionCheck {
                 public void a(int oid, ObjectAccessException error) { throw new AssertionError(error); }
             };
             client.xb().a(move.oid, placeSubscription); await(() -> place != null);
-            if (sceneId == 294 && place.getClass() != ProjectXSceneObject.class) throw new AssertionError("Training scene is not generic ProjectXSceneObject");
-            if ((sceneId == 437 || sceneId == 449) && place.getClass() != ProjectXSceneObject.class) throw new AssertionError("Level scene is not generic ProjectXSceneObject");
+            if ((sceneId == 294 || sceneId == LABORATORY || sceneId == HALL_OF_HEROES)
+                    && place.getClass() != ProjectXSceneObject.class) throw new AssertionError("Interior scene is not generic ProjectXSceneObject");
             party = null; partySubscription = null;
-            if (sceneId == 294 || sceneId == 437 || sceneId == 449) {
+            if (sceneId == 294 || sceneId == LABORATORY || sceneId == HALL_OF_HEROES) {
                 int partyOid = 500 + move.oid;
                 await(() -> player.partyOid == partyOid);
                 partySubscription = new com.threerings.presents.dobj.t<>() {
@@ -261,7 +264,7 @@ public final class InteriorConnectionCheck {
         void awaitActor() throws Exception {
             await(() -> last != null && last.aeh() == 0 && actors.containsKey(player.pawnId));
             Actor own = actor();
-            if ((model.sceneId == 294 || model.sceneId == 437 || model.sceneId == 449) && !(own instanceof Dungeoneer))
+            if ((model.sceneId == 294 || model.sceneId == LABORATORY || model.sceneId == HALL_OF_HEROES) && !(own instanceof Dungeoneer))
                 throw new AssertionError("Interior snapshot actor is not Dungeoneer: " + own.getClass());
         }
         Actor actor() { Actor value = actors.get(player.pawnId); if (value == null) throw new AssertionError("Missing controlled actor"); return value; }
@@ -331,7 +334,7 @@ public final class InteriorConnectionCheck {
             }
         }
         private InputFrame input(int timestamp, float heading, int flags) {
-            if (model.sceneId == 294 || model.sceneId == 437 || model.sceneId == 449)
+            if (model.sceneId == 294 || model.sceneId == LABORATORY || model.sceneId == HALL_OF_HEROES)
                 return new com.threerings.projectx.dungeon.data.DungeonInputFrame(timestamp, heading, heading, flags, 0);
             return new ProjectXInputFrame(timestamp, heading, heading, flags, 0);
         }

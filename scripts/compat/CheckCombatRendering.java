@@ -76,6 +76,21 @@ public final class CheckCombatRendering {
             while (!Files.isRegularFile(publicKey) && System.nanoTime() < keyDeadline) Thread.sleep(50);
             if (!Files.isRegularFile(publicKey)) throw new IOException("Server did not create disposable public key:\n" + tail(serverLog));
 
+            Path peerOutput=outputDir.resolve("peer"),peerHome=scratch.resolve("peer-home"),peerTemp=scratch.resolve("peer-tmp");
+            Files.createDirectories(peerOutput);Files.createDirectories(peerHome.resolve("prefs"));
+            Files.createDirectories(peerHome.resolve("system-prefs"));Files.createDirectories(peerTemp);
+            var peerCommand=new ArrayList<>(base);
+            peerCommand.replaceAll(arg->arg.startsWith("-Duser.home=")?"-Duser.home="+peerHome:
+                arg.startsWith("-Djava.util.prefs.userRoot=")?"-Djava.util.prefs.userRoot="+peerHome.resolve("prefs"):
+                arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
+                arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
+            peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
+            Path peerLog=output.resolve("peer-client.log");Process peer=start(peerCommand,peerLog,scratch);
+            long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
+            while(peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
+            if(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready")))
+                throw new IOException("Graphical peer did not become ready:\n"+tail(peerLog));
+
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
             Path clientLog = output.resolve("client.log");
@@ -87,6 +102,9 @@ public final class CheckCombatRendering {
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
                 throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
+            if(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
+                    ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:")))
+                throw new IOException("Graphical peer did not pass:\n"+tail(peerLog));
             System.out.println(log.lines().filter(line -> line.startsWith("PASS:")).findFirst().orElseThrow());
             System.out.println("Combat screenshots and logs retained at " + output);
         } finally {

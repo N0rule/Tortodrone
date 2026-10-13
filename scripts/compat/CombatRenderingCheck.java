@@ -33,6 +33,10 @@ public final class CombatRenderingCheck {
         new Action("dodge",SWORD,1024,120,286,false));
     private final ProjectXApp app;
     private final Path output;
+    private final boolean peer;
+    private float peerStartX,peerStartY;
+    private float peerRenderedX,peerRenderedY;
+    private boolean peerBaseline,peerMotion;
     private final Map<Integer,Actor> authoritative=new HashMap<>();
     private final Set<Integer> activities=new TreeSet<>(),renderedActivities=new TreeSet<>();
     private final Set<String> animations=new TreeSet<>();
@@ -40,17 +44,21 @@ public final class CombatRenderingCheck {
     private final Set<Integer> previousActors=new HashSet<>();
     private final ExecutorService images=Executors.newSingleThreadExecutor();
     private final List<Future<?>> writes=new ArrayList<>();
+    private static final int[] TOUR={2,3,445,30893,318};
+    private int tour;
     private int stage,index,frames,lastStamp,actionStamp,requiredStarted;
     private float moveX,moveY;
-    private long deadline,started,nextFrame;
+    private long deadline,started,nextFrame,lastStatus;
     private boolean listening,released,projectile,aftermath,done,passed;
     private Confirm equip;
     private String lastAnimation="";
     private Throwable failure;
 
-    private CombatRenderingCheck(ProjectXApp app,Path output){this.app=app;this.output=output;deadline=System.nanoTime()+210_000_000_000L;}
+    private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer){this.app=app;this.output=output;this.peer=peer;deadline=System.nanoTime()+(peer?360:230)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
         if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
+        boolean peer=args.length==4&&args[0].equals("--peer");
+        if(peer)args=Arrays.copyOfRange(args,1,args.length);
         if(args.length!=3)throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -62,9 +70,9 @@ public final class CombatRenderingCheck {
         // Native startup re-applies this preference after construction. This is
         // the launcher's disposable preferences root, never the owner's settings.
         com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
-        var app=new ProjectXApp("LanPlayer","lan-test-password",false,"Town-Knight",null,null,null,null);
-        app.setTitle("Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
-        var probe=new CombatRenderingCheck(app,Path.of(args[2]));
+        var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
+        app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
+        var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer);
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
         timer.scheduleAtFixedRate(new TimerTask(){public void run(){if(pending.compareAndSet(false,true))app.getRunQueue().postRunnable(()->{try{probe.tick();}finally{pending.set(false);}});}},50,40);
@@ -74,11 +82,13 @@ public final class CombatRenderingCheck {
     }
     private static void seed(Path data)throws Exception {
         try(var store=new AccountStore(data)){
-            store.create("LanPlayer","lan-test-password".toCharArray());
-            char[] password=AccountStore.transform("lan-test-password".toCharArray());
-            try{store.authenticate("LanPlayer",password).characters().create(new Knight(0,"Town-Knight",
-                "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));}
-            finally{Arrays.fill(password,'\0');}
+            for(String user:List.of("LanPlayer","PeerPlayer")) {
+                store.create(user,"lan-test-password".toCharArray());
+                char[] password=AccountStore.transform("lan-test-password".toCharArray());
+                try{store.authenticate(user,password).characters().create(new Knight(0,user.equals("LanPlayer")?"Town-Knight":"Peer-Knight",
+                    "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));}
+                finally{Arrays.fill(password,'\0');}
+            }
             for(String item:List.of(SWORD,GUN,BOMB))store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
@@ -88,13 +98,57 @@ public final class CombatRenderingCheck {
             long now=System.nanoTime();
             if(now>deadline)throw new AssertionError("Timed out at stage "+stage+", action "+index);
             if(!app.zr().isLoggedOn())return;
+            // Fresh disposable preferences show Uplink automatically. Close that native
+            // startup window through its normal API before exercising the controller.
+            var root=app.getRoot();
+            if(root!=null)for(int window=root.getWindowCount()-1;window>=0;window--){
+                if(root.getWindow(window) instanceof com.threerings.projectx.client.UplinkWindow uplink)uplink.dismiss();
+            }
+            if(now-lastStatus>5_000_000_000L){
+                lastStatus=now;Object current=app.Gu();
+                System.out.println("STATE: peer="+peer+" stage="+stage+" actors="+authoritative.size()
+                    +" view="+(current==null?"none":current.getClass().getName())+" loading="+app.GF().mG());
+            }
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
+            if(peer){peerTick(view);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){started=now;stage=1;return;}
-            if(stage==1&&now-started>5_000_000_000L){capture("haven");System.out.println("RENDER: Haven loaded; normal move to Training Hall");app.GF().bl(294);stage=2;return;}
+            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;stage=1;return;}
+            if(stage==1&&now-started>5_000_000_000L){
+                if(GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
+                    throw new AssertionError("Disposable primary client must be focused for native town input");
+                if(authoritative.values().stream().noneMatch(a->a.vw()!=app.CT().pawnId&&a instanceof com.threerings.projectx.data.actor.Knight))return;
+                capture("haven");moveY=view.PO().acU().tz().y;moveNorth(view,true);started=now;stage=13;return;
+            }
+            if(stage==13&&now-started>1_500_000_000L){moveNorth(view,false);started=now;stage=14;return;}
+            if(stage==14&&now-started>15_000_000_000L){
+                var own=authoritative.get(app.CT().pawnId);
+                throw new AssertionError("Peer did not render town movement; primary actor="+(own==null?"missing":own.tz()));
+            }
+            if(stage==14&&Files.isRegularFile(output.resolve("peer/peer-movement"))){
+                var own=authoritative.get(app.CT().pawnId);
+                if(own==null||own.tz().y<moveY+2)throw new AssertionError("Town movement did not advance on the modern collision map");
+                boolean visible=false;
+                for(var actor:authoritative.values())if(actor.vw()!=app.CT().pawnId){
+                    var sprite=view.gk(actor.vw());
+                    if(sprite!=null&&sprite.acL().isVisible()&&sprite.acL().getConfig()!=null){
+                        var position=sprite.acL().getLocalTransform().tJ();
+                        visible|=Math.hypot(position.x-actor.tz().x,position.y-actor.tz().y)<1;
+                    }
+                }
+                if(!visible)throw new AssertionError("Primary client did not render its peer knight");
+                capture("haven-shared-movement");System.out.println("CHECK: two graphical clients render shared Town Square and replicated movement");
+                app.GF().bl(TOUR[tour]);stage=11;return;
+            }
+            if(stage==11&&view.sceneId()==TOUR[tour]){started=now;stage=12;return;}
+            if(stage==12&&view.sceneId()==TOUR[tour]&&now-started>3_000_000_000L){
+                capture("scene-"+TOUR[tour]);System.out.println("RENDER: modern scene "+TOUR[tour]+" loaded");
+                if(++tour<TOUR.length){app.GF().bl(TOUR[tour]);stage=11;}
+                else{app.GF().bl(294);stage=2;}
+                return;
+            }
             if(stage==2&&view.sceneId()==294&&view.PO().acU() instanceof Dungeoneer){started=now;stage=3;return;}
             if(stage==3&&now-started>2_000_000_000L){capture("training-idle");moveX=view.PO().acU().tz().x;moveY=view.PO().acU().tz().y;moveNorth(view,true);started=now;stage=8;return;}
             if(stage==8&&now-started>1_000_000_000L){moveNorth(view,false);started=now;stage=9;return;}
@@ -159,8 +213,27 @@ public final class CombatRenderingCheck {
             // Scene identity changes before its first rendered frame. Let Haven
             // settle before saving the return image and reporting completion.
             if(stage==7&&view.sceneId()==1){started=now;stage=10;return;}
-            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();passed=done=true;System.out.println("PASS: stock graphical Haven/Training/return transitions, nine combat actions, native animations and server projectile sprites");app.shutdown();}
+            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, nine combat actions, native animations and server projectile sprites");app.shutdown();}
         }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdownNow();app.shutdown();}
+    }
+    private void peerTick(View view)throws Exception {
+        if(!Files.exists(output.resolve("peer-ready"))){capture("town-peer");Files.writeString(output.resolve("peer-ready"),"");}
+        for(var actor:authoritative.values())if(actor.vw()!=app.CT().pawnId&&actor instanceof com.threerings.projectx.data.actor.Knight){
+            var sprite=view.gk(actor.vw());
+            if(sprite==null||!sprite.acL().isVisible()||sprite.acL().getConfig()==null)continue;
+            var position=sprite.acL().getLocalTransform().tJ();
+            if(Math.hypot(position.x-actor.tz().x,position.y-actor.tz().y)>1)continue;
+            if(!peerBaseline){peerStartX=actor.tz().x;peerStartY=actor.tz().y;peerRenderedX=position.x;peerRenderedY=position.y;peerBaseline=true;}
+            if(!peerMotion&&Math.hypot(actor.tz().x-peerStartX,actor.tz().y-peerStartY)>2
+                    &&Math.hypot(position.x-peerRenderedX,position.y-peerRenderedY)>1.5){
+                System.out.println("CHECK: peer model transform moved from "+peerRenderedX+","+peerRenderedY+" to "+position.x+","+position.y);
+                capture("town-peer-movement");peerMotion=true;Files.writeString(output.resolve("peer-movement"),"");
+            }
+        }
+        if(Files.isRegularFile(output.getParent().resolve("primary-complete"))){
+            if(!peerMotion)throw new AssertionError("Peer did not render the moving knight");
+            finishImages();passed=done=true;System.out.println("PASS: graphical peer renders shared Town Square and the other knight's movement");app.shutdown();
+        }
     }
     private void receive(SceneDeltaEvent event){
         lastStamp=event.QY();

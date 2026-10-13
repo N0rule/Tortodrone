@@ -38,39 +38,14 @@ with redirected stdin uses plain input and does not require a native terminal.
 
 ## External town layouts
 
-The external default map packs retain original compressed scene exports obtained from
-[reference-source/SpiralKnightsSceneArchive](https://github.com/reference-source/SpiralKnightsSceneArchive).
-The layout references client resources; it does not include game meshes, textures
-or audio. Complete copies are checked in and shipped outside both JARs; building,
-preparation and running do not depend on the archive's availability.
+The seven checked-in scene packs under `defaults/maps/` were rebuilt from local, SHA-256-verified
+official gameplay captures dated 2026-10-12. The capture hashes, sizes and versions are recorded
+in `defaults/maps/scene-source.properties`; each pack also pins its scene and collision data.
+Laboratory is scene 30893 and Hall of Heroes is the four-star variant, scene 318. The maps are
+shipped outside both JARs, so ordinary builds and runtime do not need the capture files or a
+remote archive. The map converter uses the unchanged installed client's configurations read-only.
 
-- Archive commit: `ae49faf06788dd83b35a959306c9fe4c25688004`
-- Regular Town Square path: `Legacy/BukkitBoss/2017/1`
-- Scene revision: `-1072195501`
-- SHA-256: `26f15faf59dcf711e66bf0494d64fda7da6bd95ffffa5934a659a41a398d8c57`
-- Bazaar: `Master/Static/2`, revision `1661137235`
-- Bazaar SHA-256: `e0410e91851f3367bdd7283683ee4d45f6abf0e61d63f0e01bde5d10f5012033`
-- Arcade: `Master/Static/3`, revision `199849588`
-- Arcade SHA-256: `dff99bfbbba7d37cf5585746e8883e3f6c09cfadec7ffe39ac19327a42b22b9f`
-- Garrison: `Master/Static/445`, revision `-1605078030`
-- Garrison SHA-256: `a1e3e970b31c59d2aa661ed6bd836fe578cb08bf46e64533febec8566286b9a1`
-- Advanced Training Hall: `Master/Static/294`, revision `286`
-- Advanced Training Hall SHA-256: `d0cf0863721970d15090f613d217495ceaa18fbf125813ff9d105b16966f2619`
-- Laboratory: `Master/Static/437`, revision `2079419070`
-- Laboratory SHA-256: `5f47c41368b5771f1571de791fe30fae1edddedbdeb74dda4a4d9affa0ea67e0`
-- Hall of Heroes: `Master/Static/449`, revision `801204775`
-- Hall of Heroes SHA-256: `fa15e1f1c6b538794bb4b6e560157cdfb7c98b0574beebd2633f223695ba40b6`
-- Offline source packs: `defaults/maps/{haven,bazaar,arcade,garrison,advanced_training,laboratory,hall_of_heroes}/`
-- Source checksum manifest: `defaults/maps/scene-source.properties`, recording each pack's archive path,
-  scene digest and the generations this source published; preparation refuses a source that no longer matches it
-- Runtime: `build/defaults/maps/<pack>/scene.dat`; neither JAR contains maps
-
-The archive provides no repository license file at the pinned revision. The
-layout is attributed here; no additional licensing claim is made for it.
-The default collision masks are derived from their respective scenes using
-read-only installed client configurations: default PC circle radius 1/3 and
-collision mask 43, samples spaced 0.25 units over each scene's tile bounds.
-The reusable `ScenePackExport.java` derives packs; the regular Town Square mask
-was regenerated from its exact retained export. Each map
-descriptor records both geometry and collision digests. Update them and compatibility
-fixtures together. [Map preparation](maps.md) describes importing original archives.
+Scene layouts are proprietary game references. This notice records provenance and makes no
+licensing claim. The capture directory included additional decoded/hash-verified scenes that are
+not integrated; private guild scene 528 is excluded. See [map preparation](maps.md) for the
+offline verification and candidate export workflow.

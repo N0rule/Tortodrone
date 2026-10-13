@@ -22,7 +22,7 @@ public final class ScenePackExport {
             .newInstance(resource,null,"config/");manager.init();
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(manager);
         String kind=sceneKind(scene.adD());
-        Entrance entrance=kind.equals("town")?null:defaultEntrance(scene,manager);
+        Entrance entrance=defaultEntrance(scene,manager);
         var coords=scene.adE();if(coords.isEmpty())throw new IOException("No static tiles");
         int minX=coords.stream().mapToInt(c->c.x).min().orElseThrow()-1;
         int minY=coords.stream().mapToInt(c->c.y).min().orElseThrow()-1;
@@ -34,19 +34,21 @@ public final class ScenePackExport {
         actor.init(manager);
         var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(manager);
         var shape=config.shape.acP();var bits=new BitSet(width*height);
-        float targetX=args.length==7?Float.parseFloat(args[5]):entrance==null?0:entrance.x;
-        float targetY=args.length==7?Float.parseFloat(args[6]):entrance==null?0:entrance.y;
+        float targetX=args.length==7?Float.parseFloat(args[5]):entrance.x;
+        float targetY=args.length==7?Float.parseFloat(args[6]):entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
-        float spawnX=0,spawnY=0;double nearest=Double.POSITIVE_INFINITY;
+        float spawnX=targetX,spawnY=targetY;
         for(int row=0;row<height;row++)for(int col=0;col<width;col++) {
             float x=minX+col*.25f,y=minY+row*.25f;
             if(scene.aQ((int)Math.floor(x),(int)Math.floor(y))==null
                     ||scene.a(actor,shape.d(new Transform2D(new Vector2f(x,y),0))))continue;
-            bits.set(row*width+col);double distance=(x-targetX)*(x-targetX)+(y-targetY)*(y-targetY);
-            if(distance<nearest){nearest=distance;spawnX=x;spawnY=y;}
+            bits.set(row*width+col);
         }
-        if(!Double.isFinite(nearest))throw new IOException("No walkable spawn");
-        if(args.length==7&&nearest>.00001)throw new IOException("Requested spawn is not walkable");
+        int spawnCol=Math.round((spawnX-minX)*4),spawnRow=Math.round((spawnY-minY)*4);
+        if(spawnCol<0||spawnCol>=width||spawnRow<0||spawnRow>=height||!bits.get(spawnRow*width+spawnCol)
+                ||scene.aQ((int)Math.floor(spawnX),(int)Math.floor(spawnY))==null
+                ||scene.a(actor,shape.d(new Transform2D(new Vector2f(spawnX,spawnY),0))))
+            throw new IOException("Native or requested spawn is not walkable; refusing an invented arrival");
         // Stage only after all configuration/collision validation succeeds.
         Files.createDirectories(out);
         Files.write(out.resolve("scene.dat"),layout);
@@ -58,14 +60,15 @@ public final class ScenePackExport {
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));p.setProperty("image","haven.jpg");p.setProperty("instances","1");
+        p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));
         p.setProperty("collision-sha256",digest(out.resolve("walkability.gz")));
         writeProperties(out.resolve("map.properties"),p);
-        if(entrance!=null)writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
+        if(!kind.equals("town"))writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
         System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version+
             " samples="+bits.cardinality()+" spawn="+spawnX+","+spawnY+
-            (entrance==null?"":" entrance="+entrance.id+" yaw="+entrance.rotation));
+            (" entrance="+entrance.id+" yaw="+entrance.rotation));
     }
     private static String sceneKind(TudeySceneConfig config)throws IOException {
         if(config instanceof com.threerings.projectx.dungeon.data.TrainingSceneConfig training&&"training".equals(training.getType()))return "training";
@@ -76,16 +79,15 @@ public final class ScenePackExport {
     private static Entrance defaultEntrance(TudeySceneModel scene,ConfigManager manager)throws IOException {
         var matches=new ArrayList<TudeySceneModel.PlaceableEntry>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)) {
-            if(!entry.placeable.getName().equals("Dynamic/Portal/Level Start"))continue;
             PlaceableConfig config=entry.placeable.a(manager,PlaceableConfig.class);
-            if(config.q(manager).defaultEntrance)matches.add(entry);
+            if(config.q(manager) instanceof PlaceableConfig.Marker marker && marker.defaultEntrance)matches.add(entry);
         }
-        if(matches.size()!=1)throw new IOException("Expected exactly one default Level Start portal, found "+matches.size());
+        if(matches.size()!=1)throw new IOException("Expected exactly one native default entrance, found "+matches.size());
         var entry=matches.getFirst();var position=entry.transform.tD();var rotation=entry.transform.tE();
         float yaw=(float)Math.atan2(2f*(rotation.w*rotation.z+rotation.x*rotation.y),
             1f-2f*(rotation.y*rotation.y+rotation.z*rotation.z));
         if(!Float.isFinite(position.x)||!Float.isFinite(position.y)||!Float.isFinite(yaw))
-            throw new IOException("Invalid default Level Start transform");
+            throw new IOException("Invalid default entrance transform");
         return new Entrance(((Number)entry.getKey()).intValue(),position.x,position.y,yaw);
     }
     private static void writeEntrance(Path out,String layoutDigest,Entrance entrance)throws IOException {

@@ -12,7 +12,7 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ./gradlew testProcessCleanup     # deterministic graceful/forced/interrupted child cleanup
 ./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
 ./gradlew prepareMaps
-./gradlew prepareInteriors -PgameDir="/path/to/Spiral Knights" # maintainer re-export that republishes the interiors into defaults/maps
+./gradlew prepareHaven -PgameDir="/path/to/Spiral Knights" -PcapturedScenes="/path/to/captures" -PhavenOutput="/tmp/fresh-haven-maps" # explicit candidate export; output must be fresh
 ./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
 ```
 
@@ -86,18 +86,23 @@ Graphical acceptance is authorized only in an **isolated** environment: disposab
 and all seven prepared maps. Its optional output directory must be fresh and outside
 the repository and installed game; omitting it creates a fresh `/tmp` directory.
 The launcher isolates server data, accounts, home/preferences, cache and native
-extraction, then cleans up only its child processes and sandbox. It retains logs and
-PNG captures in the output directory. The unchanged native controller sends movement,
+extraction, including separate profiles for its two stock graphical clients, then cleans up
+only its child processes and sandbox. It retains logs and PNG captures in the output directory.
+It dismisses the automatic stock Uplink window through its normal API in these disposable profiles.
+The unchanged native controller sends movement,
 sword/gun/bomb presses and charges, defense, bash and dodge. The fixture checks native
 equipment identity, body attachment composition, authoritative activities, playing
-activity animations and visible server projectile sprites. It requests normal scene
-changes from Haven to Training and back; it does not test walking through portals.
+activity animations and visible server projectile sprites. Both clients observe shared Haven;
+the peer must show displacement of the other knight's actual model transform. The primary tours
+all seven modern scenes through normal scene requests, exercises Training and returns to Haven.
+Walking through all 18 portals is covered by the separate stock networking fixture.
 The fixture disables vsync in its disposable preferences before native startup to
 avoid niri frame pacing stalls. Keep the disposable test window focused; the fixture
 refuses unfocused combat checks because slow sampling distorts short presses and poses.
 Review the captured pixels as
 well: animation playback and sprite visibility flags alone do not prove rendering.
-This fixture does not test keyboard bindings, peer views or every catalogue weapon.
+This fixture does not test keyboard bindings or every catalogue weapon. See the
+[0.27.0 acceptance record](modern-captures.md) for commands, pixel review and limits.
 
 ## Source/resource rules
 

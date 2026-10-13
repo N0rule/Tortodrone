@@ -73,9 +73,9 @@ public class WorldConnectionCheck {
    waitFor(()->deltas>=45);
    if(repeatedAdds!=0||configReplacements!=0)throw new AssertionError("Idle entry repeatedly replaces actor/model: adds="+repeatedAdds+", configs="+configReplacements);
    System.out.println("PASS: delayed entry acknowledgements retain the actor and its model configuration");
-   int count=deltas;scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,1,0)});waitFor(()->deltas>count+3);if(last.aek()==null)throw new AssertionError("Movement delta missing");
+   float initialX=controlled(player).tz().x;int count=deltas;scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,1,0)});waitFor(()->deltas>count+3);if(last.aek()==null)throw new AssertionError("Movement delta missing");
    var actor=controlled(player);
-   if(actor.tz().x<=0 || Math.abs(actor.tA()-1.5f)>.01)throw new AssertionError("Movement/facing ignored: "+actor);System.out.println("PASS: movement and independent mouse-facing updates");
+   if(actor.tz().x<=initialX || Math.abs(actor.tA()-1.5f)>.01)throw new AssertionError("Movement/facing ignored: "+actor);System.out.println("PASS: movement and independent mouse-facing updates");
    scene.a(last.QY(),last.QY(),new InputFrame[]{new ProjectXInputFrame(last.QY()+50,1.5f,0,3,0)});
    waitFor(()->controlled(player).adU()==3);
    int inventoryStarted=controlled(player).adV();float inventoryX=controlled(player).tz().x;
@@ -257,10 +257,11 @@ public class WorldConnectionCheck {
    int chatDeltas=deltas;waitFor(()->deltas>chatDeltas+3);
    if(primaryChat.size()!=(isolation?1:2)||peerChat.size()!=(isolation?1:2))throw new AssertionError("Chat leaks across instances or sender echo duplicated");
    System.out.println("PASS: stock scene speak RPC and user messages preserve Unicode/names/emote mode, sender echo and instance isolation");
+   float peerX=isolation?0:snapshots.get(last.QY()).get(id).tz().x;
    peerScene[0].a(peerDelta[0].QY(),peerDelta[0].QY(),new InputFrame[]{new ProjectXInputFrame(peerDelta[0].QY()+50,.7f,0,1,0)});
    if(isolation){waitFor(()->peerDelta[0].aek()!=null);if(snapshots.get(last.QY()).containsKey(id))throw new AssertionError("Movement leaked across instances");System.out.println("PASS: two instances isolate occupants, actors and movement for different accounts");}
    else {
-    waitFor(()->snapshots.get(last.QY()).get(id).tz().x>0);
+    waitFor(()->snapshots.get(last.QY()).get(id).tz().x>peerX);
     var actor=snapshots.get(last.QY()).get(id);
     if(Math.abs(actor.tA()-.7f)>.01||!actor.bR(2))throw new AssertionError("Peer movement/facing/animation flags not synchronized");
     System.out.println("PASS: two normal accounts receive peer actors, movement, facing and movement-animation flags");

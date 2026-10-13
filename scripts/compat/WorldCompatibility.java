@@ -85,6 +85,8 @@ public final class WorldCompatibility {
                 || player.loadouts.size()!=1 || town.occupantInfo.size()!=1 || actor==null
                 || !actor.Np() || actor.adU()!=0 || actor.adV()!=100
                 || Math.abs(actor.aeb()-TownMovement.MAX_STEP)>.00001 || actor.tz().x!=.25f || actor.tA()!=1.5f) throw new AssertionError("World schema mismatch or predicted activity leaked into delta baseline");
+        if(player.homeTown==null||!"m.haven".equals(player.homeTown.name))
+            throw new AssertionError("Home town name must use the captured localization key");
         var occupant=(ProjectXOccupantInfo)town.occupantInfo.iterator().next();
         for (var item : player.items) {
             if (!item.Cs() || item.VC()) throw new AssertionError("Starter binding flags differ from stock mutable binding");

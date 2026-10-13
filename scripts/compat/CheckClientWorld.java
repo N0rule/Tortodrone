@@ -103,7 +103,8 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             var havenCheck=new ArrayList<>(base);
             havenCheck.addAll(List.of("HavenConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString()));
-            try{run(havenCheck,"haven-links","",240);}
+            // Twelve modern routes start at authored entrances; walk them at native speed.
+            try{run(havenCheck,"haven-links","",600);}
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             var inspectCheck=new ArrayList<>(base);
             inspectCheck.addAll(List.of("InspectConnectionCheck",port,scratch.resolve("data/keys/public.txt").toString(),

@@ -660,7 +660,7 @@ final class WorldSession implements AutoCloseable {
     private ActorState actorAppearance() {
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
             arrival==null?scene.map().spawnX():arrival.x(),arrival==null?scene.map().spawnY():arrival.y(),
-            arrival==null?0:arrival.rotation(),0,0,0,created,appearance,gameMaster);
+            arrival==null?scene.map().spawnRotation():arrival.rotation(),0,0,0,created,appearance,gameMaster);
     }
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
