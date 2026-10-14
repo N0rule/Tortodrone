@@ -1,0 +1,81 @@
+# Operating Tortodrone
+
+This is the operator reference for the **current implementation**, not a promise of full vanilla functionality. See [README](../README.md) for a quick start and [Content](content.md) for maps and catalogs.
+
+## Deployment and lifecycle
+
+Install Java 25. Run `java -jar tortodrone-admin.jar` to create accounts, then `java -jar tortodrone.jar` to host; both JARs should be in the same directory as `defaults/`. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/defaults/`.
+
+- `--nogui`: terminal hosting; `--gui`: require desktop; otherwise GUI when available, terminal fallback. Stop via the GUI or `stop` / Ctrl+C in terminal mode.
+- `--config path/to/server.properties`: select a config file; **does not move `data/`**. Settings are read at process startup; stop/restart to apply changes.
+- Server GUI: Start/Stop/Restart, sessions, scene templates and instances, performance and logs. Command field shares local terminal commands; commands requiring password/confirmation prompts belong in the account manager.
+- Account manager: `java -jar tortodrone-admin.jar`; if separate from the deployed server, add `--data /path/to/server/data`. It has GUI/CLI, uses the same SQLite data and does not open a remote admin port.
+
+Edit `data/server.properties` while stopped:
+
+```properties
+server-ip=0.0.0.0
+server-port=47624
+max-clients=16
+log-mode=normal
+log-max-mib=10
+log-retention=5
+```
+
+`max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files. Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
+
+## Connecting the unchanged client
+
+Point your separately managed KnightLauncher to:
+
+| Key | Value |
+| --- | --- |
+| `game.endpoint` | `127.0.0.1` or the reachable server host |
+| `game.port` | `47624` (or your configured TCP port) |
+| `game.publicKey` | Complete contents of `data/keys/public.txt` beside the deployed server JAR |
+
+The public key is a hexadecimal modulus and exponent separated by `#`; paste the **value**, not a path, PEM header or private key. Preserve `data/keys/` between upgrades. `0.0.0.0` is a listener bind address, never a client destination. Use LAN addressing where appropriate; firewall/router forwarding is needed only when applicable. Restart the client after launcher changes. Use normal username/password; no Steam or guest sign-in.
+
+## Local administration
+
+Run `help` or `help account create` in the server terminal/GUI command field for exact current syntax. Terminal commands are **not** in-game slash commands, and do not require a GM login; restrict access to the host.
+
+| Purpose | Example |
+| --- | --- |
+| Health and sessions | `status`, `players`, `session 1`, `inspect Jane` |
+| Accounts | `account list`, `account create Alice`, `account password Alice`, `account delete Alice` |
+| GM role | `gm Alice true` or `account gm Alice false` |
+| Knights | `knight list Alice`, `knight info Alice Jane`, `knight delete Alice Jane` |
+| Balances | `grant Jane crowns 100`, `set Jane energy 500` |
+| Item lookup/grant | `items Calibur`, `items info Weapon/Sword/Calibur`, `giveitem Jane 2 Weapon/Sword/Calibur` |
+| Shutdown | `stop` |
+
+Account create/password and destructive deletion require interactive password/confirmation input; use the account manager GUI when the server window can't prompt. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
+
+The account manager supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless account administration use `java -jar tortodrone-admin.jar --help`; `--data` must appear before its command. Examples: `--create-account Alice` and `--set-gm Alice true`.
+
+A saved GM can use the original client's F3 dashboard **ItemCreator** (other tools unsupported); server-side role checks still apply. Verified GM chat commands include `!help`, `!items` and `!giveitem`; ordinary players' leading `!` remains normal chat. Do not assume local admin commands also work inside the game.
+
+## Data safety, updates and release builds
+
+1. Stop both server and account manager before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up owner-edited `defaults/` or top-level custom `maps/`, `items/`, `combat/`.
+2. On update replace the JARs and shipped default resources as appropriate; **retain your current `data/`**. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than implicitly migrated.
+3. Check `VERSION` and full build/test results. The GitHub Actions release workflow builds on Java 25 and publishes a ZIP and tar.gz **only for version tags** matching `v<VERSION>` (or explicit retry of that existing tag). Packages include JARs, `defaults/` and a start note, not JRE, database or game assets. See `.github/workflows/release.yml`.
+
+The runtime may attempt optional missing-default recovery from the GitHub `main` ZIP, without replacing existing files. That download is version-unpinned and unavailable without authentication while the repository is private; **ship complete local defaults**, especially on offline hosts.
+
+## Diagnosis
+
+Set `log-mode=debug` while stopped to inspect resource paths, protocol/scene checks and startup warnings. Logs deliberately do not contain passwords/private keys but can contain usernames, IPs, paths and item references; treat them as private.
+
+| Symptom | First check |
+| --- | --- |
+| No TCP connection | Listener, `game.endpoint`/port, firewall |
+| Secure exchange rejected | Client has the exact deployed `public.txt` value |
+| Login refused | Account exists; verify/reset through local manager |
+| Knight/world load refused | Scene pack validity and `defaults/maps/`; see [Content](content.md) |
+| Changed maps not appearing | Stop/restart, top-level `maps/` override precedence |
+| Startup rejects settings/schema | Restore supported settings or backup; do not guess a migration |
+| Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
+
+CLI and GUI are local trusted surfaces. Do not expose them as an unauthenticated web admin interface.

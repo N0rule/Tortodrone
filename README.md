@@ -1,26 +1,18 @@
 # Tortodrone
 
-Clean-room **Java 25 Spiral Knights server emulator** plus local account manager. Stock game and KnightLauncher are separate, unmodified. Supports only normal username/password; no Steam/guest auth.
+A **Java 25 clean-room Spiral Knights server emulator** and local account manager for an **unmodified** stock client. Tortodrone is under active development, **not** a complete vanilla server. Normal username/password accounts are supported; Steam and guest login are not.
 
-## Current state (verify `VERSION` and Git)
+## What works today
 
-At **0.27.0 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), twelve directed town portals and six directed interior links, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. The checked-in scenes use verified official gameplay captures dated 2026-10-12, including Laboratory scene 30893 and the four-star Hall of Heroes scene 318. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
+The currently implemented subset includes local login/accounts and GM roles, knight creation/selection/editing/deletion, persistent inventory and currencies, equipment/costumes, item grants, character preview, trading, inspection/privacy, chat/tells/emotes/sitting, and four connected Haven towns (Town Square, Bazaar, Arcade and Garrison). Three additional solo interiors (Advanced Training Hall, Laboratory, Hall of Heroes) have movement and limited stock-derived weapon/defense/projectile systems. Training Hall now also supports prepared scene actors and bounded interactions (test cubes, switches/doors, traps, pickups, blocks and conversation). The seven bundled scenes use verified modern stock-capture layouts, including Laboratory scene 30893 and Hall of Heroes scene 318. Scenes use external validated layouts/collision and server-authoritative movement.
 
-**Not implemented at the recorded checkpoint:** general missions, NPC services, shops, crafting/item use, dungeon/gate gameplay, position persistence, custom news and broad social features. The [current project handoff](docs/PROJECT.md) records the supported scope and remaining limits; inspect Git before choosing work. Older milestone detail is available in Git history.
+**Not full vanilla parity:** general dungeon/gate gameplay, broadly reusable monster AI and NPC services, missions, shops, crafting, full party/guild/social systems, world-position persistence and much of combat are not implemented. The intro is bypassed without granting fictional mission progress. Actual supported scope is determined by source/tests, not by how much data exists in `defaults/`.
 
-## Build, run and connect
+## Quick start
 
-Install **JDK 25** and put its `bin` directory on `PATH` (or set `JAVA_HOME` to the JDK). The checked-in Gradle **9.5.1** Wrapper supplies Gradle; no Make, separately installed Gradle, database service or game installation is needed. Compilation uses a Java 25 toolchain and `--release 25`.
+Install **JDK 25** and ensure `java` is on PATH. The repository includes the Gradle 9.5.1 wrapper; no system Gradle, separate SQLite service or game installation is needed for normal builds.
 
-On **Windows PowerShell or CMD**, from the repository root:
-
-```powershell
-.\gradlew.bat build
-java -jar build/tortodrone-admin.jar
-java -jar build/tortodrone.jar
-```
-
-On **Linux**:
+From the repository root:
 
 ```sh
 ./gradlew build
@@ -28,51 +20,52 @@ java -jar build/tortodrone-admin.jar
 java -jar build/tortodrone.jar
 ```
 
-On **macOS** (install a JDK 25 build for your Mac's architecture):
+On Windows use `.\gradlew.bat build` instead of `./gradlew build`. The admin program creates the normal username/password account; use it before connecting the client. The server opens a GUI when a desktop is available; use `--nogui` for headless hosting or `--gui` to explicitly request a desktop.
+
+Useful tasks (same Windows wrapper substitution):
 
 ```sh
-./gradlew build
-java -jar build/tortodrone-admin.jar
-java -jar build/tortodrone.jar
-```
-
-Create a local account with the admin application before connecting. The server opens its local control window when a desktop is available, and uses terminal mode on headless systems. Use `--nogui` for terminal hosting or `--gui` to require a desktop; either accepts `--config path/to/server.properties`. Toolkit initialization failure falls back to terminal mode. `--help` and `--version` print information without a window. In terminal mode, type `stop` or Ctrl+C to stop hosting. In graphical mode, Stop leaves the window available for Start; closing it confirms server shutdown and exit. See [desktop controls](docs/server-gui.md). Both executable JARs include SQLite JDBC 3.53.4.0 and JLine 4.4.7, their service providers, native libraries and license notices. No manual classpath is needed.
-
-Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
-
-```sh
-./gradlew buildServer             # server JAR plus external defaults
-./gradlew buildAdmin              # admin JAR
-./gradlew runServer               # packaged server, data beside build JAR
-./gradlew runAdmin                # packaged admin (graphical desktop required)
-./gradlew runServer --args="--help"
-./gradlew runServer --args="--nogui" # terminal mode; uses real build/data
-./gradlew testUnit                # all standalone unit programs
-./gradlew testIntegration         # disposable packaged server/admin and preparation tests
-./gradlew test                    # both test groups; build also runs these
-./gradlew prepareDefaults         # verify/copy local maps and item defaults
-./gradlew prepareMaps             # verify/copy only local maps
+./gradlew buildServer         # server JAR + deployed defaults
+./gradlew buildAdmin          # account-manager JAR
+./gradlew testUnit
+./gradlew testIntegration
+./gradlew prepareDefaults     # offline source validation/copy
+./gradlew prepareMaps         # maps only
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
-./gradlew clean                   # removes generated artifacts; preserves persistent state
 ```
 
-Benchmarks are never part of `build` or `test`. Resource preparation is offline and verifies source map checksums before copying. The checked-in `defaults/maps/` is the one map source, so `build`, `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes under `build/defaults/maps` with no game path, archive or extra directory. Existing custom files are preserved; a pack from a known older default generation can be upgraded in place, and owner-edited files keep their bytes. Use `-PdefaultsOutput="/path/to/disposable/defaults"` to select a preparation destination (`prepareMaps` takes the maps directory itself). Missing optional source directories produce a warning; corrupt supplied maps fail preparation. `compileJava` and `buildAdmin` do not require optional maps or downloads for maps.
+`./gradlew build` runs unit/integration checks. First use needs downloads of the Gradle distribution and verified dependencies; cached dependencies support `--offline` builds. Benchmarks are opt-in and synthetic, not proof of live-client performance.
 
-**Offline builds:** the first build needs access to the Gradle distribution, plugin portal and Maven Central. Once the Wrapper, plugin, dependency artifacts and metadata are cached, `./gradlew --offline build` works with a local JDK 25. Legacy `build/deps` files alone do not populate Gradle's cache. Preparing local defaults needs the Wrapper/build tooling cached but no third-party runtime dependencies. If a deployed server is missing required defaults, its optional startup recovery downloads the repository's `main` ZIP from `https://github.com/N0rule/Tortodrone/archive/refs/heads/main.zip`. This works without credentials after the repository is public; while it is private, recovery warns and continues with whatever local resources are present. Prefer deploying local `build/defaults/` for reliable/offline installations.
+For portable deployments place these **beside one another**:
 
-`build.gradle.kts` defines compilation, executable packaging, preparation, tests and runs; `settings.gradle.kts` names the project. `gradlew`, `gradlew.bat` and `gradle/wrapper/` pin and bootstrap Gradle, with a distribution checksum. `gradle/verification-metadata.xml` pins SHA-256 checksums for dependencies and plugins (including the original runtime JAR checksums); review changes before accepting new hashes. Gradle caches live in its user home and `.gradle/`; compiler and packaging output lives in `.build/`. `gradle.properties` enables Gradle’s configuration cache so repeated builds can reuse the configured task graph. `clean` deletes that scratch tree, the old `build/.build/`, Gradle dependency-verification reports and the two generated JARs, while preserving `build/data/`, `build/defaults/`, `build/deps/` and other deployment files.
+```text
+Tortodrone/
+  tortodrone.jar
+  tortodrone-admin.jar
+  defaults/
+    maps/
+    items/
+    combat/
+  data/                 # created at runtime; keep across updates
+```
 
-The [migration record](docs/gradle-migration.md) maps every old Make target and records verification.
+The build generates `build/defaults/`; copy the complete tree beside the deployed JARs. A versioned release archive, when published, packages the JARs and defaults but not Java or private `data/`. **Do not deploy only the two JARs** and rely on startup downloads: optional recovery from the repository's `main` ZIP is hardcoded, may be unavailable (especially while private), and never replaces existing files.
 
-Advanced Training Hall, Laboratory and Hall of Heroes are part of the checked-in defaults, so ordinary builds prepare all seven scenes in `build/defaults/maps/` with verified native entry/return links. `prepareHaven` can derive a fresh candidate tree from local, hash-verified captured scenes; it never publishes into `defaults/maps/`. See [map preparation](docs/maps.md) for the workflow and protection of custom files.
+## Client connection
 
-Both JARs keep `data/` beside themselves; copy `build/defaults/` beside them when deploying. Preserve `data/` (especially keys/DB) and customized `defaults/`. The optional startup default-resource downloader retrieves missing resources from the Tortodrone `main` branch when publicly accessible and never overwrites existing files. Missing maps prevent world entry but not login/admin. See [maps](docs/maps.md).
+Use a **separate, unmodified** Spiral Knights installation and KnightLauncher. Set the launcher to:
 
-KnightLauncher settings: `game.endpoint=127.0.0.1` (or reachable server IP), `game.port=47624`, `game.publicKey` = entire contents of `build/data/keys/public.txt`. [Connection help](docs/client-redirection.md).
+```properties
+game.endpoint=127.0.0.1
+game.port=47624
+game.publicKey=<entire value from data/keys/public.txt>
+```
 
-**Stock F3 GM dashboard:** grant the role server-side (`--set-gm Alice true` or the terminal `gm Alice`), log in with that account, press **F3** and use the client's own **ItemCreator** to create real, persistent inventory items. Nothing grants this automatically; plain accounts are refused. [Admin details](docs/administration.md).
+For a local build, the key is at `build/data/keys/public.txt` once the server has generated it. For remote hosting use the reachable server address, not `0.0.0.0`; expose the configured **TCP** port as appropriate. Restart the game after changing launcher settings. No default player account exists.
 
-Stop the server before editing `build/data/server.properties`:
+## Configuration and safety
+
+Stop the server before editing `data/server.properties`:
 
 ```properties
 server-ip=0.0.0.0
@@ -83,10 +76,19 @@ log-max-mib=10
 log-retention=5
 ```
 
-`max-clients` range 1–1024; `--config` changes the settings-file path, **not** data directory. UTF-8 logs rotate from `data/logs/latest.log` to `server-1.log` and older numbered files; `log-max-mib` accepts 1–1024 and `log-retention` accepts 1–100. See [logging/privacy](docs/logging.md). Admin manager accepts `--data /path/to/server/data`; it opens no network admin port. `help` in the terminal or graphical command field lists commands. The account manager now browses accounts, knights and inventory, searches the item catalogue, grants unequipped items and adjusts item quantities and balances through the shared storage services. The server panel shows live sessions, scene templates/instances and measured performance, with docked logs. [Commands](docs/commands.md), [Admin details](docs/administration.md), [item data](docs/game-data.md).
+`--config path/to/server.properties` changes the settings file **only**, not the adjacent `data/` path. Type `help` in the server terminal/window for local commands; `stop` shuts down terminal hosting. Logs are under `data/logs/`. Local admin tools have no exposed admin network listener.
 
-## Backups, development and references
+**Back up the entire `data/` directory** while the server and manager are stopped (database/WAL, keys and accounts) and preserve edited `defaults/` before upgrading. No automatic migration from unsupported database schemas is provided.
 
-Stop server and manager; copy the **whole `data/` directory** (SQLite WAL and keys). Only current schema 8 is supported; JSON item catalogue v2 is written, with v1 reading retained. No old-DB imports/migrations. Never discard original state while testing.
+## Documentation
 
-Start coding with [AGENTS.md](AGENTS.md) and [project handoff](docs/PROJECT.md); consult [architecture](docs/server-architecture.md) and [development](docs/development.md) for invariants, tests, stock-client checks, benchmarks and cleanup. See [upstream research](docs/server-research.md) only when the task needs it. Do not load all historical documents into agent context.
+- [Operations](docs/operations.md): deployment, accounts, commands, client troubleshooting, backup and releases.
+- [Content](docs/content.md): maps, items, combat defaults, verified imports and current extension limits.
+- [Architecture](docs/architecture.md): identity/storage, protocol, simulation and security invariants.
+- [Development](docs/development.md): build/tests, isolated stock-client and GUI checks.
+- [Research](docs/research.md): reference sources, protocol evidence and historical investigation pointers.
+- [Modern captured scenes](docs/modern-captures.md) and [Training Hall evidence](docs/training-hall.md): version-specific validation retained from newer gameplay commits.
+- [AGENTS.md](AGENTS.md): short rules for coding agents.
+
+Older milestone reports and investigations remain in Git history; they are not maintained product documentation. Licenses and third-party notices are bundled in the JARs.
+

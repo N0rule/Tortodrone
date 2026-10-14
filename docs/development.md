@@ -1,119 +1,82 @@
-# Development workflow (Java 25)
+# Development and verification
 
-Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJECT.md); inspect Git and task-specific files. Never touch installed client/launcher, real keys/data/preferences, or owner's live processes. Older detailed test procedures are available in Git history when needed.
+Start with [AGENTS.md](../AGENTS.md), then the files relevant to your task. Source, current tests and the **unchanged stock client** outrank historical documentation. Keep test accounts, server state, client preferences and processes disposable; do not modify the owner's installed client or active deployment.
 
-## Build and tests
+## Build and test (JDK 25)
 
 ```sh
-./gradlew buildServer buildAdmin # server and local admin JARs, no tests
-./gradlew build                  # both JARs and full regression (Java 25)
+./gradlew buildServer buildAdmin  # executable JARs; packaged defaults
+./gradlew build                   # full unit + integration suite
 ./gradlew testUnit
 ./gradlew testIntegration
-./gradlew testProcessCleanup     # deterministic graceful/forced/interrupted child cleanup
-./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
+./gradlew testProcessCleanup
+./gradlew prepareDefaults
 ./gradlew prepareMaps
-./gradlew prepareHaven -PgameDir="/path/to/Spiral Knights" -PcapturedScenes="/path/to/captures" -PhavenOutput="/tmp/fresh-haven-maps" # explicit candidate export; output must be fresh
-./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
+./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ```
 
-Standalone regression JVMs share one Gradle build-service slot, including when the configuration cache is reused. This avoids CPU contention from RSA/password hashing triggering local socket deadlines. Compilation and packaging retain normal worker scheduling; each fixture still runs its own concurrent scenarios. No `--max-workers=1` flag is needed for `build`, `testUnit` or `testIntegration`.
+Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. The normal `build`/`test` suites **do not** run native stock graphical checks. Standalone regression JVMs use a shared build-service slot to avoid local CPU contention; don't run competing builds in the same checkout.
 
-`testIntegration` includes `testProcessCleanup`. It compiles the standalone stock
-launchers separately from the shipped JARs and checks child exit and interrupted
-cleanup with deterministic process doubles. Stock launchers wait for exit after
-forcible termination before deleting their disposable trees. Run `buildServer`
-before `StockTools previews`, as for item export.
+`runServer` and `runAdmin` operate on **real `build/data/`** and are not disposable tests. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/defaults/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 
-The pinned Gradle Wrapper uses Java 25. Dependency/plugin checksums are in `gradle/verification-metadata.xml`; downloads are cached in Gradle user home. Use `.\gradlew.bat` on Windows. For headless Linux: `env -u DISPLAY ./gradlew build` (not a substitute for graphical tests). Avoid `JAVA_TOOL_OPTIONS`: startup output can break packaged fixture assertions. Tests must use disposable deployments; `./gradlew runServer` or `./gradlew runAdmin` starts real processes/data. Persistent compat tools are **Java**; throwaway work goes under `/tmp`.
+## Test by change type
 
-Before commit: add focused regression, run `./gradlew build`, run relevant compat/graphical checks, inspect `git diff` and `git diff --check`; update only current docs, commit major milestones, bump `VERSION` for behavioral releases only. Record commands/results, actual limitations and stopped processes.
+| Change | Minimum evidence |
+| --- | --- |
+| Parser/protocol | Unit regression for real stock types, malformed inputs, callbacks and mapping reuse; stock reader compatibility |
+| Login, saved state, trades | Isolated integration with real SQLite, stale/auth-revision and race/rollback checks; no actual user database |
+| Scenes and portals | Map/catalog tests plus native scene enter/return and two-client subscriptions if shared |
+| Items/equipment/combat | Typed catalog and persistence tests; native client equip/actor and rendering checks when visual behavior changes |
+| Local GUI | Headless/Swing unit checks and opt-in isolated desktop fixture |
+| Performance/concurrency | Benchmarks plus correctness/race tests; no production capacity claim from synthetic results |
+| Documentation only | Check links, current CLI/source accuracy and diff; **no code test claim without running it** |
 
-## Opt-in local desktop acceptance
+Run `./gradlew build` when feasible, `git diff --check` and the focused compatibility suite. Stop **only test processes you started**. Review actual logs and output before reporting a pass. Avoid editing real installed-game assets, paths, home or preferences.
 
-The local Swing server/account-manager acceptance fixture is outside normal
-`build` and `test` tasks. Build its packaged code/classes, then choose a fresh,
-nonexistent output folder under `/tmp`:
+## Stock client compatibility
 
-```sh
-./gradlew buildServer buildAdmin testClasses
-java --enable-native-access=ALL-UNNAMED -cp 'build/tortodrone.jar:.build/classes/java/test' org.tortodrone.server.DesktopCheck /tmp/tortodrone-desktop-check-0260
-```
-
-Run from the repository root on a real graphical desktop with Java 25. The fixture
-copies deployment/defaults into its disposable folder, creates test accounts,
-isolates home/preferences and runs only its own child JVM windows/server. It
-checks actual Swing windows, session snapshots, structured log display, command
-transactions, catalogue grants, balance changes and stop/start/exit. It retains
-`desktop.log` and component-rendered `server.png`, `scenes.png`, `performance.png`, `performance-light.png`,
-`catalogue.png` and `inventory.png`. Its captures use Swing component rendering (`printAll`) rather
-than screen capture, avoiding the Wayland screencast portal. Review the captures;
-they do not prove native desktop compositor/focus behavior or game rendering.
-
-The 0.26.3 fixture also checks stable performance scrolling, graph pause/resume,
-theme switching/resizing, log selection during new output, protected inventory
-actions, selection across balance/manual refresh and newly created account focus.
-
-This fixture does not launch the stock game. Native stock-client graphical
-acceptance remains separate and follows the isolated procedures below. Linux
-Swing acceptance and unchanged-client rendering passed for 0.26.0; Windows/macOS
-graphical environments were unavailable. See [actual validation](administration-overhaul.md).
-
-## Load testing
-
-```sh
-./gradlew benchmark
-./gradlew benchmark --args='--seconds 60 --clients 50,100,200,300'
-./gradlew benchmark --args='--session-only --clients 50,100,200,300'
-./gradlew benchmark --args='--instances 4 --clients 300'
-```
-
-Fixture copies JARs/defaults into disposable `/tmp` deployments, raises `max-clients` locally, enters town or session-only, sends movement/pings and cleans up its own clients/server. Default 20 s after ramp; `--instances` 1–16. Runs server at 512 MiB heap and 256 KiB thread stacks, measures ping percentiles, updates/client/s, CPU, RSS, thread count, bytes, readiness/failures. Run on idle machine; local synthetic benchmarks **do not prove** production WAN performance, smooth rendering, dynamic combat or long-run stability. 300-player snapshot is in [milestone](PROJECT.md); older detailed measurements are in Git history.
-
-## Stock compatibility and graphics
+Useful checked-in Java tools (from repository root with a separate read-only game installation):
 
 ```sh
 ./gradlew build
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
-java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/combat-render-check
+java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
-These use the **unchanged installed client classes/resources** as an oracle; stock network fixture ≠ graphical acceptance. When relevant, run the task-specific Java compatibility tools under `scripts/compat/` and document exact output. `WeaponCompatibility` checks Dungeoneer equipment modifier state/deltas; `FireCompatibility combat/fires.json` samples real projectile/effect argument shapes, including orbital deltas. `InteriorConnectionCheck port public-key host maps-dir --weapons` is a small native Arsenal/input/emission check; its disposable LanPlayer/Town-Knight fixture needs Calibur, Proto Gun and Blast Bomb grants. `CheckClientWorld` includes `AdminConnectionCheck`, which drives the original F3 admin dashboard through the stock client: login, service resolution from the bootstrap, the ItemCreator `createItem` RPC, live grant delivery, per-call authorization after a role revocation, refusal reasons and reconnect persistence. All of it uses disposable accounts/data and reads the installed game read-only.
+`scripts/compat/` also contains narrower handshake, account, scene, portal, inspection, trade, item, emote, weapon, fire and protocol fixtures. Read each tool's source/usage before running it: some launch temporary servers and clients; some only inspect installed classes/configs. The exporter `scripts/StockTools.java` handles `scene`, `items`, `weapons`, `fires`, `equipment` and current source-maintainer scene/capture subcommands in read-only game input mode with a fresh output directory. `previews`/`items` require a built server JAR.
 
-Graphical acceptance is authorized only in an **isolated** environment: disposable server, accounts, game preferences/cache/home/native/temp extraction and endpoint/public key. Read installed game read-only; never patch launcher/client or overwrite real preferences. On niri, `_JAVA_AWT_WM_NONREPARENTING=1`; verify test window/process/focus before synthetic input, then check both local/peer views, movement, inventory/equipment and actual scene transitions. Set stock `resource_dir` to installed read-only `rsrc/` and `java.io.tmpdir` to disposable writable path. Known caveats: niri vsync and virtual gamepad detection; see Git history for earlier environment notes. **Stop only spawned tests**; record inconclusive behavior honestly.
+**Stock reader/network acceptance ≠ graphical acceptance.** Rendering, attachment composition, animation and transition readiness require a graphical unchanged-client fixture, and multiplayer correctness may require two live clients in an isolated environment. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.
 
-`CheckCombatRendering` requires Java 25, a graphical desktop, the built server JAR
-and all seven prepared maps. Its optional output directory must be fresh and outside
-the repository and installed game; omitting it creates a fresh `/tmp` directory.
-The launcher isolates server data, accounts, home/preferences, cache and native
-extraction, including separate profiles for its two stock graphical clients, then cleans up
-only its child processes and sandbox. It retains logs and PNG captures in the output directory.
-It dismisses the automatic stock Uplink window through its normal API in these disposable profiles.
-The unchanged native controller sends movement,
-sword/gun/bomb presses and charges, defense, bash and dodge. The fixture checks native
-equipment identity, body attachment composition, authoritative activities, playing
-activity animations and visible server projectile sprites. Both clients observe shared Haven;
-the peer must show displacement of the other knight's actual model transform. The primary tours
-all seven modern scenes through normal scene requests, exercises Training and returns to Haven.
-Walking through all 18 portals is covered by the separate stock networking fixture.
-Append `--training-only` for the focused Training run: native actor sprites, walking to
-Konway, both conversation nodes, vial pickup/quickbar/use/throw, and Blitz Needle
-normal/charged facing in two directions.
-`TrainingCompatibility` uses the stock reader for all prepared entity subtypes, non-empty
-knight/lift/status deltas, conversation frames and a few scene gameplay checks.
-`SceneCollisionCompatibility game-dir defaults/maps/advanced_training defaults/combat/fires.json`
-compares the prepared native masks, shapes and floor cells with the installed client.
-Compile it together with `FireCatalogExport` and `FireCompatibility`. When using temporary
-probe classes, put `.build/classes/java/main` before `/tmp` on the runtime classpath so an
-older temporary dependency cannot shadow the current server classes.
-The fixture disables vsync in its disposable preferences before native startup to
-avoid niri frame pacing stalls. Keep the disposable test window focused; the fixture
-refuses unfocused combat checks because slow sampling distorts short presses and poses.
-Review the captured pixels as
-well: animation playback and sprite visibility flags alone do not prove rendering.
-This fixture does not test keyboard bindings or every catalogue weapon. See the
-[0.27.0 acceptance record](modern-captures.md) for commands, pixel review and limits.
+`CheckCombatRendering` uses a fresh output path, records logs/screenshots and exercises sword/gun/bomb controls and Haven↔Training travel. It does not verify every weapon, moving-target hits, full parties or general dungeon mechanics. Source-client binary/current wire observations matter more than an old 2011 marshaller ID table.
 
-## Source/resource rules
+## Opt-in server/admin Swing check
 
-`VERSION` is bundled in both JARs. `gradle.properties` enables Gradle’s configuration cache. `.build/` is scratch output; `build/defaults/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.
+On a Java 25 **graphical desktop**, from the source directory:
+
+```sh
+./gradlew buildServer buildAdmin testClasses
+java --enable-native-access=ALL-UNNAMED -cp 'build/tortodrone.jar:.build/classes/java/test' org.tortodrone.server.DesktopCheck /tmp/tortodrone-desktop-check-fresh
+```
+
+Choose a fresh/nonexistent output directory under `/tmp`. The fixture starts only disposable local processes and stores `desktop.log` plus captured GUI component PNGs for review. It exercises windows, account/knight browsing, sessions, charts, logs, grants, balances and lifecycle actions; **it does not launch the stock game**. Use OS-appropriate classpath separators when adapting this Linux example. Linux/niri may need `_JAVA_AWT_WM_NONREPARENTING=1` for stock-client graphical probes.
+
+## Load testing
+
+```sh
+./gradlew benchmark --args="--session-only --clients 50,100,200,300"
+./gradlew benchmark --args="--instances 4 --clients 300"
+```
+
+Benchmarks copy packaged resources into disposable deployments, simulate clients/inputs and report connection/readiness, ping percentiles, memory/CPU and network traffic. Run on an otherwise idle host. Short local simulations do not establish WAN experience, long-term stability, rendering or full combat parity.
+
+## Editing, packaging and release hygiene
+
+- Keep changes bounded; update tests for behavior and one canonical document for user-facing changes. Do not add a new milestone diary.
+- Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
+- Review `git status`, `git diff`, `git diff --check` and tests; give exact test results and what remains unverified.
+- Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
+- Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `licenses/` and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
+
+Recent scene and Training Hall validation details are retained in [Modern captures](modern-captures.md) and [Training Hall](training-hall.md). Detailed prior investigations and their original commands stay accessible via Git history (for example `git show <commit>:docs/protocol-audit.md`); [Research](research.md) points to the relevant sources and caveats.
+
