@@ -15,7 +15,7 @@ public final class PickerPreviewTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-picker-test-");
         try {
-            try(var accounts=new AccountStore(directory)){accounts.create("Alice","alice-password".toCharArray());}
+            try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
             List<List<CharacterStore.RosterEntry>> published = new ArrayList<>();

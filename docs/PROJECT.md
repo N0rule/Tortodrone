@@ -1,12 +1,22 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-13, version 0.28.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-14, version 0.29.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.29.0 introduces the versioned resource registry: canonical vanilla and explicitly selected
+  custom packs, whole-resource scene/catalog entries, exact dependency/override declarations,
+  startup validation before key/account storage, read-only legacy compatibility, and an explicit
+  migration candidate command. Resource selection does not alter protocol, client assets, engine
+  mechanics or SQLite schema 8. Java 25 full build, versioned pack/adversarial validation, legacy
+  export and packaged migration/reconnect regressions pass. Stock readers and canonical town
+  networking pass; full graphical acceptance remains incomplete, and the Training walking callback
+  timeout was reproduced on untouched 0.28.0. See the [acceptance record](content.md#acceptance-record-2026-10-14) and
+  [content packs](content.md) for the contract and operator workflow.
 
 - 0.28.0 adds prepared Training Hall actors and reusable scene mechanics: damageable
   respawning test cubes, tagged switches/doors and trap cycles, temporary pickups, health,
@@ -47,9 +57,9 @@ Java 25 clean-room server emulator for the **unmodified standalone Spiral Knight
 
 ## Modern map checkpoint / next work
 
-The seven default Haven scenes now use the hash-verified 2026-10-12 official gameplay captures from local `Sniffed` evidence: Town Square 1, Bazaar 2, Arcade 3, Garrison 445, Training 294, Laboratory 30893 and the four-star Hall of Heroes 318. All geometry, collision and 18 directed native routes were replaced together; ordinary builds use these checked-in packs offline. `prepareHaven -PgameDir=... -PcapturedScenes=... -PhavenOutput=...` rebuilds a fresh staging tree from local verified binaries. Historical archive/interior exporters and automatic publication were removed. Authored default positions and rotations are retained. Owner-edited deployed files keep their bytes and held deployment locks refuse map changes. All 14 captured binaries were recovered and stock-decoded; seven additional scenes remain unintegrated, including the private guild hall. Training has a separately hash-pinned content pack; other rooms still need their own prepared content. NPC/shop/mission mechanics are not supplied by map geometry. See [maps](maps.md) for current hashes, source provenance and validation limits.
+The seven vanilla Haven scenes now use the hash-verified 2026-10-12 official gameplay captures from local `Sniffed` evidence: Town Square 1, Bazaar 2, Arcade 3, Garrison 445, Training 294, Laboratory 30893 and the four-star Hall of Heroes 318. All geometry, collision and 18 directed native routes were replaced together; ordinary builds prepare these checked-in packs offline under `content/packs/vanilla/maps/`. `prepareHaven -PgameDir=... -PcapturedScenes=... -PhavenOutput=...` rebuilds a fresh staging tree from local verified binaries. Historical archive/interior exporters and automatic publication were removed. Authored default positions and rotations are retained. Owner-edited deployed files keep their bytes and held deployment locks refuse map changes. All 14 captured binaries were recovered and stock-decoded; seven additional scenes remain unintegrated, including the private guild hall. Training has a separately hash-pinned content pack; other rooms still need their own prepared content. NPC/shop/mission mechanics are not supplied by map geometry. See [maps](maps.md) for current hashes, source provenance and validation limits; [content](content.md) for the resource registry.
 
-Bundled numeric combat defaults still contain 382 weapons, 123 shields, 1,827 authored attack graphs and level-zero equipment control modifiers. Existing interior combat and the F3 dashboard are preserved within their recorded limits.
+The vanilla pack still contains 382 weapons, 123 shields, 1,827 authored attack graphs and level-zero equipment control modifiers. Existing interior combat and the F3 dashboard are preserved within their recorded limits.
 
 Follow the **owner's latest task** and current Git diff first; don't redo work under way. The incoming trade notification controls are restored in 0.26.1; this installed client opens their popup when the trade icon is clicked. Other reported problems: inspect another knight and privacy/equipment rules; concurrent travel through the same gate leaving one player unable to move; logout/reconnect town or position behavior. For reconnect, **research original game's location semantics before adding exact-coordinate persistence**. Trade and scene changes need stock wire evidence, two-client testing and transactional/ownership checks. Do not infer a new feature's completion from client UI elements alone.
 

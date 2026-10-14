@@ -13,7 +13,7 @@ public final class AccountStoreTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-accounts-");
         try {
-            try (AccountStore accounts = new AccountStore(directory)) {
+            try (AccountStore accounts = new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())) {
                 check(accounts.list().isEmpty(),"fresh database has no automatic login");
                 accounts.create("First","first-password".toCharArray());
                 accounts.create("Alice","alice-password".toCharArray(),true); accounts.create("Bob","bob-password".toCharArray());
@@ -49,21 +49,21 @@ public final class AccountStoreTest {
                 check(login(accounts,"Alice","replacement-password") != null,"stale GUI selection cannot modify replacement account");
                 if (Files.getFileStore(file).supportsFileAttributeView("posix")) check(Files.getPosixFilePermissions(file).equals(PosixFilePermissions.fromString("rw-------")),"database is owner-only");
             }
-            try (AccountStore restored = new AccountStore(directory)) {
+            try (AccountStore restored = new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())) {
                 check(login(restored,"Alice","replacement-password").id() == 5 && !login(restored,"Alice","replacement-password").gameMaster(),"database restart preserves account and role");
             }
             Path fresh = directory.resolve("fresh");
-            try (AccountStore accounts = new AccountStore(fresh)) { check(accounts.list().isEmpty(),"fresh database has no automatic development login"); accounts.create("First","first-password".toCharArray()); accounts.delete("First"); }
-            try (AccountStore accounts = new AccountStore(fresh)) { check(accounts.list().isEmpty(),"deleting last account does not recreate a default login"); }
+            try (AccountStore accounts = new AccountStore(fresh,false,org.tortodrone.character.ItemCatalog.starter())) { check(accounts.list().isEmpty(),"fresh database has no automatic development login"); accounts.create("First","first-password".toCharArray()); accounts.delete("First"); }
+            try (AccountStore accounts = new AccountStore(fresh,false,org.tortodrone.character.ItemCatalog.starter())) { check(accounts.list().isEmpty(),"deleting last account does not recreate a default login"); }
             Path corrupt = directory.resolve("corrupt"); Files.createDirectories(corrupt); Files.writeString(corrupt.resolve("tortodrone.db"),"not a database");
-            byte[] malformed = Files.readAllBytes(corrupt.resolve("tortodrone.db")); refused(() -> new AccountStore(corrupt));
+            byte[] malformed = Files.readAllBytes(corrupt.resolve("tortodrone.db")); refused(() -> new AccountStore(corrupt,false,org.tortodrone.character.ItemCatalog.starter()));
             check(Arrays.equals(malformed,Files.readAllBytes(corrupt.resolve("tortodrone.db"))),"corrupt database never replaced");
             concurrent(directory.resolve("concurrent"));
             System.out.println("PASS: SQLite accounts, gameMaster roles, password reset/check, deletion, stable IDs, stale selection, atomic failures and concurrency");
         } finally { try (var paths = Files.walk(directory)) { for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path); } }
     }
     private static void concurrent(Path directory) throws Exception {
-        try (AccountStore one = new AccountStore(directory); AccountStore two = new AccountStore(directory)) {
+        try (AccountStore one = new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter()); AccountStore two = new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())) {
             ExecutorService workers = Executors.newFixedThreadPool(2);
             try {
                 Callable<Boolean> first = () -> { try { one.create("SameUser","first-password".toCharArray()); return true; } catch (IOException expected) { return false; } };

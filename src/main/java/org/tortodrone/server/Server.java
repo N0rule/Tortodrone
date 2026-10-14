@@ -38,7 +38,7 @@ public final class Server {
             Path location = Path.of(Server.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
-            ServerOptions options=ServerOptions.parse(args,dataDirectory.resolve("server.properties"));
+            ServerOptions options=ServerOptions.parse(args,ServerSettings.defaultPath(directory));
             boolean desktop=options.desktopRequested();
             if(desktop) {
                 Integer desktopExit=org.tortodrone.admin.DesktopBootstrap.relaunchIfNeeded(location,args,Server.class.getName());
@@ -98,43 +98,15 @@ public final class Server {
     private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
-        var recoveryWarnings = new java.util.ArrayList<String>();
-        org.tortodrone.resources.DefaultResources.prepare(dataDirectory.getParent(),log::debug,
-            message -> { recoveryWarnings.add(message); log.debug(message); });
-        var fallbacks = new java.util.ArrayList<String>();
-        org.tortodrone.world.SceneRegistry scenes;
-
-        try { scenes=org.tortodrone.world.SceneRegistry.deployment(dataDirectory);org.tortodrone.world.SceneRegistry.install(scenes); }
-        catch(IOException missing) {
-            log.debug("Maps unavailable: " + missing.getMessage());
-            fallbacks.add("maps unavailable (world entry disabled)");
-            scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.empty());
-            org.tortodrone.world.SceneRegistry.install(scenes);
-        }
-        log.debug("Scene IDs: " + scenes.catalog().scenes().stream()
-            .map(org.tortodrone.world.SceneCatalog.MapScene::id).toList());
-        scenes.weapons(org.tortodrone.world.WeaponCatalog.deployment(dataDirectory));
-        scenes.equipment(org.tortodrone.world.EquipmentCatalog.deployment(dataDirectory));
-        scenes.fires(org.tortodrone.world.FireCatalog.deployment(dataDirectory));
-        if(scenes.weapons().weapons().isEmpty())fallbacks.add("weapon controls unavailable (export defaults/combat/weapons.tsv)");
-        org.tortodrone.character.ItemCatalog catalog;
-        Path itemSource=org.tortodrone.character.ItemCatalog.source(dataDirectory);
-        try {
-            catalog=org.tortodrone.character.ItemCatalog.deployment(dataDirectory);
-            if (itemSource != null) log.debug("Item catalog: " + itemSource);
-        }
-        catch(IOException invalid) {
-            log.debug("Item definitions unavailable: " + invalid.getMessage());
-            fallbacks.add("item definitions invalid (using built-in starter definitions)");
-            catalog=org.tortodrone.character.ItemCatalog.starter();
-        }
-        if(itemSource==null)fallbacks.add("item catalog missing (using built-in starter definitions)");
-        String resourceHint=settings.logMode()==ServerSettings.LogMode.DEBUG
-            ? "See diagnostics above."
-            : "Check defaults/maps/ and defaults/items/catalog.json beside the server JAR; use log-mode=debug for details.";
-        if(!fallbacks.isEmpty())log.warn("Resource fallback: " + String.join("; ",fallbacks)
-            + "; login and administration remain available. " + resourceHint);
-        else if(!recoveryWarnings.isEmpty())log.warn("Default resource recovery incomplete; using available local maps/items. " + resourceHint);
+        var content=org.tortodrone.resources.ContentManager.load(dataDirectory.getParent());
+        var scenes=content.createScenes();
+        org.tortodrone.world.SceneRegistry.install(scenes);
+        var catalog=content.items();
+        for(String warning:content.warnings())log.warn(warning);
+        log.info("Content packs: "+content.packs());
+        content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
+        try {content.writeLockfile(dataDirectory.getParent());}
+        catch(IOException cacheUnavailable){log.warn("Content lockfile unavailable: "+cacheUnavailable.getMessage());}
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");

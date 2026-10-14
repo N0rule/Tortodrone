@@ -55,13 +55,6 @@ public final class EquipmentCatalog {
 
     public static EquipmentCatalog empty() { return new EquipmentCatalog(List.of()); }
 
-    public static EquipmentCatalog deployment(Path data) throws IOException {
-        Path deployment = data.toAbsolutePath().normalize().getParent();
-        Path custom = deployment.resolve("combat/equipment.tsv");
-        Path defaults = deployment.resolve("defaults/combat/equipment.tsv");
-        return Files.exists(custom) ? load(custom) : Files.exists(defaults) ? load(defaults) : empty();
-    }
-
     public static EquipmentCatalog load(Path file) throws IOException {
         long size = Files.size(file);
         if (size > MAX_BYTES) throw new IOException("Equipment catalogue exceeds size limit");

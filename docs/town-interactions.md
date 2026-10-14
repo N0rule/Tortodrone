@@ -1,6 +1,6 @@
 # Town interactions and solo interiors
 
-This milestone extends the existing four Haven towns with verified player interactions and three private interior areas. Protocol behavior is derived from the unchanged installed client. Current checked-in layouts come from official gameplay captures dated 2026-10-12; the seven capture hashes are pinned in `defaults/maps/scene-source.properties`. It does not add a general party system or new quest content.
+This milestone extends the existing four Haven towns with verified player interactions and three private interior areas. Protocol behavior is derived from the unchanged installed client. Current checked-in layouts come from official gameplay captures dated 2026-10-12; the seven capture hashes are pinned in `content/packs/vanilla/maps/scene-source.properties`. It does not add a general party system or new quest content.
 
 ## Player emotes
 
@@ -58,9 +58,9 @@ Interior controllers also require health/status entries and an elevator return d
 
 The server currently uses TCP only. On the first interior entry, a native `UpdateThrottleMessage` raises that connection's client send limit to 100 messages per second. Native unreliable input otherwise falls back to the same TCP queue as travel and keepalive requests, behind the client's default ten-message limit. The stock acknowledgement is decoded without granting any service or changing player data. This is this server's bounded TCP transport policy, not an implementation of stock UDP or its separate flood guard.
 
-The repository's `defaults/maps/` contains all seven packs: four towns and three interiors, with `catalog.properties` and the `scene-source.properties` provenance manifest. These scene packs are committed outside the JARs; game meshes, textures, audio and installed JARs are not. Ordinary `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes offline. Custom files are preserved; only known prior default generations can be upgraded in place, while owner-edited packs keep their bytes.
+The repository's `content/packs/vanilla/maps/` contains all seven packs: four towns and three interiors, with `catalog.properties` and the `scene-source.properties` provenance manifest. These scene packs are committed outside the JARs; game meshes, textures, audio and installed JARs are not. Ordinary `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes offline. Custom files are preserved; only known prior default generations can be upgraded in place, while owner-edited packs keep their bytes.
 
-An ordinary build prepares all seven scenes from the checked-in source. To derive a new candidate set, use `prepareHaven` with the installed client, all seven local captured scene binaries, and a fresh output path. It verifies each capture hash and writes staging output only; it does not republish into `defaults/maps/`. The server loads `build/defaults/maps/` unless a custom `build/maps/` overrides it. See [map preparation](maps.md) for the command and safeguards.
+An ordinary build prepares all seven scenes from the checked-in source. To derive a new candidate set, use `prepareHaven` with the installed client, all seven local captured scene binaries, and a fresh output path. It verifies each capture hash and writes staging output only; it does not republish into `content/packs/vanilla/maps/`. The registry selects versioned vanilla/custom pack resources. With `legacy=auto`, an existing top-level `build/maps/` still replaces the entire map catalog through the read-only compatibility layer. See [map preparation](maps.md) for the command and safeguards.
 
 There is no map-specific task in `buildServer`; it prepares the checked-in source only. Maps contain geometry and verified portal metadata, not NPCs, shops, missions, combat behavior or rewards. Private guild scene 528 is excluded.
 

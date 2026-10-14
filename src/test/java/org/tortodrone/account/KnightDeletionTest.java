@@ -11,7 +11,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class KnightDeletionTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-knight-delete-");
-        try(var server=new AccountStore(home);var manager=new AccountStore(home)) {
+        try(var server=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter());var manager=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
             server.create("Alice","alice-password".toCharArray());server.create("Bob","bob-password".toCharArray());
             var alice=AccountStoreTest.login(server,"Alice","alice-password");
             var bob=AccountStoreTest.login(server,"Bob","bob-password");
@@ -44,7 +44,7 @@ public final class KnightDeletionTest {
             check(next.id()==3&&recreated.worldId()>removed.worldId(),"freed slot uses new roster/world/item identities");
             refused(()->manager.deleteKnight("Alice",next.name(),alice.id(),removed.worldId()));
             check(manager.knights("Alice").size()==2,"stale confirmation cannot delete name replacement");
-            try(var restart=new AccountStore(home)) {
+            try(var restart=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
                 check(restart.worldProfile("Alice","Keep-Knight").equals(survivor),"surviving data persists on restart");
             }
         }finally{try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.delete(file);}}

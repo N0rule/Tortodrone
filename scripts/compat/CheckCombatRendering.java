@@ -24,7 +24,7 @@ public final class CheckCombatRendering {
         }
         Path jar = project.resolve("build/tortodrone.jar");
         if (!Files.isRegularFile(jar)) throw new IOException("Build first with ./gradlew build");
-        Path defaults = project.resolve("build/defaults");
+        Path defaults = project.resolve("build/content/packs/vanilla");
         requireMaps(defaults);
 
         Path output;
@@ -44,8 +44,8 @@ public final class CheckCombatRendering {
             Path app = scratch.resolve("app");
             Files.createDirectories(app);
             Files.copy(jar, scratch.resolve("tortodrone.jar"));
-            copyTree(defaults, scratch.resolve("defaults"));
-            Path maps = scratch.resolve("defaults");
+            copyTree(defaults, scratch.resolve("content/packs/vanilla"));
+            Path maps = scratch.resolve("content/packs/vanilla");
             requireMaps(maps);
             Files.createDirectories(scratch.resolve("data"));
             Files.createDirectories(scratch.resolve("home/prefs"));

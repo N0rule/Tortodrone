@@ -17,7 +17,7 @@ public final class PlayerTradeTest {
             int alice=db.create("Alice",protection,false),bob=db.create("Bob",protection,false);
             var as=new CharacterStore(db,alice,"Alice");var bs=new CharacterStore(db,bob,"Bob");
             as.create(choices("Alice-Knight"));bs.create(choices("Bob-Knight"));
-            var catalog=ItemCatalog.load(Path.of("defaults/items/catalog.json"));
+            var catalog=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
             var sword=catalog.require("Weapon/Sword/Calibur");
             var stack=catalog.entries().stream().filter(i->i.grantable()&&i.stackable()&&!i.permanent()).findFirst().orElseThrow();
             db.grantItems("Alice","Alice-Knight",alice,-1,sword,1,-1,-1);

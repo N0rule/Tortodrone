@@ -48,7 +48,7 @@ public final class SceneContentExport {
 
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
-        try(var in=Files.newInputStream(Path.of("defaults/combat/actor-rules.properties"))){rules.load(in);}
+        try(var in=Files.newInputStream(Path.of("content/packs/vanilla/combat/actor-rules.properties"))){rules.load(in);}
         if(!"1".equals(rules.getProperty("format")))throw new IOException("Unsupported authored actor rules");
         values.put("format", "1");
         values.put("layout-sha256", sha256(layout));

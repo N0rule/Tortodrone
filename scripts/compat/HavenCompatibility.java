@@ -19,8 +19,8 @@ public final class HavenCompatibility {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 2) throw new IllegalArgumentException(
-            "Usage: HavenCompatibility installed-game [defaults/maps]");
-        Path game=Path.of(args[0]), maps=args.length==2?Path.of(args[1]):Path.of("defaults/maps");
+            "Usage: HavenCompatibility installed-game [content/packs/vanilla/maps]");
+        Path game=Path.of(args[0]), maps=args.length==2?Path.of(args[1]):Path.of("content/packs/vanilla/maps");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),

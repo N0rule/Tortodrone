@@ -14,11 +14,11 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 
-/** Java 25 build inputs and offline preparation of the extensible defaults tree. */
+/** Java 25 build inputs and offline preparation of versioned content. */
 public final class BuildTools {
     public static void main(String[] args) throws Exception {
         Path project = Path.of("").toAbsolutePath();
-        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or defaults|maps [output]");
+        if (args.length == 0) throw new IllegalArgumentException("Usage: java scripts/BuildTools.java sqlite|jline output, or content|defaults|maps [output]");
         switch (args[0]) {
             case "sqlite", "jline" -> {
                 if (args.length != 2) throw new IllegalArgumentException("Expected dependency output path");
@@ -29,11 +29,11 @@ public final class BuildTools {
                     ? "bcb1f51e36f940867e83342f9efbf5968ac44a6bef4d397bb4af7b17b45cd2fb"
                     : "091c6aaf65de86d4106528a626fe1d9daebcd2313102d6f7e484700846d0e63d");
             }
-            case "maps", "defaults" -> {
+            case "maps", "defaults", "content" -> {
                 if (args.length > 2) throw new IllegalArgumentException("Expected at most one map output directory");
-                boolean maps=args[0].equals("maps");
-                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(maps?"build/defaults/maps":"build/defaults");
-                prepare(project, output.toAbsolutePath().normalize(), maps);
+                String command=args[0];
+                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(command.equals("maps")?"build/content/packs/vanilla/maps":"build/content/packs/vanilla");
+                prepare(project, output.toAbsolutePath().normalize(), command);
             }
             default -> throw new IllegalArgumentException("Unknown build input command");
         }
@@ -59,24 +59,38 @@ public final class BuildTools {
     private record Copy(Path source, Path target, boolean replace) { }
     /** Map provenance manifest checked in beside the packs it pins. */
     private static final String MAP_MANIFEST = "scene-source.properties";
-    private static void prepare(Path project, Path output, boolean mapsOnly) throws Exception {
+    private static void prepare(Path project, Path output, String command) throws Exception {
+        boolean mapsOnly=command.equals("maps");
         // One checked-in source for every machine: no local export directory can change a build.
-        Path mapSource=project.resolve("defaults/maps");
+        Path vanillaSource=project.resolve("content/packs/vanilla");
+        Path mapSource=vanillaSource.resolve("maps");
         Path mapOutput=mapsOnly?output:output.resolve("maps");
+        if(!mapsOnly&&!Files.isDirectory(vanillaSource,LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("Required vanilla content source is absent: "+vanillaSource);
+        if(!mapsOnly&&!Files.isDirectory(mapSource,LinkOption.NOFOLLOW_LINKS))
+            throw new IOException("Required vanilla map source is absent: "+mapSource);
         verifyMaps(mapSource);
         var copies=new ArrayList<Copy>();
         Properties ownership=sourceOwnership(mapSource,MAP_MANIFEST);
         plan(mapSource,mapOutput,copies,null,ownership);
-        if(!mapsOnly)plan(project.resolve("defaults"),output,copies,Path.of("maps"),
-            sourceOwnership(project.resolve("defaults"),"default-source.properties"));
-        // Hold an existing deployment's lock before changing maps; never stop a live server.
-        Path lockFile=(Path.of("defaults").equals(mapOutput.getParent().getFileName())
-            ?mapOutput.getParent().getParent():mapOutput.getParent()).resolve("data/server.lock");
-        boolean mapsChanging=copies.stream().anyMatch(copy->copy.target.startsWith(mapOutput));
-        try(var channel=mapsChanging&&Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)
+        Path deploymentRoot;
+        deploymentRoot=inferDeploymentRoot(output);
+        if(!mapsOnly) {
+            plan(vanillaSource,output,copies,Path.of("maps"),sourceOwnership(vanillaSource,"default-source.properties"));
+            // Operator packs are not build inputs. Copy only the shipped empty directory marker.
+            // Arbitrary staging pack outputs receive no config files outside the requested tree.
+            if(output.endsWith(Path.of("content/packs/vanilla"))||output.endsWith(Path.of("defaults"))) {
+                plan(project.resolve("config"),deploymentRoot.resolve("config"),copies,null,null,"content.properties");
+                plan(project.resolve("custom/packs"),deploymentRoot.resolve("custom/packs"),copies,null,null,".gitkeep");
+            }
+        }
+        // Refuse all planned content changes while the target deployment is locked.
+        Path lockFile=deploymentRoot.resolve("data/server.lock");
+        boolean changing=!copies.isEmpty();
+        try(var channel=changing&&Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)
                 ?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;
             FileLock lock=channel==null?null:channel.tryLock()) {
-            if(channel!=null&&lock==null)throw new IOException("Maps need updating but the server is running; stop it yourself before rebuilding");
+            if(channel!=null&&lock==null)throw new IOException("Content needs updating but the server is running; stop it yourself before rebuilding");
             for(var copy:copies) {
                 if(copy.replace) {
                     Path temporary=Files.createTempFile(copy.target.getParent(),".map-update-",".tmp");
@@ -87,9 +101,21 @@ public final class BuildTools {
                 } else copyMissing(copy.source,copy.target);
             }
         }
-        System.out.println("Prepared maps: " + mapSource + " -> " + mapOutput);
+        System.out.println("Prepared "+(mapsOnly?"maps":"content")+": " + (mapsOnly?mapSource:vanillaSource) + " -> " + (mapsOnly?mapOutput:output));
+    }
+    static Path inferDeploymentRoot(Path output) {
+        Path normalized=output.toAbsolutePath().normalize();
+        if(normalized.endsWith(Path.of("content/packs/vanilla/maps")))return normalized.getParent().getParent().getParent().getParent();
+        if(normalized.endsWith(Path.of("content/packs/vanilla")))return normalized.getParent().getParent().getParent();
+        if(normalized.endsWith(Path.of("defaults")))return normalized.getParent();
+        if(normalized.endsWith(Path.of("defaults/maps")))return normalized.getParent().getParent();
+        if(normalized.endsWith(Path.of("maps")))return normalized.getParent();
+        return normalized.getParent();
     }
     private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership) throws Exception {
+        plan(source,output,copies,skip,ownership,null);
+    }
+    private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership,String onlyFile) throws Exception {
         if(Files.notExists(source,LinkOption.NOFOLLOW_LINKS)) {
             System.out.println("Optional default source is absent: " + source + "; continuing without it");return;
         }
@@ -98,6 +124,7 @@ public final class BuildTools {
             for(Path file:paths.sorted().toList()) {
                 Path relative=source.relativize(file);
                 if(skip!=null&&relative.startsWith(skip))continue;
+                if(onlyFile!=null&&!relative.equals(Path.of(onlyFile)))continue;
                 if(Files.isSymbolicLink(file))throw new IOException("Default source contains a symlink: " + file);
                 if(!Files.isRegularFile(file))continue;
                 Path target=output.resolve(relative);

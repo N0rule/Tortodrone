@@ -1,4 +1,4 @@
-# Server state and legacy research; map preparation reads defaults/maps only.
+# Server state and legacy research; vanilla preparation reads content/packs/vanilla.
 /local/
 
 # Captures and logs
@@ -12,3 +12,11 @@
 build/
 .build/
 .gradle/
+
+# Local deployment state and enabled operator packs
+/data/
+/cache/
+/config/server.properties
+/config/content-migrated.properties
+/custom/packs/*
+!/custom/packs/.gitkeep

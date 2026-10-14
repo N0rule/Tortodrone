@@ -87,13 +87,6 @@ public final class WeaponCatalog {
 
     public static WeaponCatalog empty() { return new WeaponCatalog(List.of(), List.of()); }
 
-    public static WeaponCatalog deployment(Path data) throws IOException {
-        Path deployment = data.toAbsolutePath().normalize().getParent();
-        Path custom = deployment.resolve("combat/weapons.tsv");
-        Path defaults = deployment.resolve("defaults/combat/weapons.tsv");
-        return Files.exists(custom) ? load(custom) : Files.exists(defaults) ? load(defaults) : empty();
-    }
-
     public static WeaponCatalog load(Path file) throws IOException {
         long size = Files.size(file);
         if (size > MAX_BYTES) throw new IOException("Weapon catalogue exceeds size limit");

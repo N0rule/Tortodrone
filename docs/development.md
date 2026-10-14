@@ -10,11 +10,14 @@ Start with [AGENTS.md](../AGENTS.md), [README](../README.md), [milestone](PROJEC
 ./gradlew testUnit
 ./gradlew testIntegration
 ./gradlew testProcessCleanup     # deterministic graceful/forced/interrupted child cleanup
-./gradlew prepareDefaults        # copy default maps/items without overwriting custom files
-./gradlew prepareMaps
+./gradlew prepareContent         # prepare canonical versioned vanilla pack
+./gradlew prepareDefaults        # deprecated alias; -PdefaultsOutput remains supported
+./gradlew prepareMaps            # canonical vanilla maps only
 ./gradlew prepareHaven -PgameDir="/path/to/Spiral Knights" -PcapturedScenes="/path/to/captures" -PhavenOutput="/tmp/fresh-haven-maps" # explicit candidate export; output must be fresh
-./gradlew clean                  # preserves build/data/, build/defaults/ and build/deps/
+./gradlew clean                  # preserves build/data/, build/content/ and build/deps/
 ```
+
+Run stock networking/graphics fixtures separately from the Gradle regressions to avoid competing authentication work and socket deadlines.
 
 Standalone regression JVMs share one Gradle build-service slot, including when the configuration cache is reused. This avoids CPU contention from RSA/password hashing triggering local socket deadlines. Compilation and packaging retain normal worker scheduling; each fixture still runs its own concurrent scenarios. No `--max-workers=1` flag is needed for `build`, `testUnit` or `testIntegration`.
 
@@ -40,7 +43,7 @@ java --enable-native-access=ALL-UNNAMED -cp 'build/tortodrone.jar:.build/classes
 ```
 
 Run from the repository root on a real graphical desktop with Java 25. The fixture
-copies deployment/defaults into its disposable folder, creates test accounts,
+copies deployment content packs into its disposable folder, creates test accounts,
 isolates home/preferences and runs only its own child JVM windows/server. It
 checks actual Swing windows, session snapshots, structured log display, command
 transactions, catalogue grants, balance changes and stop/start/exit. It retains
@@ -67,7 +70,7 @@ graphical environments were unavailable. See [actual validation](administration-
 ./gradlew benchmark --args='--instances 4 --clients 300'
 ```
 
-Fixture copies JARs/defaults into disposable `/tmp` deployments, raises `max-clients` locally, enters town or session-only, sends movement/pings and cleans up its own clients/server. Default 20 s after ramp; `--instances` 1–16. Runs server at 512 MiB heap and 256 KiB thread stacks, measures ping percentiles, updates/client/s, CPU, RSS, thread count, bytes, readiness/failures. Run on idle machine; local synthetic benchmarks **do not prove** production WAN performance, smooth rendering, dynamic combat or long-run stability. 300-player snapshot is in [milestone](PROJECT.md); older detailed measurements are in Git history.
+Fixture copies JARs and selected content packs into disposable `/tmp` deployments, raises `max-clients` locally, enters town or session-only, sends movement/pings and cleans up its own clients/server. Default 20 s after ramp; `--instances` 1–16. Runs server at 512 MiB heap and 256 KiB thread stacks, measures ping percentiles, updates/client/s, CPU, RSS, thread count, bytes, readiness/failures. Run on idle machine; local synthetic benchmarks **do not prove** production WAN performance, smooth rendering, dynamic combat or long-run stability. 300-player snapshot is in [milestone](PROJECT.md); older detailed measurements are in Git history.
 
 ## Stock compatibility and graphics
 
@@ -101,7 +104,7 @@ Konway, both conversation nodes, vial pickup/quickbar/use/throw, and Blitz Needl
 normal/charged facing in two directions.
 `TrainingCompatibility` uses the stock reader for all prepared entity subtypes, non-empty
 knight/lift/status deltas, conversation frames and a few scene gameplay checks.
-`SceneCollisionCompatibility game-dir defaults/maps/advanced_training defaults/combat/fires.json`
+`SceneCollisionCompatibility game-dir content/packs/vanilla/maps/advanced_training content/packs/vanilla/combat/fires.json`
 compares the prepared native masks, shapes and floor cells with the installed client.
 Compile it together with `FireCatalogExport` and `FireCompatibility`. When using temporary
 probe classes, put `.build/classes/java/main` before `/tmp` on the runtime classpath so an
@@ -116,4 +119,4 @@ This fixture does not test keyboard bindings or every catalogue weapon. See the
 
 ## Source/resource rules
 
-`VERSION` is bundled in both JARs. `gradle.properties` enables Gradle’s configuration cache. `.build/` is scratch output; `build/defaults/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.
+`VERSION` is bundled in both JARs. `gradle.properties` enables Gradle’s configuration cache. `.build/` is scratch output; `build/content/`, legacy `build/deps/` cache and `build/data/` live state survive clean. Use disposable deployments for migration and content validation; the migration command exports legacy resources without changing selection. See [content packs](content.md). Pin/digest and license provenance: [dependencies](dependencies.md); validated maps: [maps](maps.md); client redirection: [client-redirection](client-redirection.md). Do not commit game assets or copy unlicensed upstream server code.

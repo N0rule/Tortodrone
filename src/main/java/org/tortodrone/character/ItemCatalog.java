@@ -61,14 +61,6 @@ public final class ItemCatalog {
         byId.replaceAll((id,list)->List.copyOf(list));this.ids=Map.copyOf(byId);
     }
     public static ItemCatalog starter() { return new ItemCatalog(StarterCatalog.catalogEntries()); }
-    public static ItemCatalog deployment(Path data)throws IOException {
-        Path file=source(data);return file==null?starter():load(file);
-    }
-    public static Path source(Path data) {
-        Path deployment=data.toAbsolutePath().normalize().getParent();
-        Path custom=deployment.resolve("items/catalog.json"),defaults=deployment.resolve("defaults/items/catalog.json");
-        return Files.exists(custom)?custom:Files.exists(defaults)?defaults:null;
-    }
     public String alias(Entry entry) { return aliases.get(entry.config()); }
     private static String aliasBase(Entry entry) { return prefix(entry.category())+":"+slug(entry.displayName()); }
     private static String prefix(String type) {

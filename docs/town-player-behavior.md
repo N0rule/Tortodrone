@@ -140,7 +140,7 @@ implementation before the sweep fix. `./gradlew unitworld_CollisionMapTest
 unitworld_SceneWeaponsTest` passed after the fix; the final `./gradlew build`
 passed all 67 tasks, including the exact mixed-direction corner regression and
 orbital collision/wall-passing flag checks. The disposable stock-client run of
-`FireCompatibility defaults/combat/fires.json` passed all 60 representative
+`FireCompatibility content/packs/vanilla/combat/fires.json` passed all 60 representative
 projectile/effect shapes; `InteriorConnectionCheck port public-key 127.0.0.1
 maps-dir --weapons` passed Calibur, Proto Gun and Blast Bomb equip/input/emission.
 `git diff --check` passed. The graphical baseline launch used

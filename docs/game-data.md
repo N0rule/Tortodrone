@@ -15,16 +15,17 @@ Use a JDK capable of reading the installed classes (Java 25 for the tested game)
 java scripts/StockTools.java items "/path/to/Spiral Knights"
 ```
 
-Build the server JAR first; the exporter then creates **build/items/catalog.json**
-and **build/items/provenance.tsv**. Output must be a fresh directory; pass a different
+Build the server JAR first; the exporter then creates **build/exports/items/catalog.json**
+and **build/exports/items/provenance.tsv**. Output must be a fresh directory; pass a different
 directory as the optional final argument for another snapshot. The exporter reads
 the installation locally and never downloads game assets.
 
-The checked-in default definitions live in `defaults/items/catalog.json` and are
-copied by `./gradlew prepareDefaults`. Both applications prefer custom `items/catalog.json`
-beside their JARs, then use the default catalogue. Server startup warns and uses
-built-in starter definitions if neither is usable. Restart after changing definitions;
-preserve custom catalogues across updates. The game is not a runtime dependency.
+The checked-in definitions live in `content/packs/vanilla/items/catalog.json` and are
+copied by `./gradlew prepareContent`. Item catalogs are whole resources in the versioned content
+registry: a selected pack may explicitly replace the whole `items` resource, but rows are not
+merged or individually removed. The loader validates the complete resource set and cross-references
+before account/key storage opens. Invalid or missing selected resources fail startup. Restart after
+changing definitions; preserve operator packs across updates. The game is not a runtime dependency.
 
 The checked-in v2 snapshot contains **9,348 definitions**, of which **8,570 are
 grantable** under the current native-record and model-argument rules. Counts describe

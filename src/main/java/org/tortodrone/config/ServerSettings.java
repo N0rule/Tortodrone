@@ -10,6 +10,14 @@ import java.util.Properties;
 public record ServerSettings(String bind, int port, LogMode logMode, int maxClients, int logMaxMiB, int logRetention) {
     public ServerSettings(String bind,int port,LogMode mode,int clients) { this(bind,port,mode,clients,10,5); }
     public enum LogMode { NORMAL, DEBUG }
+    /** Existing settings are read in place; new deployments keep operator configuration out of data/. */
+    public static Path defaultPath(Path deployment) throws IOException {
+        Path current=deployment.resolve("config/server.properties"),legacy=deployment.resolve("data/server.properties");
+        org.tortodrone.resources.ContentFiles.safe(current);
+        if(Files.exists(current,java.nio.file.LinkOption.NOFOLLOW_LINKS))return current;
+        org.tortodrone.resources.ContentFiles.safe(legacy);
+        return Files.exists(legacy,java.nio.file.LinkOption.NOFOLLOW_LINKS)?legacy:current;
+    }
     public static ServerSettings load(Path file) throws IOException {
         file = file.toAbsolutePath().normalize();
         Properties defaults = new Properties();

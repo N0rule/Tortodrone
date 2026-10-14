@@ -187,7 +187,7 @@ Unavailable maps/items produce one resource-fallback warning describing the effe
 `debug` also records configuration/storage paths, default-resource recovery details,
 scene/resource timings, storage diagnostics and protocol message types. Each connection logs
 its disconnection once. Neither mode records passwords or authentication payloads.
-Set `log-mode=normal` or `log-mode=debug` in `data/server.properties` and restart.
+Set `log-mode=normal` or `log-mode=debug` in `config/server.properties` (or active legacy `data/server.properties`) and restart.
 UTF-8 `latest.log` rotates to numbered `server-N.log` files: `log-max-mib=10`
 (default, range 1–1024), `log-retention=5` (default, range 1–100). The GUI filter,
 pause, Clear view and Debug checkbox do not change disk logging. See
@@ -214,6 +214,6 @@ Derived friendly names, category aliases and inspection/search do not add JSON o
 wire fields. See [catalogue identity and availability](game-data.md).
 Equipped starters are bound; equipping applies the stored bind-on-equip rule and
 unequipping retains binding. Reopening never regrants kits or re-equips items.
-Preserve external `defaults/` and optional custom `items/` and `maps/` with the deployment.
+Preserve `content/`, `custom/packs/` and `config/` with the deployment, plus any active legacy resources until [migration](content.md) is selected.
 
 Never copy only a live database: pending changes may reside in its WAL.

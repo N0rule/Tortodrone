@@ -30,7 +30,7 @@ position resets to spawn. Reconnect to change characters. See
 ## Troubleshooting
 
 Logs are in the server terminal and `data/logs/latest.log`. Stop the server before
-setting `log-mode=debug` in its adjacent `data/server.properties`, then restart.
+setting `log-mode=debug` in its adjacent `config/server.properties` (or active legacy `data/server.properties`), then restart.
 Debug adds protocol diagnostics while excluding secrets/raw payloads.
 
 | Symptom | Check |

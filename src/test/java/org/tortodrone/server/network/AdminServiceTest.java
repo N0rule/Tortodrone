@@ -20,7 +20,7 @@ public final class AdminServiceTest {
             .equals("com.threerings.projectx.admin.data.ProjectXAdminMarshaller"),
             "stock admin marshaller is advertised in the bootstrap service list");
         Path home = Files.createTempDirectory("tortodrone-admin-service-");
-        try (var accounts = new AccountStore(home)) {
+        try (var accounts = new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
             var database = new Database(home, false);
             accounts.create("Alice", "alice-password".toCharArray());
             accounts.create("Master", "master-password".toCharArray(), true);

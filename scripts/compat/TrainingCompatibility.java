@@ -11,7 +11,7 @@ public final class TrainingCompatibility {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Path pack=Path.of(args[0]);
         var content=SceneContent.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
-        var entities=new SceneEntities(content,CollisionMap.read(Path.of("defaults/maps/advanced_training/walkability.gz")));
+        var entities=new SceneEntities(content,CollisionMap.read(Path.of("content/packs/vanilla/maps/advanced_training/walkability.gz")));
         var actors=entities.actors();
         var added=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,actors,List.of(),new int[0],Map.of(),true));
         if(added.aej().length!=actors.size())throw new AssertionError("Missing native scene actors");
@@ -71,7 +71,7 @@ public final class TrainingCompatibility {
     }
     private static ActorState player(float x,float y,float rotation){return new ActorState(219,1001,"Fixture",256,100,x,y,rotation,rotation,0,new StarterCatalog.Model("Character/PC/Default",Map.of()));}
     private static void gameplay(SceneContent content)throws Exception {
-        var collision=CollisionMap.read(Path.of("defaults/maps/advanced_training/walkability.gz"));
+        var collision=CollisionMap.read(Path.of("content/packs/vanilla/maps/advanced_training/walkability.gz"));
         var world=new SceneEntities(content,collision);int stamp=SceneClock.now();
         long initialTargets=world.actors().stream().filter(a->a.entity().kind().equals("Monster")).count();
         var cube=world.actors().stream().filter(a->a.entity().kind().equals("Monster")).findFirst().orElseThrow();
@@ -103,7 +103,7 @@ public final class TrainingCompatibility {
         if((float)FireCompatibility.field(applied,"_z")!=1||(int)FireCompatibility.field(applied,"_faction")!=219
                 ||((int[])FireCompatibility.field(applied,"_actorIds")).length!=0)throw new AssertionError("Native thrown-lift delta mismatch");
         var health=new SceneHealth(content);if(!health.damage(hit(8,30).arguments().get("damage"),stamp)||!health.heal(120)||health.state().current()!=health.state().maximum())throw new AssertionError("Party damage/heal mismatch");
-        var map=SceneCatalog.load(Path.of("defaults/maps")).scene(294);
+        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
         var movement=new TownMovement(collision,map.spawnX(),map.spawnY(),map.spawnRotation());movement.combat(new KnightCombat(WeaponCatalog.empty()));
         var interactions=new java.util.concurrent.atomic.AtomicInteger();movement.interaction(at->{interactions.incrementAndGet();return true;});
         movement.accept(100,0,0,4,99,100,100);movement.advance(100,100);
@@ -131,7 +131,7 @@ public final class TrainingCompatibility {
         if(input.available()!=0)throw new AssertionError("Native message framing mismatch");return message;
     }
     private static void quickbar()throws Exception {
-        var map=SceneCatalog.load(Path.of("defaults/maps")).scene(294);var scene=new SceneRegistry.Instance(140,0,map);
+        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var scene=new SceneRegistry.Instance(140,0,map);
         var knight=new Knight(1,"Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
         var profile=new WorldProfile(219,1,1,0,0,0,List.of());
         var party=(com.threerings.projectx.dungeon.data.LevelPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene))).yk();

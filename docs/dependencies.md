@@ -38,9 +38,9 @@ with redirected stdin uses plain input and does not require a native terminal.
 
 ## External town layouts
 
-The seven checked-in scene packs under `defaults/maps/` were rebuilt from local, SHA-256-verified
+The seven checked-in scene packs under `content/packs/vanilla/maps/` were rebuilt from local, SHA-256-verified
 official gameplay captures dated 2026-10-12. The capture hashes, sizes and versions are recorded
-in `defaults/maps/scene-source.properties`; each pack also pins its scene and collision data.
+in `content/packs/vanilla/maps/scene-source.properties`; each pack also pins its scene and collision data.
 Laboratory is scene 30893 and Hall of Heroes is the four-star variant, scene 318. The maps are
 shipped outside both JARs, so ordinary builds and runtime do not need the capture files or a
 remote archive. The map converter uses the unchanged installed client's configurations read-only.

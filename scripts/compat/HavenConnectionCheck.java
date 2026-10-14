@@ -11,7 +11,7 @@ import org.tortodrone.world.*;
 public final class HavenConnectionCheck {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var maps=SceneCatalog.load(Path.of("defaults/maps"));
+        var maps=SceneCatalog.load(Path.of("content/packs/vanilla/maps"));
         Thread thread=Thread.currentThread();at queue=new at(){
             public void postRunnable(Runnable task){WorldConnectionCheck.tasks.add(task);}
             public boolean isDispatchThread(){return Thread.currentThread()==thread;}public boolean isRunning(){return true;}};

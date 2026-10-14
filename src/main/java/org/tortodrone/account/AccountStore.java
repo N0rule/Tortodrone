@@ -37,7 +37,7 @@ public final class AccountStore implements AutoCloseable {
         finally { Arrays.fill(password,'\0'); }
     }
     public AccountStore(Path directory) throws IOException { this(directory,false); }
-    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,ItemCatalog.deployment(directory)); }
+    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent()).items()); }
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
@@ -69,7 +69,7 @@ public final class AccountStore implements AutoCloseable {
         if (database == null) return require(username,-1).characters();
         var identity = database.identity(username);
         if (identity == null) throw new IOException("No such account");
-        return new CharacterStore(database,identity.id(),identity.username());
+        return new CharacterStore(database,identity.id(),identity.username(),catalog);
     }
 
     public synchronized WorldProfile currency(String username,String knight,Currency currency,long delta,int expectedAccount,int expectedWorld) throws IOException {

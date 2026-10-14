@@ -1,6 +1,6 @@
 # Server architecture — concise map
 
-**Authoritative reference:** current Java 25 source, tests and Git. This describes the 0.26.0 administration milestone; [validation and limits](administration-overhaul.md) record Linux acceptance. Earlier detailed architectural notes remain in Git history; consult them only if the current code and this summary are insufficient.
+**Authoritative reference:** current Java 25 source, tests and Git. The 0.29.0 resource registry resolves external content before key/account storage initialization; [content packs](content.md) describes its pack contract. Earlier detailed architectural notes remain in Git history; consult them only if the current code and this summary are insufficient.
 
 ## Code map (`src/main/java/org/tortodrone/`)
 
@@ -15,7 +15,7 @@
 | Instances/physics | `world/SceneCatalog`, `SceneRegistry`, `SceneSimulation`, `CollisionMap`, `TownMovement`, `ActorState`, `SceneClock` |
 | Interior controls/projectiles | `world/KnightCombat`, `SceneWeapons`, `WeaponCatalog`, `EquipmentCatalog`, `FireCatalog` |
 | Player trading | `server/network/PlayerTrades`, `storage/TradeTransfer` |
-| Resources/admin | `resources/DefaultResources`; `admin/AdminApplication`, `AdminWindow`, `KnightPanel`; `config/ServerSettings` |
+| Resources/admin | `resources/ContentManager`, `ContentRegistry`, `ContentFiles`, `LegacyContent`; `admin/AdminApplication`, `AdminWindow`, `KnightPanel`; `config/ServerSettings` |
 
 ## Hard invariants
 
@@ -57,9 +57,13 @@ observers run after operation connection cleanup and never log SQL arguments or
 credentials. See [GUI lifecycle](server-gui.md), [command boundaries](commands.md)
 and [logging/privacy](logging.md).
 
+## Content startup and world resources
+
+`ContentManager` resolves the explicit `config/content.properties` selection from `content/packs/vanilla/` and `custom/packs/<id>/`. It validates pack/engine formats, file and deterministic directory SHA-256 digests, exact dependencies, provider-specific overrides, scene descriptors, item/combat references and completeness as one snapshot. Startup does this before key generation or account database initialization; errors refuse startup without downloads or partial fallback. `LegacyContent` is a read-only compatibility resolver for established legacy paths, with preserved precedence and no mixing with versioned custom packs. `cache/content.lock` is regenerated for diagnostics only and never drives resolution. `data/` continues to own keys, accounts and schema-8 SQLite state. `config/server.properties` is canonical for new deployments; an existing `data/server.properties` is read in place when the canonical file is absent. See [content packs and migration](content.md).
+
 ## World and events
 
-- External `maps/` overrides `defaults/maps/`; verified scene/collision data shared immutably, **mutable state per instance**. `SceneSimulation` advances **all** entered knights, checks collisions/portals, then captures one immutable scene snapshot per 50 ms tick. Movement input carries intentions/facing, not coordinates; spectator/paused input is gated.
+- Scene resources are supplied as whole `scene.<id>` entries in resolved packs; verified scene/collision data is shared immutably, **mutable state per instance**. `SceneSimulation` advances **all** entered knights, checks collisions/portals, then captures one immutable scene snapshot per 50 ms tick. Movement input carries intentions/facing, not coordinates; spectator/paused input is gated.
 - Entered-place readiness is required before publishing deltas. Each recipient coalesces pending publications and diffs against its **last successfully queued** TCP snapshot, not merely the previous global tick. Preserve actor appearance configs, per-client class mappings, movement/activity timestamps and ack fields. Stop simulation clock on empty instance; stale callbacks may not revive detached occupants or reset replacements.
 - Travel: detect verified portal polygon crossing during movement substeps, freeze crossing, server-select destination/tag, validate current owner/readiness, notify native zone/scene move, reset source membership/recipient baseline and re-enter at original marker. Cache version/client destination cannot authorize travel. Prevent old-scene inputs/queued events crossing boundary.
 - `WorldStatePoller` checks auth/role/profile revisions **once per deployment every 250 ms** outside simulation/session locks; loads inventory on revision changes only; reject stale asynchronous reads. Persisted state publishes ordered item, equipment element, then loadout events so open Arsenal reacts; reconnect rebuilds picker from equipped outfit.

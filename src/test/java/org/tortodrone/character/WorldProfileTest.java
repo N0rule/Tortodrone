@@ -14,7 +14,7 @@ public final class WorldProfileTest {
         Path home = Files.createTempDirectory("tortodrone-world-profile-");
         try {
             Database db = new Database(home,false);
-            try (AccountStore accounts = new AccountStore(home)) {
+            try (AccountStore accounts = new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
                 accounts.create("Alice","alice-password".toCharArray()); accounts.create("Bob","bob-password".toCharArray());
             }
             CharacterStore alice = new CharacterStore(db,1,"Alice"), bob = new CharacterStore(db,2,"Bob");
@@ -57,7 +57,7 @@ public final class WorldProfileTest {
             check(count(db,"inventory_items")==10,"knight deletion cascades only its own inventory");
             alice.create(choices("Next-Knight"),1); check(alice.worldProfile("Next-Knight",1).worldId()>retryProfile.worldId(),"deleted world IDs never recycled");
             check(db.worldProfile(2,1,1).equals(b),"another account's identity and items are unchanged");
-            try(AccountStore accounts=new AccountStore(home)) {
+            try(AccountStore accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
                 accounts.setPassword("Alice","new-password".toCharArray());
                 check(db.worldStates().get(retryProfile.worldId()).authRevision()>1,"batch metadata detects stale authentication");
                 refused(() -> active.worldProfile(1,retry.id(),1));
@@ -65,7 +65,7 @@ public final class WorldProfileTest {
             }
             check(count(db,"inventory_items")==5 && count(db,"world_characters")==1,"account deletion cascades only owned profiles/items");
             // Concurrent accounts allocate from one serialized durable sequence.
-            try(AccountStore accounts=new AccountStore(home)) { accounts.create("Carol","carol-password".toCharArray()); accounts.create("David","david-password".toCharArray()); }
+            try(AccountStore accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) { accounts.create("Carol","carol-password".toCharArray()); accounts.create("David","david-password".toCharArray()); }
             var carol=new CharacterStore(db,3,"Carol"); var david=new CharacterStore(db,4,"David");
             var workers=Executors.newFixedThreadPool(2);
             try {

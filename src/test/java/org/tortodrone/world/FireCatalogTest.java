@@ -29,8 +29,6 @@ public final class FireCatalogTest {
             var result=loaded.find("weapon/gun/test",292);
             check(result!=null&&result.equals(attack),"attack refs, arguments, nested projectile and action metadata round trip");
             check(loaded.unsupportedTypes().get("DamageRegion")==1,"unsupported action types are retained and reported");
-            Path deployment=root.resolve("server");Files.createDirectories(deployment.resolve("defaults/combat"));Files.copy(file,deployment.resolve("defaults/combat/fires.json"));
-            check(FireCatalog.deployment(deployment.resolve("data.sqlite")).find("Weapon/Gun/Test",292)!=null,"defaults fire catalogue resolution");
             Path malformed=root.resolve("bad.json");Files.writeString(malformed,"{\"format\":\"tortodrone-fires\",\"version\":1,\"entries\":[],\"unsupported\":{\"bad\":-1}}");
             try{FireCatalog.load(malformed);throw new AssertionError("Negative unsupported count accepted");}catch(java.io.IOException expected){}
             check(result.fireRefs().getFirst().action().children().getFirst().children().getFirst().values().equals(List.of("Red","Blue")),"prespawned actor argument modifications round trip");
@@ -45,7 +43,7 @@ public final class FireCatalogTest {
             check(FireCatalog.load(legacy).find("Weapon/Legacy",292).fireRefs().getFirst().action().actor().equals(actor),"previous fire format remains readable without orbital or argument-change fields");
             oldRoot.put("version",2);Files.writeString(legacy,org.tortodrone.resources.Json.stringify(oldRoot));
             try{FireCatalog.load(legacy);throw new AssertionError("Missing v2 fields accepted");}catch(java.io.IOException expected){}
-            System.out.println("PASS: bounded fire graph JSON, argument-preserving reference lookup, orbital metadata, unsupported action reporting and deployment resolution");
+            System.out.println("PASS: bounded fire graph JSON, argument-preserving reference lookup, orbital metadata, unsupported action reporting");
         } finally {
             try(var paths=Files.walk(root)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
         }

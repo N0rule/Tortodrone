@@ -17,7 +17,7 @@ public final class SceneCollisionCompatibility {
         var collision=SceneCollision.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
         var pc=cm.d(ActorConfig.class,"Character/PC/Default").ai(cm);
         Object playerShape=FireCatalogExport.argumentValue(pc.shape);int checked=0,different=0;
-        var walk=CollisionMap.read(Path.of("defaults/maps/advanced_training/walkability.gz"));
+        var walk=CollisionMap.read(Path.of("content/packs/vanilla/maps/advanced_training/walkability.gz"));
         // The stock default pawn and two independently exported projectile profiles.
         var profiles=new ArrayList<FireCatalog.ActorSpec>();
         var fires=FireCatalog.load(Path.of(args[2]));

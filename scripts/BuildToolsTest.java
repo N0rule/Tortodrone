@@ -12,6 +12,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class BuildToolsTest {
     public static void main(String[] args) throws Exception {
         Path home = Files.createTempDirectory("tortodrone-build-inputs-");
+        check(BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla/maps")).equals(home),
+            "canonical vanilla map output resolves its deployment root");
+        check(BuildTools.inferDeploymentRoot(home.resolve("content/packs/vanilla")).equals(home),
+            "canonical vanilla output resolves its deployment root");
+        check(BuildTools.inferDeploymentRoot(home.resolve("defaults/maps")).equals(home),
+            "legacy defaults/maps output resolves its deployment root");
         var requests = new AtomicInteger();
         var release = new CountDownLatch(1);
         byte[] content = "synthetic dependency".getBytes(java.nio.charset.StandardCharsets.UTF_8);

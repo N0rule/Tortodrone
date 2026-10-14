@@ -30,7 +30,7 @@ public final class PortalConnectionCheck {
             WorldConnectionCheck.waitFor(()->!forced.isEmpty());
             player.a(new com.threerings.tudey.dobj.a(){public void c(com.threerings.tudey.dobj.SceneDeltaEvent event){WorldConnectionCheck.received(event);}});
             WorldConnectionCheck.enterPrimary(client,player,WorldConnectionCheck.moveScene(client,1));forced.clear();
-            var maps=SceneCatalog.load(Path.of("defaults/maps"));
+            var maps=SceneCatalog.load(Path.of("content/packs/vanilla/maps"));
             try(var peer=new GameMasterConnectionCheck.Endpoint(args,queue,"PeerPlayer","Peer-Knight")) {
                 WorldConnectionCheck.waitFor(()->peer.occupant(player.pawnId)!=null);
                 var identity=player.pawnId;var equipment=player.equipment.clone();

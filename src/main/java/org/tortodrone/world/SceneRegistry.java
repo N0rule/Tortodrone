@@ -80,19 +80,13 @@ public final class SceneRegistry {
         if(scene==null||scene.map().town())return;
         if(interiors.remove(new InteriorKey(scene.map().id(),worldId),scene))interiorOids.addLast(scene.oid());
     }
-    public static SceneRegistry deployment(Path data) throws IOException {
-        Path root=data.toAbsolutePath().normalize().getParent(),maps=root.resolve("maps");
-        return new SceneRegistry(SceneCatalog.load(Files.exists(maps)?maps:root.resolve("defaults/maps")));
-    }
     public static synchronized SceneRegistry system()throws IOException {
         if(system==null) {
             try {
                 Path source=Path.of(SceneRegistry.class.getProtectionDomain().getCodeSource().getLocation().toURI());
                 Path deployment=Files.isDirectory(source)?source:source.getParent();
-                Path maps=deployment.resolve("maps");
-                if(!Files.exists(maps))maps=deployment.resolve("defaults/maps");
-                system=new SceneRegistry(SceneCatalog.load(maps));
-            }catch(java.net.URISyntaxException e){throw new IOException("Cannot locate map directory",e);}
+                system=org.tortodrone.resources.ContentManager.load(deployment).createScenes();
+            }catch(java.net.URISyntaxException e){throw new IOException("Cannot locate content directory",e);}
         }
         return system;
     }

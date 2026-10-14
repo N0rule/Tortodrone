@@ -252,7 +252,7 @@ public final class TradeConnectionCheck {
     static void seed(Path data,Path propertiesFile)throws Exception {
         data=data.toAbsolutePath().normalize();Path deployment=data.getParent();propertiesFile=propertiesFile.toAbsolutePath().normalize();
         if(deployment==null||!Files.isRegularFile(deployment.resolve("tortodrone.jar"))||
-            !Files.isRegularFile(data.resolve("tortodrone.db"))||!Files.isRegularFile(deployment.resolve("defaults/items/catalog.json"))||
+            !Files.isRegularFile(data.resolve("tortodrone.db"))||!Files.isRegularFile(deployment.resolve("content/packs/vanilla/items/catalog.json"))||
             !propertiesFile.startsWith(deployment))
             throw new IllegalArgumentException("Seed mode only accepts a disposable deployment data directory and an output properties path inside that deployment");
         Properties result=new Properties();

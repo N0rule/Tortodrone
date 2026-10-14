@@ -22,15 +22,17 @@ public final class CheckClientWorld {
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
             for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
-            Path maps=project.resolve("build/defaults");
+            Path maps=project.resolve("build/content/packs/vanilla");
             try(var paths=Files.walk(maps)) {
                 for(var path:paths.toList()) {
-                    Path target=scratch.resolve("defaults").resolve(maps.relativize(path));
+                    Path target=scratch.resolve("content/packs/vanilla").resolve(maps.relativize(path));
                     if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
                 }
             }
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
+            Files.createDirectories(scratch.resolve("config"));
+            Files.writeString(scratch.resolve("config/content.properties"),"format=1\nenabled=vanilla\nlegacy=disabled\n");
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
             run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
@@ -71,9 +73,9 @@ public final class CheckClientWorld {
             run(inspectReader,"inspect-reader","",30);
             var interiorReader=new ArrayList<>(base);interiorReader.addAll(List.of("InteriorCompatibility",game.toString()));
             run(interiorReader,"interior-reader","",45);
-            var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("items").toString()));
+            var export=new ArrayList<>(base);export.addAll(List.of("ItemCatalogExport",game.toString(),scratch.resolve("exports/items").toString()));
             run(export,"item-export","",60);
-            var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("items/catalog.json").toString()));
+            var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("exports/items/catalog.json").toString()));
             run(catalogCheck,"item-catalog","",60);
             Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n");
             for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
@@ -117,7 +119,7 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
-            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/defaults/maps");
+            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/content/packs/vanilla/maps");
             if(args.length==2||Files.isDirectory(prepared.resolve("advanced_training"))
                     &&Files.isDirectory(prepared.resolve("laboratory"))&&Files.isDirectory(prepared.resolve("hall_of_heroes"))) {
                 copyTree(prepared,scratch.resolve("maps"));
@@ -135,11 +137,12 @@ public final class CheckClientWorld {
             List<String> seed = new ArrayList<>(base);
             seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
             run(seed,"seed-reconnect","",15);
-            Path descriptor = scratch.resolve("defaults/maps/haven/map.properties");
+            Path descriptor = scratch.resolve("content/packs/vanilla/maps/haven/map.properties");
             var properties = new Properties();
             try (var in = Files.newInputStream(descriptor)) { properties.load(in); }
             properties.setProperty("instances", "2");
             try (var out = Files.newOutputStream(descriptor)) { properties.store(out, "Disposable instance check"); }
+            refreshSceneFingerprint(descriptor.getParent(),"scene.1");
             Path isolatedLog = scratch.resolve("isolated-server.log");
             Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), isolatedLog);
             isolated.getOutputStream().close();
@@ -159,6 +162,7 @@ public final class CheckClientWorld {
             isolated.destroy();if(!isolated.waitFor(5,TimeUnit.SECONDS))throw new IOException("Temporary instance server did not stop");
             properties.setProperty("instances","1");
             try(var out=Files.newOutputStream(descriptor)){properties.store(out,"Disposable trade check");}
+            refreshSceneFingerprint(descriptor.getParent(),"scene.1");
             var tradeSeed=new ArrayList<>(base);
             tradeSeed.addAll(List.of("TradeConnectionCheck","--seed",scratch.resolve("data").toString(),scratch.resolve("trade.properties").toString()));
             run(tradeSeed,"seed-trade","",15);
@@ -184,6 +188,14 @@ public final class CheckClientWorld {
             Path target=destination.resolve(source.relativize(path));
             if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
         }}
+    }
+    private static void refreshSceneFingerprint(Path folder,String key)throws Exception {
+        run(List.of(executable("java"),"-cp",scratch.resolve("tortodrone.jar").toString(),
+            "org.tortodrone.resources.ContentFiles",folder.toString()),"fingerprint","",15);
+        Path file=scratch.resolve("content/packs/vanilla/pack.properties");var manifest=new Properties();
+        try(var input=Files.newInputStream(file)){manifest.load(input);}
+        manifest.setProperty("sha256."+key,Files.readString(scratch.resolve("fingerprint.log")).trim());
+        try(var output=Files.newOutputStream(file)){manifest.store(output,"Disposable scene configuration");}
     }
     private static String ready(Process server,Path log)throws Exception {
         long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(15);

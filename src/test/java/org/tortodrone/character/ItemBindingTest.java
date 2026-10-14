@@ -11,7 +11,7 @@ public final class ItemBindingTest {
     public static void main(String[] args) throws Exception {
         Path home = Files.createTempDirectory("tortodrone-binding-");
         try {
-            try (var accounts = new AccountStore(home)) { accounts.create("Alice", "alice-password".toCharArray()); }
+            try (var accounts = new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) { accounts.create("Alice", "alice-password".toCharArray()); }
             var db = new Database(home, false);
             var characters = new CharacterStore(db, 1, "Alice");
             var knight = characters.create(new Knight(0,"Bound-Knight","Gear/Helm/Spiral Sallet (Blue)",

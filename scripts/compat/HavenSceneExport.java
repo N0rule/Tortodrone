@@ -41,7 +41,7 @@ public final class HavenSceneExport {
         Path project=Path.of("").toAbsolutePath().normalize();
         Path game=Path.of(args[0]).toAbsolutePath().normalize();
         Path archive=Path.of(args[1]).toRealPath();
-        Properties pins=properties(project.resolve("defaults/maps/scene-source.properties"));
+        Properties pins=properties(project.resolve("content/packs/vanilla/maps/scene-source.properties"));
         Path output=Path.of(args[2]).toAbsolutePath().normalize();
         if(!Files.isRegularFile(game.resolve("code/projectx-pcode.jar")))throw new IOException("Missing installed stock game JAR");
         if(Files.exists(output,LinkOption.NOFOLLOW_LINKS))throw new IOException("Output exists; choose a fresh maps directory");
@@ -326,7 +326,7 @@ public final class HavenSceneExport {
         Properties p=new Properties();p.setProperty("format",FORMAT);
         // The checked-in source keeps its provenance manifest and ownership history; a fresh
         // generation records this generation's digests as the replacement baseline.
-        var existing=project.resolve("defaults/maps/scene-source.properties");
+        var existing=project.resolve("content/packs/vanilla/maps/scene-source.properties");
         if(Files.isRegularFile(existing,LinkOption.NOFOLLOW_LINKS)) {
             Properties old=properties(existing);
             for(String key:old.stringPropertyNames())if(key.startsWith("owned.")||key.startsWith("capture."))p.setProperty(key,old.getProperty(key));
@@ -336,7 +336,7 @@ public final class HavenSceneExport {
             }
             addOwned(p,"scene-source.properties",digest(existing));
         }
-        Path bundled=project.resolve("defaults/maps");
+        Path bundled=project.resolve("content/packs/vanilla/maps");
         for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties","content.properties","static-collision.properties")) {
             String rel=pack.folder+"/"+file;Path original=bundled.resolve(rel);
             if(Files.isRegularFile(original))addOwned(p,rel,digest(original));

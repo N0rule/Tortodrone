@@ -17,7 +17,7 @@ public final class MapPreparationIntegrationTest {
         try {
             offlinePreparation(home);
             checkedInSourcePreparation(home);
-            System.out.println("PASS: offline map preparation, checked-in source preparation, published-pack upgrades, edited-pack preservation, deployment lock, added packs, missing-source handling, owner symlinks and corrupt-source refusal");
+            System.out.println("PASS: offline map and content preparation, published-pack upgrades, edited-pack preservation, deployment locks, added packs, missing-source handling, owner symlinks and corrupt-source refusal");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
@@ -26,10 +26,10 @@ public final class MapPreparationIntegrationTest {
     }
     private static void offlinePreparation(Path home) throws Exception {
         Path project = home.resolve("source without cache");
-        Path source = project.resolve("defaults/maps");
-        try (var paths = Files.walk(Path.of("defaults/maps"))) {
+        Path source = project.resolve("content/packs/vanilla/maps");
+        try (var paths = Files.walk(Path.of("content/packs/vanilla/maps"))) {
             for (Path path : paths.toList()) {
-                Path out = source.resolve(Path.of("defaults/maps").relativize(path));
+                Path out = source.resolve(Path.of("content/packs/vanilla/maps").relativize(path));
                 if (Files.isDirectory(path)) Files.createDirectories(out); else Files.copy(path, out);
             }
         }
@@ -72,9 +72,10 @@ public final class MapPreparationIntegrationTest {
 
     private static void checkedInSourcePreparation(Path home) throws Exception {
         Path project=home.resolve("checked-in map source project");
-        Path maps=project.resolve("defaults/maps");
-        copyTree(Path.of("defaults/maps"),maps);
-        Files.writeString(project.resolve("defaults/items-source-marker.txt"),"bundled item resources remain included\n");
+        Path maps=project.resolve("content/packs/vanilla/maps");
+        copyTree(Path.of("content/packs/vanilla"),project.resolve("content/packs/vanilla"));
+        if(Files.isDirectory(Path.of("config")))copyTree(Path.of("config"),project.resolve("config"));
+        if(Files.isDirectory(Path.of("custom/packs")))copyTree(Path.of("custom/packs"),project.resolve("custom/packs"));
         Path tool=project.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tool);
         Path mapsOutput=project.resolve("deployment/defaults/maps");
         check(runTool(project,tool,"maps",mapsOutput.toString())==0,"maps prepare from the checked-in source alone");
@@ -82,15 +83,28 @@ public final class MapPreparationIntegrationTest {
         check(catalog.scenes().size()==7,"the checked-in source prepares all seven Haven scenes");
         check(runTool(project,tool,"maps",mapsOutput.toString())==0,"checked-in source preparation is repeatable");
 
-        Path defaultsOutput=project.resolve("prepared defaults");
-        check(runTool(project,tool,"defaults",defaultsOutput.toString())==0
-            &&SceneCatalog.load(defaultsOutput.resolve("maps")).scenes().size()==7
-            &&Files.readString(defaultsOutput.resolve("items-source-marker.txt")).contains("bundled item resources"),
-            "defaults preparation prepares the checked-in maps while retaining other defaults");
-
+        Path vanillaOutput=project.resolve("deployment/content/packs/vanilla");
+        check(runTool(project,tool,"content",vanillaOutput.toString())==0
+            &&SceneCatalog.load(vanillaOutput.resolve("maps")).scenes().size()==7
+            &&Files.isRegularFile(vanillaOutput.resolve("items/catalog.json")),
+            "full content preparation includes maps, item definitions and combat data");
+        Path absent=home.resolve("absent vanilla source project");
+        Files.createDirectories(absent);
+        Path absentTool=absent.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),absentTool);
+        Path absentOutput=absent.resolve("content/packs/vanilla");
+        check(runTool(absent,absentTool,"content",absentOutput.toString())!=0&&!Files.exists(absentOutput),
+            "full content preparation refuses a missing canonical vanilla source");
         Path locked=project.resolve("locked deployment");
         Path lockFile=locked.resolve("data/server.lock");Files.createDirectories(lockFile.getParent());
         Files.createFile(lockFile);
+        Path lockedVanilla=locked.resolve("content/packs/vanilla");
+        try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
+            check(runTool(project,tool,"content",lockedVanilla.toString())!=0
+                &&!Files.exists(lockedVanilla),
+                "active deployment lock refuses all canonical content changes before writing");
+        }
+        check(runTool(project,tool,"content",lockedVanilla.toString())==0,
+            "canonical content preparation proceeds after deployment unlocks");
         try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
             check(runTool(project,tool,"maps",locked.resolve("maps").toString())!=0
                 &&!Files.exists(locked.resolve("maps")),
@@ -131,34 +145,34 @@ public final class MapPreparationIntegrationTest {
             "an added source pack is discovered without a name list to edit");
 
         Path damaged=home.resolve("corrupt map source project");
-        copyTree(Path.of("defaults/maps"),damaged.resolve("defaults/maps"));
-        Files.write(damaged.resolve("defaults/maps/arcade/scene.dat"),new byte[]{1,2,3});
+        copyTree(Path.of("content/packs/vanilla/maps"),damaged.resolve("content/packs/vanilla/maps"));
+        Files.write(damaged.resolve("content/packs/vanilla/maps/arcade/scene.dat"),new byte[]{1,2,3});
         Path damagedTool=damaged.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),damagedTool);
         Path damagedOutput=damaged.resolve("output maps");
         check(runTool(damaged,damagedTool,"maps",damagedOutput.toString())!=0&&!Files.exists(damagedOutput),
             "damaged source is rejected before creating output");
 
         Path tampered=home.resolve("tampered map source project");
-        copyTree(Path.of("defaults/maps"),tampered.resolve("defaults/maps"));
-        Files.writeString(tampered.resolve("defaults/maps/laboratory/portals.properties"),
-            Files.readString(tampered.resolve("defaults/maps/laboratory/portals.properties"))+"# stray edit\n");
+        copyTree(Path.of("content/packs/vanilla/maps"),tampered.resolve("content/packs/vanilla/maps"));
+        Files.writeString(tampered.resolve("content/packs/vanilla/maps/laboratory/portals.properties"),
+            Files.readString(tampered.resolve("content/packs/vanilla/maps/laboratory/portals.properties"))+"# stray edit\n");
         Path tamperedTool=tampered.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tamperedTool);
         Path tamperedOutput=tampered.resolve("output maps");
         check(runTool(tampered,tamperedTool,"maps",tamperedOutput.toString())!=0&&!Files.exists(tamperedOutput),
             "a source pack that no longer matches its checksum manifest is rejected before creating output");
 
         Path missingPack=home.resolve("missing map source project");
-        copyTree(Path.of("defaults/maps"),missingPack.resolve("defaults/maps"));
-        deleteTree(missingPack.resolve("defaults/maps/hall_of_heroes"));
+        copyTree(Path.of("content/packs/vanilla/maps"),missingPack.resolve("content/packs/vanilla/maps"));
+        deleteTree(missingPack.resolve("content/packs/vanilla/maps/hall_of_heroes"));
         Path missingTool=missingPack.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),missingTool);
         Path missingOutput=missingPack.resolve("output maps");
         check(runTool(missingPack,missingTool,"maps",missingOutput.toString())!=0&&!Files.exists(missingOutput),
             "source missing a pinned scene pack is rejected before creating output");
 
         Path linked=home.resolve("symlinked map source project");
-        copyTree(Path.of("defaults/maps"),linked.resolve("defaults/maps"));
+        copyTree(Path.of("content/packs/vanilla/maps"),linked.resolve("content/packs/vanilla/maps"));
         boolean sourceSymlink=false;
-        try {Files.createSymbolicLink(linked.resolve("defaults/maps/source-link"),linked.resolve("defaults/maps/haven/map.properties"));sourceSymlink=true;}
+        try {Files.createSymbolicLink(linked.resolve("content/packs/vanilla/maps/source-link"),linked.resolve("content/packs/vanilla/maps/haven/map.properties"));sourceSymlink=true;}
         catch(UnsupportedOperationException|java.io.IOException unavailable) {
             System.out.println("SKIP: source symlink test (symlinks unavailable)");
         }

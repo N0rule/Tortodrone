@@ -12,7 +12,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class ItemGrantTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-item-grants-");
-        try(var accounts=new AccountStore(home)) {
+        try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
             accounts.create("Staff","staff-password".toCharArray(),true);accounts.create("Alice","alice-password".toCharArray());
             var db=new Database(home,false);var characters=new CharacterStore(db,2,"Alice");
             var knight=characters.create(choices("Alice-Knight"));var before=characters.worldProfile(knight.name(),1);
@@ -40,8 +40,8 @@ public final class ItemGrantTest {
             var workers=Executors.newFixedThreadPool(2);
             try {
                 for(var future:workers.invokeAll(List.<Callable<WorldProfile>>of(
-                    ()->new AccountStore(home).grantItems("Alice",knight.name(),entry.config(),2,-1,-1),
-                    ()->new AccountStore(home).grantItems("Alice",knight.name(),entry.config(),2,-1,-1))))future.get();
+                    ()->new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter()).grantItems("Alice",knight.name(),entry.config(),2,-1,-1),
+                    ()->new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter()).grantItems("Alice",knight.name(),entry.config(),2,-1,-1))))future.get();
             }finally{workers.shutdownNow();}
             var saved=new Database(home,false).worldProfile(2,1,1);
             check(saved.items().size()==11&&saved.items().stream().map(WorldProfile.Item::id).distinct().count()==11,"concurrent grants persist without ID collisions");

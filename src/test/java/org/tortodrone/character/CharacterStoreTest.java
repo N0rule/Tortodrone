@@ -61,7 +61,7 @@ public final class CharacterStoreTest {
         }
     }
     private static CharacterStore store(Path directory) throws IOException {
-        try(var accounts=new AccountStore(directory)) {
+        try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())) {
             if(accounts.list().isEmpty())accounts.create("Alice","alice-password".toCharArray());
         }
         return new CharacterStore(new Database(directory,false),1,"Alice");

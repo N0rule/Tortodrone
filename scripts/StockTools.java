@@ -23,7 +23,7 @@ public final class StockTools {
             case "items" -> {
                 if (args.length > 3) throw new IllegalArgumentException("items expects game directory [fresh-output-directory]");
                 fixture = "ItemCatalogExport";
-                fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/items").toString());
+                fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/exports/items").toString());
                 if(!Files.isRegularFile(project.resolve("build/tortodrone.jar")))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
             }
             case "fires" -> {

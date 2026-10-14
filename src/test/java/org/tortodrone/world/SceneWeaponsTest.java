@@ -9,7 +9,7 @@ import org.tortodrone.character.StarterCatalog;
 /** Small scene-clock regression: native emissions, expiry and observer-independent ownership. */
 public final class SceneWeaponsTest {
     public static void main(String[] args)throws Exception {
-        var map=SceneCatalog.load(Path.of("defaults/maps")).entry();
+        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).entry();
         var model=new StarterCatalog.Model("Fixture",Map.of());
         var effect=new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,model,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         var bullet=new FireCatalog.ActorSpec("BULLET",model,200,2,.1f,0,0,0,1,null);

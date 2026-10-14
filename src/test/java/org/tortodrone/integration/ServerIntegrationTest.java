@@ -53,6 +53,7 @@ public final class ServerIntegrationTest {
             launchModes(sourceJar,directory.resolve("launch-modes"));
             defaultWorkflow(jar, directory.resolve("default-start"));
             missingDefaultsWorkflow(sourceJar,directory.resolve("missing-defaults"));
+            legacyMigrationWorkflow(sourceJar,directory.resolve("legacy-migration"));
             shutdownWorkflow(sourceJar,directory.resolve("shutdown-start"));
             rejected(jar, null, directory, "Use --help", "removed account startup option", "--list-accounts");
             managementWorkflow(jar, directory.resolve("management-start"));
@@ -156,37 +157,36 @@ public final class ServerIntegrationTest {
 
     private static void missingDefaultsWorkflow(Path sourceJar,Path directory)throws Exception {
         Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");Files.copy(sourceJar,jar);
-        seed(jar,directory);
-        Path config=directory.resolve("data/server.properties");Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
-        try(var server=new Running(jar,config,directory,java.util.List.of("-Dhttps.proxyHost=127.0.0.1","-Dhttps.proxyPort=1"))) {
-            int port=server.ready();
-            try(var socket=new Socket("127.0.0.1",port)) {
-                TestClient.authenticate(socket,publicKey(Files.readString(directory.resolve("data/keys/public.txt")).trim()),true,
-                    (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,true));
-            }
+        Path config=directory.resolve("config/server.properties");Files.createDirectories(config.getParent());
+        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        rejected(jar,config,directory,"Missing content file", "incomplete deployment fails before account/key initialization");
+        check(!Files.exists(directory.resolve("data/keys"))&&!Files.exists(directory.resolve("data/tortodrone.db")),
+            "missing content never creates a fallback database or identity");
+        check(!Files.exists(directory.resolve("defaults")),"startup never downloads or installs legacy content");
+    }
+
+    private static void legacyMigrationWorkflow(Path source,Path root)throws Exception {
+        Files.createDirectories(root);Path jar=root.resolve("tortodrone.jar");
+        org.tortodrone.support.TestDeployment.copyServer(source,jar);
+        Files.move(root.resolve("content/packs/vanilla"),root.resolve("defaults"));
+        Path data=root.resolve("data");seed(jar,root);
+        Path config=data.resolve("server.properties");
+        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        try(var server=new Running(jar,null,root);var socket=new Socket("127.0.0.1",server.ready())) {
+            TestClient.authenticate(socket,publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),true,
+                (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,true));
         }
-        String log=Files.readString(directory.resolve("data/logs/latest.log"));
-        check(log.contains("Resource fallback: maps unavailable")
-            &&log.contains("using built-in starter definitions")&&log.contains("Done! Listening"),"unavailable defaults warn while normal login/character persistence still work");
-        check(log.contains("Check defaults/maps/ and defaults/items/catalog.json beside the server JAR; use log-mode=debug for details.")
-            &&!log.contains("make maps"),"normal fallback hint gives deployment paths, debug setting and no stale Make command");
-        check(log.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1
-            &&!log.contains("Default resource download failed")&&!log.contains("Missing default resources")&&!log.contains("/DEBUG]:"),
-            "normal mode reports missing defaults once without recovery diagnostics");
-        check(database(directory.resolve("data")).roster(1).size()==1,"missing defaults do not discard saved characters");
-        Path debugLog=directory.resolve("data/logs/latest.log");Files.delete(debugLog);
-        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
-        try(var server=new Running(jar,config,directory,java.util.List.of("-Dhttps.proxyHost=127.0.0.1","-Dhttps.proxyPort=1"))) {
-            server.ready();
-            server.send("stop\n");check(server.process.waitFor(10,TimeUnit.SECONDS),"debug fallback server stops");
+        var files=java.util.List.of(data.resolve("tortodrone.db"),data.resolve("keys/private.pk8"),data.resolve("keys/public.txt"),config);
+        var original=new java.util.HashMap<Path,byte[]>();for(Path file:files)original.put(file,Files.readAllBytes(file));
+        org.tortodrone.resources.ContentMigration.migrate(root);
+        for(Path file:files)check(Arrays.equals(original.get(file),Files.readAllBytes(file)),"migration preserves database, identity and settings: "+file.getFileName());
+        Files.copy(root.resolve("config/content-migrated.properties"),root.resolve("config/content.properties"));
+        try(var server=new Running(jar,null,root);var socket=new Socket("127.0.0.1",server.ready())) {
+            TestClient.authenticate(socket,publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),true,
+                (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,false));
         }
-        String debug=Files.readString(debugLog);
-        check(debug.contains("Default resource download failed")&&debug.contains("Missing default resources")
-            &&debug.contains("Account database:")&&debug.contains("Scene IDs:"),"debug mode includes recovery and storage diagnostics");
-        check(debug.lines().filter(line->line.contains("/WARN]: Resource fallback:")).count()==1,"debug fallback warning is consolidated");
-        check(debug.contains("Resource fallback:")&&debug.contains("See diagnostics above.")
-            &&!debug.contains("use log-mode=debug")&&!debug.contains("make maps"),
-            "debug fallback hint points to existing diagnostics without repeating debug setting or stale Make command");
+        check(Arrays.equals(original.get(data.resolve("keys/private.pk8")),Files.readAllBytes(data.resolve("keys/private.pk8"))),"migrated deployment keeps its private identity on reconnect");
+        check(Files.readString(data.resolve("logs/latest.log")).contains("Pack[id=legacy-import, version=1.0.0]"),"the packaged server uses the explicitly selected migrated pack");
     }
 
     private static void defaultWorkflow(Path jar, Path directory) throws Exception {
@@ -197,7 +197,7 @@ public final class ServerIntegrationTest {
         org.tortodrone.support.TestDeployment.copyServer(jar, deployedJar);
         seed(deployedJar,deployment);
         Path data = deployment.resolve("data");
-        Path config = data.resolve("server.properties");
+        Path config = deployment.resolve("config/server.properties");
         ServerSettings defaults = ServerSettings.load(config);
         check(defaults.logMode() == ServerSettings.LogMode.NORMAL, "default logs use normal mode");
         check(!properties(config).containsKey("data-directory"), "generated settings omit data-directory");
@@ -239,7 +239,7 @@ public final class ServerIntegrationTest {
         check(log.contains("Connected | session=")&&log.contains("Disconnected | session=")&&log.contains("account=tortodrone (#1)")&&log.contains("rosterId=")&&!log.contains("client-cpu"),"normal logs correlate verified account and distinct knight identities without client hardware claims");
         check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
         try (var entries = Files.list(deployment)) {
-            check(entries.count() == 3, "deployment contains the JAR, external maps and data directory");
+            check(entries.count() == 5, "deployment separates the JAR, content, config, cache and persistent data");
         }
     }
 

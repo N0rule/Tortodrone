@@ -16,7 +16,7 @@ public final class CharacterManagementStoreTest {
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-management-test-");
         try {
-            try(var accounts=new AccountStore(directory)){accounts.create("Alice","alice-password".toCharArray());}
+            try(var accounts=new AccountStore(directory,false,org.tortodrone.character.ItemCatalog.starter())){accounts.create("Alice","alice-password".toCharArray());}
             var db=new Database(directory,false);
             CharacterStore store = new CharacterStore(db,1,"Alice");
             Knight first = store.create(choices("First-Knight"));

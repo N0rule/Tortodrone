@@ -25,15 +25,6 @@ public final class WeaponCatalogTest {
             try { loaded.require("missing"); throw new AssertionError("Unknown weapon accepted"); }
             catch (IOException expected) { }
 
-            Path deployment = root.resolve("server"); Files.createDirectories(deployment.resolve("defaults/combat"));
-            Path data = deployment.resolve("data.sqlite");
-            Files.copy(file, deployment.resolve("defaults/combat/weapons.tsv"));
-            check(WeaponCatalog.deployment(data).dodgeCooldown() == 2500, "defaults weapon catalogue is selected");
-            Files.createDirectories(deployment.resolve("combat"));
-            Path custom = deployment.resolve("combat/weapons.tsv");
-            WeaponCatalog.write(custom, List.of(), List.of(), 1250);
-            check(WeaponCatalog.deployment(data).dodgeCooldown() == 1250, "custom weapon catalogue takes precedence");
-
             Path malformed = root.resolve("bad.tsv");
             Files.writeString(malformed, "TORTODRONE-COMBAT\t1\nC\t0\nW\tWeapon/X\t0\t0\t0\ttrue\tfalse\tNaN\t1\n");
             try { WeaponCatalog.load(malformed); throw new AssertionError("Non-finite weapon speed accepted"); }
@@ -42,7 +33,7 @@ public final class WeaponCatalogTest {
             Files.writeString(missingCooldown, "TORTODRONE-COMBAT\t1\n");
             try { WeaponCatalog.load(missingCooldown); throw new AssertionError("Missing cooldown accepted"); }
             catch (IOException expected) { }
-            System.out.println("PASS: bounded weapon TSV parsing, immutable metadata, lookup and deployment precedence");
+            System.out.println("PASS: bounded weapon TSV parsing, immutable metadata, lookup");
         } finally {
             try (var paths = Files.walk(root)) {
                 for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);

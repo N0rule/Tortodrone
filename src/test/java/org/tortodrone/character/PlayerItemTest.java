@@ -12,7 +12,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class PlayerItemTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-player-items-");
-        try(var accounts=new AccountStore(home)) {
+        try(var accounts=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
             accounts.create("Alice","alice-password".toCharArray());accounts.create("Other","other-password".toCharArray());
             var db=new Database(home,false);var chars=new CharacterStore(db,1,"Alice");
             chars.create(new Knight(0,"Saved-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));

@@ -11,7 +11,7 @@ public final class GameMasterTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-gm-");
         try {
-            try(var server=new AccountStore(home);var tool=new AccountStore(home)) {
+            try(var server=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter());var tool=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
                 server.create("Staff","staff-password".toCharArray(),true);
                 server.create("Player","player-password".toCharArray());
                 var identity=AccountStoreTest.login(server,"Staff","staff-password");
@@ -36,7 +36,7 @@ public final class GameMasterTest {
                     try{lease.gameMaster();throw new AssertionError("Old auth revision retained GM access");}catch(IOException expected){}
                 }
             }
-            try(var restored=new AccountStore(home)) {
+            try(var restored=new AccountStore(home,false,org.tortodrone.character.ItemCatalog.starter())) {
                 check(AccountStoreTest.login(restored,"Staff","new-password").gameMaster(),"role persists through restart and password change");
             }
             System.out.println("PASS: durable GM roles, separate-tool grant/revocation, target guards and stale authenticated privilege denial");

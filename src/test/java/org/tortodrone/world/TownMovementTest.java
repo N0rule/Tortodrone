@@ -33,9 +33,9 @@ public final class TownMovementTest {
         check(arrival.x()==entry.spawnX()&&arrival.y()==entry.spawnY()
             &&Math.abs(arrival.rotation()-entry.spawnRotation())<.00001f,
             "default movement starts at the authored modern entrance and facing");
-        check(TownTerrain.walkable(0,-8), "clear movement test corridor");
-        check(!TownTerrain.walkable(Float.NaN,0) && !TownTerrain.walkable(10000,0)
-            && !TownTerrain.walkable(0,Float.POSITIVE_INFINITY), "invalid positions blocked");
+        check(entry.collision().walkable(0,-8), "clear movement test corridor");
+        check(!entry.collision().walkable(Float.NaN,0) && !entry.collision().walkable(10000,0)
+            && !entry.collision().walkable(0,Float.POSITIVE_INFINITY), "invalid positions blocked");
         var m = movement();
         m.resetInput(100);
         check(m.accept(100,1.5f,0,1,100,1000), "first input accepted");

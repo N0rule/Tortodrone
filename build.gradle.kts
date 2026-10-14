@@ -70,16 +70,33 @@ val buildTools = sourceSets.create("buildTools") {
 }
 fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) {
     group = "build setup"
-    description = "Prepare the checked-in defaults and map packs; preserve custom files."
+    description = "Prepare checked-in versioned content packs; preserve custom files."
     classpath = buildTools.runtimeClasspath
     javaLauncher.set(launcher25)
     mainClass.set("BuildTools")
     workingDir = projectDir
-    args(command, providers.gradleProperty("defaultsOutput").getOrElse(
-        publicOutput.dir(if (command == "maps") "defaults/maps" else "defaults").asFile.absolutePath))
+    val output = if (command == "maps") providers.gradleProperty("mapsOutput").orElse(
+        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content/packs/vanilla/maps").asFile.absolutePath)
+    else providers.gradleProperty("contentOutput").orElse(
+        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content/packs/vanilla").asFile.absolutePath)
+    args(command, output)
     // Always recheck source integrity and fill missing files; never claim ownership of defaults.
 }
-val prepareDefaults = preparation("prepareDefaults", "defaults")
+val validateContent = tasks.register<JavaExec>("validateContent") {
+    group = "verification"
+    description = "Validate the selected source content snapshot without touching deployment data."
+    classpath = sourceSets.main.get().runtimeClasspath
+    javaLauncher.set(launcher25)
+    mainClass.set("org.tortodrone.resources.ContentManager")
+    workingDir = projectDir
+    args(projectDir.absolutePath)
+}
+val prepareContent = preparation("prepareContent", "content").apply { configure { dependsOn(validateContent) } }
+val prepareDefaults = tasks.register("prepareDefaults") {
+    group = "build setup"
+    description = "Deprecated alias for prepareContent; -PdefaultsOutput remains supported."
+    dependsOn(prepareContent)
+}
 preparation("prepareMaps", "maps")
 // Rebuild modern packs only from local hash-verified captured binaries. Publication is
 // explicit; neither a normal build nor a failed export may restore historical scenes.
@@ -100,13 +117,13 @@ val prepareHaven = tasks.register<Exec>("prepareHaven") {
 }
 val buildServer = tasks.register("buildServer") {
     group = "build"
-    description = "Build the executable server JAR and prepare external defaults."
-    dependsOn(serverJar, prepareDefaults)
+    description = "Build the executable server JAR and prepare versioned content."
+    dependsOn(serverJar, prepareContent)
 }
 val buildAdmin = tasks.register("buildAdmin") {
     group = "build"
     description = "Build the executable local admin JAR."
-    dependsOn(adminJar)
+    dependsOn(adminJar, prepareContent)
 }
 tasks.assemble { dependsOn(buildServer, buildAdmin) }
 
@@ -205,7 +222,7 @@ tasks.register<JavaExec>("benchmark") {
 tasks.clean {
     delete(serverJar.flatMap { it.archiveFile }, adminJar.flatMap { it.archiveFile })
     delete(publicOutput.file("tortodrone.jar.tmp"), publicOutput.file("tortodrone-admin.jar.tmp"))
-    // Legacy Make scratch only. Preserve build/data, build/defaults, build/deps and unknown files.
+    // Preserve runtime data, versioned content, dependencies and unknown files.
     delete(publicOutput.dir(".build"))
     // Gradle verification reports use this fixed path even with a custom buildDirectory.
     delete(publicOutput.dir("reports/dependency-verification"))

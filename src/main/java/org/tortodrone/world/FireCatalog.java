@@ -108,11 +108,6 @@ public final class FireCatalog {
         detonations=Map.copyOf(actions);
     }
     public static FireCatalog empty() { return new FireCatalog(List.of(), Map.of()); }
-    public static FireCatalog deployment(Path data) throws IOException {
-        Path deployment = data.toAbsolutePath().normalize().getParent();
-        Path custom = deployment.resolve("combat/fires.json"), defaults = deployment.resolve("defaults/combat/fires.json");
-        return Files.exists(custom) ? load(custom) : Files.exists(defaults) ? load(defaults) : empty();
-    }
     public AttackFire find(String weaponConfig, int activity) { return attacks.get(key(weaponConfig, activity)); }
     public List<AttackFire> entries() { return attacks.values().stream().sorted(Comparator.comparing(AttackFire::weaponConfig).thenComparingInt(AttackFire::activity)).toList(); }
     public Map<String,Integer> unsupportedTypes() { return unsupported; }

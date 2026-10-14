@@ -201,7 +201,7 @@ public final class CombatRenderingCheck {
                     .filter(a->a.Mv().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
                     .filter(a->Math.hypot(a.tz().x-5.818864,a.tz().y-2.6403537)<.05).findFirst()
                     .orElseThrow(()->new AssertionError("Authored Konway actor is missing from its verified Training Hall position"));
-                konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("defaults/maps")).scene(294);
+                konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
                 konwayRoute=routeTo(trainingMap,server.tz().x,server.tz().y,stranger.tz().x,stranger.tz().y);
                 konwayRouteIndex=0;konwayStarted=now;stage=20;return;
             }
@@ -532,7 +532,7 @@ public final class CombatRenderingCheck {
     }
     private Actor viewPawn(){return authoritative.get(app.CT().pawnId);}
     private void loadNeedleHeadings()throws Exception{
-        for(var attack:FireCatalog.load(Path.of("defaults/combat/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
+        for(var attack:FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
             var headings=new ArrayList<Heading>();for(var fire:attack.fireRefs())collectNeedleHeadings(fire.action(),headings);
             needleHeadings.put(attack.activity(),List.copyOf(headings));
         }

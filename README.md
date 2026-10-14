@@ -4,7 +4,7 @@ Clean-room **Java 25 Spiral Knights server emulator** plus local account manager
 
 ## Current state (verify `VERSION` and Git)
 
-At **0.27.0 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), twelve directed town portals and six directed interior links, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. The checked-in scenes use verified official gameplay captures dated 2026-10-12, including Laboratory scene 30893 and the four-star Hall of Heroes scene 318. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
+At **0.29.0 / SQLite schema 8**: login and account takeover protection; globally unique knight names; character creation, editing, selection and deletion; four external Haven towns (Town Square, Bazaar, Arcade, Garrison), twelve directed town portals and six directed interior links, authoritative movement/static collision, shared per-instance 50 ms simulation and multiplayer actor updates. The checked-in scenes use verified official gameplay captures dated 2026-10-12, including Laboratory scene 30893 and the four-star Hall of Heroes scene 318. Persistent inventory/equipment/costumes/trinkets/stacks/binding/currencies, local administration/GM roles and commands, live Arsenal updates, scene chat/private tells, sitting and stock character previews. Player trading and inspection/privacy are supported. Three solo Haven interiors support authored weapon controls, shielding, dodge and projectile emissions within the [recorded combat limits](docs/town-player-behavior.md). Intro missions are bypassed without fabricated completion/rewards.
 
 **Not implemented at the recorded checkpoint:** general missions, NPC services, shops, crafting/item use, dungeon/gate gameplay, position persistence, custom news and broad social features. The [current project handoff](docs/PROJECT.md) records the supported scope and remaining limits; inspect Git before choosing work. Older milestone detail is available in Git history.
 
@@ -41,7 +41,7 @@ Create a local account with the admin application before connecting. The server 
 Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 
 ```sh
-./gradlew buildServer             # server JAR plus external defaults
+./gradlew buildServer             # server JAR plus prepared versioned content
 ./gradlew buildAdmin              # admin JAR
 ./gradlew runServer               # packaged server, data beside build JAR
 ./gradlew runAdmin                # packaged admin (graphical desktop required)
@@ -50,29 +50,30 @@ Use `./gradlew` below on Linux/macOS; substitute `.\gradlew.bat` on Windows:
 ./gradlew testUnit                # all standalone unit programs
 ./gradlew testIntegration         # disposable packaged server/admin and preparation tests
 ./gradlew test                    # both test groups; build also runs these
-./gradlew prepareDefaults         # verify/copy local maps and item defaults
-./gradlew prepareMaps             # verify/copy only local maps
+./gradlew prepareContent          # prepare canonical content/packs/vanilla
+./gradlew prepareDefaults         # deprecated alias for prepareContent
+./gradlew prepareMaps             # prepare only vanilla maps
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ./gradlew clean                   # removes generated artifacts; preserves persistent state
 ```
 
-Benchmarks are never part of `build` or `test`. Resource preparation is offline and verifies source map checksums before copying. The checked-in `defaults/maps/` is the one map source, so `build`, `buildServer`, `prepareDefaults` and `prepareMaps` prepare all seven scenes under `build/defaults/maps` with no game path, archive or extra directory. Existing custom files are preserved; a pack from a known older default generation can be upgraded in place, and owner-edited files keep their bytes. Use `-PdefaultsOutput="/path/to/disposable/defaults"` to select a preparation destination (`prepareMaps` takes the maps directory itself). Missing optional source directories produce a warning; corrupt supplied maps fail preparation. `compileJava` and `buildAdmin` do not require optional maps or downloads for maps.
+Benchmarks are never part of `build` or `test`. Resource preparation is offline and verifies pinned source checksums before copying. `build`, `buildServer`, `buildAdmin` and `prepareContent` prepare the canonical `content/packs/vanilla/` tree under `build/content/packs/vanilla/`; `prepareMaps` prepares its maps subtree. Use `-PcontentOutput="/path/to/content/packs/vanilla"` for the complete pack output, or deprecated `-PdefaultsOutput` for compatibility. Preparation preserves owner-edited files and refuses planned changes while the target deployment lock is held. See [content packs and legacy migration](docs/content.md).
 
-**Offline builds:** the first build needs access to the Gradle distribution, plugin portal and Maven Central. Once the Wrapper, plugin, dependency artifacts and metadata are cached, `./gradlew --offline build` works with a local JDK 25. Legacy `build/deps` files alone do not populate Gradle's cache. Preparing local defaults needs the Wrapper/build tooling cached but no third-party runtime dependencies. If a deployed server is missing required defaults, its optional startup recovery downloads the repository's `main` ZIP from `https://github.com/N0rule/Tortodrone/archive/refs/heads/main.zip`. This works without credentials after the repository is public; while it is private, recovery warns and continues with whatever local resources are present. Prefer deploying local `build/defaults/` for reliable/offline installations.
+**Offline builds:** the first build needs access to the Gradle distribution, plugin portal and Maven Central. Once the Wrapper, plugin, dependency artifacts and metadata are cached, `./gradlew --offline build` works with a local JDK 25. Legacy `build/deps` files alone do not populate Gradle's cache. Preparing the canonical vanilla content needs cached Wrapper/build tooling but no third-party runtime dependencies. Server startup never downloads content: deploy the complete validated vanilla pack and explicitly selected custom packs.
 
-`build.gradle.kts` defines compilation, executable packaging, preparation, tests and runs; `settings.gradle.kts` names the project. `gradlew`, `gradlew.bat` and `gradle/wrapper/` pin and bootstrap Gradle, with a distribution checksum. `gradle/verification-metadata.xml` pins SHA-256 checksums for dependencies and plugins (including the original runtime JAR checksums); review changes before accepting new hashes. Gradle caches live in its user home and `.gradle/`; compiler and packaging output lives in `.build/`. `gradle.properties` enables Gradle’s configuration cache so repeated builds can reuse the configured task graph. `clean` deletes that scratch tree, the old `build/.build/`, Gradle dependency-verification reports and the two generated JARs, while preserving `build/data/`, `build/defaults/`, `build/deps/` and other deployment files.
+`build.gradle.kts` defines compilation, executable packaging, preparation, tests and runs; `settings.gradle.kts` names the project. `gradlew`, `gradlew.bat` and `gradle/wrapper/` pin and bootstrap Gradle, with a distribution checksum. `gradle/verification-metadata.xml` pins SHA-256 checksums for dependencies and plugins (including the original runtime JAR checksums); review changes before accepting new hashes. Gradle caches live in its user home and `.gradle/`; compiler and packaging output lives in `.build/`. `gradle.properties` enables Gradle’s configuration cache so repeated builds can reuse the configured task graph. `clean` deletes that scratch tree, the old `build/.build/`, Gradle dependency-verification reports and the two generated JARs, while preserving `build/data/`, `build/content/`, `build/deps/` and other deployment files.
 
 The [migration record](docs/gradle-migration.md) maps every old Make target and records verification.
 
-Advanced Training Hall, Laboratory and Hall of Heroes are part of the checked-in defaults, so ordinary builds prepare all seven scenes in `build/defaults/maps/` with verified native entry/return links. `prepareHaven` can derive a fresh candidate tree from local, hash-verified captured scenes; it never publishes into `defaults/maps/`. See [map preparation](docs/maps.md) for the workflow and protection of custom files.
+Advanced Training Hall, Laboratory and Hall of Heroes are part of the canonical vanilla pack, so ordinary builds prepare all seven scenes in `build/content/packs/vanilla/maps/` with verified native entry/return links. `prepareHaven` can derive a fresh candidate tree from local, hash-verified captured scenes; it never publishes into `content/packs/vanilla/maps/`. See [map preparation](docs/maps.md) for the workflow and protection of custom files.
 
-Both JARs keep `data/` beside themselves; copy `build/defaults/` beside them when deploying. Preserve `data/` (especially keys/DB) and customized `defaults/`. The optional startup default-resource downloader retrieves missing resources from the Tortodrone `main` branch when publicly accessible and never overwrites existing files. Missing maps prevent world entry but not login/admin. See [maps](docs/maps.md).
+Both JARs keep `data/` beside themselves; deploy the complete `build/content/packs/vanilla/` tree plus `config/` and `custom/packs/`. Preserve `data/` (especially keys/DB) and operator-managed packs. Content is validated as a complete snapshot before keys or account storage open; corrupt/incomplete resources fail startup, with no download or partial fallback. See [content packs](docs/content.md) and [maps](docs/maps.md).
 
 KnightLauncher settings: `game.endpoint=127.0.0.1` (or reachable server IP), `game.port=47624`, `game.publicKey` = entire contents of `build/data/keys/public.txt`. [Connection help](docs/client-redirection.md).
 
 **Stock F3 GM dashboard:** grant the role server-side (`--set-gm Alice true` or the terminal `gm Alice`), log in with that account, press **F3** and use the client's own **ItemCreator** to create real, persistent inventory items. Nothing grants this automatically; plain accounts are refused. [Admin details](docs/administration.md).
 
-Stop the server before editing `build/data/server.properties`:
+Stop the server before editing `config/server.properties` beside the JAR (`build/config/server.properties` for source builds). An existing `data/server.properties` beside the JAR is still read in place when the canonical file is absent:
 
 ```properties
 server-ip=0.0.0.0
@@ -87,6 +88,6 @@ log-retention=5
 
 ## Backups, development and references
 
-Stop server and manager; copy the **whole `data/` directory** (SQLite WAL and keys). Only current schema 8 is supported; JSON item catalogue v2 is written, with v1 reading retained. No old-DB imports/migrations. Never discard original state while testing.
+Stop server and manager; copy the **whole `data/` directory** (SQLite WAL and keys). Only current schema 8 is supported; JSON item catalogue v2 is written, with v1 reading retained. Content packs and settings live outside `data/`. No old-DB imports/migrations. Never discard original state while testing.
 
 Start coding with [AGENTS.md](AGENTS.md) and [project handoff](docs/PROJECT.md); consult [architecture](docs/server-architecture.md) and [development](docs/development.md) for invariants, tests, stock-client checks, benchmarks and cleanup. See [upstream research](docs/server-research.md) only when the task needs it. Do not load all historical documents into agent context.

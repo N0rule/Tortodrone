@@ -38,7 +38,7 @@ public final class InteriorConnectionCheck {
             public boolean isRunning() { return true; }
         };
         String host = args.length > 2 ? args[2] : "127.0.0.1";
-        Path mapsPath = args.length > 3 ? Path.of(args[3]) : Path.of("defaults/maps");
+        Path mapsPath = args.length > 3 ? Path.of(args[3]) : Path.of("content/packs/vanilla/maps");
         var maps = SceneCatalog.load(mapsPath);
         requireScene(maps, 1, "town"); requireScene(maps, 2, "town");
         requireScene(maps, 3, "town"); requireScene(maps, 445, "town");
