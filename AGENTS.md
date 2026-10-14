@@ -1,23 +1,20 @@
-# Tortodrone agent instructions
+# Tortodrone agent rules
 
-## Start here (small context)
+Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; normal username/password only.
 
-Read this file and [docs/PROJECT.md](docs/PROJECT.md) first. Check `git status --short --branch`, `git log -5 --oneline`, `VERSION`, and relevant source/tests before assuming the documented checkpoint is current. **Do not preload README or other docs.** Use [README](README.md) for deployment, [architecture](docs/server-architecture.md) for deeper invariants and [development](docs/development.md) for testing when relevant. Source and Git are authoritative. Java **25**.
+## Start
+- Check `git status --short --branch`, recent commits, `VERSION` and **relevant** source/tests. Code and observed stock-client behavior override historical docs.
+- Read only task-relevant documentation: `README.md` (quick start), `docs/{architecture,content,operations,development,research}.md`. Do not preload everything or create milestone diary files.
+- Make one bounded, reviewable change; preserve unrelated work.
 
-## Rules
+## Never violate
+- Never edit installed client/launcher, real preferences, live servers or owner data. Test with disposable data, keys, accounts and processes; stop only processes you started. Do not commit assets, credentials, captures or build/runtime outputs.
+- Preserve authentication leases/revisions, ownership, GM authorization, SQLite transactions and rollback. Save before publishing events; reject unsupported DB schemas, never silently migrate.
+- Stock protocol contracts require **verified** class/method/argument/callback layouts, mapping order and limits. Do not invent wire fields, mission completions or rewards.
+- Scene instances own simulation state. Treat client movement as intent, not coordinates; guard subscriptions/travel generations. Never block on network I/O under storage/simulation locks.
+- Versioned vanilla/custom packs and read-only legacy compatibility are implemented. External definitions do not imply gameplay support.
 
-- Develop only the Java server and local admin tools. Never alter installed game, client, launcher or their real preferences. Normal username/password only; no Steam/guest auth.
-- Protect accounts, characters, SQLite, keys, preferences and running sessions. Use disposable deployments/data for all tests; never stop the owner's processes. Do not commit secrets, game assets, runtime data or build output.
-- Persistent repository tools are Java; throwaway probes belong in `/tmp`. Derive protocol and gameplay behavior from upstream evidence and the **unchanged stock client**, never invented wire fields, quests or rewards.
-- Work in one verifiable milestone at a time. Preserve unrelated Git edits. Run `./gradlew build` and stock-client/graphical checks when applicable; cleanup only processes you started. Review diffs, commit major finished milestones, bump `VERSION` for behavioral releases only; **do not push, merge or delete branches** without approval.
-- No implicit database migration: refuse unsupported schemas without modifying existing data. Ask only for consequential owner decisions.
-
-## Subagents (conserve primary-model usage)
-
-- Prefer **GPT-6 Luna Reasoning low** for bounded repository exploration, protocol research, documentation, focused tests, isolated features, simple fixes and independent reviews—even if the primary agent must wait. Start with one; use up to **3** only for independent scopes. Never spawn extra Sol High agents.
-- Give each agent one deliverable, acceptance criteria, source pointers, exact verification and **non-overlapping file ownership**. Research/review is read-only unless specified; no nested delegation or commits unless assigned.
-- Primary agent coordinates builds and shared processes (no concurrent builds in one checkout), verifies `file:line` evidence and all diffs, reproduces bugs, integrates and runs final checks. Retain architecture, concurrency, authentication/storage invariants and wire protocol changes with the primary agent. Never let Full Access override data and file boundaries.
-
-## Done criteria
-
-Report changed files, actual test commands/results, limits and final commit. Graphical testing is authorized in the isolated environment described in [development](docs/development.md); network-only tests cannot prove rendering or animations.
+## Finish
+- Add focused tests; run applicable checks (ideally `./gradlew build` on JDK 25) and isolated stock-client/graphical tests when behavior requires them. A network fixture cannot prove rendering.
+- Review `git diff --check` and exact results; report unverified claims/platforms honestly. Update one canonical doc if behavior changes.
+- Do not push, merge, force-update or delete branches without owner authorization. Bump `VERSION` for behavioral releases, not docs-only work.

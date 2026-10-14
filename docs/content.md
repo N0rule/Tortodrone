@@ -1,86 +1,65 @@
-# Content packs and legacy resources
+# Content and default resources
 
-The 0.29.0 resource architecture resolves one complete, validated content snapshot at startup. Definitions remain external to the JAR and separate from persistent state. The loader does not download content, partially fall back after errors, merge individual item rows, or reload content while running.
+**Current format (v0.30.0):** versioned content packs selected through `config/content.properties`. The shipped `vanilla` pack contains the checked-in scenes and catalogs; explicitly enabled custom packs may add or replace complete resources under declared dependency/override rules. Older `defaults/` and top-level resource layouts remain available through read-only legacy compatibility when no versioned pack is selected.
 
-## Deployment layout
+## What ships today
+
+`./gradlew validateContent` checks the selected checked-in pack; `./gradlew prepareContent` prepares it under `build/content/packs/vanilla/`. `buildServer` prepares the content with the executable JAR. Game installation and online archives are **not** required for ordinary preparation. The runtime resolves and validates the selected content before key/account storage and does not download missing resources.
 
 ```text
-config/
-  content.properties       # explicit pack selection and legacy policy
-  server.properties        # listener/log settings
-content/packs/vanilla/     # canonical checked-in versioned baseline
-custom/packs/<id>/         # operator-managed versioned packs
-cache/content.lock         # diagnostic snapshot, written by the server
-data/                      # accounts, keys, SQLite, logs; not content
+config/content.properties
+content/packs/vanilla/pack.properties
+content/packs/vanilla/maps/...
+content/packs/vanilla/items/catalog.json
+content/packs/vanilla/combat/{weapons.tsv,equipment.tsv,fires.json}
+custom/packs/<id>/pack.properties
 ```
 
-The stock repository content is prepared offline by `./gradlew prepareContent` into `build/content/packs/vanilla/`; `buildServer` depends on it. `./gradlew prepareDefaults` remains a deprecated alias, and `-PdefaultsOutput` remains accepted. `./gradlew prepareMaps` prepares only the canonical vanilla `maps/` directory; `-PcontentOutput` selects the complete vanilla pack output directory. `buildAdmin` prepares content as well. Preparation validates pinned sources, preserves owner-edited deployment files and refuses planned changes when `data/server.lock` is held.
+The seven stock scenes are Haven (1), Bazaar (2), Arcade (3), Garrison (445), Advanced Training (294), Laboratory (30893) and the four-star Hall of Heroes (318). Captured stock layouts from October 2026 support twelve directed town portals plus six interior travel links. Training includes prepared actors, collisions and limited interactive mechanics; the other interiors remain more limited. None of this constitutes general dungeon/mission support. See [modern captures](modern-captures.md) and [Training Hall evidence](training-hall.md).
 
-A new deployment uses `config/server.properties`. If that file is absent and `data/server.properties` already exists, the server reads that legacy file in place; it does not move or rewrite it. SQLite remains schema 8. This architecture changes resource organization and startup validation, not account data or game protocol.
+`config/content.properties` lists enabled pack IDs (`vanilla` by default) and the legacy policy. The vanilla pack is at `content/packs/vanilla/`; other selected packs are at `custom/packs/<id>/`. Each pack declares a version, resource paths and SHA-256 digests in `pack.properties`. A resource is a complete catalog or scene directory. A custom pack can override an existing resource only when it declares the exact dependency/version and override owner. Packs are resolved and validated as one snapshot before the server opens persistent account/key state; unknown properties, unsafe paths, bad hashes, missing references, incompatible dependencies and undeclared overrides fail startup.
 
-## Pack manifest
+Legacy layouts remain read-only compatible when `legacy=auto` and legacy files are present. Do not edit or delete an existing deployment as part of migration. To prepare a candidate, run the packaged `org.tortodrone.resources.ContentMigration` command against a stopped deployment. It exports to a new `custom/packs/legacy-import/` directory and writes `config/content-migrated.properties`; review both before explicitly selecting the candidate. It refuses occupied destinations and does not change original resources or player data. See `src/main/java/org/tortodrone/resources/ContentMigration.java` for the exact command contract.
 
-The canonical pack is `content/packs/vanilla/`; enabled custom pack IDs resolve under `custom/packs/<id>/`. Each pack has `pack.properties`, with `format=1`, `engine-format=1`, `id`, and `version` fields (`X.Y.Z`, with an optional prerelease suffix). Every supplied resource is declared as `resource.<key>=<relative-path>` and pinned with `sha256.<key>=<64 lowercase hex digits>`. A file hash is SHA-256 of its bytes. A directory hash is deterministic over its sorted relative file paths and file digests, as implemented by `ContentFiles`: SHA-256 of each UTF-8 relative path, a zero byte, and its raw 32-byte file digest, concatenated in path order. Use `java -cp tortodrone.jar org.tortodrone.resources.ContentFiles /resource-path` to calculate a pin, and `java -cp tortodrone.jar org.tortodrone.resources.ContentManager /deployment` for read-only full validation.
+## Map pack contract
 
-The required whole-resource keys are `entry`, `items`, `weapons`, `equipment`, and `fires`. Maps are declared one scene directory at a time as `scene.<positive-id>`. Thus packs can add scenes, or replace a whole catalog/map resource. Item rows are not merged or individually removed.
+`content/packs/vanilla/maps/catalog.properties` selects the town spawn with `entry-scene=1` by default. Every scene directory is declared as a whole `resource.scene.<id>` in its pack manifest and needs:
 
-Dependencies are exact: `require.<pack-id>=<version>`. Replacing a resource owned by an earlier enabled pack requires both a dependency on that exact pack version and `override.<resource-key>=<current-provider-id>`. Pack IDs are explicit and are not discovered by scanning `custom/packs`. For example, a scene replacement pack can declare:
+| File | Meaning |
+| --- | --- |
+| `map.properties` | Positive unique `scene-id`, `zone-id` and zone/name/image, `kind` (`town`/`training`/`level`), signed `version`, walkable `spawn-x/y`, `instances` (1–16), SHA-256s |
+| `scene.dat` | Original compressed Tudey scene export sent to the stock reader |
+| `walkability.gz` | Derived sampled collision grid used for authoritative movement |
+| `portals.properties` | Optional validated entrance tags, rectangular/convex-polygon triggers and destinations |
+| `content.properties` / `static-collision.properties` | Optional supported stock-derived scene actors/interactions and detailed collision (present in Training); not required for every map |
 
-```properties
-format=1
-engine-format=1
-id=my-scenes
-version=1.0.0
-require.vanilla=0.29.0
-resource.scene.2=maps/bazaar
-sha256.scene.2=<digest produced by ContentFiles>
-override.scene.2=vanilla
-```
+The loader scans subfolders, not a fixed Java map-name list. It checks header/hashes, descriptor paths, valid spawn, portal arrival safety, unique scene IDs, shared zone-name consistency and existing destination entrance tags. Limits: **64 templates**, **128 configured instances**, scene file up to 900,000 bytes and collision file up to 1 MiB. Missing portal metadata is allowed but provides **no automatic travel**; merely adding a scene does not make it visitable. Every non-town template currently uses a private per-knight interior runtime; that is not a general dungeon/party implementation.
 
-Enable it with `enabled=vanilla,my-scenes` and `legacy=disabled`. A new scene uses its own positive scene ID and needs no override declaration. The scene descriptor must agree with the registered ID; portals must name installed destinations and entrances.
+**Install a prepared third-party pack:** stop the server; back up `config/content.properties` and current packs; copy the complete pack under `custom/packs/<id>/`; validate its `pack.properties` hashes and required catalog/scene references; add its ID to `enabled=`; then restart and check scene logs and an unchanged client. A custom pack replacing an existing resource must declare the exact dependency and override owner. There is no runtime map reload or GUI pack installer.
 
-## Selection and compatibility
+**Change starting town:** edit the selected pack's complete `maps/catalog.properties` resource, e.g. `entry-scene=123` for a valid `kind=town` scene, update that resource's manifest digest, then restart. This changes everyone's default entry scene. For portals, `trigger.<entryId>.scene` and `trigger.<entryId>.entrance` must reference an installed target with a matching `entrance.<tag>.*` and a walkable, safe arrival. Return links require explicit configuration.
 
-`config/content.properties` defaults to:
-
-```properties
-format=1
-enabled=vanilla
-legacy=auto
-```
-
-`enabled` is a comma-separated ordered list of explicit pack IDs and must include at least one pack. `vanilla` selects the bundled baseline. `legacy` is either `auto` or `disabled`. In `auto`, the read-only compatibility resolver activates if any legacy `defaults/`, `maps/`, `items/catalog.json`, or combat catalog path is present; the established per-resource precedence is retained. Legacy resources cannot be combined with versioned custom packs. Migrate first, or deliberately set `legacy=disabled` after ensuring the selected versioned packs provide all required resources.
-
-Migration command (run against a stopped deployment):
+**Import a verified raw archived scene (maintainer/advanced):**
 
 ```sh
-java -cp tortodrone.jar org.tortodrone.resources.ContentMigration /path/to/deployment
+java scripts/StockTools.java scene "/path/to/Spiral Knights" "/path/to/archive-scene.dat" "/tmp/new-scene-pack" 1 Haven
 ```
 
-It validates and exports the effective legacy resources into `custom/packs/legacy-import/` and writes a `config/content-migrated.properties` candidate. It does not select that candidate automatically and does not overwrite an existing pack or config. Review/copy the candidate selection explicitly when ready. The command refuses to run while `data/server.lock` is held. Keep a backup and preserve the entire `data/` directory as usual.
+Run from the **source checkout**, with JDK 25 and a compatible, read-only stock game installation (including `code/projectx-pcode.jar`); the output folder must be new. The importer derives native kind, collision samples, closest walkable spawn, descriptor/hashes and optional default interior entrance. The newer source tools can also extract optional scene content and collision metadata where supported. It cannot convert arbitrary images/models/Unity scenes, create full dungeon functionality or infer all return portals. Try the scene in the unchanged client: archive revisions/assets can differ.
 
-## Startup guarantees and limits
+Maintainer stock extraction and captured-layout re-exports are separate source-maintenance workflows; ordinary Gradle builds use the checked-in validated packs and do not automatically import games or captures. See `scripts/StockTools.java`, `scripts/compat/ScenePackExport.java` and `docs/development.md`.
 
-The server checks paths, symlinks, format versions, digests, dependencies, declared overrides, scene metadata, catalogue references and cross-catalog combat references before opening the account/key stores. Scene templates/IDs and portal references are checked by the engine; actual compressed stock-scene identities and client asset compatibility still require the unchanged-client oracle. Missing, corrupt, changing or incomplete selected content fails startup; the server does not download resources or fall back to a partial set. `cache/content.lock` records resolved pack versions and resource providers/digests for diagnostics only; it never controls selection or validation and is regenerated by the server at startup.
+## Items and combat
 
-Content definitions do not implement game behavior. The unchanged stock client still owns models, textures, audio, UI and named display configurations; client assets, protocol constants, authentication, server mechanics and SQLite schema are unaffected. Custom content is limited to validated scene additions or whole-resource replacements. There is no row-level item merge/removal or runtime reload. See [maps](maps.md), [game data](game-data.md), and [architecture](server-architecture.md).
+- `items/catalog.json` is the stock-derived **v2 JSON** definition catalog (v1 readable), in the selected pack; persistent owned items/equipment, binding and currencies live in SQLite. The indexed default snapshot contains 9,348 definitions; 8,570 satisfy current grantability checks. An indexed definition is **not** evidence its gameplay/use/crafting behavior works.
+- `combat/weapons.tsv`, `equipment.tsv` and `fires.json` supply numeric weapon controls, modifiers and authored fire graphs from the selected pack; server Java implements state/attacks/replication. Current snapshot includes 382 weapons, 123 shields and 1,827 attack graphs with known unsupported effects/actions.
+- To customize definitions, create or select a complete pack under `custom/packs/` and declare its resources, hashes, dependencies and overrides in `pack.properties`. Restart after changing content. For raw stock extraction, use `java scripts/StockTools.java items|weapons|equipment|fires ...` with command-specific help/code; outputs are not automatically installed.
+- The stock client retains meshes, textures, audio, UI and named configs; these are **not bundled** as server assets. Server configs reference stock-compatible identities.
 
+## Checksums and update behavior
 
-## Removed assumptions and retained engine rules
+`content/packs/vanilla/pack.properties` pins each whole resource with SHA-256 digests. Preparation tools verify checked-in source manifests, fill missing output files and upgrade only destination files recognized as earlier published versions; owner-modified destination bytes are preserved. Changing a source resource requires updating its manifest digest and, for changed map geometry, matching collision/portal data. Custom packs have their own independent manifests.
 
-`DefaultResources` and its GitHub-main ZIP recovery, hardcoded required-map file list and recovery tests were removed. The five independent scene/item/combat deployment selectors now resolve through `ContentManager`; empty-map/starter-catalog production fallback was removed. The unused `TownTerrain` wrapper was removed. Stock export outputs stage under `build/exports/` rather than accidentally acting as top-level legacy overrides. Stock test/build inputs use the canonical paths. Existing legacy paths occur only at explicit compatibility/preparation boundaries.
+Beware: owner modifications preserved by preparation may still fail runtime validation if only one matching file was edited. Do not merge geometry without matching metadata. The server may start with login/admin but reject world entry when scene loading fails.
 
-Scene IDs, map membership, the entry scene, source locations and pack precedence live in content/selection manifests. Java still owns the supported resource schemas, bounded scene/instance capacity, native scene-config types and distributed object-ID ranges, stock player/picker identities and model argument conventions, serializers/protocol constants, collision/combat mechanics, authentication/authorization and schema-8 storage checks. Starter preview/fixture definitions remain for verified stock identities; they are not a production substitute for missing content. No new wire fields, missions or rewards were introduced.
-
-## Acceptance record (2026-10-14)
-
-- `./gradlew build`: passed with Java 25, 79 tasks (73 executed). Includes registry/dependency/override/path/checksum validation, explicit legacy export, unchanged data/key/settings bytes, real packaged migration and reconnect, preparation ownership/locks, current-schema refusal and the full existing engine/protocol/admin regression suite. An earlier socket timeout while overlapping native/graphical tests passed when rerun separately.
-- `./gradlew integrationMaps integrationServer unitserver_network_OptionRefusalTest --offline`: passed independently, including the real SQLite/key/config preservation and migrated-pack login scenario.
-- All 40 old baseline files were compared with Git `88f2964`: 39 moved byte-for-byte; only `default-source.properties` gained source/ownership pins for the new `pack.properties`. Seven scenes, 9,348 items, 382 weapons, 123 shields and 1,827 fire graphs remain present.
-- The release assembly block validated a fresh canonical deployment with `ContentManager`. The local system has no `zip` executable; equivalent Python ZIP/TAR assembly and integrity checks passed and confirmed that player data, cache and operator pack files are excluded. The GitHub workflow still uses its existing ZIP/TAR commands.
-- `java scripts/compat/CheckClientWorld.java "$GAME"`: stock readers validated seven scene identities, 18 portal links, item metadata/model arguments, native scene/player/trade/party/delta schemas; live checks passed login/reconnect, town movement/travel, peer updates, roles/F3 ItemCreator, tells, inspection, 68 emotes and all twelve town walking links. The overall fixture failed on the Training walking-entry callback. A focused canonical-pack probe reproduced it; the same probe against an untouched `88f2964` / 0.28.0 build in `/tmp` failed identically (`scene=294`, logged on, no move callback). This is an existing limit, not a passing six-interior-link acceptance result. Diagnostics were retained under `/tmp/tortodrone-canonical-native-4t256c12/{diagnostics,baseline-diagnostics}`; the disposable accounts/keys and spawned processes were cleaned up.
-- `java scripts/compat/CheckCombatRendering.java "$GAME" /tmp/tortodrone-content-0290-graphics`: interrupted with signal 143 before full acceptance. Canonical vanilla startup, two graphical town clients, peer movement, all seven scene renders, Training actors/Konway/vial state and several sword/gun/bomb animation checks completed before interruption. Pixel review confirmed town, Laboratory, Training actors and vial quickbar; the throw capture was black. Full combat/throw pixel acceptance cannot be inferred from that run.
-
-- The `--training-only` retry at `/tmp/tortodrone-content-0290-training-retry` failed the initial graphical town-controller movement check. A fresh full retry at `/tmp/tortodrone-content-0290-focused` rendered all seven scenes and passed shared town movement, Training actors, Konway and vial pickup, then failed `Native throw did not create a faction-owned Dynamic/Lift Objects/Throwing Vial actor`. These failures leave full graphical combat/throw acceptance incomplete; they are not described as passing checks. The first run did observe a faction-owned throw, but that does not make the failed retry a pass. Neither protocol/gameplay code nor the prepared scene/combat payloads changed in this migration.
-
-Only test-owned processes and disposable deployments were used. The installed stock client, real preferences, owner accounts/keys/database and running sessions were not modified. Windows/macOS graphical behavior, arbitrary third-party stock assets, every item/effect, general economy/missions/dungeons, hot reload and row-level catalog merging remain unverified or unsupported as described above.
+Content packs provide external definitions; they do not add mechanics to the Java engine. The current implementation supports complete scene/catalog resources and their declared selection/dependency/override rules. It does not provide hot reload, partial-file overlays, arbitrary dungeon behavior, missions, shops or general NPC/monster mechanics. Persistent accounts, ownership and progression remain in `data/`, separate from replaceable content.

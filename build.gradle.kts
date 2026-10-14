@@ -126,6 +126,11 @@ val buildAdmin = tasks.register("buildAdmin") {
     dependsOn(adminJar, prepareContent)
 }
 tasks.assemble { dependsOn(buildServer, buildAdmin) }
+tasks.register("buildWithoutTests") {
+    group = "build"
+    description = "Compile and package the server and admin without running regression programs."
+    dependsOn(tasks.assemble, tasks.testClasses, tasks.named("buildToolsClasses"))
+}
 
 fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, prerequisite: TaskProvider<Task>, workingDirectory: java.io.File) =
     tasks.register<JavaExec>(name) {
@@ -162,18 +167,29 @@ fun standalone(name: String, entryPoint: String, arguments: List<String> = empty
         workingDir = projectDir
         args(arguments)
     }
-val unitPrograms = fileTree("src/test/java") {
+val unitProgramNames = fileTree("src/test/java") {
     include("**/*Test.java")
     exclude("org/tortodrone/integration/**")
 }.files.sortedBy { it.path }.map { source ->
-    val entryPoint = source.relativeTo(file("src/test/java")).invariantSeparatorsPath
+    source.relativeTo(file("src/test/java")).invariantSeparatorsPath
         .removeSuffix(".java").replace('/', '.')
-    standalone("unit${entryPoint.removePrefix("org.tortodrone.").replace('.', '_')}", entryPoint)
+}
+val runUnitSuite = tasks.register<JavaExec>("runUnitSuite") {
+    group = "verification"
+    description = "Run all standalone unit programs in one JVM."
+    usesService(regressionExecution)
+    dependsOn(buildServer, buildAdmin, tasks.testClasses)
+    javaLauncher.set(launcher25)
+    classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
+    mainClass.set("org.tortodrone.support.StandaloneTestSuite")
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+    workingDir = projectDir
+    args(unitProgramNames)
 }
 val testUnit = tasks.register("testUnit") {
     group = "verification"
     description = "Run all standalone unit test programs."
-    dependsOn(unitPrograms)
+    dependsOn(runUnitSuite)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val adminPath = publicOutput.file("tortodrone-admin.jar").asFile.absolutePath
