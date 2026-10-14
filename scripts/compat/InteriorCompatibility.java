@@ -12,6 +12,7 @@ import com.threerings.projectx.dungeon.data.GateSummary;
 import com.threerings.projectx.dungeon.data.Health;
 import com.threerings.projectx.dungeon.data.ImmutableStatusModifiers;
 import com.threerings.projectx.dungeon.data.LevelPartyObject;
+import com.threerings.projectx.dungeon.data.DungeonPartyObject;
 import com.threerings.projectx.dungeon.data.PartyMember;
 import com.threerings.projectx.dungeon.data.Status;
 import com.threerings.projectx.dungeon.config.DungeonActorConfig;
@@ -109,8 +110,8 @@ public final class InteriorCompatibility {
         var throttle=(com.threerings.presents.net.UpdateThrottleMessage)input.qe();
         if(throttle.messagesPerSec!=SessionCodec.INTERIOR_TCP_MESSAGES_PER_SECOND)
             throw new AssertionError("Native TCP fallback throttle did not decode");
-        var party = (LevelPartyObject) ((ObjectResponse<?>) input.qe()).yk();
-        checkParty(party, knight, profile);
+        var party = (DungeonPartyObject) ((ObjectResponse<?>) input.qe()).yk();
+        checkParty(party, knight, profile, kind);
 
         var moveNotification = (EventNotification) input.qe();
         var move = (InvocationResponseEvent) moveNotification.yj();
@@ -145,12 +146,12 @@ public final class InteriorCompatibility {
         if (!(applied instanceof Dungeoneer moved)) throw new AssertionError("Dungeoneer delta changed actor type");
         checkActor(moved, updated, knight, profile, manager);
         if (input.available() != 0) throw new AssertionError("Unexpected trailing stock reader data");
-        System.out.println("PASS: " + kind + " config, ProjectXSceneObject, LevelPartyObject and Dungeoneer delta");
+        System.out.println("PASS: " + kind + " config, ProjectXSceneObject, native party subtype and Dungeoneer delta");
     }
 
-    private static void checkParty(LevelPartyObject party, Knight knight, WorldProfile profile) {
+    private static void checkParty(DungeonPartyObject party, Knight knight, WorldProfile profile, String kind) {
         if (party.partyService == null || party.members == null || party.health == null || party.status == null ||
-            party.speakService != null || party.dungeonPartyService != null || party.levelPartyService != null)
+            party.speakService != null || party.dungeonPartyService != null)
             throw new AssertionError("Party object service/set nullability differs from native minimal-party snapshot");
         if (party.members.size() != 1 || party.health.size() != 1 || party.status.size() != 1)
             throw new AssertionError("Party member/health/status sets must each contain the owner's entry");
@@ -167,6 +168,17 @@ public final class InteriorCompatibility {
         if (status.Qu() != PLAYER_OID || status.conditions != null || status.expires != null || status.flags != 0)
             throw new AssertionError("Native peaceful status entry must be keyed to the owner with null conditions and clear flags");
         if (profile.items().size() != 5) throw new AssertionError("Invalid party fixture profile");
+        if (party.spawn != null) throw new AssertionError("Native party spawn must remain unset");
+        if (kind.equals("training")) {
+            if (party.getClass() != DungeonPartyObject.class || party.memberLimit != 8 || party.gateId != 0 || party.depth != 0)
+                throw new AssertionError("Native Training party metadata mismatch");
+            return;
+        }
+        checkLevelParty((LevelPartyObject)party);
+    }
+
+    private static void checkLevelParty(LevelPartyObject party) {
+        if (party.levelPartyService != null) throw new AssertionError("Unsupported level party service advertised");
         if (party.memberLimit != 1 || party.gateId != 0 || party.depth != 0 || party.floor != 0)
             throw new AssertionError("LevelPartyObject initial party metadata mismatch");
         if (party.pendingFloorName != null || party.pendingFloorDepth != 0 || party.actualGateId != 0 ||

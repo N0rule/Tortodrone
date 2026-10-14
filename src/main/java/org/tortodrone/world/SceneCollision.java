@@ -23,6 +23,20 @@ public final class SceneCollision {
     }
 
     public static SceneCollision empty() { return EMPTY; }
+    /** Native actor shapes at two world poses, with a rounded damage-region expansion. */
+    public static boolean overlaps(Object first,float x,float y,float rotation,Object second,float otherX,float otherY,float otherRotation,float expansion) {
+        float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation),oc=(float)Math.cos(otherRotation),os=(float)Math.sin(otherRotation);
+        for(var a:fromData(first,0))for(var b:fromData(second,0)){
+            var worldA=transform(a,x,y,c,s,1);var worldB=transform(b,otherX,otherY,oc,os,1);
+            if(intersects(worldA,worldB))return true;
+            if(expansion<=0)continue;
+            if(worldA instanceof Circle circle){if(intersects(new Circle(circle.center,circle.radius+expansion),worldB))return true;}
+            else if(worldA instanceof Capsule capsule){if(intersects(new Capsule(capsule.a,capsule.b,capsule.radius+expansion),worldB))return true;}
+            else if(worldA instanceof Polygon polygon)for(int i=0;i<polygon.points.size();i++)
+                if(intersects(new Capsule(polygon.points.get(i),polygon.points.get((i+1)%polygon.points.size()),expansion),worldB))return true;
+        }
+        return false;
+    }
     /** True only when this scene pack has no collision metadata (legacy fallback case). */
     public boolean isEmpty() { return !present; }
     /** True when the native scene contains a tile at floor(x), floor(y); absent metadata returns false. */
@@ -116,7 +130,7 @@ public final class SceneCollision {
         String type=data.type();
         if(type.endsWith("$TransformedShape")||type.endsWith("$Transformed")){
             Object transform=SceneDamage.field(data,"transform"),translation=SceneDamage.field(transform,"_translation");
-            float tx=number(translation,"x"),ty=number(translation,"y"),r=number(transform,"_rotation"),scale=number(transform,"_scale");
+            float tx=SceneDamage.number(translation,"x",0),ty=SceneDamage.number(translation,"y",0),r=SceneDamage.number(transform,"_rotation",0),scale=SceneDamage.number(transform,"_scale",1);
             List<Geom> child=fromData(SceneDamage.field(data,"shape"),depth+1);
             float c=(float)Math.cos(r),s=(float)Math.sin(r);return child.stream().map(g->transform(g,tx,ty,c,s,scale)).toList();
         }

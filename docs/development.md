@@ -102,10 +102,12 @@ Walking through all 18 portals is covered by the separate stock networking fixtu
 Append `--training-only` for the focused Training run: native actor sprites, walking to
 Konway, both conversation nodes, vial pickup/quickbar/use/throw, and Blitz Needle
 normal/charged facing in two directions.
-`TrainingCompatibility` uses the stock reader for all prepared entity subtypes, non-empty
-knight/lift/status deltas, conversation frames and a few scene gameplay checks.
+`TrainingCompatibility` uses the stock reader for all prepared entity subtypes, native Training
+party type/capacity, health/status resubscription, damage feedback, non-empty knight/lift/status
+deltas, conversation frames and focused scene gameplay checks.
 `SceneCollisionCompatibility game-dir content/packs/vanilla/maps/advanced_training content/packs/vanilla/combat/fires.json`
-compares the prepared native masks, shapes and floor cells with the installed client.
+compares the prepared native masks, static/dynamic shapes, rotated actor contacts and floor
+cells with the installed client.
 Compile it together with `FireCatalogExport` and `FireCompatibility`. When using temporary
 probe classes, put `.build/classes/java/main` before `/tmp` on the runtime classpath so an
 older temporary dependency cannot shadow the current server classes.

@@ -16,6 +16,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
         final SceneStatus status;
+        final Object shape;
         final Map<Integer,Integer> hazardHits=new HashMap<>();
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
@@ -24,8 +25,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
             activityStarted=stateEntered=stamp;
             status=new SceneStatus(content,true);
+            var preparedShape=spec.model("source-shape");shape=preparedShape==null?null:preparedShape.arguments().get("value");
             speed=spec.number("speed",0);
             faction=spec.integer("faction",0);
+            if(kind.equals("Switch"))flags|=2; // Native Switch constructor's START flag, including help bubbles.
             if(spec.flag("start-open",false))flags|=2;
             cycle=spec.text("cycle","");int split=cycle.lastIndexOf('|');if(split>=0)cycle=cycle.substring(split+1);
         }
@@ -35,19 +38,27 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime));}
     }
     private final SceneContent content;private final CollisionMap terrain;
+    private final SceneCollision staticCollision;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
-    private java.util.function.BiConsumer<Integer,Object> playerDamage=(actor,damage)->{};
-    public void playerDamage(java.util.function.BiConsumer<Integer,Object> damage){playerDamage=Objects.requireNonNull(damage);}
+    public record PlayerHit(int actor,Object damage,int timestamp,int source) { }
+    private java.util.function.Consumer<PlayerHit> playerDamage=hit->{};
+    public void playerDamage(java.util.function.BiConsumer<Integer,Object> damage){Objects.requireNonNull(damage);playerDamage=hit->damage.accept(hit.actor(),hit.damage());}
+    public void playerHits(java.util.function.Consumer<PlayerHit> damage){playerDamage=Objects.requireNonNull(damage);}
+    private java.util.function.Consumer<SceneCombatEvent> feedback=event->{};
+    public void feedback(java.util.function.Consumer<SceneCombatEvent> value){feedback=Objects.requireNonNull(value);}
     private java.util.function.BiPredicate<Integer,Integer> playerHeal=(actor,amount)->false;
     public void playerHeal(java.util.function.BiPredicate<Integer,Integer> heal){playerHeal=Objects.requireNonNull(heal);}
     private java.util.function.BiConsumer<ActorState,FireCatalog.Action> attack=(actor,action)->{};
     public void attacks(java.util.function.BiConsumer<ActorState,FireCatalog.Action> fire){attack=Objects.requireNonNull(fire);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
-        this.content=content;this.terrain=terrain;int stamp=SceneClock.now();
+        this(content,terrain,SceneCollision.empty());
+    }
+    public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
+        this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);int stamp=SceneClock.now();
         for(var binding:content.entries())spawn(binding,binding.spec(),null,stamp);
     }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
@@ -65,7 +76,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         boolean blocked=false;
         if(damage!=null&&damage.arguments().get("value") instanceof FireCatalog.DataValue){
             for(var player:players)if(pad.spec.contains(pad.x,pad.y,pad.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS)){
-                playerDamage.accept(player.id(),damage.arguments().get("value"));blocked=true;
+                playerDamage.accept(new PlayerHit(player.id(),damage.arguments().get("value"),stamp,0));blocked=true;
             }
         }
         if(blocked){pad.nextGeneration=stamp+pad.spec.integer("delay",0);return;}
@@ -198,9 +209,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void lift(Entity e,int stamp,float elapsed,List<ActorState> players){
         if(e.carrier!=0){for(var player:players)if(player.id()==e.carrier){e.x=player.x();e.y=player.y();e.rotation=player.rotation();return;}return;}
         if((e.flags&2)==0)return;
-        float distance=e.speed*elapsed,x=e.x+(float)Math.cos(e.direction)*distance,y=e.y+(float)Math.sin(e.direction)*distance;
-        boolean collided=!terrain.walkableSegment(e.x,e.y,x,y)||contact(x,y,e.id);
-        if(!collided){e.x=x;e.y=y;}
+        float distance=e.speed*elapsed;boolean collided=false;
+        int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/.1f));
+        for(int step=0;step<steps;step++){
+            float x=e.x+(float)Math.cos(e.direction)*distance/steps,y=e.y+(float)Math.sin(e.direction)*distance/steps;
+            boolean clear=staticCollision.isEmpty()||e.shape==null?terrain.walkableSegment(e.x,e.y,x,y):
+                staticCollision.clearSegment(e.spec.integer("thrown-collision-mask",0),e.shape,e.x,e.y,x,y,e.rotation);
+            if(!clear||contact(x,y,e.rotation,e.id,e.shape,e.spec.integer("thrown-collision-mask",-1))){collided=true;break;}
+            e.x=x;e.y=y;
+        }
         if(stamp-e.thrownAt>=e.spec.integer("throw-time",0))e.z=Math.max(0,e.z-e.spec.number("fall-speed",0)*elapsed);
         if(collided||e.z<=0||stamp-e.thrownAt>=e.spec.integer("fuse",0))land(e,stamp);
     }
@@ -311,11 +328,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }return true;
     }
     @Override public boolean contact(float x,float y,int owner){
+        return contact(x,y,0,owner,null,-1);
+    }
+    @Override public boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){
         var source=entities.get(owner);
-        if(source!=null&&(source.kind.equals("Monster")||source.kind.equals("Trap")))return players.stream().anyMatch(p->Math.hypot(p.x()-x,p.y()-y)<=ScenePortals.PAWN_RADIUS);
+        if(source!=null&&(source.kind.equals("Monster")||source.kind.equals("Trap"))&&(mask&4)!=0&&players.stream().anyMatch(p->shape==null?
+            Math.hypot(p.x()-x,p.y()-y)<=ScenePortals.PAWN_RADIUS:SceneShape.intersects(shape,
+                (p.x()-x)*(float)Math.cos(rotation)+(p.y()-y)*(float)Math.sin(rotation),
+                -(p.x()-x)*(float)Math.sin(rotation)+(p.y()-y)*(float)Math.cos(rotation),ScenePortals.PAWN_RADIUS)))return true;
         for(var e:entities.values())if(e.id!=owner&&e.carrier==0&&e.destroyed==Integer.MAX_VALUE
-            &&(e.kind.equals("Monster")||e.kind.startsWith("Block")||e.kind.equals("Door")&&(e.flags&2)==0||e.kind.equals("Switch")&&e.spec.text("switch-mode","").startsWith("damage-"))
-            &&e.spec.contains(e.x,e.y,e.rotation,x,y,0))return true;
+            &&(e.spec.integer("collision-flags",0)&mask)!=0
+            &&!(e.kind.equals("Door")&&(e.flags&2)!=0)
+            &&(shape==null||e.shape==null?e.spec.contains(e.x,e.y,e.rotation,x,y,0):SceneCollision.overlaps(shape,x,y,rotation,e.shape,e.x,e.y,e.rotation,0)))return true;
         return false;
     }
     @Override public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
@@ -335,7 +359,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
                 boolean hit=defined instanceof FireCatalog.DataValue?SceneShape.intersects(defined,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+expansion;
-                if(hit)playerDamage.accept(player.id(),damage);
+                int sourceId=source==null?owner:source.kind.equals("Monster")?owner:source.kind.equals("DungeonLift")?source.owner:0;
+                if(hit){
+                    // One trap action can cover several occupants. Record each
+                    // hit here so the next sensor cannot damage them again on
+                    // the same tick or before the authored refractory deadline.
+                    if(source!=null&&source.kind.equals("Trap")){
+                        if(stamp<source.hazardHits.getOrDefault(player.id(),0))continue;
+                        source.hazardHits.put(player.id(),stamp+source.spec.integer("hazard-refractory",0));
+                    }
+                    playerDamage.accept(new PlayerHit(player.id(),damage,stamp,sourceId));
+                }
             }
         }
         for(var e:entities.values()){
@@ -344,7 +378,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             boolean hit;
             if(defined instanceof FireCatalog.DataValue geometry){
                 float tx=dx*c+dy*s,ty=-dx*s+dy*c,r=e.spec.number("radius",0);
-                hit=SceneShape.intersects(geometry,tx,ty,r+Math.max(0,expansion));
+                hit=e.shape==null?SceneShape.intersects(geometry,tx,ty,r+Math.max(0,expansion)):
+                    SceneCollision.overlaps(geometry,x,y,rotation,e.shape,e.x,e.y,e.rotation,Math.max(0,expansion));
             }else hit=e.spec.contains(e.x,e.y,e.rotation,x,y,Math.max(0,expansion));
             if(!hit)continue;
             if(e.kind.equals("Switch")){
@@ -358,7 +393,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
             Object accepted=SceneDamage.prune(damage,e.spec.integer("damage-mask",0));
             float amount=SceneDamage.amount(accepted,content,e.spec);
             if(e.kind.equals("Monster")){
-                e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0)hurt(e,amount,stamp);
+                e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
+                    int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
+                    int sourceId=source!=null&&source.kind.equals("DungeonLift")?source.owner:owner;
+                    float fraction=dealt/e.spec.number("health",1);
+                    feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,fraction>.4f?"NORMAL_LARGE":fraction>.2f?"NORMAL_MEDIUM":"NORMAL_SMALL"));
+                }
             }else if(amount>0&&e.kind.startsWith("Block"))blockHit(e,stamp);
         }
     }

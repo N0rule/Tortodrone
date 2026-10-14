@@ -13,6 +13,9 @@ public final class OptionRefusalTest {
     private static final String DIFFICULTY = "com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty";
 
     public static void main(String[] args) throws Exception {
+        // Production startup loads content before accepting clients. Keep this
+        // fixture's socket deadline scoped to RPC delivery, not first-use map loading.
+        org.tortodrone.world.SceneRegistry.system();
         for (String type : new String[]{LOOT, DIFFICULTY}) {
             for (int ordinal : new int[]{3, 255}) {
                 var writer = new TestWire.Writer();

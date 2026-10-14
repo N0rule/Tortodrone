@@ -18,16 +18,18 @@ public final class SceneSimulation {
         private final Object identity=new Object(), predecessor;
         private final List<ActorState> actors;
         private final List<SceneEffect> effects;
+        private final List<SceneCombatEvent> combatEvents;
         private final Map<Integer,ActorState> byId;
         private final Set<Integer> occupants;
         private final Map<Integer,Boolean> roles;
         private final Map<Integer,ScenePortals.Trigger> portals;
         private final Map<Integer,SceneHealth.State> health;
         private final Delta common, initial;
-        private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects, Map<Integer,ScenePortals.Trigger> portals, Map<Integer,SceneHealth.State> health,Snapshot previous) {
+        private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects,List<SceneCombatEvent> combatEvents, Map<Integer,ScenePortals.Trigger> portals, Map<Integer,SceneHealth.State> health,Snapshot previous) {
             timestamp=stamp;this.actors=List.copyOf(actors);this.effects=List.copyOf(effects);
             this.portals=Map.copyOf(portals);
             this.health=Map.copyOf(health);
+            this.combatEvents=List.copyOf(combatEvents);
             var index=new LinkedHashMap<Integer,ActorState>();var permissions=new HashMap<Integer,Boolean>();
             for(var actor:actors){index.put(actor.id(),actor);if(actor.player())permissions.put(actor.id(),actor.gameMaster());}
             byId=Collections.unmodifiableMap(index);occupants=Set.copyOf(permissions.keySet());roles=Map.copyOf(permissions);
@@ -40,6 +42,7 @@ public final class SceneSimulation {
         public List<ActorState> players(){return actors.stream().filter(ActorState::player).toList();}
         public SceneHealth.State health(int actor){return health.get(actor);}
         public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);return effects.stream().filter(e->e.sequence()>last).toList();}
+        public List<SceneCombatEvent> combatEventsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.combatEvents.stream().mapToLong(SceneCombatEvent::sequence).max().orElse(0);return combatEvents.stream().filter(e->e.sequence()>last).toList();}
         public Set<Integer> occupants(){return occupants;}
         public Map<Integer,Boolean> roles(){return roles;}
         public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
@@ -151,13 +154,23 @@ public final class SceneSimulation {
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
     private final SceneWeapons weapons;
     private final SceneEntities entities;
+    private final ArrayDeque<SceneCombatEvent> combatEvents=new ArrayDeque<>();
+    private long combatSequence;
+    private void feedback(SceneCombatEvent event){
+        if(combatEvents.size()>=1024)combatEvents.removeFirst();
+        combatEvents.addLast(new SceneCombatEvent(++combatSequence,event.timestamp(),event.actor(),event.amount(),event.source(),event.performance()));
+    }
     public synchronized void fires(FireCatalog catalog){weapons.catalog(catalog);}
     private ScheduledExecutorService timer;
     private Snapshot previous;
     private long tickCount;
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
-        entities=new SceneEntities(instance.map().content(),instance.map().collision());
-        entities.playerDamage((actor,damage)->{var member=members.get(actor);if(member!=null&&member.entered)member.health.damage(damage,SceneClock.now());});
+        entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
+        entities.feedback(this::feedback);
+        entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
+            var result=member.health.hit(hit.damage(),hit.timestamp());
+            if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
+        }});
         entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.health.heal(amount);});
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
         entities.attacks((actor,action)->weapons.fire(action,actor,SceneClock.now()));}
@@ -174,7 +187,7 @@ public final class SceneSimulation {
         for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
         var actors=new ArrayList<ActorState>();members.values().forEach(m->actors.add(m.actor()));actors.addAll(entities.actors());actors.addAll(weapons.actors());
         var health=new HashMap<Integer,SceneHealth.State>();members.forEach((id,member)->health.put(id,member.health.state()));
-        return new Snapshot(stamp,actors,weapons.effects(),portals,health,baseline);
+        return new Snapshot(stamp,actors,weapons.effects(),List.copyOf(combatEvents),portals,health,baseline);
     }
     private void start() {
         if(timer!=null)return;
@@ -208,6 +221,7 @@ public final class SceneSimulation {
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();
             entities.advance(stamp,players);weapons.advance(stamp,players);
+            combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;
             recipients=members.values().stream().filter(m->m.entered).toList();
         }

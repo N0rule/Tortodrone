@@ -61,7 +61,10 @@ public final class ScenePackExport {
         }
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
-        p.setProperty("version",Integer.toString(scene.version));p.setProperty("image","haven.jpg");p.setProperty("instances","1");
+        p.setProperty("version",Integer.toString(scene.version));
+        if(!(scene.adD() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.Nk()==null)
+            throw new IOException("Missing native scene background");
+        p.setProperty("image",projectConfig.Nk());p.setProperty("instances","1");
         p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));

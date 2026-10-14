@@ -1,12 +1,22 @@
 # Tortodrone: working context
 
-**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-14, version 0.29.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
+**This is the agent's short project handoff, not an authoritative feature checklist.** Snapshot: **2026-10-14, version 0.30.0, SQLite schema 8**. Check `VERSION`, Git status/log, relevant source and tests on every task. Read [AGENTS.md](../AGENTS.md) for mandatory safety, delegation and commit rules.
 
 ## Goal and constraints
 
 Java 25 clean-room server emulator for the **unmodified standalone Spiral Knights client**, with local Java administration; normal username/password login, no Steam/guest auth. Implement verified stock behavior incrementally, not a speculative MMO redesign. Target ~300 concurrent clients, including a crowded Haven; synthetic short benchmarks are not proof of live playability. No migration of old schema or destruction of existing state.
 
 ## Current recorded baseline
+
+- 0.30.0 audits Training against the additional private official-session evidence. Native
+  rotated target/projectile hitboxes and thrown-lift collision masks replace centre/pawn-grid
+  approximations; trap sensors respect each occupant's refractory interval. Training
+  streams the observed DungeonPartyObject subtype/capacity and current health/status, native
+  switch START flags and party damage feedback. Loading uses the authored training background.
+  Party formation/shared instances and visited-area seed generation remain unimplemented;
+  capture omissions do not establish those policies. The binary checksum difference is solely
+  an explicit `spawnTypes=vanilla` versus empty field, with matching geometry. See the
+  [evidence comparison and acceptance](training-hall.md) for tests and remaining limits.
 
 - 0.29.0 introduces the versioned resource registry: canonical vanilla and explicitly selected
   custom packs, whole-resource scene/catalog entries, exact dependency/override declarations,

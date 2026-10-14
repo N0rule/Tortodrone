@@ -328,8 +328,10 @@ public final class CombatRenderingCheck {
                 if(now-started>8_000_000_000L)throw new AssertionError("Native Vial did not enter held activity 269 with a lift id");
                 return;
             }
-            if(stage==31&&now-started>180_000_000L){flags(view,0);started=now;stage=32;return;}
-            if(stage==32){
+            if(stage==31&&now-started>180_000_000L){flags(view,0);stage=32;}
+            // Observe from the first throw frame: a nearby wall can shatter a
+            // correctly thrown vial before the 180 ms input press has ended.
+            if(stage==31||stage==32){
                 var own=authoritative.get(app.CT().pawnId);Actor thrown=null;
                 for(var actor:authoritative.values())if(actor.vw()==vialLiftActor&&actor instanceof com.threerings.projectx.dungeon.data.actor.DungeonLift
                         &&actor.Mv().getName().equals("Dynamic/Lift Objects/Throwing Vial")&&actor.bR(2)
@@ -337,6 +339,7 @@ public final class CombatRenderingCheck {
                 if(thrown!=null){
                     var sprite=view.gk(thrown.vw());if(sprite==null||sprite.acL().getConfig()==null)throw new AssertionError("Thrown native Vial has no rendered sprite");
                     if(own instanceof Dungeoneer knight&&field(knight,"_lift").getInt(knight)==0){
+                        flags(view,0);
                         if(!vialThrownCaptured){vialLiftActor=thrown.vw();capture("training-vial-thrown");vialThrownCaptured=true;}
                         started=now;stage=34;return;
                     }
@@ -393,7 +396,9 @@ public final class CombatRenderingCheck {
                 String state=activity+":"+names;
                 if(!state.equals(lastAnimation)){System.out.println("ANIMATION: "+action.name+" "+elapsed+"ms "+state);lastAnimation=state;}
                 if(activity!=0&&activityPlaying(own,activity)){if(renderedActivities.add(activity))capture(action.name+"-activity-"+activity);animations.addAll(names);}
-                if(now>=nextFrame&&frames<12){capture(action.name+(released?"-release-":"-")+String.format(Locale.ROOT,"%02d",frames++));nextFrame=now+120_000_000L;}
+                // Activity/animation assertions still run on every sample. Bound
+                // retained full-resolution frames per press/release phase too.
+                if(now>=nextFrame&&frames<3){capture(action.name+(released?"-release-":"-")+String.format(Locale.ROOT,"%02d",frames++));nextFrame=now+300_000_000L;}
                 if(!aftermath&&action.name.equals("bomb-charge")&&elapsed>action.held+1800){capture("bomb-charge-aftermath");aftermath=true;}
                 // A held gun press fires normally before entering charge. Only
                 // projectiles born after the required release activity qualify.
@@ -416,7 +421,10 @@ public final class CombatRenderingCheck {
                             System.out.println("CHECK: "+action.name+" projectile rotation matches native facing "+facing+" and authored spread");
                         }
                         projectile=true;System.out.println("PROJECTILE: "+action.name+" "+actor.getClass().getSimpleName()+" "+actor.Mv());
-                        capture(action.name+"-projectile-"+capturedProjectiles.size());
+                        // Validate every projectile, but retain representative
+                        // pixels so Needle pellets cannot fill the image-encoding
+                        // queue with a full frame for every projectile.
+                        if(capturedProjectiles.size()<=2)capture(action.name+"-projectile-"+capturedProjectiles.size());
                     }
                 }
                 var server=authoritative.get(app.CT().pawnId);

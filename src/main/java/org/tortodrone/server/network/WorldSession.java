@@ -151,7 +151,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean ownsInteriorParty(int target){return selected()&&!scene.map().town()&&target==SessionCodec.interiorPartyOid(scene);}
     synchronized void subscribeInteriorParty(short message)throws IOException {
         profile=loadProfile(profile);
-        var health=membership.health();output.send(()->codec.interiorParty(message,SessionCodec.interiorPartyOid(scene),oid,knight,profile,scene,health));
+        var health=membership.health();var status=membership.status();output.send(()->codec.interiorParty(message,SessionCodec.interiorPartyOid(scene),oid,knight,profile,scene,health,status));
         subscribedPartyOid=SessionCodec.interiorPartyOid(scene);
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
@@ -705,6 +705,7 @@ final class WorldSession implements AutoCloseable {
         if(!scene.map().town()&&currentOwn!=null&&currentOwn.sceneKnight()!=null&&(previousOwn==null||previousOwn.sceneKnight()==null||!currentOwn.sceneKnight().status().equals(previousOwn.sceneKnight().status()))){
             var status=currentOwn.sceneKnight().status();output.send(()->codec.partyStatus(SessionCodec.interiorPartyOid(scene),oid,status));
         }
+        if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot))output.send(()->codec.partyDamage(SessionCodec.interiorPartyOid(scene),event));
         lastStamp=reference=stamp;lastSnapshot=current;
         collectPickups();
         for(long id:membership.takeUsedItems()){

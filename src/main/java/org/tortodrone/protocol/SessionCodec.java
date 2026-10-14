@@ -615,8 +615,12 @@ public final class SessionCodec {
         return interiorParty(message,partyOid,playerOid,knight,profile,scene,new org.tortodrone.world.SceneHealth.State(1,1,0));
     }
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health)throws IOException {
+        return interiorParty(message,partyOid,playerOid,knight,profile,scene,health,org.tortodrone.world.SceneStatus.State.NORMAL);
+    }
+    public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException {
         return frame(out->{
-            objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
+            boolean training=scene.map().kind().equals("training");
+            objectHeader(out,message,"com.threerings.projectx.dungeon.data."+(training?"DungeonPartyObject":"LevelPartyObject"),partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
             out.writeShort(0); // Party chat is outside this milestone.
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
@@ -628,10 +632,11 @@ public final class SessionCodec {
             out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
             type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);
-            out.writeShort(0);out.writeBoolean(false);out.writeByte(0);
-            emptyCollection(out);vector(out,scene.map().spawnX(),scene.map().spawnY());
+            conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(0);
+            emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(0);out.writeBoolean(!scene.map().content().items().isEmpty());out.writeLong(0);
-            out.writeShort(0);out.writeInt(1);out.writeInt(0); // No dungeon matchmaking service or gate.
+            out.writeShort(0);out.writeInt(training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
+            if(training)return;
             out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(3); // SUBTOWN
@@ -649,6 +654,14 @@ public final class SessionCodec {
         return frame(out->{eventHeader(out,"EntryUpdatedEvent",partyOid);string(out,"health");
             type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(playerOid);
             out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());});
+    }
+    public byte[] partyDamage(int partyOid,org.tortodrone.world.SceneCombatEvent event)throws IOException {
+        return frame(out->{type(out,PREFIX+"EventNotification");out.writeShort(-1);
+            type(out,"com.threerings.projectx.dungeon.data.PartyObject$DamageEvent");out.writeInt(partyOid);
+            string(out,"damage");out.writeInt(event.timestamp());out.writeInt(event.actor());out.writeInt(event.amount());out.writeInt(event.source());
+            type(out,"com.threerings.projectx.dungeon.util.DamageSummary$Performance");
+            out.writeByte(switch(event.performance()){case "NORMAL_SMALL"->6;case "NORMAL_MEDIUM"->7;case "NORMAL_LARGE"->8;default->1;});
+        });
     }
 
     /** Original Crowd place chat message, carrying a server-selected visible name. */

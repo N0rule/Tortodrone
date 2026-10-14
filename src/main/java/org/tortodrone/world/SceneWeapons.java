@@ -6,6 +6,7 @@ import java.util.*;
 public final class SceneWeapons {
     public interface Targets {
         boolean contact(float x,float y,int owner);
+        default boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return contact(x,y,owner);}
         void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
         default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
     }
@@ -96,7 +97,7 @@ public final class SceneWeapons {
                 for(int n=0;n<steps;n++){float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
                     if(!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){destroy(shot,stamp,false);break;}
                     shot.x=x;shot.y=y;
-                    if(targets!=null&&targets.contact(x,y,shot.source.ownerId)){destroy(shot,stamp,false);break;}}
+                    if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){destroy(shot,stamp,false);break;}}
             }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,Math.max(previous,shot.created),owners.get(shot.source.ownerId));
             if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
@@ -126,7 +127,7 @@ public final class SceneWeapons {
             float x=cx+rx,y=cy+ry;
             if((shot.spec.flags()&2)==0&&!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){shot.collided=next;destroy(shot,next,false);break;}
             shot.relativeX=rx;shot.relativeY=ry;shot.x=x;shot.y=y;from=next;
-            if(targets!=null&&targets.contact(x,y,shot.source.ownerId)){shot.collided=next;destroy(shot,next,false);}
+            if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){shot.collided=next;destroy(shot,next,false);}
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}

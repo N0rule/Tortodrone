@@ -33,15 +33,18 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         public Spec child(){var child=new TreeMap<String,String>();fields.forEach((k,v)->{if(k.startsWith("child."))child.put(k.substring(6),v);});return new Spec(child);}
         public Spec section(String prefix){var section=new TreeMap<String,String>();fields.forEach((k,v)->{if(k.startsWith(prefix))section.put(k.substring(prefix.length()),v);});return new Spec(section);}
         public boolean contains(float cx,float cy,float x,float y,float radius){
-            if(fields.containsKey("radius"))return Math.hypot(cx-x,cy-y)<=number("radius",0)+radius;
-            return Math.abs(cx-x)<=number("width",0)/2+radius&&Math.abs(cy-y)<=number("height",0)/2+radius;
+            return contains(cx,cy,0,x,y,radius);
         }
         public boolean contains(float cx,float cy,float rotation,float x,float y,float radius){
-            if(fields.containsKey("radius"))return contains(cx,cy,x,y,radius);
+            if(fields.containsKey("radius"))return Math.hypot(cx-x,cy-y)<=number("radius",0)+radius;
             float dx=x-cx,dy=y-cy,c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float tx=dx*c+dy*s,ty=-dx*s+dy*c;
-            return tx>=number("bounds-min-x",0)-radius&&tx<=number("bounds-max-x",0)+radius
-                &&ty>=number("bounds-min-y",0)-radius&&ty<=number("bounds-max-y",0)+radius;
+            if(text("shape","").equals("Compound")){
+                var shape=model("source-shape");if(shape!=null)return SceneShape.intersects(shape.arguments().get("value"),tx,ty,radius);
+            }
+            float gapX=Math.max(number("bounds-min-x",-number("width",0)/2)-tx,Math.max(0,tx-number("bounds-max-x",number("width",0)/2)));
+            float gapY=Math.max(number("bounds-min-y",-number("height",0)/2)-ty,Math.max(0,ty-number("bounds-max-y",number("height",0)/2)));
+            return gapX*gapX+gapY*gapY<=radius*radius;
         }
     }
     public record Entry(String key,float x,float y,float rotation,Spec spec) { }

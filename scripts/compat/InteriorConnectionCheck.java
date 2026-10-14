@@ -4,6 +4,7 @@ import com.threerings.presents.dobj.*;
 import com.threerings.projectx.client.aU;
 import com.threerings.projectx.data.*;
 import com.threerings.projectx.dungeon.data.LevelPartyObject;
+import com.threerings.projectx.dungeon.data.DungeonPartyObject;
 import com.threerings.projectx.dungeon.data.actor.Dungeoneer;
 import com.threerings.tudey.data.InputFrame;
 import com.threerings.tudey.data.actor.Actor;
@@ -79,10 +80,10 @@ public final class InteriorConnectionCheck {
             peer.enter(294); peer.entered(); peer.awaitActor();
             if (peer.place.xL() == lan.place.xL()) throw new AssertionError("Two players shared a private training instance");
             if (!(peer.actor() instanceof Dungeoneer)) throw new AssertionError("Peer training actor is not a Dungeoneer");
-            if (peer.party == null || peer.party.getClass() != LevelPartyObject.class)
-                throw new AssertionError("Peer training party subscription did not decode LevelPartyObject");
-            if (peer.party.xL() == lan.party.xL() || !peer.currentActors().keySet().equals(Set.of(peer.player.pawnId)) ||
-                !lan.currentActors().keySet().equals(Set.of(lan.player.pawnId)))
+            if (peer.party == null || peer.party.getClass() != DungeonPartyObject.class || peer.party.memberLimit != 8)
+                throw new AssertionError("Peer training party subscription did not decode the native DungeonPartyObject");
+            if (peer.party.xL() == lan.party.xL() || !playerIds(peer).equals(Set.of(peer.player.pawnId)) ||
+                !playerIds(lan).equals(Set.of(lan.player.pawnId)))
                 throw new AssertionError("Concurrent private training leaked party members or actor baselines");
             System.out.println("PASS: concurrent training entries use distinct scenes, parties, Dungeoneers and fresh baselines");
 
@@ -92,7 +93,7 @@ public final class InteriorConnectionCheck {
             if (leave.reason != null) throw new AssertionError("Training party method 3 rejected: " + leave.reason);
             checkForce(1, 1);
             lan.enter(1); lan.entered(); lan.awaitActor();
-            System.out.println("PASS: native LevelPartyObject.partyService.h emits method 3 and returns from training");
+            System.out.println("PASS: native DungeonPartyObject.partyService.h emits method 3 and returns from training");
             travelByWalk(lan, maps, 294, 1, "town");
 
             travelByWalk(lan, maps, 445, LABORATORY, "level");
@@ -100,7 +101,20 @@ public final class InteriorConnectionCheck {
             travelByWalk(lan, maps, 445, HALL_OF_HEROES, "level");
             travelByWalk(lan, maps, HALL_OF_HEROES, 445, "town");
             System.out.println("PASS: all six new interior links used their native walking sensors or stock party exit");
+            peer.close();
+            try(var reconnected=new Endpoint(host,Integer.parseInt(args[0]),key,"PeerPlayer","Peer-Knight")){
+                reconnected.enter(maps.entry().id());reconnected.entered();reconnected.awaitActor();
+                if(reconnected.player.partyOid!=0||reconnected.party!=null||reconnected.actor() instanceof Dungeoneer)
+                    throw new AssertionError("Reconnect retained a departed Training party or actor");
+                System.out.println("PASS: disconnect in Training releases room state; stock reconnect enters the configured town with a fresh baseline");
+            }
         }
+    }
+
+    private static Set<Integer> playerIds(Endpoint endpoint) {
+        var ids = new HashSet<Integer>();
+        for (var actor : endpoint.currentActors().values()) if (actor instanceof Dungeoneer) ids.add(actor.vw());
+        return ids;
     }
 
     private static void requireScene(SceneCatalog catalog, int id, String kind) throws Exception {
@@ -135,7 +149,8 @@ public final class InteriorConnectionCheck {
                 ||Math.abs(Math.IEEEremainder(arrival.tA()-expected.rotation(),2*Math.PI))>.002||arrival.bR(2))
             throw new AssertionError("Wrong tagged arrival or active movement after link " + sourceId + "/" + destinationId + ": " + arrival);
         if (destinationKind.equals("level") || destinationKind.equals("training")) {
-            if (!(arrival instanceof Dungeoneer) || endpoint.party == null || endpoint.party.getClass() != LevelPartyObject.class)
+            Class<?> expectedType=destinationKind.equals("training")?DungeonPartyObject.class:LevelPartyObject.class;
+            if (!(arrival instanceof Dungeoneer) || endpoint.party == null || endpoint.party.getClass() != expectedType)
                 throw new AssertionError("Interior entry did not subscribe native party and Dungeoneer actor");
             int expectedParty = 500 + endpoint.place.xL();
             if (endpoint.party.xL() != expectedParty) throw new AssertionError("Unexpected interior party oid " + endpoint.party.xL());
@@ -200,9 +215,9 @@ public final class InteriorConnectionCheck {
 
     private static final class Endpoint implements AutoCloseable {
         final Client client; final PlayerObject player;
-        ProjectXSceneObject place; LevelPartyObject party;
+        ProjectXSceneObject place; DungeonPartyObject party;
         com.threerings.presents.dobj.t<ProjectXSceneObject> placeSubscription;
-        com.threerings.presents.dobj.t<LevelPartyObject> partySubscription;
+        com.threerings.presents.dobj.t<DungeonPartyObject> partySubscription;
         SceneModel model; final Map<Integer, Actor> actors = new HashMap<>();
         SceneDeltaEvent last; int chatCount; boolean observing = true;
 
@@ -236,6 +251,19 @@ public final class InteriorConnectionCheck {
                 return null;
             });
             service.getMethod("a", int.class, int.class, int.class, listener).invoke(client.bU(service), 1, sceneId, 0, callback);
+            // Like the graphical ProjectX director, subscribe as soon as partyOid
+            // arrives. The room-load callback waits for this so its HUD can attach
+            // a populated party/quickbar; waiting for the callback first deadlocks.
+            boolean interior = sceneId == 294 || sceneId == LABORATORY || sceneId == HALL_OF_HEROES;
+            if (interior) {
+                await(() -> player.partyOid != 0);
+                int partyOid = player.partyOid;
+                partySubscription = new com.threerings.presents.dobj.t<>() {
+                    public void a(DungeonPartyObject object) { party = object; }
+                    public void a(int oid, ObjectAccessException error) { throw new AssertionError(error); }
+                };
+                client.xb().a(partyOid, partySubscription); await(() -> party != null);
+            }
             await(() -> move.done); model = move.model;
             if (model.sceneId != sceneId) throw new AssertionError("Zone callback returned wrong scene model");
             placeSubscription = new com.threerings.presents.dobj.t<>() {
@@ -245,15 +273,8 @@ public final class InteriorConnectionCheck {
             client.xb().a(move.oid, placeSubscription); await(() -> place != null);
             if ((sceneId == 294 || sceneId == LABORATORY || sceneId == HALL_OF_HEROES)
                     && place.getClass() != ProjectXSceneObject.class) throw new AssertionError("Interior scene is not generic ProjectXSceneObject");
-            party = null; partySubscription = null;
-            if (sceneId == 294 || sceneId == LABORATORY || sceneId == HALL_OF_HEROES) {
-                int partyOid = 500 + move.oid;
-                await(() -> player.partyOid == partyOid);
-                partySubscription = new com.threerings.presents.dobj.t<>() {
-                    public void a(LevelPartyObject object) { party = object; }
-                    public void a(int oid, ObjectAccessException error) { throw new AssertionError(error); }
-                };
-                client.xb().a(partyOid, partySubscription); await(() -> party != null);
+            if (interior) {
+                if (party.xL() != player.partyOid) throw new AssertionError("Subscribed party changed during entry");
             } else {
                 await(() -> player.partyOid == 0);
             }

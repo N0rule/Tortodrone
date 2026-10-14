@@ -19,6 +19,7 @@ public final class SceneCatalogTest {
             copy(Path.of("content/packs/vanilla/maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==7 && catalog.entry().id()==1,"all seven Haven scenes load without installed game");
+            check(catalog.scene(294).image().equals("traininghall.jpg"),"Training loading screen uses its native background");
             check(catalog.entry().zoneName().equals("%town:m.haven")&&catalog.entry().townName().equals("m.haven"),
                 "captured qualified zone name and town localization key remain distinct");
             check(catalog.scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,

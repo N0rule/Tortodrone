@@ -6,6 +6,7 @@ import org.tortodrone.character.WorldProfile;
 /** Party health is instance state; it is never written to the account database. */
 public final class SceneHealth {
     public record State(int current,int maximum,int bonus) { }
+    public record Hit(int amount,int feedback) { }
     private static final Set<Integer> GEAR=Set.of(0,1,2,5,10,11,12);
     private final SceneContent content;
     private final SceneStatus status;
@@ -29,11 +30,16 @@ public final class SceneHealth {
     }
     public State state(){return new State(current,maximum,bonus);}
     public boolean damage(Object damage,int stamp){
-        if(current==0)return false;
+        return hit(damage,stamp).amount()>0;
+    }
+    public Hit hit(Object damage,int stamp){
+        if(current==0)return new Hit(0,0);
         damage=SceneDamage.prune(damage,Math.round(content.stats().getOrDefault("player.damage-mask",13f)));
         var fields=new HashMap<>(defense.fields());fields.replaceAll((key,value)->Float.toString(Float.parseFloat(value)*status.state().modifiers().defense()));
-        int amount=(int)Math.ceil(SceneDamage.amount(damage,content,new SceneContent.Spec(fields)));
-        status.damaged(amount,stamp);status.apply(damage,stamp);return rawDamage(amount);
+        var mitigation=new SceneContent.Spec(fields);
+        int amount=(int)Math.ceil(SceneDamage.amount(damage,content,mitigation));
+        status.damaged(amount,stamp);status.apply(damage,stamp);rawDamage(amount);
+        return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount));
     }
     private boolean rawDamage(int amount){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);return true;}
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}

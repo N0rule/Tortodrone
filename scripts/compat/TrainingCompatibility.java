@@ -20,6 +20,7 @@ public final class TrainingCompatibility {
         for(int i=0;i<actors.size();i++){
             var state=actors.get(i);var nativeActor=added.aej()[i];
             if(!nativeActor.getClass().getName().equals(state.entity().nativeClass()))throw new AssertionError("Wrong native entity type");
+            if(state.entity().kind().equals("Switch")&&!nativeActor.bR(2))throw new AssertionError("Native Switch START flag missing");
             if(!FireCompatibility.field(nativeActor,"_config").equals(FireCompatibility.reference(state.config())))throw new AssertionError("Changed native actor arguments");
             com.threerings.tudey.dobj.SceneDeltaEvent updated;
             try{updated=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(state),new int[0],Map.of(state.id(),state),true));}
@@ -49,7 +50,8 @@ public final class TrainingCompatibility {
         if((int)FireCompatibility.field(carried,"_lift")!=actors.getFirst().id()||FireCompatibility.field(carried,"_activityData")==null
                 ||java.lang.reflect.Array.getLength(FireCompatibility.field(carried,"_conditions"))!=1)throw new AssertionError("Native knight lift/status delta mismatch");
         gameplay(content);
-        quickbar();
+        quickbar(status);
+        damageFeedback();
         var conversation=content.conversations().get(npc.config().name());
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
         for(var frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),
@@ -130,16 +132,29 @@ public final class TrainingCompatibility {
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();Object message=input.qe();
         if(input.available()!=0)throw new AssertionError("Native message framing mismatch");return message;
     }
-    private static void quickbar()throws Exception {
+    private static void quickbar(SceneStatus.State status)throws Exception {
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var scene=new SceneRegistry.Instance(140,0,map);
         var knight=new Knight(1,"Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
         var profile=new WorldProfile(219,1,1,0,0,0,List.of());
-        var party=(com.threerings.projectx.dungeon.data.LevelPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene))).yk();
+        var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene,new SceneHealth.State(193,200,0),status))).yk();
+        if(party.getClass()!=com.threerings.projectx.dungeon.data.DungeonPartyObject.class||party.memberLimit!=8||party.spawn!=null)throw new AssertionError("Native Training party type, capacity or spawn mismatch");
         if(!party.hasPickups)throw new AssertionError("Native quickbar HUD is hidden");
         if(!party.members.e(1001))throw new AssertionError("Native party does not contain its local player oid");
+        var health=party.health.iterator().next();var condition=party.status.iterator().next();
+        if(health.current!=193||health.maximum!=200||condition.conditions.length!=1||!Arrays.equals(condition.expires,new int[]{5000}))throw new AssertionError("Party resubscription lost current health/status");
         var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().quickbar(1001,new long[]{-1,-2,0,0}))).yj();
         if(event.xE().size()!=4||!Long.valueOf(-1).equals(((com.threerings.presents.dobj.ElementUpdatedEvent)event.xE().getFirst()).getValue()))throw new AssertionError("Native quickbar slot event mismatch");
         System.out.println("PASS: native party enables pickups and four-slot quickbar updates preserve transient item IDs");
+    }
+    private static void damageFeedback()throws Exception {
+        for(var sample:List.of(new SceneCombatEvent(1,100,219,(7<<20)+1,0,"NORMAL"),
+                new SceneCombatEvent(2,150,1000000000,43,219,"NORMAL_LARGE"))){
+            var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyDamage(640,sample));
+            var event=(com.threerings.projectx.dungeon.data.PartyObject.DamageEvent)notification.yj();
+            if(event.QY()!=sample.timestamp()||event.QU()!=sample.actor()||event.QZ()!=sample.amount()||event.Qx()!=sample.source()
+                    ||!event.Ra().name().equals(sample.performance())||!event.getName().equals("damage"))throw new AssertionError("Native party damage feedback mismatch");
+        }
+        System.out.println("PASS: native party damage events preserve timestamp, target, encoded knight/raw monster amounts, source and performance");
     }
 
 }

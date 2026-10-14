@@ -13,6 +13,9 @@ import org.tortodrone.support.TestWire;
 /** Untrusted post-login frames and object ownership, independent of game files. */
 public final class SessionTest {
     public static void main(String[] args) throws Exception {
+        // Match production's content-before-listen startup; ownership rejection
+        // deadlines should not include first-use loading of the default scene pack.
+        org.tortodrone.world.SceneRegistry.system();
         TestWire.Writer writer = new TestWire.Writer();
         byte[] creation = writer.body(out -> {
             writer.message(out, "ForwardEventRequest", 7);
