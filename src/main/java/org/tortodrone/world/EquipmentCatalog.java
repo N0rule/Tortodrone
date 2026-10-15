@@ -45,6 +45,8 @@ public final class EquipmentCatalog {
     public record Pair(Modifiers equipment, Modifiers weapon) { }
 
     private final Map<String, Entry> entries;
+    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    public void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
 
     public EquipmentCatalog(Collection<Entry> entries) {
         var map = new TreeMap<String, Entry>();
@@ -117,7 +119,8 @@ public final class EquipmentCatalog {
                     total = total.plus(require(item.config()).forClass(weaponClass));
             }
         }
-        return total;
+        var bonus=town.equipmentBonuses(profile,weaponClass.name());
+        return total.plus(new Modifiers(bonus.charge(),bonus.speed(),bonus.attack(),0));
     }
 
     /** Build the separate stock weapon-mod object for the selected slot 6/7 weapon. */
@@ -140,7 +143,7 @@ public final class EquipmentCatalog {
             case BOMB -> WeaponClass.BOMB;
             default -> throw new IOException("Selected item is not a stock weapon");
         };
-        return new Pair(equipment(profile, weaponClass), weapon(selectedWeapon));
+        var bonus=town.weaponBonuses(selectedWeapon,weaponClass.name());return new Pair(equipment(profile, weaponClass), weapon(selectedWeapon).plus(new Modifiers(bonus.charge(),bonus.speed(),bonus.attack(),0)));
     }
 
     public static float cappedSpeed(float value) { return Math.clamp(value, -0.24f, 0.24f); }

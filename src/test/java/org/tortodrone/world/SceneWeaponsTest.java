@@ -10,6 +10,7 @@ import org.tortodrone.character.StarterCatalog;
 public final class SceneWeaponsTest {
     public static void main(String[] args)throws Exception {
         authoredHeavyAttacks();
+        reportedWeaponRegressions();
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).entry();
         var model=new StarterCatalog.Model("Fixture",Map.of());
         var effect=new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,model,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
@@ -87,6 +88,36 @@ public final class SceneWeaponsTest {
         blockedCellCannotBeSkipped();
         fireTracksAttackAnimationSpeed(map.collision());
         System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
+    }
+    private static void reportedWeaponRegressions()throws Exception {
+        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
+        var model=new StarterCatalog.Model("Fixture",Map.of());var hits=new ArrayList<StarterCatalog.Model>();
+        var scene=new SceneWeapons(openTerrain());scene.catalog(catalog);
+        scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return x>.3f;}public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){hits.add(region);}});
+        var owner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,100,model);
+        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Autogun",292,100,0,500));scene.advance(101,List.of(owner));
+        check(!hits.isEmpty()&&scene.actors().getFirst().x()<1,"Autogun muzzle sweep damages a target inside its offset");
+        scene.cancel(10);hits.clear();
+        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Celestial Orbitgun",292,200,0,500));
+        var gunner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,200,model);
+        for(int t=201;t<1000;t+=25)scene.advance(t,List.of(gunner));
+        check(!hits.isEmpty(),"orbital collision executes source FIZZLE=false shutdown damage");
+        scene.cancel(10);scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return false;}public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){}});
+        var north=new ActorState(10,1001,"Fixture",0,1,0,0,(float)Math.PI/2,0,0,290,1100,model);
+        scene.attack(10,new KnightCombat.AttackStart("Weapon/Sword/Divine Avenger",290,1100,0,2000));
+        for(int t=1101;t<1700;t+=25)scene.advance(t,List.of(north));
+        var blades=scene.actors().stream().filter(a->a.config().name().equals("Bullet/Sword/Avenger")).toList();
+        check(blades.size()==3&&blades.stream().map(a->Math.round(a.rotation()*1000)).distinct().count()==3,"Divine Avenger emits three separated beams relative to the attack direction");
+        scene.cancel(10);
+        var west=new ActorState(10,1001,"Fixture",0,1,0,0,(float)Math.PI,0,0,290,1800,model);
+        scene.attack(10,new KnightCombat.AttackStart("Weapon/Sword/Gran Faust",290,1800,0,2000));
+        for(int t=1801;t<2400;t+=25)scene.advance(t,List.of(west));
+        var faust=scene.actors().stream().filter(a->a.config().name().equals("Bullet/Sword/Gran Faust (Charged)")).toList();
+        check(faust.size()==1&&Math.abs(faust.getFirst().rotation()-(float)Math.PI)<.001f,"Gran Faust releases one beam in the attack direction");
+        var alchemer=catalog.find("Weapon/Handgun/Prismatech Alchemer",290).fireRefs().getFirst().action().actor();
+        var shards=alchemer.detonation().children().stream().filter(a->a.kind()==FireCatalog.Kind.EMIT_PROJECTILE).toList();
+        check(shards.size()==2&&shards.stream().allMatch(FireCatalog.Action::relative)&&Math.abs(shards.get(0).rotation()-(float)(Math.PI*.75))<.001&&Math.abs(shards.get(1).rotation()-(float)(Math.PI*1.25))<.001,"charged Alchemer splits into the two archived backward directions");
+        check(catalog.find("Weapon/Handgun/Tortafist/Grand Tortofist",290).fireRefs().getFirst().action().actor().detonation().count()==6,"Tortofist charge scatters six crystals");
     }
     private static CollisionMap openTerrain()throws Exception {
         Path file=Files.createTempFile("tortodrone-weapon-open-",".gz");

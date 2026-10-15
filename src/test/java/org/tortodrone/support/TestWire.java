@@ -64,15 +64,17 @@ public final class TestWire {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
-        check(in.readBoolean() && in.readInt() == 13, "login service count");
+        check(in.readBoolean() && in.readInt() == 15, "login service count");
         Set<String> services = new HashSet<>();
-        for (int i = 0; i < 13; i++) {
+        for (int i = 0; i < 15; i++) {
             String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
-        check(services.size() == 13 && services.contains("com.threerings.projectx.data.KnightMarshaller")
+        check(services.size() == 15 && services.contains("com.threerings.projectx.data.KnightMarshaller")
             &&services.contains("com.threerings.projectx.social.data.SocialMarshaller")
-            &&services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller"),
+            &&services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller")
+            &&services.contains("com.threerings.projectx.sprites.data.BattleSpriteMarshaller")
+            &&services.contains("com.threerings.projectx.auction.data.AuctionMarshaller"),
             "distinct login, trade, admin and other response services");
         check(in.readInt() == 2, "configuration identity");
         check(in.readBoolean(), "bootstrap host present");

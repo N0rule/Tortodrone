@@ -151,11 +151,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",670);}
     public InteractionState interaction(float x,float y,float rotation){
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((content.conversations().containsKey(e.config.name())||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        for(var e:entities.values())if((content.conversations().containsKey(e.config.name())||e.spec.fields().containsKey("town-kind")||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
-            if(distance<=e.spec.number("interaction-radius",.4f)+e.spec.number("radius",0)+e.spec.number("interaction-expansion",0)&&distance<best){nearest=e;best=distance;}
+            if((e.spec.flag("interaction-area",false)?SceneShape.intersects(e.shape,x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y,e.spec.number("interaction-radius",.4f)):distance<=e.spec.number("interaction-radius",.4f)+e.spec.number("radius",0)+e.spec.number("interaction-expansion",0))&&distance<best){nearest=e;best=distance;}
         }
         if(nearest==null)return null;
         String description=nearest.spec.text("description","");
@@ -401,7 +401,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             boolean hit;
             if(defined instanceof FireCatalog.DataValue geometry){
                 float tx=dx*c+dy*s,ty=-dx*s+dy*c,r=e.spec.number("radius",0);
-                hit=e.shape==null?SceneShape.intersects(geometry,tx,ty,r+Math.max(0,expansion)):
+                hit=e.shape==null||geometry.type().endsWith("$Segment")?SceneShape.intersects(geometry,tx,ty,r+Math.max(0,expansion)):
                     SceneCollision.overlaps(geometry,x,y,rotation,e.shape,e.x,e.y,e.rotation,Math.max(0,expansion));
             }else hit=e.spec.contains(e.x,e.y,e.rotation,x,y,Math.max(0,expansion));
             if(!hit)continue;

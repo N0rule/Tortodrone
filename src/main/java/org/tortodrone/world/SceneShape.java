@@ -20,6 +20,7 @@ public final class SceneShape {
             if(shapes instanceof FireCatalog.ListValue list)for(Object child:list.values())if(intersects(child,x,y,radius))return true;
             return false;
         }
+        if(type.endsWith("$Segment")){float dx=x-Math.clamp(x,0,SceneDamage.number(shape,"length",0));return dx*dx+y*y<=radius*radius;}
         if(type.endsWith("$Circle"))return Math.hypot(x,y)<=SceneDamage.number(shape,"radius",0)+radius;
         if(type.endsWith("$Rectangle")){
             float dx=Math.max(0,Math.abs(x)-SceneDamage.number(shape,"width",0)/2);

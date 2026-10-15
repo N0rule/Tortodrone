@@ -9,8 +9,8 @@ import org.tortodrone.resources.Json;
 
 /** Numeric/reference-only stock action graphs for player weapon attacks. */
 public final class FireCatalog {
-    private static final int MAX_BYTES = 64 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 500_000;
-    public enum Kind { COMPOUND, CONDITIONAL, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, UNSUPPORTED }
+    private static final int MAX_BYTES = 128 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 2_000_000;
+    public enum Kind { COMPOUND, CONDITIONAL, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, APPLY_STATUS, START_SPRITE_SHIELD, END_SPRITE_SHIELD, FAIL, UNSUPPORTED }
     public enum NullValue { INSTANCE }
     public record EnumValue(String type, String name, int ordinal) {
         public EnumValue(String type,String name){this(type,name,-1);}
@@ -60,7 +60,7 @@ public final class FireCatalog {
             text(nativeType, 128); Objects.requireNonNull(config); time(fuse); finite(speed); finite(maxStep);
             finite(offsetX); finite(offsetY); finite(height);
             timers=List.copyOf(timers);if(timers.size()>64)throw new IllegalArgumentException("Too many actor timers");
-            if ((nativeType.equals("ORBITAL_BULLET") || nativeType.equals("COMPOUND_ORBITAL_BULLET")) != (orbit != null))
+            if ((nativeType.equals("ORBITAL") || nativeType.equals("ORBITAL_BULLET") || nativeType.equals("COMPOUND_ORBITAL_BULLET")) != (orbit != null))
                 throw new IllegalArgumentException("Orbital native actor metadata mismatch");
             if (orbit != null && orbit.compound() != nativeType.equals("COMPOUND_ORBITAL_BULLET"))
                 throw new IllegalArgumentException("Compound orbital metadata mismatch");

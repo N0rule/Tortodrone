@@ -19,7 +19,7 @@ final class PlayerTrades {
     static final class Member {
         final CharacterStore store;final Knight knight;final int worldId,sceneOid,playerOid;final long auth;
         final SessionOutput output;final SessionCodec codec;final java.net.Socket socket;
-        boolean live=true;
+        boolean live=true;volatile long dialogGeneration;
         Member(CharacterStore store,Knight knight,WorldProfile profile,long auth,int sceneOid,int playerOid,SessionOutput output,SessionCodec codec,java.net.Socket socket){
             this.store=store;this.knight=knight;worldId=profile.worldId();this.auth=auth;this.sceneOid=sceneOid;this.playerOid=playerOid;this.output=output;this.codec=codec;this.socket=socket;
         }
@@ -41,7 +41,7 @@ final class PlayerTrades {
         }
         int side(Member m)throws IOException {if(m==members[0])return 0;if(m==members[1])return 1;throw new IOException("Not a trade participant");}
         SessionCodec.TradeView view(){return new SessionCodec.TradeView(oid,members[0].knight,owners[0],offered(0),members[1].knight,owners[1],offered(1),crowns[0],crowns[1],energy[0],energy[1],revision,accepted[0],accepted[1],completed);}
-        List<WorldProfile.Item> offered(int side){return owners[side].items().stream().filter(i->items[side].containsKey(i.id())).map(i->new WorldProfile.Item(i.id(),i.slot(),i.config(),i.accessory(),i.heat(),null,i.bound(),i.bindOnEquip(),i.starter(),items[side].get(i.id()),i.permanent())).toList();}
+        List<WorldProfile.Item> offered(int side){return owners[side].items().stream().filter(i->items[side].containsKey(i.id())).map(i->new WorldProfile.Item(i.id(),i.slot(),i.config(),i.accessory(),i.heat(),null,i.bound(),i.bindOnEquip(),i.starter(),items[side].get(i.id()),i.permanent(),i.level(),i.heatProgress(),i.variants(),i.additionalAccessories())).toList();}
     }
     private final Map<String,Member> members=new HashMap<>();
     private final Map<Member,Invite> invitations=new HashMap<>(); // At most one outstanding request per participant.
@@ -77,10 +77,11 @@ final class PlayerTrades {
         if(oid==Integer.MAX_VALUE)throw new IOException("Trade object identity space exhausted");
         long created=lastCreated=Math.max(System.currentTimeMillis(),lastCreated+1);
         var trade=new Trade(a,b,ap,bp,oid,created);trades.put(a,trade);trades.put(b,trade);
-        var view=trade.view();
+        var view=trade.view();a.dialogGeneration=b.dialogGeneration=created;
         try{a.output.send(()->a.codec.tradeDialog(a.playerOid,view,created));b.output.send(()->b.codec.tradeDialog(b.playerOid,view,created));}
         catch(IOException failed){cancel(trade);throw failed;}
     }
+    synchronized boolean active(Member member){return member!=null&&trades.containsKey(member);}
     synchronized boolean owns(Member member,int oid){var t=trades.get(member);return member!=null&&member.live&&t!=null&&t.oid==oid;}
     synchronized void subscribe(Member member,int oid,short message)throws IOException {
         expire();var t=require(member,oid);check(t);var view=t.view();

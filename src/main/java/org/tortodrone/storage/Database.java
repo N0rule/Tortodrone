@@ -12,7 +12,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 8;
+    public static final int SCHEMA_VERSION = 9;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -101,6 +101,7 @@ public final class Database {
                 s.execute("CREATE TABLE account_events(id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL, action TEXT NOT NULL, created_at INTEGER NOT NULL)");
             }
             WorldProfiles.initialize(connection);
+            TownStore.initialize(connection);
             try (Statement s = connection.createStatement()) {
                 s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
                 s.execute("PRAGMA user_version="+SCHEMA_VERSION);
@@ -283,7 +284,9 @@ public final class Database {
         });
     }
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
+    private final java.util.concurrent.atomic.AtomicLong nextTownSweep=new java.util.concurrent.atomic.AtomicLong();
     public Map<Integer,WorldState> worldStates()throws IOException {
+        long now=System.nanoTime(),next=nextTownSweep.get();if(now>=next&&nextTownSweep.compareAndSet(next,now+60_000_000_000L))write(c->{AuctionHouse.sweep(c);return null;});
         return read(c->{
             var states=new HashMap<Integer,WorldState>();
             try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {

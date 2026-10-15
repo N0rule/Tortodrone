@@ -68,7 +68,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 entries.add(new Entry(key,x,y,rotation,spec));
             }
             for(String key:p.stringPropertyNames())if(key.startsWith("scale."))scales.put(key.substring(6),finite(Float.parseFloat(p.getProperty(key))));
-            for(String key:p.stringPropertyNames())if(key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
+            for(String key:p.stringPropertyNames())if(key.startsWith("destination.")||key.startsWith("player.")||key.startsWith("gear.")||key.startsWith("status-power.")||key.startsWith("status-chance."))stats.put(key,finite(Float.parseFloat(p.getProperty(key))));
             var items=new TreeMap<String,Spec>();
             for(String id:p.getProperty("items","").split(",")){
                 if(id.isBlank())continue;if(items.size()>=256)throw new IllegalArgumentException("Too many scene items");

@@ -165,6 +165,8 @@ final class ClientSession {
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
             if(world.interiorPartyInvocation(invocation))return;
+            if(world.auctionInvocation(invocation))return;
+            if(world.townInvocation(invocation))return;
             if(world.conversationInvocation(invocation))return;
             if(world.tradeInvocation(invocation))return;
             if(world.departingScene(invocation.oid())&&invocation.service()==10

@@ -114,6 +114,8 @@ public final class ContentManager {
         var weapons=WeaponCatalog.load(resources.get("weapons").path());
         var equipment=EquipmentCatalog.load(resources.get("equipment").path());
         var fires=FireCatalog.load(resources.get("fires").path());
+        if(resources.containsKey("pet-fires"))FireCatalog.load(resources.get("pet-fires").path());
+        if(resources.containsKey("town"))org.tortodrone.town.TownCatalog.load(resources.get("town").path());
         for(var weapon:weapons.weapons())requireItem(items,weapon.config());
         for(var shield:weapons.shields())requireItem(items,shield.config());
         for(var item:equipment.entries())requireItem(items,item.config());
@@ -128,7 +130,7 @@ public final class ContentManager {
         try {int id=Integer.parseInt(key.substring(6));if(id>0&&key.equals("scene."+id))return id;}catch(NumberFormatException ignored){ }
         throw new IOException("Invalid content scene ID: "+key);
     }
-    private static void resourceKey(String key) throws IOException {if(key.startsWith("scene."))sceneId(key);else if(!CATALOGS.contains(key))throw new IOException("Unsupported content resource: "+key);}
+    private static void resourceKey(String key) throws IOException {if(key.startsWith("scene."))sceneId(key);else if(!CATALOGS.contains(key)&&!key.equals("town")&&!key.equals("pet-fires"))throw new IOException("Unsupported content resource: "+key);}
     private static void name(String name) throws IOException {if(!name.matches("[a-z][a-z0-9-]{0,63}"))throw new IOException("Invalid content pack ID: "+name);}
     private static void version(String version) throws IOException {if(!version.matches("[0-9]{1,6}\\.[0-9]{1,6}\\.[0-9]{1,6}(?:-[a-zA-Z0-9.-]{1,64})?"))throw new IOException("Invalid content pack version: "+version);}
     private static List<String> names(String text) throws IOException {

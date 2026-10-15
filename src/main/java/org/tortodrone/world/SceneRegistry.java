@@ -18,10 +18,15 @@ public final class SceneRegistry {
         public SceneSimulation simulation(){return simulation;}
     }
     private final SceneCatalog catalog;
+    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    public org.tortodrone.town.TownCatalog town(){return town;}
+    public void town(org.tortodrone.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
     private WeaponCatalog weapons=WeaponCatalog.empty();
     private EquipmentCatalog equipment=EquipmentCatalog.empty();
     public EquipmentCatalog equipment(){return equipment;}
-    public void equipment(EquipmentCatalog catalog){equipment=Objects.requireNonNull(catalog);}
+    public void equipment(EquipmentCatalog catalog){equipment=Objects.requireNonNull(catalog);equipment.town(town);}
+    private FireCatalog petFires=FireCatalog.empty();
+    public void petFires(FireCatalog catalog){petFires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().petFires(catalog);}
     private FireCatalog fires=FireCatalog.empty();
     public FireCatalog fires(){return fires;}
     public void fires(FireCatalog catalog){fires=Objects.requireNonNull(catalog);for(var copies:instances.values())for(var instance:copies)instance.simulation().fires(catalog);}
@@ -72,7 +77,7 @@ public final class SceneRegistry {
             var key=new InteriorKey(scene,worldId);var existing=interiors.get(key);
             if(existing!=null)return existing;
             var oid=interiorOids.pollFirst();if(oid==null)throw new IOException("Interior capacity is full; try again later");
-            var created=new Instance(oid,0,map);created.simulation().fires(fires);interiors.put(key,created);return created;
+            var created=new Instance(oid,0,map);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);return created;
         }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
     }

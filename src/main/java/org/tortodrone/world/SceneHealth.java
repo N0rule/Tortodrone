@@ -14,10 +14,16 @@ public final class SceneHealth {
     private SceneContent.Spec shieldDefense=new SceneContent.Spec(Map.of());
     private int current,maximum,bonus;
     private int invulnerableUntil;
+    private java.util.function.IntUnaryOperator spriteShield=amount->amount;
+    public void spriteShield(java.util.function.IntUnaryOperator shield){spriteShield=java.util.Objects.requireNonNull(shield);}
     public SceneHealth(SceneContent content){this.content=content;status=new SceneStatus(content,false);current=maximum=Math.round(content.stats().getOrDefault("player.base-health",1f));}
     public SceneStatus.State status(){return status.state();}
-    public void equipment(WorldProfile profile){
-        int next=0;var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
+    public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
+    public boolean cloaked(){return status.cloaked();}
+    public void breakCloak(){status.breakCloak();}
+    public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.town.TownCatalog.empty());}
+    public void equipment(WorldProfile profile,org.tortodrone.town.TownCatalog town){
+        int next=town.equipmentBonuses(profile,"").health();var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
         for(var item:profile.items())if(item.equippedSlot()!=null&&GEAR.contains(item.equippedSlot())){
             String prefix="gear."+item.config()+".";
             next+=Math.round(content.stats().getOrDefault(prefix+"health-bonus",0f));
@@ -60,6 +66,7 @@ public final class SceneHealth {
         fields.replaceAll((key,value)->Float.toString(Float.parseFloat(value)*status.state().modifiers().defense()));
         var mitigation=new SceneContent.Spec(fields);
         int amount=(int)Math.ceil(SceneDamage.amount(damage,content,mitigation,multiplier,blockableScale));
+        amount=Math.max(0,spriteShield.applyAsInt(amount));
         status.damaged(amount,stamp);status.apply(damage,stamp);rawDamage(amount);if(!alive())status.clear();
         return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale));
     }

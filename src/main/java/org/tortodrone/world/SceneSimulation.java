@@ -8,6 +8,8 @@ import java.util.function.Consumer;
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work
  * runs on the simulation thread. Terrain and future world systems belong to this instance. */
 public final class SceneSimulation {
+    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    public synchronized void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
     public record Delta(List<ActorState> added, List<ActorState> updated, int[] removed,
             List<ActorState> changedRoles, Map<Integer,ActorState> baseline) {
         public Delta { removed=removed.clone(); }
@@ -74,6 +76,39 @@ public final class SceneSimulation {
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
+        private org.tortodrone.town.TownState.Sprite sprite;
+        private org.tortodrone.town.TownState.Harness harness;
+        private final int petId=nextPetId++;
+        private final int[] nextSkill=new int[3];
+        private int petSkill,petStarted,petClear,lastSkillInput,petShield,petShieldMaximum;
+        private String petShieldPower;
+        private float petX,petY,petRotation;
+        private boolean petFollow;
+        private int auraOwner;
+        private ActorState petActor(){
+            if(instance.map().town()||!entered||sprite==null)return null;
+            var state=new ScenePetState(appearance.id(),sprite,harness,petFollow,java.util.Arrays.stream(nextSkill).boxed().toList(),petShield,petShieldMaximum,petShieldPower);
+            return new ActorState(petId,0,"",0,appearance.created(),petSkill==0||petFollow?movement.x():petX,petSkill==0||petFollow?movement.y():petY,petSkill==0?movement.rotation():petRotation,0,0,petSkill,petStarted,new org.tortodrone.character.StarterCatalog.Model("Sprite/Base",Map.of()),false,null,null,null,null,null,state);
+        }
+        private void advancePet(int stamp){
+            if(sprite==null||instance.map().town())return;
+            if(petSkill!=0&&stamp>=petClear){petSkill=0;petStarted=petClear;}
+            int input=(movement.inputFlags()&384)>>>7;
+            if(input==0){lastSkillInput=0;return;}
+            if(input==lastSkillInput||petSkill!=0||!health.alive())return;
+            lastSkillInput=input;int skill=input-1;
+            if(!org.tortodrone.town.SpriteRules.unlocked(sprite.level(),skill)||stamp<nextSkill[skill])return;
+            var def=town.sprite(sprite.config());if(def==null||skill>=def.skills().size())return;
+            var ability=def.skills().get(skill);String name=ability.attacks().get(sprite.ultimates().get(skill));
+            String damage=town.harnessDamage(harness==null?"Iron Harness":harness.config());if(damage==null)damage="NORMAL";
+            var attack=petFires.find(name+"|"+sprite.powers().get(skill*3+1)+"|"+sprite.powers().get(skill*3+2)+"|"+damage,292);if(attack==null)return;
+            int power=sprite.powers().get(skill*3),recharge=(int)(ability.recharge().get(power)*1000*town.harnessRecharge(harness==null?"Iron Harness":harness.config()));
+            int minimum=ability.minimum().get(power)*1000;nextSkill[skill]=stamp+Math.max(minimum,recharge);
+            petSkill=input;petStarted=stamp;petClear=stamp+Math.max(1,((Number)attack.attack().arguments().getOrDefault("clear",1000)).intValue());petFollow=ability.follow();petX=movement.x();petY=movement.y();petRotation=movement.rotation();
+            int land=((Number)attack.attack().arguments().getOrDefault("land",0)).intValue();
+            weapons.attack(petId,new KnightCombat.AttackStart(attack.weaponConfig(),292,stamp,land,petClear-stamp),attack);
+        }
+
         private org.tortodrone.character.KnightProgress progress=org.tortodrone.character.KnightProgress.RECRUIT;
         private long pendingItem;private int itemLand;private SceneContent.Spec itemSpec;
         private final ArrayDeque<Long> usedItems=new ArrayDeque<>();
@@ -96,6 +131,7 @@ public final class SceneSimulation {
         public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){check();entities.completePickup(appearance.id(),entity,success);}}
         private Membership(ActorState actor,Consumer<Snapshot> publish) {
             appearance=actor;this.publish=publish;
+            health.spriteShield(amount->{var shield=auraOwner==0?this:members.get(auraOwner);if(shield==null||!shield.entered||shield.petShield<=0)return amount;int absorbed=Math.min(amount,shield.petShield);shield.petShield-=absorbed;return amount-absorbed;});
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
             movement.revival(stamp->instance.map().kind().equals("training")&&health.revive(stamp));
@@ -115,7 +151,7 @@ public final class SceneSimulation {
                 movement.thrown(drop,stamp);if(drop)dropAt=stamp+400;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
         }
         public void enter(){synchronized(SceneSimulation.this){check();entered=true;start();}}
-        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
+        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
             return input(stamp,facing,heading,flags,stamp,sceneTime,now);
@@ -124,15 +160,15 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
-            synchronized(SceneSimulation.this){check();progress=profile.progress();if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
-                if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile);}
+            synchronized(SceneSimulation.this){check();progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+                if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile,town);}
         }
         public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
             combat(catalog,EquipmentCatalog.empty(),profile);
         }
         public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
-                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
+                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();weapons.attack(appearance.id(),attack);});movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
@@ -154,15 +190,18 @@ public final class SceneSimulation {
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
-                movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
+                movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
                 movement.activity()==TownMovement.DEAD&&instance.map().kind().equals("training")?new InteractionState(a.id(),null,"Resurrect"):
-                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress));
+                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
-        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
+        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
+    private int nextPetId=1_700_000_000;
+    private FireCatalog petFires=FireCatalog.empty();
+    public synchronized void petFires(FireCatalog catalog){petFires=Objects.requireNonNull(catalog);}
     private final SceneWeapons weapons;
     private final SceneEntities entities;
     private final ArrayDeque<SceneCombatEvent> combatEvents=new ArrayDeque<>();
@@ -188,6 +227,19 @@ public final class SceneSimulation {
         }});
         entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.health.heal(amount);});
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
+        weapons.petActions(action->{var member=members.get(action.owner());if(member==null||!member.entered)return;
+            switch(action.kind()){
+                case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.character.StarterCatalog.Model ref){
+                    Object data=action.config().arguments().get("data");float radius=((Number)action.config().arguments().getOrDefault("radius",0)).floatValue();
+                    for(var target:members.values())if(target.entered&&(target==member||radius>0&&Math.hypot(target.movement.x()-member.movement.x(),target.movement.y()-member.movement.y())<=radius)){
+                        target.health.condition(ref,data,action.timestamp());if(data instanceof FireCatalog.DataValue value&&value.type().endsWith("$SpriteShield"))target.auraOwner=member.appearance.id();
+                    }
+                }}
+                case START_SPRITE_SHIELD->{member.petShield=member.petShieldMaximum=((Number)action.config().arguments().getOrDefault("health",0)).intValue();member.petShieldPower=(String)action.config().arguments().get("power");}
+                case END_SPRITE_SHIELD->{member.petShield=member.petShieldMaximum=0;member.petShieldPower=null;}
+                default->{}
+            }
+        });
         entities.attacks((actor,action)->weapons.fire(action,actor,SceneClock.now()));}
     public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
@@ -200,7 +252,7 @@ public final class SceneSimulation {
     private Snapshot capture(int stamp,Snapshot baseline) {
         var portals=new HashMap<Integer,ScenePortals.Trigger>();
         for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
-        var actors=new ArrayList<ActorState>();members.values().forEach(m->actors.add(m.actor()));actors.addAll(entities.actors());actors.addAll(weapons.actors());
+        var actors=new ArrayList<ActorState>();members.values().forEach(m->actors.add(m.actor()));for(var member:members.values()){var pet=member.petActor();if(pet!=null)actors.add(pet);}actors.addAll(entities.actors());actors.addAll(weapons.actors());
         var health=new HashMap<Integer,SceneHealth.State>();members.forEach((id,member)->health.put(id,member.health.state()));
         return new Snapshot(stamp,actors,weapons.effects(),List.copyOf(combatEvents),portals,health,baseline);
     }
@@ -224,6 +276,7 @@ public final class SceneSimulation {
             // All authoritative entities advance before capture. Future AI/combat/dynamic
             // collision stages run here once per instance, independent of observer count.
             for(var member:members.values())if(member.entered&&member.portal==null) {
+                if(member.auraOwner!=0&&member.health.status().conditions().stream().noneMatch(c->c.name().contains("Angelic Aura")))member.auraOwner=0;
                 member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&2)!=0);
                 member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
@@ -233,10 +286,10 @@ public final class SceneSimulation {
                     if(member.health.heal(member.itemSpec.integer("heal",0))){member.usedItems.add(member.pendingItem);weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);}
                     member.pendingItem=0;member.itemSpec=null;
                 }
-                member.portal=member.movement.portal();
+                member.portal=member.movement.portal();member.advancePet(stamp);
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();
-            entities.advance(stamp,players);weapons.advance(stamp,players);
+            entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;
             recipients=members.values().stream().filter(m->m.entered).toList();

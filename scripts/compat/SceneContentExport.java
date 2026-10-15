@@ -138,7 +138,7 @@ public final class SceneContentExport {
         if (action == null) return;
         if (depth > 32) throw new IOException("Startup compound nesting exceeds limit at " + sourceKey);
         if (action instanceof ActionConfig.SpawnActor spawn) {
-            if (spawn.actor == null) throw new IOException("Startup actor reference missing at " + sourceKey);
+            if (spawn.actor == null) {if(Boolean.getBoolean("tortodrone.townExport"))return;throw new IOException("Startup actor reference missing at " + sourceKey);}
             ActorConfig actor = spawn.actor.a(cm, ActorConfig.class);
             if (actor == null) throw new IOException("Unresolved startup actor at " + sourceKey);
             result.add(new Binding(sourceKey, handlerIndex, x, y, rotation, bindArguments(spawn.actor,sourceArgs)));

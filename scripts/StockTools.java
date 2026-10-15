@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath(), game = Path.of(args[1]).toAbsolutePath();
         if (!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) throw new IOException("Missing installed stock game JAR");
         String fixture;
@@ -26,9 +26,14 @@ public final class StockTools {
                 fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/exports/items").toString());
                 if(!Files.isRegularFile(project.resolve("build/tortodrone.jar")))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
             }
+            case "pets" -> {
+                if(args.length!=3)throw new IllegalArgumentException("pets expects game-directory fresh-output-directory");
+                fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/PetCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
+            }
             case "fires" -> {
                 if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
-                fixture="FireCatalogExport"; fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java")); fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
             }
             case "weapons" -> {
                 if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");
@@ -40,6 +45,14 @@ public final class StockTools {
                 fixture="EquipmentCatalogExport";
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+            }
+            case "town-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("town-check expects game-directory");fixture="TownCompatibility";
+            }
+            case "town" -> {
+                if(args.length!=4)throw new IllegalArgumentException("town expects game-directory maps-directory fresh-output-directory");
+                fixture="TownSceneExport";fixtureArgs.add(args[2].equals("--accessories")?args[2]:Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/TownSceneExport.java"));
             }
             case "haven" -> {
                 if(args.length!=4)throw new IllegalArgumentException("haven expects game-directory captured-binaries-directory fresh-output-directory");
@@ -58,7 +71,7 @@ public final class StockTools {
             }
             default -> throw new IllegalArgumentException("Unknown stock tool");
         }
-        if(args[0].equals("scene")||args[0].equals("haven")){
+        if(args[0].equals("scene")||args[0].equals("haven")||args[0].equals("town")){
             sources.add(project.resolve("scripts/compat/SceneContentExport.java"));
             sources.add(project.resolve("scripts/compat/SceneCollisionExport.java"));
             sources.add(project.resolve("scripts/compat/ScenePlayerStatsExport.java"));

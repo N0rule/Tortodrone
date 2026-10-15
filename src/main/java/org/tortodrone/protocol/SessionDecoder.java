@@ -35,8 +35,10 @@ public final class SessionDecoder {
         }
     }
     public record Registration(String code, short id) { }
+    public record Multiset(Map<Object,Integer> counts) {public Multiset{counts=Map.copyOf(counts);}}
     public record Listener(String type, short requestId) { }
     public record EnumValue(String type, int ordinal) { }
+    public record AuctionSearch(boolean featured,EnumValue group,java.util.Set<Integer> configs,int sort,boolean ascending,boolean all) { }
     /** Stock ConfigReference: an interned config name plus its streamed argument map. */
     public record ConfigReference(String name, Map<String,Object> arguments) {
         public ConfigReference {
@@ -146,6 +148,8 @@ public final class SessionDecoder {
         String type = types.read(in);
         if (type == null) return null;
         return switch (type) {
+            case "com.google.common.collect.Multiset","com.google.common.collect.HashMultiset","com.google.common.collect.LinkedHashMultiset" -> {int size=count(in);var entries=new LinkedHashMap<Object,Integer>();for(int i=0;i<size;i++){Object entry=value(in,depth+1);int number=in.readInt();check((entry instanceof Long||entry instanceof Integer)&&number>0&&number<=9999&&entries.put(entry,number)==null,"Invalid Town multiset");}yield new Multiset(entries);}
+            case "[J" -> {int size=count(in);long[] values=new long[size];for(int i=0;i<size;i++)values[i]=in.readLong();yield values;}
             case "java.lang.String" -> in.readUTF();
             case "java.lang.Boolean" -> present(in);
             case "java.lang.Integer" -> in.readInt();
@@ -153,6 +157,13 @@ public final class SessionDecoder {
             case "java.lang.Long" -> in.readLong();
             case "java.lang.Float" -> in.readFloat();
             case "com.threerings.util.Name" -> string(in);
+            case "com.threerings.projectx.item.data.ItemCodes$Group" -> enumeration(in,type,29);
+            case "com.threerings.projectx.item.data.ItemCodes$AccessoryLocation" -> enumeration(in,type,11);
+            case "com.threerings.projectx.sprites.data.SpritePerk" -> enumeration(in,type,72);
+            case "com.threerings.projectx.sprites.data.SpriteCodes$Ultimate" -> enumeration(in,type,3);
+            case "com.threerings.projectx.auction.data.Duration" -> enumeration(in,type,10);
+            case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in,type,6);
+            case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
             case "com.threerings.config.ConfigReference" -> configReference(in,depth);
             case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
             case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List" -> values(in, depth);
@@ -176,6 +187,14 @@ public final class SessionDecoder {
         };
     }
 
+    private AuctionSearch auctionSearch(DataInputStream in,int depth)throws IOException {
+        boolean featured=present(in);Object group=value(in,depth+1);
+        java.util.Set<Integer> configs=null;
+        if(present(in)){int size=count(in);configs=new java.util.HashSet<>();for(int i=0;i<size;i++){Object v=value(in,depth+1);check(v instanceof Integer,"Invalid auction config");configs.add((Integer)v);}}
+        Object sort=value(in,depth+1);check(group==null||group instanceof EnumValue&&((EnumValue)group).type().equals("com.threerings.projectx.item.data.ItemCodes$Group"),"Invalid auction group");
+        check(sort==null||sort instanceof EnumValue&&((EnumValue)sort).type().equals("com.threerings.projectx.auction.data.Search$Sort"),"Invalid auction sort");
+        return new AuctionSearch(featured,(EnumValue)group,configs==null?null:java.util.Set.copyOf(configs),sort==null?0:((EnumValue)sort).ordinal(),present(in),present(in));
+    }
     private SessionDecoder.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
         String name=intern(in);
         return new SessionDecoder.ConfigReference(name,argumentMap(in,depth));

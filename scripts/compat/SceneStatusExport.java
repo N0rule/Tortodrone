@@ -72,7 +72,7 @@ public final class SceneStatusExport {
     }
 
     /** Serializes only fields declared by the native status implementation hierarchy. */
-    private static String statusData(StatusConditionConfig config) throws Exception {
+    static String statusData(StatusConditionConfig config) throws Exception {
         List<FireCatalog.FieldValue> fields = new ArrayList<>();
         for (Class<?> type = config.getClass(); type != null && type != StatusConditionConfig.class;
              type = type.getSuperclass()) {

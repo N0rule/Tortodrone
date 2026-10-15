@@ -1,6 +1,6 @@
 # Content and default resources
 
-**Current format (v0.30.1):** versioned content packs selected through `data/server.properties`. The shipped `vanilla` pack contains the checked-in scenes and catalogs; explicitly enabled custom packs may add or replace complete resources under declared dependency/override rules. Older `defaults/` and top-level resource layouts remain available through read-only legacy compatibility when no versioned pack is selected.
+**Current format (v0.31.0):** versioned content packs selected through `data/server.properties`. The shipped `vanilla` pack contains the checked-in scenes and catalogs; explicitly enabled custom packs may add or replace complete resources under declared dependency/override rules. Older `defaults/` and top-level resource layouts remain available through read-only legacy compatibility when no versioned pack is selected.
 
 ## What ships today
 
@@ -15,7 +15,7 @@ content/packs/vanilla/combat/{weapons.tsv,equipment.tsv,fires.json}
 content/custom/packs/<id>/pack.properties
 ```
 
-The seven stock scenes are Haven (1), Bazaar (2), Arcade (3), Garrison (445), Advanced Training (294), Laboratory (30893) and the four-star Hall of Heroes (318). Captured stock layouts from October 2026 support twelve directed town portals plus six interior travel links. Training includes prepared actors, collisions and limited interactive mechanics; the other interiors remain more limited. None of this constitutes general dungeon/mission support. See [modern captures](modern-captures.md) and [Training Hall evidence](training-hall.md).
+The seven stock scenes are Haven (1), Bazaar (2), Arcade (3), Garrison (445), Advanced Training (294), Laboratory (30893) and the four-star Hall of Heroes (318). Captured stock layouts from October 2026 support twelve directed town portals plus six interior travel links. Training includes prepared actors, collisions and limited interactive mechanics; town layouts and the two town interiors also have prepared actors, station bindings and supported conversation graphs. None of this constitutes general dungeon/mission support. See [modern captures](modern-captures.md) and [Training Hall evidence](training-hall.md).
 
 `data/server.properties` uses `content-packs=vanilla` and `legacy-content=auto` by default. It lists enabled pack IDs (`vanilla` by default) and the legacy policy. The vanilla pack is at `content/packs/vanilla/`; other selected packs are at `content/custom/packs/<id>/`. Each pack declares a version, resource paths and SHA-256 digests in `pack.properties`. A resource is a complete catalog or scene directory. A custom pack can override an existing resource only when it declares the exact dependency/version and override owner. Packs are resolved and validated as one snapshot before the server opens persistent account/key state; unknown properties, unsafe paths, bad hashes, missing references, incompatible dependencies and undeclared overrides fail startup.
 
@@ -56,12 +56,25 @@ Maintainer stock extraction and captured-layout re-exports are separate source-m
 - To customize definitions, create or select a complete pack under `content/custom/packs/` and declare its resources, hashes, dependencies and overrides in `pack.properties`. Restart after changing content. For raw stock extraction, use `java scripts/StockTools.java items|weapons|equipment|fires ...` with command-specific help/code; outputs are not automatically installed.
 - The stock client retains meshes, textures, audio, UI and named configs; these are **not bundled** as server assets. Server configs reference stock-compatible identities.
 
+## Town gameplay
+
+The optional `resource.town=town/catalog.json` resource supplies archive-derived recipe costs/ingredients, crafting variant tables, sprite progression references, accessory rules and available merchant catalogues. Scene `content.properties` binds those rules to current layouts. Runtime support includes atomic recipe learning/crafting, normal and catalogue alchemy (including sprite food and supplied special recipes), sprite hatching/care/skill allocation/perks, harness-kit installation and equipment, equipped sprite replication, accessory attachment/removal, unbinding, merchant purchases/sales, town destination commands, and auction escrow/bidding/buyouts/cancellation/watch lists with persistent attachment mail. Health, movement/attack speed and charge bonuses have server mappings; full sprite combat, other variant/perk effects, general quest/event/guild building scripts and missing source catalogues remain incomplete. Empty or stripped source stock is not replaced with invented goods or rewards. No claim of complete Town parity is made.
+
+Town persistence uses **SQLite schema 9**. Schema 8 is rejected without modifying it. With the old server stopped, export an explicit upgrade candidate using the new JAR:
+
+```sh
+java --enable-native-access=ALL-UNNAMED -cp build/tortodrone.jar \
+  org.tortodrone.storage.TownUpgrade /path/to/old/data /tmp/tortodrone-schema9-candidate
+```
+
+The candidate directory must be new. The tool locks the stopped source deployment, copies a consistent SQLite snapshot and upgrades only the candidate database. Review/back up the deployment before installing that candidate; keys and other deployment files are untouched. Existing content packs without the Town resource still load with their previous limited functionality. Stock-reader checks cover Town messages; graphical gameplay remains unverified.
+
 ## Checksums and update behavior
 
 `content/packs/vanilla/pack.properties` pins each whole resource with SHA-256 digests. Preparation tools verify checked-in source manifests, fill missing output files and upgrade only destination files recognized as earlier published versions; owner-modified destination bytes are preserved. Changing a source resource requires updating its manifest digest and, for changed map geometry, matching collision/portal data. Custom packs have their own independent manifests.
 
 Beware: owner modifications preserved by preparation may still fail runtime validation if only one matching file was edited. Do not merge geometry without matching metadata. The server may start with login/admin but reject world entry when scene loading fails.
 
-Content packs provide external definitions; they do not add mechanics to the Java engine. The current implementation supports complete scene/catalog resources and their declared selection/dependency/override rules. It does not provide hot reload, partial-file overlays, arbitrary dungeon behavior, missions, shops or general NPC/monster mechanics. Persistent accounts, ownership and progression remain in `data/`, separate from replaceable content.
+Content packs provide external definitions; they do not add mechanics to the Java engine. The current implementation supports complete scene/catalog resources and their declared selection/dependency/override rules. It does not provide hot reload, partial-file overlays, arbitrary dungeon behavior, general missions or general NPC/monster scripts. Persistent accounts, ownership and progression remain in `data/`, separate from replaceable content.
 
 Builds and startup generate `data/server.properties` from bundled defaults when it is missing. Content validation reads the settings without creating files, and no separate config or diagnostic cache directory is needed. Pack hashes remain in `pack.properties`. Existing settings are preserved; missing options use the bundled defaults.

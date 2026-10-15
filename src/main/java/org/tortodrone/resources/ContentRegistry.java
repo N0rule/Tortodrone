@@ -18,6 +18,8 @@ public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, 
     }
     public SceneRegistry createScenes() {
         var registry=new SceneRegistry(scenes);
+        if(resources.containsKey("town"))try{registry.town(org.tortodrone.town.TownCatalog.load(resources.get("town").path()));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid Town content",invalid);}
+        if(resources.containsKey("pet-fires"))try{registry.petFires(FireCatalog.load(resources.get("pet-fires").path()));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid pet attacks",invalid);}
         registry.weapons(weapons);registry.equipment(equipment);registry.fires(fires);
         return registry;
     }

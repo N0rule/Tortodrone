@@ -17,6 +17,9 @@ public record ProjectileState(String nativeType,StarterCatalog.Model config,int 
         return switch(nativeType) {
             case "BULLET" -> "Bullet";
             case "BOMB" -> "Bomb";
+            case "LASER" -> "Laser";
+            case "ORBITAL" -> "Orbital";
+            case "ACTOR" -> "Actor";
             case "ORBITAL_BULLET" -> "OrbitalBullet";
             case "COMPOUND_ORBITAL_BULLET" -> "CompoundOrbitalBullet";
             default -> throw new IllegalArgumentException("Unsupported projectile actor: "+nativeType);

@@ -13,6 +13,9 @@ public final class SceneWeapons {
         default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
         default boolean monsters(Object region,float x,float y,float rotation){return false;}
     }
+    public record PetAction(FireCatalog.Kind kind,org.tortodrone.character.StarterCatalog.Model config,int owner,int timestamp) { }
+    private java.util.function.Consumer<PetAction> petActions=ignored->{};
+    public void petActions(java.util.function.Consumer<PetAction> sink){petActions=Objects.requireNonNull(sink);}
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
@@ -29,7 +32,7 @@ public final class SceneWeapons {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
         final int[] timers;float x,y,relativeX,relativeY;int advanced;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
         Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];}
-        ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),0,relativeX,relativeY,collided,rotation,source.ownerId);
+        ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),spec.nativeType().equals("ORBITAL")?source.ownerId:0,relativeX,relativeY,collided,rotation,source.ownerId);
             // Native _z is the source's floor elevation, not the authored bullet
             // height. Knights have no explicit Z; their client resolves the floor.
             var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,ProjectileState.UNSPECIFIED_Z,spec.speed(),spec.maxStep(),source.ownerId,fizzle,orbit);
@@ -53,7 +56,10 @@ public final class SceneWeapons {
     public SceneWeapons(CollisionMap terrain){this.terrain=Objects.requireNonNull(terrain);}
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
     public void attack(int owner,KnightCombat.AttackStart start){
-        var attack=catalog.find(start.config(),start.activity());if(attack==null)return;
+        var attack=catalog.find(start.config(),start.activity());attack(owner,start,attack);
+    }
+    public void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack){
+        if(attack==null)return;
         var list=runs.computeIfAbsent(owner,k->new ArrayList<>());
         if(list.size()<MAX_RUNS)list.add(new Run(start,attack));
     }
@@ -70,7 +76,7 @@ public final class SceneWeapons {
         var owners=new HashMap<Integer,ActorState>();for(var player:players)owners.put(player.id(),player);
         currentOwners=owners;
         for(var iterator=runs.entrySet().iterator();iterator.hasNext();){var e=iterator.next();var actor=owners.get(e.getKey());if(actor==null){iterator.remove();continue;}
-            var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.id(),actor.clientOid());
+            var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),actor.clientOid(),null,actor.id());
             e.getValue().removeIf(run->{
                 int cutoff=run.start.started()+run.start.clear();
                 if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
@@ -121,9 +127,13 @@ public final class SceneWeapons {
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
     }
-    private Pose shotPose(Shot shot){return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shot.spec.collisionShape(),shot.id);}
+    private Pose shotPose(Shot shot){Object shape=shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id);}
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
+        if(shot.spec.nativeType().equals("ORBITAL")){
+            if(home==null){destroy(shot,end,true);return;}var orbit=shot.spec.orbit();float angle=orbit.startingRotation()+spin(end-shot.created,orbit.angularSpeed(),false);
+            shot.relativeX=orbit.radius()*(float)Math.cos(angle);shot.relativeY=orbit.radius()*(float)Math.sin(angle);shot.x=home.x()+shot.relativeX;shot.y=home.y()+shot.relativeY;shot.advanced=end;return;
+        }
         if(shot.spec.nativeType().equals("BULLET")){
             int from=shot.advanced;float distance=shot.spec.speed()*(end-from)/1000f;
             int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
@@ -184,6 +194,8 @@ public final class SceneWeapons {
         if(action.kind()==FireCatalog.Kind.RANDOM_EQUAL){return action.children().isEmpty()||execute(action.children().get(java.util.concurrent.ThreadLocalRandom.current().nextInt(action.children().size())),source,stamp,depth+1,seed);}
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
+        if(action.kind()==FireCatalog.Kind.FAIL)return false;
+        if(action.kind()==FireCatalog.Kind.APPLY_STATUS||action.kind()==FireCatalog.Kind.START_SPRITE_SHIELD||action.kind()==FireCatalog.Kind.END_SPRITE_SHIELD){petActions.accept(new PetAction(action.kind(),action.config(),source.ownerId,stamp));return true;}
         if(!sourceTarget(action.targetType()))return false;
         if(action.kind()==FireCatalog.Kind.DESTROY_SOURCE){var shot=shots.get(source.actorId);if(shot==null)return false;destroy(shot,stamp,false);return true;}
         if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
@@ -220,8 +232,17 @@ public final class SceneWeapons {
             if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
             while(shots.containsKey(nextId))nextId++;
             var shot=new Shot(nextId++,spec,source,stamp,x,y,rotation);
-            if(clear(spec,x,y,x+ox,y+oy,rotation)){shot.x+=ox;shot.y+=oy;}
-            shots.put(shot.id,shot);result=true;
+            shots.put(shot.id,shot);
+            // A muzzle offset is movement too. Sweeping it prevents a bullet from
+            // starting beyond a monster standing between the knight and the muzzle.
+            int muzzleSteps=Math.max(1,(int)Math.ceil(Math.hypot(ox,oy)/.05f));
+            for(int step=1;step<=muzzleSteps;step++){
+                float px=x+ox*step/muzzleSteps,py=y+oy*step/muzzleSteps;
+                if(!clear(spec,shot.x,shot.y,px,py,rotation)){destroy(shot,stamp,false);break;}
+                shot.x=px;shot.y=py;
+                if(spec.nativeType().equals("BULLET")&&spec.collisionMask()!=0&&targets!=null&&targets.contact(px,py,rotation,source.ownerId,spec.collisionShape(),spec.collisionMask())){destroy(shot,stamp,false);break;}
+            }
+            result=true;
         }return result;
     }
     private static boolean nonTargetAction(String type){return type.endsWith("$DamageRegionFromPoint")||type.endsWith("$ApplyStatus")||type.endsWith("$ImpartImpulse");}
@@ -235,6 +256,12 @@ public final class SceneWeapons {
             return type.equals("All");
         }
         if(type.equals("Not")){Boolean result=condition(SceneDamage.field(raw,"condition"),source,stamp,depth+1);return result==null?null:!result;}
+        if(type.equals("FlagSet")){
+            var shot=shots.get(source.actorId);if(shot==null)return null;
+            Object flag=SceneDamage.field(raw,"flagName");
+            Boolean set="FIZZLE".equals(flag)?shot.fizzle:"RETURNING".equals(flag)?shot.returning:null;
+            return set==null?null:set==!Boolean.FALSE.equals(SceneDamage.field(raw,"set"));
+        }
         if(type.equals("Cooldown")){
             var deadlines=cooldowns.computeIfAbsent(source.ownerId,id->new IdentityHashMap<>());
             if(stamp<deadlines.getOrDefault(raw,Integer.MIN_VALUE))return false;

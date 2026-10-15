@@ -19,6 +19,8 @@ public final class SceneStatus {
         Active(StarterCatalog.Model reference,SceneContent.Spec spec,Object data,float strength,int stamp,boolean monster){
             this.reference=reference;this.spec=spec;this.data=data;this.strength=strength;started=nextTick=nextShock=stamp;
             float duration=lerp(spec.number("min-duration",0),spec.number("max-duration",0),strength);
+            Object override=reference.arguments().get("Duration");if(override instanceof Number n)duration=n.floatValue();
+            else if(override instanceof String value)try{duration=Float.parseFloat(value);}catch(NumberFormatException ignored){}
             expires=stamp+(int)(duration*(monster?spec.number("monster-duration-multiplier",1):1));
         }
     }
@@ -48,13 +50,27 @@ public final class SceneStatus {
         shieldCooloff.put(flags,stamp+1000);
         return (int)Math.ceil(relativePower(power,0)*content.scales().getOrDefault(model.name(),0f));
     }
+    public void applyResolved(StarterCatalog.Model reference,Object data,int stamp){
+        if(!(data instanceof FireCatalog.DataValue value))return;
+        String kind=value.type().substring(value.type().lastIndexOf('$')+1);
+        var fields=new HashMap<String,String>();fields.put("class",kind);
+        fields.put("min-duration",Float.toString(SceneDamage.number(data,"minDuration",SceneDamage.number(data,"duration",0))));
+        fields.put("max-duration",Float.toString(SceneDamage.number(data,"maxDuration",SceneDamage.number(data,"duration",0))));
+        fields.put("monster-duration-multiplier",Float.toString(SceneDamage.number(data,"monsterDurationMultiplier",1)));
+        var spec=new SceneContent.Spec(fields);
+        float chance=reference.arguments().get("Chance") instanceof Number n?n.floatValue():SceneDamage.number(data,"chance",1);
+        if(Math.random()>=chance)return;
+        active.put(kind,new Active(reference,spec,data,1,stamp,monster));
+    }
+    public boolean cloaked(){return active.containsKey("Cloak");}
+    public void breakCloak(){active.remove("Cloak");}
     public void apply(Object damage,int stamp){
         if(!(damage instanceof FireCatalog.DataValue value))return;
         if(value.type().endsWith("$Compound")){
             if(SceneDamage.field(damage,"damages") instanceof FireCatalog.ListValue list)for(Object child:list.values())apply(child,stamp);return;
         }
         if(!value.type().endsWith("$Status")||!(SceneDamage.field(damage,"statusCondition") instanceof StarterCatalog.Model reference))return;
-        apply(reference,stamp,0);
+        if(SceneDamage.field(damage,"statusData") instanceof FireCatalog.DataValue data)applyResolved(reference,data,stamp);else apply(reference,stamp,0);
     }
     private void apply(StarterCatalog.Model reference,int stamp,int depth){
         if(depth>8)return;var spec=content.statuses().get(reference.name());if(spec==null)return;
@@ -85,6 +101,7 @@ public final class SceneStatus {
         for(var entry:active.entrySet()){
             var a=entry.getValue();refs.add(a.reference);expires.add(a.expires);
             switch(entry.getKey()){
+                case "Buff" -> {speed*=1+buff(a,"Speed Modifier","speedModifier");attackSpeed*=1+buff(a,"Attack Speed Modifier","attackSpeedModifier");attackDamage*=1+buff(a,"Damage Modifier","damageModifier");defense*=1+buff(a,"Defense Modifier","defenseModifier");}
                 case "Stun" -> {float modifier=1-parameter(a,"minSpeedReduction","maxSpeedReduction");speed*=modifier;attackSpeed*=modifier;}
                 case "Poison" -> {attackDamage*=1-parameter(a,"minAttackReduction","maxAttackReduction");defense*=1-parameter(a,"minDefenseReduction","maxDefenseReduction");heal*=monster?parameter(a,"minHealModifier","maxHealModifier"):0;}
                 case "Freeze" -> {move=false;rotate=false;}
@@ -111,6 +128,7 @@ public final class SceneStatus {
             }
         }
     }
+    private static float buff(Active a,String argument,String field){Object value=a.reference.arguments().get(argument);return value instanceof Number n?n.floatValue():SceneDamage.number(a.data,field,0);}
     private float scale(Active a,String field){Object value=SceneDamage.field(a.data,field);return value instanceof StarterCatalog.Model model?content.scales().getOrDefault(model.name(),0f):0;}
     private static float parameter(Active a,String min,String max){return lerp(SceneDamage.number(a.data,min,0),SceneDamage.number(a.data,max,0),a.strength);}
     private static float lerp(float min,float max,float t){return min+(max-min)*t;}

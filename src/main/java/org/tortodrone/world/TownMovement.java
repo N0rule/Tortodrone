@@ -225,6 +225,7 @@ public final class TownMovement {
     public float rotation() { return rotation; }
     public float direction() { return direction; }
     public int flags() { return flags; }
+    public int inputFlags(){return inputFlags;}
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
     private void setActivity(int value, int started) {

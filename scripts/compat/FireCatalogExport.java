@@ -67,12 +67,13 @@ public final class FireCatalogExport {
         if(defense!=null)entries.add(new AttackFire(name,284,new StarterCatalog.Model("ShieldDefense",Map.of("rarity",shield.rarity)),1,List.of(
             new FireRef(new StarterCatalog.Model("ShieldDefense",Map.of()),shield.actionDelay,0,false,0,0,0,readAction(manager,defense),null))));
     }
-    private static void addAttack(ConfigManager manager, String weapon, int activity,
+    static void addAttack(ConfigManager manager, String weapon, int activity,
             ConfigReference<AttackConfig> reference, List<AttackFire> entries) throws Exception {
         if (reference == null) return;
         AttackConfig.Original attack = AttackConfig.b(manager, reference);
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
+        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qh());metadata.put("clear",attack.Qf());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
         var refs = new ArrayList<FireRef>();
         if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
             &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
@@ -118,6 +119,19 @@ public final class FireCatalogExport {
     static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
         if (action == null) return null;
         actionCount++;
+        if(action.getClass().getSimpleName().equals("DestroyActor"))return destroySource();
+        if(action instanceof ActionConfig.Fail)return new Action(Kind.FAIL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
+        if(action instanceof DungeonActionConfig.ApplyStatus status){
+            if(status.condition==null)return noop();
+            var values=new TreeMap<String,Object>();values.put("reference",model(status.condition));
+            if(status.condition!=null){var resolved=manager.a(StatusConditionConfig.class,status.condition);if(resolved!=null)values.put("data",FireCatalog.modelJson(SceneStatusExport.statusData(resolved)).arguments().get("data"));}
+            return new Action(Kind.APPLY_STATUS,new StarterCatalog.Model("Status",values),null,target(status.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.StartSpriteShield shield){
+            var scale=manager.a(DepthScaleConfig.class,shield.healthScale);var values=new TreeMap<String,Object>();values.put("health",scale==null?0:scale.a(manager,0,0,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM));values.put("power",shield.power);values.put("defense",argumentValue(shield.defense));
+            return new Action(Kind.START_SPRITE_SHIELD,new StarterCatalog.Model("SpriteShield",values),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.EndSpriteShield)return new Action(Kind.END_SPRITE_SHIELD,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         if(action instanceof ActionConfig.Conditional conditional){
             return new Action(Kind.CONDITIONAL,new StarterCatalog.Model("Condition",Map.of("condition",argumentValue(conditional.condition))),null,"Source","","",0,0,0,0,true,0,0,0,0,false,
                 List.of(conditional.action==null?noop():readAction(manager,conditional.action),conditional.elseAction==null?noop():readAction(manager,conditional.elseAction)),"");
@@ -132,6 +146,10 @@ public final class FireCatalogExport {
         if (action instanceof DungeonActionConfig.FirePrefired firePrefired) {
             return new Action(Kind.FIRE_EFFECT, model(firePrefired.effect), null, target(firePrefired.location), "", "",
                 0,0,0,0,false,0,0,0,0,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.DamageTargetFromPoint damage){
+            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));data.put("region",argumentValue(new RegionConfig.Default()));data.put("impulse",argumentValue(damage.impulseDealt));
+            return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageTarget",data),null,"Source","","",0,0,0,0,true,0,0,0,damage.collisionMask,false,List.of(),"");
         }
         if(action instanceof DungeonActionConfig.DamageRegionFromPoint damage){
             var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));
@@ -310,6 +328,12 @@ public final class FireCatalogExport {
             fields.add(new FieldValue("damages",DamageConfig[].class.getName(),new ListValue(DamageConfig.class.getName(),children)));
             return new DataValue(DamageConfig.Compound.class.getName(),fields);
         }
+        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null){
+            var fields=new ArrayList<FieldValue>(((DataValue)argumentValue(damage)).fields());
+            var config=manager.a(StatusConditionConfig.class,status.statusCondition);
+            if(config!=null)fields.add(new FieldValue("statusData","java.lang.Object",FireCatalog.modelJson(SceneStatusExport.statusData(config)).arguments().get("data")));
+            return new DataValue(damage.getClass().getName(),fields);
+        }
         if(!(damage instanceof DamageConfig.DepthScale scaled))return argumentValue(damage);
         var config=manager.a(DepthScaleConfig.class,scaled.depthScale);if(config==null)throw new IOException("Unresolved damage scale "+scaled.depthScale);
         float amount=config.a(manager,0,damageRarity,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM);
@@ -336,6 +360,9 @@ public final class FireCatalogExport {
         else if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$OrbitalBullet")) {
             type = "ORBITAL_BULLET"; orbit = orbital(actor, false); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
         }
+        else if(actor instanceof DungeonActorConfig.Orbital o){type="ORBITAL";fuse=600000;speed=o.speed;height=o.height;orbit=new OrbitSpec(o.orbitRadius,o.speed,o.startingRotation,0,0,600000,o.follow.name(),false,null,null,null);}
+        else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
+        else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
         else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
@@ -393,6 +420,23 @@ public final class FireCatalogExport {
             }
             detonation=new Action(detonation.kind(),detonation.config(),detonation.actor(),detonation.targetType(),detonation.facingType(),detonation.collisionSourceType(),detonation.x(),detonation.y(),detonation.rotation(),detonation.rotationVariance(),detonation.relative(),detonation.count(),detonation.stepSize(),detonation.steps(),detonation.collisionMask(),detonation.stopOnFailure(),children,detonation.unsupportedType(),detonation.parameter(),detonation.values());
         }
+        if(refName.startsWith("Bullet/Pet/")){
+            if(actor instanceof DungeonActorConfig.Laser laser){
+                var action=readAction(manager,laser.damageAction);int interval=Math.max(1,laser.damageInterval),limit=Math.max(1,Math.min(128,(fuse-laser.warmup+interval-1)/interval));
+                timers.add(new ActorTimer(laser.warmup,interval,limit,action,null));
+            }
+            for(var handler:actor.handlers){
+                if(handler instanceof HandlerConfig.Startup start){var a=readAction(manager,start.action);if(a!=null)timers.add(new ActorTimer(0,0,1,a,null));}
+                if(handler instanceof HandlerConfig.Timer timer){
+                    var a=readAction(manager,timer.action);if(a==null)continue;
+                    int interval=Math.max(1,(int)(timer.interval*1000)),delay=Math.max(0,interval+(int)(timer.offset*1000));
+                    if(a.kind()==Kind.DESTROY_SOURCE){fuse=Math.min(fuse,delay);continue;}
+                    timers.add(new ActorTimer(delay,interval,Math.min(128,timer.limit==0?128:timer.limit),a,null));
+                }
+            }
+        }
+        if(type.equals("ORBITAL")&&reference.kW().get("Duration") instanceof Number duration)fuse=Math.max(1,(int)(duration.floatValue()*1000));
+        if(type.equals("ACTOR")&&!timers.isEmpty())fuse=timers.stream().filter(t->t.action().kind()!=Kind.COMPOUND||!t.action().children().isEmpty()).mapToInt(t->t.delay()+t.interval()*(t.limit()-1)+1).max().orElse(1);
         detonation=restoreDamageShape(manager,reference,detonation);
         return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
             shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""));
@@ -430,7 +474,7 @@ public final class FireCatalogExport {
         }
         return action;
     }
-    private static boolean isProjectile(String type) { return type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
+    private static boolean isProjectile(String type) { return type.equals("ORBITAL") || type.equals("LASER") || type.equals("ACTOR") || type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
     private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }
     private static OrbitSpec orbital(Object config,boolean compound)throws IOException {
         Object follow=field(config,"follow");

@@ -12,6 +12,8 @@
 build/
 .build/
 .gradle/
+__pycache__/
+*.pyc
 
 # Local deployment state and enabled operator packs
 /data/

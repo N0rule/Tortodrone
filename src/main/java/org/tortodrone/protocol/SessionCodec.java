@@ -41,7 +41,9 @@ public final class SessionCodec {
         "com.threerings.projectx.uplink.data.UplinkMarshaller",
         "com.threerings.projectx.social.data.FeedMarshaller",
         "com.threerings.projectx.social.data.SocialMarshaller",
-        "com.threerings.projectx.admin.data.ProjectXAdminMarshaller");
+        "com.threerings.projectx.admin.data.ProjectXAdminMarshaller",
+        "com.threerings.projectx.sprites.data.BattleSpriteMarshaller",
+        "com.threerings.projectx.auction.data.AuctionMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int INTERIOR_TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -175,7 +177,7 @@ public final class SessionCodec {
                 for(int i=0;i<5;i++)out.writeInt(0);
                 emptyObjectArray(out,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
             } else emptyDSet(out);
-            out.writeInt(0); out.writeInt(0); out.writeFloat(0); // mail fees, auction fee
+            out.writeInt(0); out.writeInt(0); out.writeFloat(.1f); // mail fees, recovered auction sale fee
             out.writeLong(0); string(out, null); emptyCollection(out); // reboot, disabled achievements
             out.writeFloat(0); emptyCollection(out); emptyCollection(out); // surveys, missions, scope vars
             out.writeBoolean(false); out.writeBoolean(false); emptyCollection(out); // love, uploads, events
@@ -331,7 +333,7 @@ public final class SessionCodec {
                 for(var entry:equipped.entrySet()){value(out,entry.getKey());item(out,knight,profile.worldId(),entry.getValue());}
                 out.writeBoolean(false);
             }
-            out.writeShort(0);emptyDSet(out); // No battle sprite or earned achievements in current persisted state.
+            var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);if(sprite==null)out.writeShort(0);else sprite(out,profile,sprite);emptyDSet(out);
         });
     }
 
@@ -350,6 +352,7 @@ public final class SessionCodec {
     void value(DataOutputStream out,Object value) throws IOException {
         if (value == null || value==FireCatalog.NullValue.INSTANCE) { out.writeShort(0);
         } else if (value instanceof Long number) { type(out,"java.lang.Long"); out.writeLong(number);
+        } else if (value instanceof SessionDecoder.EnumValue e) {type(out,e.type());out.writeByte(e.ordinal());
         } else if (value instanceof Boolean flag) { type(out,"java.lang.Boolean"); out.writeBoolean(flag);
         } else if (value instanceof StarterCatalog.Model model) {
             type(out,"com.threerings.config.ConfigReference"); intern(out,model.name());
@@ -495,6 +498,87 @@ public final class SessionCodec {
                 type(o,"[Lcom.threerings.util.Name;");o.writeInt(2);name(o,view.first.name());name(o,view.second.name());o.writeInt(view.oid);
             });});
     }
+    public static final int CRAFT_SERVICE=22, UNBIND_SERVICE=23, ACCESSORY_SERVICE=24, VARIANT_SERVICE=25;
+    public byte[] townDialog(int playerOid,int sceneOid,org.tortodrone.town.TownCatalog.Station station,ActorState source,long created,int service)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
+            attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
+            attribute(out,playerOid,"sceneDialog",o->{
+                if(station==null){o.writeShort(0);return;}
+                String kind=station.kind();
+                if(kind.equals("OpenAuction")){type(o,"com.threerings.projectx.auction.data.AuctionDialogInfo");if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}o.writeShort(0);o.writeShort(0);return;}
+                if(kind.equals("OpenShop")){
+                    type(o,"com.threerings.projectx.shop.data.ShopDialogInfo");
+                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                    o.writeShort(0);o.writeShort(0);value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
+                    o.writeInt(station.shop().level());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.data.ShopDialogInfo$Type",station.type().equals("ENERGY")?1:station.type().equals("TOKEN")?2:0));
+                    int preparer=List.of("BASIC","GREMLIN","LOCKED","LOCK_NON_STACKABLE","DEPOT","STATUE").indexOf(station.shop().preparer());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.util.ItemPreparer",Math.max(0,preparer)));o.writeBoolean(station.shop().perKnight());
+                    type(o,"com.threerings.projectx.shop.data.ShopMarshaller");o.writeInt(sceneOid);o.writeInt(service);return;
+                }
+                String dialog=kind.equals("OpenUnbinder")?"UnbindDialogInfo":kind.equals("OpenAccessorizer")?"AccessoryDialogInfo":kind.equals("OpenVariantMaker")?"VariantMakerDialogInfo":"CrafterDialogInfo";
+                type(o,"com.threerings.projectx.craft.data."+dialog);
+                if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                o.writeShort(0);o.writeShort(0);
+                value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
+                if(dialog.equals("CrafterDialogInfo")){
+                    type(o,"com.threerings.projectx.craft.data.CrafterDialogInfo$CrafterGroup");o.writeByte(station.group().equals("SPRITE")?1:0);
+                    string(o,station.type().isEmpty()?null:station.type());o.writeShort(0);
+                    type(o,"com.threerings.projectx.craft.data.CraftMarshaller");o.writeInt(sceneOid);o.writeInt(service);
+                    if(station.recipes().isEmpty())o.writeShort(0);else{type(o,"[Lcom.threerings.projectx.craft.config.RecipeConfig$RecipeConfigReference;");o.writeInt(station.recipes().size());for(String recipe:station.recipes()){type(o,"com.threerings.projectx.craft.config.RecipeConfig$RecipeConfigReference");value(o,new StarterCatalog.Model(recipe,Map.of()));}}
+                    o.writeShort(0);
+                }else{String marshaller=dialog.equals("UnbindDialogInfo")?"UnbindMarshaller":dialog.equals("AccessoryDialogInfo")?"AccessoryMarshaller":"VariantMarshaller";type(o,"com.threerings.projectx.craft.data."+marshaller);o.writeInt(sceneOid);o.writeInt(service);}
+            });});
+    }
+    public byte[] townShop(int oid,List<org.tortodrone.town.TownCatalog.Good> goods,List<Integer> available)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"uniqueDialog");type(out,"com.threerings.projectx.shop.data.UniqueShopInfo");out.writeBoolean(true);out.writeInt(goods.size());
+            for(int i=0;i<goods.size();i++){var good=goods.get(i);type(out,"com.threerings.projectx.shop.data.UniqueShopInfo$GoodCount");type(out,"com.threerings.projectx.shop.config.GoodConfig$"+(good.token().isEmpty()?"Item":"TokenItem"));out.writeInt(good.price());out.writeInt(good.energy());out.writeInt(0);out.writeBoolean(false);out.writeInt(good.count());out.writeInt(good.limit());value(out,new StarterCatalog.Model(good.item(),Map.of()));if(!good.token().isEmpty()){value(out,new StarterCatalog.Model(good.token(),Map.of()));out.writeInt(good.tokenCount());}out.writeInt(available.get(i));}
+        });
+    }
+
+    public byte[] townState(int oid,WorldProfile profile)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(5);
+            attribute(out,oid,"newMailInfo",o->{type(o,"com.threerings.presents.dobj.DSet");var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o," 7");value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",3));}});
+            attribute(out,oid,"recipes",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().recipes().size());for(var recipe:profile.town().recipes()){type(o,"com.threerings.projectx.craft.data.Recipe");o.writeBoolean(true);o.writeLong(recipe.id());string(o,recipe.config());}});
+            attribute(out,oid,"harnesses",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().harnesses().size());for(var h:profile.town().harnesses())harness(o,h);});
+            attribute(out,oid,"sprites",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().sprites().size());for(var sprite:profile.town().sprites())sprite(o,profile,sprite);});
+            attribute(out,oid,"equippedSprite",o->value(o,profile.town().equippedSprite()));});
+    }
+    private void harness(DataOutputStream out,org.tortodrone.town.TownState.Harness h)throws IOException {type(out,"com.threerings.projectx.sprites.data.Harness");out.writeBoolean(true);out.writeLong(h.id());value(out,new StarterCatalog.Model(h.config(),Map.of()));}
+    private void sprite(DataOutputStream out,WorldProfile owner,org.tortodrone.town.TownState.Sprite s)throws IOException {
+        var h=owner.town().harnesses().stream().filter(v->v.id()==s.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));sprite(out,owner.worldId(),s,h);
+    }
+    private void sprite(DataOutputStream out,int worldId,org.tortodrone.town.TownState.Sprite s,org.tortodrone.town.TownState.Harness h)throws IOException {
+        type(out,"com.threerings.projectx.sprites.data.BattleSprite");string(out,s.name());out.writeFloat(s.heat());out.writeBoolean(s.lastFull()!=null);if(s.lastFull()!=null)out.writeLong(s.lastFull());out.writeInt(s.level());out.writeLong(s.fullStamp());
+        out.writeBoolean(true);out.writeInt(3);for(int skill=0;skill<3;skill++){type(out,"com.threerings.projectx.sprites.data.BattleSprite$SkillBonus");primitiveInts(out,new int[]{s.powers().get(skill*3),s.powers().get(skill*3+1),s.powers().get(skill*3+2)});value(out,new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate",s.ultimates().get(skill)));}
+        out.writeInt(s.perkLevel());out.writeBoolean(true);out.writeInt(s.perks().size());for(int perk:s.perks().stream().sorted().toList())value(out,new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",perk));
+        value(out,s.perk()==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",s.perk()));out.writeInt(s.id());out.writeInt(worldId);out.writeUTF(s.config());harness(out,h==null?new org.tortodrone.town.TownState.Harness(0,"Iron Harness"):h);
+    }
+    public byte[] townResult(int oid,short request,Object result,WorldProfile profile)throws IOException {
+        listingViewer=profile.worldId();
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);
+            if(result instanceof org.tortodrone.town.TownState.Sprite s)sprite(out,profile,s);else townValue(out,result);});
+    }
+
+    private void townValue(DataOutputStream out,Object value)throws IOException {
+        if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
+        else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
+        else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
+        else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}
+        else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out," 7");out.writeLong(m.sent());string(out,m.subject());string(out,m.body());
+            if(m.claimed()||m.item()==null&&m.crowns()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
+                out.writeBoolean(m.item()!=null);if(m.item()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(m.item().config(),Map.of()));out.writeInt(m.item().count());}out.writeInt(m.crowns());out.writeInt(0);}
+            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",3));out.writeByte(m.read()?0:1);
+        }else value(out,value);
+    }
+    private void listing(DataOutputStream out,org.tortodrone.town.AuctionState.Listing a)throws IOException{
+        type(out,"com.threerings.projectx.auction.data.ListingInfo");out.writeLong(a.id());int status=a.bidder()==0?0:a.participated()?(a.mine()?1:3):1;
+        // The caller's winning status is carried explicitly by the view, separate from seller ownership.
+        if(a.participated()&&a.bidder()!=0&&!a.mine())status=a.bidder()==listingViewer?2:3;else if(!a.participated()&&a.watching())status=4;
+        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
+        long hours=(a.expires()-System.currentTimeMillis())/3600000;int time=a.cancelled()?6:a.ended()||a.expires()<=System.currentTimeMillis()?5:hours<1?0:hours<4?1:hours<12?2:hours<48?3:4;
+        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());out.writeShort(0);
+    }
+    private int listingViewer;
+
     public byte[] conversationDialog(int playerOid,int sceneOid,org.tortodrone.world.SceneConversation conversation,
             String nodeId,ActorState source,long created)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
@@ -777,8 +861,9 @@ public final class SessionCodec {
             if(seeded)out.writeLong(definition.seed());
             boolean level=item.slot()!=WorldProfile.Slot.OTHER||definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM;
             if(level) {
-                out.writeInt(0);out.writeFloat(0);out.writeFloat(0);out.writeShort(0);
-                out.writeBoolean(item.accessory()!=null);if(item.accessory()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(item.accessory()+", "+costume,Map.of()));}
+                out.writeInt(item.level());out.writeFloat(item.heatProgress());out.writeFloat(0);
+                if(item.variants().isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.config.ConfigReference;");out.writeInt(item.variants().size());for(var variant:item.variants())value(out,variant);}
+                var accessories=item.nativeAccessories(costume);out.writeBoolean(!accessories.isEmpty());if(!accessories.isEmpty()){out.writeInt(accessories.size());for(String accessory:accessories)value(out,new StarterCatalog.Model(accessory,Map.of()));}
             }
             // Stock Item.o / LevelItem.a compare this configuration ID, not the
             // config name. A shared zero leaves the previous weapon's sprite and
@@ -802,8 +887,8 @@ public final class SessionCodec {
         int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};long[] equipment=profile.equipment();
         out.writeBoolean(true);out.writeInt(slots.length);
         for(int slot:slots)out.writeLong(equipment[slot]);
-        out.writeBoolean(false);out.writeInt(0);out.writeInt(0);out.writeLong(0);
-        out.writeShort(0);string(out,""); // no sprite perk; empty name is the stock current loadout.
+        out.writeBoolean(false);out.writeInt(0);out.writeInt(profile.town().equippedSprite());var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);out.writeLong(sprite==null?0:sprite.harness());
+        value(out,sprite==null||sprite.perk()==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",sprite.perk()));string(out,""); // no sprite perk; empty name is the stock current loadout.
     }
     private void townSummary(DataOutputStream out)throws IOException {
         var entry=SceneRegistry.system().entry().map();
@@ -816,25 +901,30 @@ public final class SessionCodec {
         var progress=actor.sceneKnight()==null?org.tortodrone.character.KnightProgress.RECRUIT:actor.sceneKnight().progress();
         type(out,"com.threerings.projectx.data.PlayerObject$Type");out.writeByte(actor.gameMaster()?2:0);out.writeInt(actor.color());out.writeShort(0);type(out,"com.threerings.projectx.data.ProjectXCodes$PrestigeRank");out.writeByte(progress.prestigeRank());out.writeInt(progress.rank());
     }
+    private void actorSprite(DataOutputStream out,ActorState actor)throws IOException{
+        var state=actor.sceneKnight();if(state==null||state.sprite()==null)out.writeShort(0);else sprite(out,actor.id(),state.sprite(),state.harness());
+    }
     private void actor(DataOutputStream out,ActorState a,boolean interior)throws IOException {
+        if(a.pet()!=null){petActor(out,a);return;}
         if(a.projectile()!=null){projectile(out,a);return;}
         if(a.entity()!=null){sceneEntity(out,a);return;}
         type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());
-        value(out,a.sceneKnight()==null?null:a.sceneKnight().activityData());interaction(out,a.interaction());string(out,null);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());out.writeShort(0);
+        value(out,a.sceneKnight()==null?null:a.sceneKnight().activityData());interaction(out,a.interaction());string(out,null);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());actorSprite(out,a);
         if(interior) {
             var combat=a.combat();
             weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());conditions(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
             out.writeInt(0);out.writeInt(0);
             out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
-            out.writeInt(0);out.writeInt(0);out.writeInt(combat==null?0:combat.nextDodge());
+            out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());out.writeInt(combat==null?0:combat.nextDodge());
             statusModifiers(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
             equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
     }
     private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline,boolean interior)throws IOException {
         // ActorDelta is final: its typed array omits a per-element type header.
+        if(a.pet()!=null){petDelta(out,a);return;}
         if(a.projectile()!=null){projectileDelta(out,a);return;}
         if(a.entity()!=null){sceneEntityDelta(out,a);return;}
         out.writeInt(a.id());type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");
@@ -844,17 +934,19 @@ public final class SessionCodec {
         // fields so that local inventory prediction cannot leak into subsequent delta baselines.
         boolean combatChanged=interior&&(a.combat()!=null||baseline!=null&&baseline.combat()!=null);
         boolean sceneData=a.sceneKnight()!=null||baseline!=null&&baseline.sceneKnight()!=null;
+        boolean spriteChanged=baseline==null||!java.util.Objects.equals(a.sceneKnight()==null?null:a.sceneKnight().sprite(),baseline.sceneKnight()==null?null:baseline.sceneKnight().sprite())||!java.util.Objects.equals(a.sceneKnight()==null?null:a.sceneKnight().harness(),baseline.sceneKnight()==null?null:baseline.sceneKnight().harness());
         int second=a.interaction()!=null||baseline!=null&&baseline.interaction()!=null?0x1d:1;
-        out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(second|(sceneData?0x42:0));
+        out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(second|(sceneData?0x42:0)|(spriteChanged?0x80:0));
         // Mutable Dungeoneer fields: weapon 16, shields 17/18, health 22/23,
         // impulse 24, chain 27/28, dodge deadline 31 and modifiers 33/34. Id/created are DeltaFinal.
-        if(interior){out.writeByte((combatChanged?0xf7:0)|(sceneData?8:0));out.writeByte(combatChanged?0x99:0);out.writeByte((combatChanged?6:0)|(sceneData?1:0));}
+        if(interior){out.writeByte((combatChanged?0xf7:0)|(sceneData?8:0));out.writeByte((combatChanged?0x99:0)|(sceneData?0x60:0));out.writeByte((combatChanged?6:0)|(sceneData?1:0));}
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
         out.writeInt(a.activity());out.writeInt(a.activityStarted());
         if(sceneData)value(out,a.sceneKnight()==null?null:a.sceneKnight().activityData());
         if(a.interaction()!=null||baseline!=null&&baseline.interaction()!=null)interaction(out,a.interaction());
         if(sceneData)out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());
+        if(spriteChanged)actorSprite(out,a);
         if(combatChanged) {
             var combat=a.combat();weapon(out,a.id(),combat);value(out,combat==null?null:combat.shield());value(out,combat==null?null:combat.shieldCostume());
         }
@@ -862,7 +954,10 @@ public final class SessionCodec {
         if(combatChanged) {
             var combat=a.combat();
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
-            out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());out.writeInt(combat==null?0:combat.nextDodge());
+            out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
+        }
+        if(interior&&sceneData){out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());}
+        if(combatChanged){var combat=a.combat();out.writeInt(combat==null?0:combat.nextDodge());
         }
         if(interior&&sceneData)statusModifiers(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
         if(combatChanged) {
@@ -881,14 +976,31 @@ public final class SessionCodec {
         type(out,"com.threerings.projectx.config.ActionDesc$"+interaction.action());
         type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(interaction.actorId());value(out,interaction.description());
     }
+    private void petActor(DataOutputStream out,ActorState a)throws IOException {
+        type(out,"com.threerings.projectx.dungeon.data.actor.SpriteActor");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);
+        vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());out.writeFloat(0);
+        petFields(out,a,false);
+    }
+    private void petFields(DataOutputStream out,ActorState a,boolean delta)throws IOException {
+        var pet=a.pet();sprite(out,pet.knight(),pet.sprite(),pet.harness());out.writeInt(pet.knight());out.writeBoolean(pet.follow());if(delta){type(out,"[I");out.writeInt(pet.nextSkill().size());for(int next:pet.nextSkill())out.writeInt(next);}else primitiveInts(out,pet.nextSkill().stream().mapToInt(Integer::intValue).toArray());
+        out.writeInt(pet.shieldHealth());out.writeInt(pet.shieldMaximum());if(delta)value(out,pet.shieldPower());else string(out,pet.shieldPower());
+    }
+    private void petDelta(DataOutputStream out,ActorState a)throws IOException {
+        out.writeInt(a.id());type(out,"com.threerings.projectx.dungeon.data.actor.SpriteActor");
+        // Actor/Active/Agent mutable field order, followed by the seven SpriteActor fields.
+        int mask=0x1ffdc;out.writeByte(mask);out.writeByte(mask>>>8);out.writeByte(mask>>>16);
+        vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());out.writeFloat(0);petFields(out,a,true);
+    }
     private void projectile(DataOutputStream out,ActorState actor)throws IOException {
         var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
-        type(out,"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
+        type(out,p.nativeType().equals("ACTOR")?"com.threerings.tudey.data.actor.Actor":"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
         value(out,p.config());out.writeInt(actor.id());out.writeInt(p.created());out.writeInt(p.destroyed());
         vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
         if(p.orbit()!=null){var orbit=p.orbit();out.writeFloat(orbit.radius());out.writeInt(orbit.followId());
             vector(out,p.originX(),p.originY());vector(out,orbit.relativeX(),orbit.relativeY());out.writeInt(orbit.collided());out.writeFloat(orbit.originalRotation());
-            out.writeInt(p.ownerOid());out.writeInt(orbit.homeTargetId());out.writeInt(0);out.writeInt(p.faction());return;}
+            if(!p.nativeType().equals("ORBITAL")){out.writeInt(p.ownerOid());out.writeInt(orbit.homeTargetId());out.writeInt(0);out.writeInt(p.faction());}return;}
+        if(p.nativeType().equals("ACTOR"))return;
+        if(p.nativeType().equals("LASER")){out.writeBoolean(!p.fizzle());vector(out,actor.x()+(float)Math.cos(actor.rotation())*p.speed(),actor.y()+(float)Math.sin(actor.rotation())*p.speed());return;}
         if(bullet){out.writeFloat(p.maxStep());out.writeFloat(actor.direction());vector(out,p.originX(),p.originY());out.writeFloat(p.z());}
         out.writeInt(p.ownerOid());out.writeInt(0);if(bullet)out.writeInt(p.faction());else out.writeFloat(p.z());
     }
@@ -974,11 +1086,12 @@ public final class SessionCodec {
     }
     private void projectileDelta(DataOutputStream out,ActorState actor)throws IOException {
         var p=actor.projectile();boolean bullet=p.nativeType().equals("BULLET");
-        out.writeInt(actor.id());type(out,"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
+        out.writeInt(actor.id());type(out,p.nativeType().equals("ACTOR")?"com.threerings.tudey.data.actor.Actor":"com.threerings.projectx.dungeon.data.actor."+p.nativeClass());
         // Actor: destroyed, translation, rotation, flags. Origin, id and created are final.
-        out.writeByte(0x1e);if(p.orbit()!=null)out.writeByte(3);else if(bullet)out.writeByte(0);
+        out.writeByte(p.nativeType().equals("LASER")?0x7e:0x1e);if(p.orbit()!=null)out.writeByte(3);else if(bullet)out.writeByte(0);
         out.writeInt(p.destroyed());vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
         if(p.orbit()!=null){vector(out,p.orbit().relativeX(),p.orbit().relativeY());out.writeInt(p.orbit().collided());}
+        if(p.nativeType().equals("LASER")){out.writeBoolean(!p.fizzle());vector(out,actor.x()+(float)Math.cos(actor.rotation())*p.speed(),actor.y()+(float)Math.sin(actor.rotation())*p.speed());}
     }
     private void effect(DataOutputStream out,SceneEffect effect)throws IOException {
         type(out,"com.threerings.tudey.data.effect.Effect");value(out,effect.config());out.writeInt(effect.timestamp());out.writeShort(0);
