@@ -151,7 +151,7 @@ public final class InteriorCompatibility {
 
     private static void checkParty(DungeonPartyObject party, Knight knight, WorldProfile profile, String kind) {
         if (party.partyService == null || party.members == null || party.health == null || party.status == null ||
-            party.speakService != null || party.dungeonPartyService != null)
+            party.speakService == null || party.dungeonPartyService != null)
             throw new AssertionError("Party object service/set nullability differs from native minimal-party snapshot");
         if (party.members.size() != 1 || party.health.size() != 1 || party.status.size() != 1)
             throw new AssertionError("Party member/health/status sets must each contain the owner's entry");
@@ -165,8 +165,8 @@ public final class InteriorCompatibility {
         if (health.Qu() != PLAYER_OID || health.current != 1 || health.maximum != 1 || health.bonus != 0 || party.z(member.name))
             throw new AssertionError("Native peaceful owner health must be positive and not trigger the stock dead-party predicate");
         Status status = party.status.iterator().next();
-        if (status.Qu() != PLAYER_OID || status.conditions != null || status.expires != null || status.flags != 0)
-            throw new AssertionError("Native peaceful status entry must be keyed to the owner with null conditions and clear flags");
+        if (status.Qu() != PLAYER_OID || status.conditions != null || status.expires != null || status.flags != 1)
+            throw new AssertionError("Native peaceful status entry must be keyed to the owner with null conditions and an emergency revive");
         if (profile.items().size() != 5) throw new AssertionError("Invalid party fixture profile");
         if (party.spawn != null) throw new AssertionError("Native party spawn must remain unset");
         if (kind.equals("training")) {

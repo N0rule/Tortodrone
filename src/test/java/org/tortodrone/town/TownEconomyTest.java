@@ -53,6 +53,14 @@ public final class TownEconomyTest {
             check(db.worldProfile(b,1,1).items().stream().anyMatch(i->i.config().equals("Weapon/Sword/Calibur")),"buyout delivers owned attachment exactly once");
             check(new Database(home,true).worldProfile(a,1,1).town().sprites().getFirst().name().equals("Sparky"),"sprite state survives reopening");
             check(AuctionHouse.nextBid(199,0,false)==208&&AuctionHouse.listingFee(0,1,0,100,500)==5,"archive auction arithmetic");
+            grant(db,items,"Alice","Alice-Knight","Rarity/Spark of Life",2);
+            var beforeRevive=db.worldProfile(a,1,1);long spark=id(beforeRevive,"Rarity/Spark of Life");
+            refused(()->town.revive(b,1,1,-1));refused(()->town.revive(a,1,999,-1));refused(()->town.revive(a,1,1,49));
+            check(db.worldProfile(a,1,1).equals(beforeRevive),"foreign/missing Sparks, stale authentication and insufficient approval preserve the inventory");
+            var revived=town.revive(a,1,1,-1).profile();
+            check(revived.items().stream().filter(i->i.id()==spark).findFirst().orElseThrow().count()==1&&revived.energy()==beforeRevive.energy(),"Spark revive consumes exactly one owned unit without charging energy");
+            db.currency("Alice","Alice-Knight",a,-1,Currency.ENERGY,100);
+            check(town.revive(a,1,1,50).profile().energy()==revived.energy()+50,"native buy-and-use approval charges the archive's 50 energy cost");
             System.out.println("PASS: Town crafting, sprite persistence, auction escrow, mail ownership and rollback");
         }finally{try(var paths=Files.walk(home)){for(var file:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(file);}}
     }

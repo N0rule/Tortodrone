@@ -49,6 +49,15 @@ public final class StockTools {
             case "town-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("town-check expects game-directory");fixture="TownCompatibility";
             }
+            case "training-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("training-check expects game-directory");fixture="TrainingCompatibility";
+                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/packs/vanilla/maps/advanced_training").toString());
+                sources.add(project.resolve("scripts/compat/TrainingCompatibility.java"));sources.add(project.resolve("scripts/compat/FireCompatibility.java"));
+            }
+            case "statuses" -> {
+                if(args.length!=3)throw new IllegalArgumentException("statuses expects game-directory fresh-output-file");fixture="StatusRuntimeExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("StatusRuntimeExport","SceneStatusExport","ScenePlayerStatsExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "town" -> {
                 if(args.length!=4)throw new IllegalArgumentException("town expects game-directory maps-directory fresh-output-directory");
                 fixture="TownSceneExport";fixtureArgs.add(args[2].equals("--accessories")?args[2]:Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());

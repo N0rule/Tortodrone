@@ -5,7 +5,9 @@ import org.tortodrone.character.WorldProfile;
 
 /** Party health is instance state; it is never written to the account database. */
 public final class SceneHealth {
-    public record State(int current,int maximum,int bonus) { }
+    public record State(int current,int maximum,int bonus,int reviveFlags) {
+        public State(int current,int maximum,int bonus){this(current,maximum,bonus,1);}
+    }
     public record Hit(int amount,int feedback) { }
     private static final Set<Integer> GEAR=Set.of(0,1,2,5,10,11,12);
     private final SceneContent content;
@@ -14,15 +16,22 @@ public final class SceneHealth {
     private SceneContent.Spec shieldDefense=new SceneContent.Spec(Map.of());
     private int current,maximum,bonus;
     private int invulnerableUntil;
+    private boolean emergencyRevive=true;
+    private int emergencyAt;
     private java.util.function.IntUnaryOperator spriteShield=amount->amount;
     public void spriteShield(java.util.function.IntUnaryOperator shield){spriteShield=java.util.Objects.requireNonNull(shield);}
     public SceneHealth(SceneContent content){this.content=content;status=new SceneStatus(content,false);current=maximum=Math.round(content.stats().getOrDefault("player.base-health",1f));}
     public SceneStatus.State status(){return status.state();}
+    public List<SceneStatus.Pulse> takePulses(){return status.takePulses();}
+    public List<FireCatalog.Action> takeActions(){return status.takeActions();}
+    public void inventory(WorldProfile profile){status.equipment(profile);}
+    public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)));died(stamp);}}
     public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
     public boolean cloaked(){return status.cloaked();}
     public void breakCloak(){status.breakCloak();}
     public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.town.TownCatalog.empty());}
     public void equipment(WorldProfile profile,org.tortodrone.town.TownCatalog town){
+        status.equipment(profile);
         int next=town.equipmentBonuses(profile,"").health();var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
         for(var item:profile.items())if(item.equippedSlot()!=null&&GEAR.contains(item.equippedSlot())){
             String prefix="gear."+item.config()+".";
@@ -38,11 +47,13 @@ public final class SceneHealth {
         defense=new SceneContent.Spec(defenses);
         shield.replaceAll((key,value)->Integer.toString((int)Math.ceil(Float.parseFloat(value))));shieldDefense=new SceneContent.Spec(shield);
     }
-    public State state(){return new State(current,maximum,bonus);}
+    public State state(){return new State(current,maximum,bonus,(emergencyRevive?1:0)|(emergencyAt!=0?8:0));}
     public boolean alive(){return current>0;}
     public boolean invulnerable(int stamp){return stamp<invulnerableUntil;}
-    /** Training revival is a separate operation: ordinary heals cannot raise the dead. */
-    public boolean revive(int stamp){if(alive())return false;current=maximum;status.clear();invulnerableUntil=stamp+2000;return true;}
+    /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
+    private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+5000;}}
+    public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}
+    public boolean revive(int stamp){if(alive())return false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+2000;return true;}
     public boolean damage(Object damage,int stamp){
         return hit(damage,stamp).amount()>0;
     }
@@ -67,14 +78,18 @@ public final class SceneHealth {
         var mitigation=new SceneContent.Spec(fields);
         int amount=(int)Math.ceil(SceneDamage.amount(damage,content,mitigation,multiplier,blockableScale));
         amount=Math.max(0,spriteShield.applyAsInt(amount));
-        status.damaged(amount,stamp);status.apply(damage,stamp);rawDamage(amount);if(!alive())status.clear();
+        amount+=(int)Math.ceil(status.damaged(amount,stamp));
+        if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount);died(stamp);
         return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale));
     }
     private boolean rawDamage(int amount){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);return true;}
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}
     public void advance(int stamp,int elapsed,boolean moving){
-        if(!alive())return;
+        if(!alive()){
+            if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+5000;}
+            return;
+        }
         status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount));},amount->heal((int)Math.ceil(amount)));
-        if(!alive())status.clear();
+        died(stamp);
     }
 }

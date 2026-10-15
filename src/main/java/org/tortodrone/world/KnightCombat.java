@@ -41,7 +41,7 @@ public final class KnightCombat {
     private int shieldHit=-300000,shieldRegenStart;
     private boolean bashSpent;
     private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
-    public void status(SceneStatus.Modifiers value){status=Objects.requireNonNull(value);}
+    public void status(SceneStatus.Modifiers value){status=Objects.requireNonNull(value);if(!value.canMove())impulse=null;if(!value.canDefend()&&(activity==DEFENSE||activity==HURT_DEFENSE))clear(started);if(!value.canAttack()&&activity!=DEFENSE&&activity!=HURT_DEFENSE)clear(started);}
     public record AttackStart(String config,int activity,int started,int land,int clear,float attackSpeed) {
         public AttackStart(String config,int activity,int started,int land,int clear) {
             this(config,activity,started,land,clear,1f);
@@ -124,7 +124,7 @@ public final class KnightCombat {
             started+=attack.rearm();activity=CHARGE;attack=null;
         }
         boolean rearmed=attack!=null&&time-started>=attack.rearm()&&activity!=COOLDOWN;
-        if((flags&1024)!=0&&time>nextDodge&&activity!=CHARGE&&activity!=DEFENSE&&attack==null&&activity!=DODGE) {
+        if(status.canMove()&&(flags&1024)!=0&&time>nextDodge&&activity!=CHARGE&&activity!=DEFENSE&&attack==null&&activity!=DODGE) {
             activity=DODGE;started=time;nextDodge=time+dodgeCooldown;attack=null;
             float angle=(flags&1)!=0?direction:facing;
             impulse=new Impulse(time,625,(float)Math.cos(angle)*5,(float)Math.sin(angle)*5);impulseApplied=true;
@@ -134,9 +134,9 @@ public final class KnightCombat {
             if(changed>=started)startAttack(definition.attacks().isEmpty()?CHARGE:activity>=NORMAL?nextNormal(time):NORMAL,time);
             else if(canCharge()&&changed+350<started){activity=CHARGE;started=time;attack=null;}
         }
-        if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;
+        if(status.canDefend()&&(flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;
             attackSink.accept(new AttackStart(shield,DEFENSE,started,0,600000,1));}
-        if((flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
+        if(status.canMove()&&status.canDefend()&&(flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
             activity=BASH;started=time;attack=scaled(shieldDefinition.bash());impulseApplied=false;bashSpent=false;
             attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear(),attackSpeed()));
         }
@@ -170,7 +170,7 @@ public final class KnightCombat {
             }
             if(!impulseApplied&&attack.impulseDuration()>0&&time>=started+attack.impulseDelay()) {
                 float cos=(float)Math.cos(facing),sin=(float)Math.sin(facing);
-                impulse=new Impulse(started+attack.impulseDelay(),attack.impulseDuration(),attack.impulseX()*cos-attack.impulseY()*sin,attack.impulseX()*sin+attack.impulseY()*cos);impulseApplied=true;
+                if(status.canMove())impulse=new Impulse(started+attack.impulseDelay(),attack.impulseDuration(),attack.impulseX()*cos-attack.impulseY()*sin,attack.impulseX()*sin+attack.impulseY()*cos);impulseApplied=true;
             }
             if(definition!=null&&activity!=BASH&&activity!=COOLDOWN&&definition.cooldown()!=null&&definition.maxChain()>0&&chainCount==definition.maxChain()&&time>=started+attack.rearm()) {
                 int end=started+attack.rearm();startAttack(COOLDOWN,end);
@@ -181,5 +181,5 @@ public final class KnightCombat {
         // Keep a completed impulse through its final integration interval; movement retires it.
     }
     public void retireImpulse(int time){if(impulse!=null&&time>=impulse.started()+impulse.duration())impulse=null;}
-    public void impulse(Impulse value){if(value!=null)impulse=SceneDamage.combine(value,impulse);}
+    public void impulse(Impulse value){if(value!=null&&status.canMove())impulse=SceneDamage.combine(value,impulse);}
 }

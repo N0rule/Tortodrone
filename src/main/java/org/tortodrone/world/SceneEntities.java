@@ -210,10 +210,21 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Pickup")&&e.claim==0)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
                 e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.spec.number("health",0),e.health+(float)amount);});
-                if(e.health==0)e.status.clear();else {advanceImpulse(e,stamp);move(e,stamp,elapsed,players);}
+                if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
             }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
+        }
+        for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
+        for(var e:List.copyOf(entities.values()))for(var action:e.status.takeActions())attack.accept(e.snapshot(),action);
+    }
+    /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
+    public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){
+        if((pulse.mask()&1)!=0)for(var p:players)if(p.id()!=source&&playerActive.test(p.id())&&Math.hypot(p.x()-x,p.y()-y)<=pulse.radius()+2*ScenePortals.PAWN_RADIUS)
+            playerDamage.accept(new PlayerHit(p.id(),pulse.damage(),stamp,source,1));
+        if((pulse.mask()&128)!=0)for(var target:List.copyOf(entities.values()))if(target.id!=source&&target.kind.equals("Monster")&&target.health>0&&Math.hypot(target.x-x,target.y-y)<=pulse.radius()+target.spec.number("radius",0)+ScenePortals.PAWN_RADIUS){
+            Object accepted=SceneDamage.prune(pulse.damage(),target.spec.integer("damage-mask",0));float amount=SceneDamage.amount(accepted,content,target.spec);
+            amount+=target.status.damaged(amount,stamp);target.status.apply(accepted,stamp);if(amount>0)hurt(target,amount,stamp);
         }
     }
     private void lift(Entity e,int stamp,float elapsed,List<ActorState> players){
@@ -265,7 +276,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
         int slot=e.spec.integer("attack",-1);String prefix="attack."+slot+".";
         var modifiers=e.status.state().modifiers();
-        if(!modifiers.canAttack()){
+        if(!modifiers.canAttack()||modifiers.shocked()){
             if(e.activity>=4){e.activity=0;e.fired.clear();}
             e.flags&=~2;return;
         }
@@ -284,6 +295,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             return;
         }
         if(target!=null&&e.activity==0&&slot>=0&&stamp>=e.nextAttack&&nearest<=e.spec.number("attack-distance",0)){
+            float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return;}
             e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
             e.activity=4+slot;e.activityStarted=stamp;e.nextAttack=stamp+e.spec.integer("attack-interval",0);e.fired.clear();return;
         }
@@ -367,6 +379,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @Override public void sweep(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){
         damage(region,x,y,rotation,stamp,owner,null,hit);
     }
+    @Override public void sweep(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object shape,Set<Integer> hit){
+        damage(region,x,y,rotation,stamp,owner,shape,hit);
+    }
     private void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape,Set<Integer> hitOnce){
         Object damage=region.arguments().get("damage"),shape=region.arguments().get("region");
         var source=entities.get(owner);float expansion=SceneDamage.number(shape,"expansion",0);
@@ -419,7 +434,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             defense.replaceAll((key,value)->key.startsWith("defense.")?Float.toString(Float.parseFloat(value)*e.status.state().modifiers().defense()):value);
             float amount=SceneDamage.amount(accepted,content,new SceneContent.Spec(defense),multiplier);
             if(e.kind.equals("Monster")){
-                e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
+                amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
                     applyImpulse(e,region,x,y,rotation,stamp);
                     if(e.health==0)e.status.clear();

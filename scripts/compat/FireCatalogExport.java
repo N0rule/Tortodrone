@@ -16,7 +16,7 @@ import org.tortodrone.world.FireCatalog.*;
 public final class FireCatalogExport {
     private static final Map<String,Integer> UNSUPPORTED = new TreeMap<>();
     private static final Set<String> NESTED_FIRES = new HashSet<>();
-    private static final Set<String> NESTED_ACTORS = new HashSet<>();
+    private static final Set<ConfigReference<ActorConfig>> NESTED_ACTORS = new HashSet<>();
     private static int actionCount, projectileCount;
     private static int damageRarity;
 
@@ -216,7 +216,7 @@ public final class FireCatalogExport {
             int count=0,steps=0,mask=0;float step=0;String collision="",facing="";
             if(action instanceof ActionConfig.SpawnRandomTranslatedActor random){count=random.count;steps=random.steps;step=random.stepSize;mask=random.collisionMask;collision=target(random.collisionSource);}
             if(action instanceof ActionConfig.SpawnFacingActor f)facing=target(f.facing);
-            return new Action(kind,null,spec,target(spawn.location),facing,collision,x,y,rotation,rotationVariance,relative,count,step,steps,mask,false,List.of(),"");
+            return new Action(kind,kind==Kind.EMIT_PROJECTILE?new StarterCatalog.Model("ServerSpawned",Map.of()):null,spec,target(spawn.location),facing,collision,x,y,rotation,rotationVariance,relative,count,step,steps,mask,false,List.of(),"");
         }
         return unsupported(action);
     }
@@ -238,7 +238,7 @@ public final class FireCatalogExport {
             parameter = modified.parameter;
             values = modified.values == null ? List.of() : Arrays.asList(modified.values.clone());
         }
-        return new Action(kind,null,spec,target(spawn.location),"","",x,y,spawn.rotation,spawn.rotationVariance,
+        return new Action(kind,new StarterCatalog.Model("Prespawned",Map.of()),spec,target(spawn.location),"","",x,y,spawn.rotation,spawn.rotationVariance,
             spawn.relative,0,0,0,0,false,List.of(),"",parameter,values);
     }
     private static Action noop() {
@@ -363,8 +363,8 @@ public final class FireCatalogExport {
         else if(actor instanceof DungeonActorConfig.Orbital o){type="ORBITAL";fuse=600000;speed=o.speed;height=o.height;orbit=new OrbitSpec(o.orbitRadius,o.speed,o.startingRotation,0,0,600000,o.follow.name(),false,null,null,null);}
         else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
         else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
-        else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
-        else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(refName)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(refName);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
+        else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
+        else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
         com.threerings.tudey.data.actor.Actor nativeActor=actor.a(reference,0,0,new Vector2f(),0f);
         nativeActor.init(manager);
@@ -435,6 +435,27 @@ public final class FireCatalogExport {
                 }
             }
         }
+        if(!refName.startsWith("Bullet/Pet/"))for(var handler:actor.handlers){
+            // Piercing charged bullets exclude monsters from their blocking mask.
+            // Their intersection handler, rather than detonation, deals the hits.
+            if(handler instanceof HandlerConfig.BaseIntersection intersection){
+                Action hit=intersectionDamage(readAction(manager,intersection.action));
+                if(hit!=null){int interval=Math.max(16,(fuse+126)/127);
+                    timers.add(new ActorTimer(0,interval,Math.min(128,1+(fuse+interval-1)/interval),hit,null));}
+            }
+            if(handler instanceof HandlerConfig.Timer timer&& !refName.equals("Bullet/Sword/Burst Bullet")
+                && !refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")&&!refName.startsWith("Bullet/Handgun/Pulsar/")){
+                Action action=readAction(manager,timer.action);
+                if(action!=null&&containsDamage(action)){
+                    int interval=Math.max(1,(int)(timer.interval*1000)),delay=Math.max(0,interval+(int)(timer.offset*1000));
+                    if(refName.equals("Bullet/Sword/Spur (Charged)")){
+                        // Archived Spur/Winmillion combat description: the short
+                        // piercing charge projectile can hit up to three times.
+                        timers.add(new ActorTimer(0,Math.max(1,fuse/3),3,action,null));
+                    }else timers.add(new ActorTimer(delay,interval,Math.min(128,timer.limit==0?128:timer.limit),action,null));
+                }
+            }
+        }
         if(type.equals("ORBITAL")&&reference.kW().get("Duration") instanceof Number duration)fuse=Math.max(1,(int)(duration.floatValue()*1000));
         if(type.equals("ACTOR")&&!timers.isEmpty())fuse=timers.stream().filter(t->t.action().kind()!=Kind.COMPOUND||!t.action().children().isEmpty()).mapToInt(t->t.delay()+t.interval()*(t.limit()-1)+1).max().orElse(1);
         detonation=restoreDamageShape(manager,reference,detonation);
@@ -442,6 +463,14 @@ public final class FireCatalogExport {
             shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""));
     }
     private static Action destroySource(){return new Action(Kind.DESTROY_SOURCE,null,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");}
+    private static boolean containsDamage(Action action){return action.kind()==Kind.DAMAGE_REGION||action.children().stream().anyMatch(FireCatalogExport::containsDamage);}
+    private static Action intersectionDamage(Action action){
+        if(action==null)return null;
+        if(action.kind()==Kind.DAMAGE_REGION)return new Action(Kind.SWEEP_DAMAGE,action.config(),null,action.targetType(),"","",action.x(),action.y(),0,0,true,0,0,0,action.collisionMask(),false,List.of(),"");
+        if(action.kind()!=Kind.COMPOUND)return null;
+        var children=new ArrayList<Action>();for(var child:action.children()){var hit=intersectionDamage(child);if(hit!=null)children.add(hit);}
+        return children.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+    }
     private static Action restoreDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,Action action)throws Exception {
         if(action==null)return null;
         // Choice arguments survive stripping even when the region they address

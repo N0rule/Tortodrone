@@ -46,6 +46,10 @@ public final class ScenePlayerStatsExport {
             if (!(original instanceof ItemConfig.Gear gear)) continue;
             String name = config.getName();
             var level = gear.c(cm, 0);
+            for(int mask:new int[]{1,2,4,8,16,32,64}){
+                int resist=level.eK(gear.defense.ei(mask));
+                if(resist!=0)put(values,"gear."+name+".status-resist."+mask,Integer.toString(resist));
+            }
             put(values, "gear." + name + ".health-bonus", Integer.toString(level.fr(0)));
             for (String damageType : DAMAGE_TYPES) {
                 DamageSummary.DamageType type = DamageSummary.DamageType.valueOf(damageType.toUpperCase());

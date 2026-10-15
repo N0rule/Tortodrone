@@ -20,14 +20,14 @@ public final class SceneSimulationTest {
         var two=a.join(actor(2,start,map,model),second::add);
         var isolated=b.join(actor(3,start,map,model),other::add);
         try {
-            check(a.playerCount()==2&&a.snapshot().actors().size()==2,"selected actors are scene-owned before readiness");
+            check(a.playerCount()==2&&a.snapshot().players().size()==2,"selected actors are scene-owned before readiness");
             check(!one.input(start,0,0,1,start,System.nanoTime()/1_000_000L),"movement is gated by entry");
             check(!one.sit(start,System.nanoTime()/1_000_000L),"sitting is gated by entry");
             one.enter();two.enter();isolated.enter();
             var previous=next(first);var peer=next(second);
             check(previous==peer,"recipients receive the exact same immutable scene publication");
             var away=next(other);check(away.occupants().equals(Set.of(3)),"independent instances isolate actors");
-            var initial=previous.delta(null);check(initial.added().size()==2&&initial.updated().isEmpty(),"first recipient baseline is independent");
+            var initial=previous.delta(null);check(initial.added().equals(previous.actors())&&initial.updated().isEmpty(),"first recipient baseline is independent");
             int time=SceneClock.now();
             check(one.input(time,0,0,1,time,System.nanoTime()/1_000_000L),"scene owns accepted movement");
             var current=next(first);var same=next(second);
@@ -50,7 +50,7 @@ public final class SceneSimulationTest {
             check(removed.delta(current).removed().length==1,"coalesced recipient baselines still remove departed actors");
             check(a.playerCount()==1&&b.playerCount()==1,"closing membership cannot remove another instance's actor");
             one.close();long count=a.tickCount();Thread.sleep(160);
-            check(a.tickCount()==count&&a.snapshot().actors().isEmpty(),"empty scene releases its timer and entities");
+            check(a.tickCount()==count&&a.snapshot().players().isEmpty(),"empty scene releases its timer and player actors");
             check(b.tickCount()>1,"other scene continues while first is idle");
             try(var rejoin=a.join(actor(1,SceneClock.now(),map,model),first::add)) {
                 rejoin.enter();Thread.sleep(80);check(a.tickCount()>count,"idle scene restarts on entry");

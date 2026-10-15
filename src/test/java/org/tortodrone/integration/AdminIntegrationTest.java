@@ -15,6 +15,10 @@ import static org.tortodrone.support.TestWire.check;
 
 /** The actual distributed admin JAR shares a live server's database, not its memory. */
 public final class AdminIntegrationTest {
+    // A separate admin JVM has to start and derive the new password hash before the server can
+    // notice the revocation, so the idle session must outwait that work, not just the server poll.
+    private static final int REVOCATION_TIMEOUT_MILLIS = 30_000;
+    private static final long REVOCATION_WAIT_SECONDS = 40;
     public static void main(String[] args) throws Exception {
         Path directory = Files.createTempDirectory("tortodrone-admin-test-");
         ExecutorService worker = Executors.newSingleThreadExecutor();
@@ -46,12 +50,12 @@ public final class AdminIntegrationTest {
                 var ready = new CompletableFuture<Void>();
                 Future<?> disconnected = worker.submit(() -> {
                     try (Socket socket = new Socket("127.0.0.1",port)) {
-                        TestClient.authenticate(socket,key,"Player","player-password",true,(peer,wire,oid) -> { ready.complete(null); check(peer.getInputStream().read() == -1,"password reset closes idle active session"); });
+                        TestClient.authenticate(socket,key,"Player","player-password","success",REVOCATION_TIMEOUT_MILLIS,(peer,wire,oid) -> { ready.complete(null); check(peer.getInputStream().read() == -1,"password reset closes idle active session"); });
                     } catch (Exception failure) { ready.completeExceptionally(failure); throw new RuntimeException(failure); }
                 });
-                ready.get(10,TimeUnit.SECONDS);
+                ready.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
                 command(admin,directory,"changed-password\nchanged-password\n",true,"Password changed.","--set-password","Player");
-                disconnected.get(10,TimeUnit.SECONDS);
+                disconnected.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","player-password",false,(a,b,c) -> {}); }
                 command(admin,directory,"",true,"Saved-Knight","--list-knights","Player");
                 command(admin,directory,"",true,"Proto Sword [Sword] [id=1132943168] sw:proto-sword","--items","Proto Sword");
@@ -62,12 +66,12 @@ public final class AdminIntegrationTest {
                 var knightReady=new CompletableFuture<Void>();
                 Future<?> knightDeleted=worker.submit(()->{
                     try(Socket socket=new Socket("127.0.0.1",port)) {
-                        TestClient.authenticate(socket,key,"Player","changed-password",true,(peer,wire,oid)->{knightReady.complete(null);check(peer.getInputStream().read()==-1,"local knight deletion revokes account session");});
+                        TestClient.authenticate(socket,key,"Player","changed-password","success",REVOCATION_TIMEOUT_MILLIS,(peer,wire,oid)->{knightReady.complete(null);check(peer.getInputStream().read()==-1,"local knight deletion revokes account session");});
                     }catch(Exception failure){knightReady.completeExceptionally(failure);throw new RuntimeException(failure);}
                 });
-                knightReady.get(10,TimeUnit.SECONDS);
+                knightReady.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
                 command(admin,directory,"Saved-Knight\n",true,"Knight deleted.","--delete-knight","Player","Saved-Knight");
-                knightDeleted.get(10,TimeUnit.SECONDS);
+                knightDeleted.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
                 check(database.identity("Player")!=null&&database.roster(2).isEmpty(),"individual deletion preserves account credentials and clears its roster");
                 try(Socket socket=new Socket("127.0.0.1",port)) {
                     TestClient.authenticate(socket,key,"Player","changed-password",true,(peer,wire,oid)->{
@@ -80,11 +84,11 @@ public final class AdminIntegrationTest {
                 var deletionReady = new CompletableFuture<Void>();
                 Future<?> deleted = worker.submit(() -> {
                     try (Socket socket = new Socket("127.0.0.1",port)) {
-                        TestClient.authenticate(socket,key,"Player","changed-password",true,(peer,wire,oid) -> { deletionReady.complete(null); check(peer.getInputStream().read() == -1,"delete closes idle active session"); });
+                        TestClient.authenticate(socket,key,"Player","changed-password","success",REVOCATION_TIMEOUT_MILLIS,(peer,wire,oid) -> { deletionReady.complete(null); check(peer.getInputStream().read() == -1,"delete closes idle active session"); });
                     } catch (Exception failure) { deletionReady.completeExceptionally(failure); throw new RuntimeException(failure); }
                 });
-                deletionReady.get(10,TimeUnit.SECONDS);
-                command(admin,directory,"Player\n",true,"Account deleted.","--delete-account","Player"); deleted.get(10,TimeUnit.SECONDS);
+                deletionReady.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
+                command(admin,directory,"Player\n",true,"Account deleted.","--delete-account","Player"); deleted.get(REVOCATION_WAIT_SECONDS,TimeUnit.SECONDS);
                 check(database.identity("Player") == null && database.roster(2).isEmpty(),"delete cascades character rows");
                 try (Socket socket = new Socket("127.0.0.1",port)) { TestClient.authenticate(socket,key,"Player","changed-password","m.no_such_user",(a,b,c) -> {}); }
                 check(running.process.isAlive(),"administration does not stop server");

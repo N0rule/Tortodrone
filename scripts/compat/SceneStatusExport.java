@@ -16,7 +16,7 @@ import org.tortodrone.world.FireCatalog;
 /** Exports bounded native status defaults and modifier fields for scene combat. */
 public final class SceneStatusExport {
     private static final Set<String> TYPES = Set.of(
-        "Fire", "Shock", "Freeze", "Poison", "Stun", "Sleep", "Curse", "DepthScaled");
+        "Fire", "Shock", "Freeze", "Poison", "Stun", "Sleep", "Curse", "DepthScaled", "Resist", "Buff", "Cloak", "Grab", "Stop", "Shield", "Expires");
 
     private SceneStatusExport() { }
 
@@ -41,6 +41,14 @@ public final class SceneStatusExport {
             put(values, prefix + "class", config.getClass().getSimpleName());
             putCommon(values, prefix, config);
             put(values, prefix + "data", statusData(config));
+            for(String key:List.of("signal","finishedAction","damageAction"))if(field(config,key) instanceof com.threerings.tudey.config.ActionConfig action){
+                String output=key.equals("signal")?"signal-action":key.equals("finishedAction")?"finished-action":"damage-action";
+                put(values,prefix+output,FireCatalog.actionJson(FireCatalogExport.readAction(cm,action)));
+            }
+            for(String key:List.of("damageStart","damageEnd","wakeDamageStart","wakeDamageEnd","healthStart","healthEnd","health","healScale"))if(field(config,key) instanceof com.threerings.config.ConfigReference<?> ref){
+                @SuppressWarnings({"unchecked","rawtypes"}) var scale=cm.a(com.threerings.projectx.dungeon.config.DepthScaleConfig.class,(com.threerings.config.ConfigReference)ref);
+                if(scale!=null)putFinite(values,prefix+"scale-"+key,scale.a(cm,0,0,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM));
+            }
         }
         put(values, "statuses", String.join(",", ids));
         for (var entry : values.entrySet()) {

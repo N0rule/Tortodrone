@@ -13,7 +13,7 @@ import org.tortodrone.world.TownSquare;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
 
-/** Stock ProjectX admin service: the original F3 ItemCreator, authorized on the server. */
+/** Stock item/sprite admin tools, server authorization, live pet equipment and persistence. */
 public final class AdminServiceTest {
     public static void main(String[] args) throws Exception {
         TestWire.check(SessionCodec.SERVICES.get(SessionCodec.ADMIN_SERVICE - 1)
@@ -42,14 +42,22 @@ public final class AdminServiceTest {
                 response(playerFrames, playerSocket, (short) 5, (byte) 0, "Game Master permission required");
                 check(players.worldProfile(player.name(), 1).items().stream().allMatch(i -> i.starter()),
                     "no admin item reaches an unprivileged account");
+                for(int method:new int[]{8,44,45,46}){
+                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 44->new Object[]{99};case 45->new Object[]{0,0,3};default->new Object[]{0,1};};
+                    world.admin(spriteInvoke(method,(short)20,values));
+                    response(playerFrames,playerSocket,(short)20,(byte)0,"Game Master permission required");
+                }
+                check(players.worldProfile(player.name(),1).town().sprites().isEmpty(),"ordinary players cannot create or edit sprites with GM calls");
             }
 
             // The authorized administrator creates a real, persistent item with the stock tool.
             Socket staffSocket = new RecordingSocket();
             var staffFrames = new Frames();
+            var scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneRegistry.system().catalog());
+            scenes.town(org.tortodrone.town.TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
             try (var out = new SessionOutput(staffSocket);
                  var world = new WorldSession(staffSocket, staff, out, new SessionCodec(), 1002, 1, message -> {},
-                     org.tortodrone.world.SceneRegistry.system(), () -> true)) {
+                     scenes, () -> true)) {
                 world.select(knight.name(), receiver);
                 world.subscribe((short) 1);
                 world.entered();
@@ -75,6 +83,7 @@ public final class AdminServiceTest {
                 response(staffFrames, staffSocket, (short) 11, (byte) 0, "This admin tool is not available yet");
                 check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 3,
                     "refused admin operations grant nothing");
+                spriteCommands(world,staffFrames,staffSocket,staff,knight,accounts,database,scenes);
             }
             // A second stock session after a reconnect still owns the granted item.
             Socket reconnect = new RecordingSocket();
@@ -87,12 +96,63 @@ public final class AdminServiceTest {
             var reloaded = new CharacterStore(reopened, 2, "Master").worldProfile(knight.name(), 1);
             check(reloaded.items().stream().filter(i -> i.config().equals("Gear/Shield/Proto Shield") && !i.starter())
                 .count() == 3, "created item persists in the database across sessions");
-            System.out.println("PASS: stock admin service advertisement, ItemCreator decoding, server-side authorization, real grants, refusal reasons and persistence");
+            var savedSprite=reloaded.town().sprites().getFirst();
+            check(savedSprite.level()==99&&savedSprite.powers().get(8)==3&&savedSprite.ultimates().get(2)==2,
+                "GM sprite level, power and ultimate persist across sessions");
+            System.out.println("PASS: stock admin service, item/sprite grants, sprite equip/level/power/ultimate, authorization, rollback, live equipment and persistence");
         } finally {
             try (var paths = Files.walk(home)) {
                 for (var path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
             }
         }
+    }
+
+    private static void spriteCommands(WorldSession world,Frames frames,Socket socket,CharacterStore staff,Knight knight,
+            AccountStore accounts,Database database,org.tortodrone.world.SceneRegistry scenes)throws Exception{
+        world.admin(spriteInvoke(44,(short)30,99));
+        response(frames,socket,(short)30,(byte)0,"Equip a battle sprite first; /sprite_list shows owned sprite IDs");
+        world.admin(spriteInvoke(8,(short)31,new SessionDecoder.ConfigReference("Drakon",Map.of())));
+        response(frames,socket,(short)31,(byte)1,null);
+        var initial=staff.worldProfile(knight.name(),1);int first=initial.town().equippedSprite();
+        check(initial.town().sprites().size()==1&&first==initial.town().sprites().getFirst().id(),"Sprite Creator grants and equips the first pet");
+        world.admin(spriteInvoke(45,(short)32,2,2,3));response(frames,socket,(short)32,(byte)1,null);
+        world.admin(spriteInvoke(46,(short)33,2,2));response(frames,socket,(short)33,(byte)1,null);
+        var edited=staff.worldProfile(knight.name(),1).town().sprites().getFirst();
+        check(edited.level()==0&&edited.powers().get(8)==3&&edited.ultimates().get(2)==2,"GM setters bypass point and skill unlock requirements at level 1");
+        world.admin(spriteInvoke(44,(short)34,99));response(frames,socket,(short)34,(byte)1,null);
+        var baseline=staff.worldProfile(knight.name(),1);
+        for(Object[] invalid:new Object[][]{{44,-1},{44,100},{45,3,0,1},{45,0,3,1},{45,0,0,4},{46,0,3},{8,new SessionDecoder.ConfigReference("Not a sprite",Map.of())}}){
+            world.admin(spriteInvoke((Integer)invalid[0],(short)35,Arrays.copyOfRange(invalid,1,invalid.length)));
+            String reason=switch((Integer)invalid[0]){case 44->"Sprite level must be between 1 and 100";case 45->"Sprite skill and power must be 1-3; value must be 0-3";case 46->"Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)";default->"Unknown sprite configuration";};
+            response(frames,socket,(short)35,(byte)0,reason);
+            check(staff.worldProfile(knight.name(),1).equals(baseline),"invalid sprite admin write rolls back without a revision change");
+        }
+        world.admin(spriteInvoke(8,(short)36,new SessionDecoder.ConfigReference("Maskeraith",Map.of())));
+        response(frames,socket,(short)36,(byte)1,null);
+        var two=staff.worldProfile(knight.name(),1);int second=two.town().sprites().get(1).id();
+        check(two.town().equippedSprite()==first,"creating another sprite retains the equipped one");
+        var confirm=new SessionDecoder.Listener(TestWire.INV+"ConfirmMarshaller",(short)37);
+        check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,14,4,List.of(second,confirm))),"native /sprite_equip reaches the pet service");
+        response(frames,socket,(short)37,(byte)1,null);
+        var actor=scenes.entry().simulation().snapshot().players().stream().filter(a->a.id()==two.worldId()).findFirst().orElseThrow();
+        check(actor.sceneKnight().sprite().id()==second,"sprite equip immediately updates the live knight");
+        world.admin(spriteInvoke(44,(short)38,49));response(frames,socket,(short)38,(byte)1,null);
+        check(staff.worldProfile(knight.name(),1).town().sprites().get(1).level()==49,"GM setters address the newly equipped sprite");
+        check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,14,4,List.of(first,confirm))),"owned sprite can be re-equipped");
+        response(frames,socket,(short)37,(byte)1,null);
+        baseline=staff.worldProfile(knight.name(),1);
+        accounts.setGameMaster("Master",false);
+        // The role source deliberately remains true: the database must independently reject revocation.
+        world.admin(spriteInvoke(44,(short)39,0));response(frames,socket,(short)39,(byte)0,"Game Master permission required");
+        check(staff.worldProfile(knight.name(),1).equals(baseline),"revoked GM cannot edit a sprite using stale session privileges");
+        accounts.setGameMaster("Master",true);
+        try{staff.town(scenes.town()).adminSprite(2,knight.id(),999,44,List.of(0));throw new AssertionError("Stale authentication accepted");}catch(IOException expected){}
+        check(database.worldProfile(2,knight.id(),1).equals(baseline),"stale authentication leaves all sprite state unchanged");
+    }
+
+    private static SessionDecoder.Invocation spriteInvoke(int method,short id,Object... values){
+        var args=new ArrayList<>(Arrays.asList(values));args.add(new SessionDecoder.Listener(TestWire.INV+"ConfirmMarshaller",id));
+        return new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.ADMIN_SERVICE,method,args);
     }
 
     /** Encodes a client-side createItem invocation and decodes it through the real session decoder. */

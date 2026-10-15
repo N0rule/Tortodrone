@@ -154,9 +154,19 @@ public final class TrainingCompatibility {
         var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene,new SceneHealth.State(193,200,0),status))).yk();
         if(party.getClass()!=com.threerings.projectx.dungeon.data.DungeonPartyObject.class||party.memberLimit!=8||party.spawn!=null)throw new AssertionError("Native Training party type, capacity or spawn mismatch");
         if(!party.hasPickups)throw new AssertionError("Native quickbar HUD is hidden");
+        if(party.speakService==null)throw new AssertionError("Native Training party chat has no service");
         if(!party.members.e(1001))throw new AssertionError("Native party does not contain its local player oid");
         var health=party.health.iterator().next();var condition=party.status.iterator().next();
         if(health.current!=193||health.maximum!=200||condition.conditions.length!=1||!Arrays.equals(condition.expires,new int[]{5000}))throw new AssertionError("Party resubscription lost current health/status");
+        if(party.D(party.members.iterator().next().name)!=health||condition.flags!=1)throw new AssertionError("Native HUD health lookup or emergency revive entitlement differs");
+        for(int flags:new int[]{9,0}){
+            var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(0,200,0,flags),status))).yj();
+            for(var child:update.xE())child.b(party);
+            if(party.health.iterator().next().current!=0||party.status.iterator().next().flags!=flags||party.z(party.members.iterator().next().name)!=(flags==0))throw new AssertionError("Native free/Spark death panel gate differs");
+        }
+        var revived=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(200,200,0,0),SceneStatus.State.NORMAL))).yj();
+        for(var child:revived.xE())child.b(party);
+        if(party.D(party.members.iterator().next().name).current!=200||party.z(party.members.iterator().next().name))throw new AssertionError("Native HUD health does not recover on revive");
         var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().quickbar(1001,new long[]{-1,-2,0,0}))).yj();
         if(event.xE().size()!=4||!Long.valueOf(-1).equals(((com.threerings.presents.dobj.ElementUpdatedEvent)event.xE().getFirst()).getValue()))throw new AssertionError("Native quickbar slot event mismatch");
         System.out.println("PASS: native party enables pickups and four-slot quickbar updates preserve transient item IDs");

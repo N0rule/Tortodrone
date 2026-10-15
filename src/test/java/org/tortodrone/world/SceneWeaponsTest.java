@@ -11,6 +11,7 @@ public final class SceneWeaponsTest {
     public static void main(String[] args)throws Exception {
         authoredHeavyAttacks();
         reportedWeaponRegressions();
+        chargeTargetDamage();
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).entry();
         var model=new StarterCatalog.Model("Fixture",Map.of());
         var effect=new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,model,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
@@ -97,6 +98,7 @@ public final class SceneWeaponsTest {
         var owner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,100,model);
         scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Autogun",292,100,0,500));scene.advance(101,List.of(owner));
         check(!hits.isEmpty()&&scene.actors().getFirst().x()<1,"Autogun muzzle sweep damages a target inside its offset");
+        check(scene.actors().getFirst().projectile().ownerOid()==0,"server-spawned Autogun bullets do not receive client prediction ownership");
         scene.cancel(10);hits.clear();
         scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Celestial Orbitgun",292,200,0,500));
         var gunner=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,292,200,model);
@@ -129,6 +131,32 @@ public final class SceneWeaponsTest {
             }
             return CollisionMap.read(file);
         }finally{Files.delete(file);}
+    }
+    private static void chargeTargetDamage()throws Exception {
+        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
+        var timings=WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv"));
+        var terrain=openTerrain();var model=new StarterCatalog.Model("Fixture",Map.of());
+        var circle=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f));
+        var fields=new HashMap<>(Map.of("native-type","Monster","config","Monster/Fixture","health","10000","radius",".4","damage-mask","2","collision-flags","8"));
+        fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",circle))));
+        for(String name:List.of("Weapon/Handgun/Magnus","Weapon/Handgun/Callahan","Weapon/Sword/Spur","Weapon/Sword/Divine Avenger","Weapon/Sword/Gran Faust","Weapon/Bomb/Graviton Bomb")){
+            var content=new SceneContent(List.of(new SceneContent.Entry("first",1.6f,0,0,new SceneContent.Spec(fields)),new SceneContent.Entry("second",3.6f,0,0,new SceneContent.Spec(fields))),Map.of());
+            var targets=new SceneEntities(content,terrain);var scene=new SceneWeapons(terrain);scene.catalog(catalog);scene.targets(targets);
+            var owner=new ActorState(10,1001,"Fixture",0,100,0,0,0,0,0,290,100,model);
+            var timing=timings.find(name).charged();scene.attack(10,new KnightCombat.AttackStart(name,290,100,timing.land(),timing.clear()));
+            for(int stamp=101;stamp<6500;stamp+=20)scene.advance(stamp,List.of(owner));
+            check(targets.actors().getFirst().entity().health()<1,name+" charge reduces real monster HP");
+            if(name.endsWith("Magnus")||name.endsWith("Callahan"))check(targets.actors().get(1).entity().health()<1,name+" piercing charge damages a second monster");
+        }
+        var target=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("impact",0,3,0,new SceneContent.Spec(fields))),Map.of()),terrain);
+        var scene=new SceneWeapons(terrain);scene.catalog(catalog);scene.targets(target);
+        var owner=new ActorState(10,1001,"Fixture",0,100,0,0,(float)Math.PI/2,0,0,290,100,model);
+        scene.attack(10,new KnightCombat.AttackStart("Weapon/Handgun/Nova Driver",290,100,0,1000));
+        List<ActorState> shards=List.of();
+        for(int stamp=101;stamp<600;stamp+=10){scene.advance(stamp,List.of(owner));shards=scene.actors().stream().filter(a->!a.config().name().contains("/Charged")&&a.projectile().destroyed()==Integer.MAX_VALUE).toList();if(shards.size()==4)break;}
+        check(shards.size()==4,"Nova Driver impact releases four live shards instead of exhausting them inside its victim");
+        check(shards.stream().map(a->Math.round(a.rotation()*100)).distinct().count()==4,"Driver shards preserve four directions relative to a north-facing shot");
+        check(target.actors().getFirst().entity().health()<1,"Driver impact reduces real target HP");
     }
     private static void authoredHeavyAttacks()throws Exception {
         var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));

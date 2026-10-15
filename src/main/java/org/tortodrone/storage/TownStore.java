@@ -42,6 +42,20 @@ public final class TownStore {
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}
     static List<StarterCatalog.Model> variants(String json)throws IOException{var result=new ArrayList<StarterCatalog.Model>();for(var v:(List<?>)Json.parse(json))result.add(new StarterCatalog.Model((String)v,Map.of()));return List.copyOf(result);}
     public record Result(WorldProfile profile,Object result) { }
+    public static final int SPARK_COST=50;
+    /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
+    public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            if(approvedCost<0){
+                var spark=p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")&&i.count()>0).findFirst().orElseThrow(()->new IOException("m.costupdate"));
+                consume(c,p,spark.id(),1);
+            }else{
+                if(approvedCost<SPARK_COST)throw new IOException("m.costupdate");
+                pay(c,p,0,SPARK_COST);
+            }
+            return null;
+        });
+    }
     @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
     private Result change(int account,int knight,long auth,Mutation mutation)throws IOException{
         return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),result);});
@@ -179,6 +193,55 @@ public final class TownStore {
         });
     }
 
+    /** Archive grantStarterSprite: the pod gate checks sprite count, not mission completion. */
+    static boolean grantStarterSprite(Connection c,WorldProfile p,String config)throws SQLException,IOException{
+        if(!Set.of("Drakon","Seraphynx","Maskeraith").contains(config))throw new IOException("Choose Drakon, Seraphynx or Maskeraith for the starter sprite");
+        if(!p.town().sprites().isEmpty())return false;
+        createSprite(c,p,config);
+        return true;
+    }
+    private static int createSprite(Connection c,WorldProfile p,String config)throws SQLException{
+        int id;
+        try(var s=c.prepareStatement("INSERT INTO town_sprites(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){
+            s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();
+            try(var keys=s.getGeneratedKeys()){if(!keys.next())throw new SQLException("Missing starter sprite ID");id=keys.getInt(1);}
+        }
+        if(p.town().equippedSprite()==0)try(var s=c.prepareStatement("INSERT INTO town_equipped(world_id,sprite) VALUES(?,?) ON CONFLICT(world_id) DO UPDATE SET sprite=excluded.sprite")){
+            s.setInt(1,p.worldId());s.setInt(2,id);s.executeUpdate();
+        }
+        return id;
+    }
+    /** Stock ProjectXAdminMarshaller IDs; GM setters bypass normal point/catalyst requirements. */
+    public Result adminSprite(int account,int knight,long auth,int method,List<Object> args)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            try(var s=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){
+                s.setInt(1,account);s.setLong(2,auth);
+                try(var r=s.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}
+            }
+            if(method==8){
+                String config=((org.tortodrone.protocol.SessionDecoder.ConfigReference)args.get(0)).name();
+                if(config==null||rules.sprite(config)==null)throw new IOException("Unknown sprite configuration");
+                return createSprite(c,p,config);
+            }
+            var sprite=p.town().sprites().stream().filter(s->s.id()==p.town().equippedSprite()).findFirst().orElseThrow(()->new IOException("Equip a battle sprite first; /sprite_list shows owned sprite IDs"));
+            String field,json=null;int level=sprite.level();
+            switch(method){
+                case 44->{level=(Integer)args.get(0);if(level<0||level>99)throw new IOException("Sprite level must be between 1 and 100");field="level";}
+                case 45->{int skill=(Integer)args.get(0),power=(Integer)args.get(1),value=(Integer)args.get(2);
+                    if(skill<0||skill>=3||power<0||power>=3||value<0||value>3)throw new IOException("Sprite skill and power must be 1-3; value must be 0-3");
+                    var powers=new ArrayList<>(sprite.powers());powers.set(skill*3+power,value);field="powers";json=Json.stringify(powers);}
+                case 46->{int skill=(Integer)args.get(0),ultimate=(Integer)args.get(1);
+                    if(skill<0||skill>=3||ultimate<0||ultimate>2)throw new IOException("Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)");
+                    var ultimates=new ArrayList<>(sprite.ultimates());ultimates.set(skill,ultimate);field="ultimates";json=Json.stringify(ultimates);}
+                default->throw new IOException("Unknown sprite admin operation");
+            }
+            try(var s=c.prepareStatement("UPDATE town_sprites SET "+field+"=? WHERE id=? AND world_id=?")){
+                if(json==null)s.setInt(1,level);else s.setString(1,json);s.setInt(2,sprite.id());s.setInt(3,p.worldId());
+                if(s.executeUpdate()!=1)throw new IOException("Sprite changed; retry");
+            }
+            return null;
+        });
+    }
     public Result hatch(int account,int knight,long auth,long egg)throws IOException{
         return change(account,knight,auth,(c,p)->{var item=owned(p,egg);String config=rules.item(item.config()).get("sprite");if(config==null||rules.sprite(config)==null)throw new IOException("m.internal_error");
             consume(c,p,egg,1);try(var s=c.prepareStatement("INSERT INTO town_sprites(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();try(var keys=s.getGeneratedKeys()){keys.next();return keys.getInt(1);}}});

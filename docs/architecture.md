@@ -31,7 +31,7 @@ Both executable JARs are independent of a running stock game installation. Sourc
 
 One authenticated connection owns the current account lease; a successful login can take over and invalidate an earlier session, but a failed login must not. Recheck auth revisions and GM role at the operation/transaction boundary. Mutating another knight's inventory or reading its private data must never follow from a caller-provided ID alone.
 
-The database currently uses **SQLite schema 8**, WAL, foreign keys, a bounded busy timeout and transactional updates. Reject unsupported schemas without silently migrating or deleting state. Use identity checks and `BEGIN IMMEDIATE` for multi-owner item/currency transfers; commit durable data **before** publishing account/world events. Close handlers/sockets before tearing down database, logger and the deployment lock. Persistent keys must survive upgrades.
+The database currently uses **SQLite schema 9**, WAL, foreign keys, a bounded busy timeout and transactional updates. Reject unsupported schemas without silently migrating or deleting state. Use identity checks and `BEGIN IMMEDIATE` for multi-owner item/currency transfers; commit durable data **before** publishing account/world events. Close handlers/sockets before tearing down database, logger and the deployment lock. Persistent keys must survive upgrades.
 
 ## Wire correctness
 
@@ -59,7 +59,7 @@ Clients send facing/activity/input intent, **not authoritative coordinates**. Mo
 
 `WorldStatePoller` batches identity/role/revision inspection outside session/simulation locks and publishes changed saved inventory/balances; do not use log scraping as a state source. Chat/tells and inspection are scoped by authenticated identities and current ready/owned scenes. Trading requires synchronous revision/owner checks and atomic bilateral transfer.
 
-Knights retain mission rank/subrank and prestige in namespaced rows of schema 8's existing
+Knights retain mission rank/subrank and prestige in namespaced rows of schema 9's existing
 integer metadata table. Missing values mean Recruit 1-1 and zero prestige; invalid saved
 values fail closed. Local console commands `rank <knight> <rank> <subrank>` and
 `prestige <knight> <total>` (or admin CLI `--set-rank` / `--set-prestige`) update these

@@ -16,8 +16,20 @@ public final class KnightProgressTest {
             var knight=characters.create(new Knight(0,"Rank-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             var initial=db.worldProfile(1,knight.id(),1);
             check(initial.progress().equals(KnightProgress.RECRUIT),"existing schema supplies Recruit 1-1 with zero prestige");
-            var updated=db.progress("Alice",knight.name(),1,initial.worldId(),10,3,45000);
+            refuse(()->db.progress("Alice",knight.name(),2,initial.worldId(),10,3,45000,"Drakon"));
+            refuse(()->db.progress("Alice",knight.name(),1,initial.worldId()+1,10,3,45000,"Drakon"));
+            refuse(()->db.progress("Alice",knight.name(),1,initial.worldId(),0,3,45000,"Drakon"));
+            refuse(()->db.progress("Alice",knight.name(),1,initial.worldId(),10,3,45000,"Unknown"));
+            check(db.worldProfile(1,knight.id(),1).equals(initial),"rejected starter grants leave progression and sprite ownership unchanged");
+            WorldProfile updated;
+            try(var accounts=new AccountStore(home,false,ItemCatalog.starter())){
+                updated=accounts.progress("Alice",knight.name(),10,3,45000,1,initial.worldId(),"Drakon");
+            }
             check(updated.progress().rankPair().equals("10-3")&&updated.progress().prestigeRank()==5,"Vanguard and native prestige thresholds are represented");
+            var starter=updated.town().sprites().getFirst();
+            check(updated.town().sprites().size()==1&&starter.config().equals("Drakon")&&starter.level()==0&&starter.heat()==0&&updated.town().equippedSprite()==starter.id(),"testing grant unlocks the native pod ownership gate and equips a newborn starter");
+            check(db.progress("Alice",knight.name(),1,initial.worldId(),10,3,45000,"Maskeraith").equals(updated),"repeated or stale dialog submissions cannot grant a second starter");
+            check(db.progress("Alice",knight.name(),1,initial.worldId(),null,null,null).equals(updated),"ordinary progression edits preserve the starter grant");
             check(db.worldProfile(1,knight.id(),1,initial).equals(updated)&&updated.revision()>initial.revision(),"saved progress invalidates cached profiles");
             refuse(()->db.progress("Alice",knight.name(),2,initial.worldId(),1,1,0));
             refuse(()->db.progress("Alice",knight.name(),1,initial.worldId()+1,1,1,0));
@@ -34,7 +46,7 @@ public final class KnightProgressTest {
             check(costumes.progress().equals(updated.progress()),"equipment writes retain rank and prestige");
             db.deleteKnight("Alice",knight.name(),1,initial.worldId());
             check(db.read(c->{try(var s=c.createStatement();var r=s.executeQuery("SELECT count(*) FROM metadata WHERE key LIKE 'knight.progress.%'")){r.next();return r.getInt(1);}})==0,"knight deletion cleans its progress metadata");
-            System.out.println("PASS: persisted rank/prestige, revisions, ownership, rollback, picker rank and ordinary costume equipment");
+            System.out.println("PASS: persisted rank/prestige, starter sprite grant, idempotency, revisions, ownership, rollback, picker rank and ordinary costume equipment");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static void refuse(Action action)throws Exception{try{action.run();throw new AssertionError("Invalid progress update accepted");}catch(IOException expected){}}

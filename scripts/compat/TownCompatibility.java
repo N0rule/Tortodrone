@@ -45,6 +45,7 @@ public final class TownCompatibility {
         }
         int beforeAuxiliary=bytes.size();
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,350,400,(short)50,auxiliary,List.of(),new int[0],Map.of(),true));
+        int afterAuxiliary=bytes.size();
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,400,450,(short)50,List.of(),auxiliary,new int[0],Map.of(),true));
         var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();var player=(PlayerObject)((ObjectResponse)in.qe()).yk();apply(in,player);apply(in,player);
         if(!field(player.items.iterator().next(),"_level").equals(2))throw new AssertionError("Native crafted item level missing");
@@ -63,7 +64,7 @@ public final class TownCompatibility {
         var dungeonUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeDungeon=(com.threerings.tudey.data.actor.Actor)dungeonUpdate.aek()[0].apply(nativeDungeon);
         if(!field(nativeDungeon,"_spriteId").equals(companion.id()))throw new AssertionError("Dungeon companion delta differs");
         if(bytes.size()-in.available()!=beforeAuxiliary)throw new AssertionError("Dungeon packet boundary differs by "+(bytes.size()-in.available()-beforeAuxiliary)+" bytes");
-        var auxAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var auxUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
+        var auxAdd=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();if(bytes.size()-in.available()!=afterAuxiliary)throw new AssertionError("Auxiliary packet boundary differs by "+(bytes.size()-in.available()-afterAuxiliary)+" bytes");var auxUpdate=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
         for(int i=0;i<3;i++){var nativeAux=auxUpdate.aek()[i].apply(auxAdd.aej()[i]);if(i==1&&!field(nativeAux,"_endPoint").equals(new com.threerings.math.Vector2f(4,0)))throw new AssertionError("Laser endpoint differs");if(i==2&&!field(nativeAux,"_followId").equals(42))throw new AssertionError("Orbital follow identity differs");}
         if(in.available()!=0)throw new AssertionError("Trailing Town wire bytes");
         upstream();

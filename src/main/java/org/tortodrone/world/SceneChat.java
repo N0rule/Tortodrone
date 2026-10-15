@@ -5,7 +5,7 @@ import java.util.*;
 
 /** Reusable chat membership/routing; recipients enqueue without holding the routing lock. */
 public final class SceneChat {
-    public static final int SERVICE=12,MAX_CHARACTERS=256;
+    public static final int SERVICE=12,PARTY_SERVICE=21,MAX_CHARACTERS=256;
     public record Message(String speaker,String text,byte mode,boolean personal,String bundle) {
         public Message(String speaker,String text,byte mode){this(speaker,text,mode,false,null);}
         public Message(String speaker,String text,byte mode,boolean personal){this(speaker,text,mode,personal,null);}

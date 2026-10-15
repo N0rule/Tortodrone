@@ -12,7 +12,7 @@ public final class TownMovement {
     // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
-    public static final int DYING=280, DEAD=281, RESURRECT=282;
+    public static final int SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
     public static final int DYING_MILLIS=1290, RESURRECT_MILLIS=400;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
@@ -29,11 +29,15 @@ public final class TownMovement {
     public void interactionDuration(int millis){if(millis<0||millis>10000)throw new IllegalArgumentException("Invalid interaction duration");interactionMillis=millis;}
     private KnightCombat combat;
     private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
-    public void status(SceneStatus.Modifiers modifiers){status=modifiers;if(combat!=null)combat.status(modifiers);updateFlags();}
+    public void status(SceneStatus.Modifiers modifiers){status=modifiers;if(combat!=null)combat.status(modifiers);
+        if(modifiers.shocked()&&!dead()&&activity!=RESURRECT&&activity!=SHOCKED){if(combat!=null)combat.reset(timestamp);setActivity(SHOCKED,timestamp);}
+        else if(!modifiers.shocked()&&activity==SHOCKED)setActivity(0,timestamp);
+        updateFlags();}
     private java.util.function.IntPredicate revival=stamp->false;
     public void revival(java.util.function.IntPredicate handler){revival=java.util.Objects.requireNonNull(handler);}
     public boolean dead(){return activity==DYING||activity==DEAD;}
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
+    public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
     private org.tortodrone.character.StarterCatalog.Model activityData;
     private java.util.function.IntPredicate throwing=stamp->false;
     public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
@@ -160,7 +164,7 @@ public final class TownMovement {
                 }
                 inputFlags=0;updateFlags();continue;
             }
-            if(activity==0&&(combat==null||combat.canOverride())&&freshAction&&interaction.test(timestamp)){
+            if(status.canAttack()&&activity==0&&(combat==null||combat.canOverride())&&freshAction&&interaction.test(timestamp)){
                 inputFlags&=~4;if(combat!=null)combat.reset(timestamp);
                 if(activity==0)setActivity(2,timestamp);
             }
@@ -202,7 +206,7 @@ public final class TownMovement {
             float distance = (flags&2)==0?0:SPEED * step / 1000f*status.speed()*(combat==null?1:combat.movementScale());
             float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
             var impulse=combat==null?null:combat.state().impulse();
-            if(impulse!=null){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
+            if(impulse!=null&&status.canMove()){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
             float nx = x + dx;
             float ny = y + dy;
             if (walkable(nx, ny)&&dynamicCollision.test(nx,ny)) { x = nx; y = ny; }

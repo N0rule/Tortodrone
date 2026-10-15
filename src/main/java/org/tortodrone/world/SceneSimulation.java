@@ -76,6 +76,9 @@ public final class SceneSimulation {
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
+        private boolean revivePending;
+        public boolean beginRevive(){synchronized(SceneSimulation.this){check();if(!entered||portal!=null||revivePending||!health.canSparkRevive())return false;revivePending=true;return true;}}
+        public void finishRevive(boolean success){synchronized(SceneSimulation.this){check();if(!revivePending)return;revivePending=false;if(success&&health.revive(SceneClock.now())){movement.resurrect(SceneClock.now());weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Energy Rez",Map.of()),actor(),SceneClock.now());}}}
         private org.tortodrone.town.TownState.Sprite sprite;
         private org.tortodrone.town.TownState.Harness harness;
         private final int petId=nextPetId++;
@@ -117,13 +120,15 @@ public final class SceneSimulation {
             check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0)return false;
             if(spec.text("kind","").equals("vial")){
                 int stamp=SceneClock.now();if(!movement.lift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
-                if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);return true;
+                if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);health.curseItem(id,stamp);updateLife(stamp);return true;
             }
             if(!spec.text("kind","").equals("capsule")||health.state().current()>=health.state().maximum())return false;
             int stamp=SceneClock.now();if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))return false;
+            health.curseItem(id,stamp);if(!health.alive()){usedItems.add(id);updateLife(stamp);return true;}
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
+        public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){check();health.inventory(profile);}}
         public SceneStatus.State status(){synchronized(SceneSimulation.this){check();return health.status();}}
         public boolean heal(int amount){synchronized(SceneSimulation.this){check();return health.heal(amount);}}
         public int takeInteraction(){synchronized(SceneSimulation.this){check();int target=interactionTarget;interactionTarget=0;return target;}}
@@ -134,7 +139,6 @@ public final class SceneSimulation {
             health.spriteShield(amount->{var shield=auraOwner==0?this:members.get(auraOwner);if(shield==null||!shield.entered||shield.petShield<=0)return amount;int absorbed=Math.min(amount,shield.petShield);shield.petShield-=absorbed;return amount-absorbed;});
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
-            movement.revival(stamp->instance.map().kind().equals("training")&&health.revive(stamp));
             movement.dynamicCollision((x,y)->entities.walkable(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation());
@@ -168,7 +172,7 @@ public final class SceneSimulation {
         }
         public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
-                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();weapons.attack(appearance.id(),attack);});movement.combat(combat);}
+                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();if(attack.activity()>=KnightCombat.INCOMPLETE&&combat.state().weapon()!=null)health.curseItem(combat.state().weapon().id(),attack.started());if(health.alive())weapons.attack(appearance.id(),attack);});movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
@@ -177,12 +181,14 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.emote(emote,sceneTime,now);}
         }
         private void updateLife(int stamp){
-            if(health.alive()||movement.dead())return;
+            if(health.alive()){if(movement.dead()){movement.resurrect(stamp);weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);}return;}
+            if(movement.dead())return;
             weapons.cancelAttacks(appearance.id());
             entities.cancelClaims(appearance.id());
             if(lift!=0)entities.dropLift(lift,actor(),stamp);
             lift=dropAt=interactionTarget=0;pendingItem=0;itemSpec=null;
             movement.die(stamp);
+            if((health.state().reviveFlags()&8)!=0)weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Pre Emergency Rez",Map.of()),actor(),stamp);
         }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
@@ -191,8 +197,7 @@ public final class SceneSimulation {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
                 movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
-                movement.activity()==TownMovement.DEAD&&instance.map().kind().equals("training")?new InteractionState(a.id(),null,"Resurrect"):
-                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill));
+                !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
         @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
@@ -280,6 +285,7 @@ public final class SceneSimulation {
                 member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&2)!=0);
                 member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
+                if(member.health.status().modifiers().shocked()&&member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 member.movement.advance(stamp,now);
                 if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 if(member.pendingItem!=0&&stamp>=member.itemLand){
@@ -289,6 +295,8 @@ public final class SceneSimulation {
                 member.portal=member.movement.portal();member.advancePet(stamp);
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();
+            for(var member:members.values())if(member.entered)for(var pulse:member.health.takePulses())entities.statusPulse(member.appearance.id(),pulse,member.movement.x(),member.movement.y(),stamp);
+            for(var member:members.values())if(member.entered)for(var action:member.health.takeActions())weapons.fire(action,member.actor(),stamp);
             entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;

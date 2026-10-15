@@ -163,7 +163,7 @@ public final class SessionCodec {
         return frame(out -> {
             objectHeader(out, messageId, "com.threerings.projectx.data.ServerObject", SERVER_OID);
             string(out, "tortodrone-local"); out.writeByte(0); // node name, coin exchange fee
-            for (int i = 0; i < 4; i++) out.writeInt(0); // guild costs, dungeon/PvP revival costs
+            out.writeInt(0);out.writeInt(0);out.writeInt(org.tortodrone.storage.TownStore.SPARK_COST);out.writeInt(0); // guild costs, dungeon/PvP spark costs
             if(soloInteriors){type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);townSummary(out);}
             else emptyDSet(out);
             if(soloInteriors) {
@@ -714,7 +714,7 @@ public final class SessionCodec {
             boolean training=scene.map().kind().equals("training");
             objectHeader(out,message,"com.threerings.projectx.dungeon.data."+(training?"DungeonPartyObject":"LevelPartyObject"),partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
-            out.writeShort(0); // Party chat is outside this milestone.
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
             type(out,"com.threerings.projectx.dungeon.data.PartyMember");out.writeInt(playerOid);out.writeInt(0);
             name(out,knight.name());out.writeInt(256|knight.color());value(out,new StarterCatalog.Model(knight.helm(),Map.of()));
@@ -724,7 +724,7 @@ public final class SessionCodec {
             out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
             type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);
-            conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(0);
+            conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(health.reviveFlags());
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(0);out.writeBoolean(!scene.map().content().items().isEmpty());out.writeLong(0);
             out.writeShort(0);out.writeInt(training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
@@ -746,6 +746,18 @@ public final class SessionCodec {
         return frame(out->{eventHeader(out,"EntryUpdatedEvent",partyOid);string(out,"health");
             type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(playerOid);
             out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());});
+    }
+    public byte[] partyVitals(int partyOid,int playerOid,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException{
+        return frame(out->{eventHeader(out,"CompoundEvent",partyOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
+            type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(partyOid);string(out,"health");
+            type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(playerOid);out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());
+            type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(partyOid);string(out,"status");
+            type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(playerOid);conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(health.reviveFlags());
+        });
+    }
+    public byte[] reviveFailure(int playerOid,short request,String reason)throws IOException{
+        if(!java.util.Set.of("m.costupdate","m.no_revive","m.insufficient_funds").contains(reason))return invocationFailure(playerOid,request,reason);
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",playerOid);out.writeShort(request);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason.equals("m.insufficient_funds")?"m.nsf_energy":reason);});
     }
     public byte[] partyDamage(int partyOid,org.tortodrone.world.SceneCombatEvent event)throws IOException {
         return frame(out->{type(out,PREFIX+"EventNotification");out.writeShort(-1);
@@ -871,7 +883,7 @@ public final class SessionCodec {
             out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
-            out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0));
+            out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0) | (item.cursed()?4:0));
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
@@ -997,8 +1009,8 @@ public final class SessionCodec {
         value(out,p.config());out.writeInt(actor.id());out.writeInt(p.created());out.writeInt(p.destroyed());
         vector(out,actor.x(),actor.y());out.writeFloat(actor.rotation());out.writeInt(actor.flags());
         if(p.orbit()!=null){var orbit=p.orbit();out.writeFloat(orbit.radius());out.writeInt(orbit.followId());
-            vector(out,p.originX(),p.originY());vector(out,orbit.relativeX(),orbit.relativeY());out.writeInt(orbit.collided());out.writeFloat(orbit.originalRotation());
-            if(!p.nativeType().equals("ORBITAL")){out.writeInt(p.ownerOid());out.writeInt(orbit.homeTargetId());out.writeInt(0);out.writeInt(p.faction());}return;}
+            vector(out,p.originX(),p.originY());vector(out,orbit.relativeX(),orbit.relativeY());out.writeInt(orbit.collided());
+            if(!p.nativeType().equals("ORBITAL")){out.writeFloat(orbit.originalRotation());out.writeInt(p.ownerOid());out.writeInt(orbit.homeTargetId());out.writeInt(0);out.writeInt(p.faction());}return;}
         if(p.nativeType().equals("ACTOR"))return;
         if(p.nativeType().equals("LASER")){out.writeBoolean(!p.fizzle());vector(out,actor.x()+(float)Math.cos(actor.rotation())*p.speed(),actor.y()+(float)Math.sin(actor.rotation())*p.speed());return;}
         if(bullet){out.writeFloat(p.maxStep());out.writeFloat(actor.direction());vector(out,p.originX(),p.originY());out.writeFloat(p.z());}
@@ -1074,10 +1086,10 @@ public final class SessionCodec {
     }
     private void statusModifiers(DataOutputStream out,org.tortodrone.world.SceneStatus.Modifiers status)throws IOException {
         type(out,"com.threerings.projectx.dungeon.data.ImmutableStatusModifiers");
-        out.writeFloat(status.speed());out.writeFloat(status.attackSpeed());out.writeFloat(status.attackDamage());out.writeFloat(1);
+        out.writeFloat(status.speed());out.writeFloat(status.attackSpeed());out.writeFloat(status.attackDamage());out.writeFloat(status.relativeDamage());
         out.writeFloat(status.defense());out.writeFloat(status.heal());out.writeFloat(1);out.writeFloat(1);out.writeFloat(0);
-        out.writeBoolean(status.canMove());out.writeBoolean(status.canRotate());out.writeBoolean(true);out.writeBoolean(status.canAttack());
-        out.writeBoolean(status.asleep());out.writeBoolean(status.shocked());out.writeBoolean(true);out.writeInt(0);
+        out.writeBoolean(status.canMove());out.writeBoolean(status.canRotate());out.writeBoolean(status.canDefend());out.writeBoolean(status.canAttack());
+        out.writeBoolean(status.asleep());out.writeBoolean(status.shocked());out.writeBoolean(status.canBeTargeted());out.writeInt(0);
     }
     public byte[] partyStatus(int partyOid,int playerOid,org.tortodrone.world.SceneStatus.State status)throws IOException {
         return frame(out->{eventHeader(out,"EntryUpdatedEvent",partyOid);string(out,"status");

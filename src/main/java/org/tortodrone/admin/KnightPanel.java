@@ -29,7 +29,7 @@ final class KnightPanel extends JPanel {
 
     KnightPanel(AdminWindow window) {
         super(new BorderLayout(8,8));this.window=window;
-        JPanel heading=new JPanel(new GridLayout(0,1,6,6));heading.add(new JLabel("Knights and inventory"));JPanel knightPicker=new JPanel(new BorderLayout(6,0));knightPicker.add(knights);JPanel knightActions=new JPanel(new FlowLayout(FlowLayout.RIGHT,6,0));button(knightActions,"Refresh knight",this::refresh);button(knightActions,"Delete knight",window::deleteKnight);knightPicker.add(knightActions,BorderLayout.EAST);heading.add(knightPicker);heading.add(owner);heading.add(balances);
+        JPanel heading=new JPanel(new GridLayout(0,1,6,6));heading.add(new JLabel("Knights and inventory"));JPanel knightPicker=new JPanel(new BorderLayout(6,0));knightPicker.add(knights);JPanel knightActions=new JPanel(new FlowLayout(FlowLayout.RIGHT,6,0));button(knightActions,"Refresh knight",this::refresh);button(knightActions,"Rank / prestige",this::progress);button(knightActions,"Delete knight",window::deleteKnight);knightPicker.add(knightActions,BorderLayout.EAST);heading.add(knightPicker);heading.add(owner);heading.add(balances);
         DesktopWidgets.searchField(search,"Find an inventory item");heading.add(search);add(heading,BorderLayout.NORTH);
         DesktopWidgets.configureTable(table);
         TableRowSorter<InventoryModel> sorter=new TableRowSorter<>(inventory);table.setRowSorter(sorter);
@@ -67,7 +67,7 @@ final class KnightPanel extends JPanel {
     private void show(WorldProfile result){if(account==null||account.id()!=result.accountId()||!window.selectedAccount(result.accountId()))return;
         var selected=selectedItem();Long id=selected==null?null:selected.id();profile=result;inventory.replace(result.items(),window.accounts().catalog());
         if(id!=null){table.clearSelection();for(int r=0;r<inventory.getRowCount();r++)if(inventory.item(r).id()==id){int view=table.convertRowIndexToView(r);if(view>=0)table.setRowSelectionInterval(view,view);break;}}
-        owner.setText(name+" · "+account.username());owner.setToolTipText("Account ID "+result.accountId()+" · roster ID "+result.knightId()+" · world ID "+result.worldId());balances.setText("Crowns: "+result.crowns()+"    Energy: "+result.energy());enableActions();}
+        owner.setText(name+" · "+account.username());owner.setToolTipText("Account ID "+result.accountId()+" · roster ID "+result.knightId()+" · world ID "+result.worldId());balances.setText("Crowns: "+result.crowns()+"    Energy: "+result.energy()+"    Rank: "+result.progress().rankPair()+"    Prestige: "+result.progress().prestige());enableActions();}
     private WorldProfile.Item selectedItem(){int row=table.getSelectedRow();return row<0?null:inventory.item(table.convertRowIndexToModel(row));}
     private JPanel form(Object... fields){JPanel p=new JPanel(new GridLayout(0,2,8,8));for(int i=0;i<fields.length;i+=2){p.add(new JLabel(fields[i].toString()));p.add((Component)fields[i+1]);}return p;}
     private boolean confirm(Component content,String title){return JOptionPane.showConfirmDialog(window,content,title,JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE)==JOptionPane.OK_OPTION;}
@@ -78,6 +78,23 @@ final class KnightPanel extends JPanel {
         if(!confirm(form("Item",new JLabel(inventory.friendly(item)),"Instance ID",new JLabel(Long.toString(item.id())),remove?"Remove":"New quantity",remove?new JLabel("Delete this item instance"):count),(remove?"Remove item":"Set quantity")+" — "+knight))return;
         int value=0;try{if(!remove){count.commitEdit();value=(Integer)count.getValue();}}catch(java.text.ParseException invalid){window.message("Enter a valid quantity between 1 and "+maximum+".",true);return;}
         int quantity=value;window.execute(()->window.accounts().itemQuantity(selected.username(),knight,item.id(),quantity,selected.id(),target.worldId()),this::show);
+    }
+    private void progress(){
+        if(profile==null)return;var target=profile;var selected=account;String knight=name;
+        JSpinner rank=new JSpinner(new SpinnerNumberModel(target.progress().rank(),1,10,1));
+        JSpinner subrank=new JSpinner(new SpinnerNumberModel(target.progress().subrank(),1,4,1));
+        JSpinner prestige=new JSpinner(new SpinnerNumberModel(target.progress().prestige(),0,Integer.MAX_VALUE,1000));
+        boolean hasSprite=!target.town().sprites().isEmpty();
+        JCheckBox grantSprite=new JCheckBox("Grant first battle sprite (testing)");grantSprite.setEnabled(!hasSprite);
+        JComboBox<String> sprite=new JComboBox<>(new String[]{"Drakon","Seraphynx","Maskeraith"});sprite.setEnabled(false);
+        grantSprite.addActionListener(e->sprite.setEnabled(grantSprite.isSelected()));
+        grantSprite.setToolTipText(hasSprite?"This knight already owns a sprite; pod hatching is unlocked.":"Unlocks the An Eternal Bond pod gate by granting and equipping one level 1 starter sprite.");
+        JButton vanguard=new JButton("Vanguard preset");vanguard.addActionListener(e->{rank.setValue(10);subrank.setValue(3);prestige.setValue(45000);});
+        if(!confirm(form("Rank",rank,"Subrank",subrank,"Prestige total",prestige,"Testing preset",vanguard,"An Eternal Bond",grantSprite,"Starter sprite",sprite),"Rank / prestige — "+knight))return;
+        try{rank.commitEdit();subrank.commitEdit();prestige.commitEdit();}catch(java.text.ParseException invalid){window.message("Enter rank 1–10, subrank 1–4 and a nonnegative prestige total.",true);return;}
+        int nextRank=((Number)rank.getValue()).intValue(),nextSubrank=((Number)subrank.getValue()).intValue(),nextPrestige=((Number)prestige.getValue()).intValue();
+        String starterSprite=grantSprite.isSelected()?(String)sprite.getSelectedItem():null;
+        window.execute(()->window.accounts().progress(selected.username(),knight,nextRank,nextSubrank,nextPrestige,selected.id(),target.worldId(),starterSprite),this::show);
     }
     void currency(){
         if(profile==null)return;var target=profile;var selected=account;String knight=name;

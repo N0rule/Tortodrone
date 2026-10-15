@@ -5,6 +5,7 @@ import org.tortodrone.character.StarterCatalog;
 /** Stock numeric damage summaries; geometry and mutable targets belong to the scene. */
 public final class SceneDamage {
     private SceneDamage() { }
+    public static boolean status(Object damage){return damage instanceof FireCatalog.DataValue value&&(value.type().endsWith("$Status")||value.type().endsWith("$ExclusiveStatus"));}
     public static KnightCombat.Impulse impulse(Object config,float ox,float oy,float x,float y,int level,int stamp){
         if(!(config instanceof FireCatalog.DataValue))return null;
         int difference=level-(int)number(config,"level",1);if(difference>2)return null;
@@ -37,7 +38,7 @@ public final class SceneDamage {
     }
     public static boolean hasStatus(Object damage){
         if(!(damage instanceof FireCatalog.DataValue value))return false;
-        if(value.type().endsWith("$Status"))return true;
+        if(status(damage))return true;
         if(value.type().endsWith("$Compound")&&field(damage,"damages") instanceof FireCatalog.ListValue list)for(Object child:list.values())if(hasStatus(child))return true;
         return false;
     }

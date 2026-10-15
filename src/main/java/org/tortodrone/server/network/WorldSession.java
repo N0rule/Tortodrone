@@ -68,12 +68,17 @@ final class WorldSession implements AutoCloseable {
     private long nextTemporaryItem=-1;
     private final long[] quickbar=new long[4];
     private void publishQuickbar()throws IOException {
+        if(membership!=null)membership.inventory(visibleProfile());
         for(int slot=0;slot<quickbar.length;slot++)if(!temporaryItems.containsKey(quickbar[slot]))quickbar[slot]=0;
         var slots=quickbar.clone();output.send(()->codec.quickbar(oid,slots));
     }
     private WorldProfile visibleProfile(){
-        if(temporaryItems.isEmpty())return profile;
+        return visibleProfile(membership==null?Set.of():membership.status().cursedItems());
+    }
+    private WorldProfile visibleProfile(Set<Long> cursed){
+        if(temporaryItems.isEmpty()&&cursed.isEmpty())return profile;
         var items=new ArrayList<>(profile.items());items.addAll(temporaryItems.values());
+        items.replaceAll(item->item.curse(cursed.contains(item.id())));
         return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress(),profile.town());
     }
     private void collectPickups()throws IOException {
@@ -257,7 +262,19 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized boolean interiorPartyInvocation(SessionDecoder.Invocation request)throws IOException {
         if(!ownsInteriorParty(request.oid()))return false;
+        if(request.service()==SceneChat.PARTY_SERVICE)return false;
         var args=request.arguments();
+        if(request.service()==20&&request.method()==4){
+            if(args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof Integer cost)||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid revive request");
+            try{
+                if(closed||!subscribed||!entered||!knight.name().equalsIgnoreCase(target)||!membership.beginRevive())throw new IOException("m.no_revive");
+                boolean success=false;
+                try{var result=characters.town(scenes.town()).revive(characters.accountId(),knight.id(),authRevision,cost);success=true;townChanged(result);}
+                finally{membership.finishRevive(success);}
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.reviveFailure(oid,listener.requestId(),refused.getMessage()));}
+            return true;
+        }
         if(request.service()!=20||request.method()!=3||args.size()!=1
                 ||!(args.getFirst() instanceof SessionDecoder.Listener listener)
                 ||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Unsupported interior party operation");
@@ -536,15 +553,35 @@ final class WorldSession implements AutoCloseable {
         var args=request.arguments();
         SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
         String failure=null;
-        if(request.method()!=7) {
+        int method=request.method();
+        if(method!=7&&method!=8&&method!=44&&method!=45&&method!=46) {
             // Unknown tools must not leave the stock dashboard waiting for a callback.
             if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,"This admin tool is not available yet"));}
             return;
         }
-        if(listener==null)throw new SessionDecoder.Rejected("Missing item creation confirmation listener");
-        failure=createItem(args);
+        if(listener==null||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Missing admin confirmation listener");
+        failure=method==7?createItem(args):adminSprite(method,args);
         if(failure==null)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
+    }
+
+    private String adminSprite(int method,List<Object> args)throws IOException{
+        boolean valid=switch(method){
+            case 8->args.size()==2&&args.getFirst() instanceof SessionDecoder.ConfigReference;
+            case 44->args.size()==2&&args.getFirst() instanceof Integer;
+            case 45->args.size()==4&&args.subList(0,3).stream().allMatch(v->v instanceof Integer);
+            case 46->args.size()==3&&args.subList(0,2).stream().allMatch(v->v instanceof Integer);
+            default->false;
+        };
+        if(!valid)return "Invalid sprite admin request";
+        try{
+            if(closed||!selected())return "Select a knight first";
+            if(!roles.gameMaster())return "Game Master permission required";
+            var result=characters.town(scenes.town()).adminSprite(characters.accountId(),knight.id(),authRevision,method,args);
+            townChanged(result);
+            log.info("Updated battle sprite; knightId="+profile.worldId()+"; adminMethod="+method);
+            return null;
+        }catch(IOException refused){return refused.getMessage();}
     }
 
     /** ProjectXAdminMarshaller.createItem(config, quantity, locked, expireDays), stock method seven. */
@@ -688,8 +725,9 @@ final class WorldSession implements AutoCloseable {
         int place,generation;
         synchronized(this) {
             if(departingScene(request.oid()))return;
-            if(closed||socket.isClosed()||!subscribed||!entered||!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
-            if(request.service()!=SceneChat.SERVICE||request.method()!=1||request.arguments().size()!=2
+            boolean party=ownsInteriorParty(request.oid())&&request.service()==SceneChat.PARTY_SERVICE;
+            if(closed||socket.isClosed()||!subscribed||!entered||!party&&!ownsScene(request.oid()))throw new SessionDecoder.Rejected("Unauthorized scene chat");
+            if((!party&&request.service()!=SceneChat.SERVICE)||request.method()!=1||request.arguments().size()!=2
                     ||!(request.arguments().get(0) instanceof String)||!(request.arguments().get(1) instanceof Byte))
                 throw new SessionDecoder.Rejected("Invalid scene chat request");
             try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
@@ -711,7 +749,7 @@ final class WorldSession implements AutoCloseable {
         }catch(IOException refused){feedback(place,generation,refused.getMessage());}
     }
     private synchronized void feedback(int place,int generation,String reason)throws IOException {
-        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)output.send(()->codec.chatFeedback(place,reason));
+        if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)output.send(()->codec.chatFeedback(scene.map().town()?place:SessionCodec.interiorPartyOid(scene),reason));
     }
     /** Crowd ChatService method 2. ListenerMarshaller has failure only, no success response. */
     void broadcast(SessionDecoder.Invocation request)throws IOException {
@@ -755,7 +793,7 @@ final class WorldSession implements AutoCloseable {
         if(message.personal()) {
             try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){return false;}
         }
-        output.send(()->codec.chat(message.personal()?oid:place,message));return true;
+        output.send(()->codec.chat(message.personal()?oid:scene.map().town()?place:SessionCodec.interiorPartyOid(scene),message));return true;
     }
     private void leaveChat(){
         townDialog=null;townSource=null;townService++;
@@ -817,12 +855,13 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
             delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town(),effects));
         var health=current.health(profile.worldId());
-        if(!scene.map().town()&&health!=null&&(lastSnapshot==null||!health.equals(lastSnapshot.health(profile.worldId()))))
-            output.send(()->codec.partyHealth(SessionCodec.interiorPartyOid(scene),oid,health));
         var currentOwn=current.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
         var previousOwn=lastSnapshot==null?null:lastSnapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
-        if(!scene.map().town()&&currentOwn!=null&&currentOwn.sceneKnight()!=null&&(previousOwn==null||previousOwn.sceneKnight()==null||!currentOwn.sceneKnight().status().equals(previousOwn.sceneKnight().status()))){
-            var status=currentOwn.sceneKnight().status();output.send(()->codec.partyStatus(SessionCodec.interiorPartyOid(scene),oid,status));
+        Set<Long> previousCurse=previousOwn==null||previousOwn.sceneKnight()==null?Set.of():previousOwn.sceneKnight().status().cursedItems();
+        Set<Long> currentCurse=currentOwn==null||currentOwn.sceneKnight()==null?Set.of():currentOwn.sceneKnight().status().cursedItems();
+        if(!previousCurse.equals(currentCurse))output.send(()->codec.itemChanges(oid,knight,visibleProfile(previousCurse),visibleProfile(currentCurse)));
+        if(subscribedPartyOid==SessionCodec.interiorPartyOid(scene)&&health!=null&&currentOwn!=null&&currentOwn.sceneKnight()!=null&&(lastSnapshot==null||!health.equals(lastSnapshot.health(profile.worldId()))||previousOwn==null||previousOwn.sceneKnight()==null||!currentOwn.sceneKnight().status().equals(previousOwn.sceneKnight().status()))){
+            var status=currentOwn.sceneKnight().status();output.send(()->codec.partyVitals(SessionCodec.interiorPartyOid(scene),oid,health,status));
         }
         if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot))output.send(()->codec.partyDamage(SessionCodec.interiorPartyOid(scene),event));
         lastStamp=reference=stamp;lastSnapshot=current;
@@ -888,7 +927,7 @@ final class WorldSession implements AutoCloseable {
                 var visibleBefore=visibleProfile();var previous=profile;profile=fresh;
                 if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
                 if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
-                if(!fresh.town().equals(previous.town()))output.send(()->codec.townState(oid,profile));
+                if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));}
                 if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
             }
         }
@@ -903,6 +942,7 @@ final class WorldSession implements AutoCloseable {
         try{socket.close();}catch(IOException ignored){}
     }
     private void attach() {
+        membership=null; // The old scene membership is closed before rebuilding its replacement.
         rebuildAppearance();var place=scene;
         membership=place.simulation().join(actorAppearance(),snapshot->offer(place,snapshot));
         membership.equipment(visibleProfile());

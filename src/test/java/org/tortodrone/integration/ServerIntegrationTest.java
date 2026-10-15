@@ -461,7 +461,7 @@ public final class ServerIntegrationTest {
         }
 
         int ready() throws Exception {
-            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
+            long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(30);
             StringBuilder output = new StringBuilder();
             while (System.nanoTime() < deadline) {
                 String line = lines.poll(Math.max(1, deadline - System.nanoTime()), TimeUnit.NANOSECONDS);

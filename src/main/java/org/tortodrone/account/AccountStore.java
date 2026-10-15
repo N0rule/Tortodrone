@@ -41,8 +41,11 @@ public final class AccountStore implements AutoCloseable {
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
+        return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);
+    }
+    public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld,String starterSprite)throws IOException{
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Knight progress requires SQLite storage");
-        return database.progress(username,knight,expectedAccount,expectedWorld,rank,subrank,prestige);
+        return database.progress(username,knight,expectedAccount,expectedWorld,rank,subrank,prestige,starterSprite);
     }
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");

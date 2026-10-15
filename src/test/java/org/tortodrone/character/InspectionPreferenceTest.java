@@ -24,8 +24,8 @@ public final class InspectionPreferenceTest {
             long aliceAuth = db.identity("Alice").authRevision();
             long bobAuth = db.identity("Bob").authRevision();
 
-            check(Database.SCHEMA_VERSION == 8 && schemaVersion(db) == 8,
-                "inspection preferences use schema 8 without a migration");
+            check(Database.SCHEMA_VERSION == 9 && schemaVersion(db) == 9,
+                "inspection preferences reuse schema 9 metadata without a dedicated table");
             check(!alice.inspectionHidden(aliceAuth) && !bob.inspectionHidden(bobAuth),
                 "new accounts default to inspection visible");
 

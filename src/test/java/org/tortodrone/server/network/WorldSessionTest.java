@@ -52,7 +52,9 @@ public final class WorldSessionTest {
                 var oldRegistration=persistence(first);
                 var reader = new DeltaReader(one);
                 var initial = reader.next();
-                check(initial.reference()==0 && initial.added()==1, "initial delta contains the controlled actor");
+                // Town scenes publish their content NPC actors together with the controlled knight.
+                int sceneActors = sceneActors();
+                check(initial.reference()==0 && initial.added()==sceneActors, "initial delta contains the controlled actor and town actors");
                 int previous = initial.timestamp();
                 // No acknowledgements for more than the old two-second history window.
                 for (int i=0;i<45;i++) {
@@ -81,7 +83,7 @@ public final class WorldSessionTest {
                 first.refreshFailed(oldRegistration,new IOException("late old subscription read"));
                 check(WorldSession.active(1,knight.id())&&!one.isClosed(),"stale poll results/errors cannot close a replacement subscription");
                 var reentry = reader.nextAfterSubscription((short)2);
-                check(reentry.reference()==0 && reentry.added()==1, "resubscription resets the scene baseline");
+                check(reentry.reference()==0 && reentry.added()==sceneActors, "resubscription resets the scene baseline");
                 var afterReentry = reader.next();
                 check(afterReentry.reference()==reentry.timestamp() && afterReentry.added()==0,
                     "re-entry retains actor after its initial snapshot");
@@ -113,6 +115,10 @@ public final class WorldSessionTest {
     private static WorldStatePoller.Registration persistence(WorldSession session)throws ReflectiveOperationException {
         var field=WorldSession.class.getDeclaredField("persistence");field.setAccessible(true);
         return (WorldStatePoller.Registration)field.get(session);
+    }
+    /** Actor count of the shared town entry scene, including the content NPC actors it publishes. */
+    private static int sceneActors()throws Exception {
+        return org.tortodrone.world.SceneRegistry.system().entry().simulation().snapshot().actors().size();
     }
     private static void refuse(Action action) throws Exception {
         try {action.run();throw new AssertionError("Invalid session operation accepted");}

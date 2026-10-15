@@ -10,6 +10,7 @@ public final class SceneWeapons {
         void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
         default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
         default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){damage(region,x,y,rotation,stamp,owner);}
+        default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object shape,Set<Integer> hit){sweep(region,x,y,rotation,stamp,owner,hit);}
         default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
         default boolean monsters(Object region,float x,float y,float rotation){return false;}
     }
@@ -30,7 +31,8 @@ public final class SceneWeapons {
     }
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
-        final int[] timers;float x,y,relativeX,relativeY;int advanced;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
+        final IdentityHashMap<FireCatalog.Action,Set<Integer>> hits=new IdentityHashMap<>();
+        final int[] timers;float x,y,relativeX,relativeY;Object contactShape;int advanced;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
         Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];}
         ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),spec.nativeType().equals("ORBITAL")?source.ownerId:0,relativeX,relativeY,collided,rotation,source.ownerId);
             // Native _z is the source's floor elevation, not the authored bullet
@@ -127,7 +129,7 @@ public final class SceneWeapons {
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
     }
-    private Pose shotPose(Shot shot){Object shape=shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id);}
+    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id);}
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
         if(shot.spec.nativeType().equals("ORBITAL")){
@@ -141,11 +143,24 @@ public final class SceneWeapons {
                 int time=from+(int)((long)(end-from)*(n+1)/steps);
                 float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
                 if(!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){destroy(shot,time,false);break;}
+                if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){impact(shot,x,y,time);break;}
                 shot.x=x;shot.y=y;
-                if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){destroy(shot,time,false);break;}
             }
         }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,shot.advanced,home);
         shot.advanced=end;
+    }
+    private void impact(Shot shot,float x,float y,int stamp){
+        // Keep the carrier outside its victim so its backward shards can escape.
+        // Archive BulletLogic retains the colliding substep's shape for damage;
+        // otherwise a tangent impact can miss the victim through rounding.
+        if(shot.spec.collisionShape()!=null){
+            float dx=x-shot.x,dy=y-shot.y,c=(float)Math.cos(shot.rotation),s=(float)Math.sin(shot.rotation);
+            var translation=new FireCatalog.DataValue("com.threerings.math.Vector2f",Map.of("x",dx*c+dy*s,"y",-dx*s+dy*c));
+            var transform=new FireCatalog.DataValue("com.threerings.math.Transform2D",Map.of("_translation",translation,"_rotation",0f,"_scale",1f));
+            var end=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",Map.of("shape",shot.spec.collisionShape(),"transform",transform));
+            shot.contactShape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Compound",Map.of("shapes",new FireCatalog.ListValue("com.threerings.tudey.shape.config.ShapeConfig",List.of(shot.spec.collisionShape(),end))));
+        }else {shot.x=x;shot.y=y;}
+        destroy(shot,stamp,false);
     }
     // Transcribed from the archive's 2026-compatible OrbitalBulletAdvancer:
     // fly the centre out, home to the owner, and compute the orbit at 1/60 s steps.
@@ -203,6 +218,12 @@ public final class SceneWeapons {
                 targets.damage(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
             return true;
         }
+        if(action.kind()==FireCatalog.Kind.SWEEP_DAMAGE){
+            var shot=shots.get(source.actorId);if(shot==null||targets==null)return false;
+            float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
+            targets.sweep(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape,shot.hits.computeIfAbsent(action,key->new HashSet<>()));
+            return true;
+        }
         if(action.kind()==FireCatalog.Kind.IMPULSE_REGION){if(targets!=null)targets.impulse(action.config(),source.x,source.y,source.rotation,stamp,source.ownerId);return true;}
         if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
         if(action.kind()==FireCatalog.Kind.UNSUPPORTED&&nonTargetAction(action.unsupportedType()))return true;
@@ -231,16 +252,21 @@ public final class SceneWeapons {
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
             if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
             while(shots.containsKey(nextId))nextId++;
-            var shot=new Shot(nextId++,spec,source,stamp,x,y,rotation);
+            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId):source;
+            var shot=new Shot(nextId++,spec,controller,stamp,x,y,rotation);
             shots.put(shot.id,shot);
+            // Actor-born projectiles use the native offset directly. Sweeping
+            // their muzzle from the parent impact would collide with the same
+            // target and exhaust every ricochet before a shard could travel.
+            boolean actorBorn=shots.containsKey(source.actorId);
             // A muzzle offset is movement too. Sweeping it prevents a bullet from
             // starting beyond a monster standing between the knight and the muzzle.
             int muzzleSteps=Math.max(1,(int)Math.ceil(Math.hypot(ox,oy)/.05f));
             for(int step=1;step<=muzzleSteps;step++){
                 float px=x+ox*step/muzzleSteps,py=y+oy*step/muzzleSteps;
                 if(!clear(spec,shot.x,shot.y,px,py,rotation)){destroy(shot,stamp,false);break;}
+                if(!actorBorn&&spec.nativeType().equals("BULLET")&&spec.collisionMask()!=0&&targets!=null&&targets.contact(px,py,rotation,source.ownerId,spec.collisionShape(),spec.collisionMask())){impact(shot,px,py,stamp);break;}
                 shot.x=px;shot.y=py;
-                if(spec.nativeType().equals("BULLET")&&spec.collisionMask()!=0&&targets!=null&&targets.contact(px,py,rotation,source.ownerId,spec.collisionShape(),spec.collisionMask())){destroy(shot,stamp,false);break;}
             }
             result=true;
         }return result;

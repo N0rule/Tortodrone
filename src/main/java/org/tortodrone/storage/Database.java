@@ -324,17 +324,21 @@ public final class Database {
     }
     /** Local administration only; target identity, revision and audit share one transaction. */
     public WorldProfile progress(String username,String knightName,int expectedAccount,int expectedWorld,Integer rank,Integer subrank,Integer prestige)throws IOException{
+        return progress(username,knightName,expectedAccount,expectedWorld,rank,subrank,prestige,null);
+    }
+    public WorldProfile progress(String username,String knightName,int expectedAccount,int expectedWorld,Integer rank,Integer subrank,Integer prestige,String starterSprite)throws IOException{
         return write(c->{var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);var old=profile.progress();
             org.tortodrone.character.KnightProgress next;
             try{if((rank==null)!=(subrank==null))throw new IllegalArgumentException();next=new org.tortodrone.character.KnightProgress(rank==null?old.rank():rank,subrank==null?old.subrank():subrank,prestige==null?old.prestige():prestige);}
             catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1-10, subrank 1-4 and prestige nonnegative",invalid);}
-            if(next.equals(old))return profile;
+            boolean granted=starterSprite!=null&&TownStore.grantStarterSprite(c,profile,starterSprite);
+            if(next.equals(old)&&!granted)return profile;
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,WorldProfiles.progressKey(profile.worldId(),"rank"));s.setInt(2,next.rank()*10+next.subrank());s.executeUpdate();
                 s.setString(1,WorldProfiles.progressKey(profile.worldId(),"prestige"));s.setInt(2,next.prestige());s.executeUpdate();
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
-            event(c,profile.accountId(),"knight progress; world="+profile.worldId()+"; rank="+next.rankPair()+"; prestige="+next.prestige());
+            event(c,profile.accountId(),"knight progress; world="+profile.worldId()+"; rank="+next.rankPair()+"; prestige="+next.prestige()+(granted?"; testing starter sprite="+starterSprite:""));
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }
