@@ -3,18 +3,25 @@
 Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; normal username/password only.
 
 ## Start
-- Check `git status --short --branch`, recent commits, `VERSION` and **relevant** source/tests. Code and observed stock-client behavior override historical docs.
-- Read only task-relevant documentation: `README.md` (quick start), `docs/{architecture,content,operations,development,research}.md`. Do not preload everything or create milestone diary files.
-- Make one bounded, reviewable change; preserve unrelated work.
+- Check `git status --short --branch`, recent commits, `VERSION` and **relevant** source/tests. Code and observed stock-client behavior override older docs.
+- Read only task-relevant pages (`README.md`, `docs/{architecture,content,operations,development,research}.md`). Do not preload all docs or create milestone diaries.
+- Change only what the request needs; preserve unrelated Git edits, runtime state and working behavior.
 
 ## Never violate
-- Never edit installed client/launcher, real preferences, live servers or owner data. Test with disposable data, keys, accounts and processes; stop only processes you started. Do not commit assets, credentials, captures or build/runtime outputs.
-- Preserve authentication leases/revisions, ownership, GM authorization, SQLite transactions and rollback. Save before publishing events; reject unsupported DB schemas, never silently migrate.
-- Stock protocol contracts require **verified** class/method/argument/callback layouts, mapping order and limits. Do not invent wire fields, mission completions or rewards.
-- Scene instances own simulation state. Treat client movement as intent, not coordinates; guard subscriptions/travel generations. Never block on network I/O under storage/simulation locks.
-- Versioned vanilla/custom packs and read-only legacy compatibility are implemented. External definitions do not imply gameplay support.
+- Never modify the installed client/launcher, real preferences, running server, or owner data. Use disposable test keys/accounts/databases/processes; stop only processes you started. Do not commit secrets, client assets, captures or build outputs.
+- Preserve authenticated ownership/leases/revisions, GM authorization, atomic SQLite writes/rollback and commit-before-publish. Reject unknown DB schemas without automatic migration.
+- Verify native protocol class/method/argument/callback layouts and mappings. Do not invent packets, quests or rewards.
+- Scene instances own simulation state; client input is intent, not position. Guard travel/subscription generations; keep network I/O outside simulation/storage locks.
+- Vanilla/custom content packs are implemented, but imported definitions alone do not prove gameplay support.
+
+## Verification — fast by default
+- **Docs/minor cleanup:** inspect diff/links; no Java tests.
+- **Normal Java/content change:** `./gradlew buildWithoutTests`, then **only affected standalone tests** (see `docs/development.md`). Add a focused regression if behavior changed.
+- **Auth/storage/trade/protocol/concurrency:** targeted positive/negative, ownership and rollback tests; add relevant integration checks. Do not trade away safety for speed.
+- **Client-visible changes:** focused tests first. Run **one relevant isolated stock-client/graphical scenario** only when required to establish the changed behavior; otherwise state that visuals were not verified. Never run graphical tests routinely.
+- **Major cross-cutting change or release:** full `./gradlew build` at the final checkpoint, not after each edit. Do not run benchmarks, full suites, repeated builds or unrelated checks by default.
+- Stop after acceptance criteria pass. Rerun checks only for affected changes/failures; report skipped or unavailable verification honestly.
 
 ## Finish
-- Add focused tests; run applicable checks (ideally `./gradlew build` on JDK 25) and isolated stock-client/graphical tests when behavior requires them. A network fixture cannot prove rendering.
-- Review `git diff --check` and exact results; report unverified claims/platforms honestly. Update one canonical doc if behavior changes.
-- Do not push, merge, force-update or delete branches without owner authorization. Bump `VERSION` for behavioral releases, not docs-only work.
+- Review `git diff --check`, changed files and **actual** test results; update one canonical doc only when needed.
+- Do not push, merge, force-update or delete branches without owner approval. Bump `VERSION` for behavioral releases, not docs-only changes.

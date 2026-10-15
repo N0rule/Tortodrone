@@ -35,7 +35,7 @@ Useful tasks (same Windows wrapper substitution):
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ```
 
-`./gradlew build` runs unit/integration checks. `buildWithoutTests` compiles production, test and build-tool Java sources and packages both JARs without executing tests. First use needs downloads of the Gradle distribution and verified dependencies; cached dependencies support `--offline` builds. Benchmarks are opt-in and synthetic, not proof of live-client performance.
+`./gradlew build` runs unit/integration checks. For **everyday development**, use `buildWithoutTests` to compile/package without running tests, then execute only the affected standalone tests; see [Fast focused testing](docs/development.md#running-just-the-affected-tests). Reserve full `build` and isolated graphical checks for changes that require them, not every edit. First use needs downloads of the Gradle distribution and verified dependencies; cached dependencies support `--offline` builds. Benchmarks are opt-in and synthetic, not proof of live-client performance.
 
 For portable deployments place these **beside one another**:
 

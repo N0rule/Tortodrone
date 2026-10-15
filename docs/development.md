@@ -2,19 +2,54 @@
 
 Start with [AGENTS.md](../AGENTS.md), then the files relevant to your task. Source, current tests and the **unchanged stock client** outrank historical documentation. Keep test accounts, server state, client preferences and processes disposable; do not modify the owner's installed client or active deployment.
 
+## Verification policy (FAST by default)
+
+Choose the **least expensive check that proves the requested change**. Do not run the full test suite or launch the stock graphical client after every edit.
+
+1. Check the specific source and add/update a focused regression for behavior changes.
+2. For code changes run `./gradlew buildWithoutTests`, then only directly relevant standalone test classes (below). For docs-only changes, review links and diffs instead.
+3. Escalate to focused integration for auth, storage, trades, protocol, cross-client synchronization and other high-risk paths. Include negative cases, ownership and rollback.
+4. Run one isolated stock-client/graphical acceptance scenario only when the change affects behavior that cannot be verified otherwise (rendering, animations, HUD, live scene transitions). Do **not** start repeated graphical sessions for backend-only changes. If graphical acceptance is necessary but unavailable, report it as **not verified**, not passed.
+5. Reserve a complete `./gradlew build` for significant cross-cutting changes, release readiness or a requested full regression, **once at the final checkpoint**. Benchmarks and other expensive checks are opt-in.
+
+Stop when the task's acceptance criteria pass. Avoid repeated successful suites, unrelated test coverage, speculative bug hunts and `clean` unless rebuilding from scratch is necessary.
+
 ## Build and test (JDK 25)
 
 ```sh
-./gradlew buildWithoutTests    # compile main, tests and build-tool sources; package both JARs; no tests run
-./gradlew buildServer buildAdmin  # executable JARs; selected content pack
-./gradlew build                   # full unit + integration suite
-./gradlew testUnit
-./gradlew testIntegration
-./gradlew testProcessCleanup
+./gradlew buildWithoutTests      # DEFAULT: compile/package main, tests and tools; execute no tests
+./gradlew buildServer buildAdmin # package both apps and selected content
+./gradlew testUnit               # all standalone unit tests (not a focused filter)
+./gradlew testIntegration        # all packaged integration tests
+./gradlew build                  # full suite; milestone/release verification
+./gradlew testProcessCleanup     # focused cleanup integration task
 ./gradlew prepareDefaults
 ./gradlew prepareMaps
-./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
+./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300" # explicit performance work only
 ```
+
+### Running just the affected tests
+
+Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. The bundled `StandaloneTestSuite` accepts fully-qualified test classes as arguments. From the repository root (Linux/macOS):
+
+```sh
+./gradlew buildWithoutTests
+java --enable-native-access=ALL-UNNAMED \
+  -cp 'build/tortodrone.jar:.build/classes/java/test' \
+  org.tortodrone.support.StandaloneTestSuite \
+  org.tortodrone.world.SceneCatalogTest \
+  org.tortodrone.world.SceneSimulationTest
+```
+
+Windows PowerShell/CMD (classpath uses `;`):
+
+```powershell
+.\gradlew.bat buildWithoutTests
+java --enable-native-access=ALL-UNNAMED -cp "build/tortodrone.jar;.build/classes/java/test" org.tortodrone.support.StandaloneTestSuite org.tortodrone.world.SceneCatalogTest org.tortodrone.world.SceneSimulationTest
+```
+
+Replace the example classes with the specific tests for your change; do not run them all by default. This uses the same packaged JAR and compiled test output as the Gradle unit suite. Tests which need arguments or packaged servers have their own named Gradle integration tasks.
+
 
 Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. The normal `build`/`test` suites **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
@@ -22,24 +57,26 @@ Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml`
 
 ## Test by change type
 
-| Change | Minimum evidence |
-| --- | --- |
-| Parser/protocol | Unit regression for real stock types, malformed inputs, callbacks and mapping reuse; stock reader compatibility |
-| Login, saved state, trades | Isolated integration with real SQLite, stale/auth-revision and race/rollback checks; no actual user database |
-| Scenes and portals | Map/catalog tests plus native scene enter/return and two-client subscriptions if shared |
-| Items/equipment/combat | Typed catalog and persistence tests; native client equip/actor and rendering checks when visual behavior changes |
-| Local GUI | Headless/Swing unit checks and opt-in isolated desktop fixture |
-| Performance/concurrency | Benchmarks plus correctness/race tests; no production capacity claim from synthetic results |
-| Documentation only | Check links, current CLI/source accuracy and diff; **no code test claim without running it** |
+| Change | Default checks | Escalate only when needed |
+| --- | --- | --- |
+| Docs/comments/refactor with no behavior change | Link/diff checks; compile only if code was touched | None |
+| Ordinary Java/content change | `buildWithoutTests` + affected standalone tests | Related integration if behavior crosses services |
+| Protocol, auth, storage, trades | Targeted positive/negative/ownership/rollback tests | Relevant packaged integration or stock-reader check |
+| Scene or portal logic | Map/simulation tests | Stock scene enter/return or two-client check for changed transitions |
+| Items/combat | Targeted catalog, damage/equipment tests | One isolated graphical test if modifying actual client-visible effects |
+| Server GUI | Focused UI tests | One isolated desktop fixture when visual behavior changed |
+| Performance/concurrency | Focused correctness/race checks | Benchmark only for explicit performance questions |
+| Major cross-cutting change / release | `./gradlew build` once at the end | Relevant stock-client acceptance |
+| Documentation only | Diff and link/source review | No Java tests |
 
-Run `./gradlew build` when feasible, `git diff --check` and the focused compatibility suite. Stop **only test processes you started**. Review actual logs and output before reporting a pass. Avoid editing real installed-game assets, paths, home or preferences.
+Stop **only test processes you started**, and report which checks were skipped, failed or unavailable. Use `git diff --check` before completion. Never claim graphical parity from a passing network fixture.
 
 ## Stock client compatibility
 
 Useful checked-in Java tools (from repository root with a separate read-only game installation):
 
 ```sh
-./gradlew build
+./gradlew buildWithoutTests
 java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
 java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
@@ -47,7 +84,7 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 `scripts/compat/` also contains narrower handshake, account, scene, portal, inspection, trade, item, emote, weapon, fire and protocol fixtures. Read each tool's source/usage before running it: some launch temporary servers and clients; some only inspect installed classes/configs. The exporter `scripts/StockTools.java` handles `scene`, `items`, `weapons`, `fires`, `equipment` and current source-maintainer scene/capture subcommands in read-only game input mode with a fresh output directory. `previews`/`items` require a built server JAR.
 
-**Stock reader/network acceptance ≠ graphical acceptance.** Rendering, attachment composition, animation and transition readiness require a graphical unchanged-client fixture, and multiplayer correctness may require two live clients in an isolated environment. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.
+**Stock reader/network acceptance ≠ graphical acceptance.** For a change to rendering, attachment composition, animation or transition readiness, one isolated unchanged-client graphical scenario may be necessary; for altered shared-instance behavior, test with two clients. This is **not** a default validation step for unrelated tasks. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.
 
 `CheckCombatRendering` uses a fresh output path, records logs/screenshots and exercises sword/gun/bomb controls and Haven↔Training travel. It does not verify every weapon, moving-target hits, full parties or general dungeon mechanics. Source-client binary/current wire observations matter more than an old 2011 marshaller ID table.
 
@@ -75,7 +112,7 @@ Benchmarks copy packaged resources into disposable deployments, simulate clients
 
 - Keep changes bounded; update tests for behavior and one canonical document for user-facing changes. Do not add a new milestone diary.
 - Do not commit installed game assets, third-party material without appropriate rights, private captures, secrets, `data/`, `build/` or `.build/`.
-- Review `git status`, `git diff`, `git diff --check` and tests; give exact test results and what remains unverified.
+- Review `git status`, `git diff` and `git diff --check`; report **only tests actually run**, with failures and what remains unverified. Avoid repeated runs after passing checks without relevant changes.
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `licenses/` and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
 
