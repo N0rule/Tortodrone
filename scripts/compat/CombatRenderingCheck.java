@@ -465,12 +465,14 @@ public final class CombatRenderingCheck {
         return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
             ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
     }
+    private boolean checkedStatuses,checkedEmergency;
     private void healthTick(View view,long now)throws Exception {
         var party=(com.threerings.projectx.dungeon.data.PartyObject)app.GQ().CW();
         Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
         Object panel=field(hud,"aEc").get(hud);
         if(stage==2){
             capture("health-before");
+            party.speakService.a("Training chat remains connected",(byte)0);
             Object bound=field(panel,"aEO").get(panel);
             System.out.println("HEALTH HUD: panel="+panel.getClass().getName()+" bound="+(bound==party)+" party="+party+" fields="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel));
             if(bound!=party)throw new AssertionError("Native health panel was not bound to the subscribed party");
@@ -489,12 +491,28 @@ public final class CombatRenderingCheck {
             return;
         }
         moveToward(view,0,0,false);
+        if(hp.current>0&&party.status.iterator().next().flags==0)checkedEmergency=true;
         if(hp.current<healthMaximum){
             int goal=field(panel,"aTs").getInt(panel),visible=field(panel,"aTt").getInt(panel);
-            System.out.println("HEALTH DAMAGE: native="+hp.current+"/"+hp.maximum+" hud="+goal+","+visible);
+            if(hp.current!=goal)System.out.println("HEALTH DAMAGE: native="+hp.current+"/"+hp.maximum+" hud="+goal+","+visible);
             if(goal!=hp.current)throw new AssertionError("Native health HUD did not consume the party damage update");
             if(visible>=healthMaximum)return;
-            capture("health-damaged");finishImages();passed=done=true;System.out.println("PASS: native Training health HUD displays damage from an authored spike trap");app.shutdown();
+            if(field(own,"_hitTime").getInt(own)<=0)throw new AssertionError("Player hit transient/sound timestamp missing");
+            var status=party.status.iterator().next();
+            if(status.conditions!=null&&Arrays.stream(status.conditions).anyMatch(c->c.getName().equals("Fire"))&&Arrays.stream(status.conditions).anyMatch(c->c.getName().equals("Shock"))){
+                if(!checkedStatuses)System.out.println("CHECK: native player Fire and Shock conditions, expiry and hit transient timestamp");checkedStatuses=true;
+            }
+            if(hp.current>0&&status.flags==0)checkedEmergency=true;
+            if(hp.current==0&&status.flags==0){
+                if(!checkedStatuses||!checkedEmergency)throw new AssertionError("Missing statuses or first emergency revive");
+                boolean spark=false;
+                for(Class<?> type=hud.getClass();type!=null;type=type.getSuperclass())for(var f:type.getDeclaredFields()){
+                    f.setAccessible(true);Object component=f.get(hud);
+                    if(component instanceof com.threerings.projectx.dungeon.client.ai)spark=true;
+                }
+                if(!spark)return;
+                capture("health-damaged");finishImages();passed=done=true;System.out.println("PASS: native player damage/hurt state, Fire/Shock, chat, emergency revive and second-death Spark panel");app.shutdown();
+            }
         }
     }
     private void peerTick(View view)throws Exception {

@@ -39,6 +39,7 @@ public final class TrainingSessionTest {
                 world.subscribeInteriorParty((short)4);world.subscribe((short)5);world.entered();
                 var chat=new SessionDecoder.Invocation(party,SceneChat.PARTY_SERVICE,1,List.of("training-chat-fixture",(byte)0));
                 check(!world.interiorPartyInvocation(chat),"party chat is routed to its SpeakMarshaller instead of the revive service");
+                check(!world.conversationInvocation(chat),"party chat is not an NPC conversation response despite sharing service 21");
                 world.speak(chat);socket.await("training-chat-fixture");
                 try{world.speak(new SessionDecoder.Invocation(party+1,SceneChat.PARTY_SERVICE,1,chat.arguments()));throw new AssertionError("Foreign party chat accepted");}catch(IOException expected){}
                 var before=characters.worldProfile(knight.name(),1);world.interiorPartyInvocation(revive(party,knight.name(),-1));socket.await("m.no_revive");

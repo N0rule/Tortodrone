@@ -145,6 +145,19 @@ public final class CheckCombatRendering {
         Properties map=properties(descriptor),actors=properties(content);
         String spike=Arrays.stream(actors.getProperty("entries").split(",")).map(id->"entry."+id+".")
             .filter(prefix->actors.getProperty(prefix+"cycle","").endsWith("|UP")).findFirst().orElseThrow();
+        String shock=null;
+        for(String id:actors.getProperty("entries").split(",")){
+            String prefix="entry."+id+".",config=actors.getProperty(prefix+"config","");
+            if(config.endsWith("/Floor/Fire"))actors.setProperty(spike+"hazard-action",actors.getProperty(prefix+"hazard-action"));
+            if(config.endsWith("/Floor/Shock"))shock=actors.getProperty(prefix+"hazard-action");
+        }
+        String extra="entry.9999.";
+        for(String key:new ArrayList<>(actors.stringPropertyNames()))if(key.startsWith(spike))actors.setProperty(extra+key.substring(spike.length()),actors.getProperty(key));
+        actors.setProperty(extra+"handler-index","9999");
+        actors.setProperty(extra+"hazard-action",Objects.requireNonNull(shock));
+        actors.setProperty(extra+"x",map.getProperty("spawn-x"));
+        actors.setProperty(extra+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+3));
+        actors.setProperty("entries",actors.getProperty("entries")+",9999");
         actors.setProperty(spike+"x",map.getProperty("spawn-x"));
         actors.setProperty(spike+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+3));
         save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);

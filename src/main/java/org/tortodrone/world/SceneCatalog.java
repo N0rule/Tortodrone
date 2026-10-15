@@ -21,7 +21,8 @@ public final class SceneCatalog {
         public boolean town(){return kind.equals("town");}
         /** TownSummary names a town-bundle key; ZoneSummary carries a qualified Name. */
         public String townName(){return zoneName.startsWith("%town:")?zoneName.substring(6):zoneName;}
-        public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":kind.equals("training")?"dungeon.data.TrainingSceneConfig":"dungeon.data.LevelSceneConfig");}
+        // The stock TrainingSceneConfig has no Spark revive HUD; use its level counterpart.
+        public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":"dungeon.data.LevelSceneConfig");}
     }
     private final NavigableMap<Integer,MapScene> scenes;
     private final int entry;

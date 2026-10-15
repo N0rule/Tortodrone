@@ -711,7 +711,7 @@ public final class SessionCodec {
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException {
         return frame(out->{
             boolean training=scene.map().kind().equals("training");
-            objectHeader(out,message,"com.threerings.projectx.dungeon.data."+(training?"DungeonPartyObject":"LevelPartyObject"),partyOid);
+            objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
@@ -727,7 +727,6 @@ public final class SessionCodec {
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(0);out.writeBoolean(!scene.map().content().items().isEmpty());out.writeLong(0);
             out.writeShort(0);out.writeInt(training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
-            if(training)return;
             out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(3); // SUBTOWN
@@ -926,7 +925,7 @@ public final class SessionCodec {
             var combat=a.combat();
             weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());conditions(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
-            out.writeInt(0);out.writeInt(0);
+            out.writeInt(0);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().hitTime());
             out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
             out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());out.writeInt(combat==null?0:combat.nextDodge());
             statusModifiers(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.Modifiers.NORMAL:a.sceneKnight().status().modifiers());
@@ -949,8 +948,8 @@ public final class SessionCodec {
         int second=a.interaction()!=null||baseline!=null&&baseline.interaction()!=null?0x1d:1;
         out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(second|(sceneData?0x42:0)|(spriteChanged?0x80:0));
         // Mutable Dungeoneer fields: weapon 16, shields 17/18, health 22/23,
-        // impulse 24, chain 27/28, dodge deadline 31 and modifiers 33/34. Id/created are DeltaFinal.
-        if(interior){out.writeByte((combatChanged?0xf7:0)|(sceneData?8:0));out.writeByte((combatChanged?0x99:0)|(sceneData?0x60:0));out.writeByte((combatChanged?6:0)|(sceneData?1:0));}
+        // impulse 24, hit time 26, chain 27/28, dodge deadline 31 and modifiers 33/34. Id/created are DeltaFinal.
+        if(interior){out.writeByte((combatChanged?0xf7:0)|(sceneData?8:0));out.writeByte((combatChanged?0x99:0)|(sceneData?0x64:0));out.writeByte((combatChanged?6:0)|(sceneData?1:0));}
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
         out.writeInt(a.activity());out.writeInt(a.activityStarted());
@@ -965,7 +964,9 @@ public final class SessionCodec {
         if(combatChanged) {
             var combat=a.combat();
             out.writeInt(combat==null?0:combat.shieldRegenStart());out.writeInt(combat==null?-300000:combat.shieldHit());out.writeFloat(combat==null?0:combat.shieldHealth());out.writeInt(combat==null?0:combat.shieldMaximum());impulse(out,combat==null?null:combat.impulse());
-            out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
+        }
+        if(interior&&sceneData)out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().hitTime());
+        if(combatChanged){var combat=a.combat();out.writeInt(combat==null?0:combat.chainCount());out.writeInt(combat==null?0:combat.chainReset());
         }
         if(interior&&sceneData){out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteActor());out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().spriteAttack());}
         if(combatChanged){var combat=a.combat();out.writeInt(combat==null?0:combat.nextDodge());

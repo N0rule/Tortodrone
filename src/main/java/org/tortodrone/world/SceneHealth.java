@@ -15,7 +15,8 @@ public final class SceneHealth {
     private SceneContent.Spec defense=new SceneContent.Spec(Map.of());
     private SceneContent.Spec shieldDefense=new SceneContent.Spec(Map.of());
     private int current,maximum,bonus;
-    private int invulnerableUntil;
+    private int invulnerableUntil,hitTime;
+    public int hitTime(){return hitTime;}
     private boolean emergencyRevive=true;
     private int emergencyAt;
     private java.util.function.IntUnaryOperator spriteShield=amount->amount;
@@ -25,7 +26,7 @@ public final class SceneHealth {
     public List<SceneStatus.Pulse> takePulses(){return status.takePulses();}
     public List<FireCatalog.Action> takeActions(){return status.takeActions();}
     public void inventory(WorldProfile profile){status.equipment(profile);}
-    public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)));died(stamp);}}
+    public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)),stamp);died(stamp);}}
     public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
     public boolean cloaked(){return status.cloaked();}
     public void breakCloak(){status.breakCloak();}
@@ -79,17 +80,17 @@ public final class SceneHealth {
         int amount=(int)Math.ceil(SceneDamage.amount(damage,content,mitigation,multiplier,blockableScale));
         amount=Math.max(0,spriteShield.applyAsInt(amount));
         amount+=(int)Math.ceil(status.damaged(amount,stamp));
-        if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount);died(stamp);
+        if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount,stamp);died(stamp);
         return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale));
     }
-    private boolean rawDamage(int amount){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);return true;}
+    private boolean rawDamage(int amount,int stamp){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);hitTime=stamp;return true;}
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}
     public void advance(int stamp,int elapsed,boolean moving){
         if(!alive()){
             if(emergencyAt!=0&&stamp>=emergencyAt){emergencyRevive=false;revive(stamp);invulnerableUntil=stamp+5000;}
             return;
         }
-        status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount));},amount->heal((int)Math.ceil(amount)));
+        status.advance(stamp,elapsed,moving,amount->{if(!invulnerable(stamp))rawDamage((int)Math.ceil(amount),stamp);},amount->heal((int)Math.ceil(amount)));
         died(stamp);
     }
 }

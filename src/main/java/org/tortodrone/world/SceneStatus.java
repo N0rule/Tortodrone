@@ -67,6 +67,11 @@ public final class SceneStatus {
     private void applyResolved(StarterCatalog.Model reference,Object data,int stamp,boolean checkChance){
         if(!(data instanceof FireCatalog.DataValue value))return;
         String kind=value.type().substring(value.type().lastIndexOf('$')+1);
+        if(kind.equals("DepthScaled")){
+            var selected=depthCondition(data);
+            if(selected!=null){var args=new HashMap<>(selected.arguments());args.putAll(reference.arguments());apply(new StarterCatalog.Model(selected.name(),args),stamp,0,checkChance);}
+            return;
+        }
         var fields=new HashMap<String,String>();fields.put("class",kind);
         fields.put("min-duration",Float.toString(SceneDamage.number(data,"minDuration",SceneDamage.number(data,"duration",0))));
         fields.put("max-duration",Float.toString(SceneDamage.number(data,"maxDuration",SceneDamage.number(data,"duration",0))));
@@ -77,6 +82,14 @@ public final class SceneStatus {
         if(checkChance&&Math.random()>=chance)return;
         var prepared=content.statuses().get(reference.name());if(prepared!=null)prepared.fields().forEach((key,value2)->{if(key.endsWith("-action")||key.startsWith("scale-"))fields.put(key,value2);});
         add(reference,new SceneContent.Spec(fields),data,power,stamp);
+    }
+    private static StarterCatalog.Model depthCondition(Object data){
+        StarterCatalog.Model selected=null;float highest=-1;
+        if(SceneDamage.field(data,"conditions") instanceof FireCatalog.ListValue list)for(Object choice:list.values()){
+            float at=SceneDamage.number(choice,"depth",0);
+            if(at<=0&&at>=highest&&SceneDamage.field(choice,"statusCondition") instanceof StarterCatalog.Model model){selected=model;highest=at;}
+        }
+        return selected;
     }
     public boolean cloaked(){return active.containsKey("Cloak");}
     public void breakCloak(){active.remove("Cloak");}

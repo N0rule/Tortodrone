@@ -65,10 +65,10 @@ public final class TrainingCompatibility {
         var status=new SceneStatus.State(List.of(new StarterCatalog.Model(condition.getKey(),Map.of())),List.of(5000),
             new SceneStatus.Modifiers(1,1,1,1,1,false,false,true,false,false));
         var carrying=new ActorState(pc.id(),pc.clientOid(),pc.name(),pc.color(),pc.created(),pc.x(),pc.y(),pc.rotation(),pc.direction(),pc.flags(),268,150,
-            pc.config(),false,null,null,null,pc.interaction(),new SceneKnightState(new StarterCatalog.Model("Pickup/Capsule/Health Capsule",Map.of()),actors.getFirst().id(),status));
+            pc.config(),false,null,null,null,pc.interaction(),new SceneKnightState(new StarterCatalog.Model("Pickup/Capsule/Health Capsule",Map.of()),actors.getFirst().id(),status,KnightProgress.RECRUIT,null,null,0,0,149));
         var carriedDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(carrying),new int[0],Map.of(pc.id(),pc),true));
         var carried=carriedDelta.aek()[0].apply(nativePc);
-        if((int)FireCompatibility.field(carried,"_lift")!=actors.getFirst().id()||FireCompatibility.field(carried,"_activityData")==null
+        if((int)FireCompatibility.field(carried,"_hitTime")!=149||(int)FireCompatibility.field(carried,"_lift")!=actors.getFirst().id()||FireCompatibility.field(carried,"_activityData")==null
                 ||java.lang.reflect.Array.getLength(FireCompatibility.field(carried,"_conditions"))!=1)throw new AssertionError("Native knight lift/status delta mismatch");
         gameplay(content);
         quickbar(status);
@@ -159,7 +159,7 @@ public final class TrainingCompatibility {
         var knight=new Knight(1,"Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
         var profile=new WorldProfile(219,1,1,0,0,0,List.of());
         var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((com.threerings.presents.net.ObjectResponse<?>)nativeMessage(new SessionCodec().interiorParty((short)4,640,1001,knight,profile,scene,new SceneHealth.State(193,200,0),status))).yk();
-        if(party.getClass()!=com.threerings.projectx.dungeon.data.DungeonPartyObject.class||party.memberLimit!=8||party.spawn!=null)throw new AssertionError("Native Training party type, capacity or spawn mismatch");
+        if(party.getClass()!=com.threerings.projectx.dungeon.data.LevelPartyObject.class||party.memberLimit!=8||party.spawn!=null)throw new AssertionError("Native Training revive-capable party type, capacity or spawn mismatch");
         if(!party.hasPickups)throw new AssertionError("Native quickbar HUD is hidden");
         if(party.speakService==null)throw new AssertionError("Native Training party chat has no service");
         if(!party.members.e(1001))throw new AssertionError("Native party does not contain its local player oid");

@@ -10,8 +10,17 @@ public final class SceneStatusTest {
     public static void main(String[] args)throws Exception{
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var content=map.content();
         thrownVials(content);
+        for(String kind:List.of("Fire","Shock")){
+            var scaled=content.statuses().get(kind+" (Scaled)");
+            var player=new SceneHealth(content);
+            player.condition(new StarterCatalog.Model(kind+" (Scaled)",Map.of("Chance",1f,"Power",100)),scaled.model("data").arguments().get("data"),1000);
+            player.advance(1001,1,false);
+            check(!player.status().conditions().isEmpty()&&player.status().expires().getFirst()>1001,"resolved depth-scaled "+kind+" selects a lasting status");
+            if(kind.equals("Shock"))check(player.status().modifiers().shocked(),"resolved shock produces player spasms");
+            else check(player.state().current()<player.state().maximum(),"resolved fire burns the player");
+        }
         var burn=new SceneHealth(content);burn.hit(status("Fire"),1000);burn.advance(1000,0,false);
-        check(burn.state().current()<burn.state().maximum(),"exclusive burn applies periodic damage");
+        check(burn.hitTime()==1000&&burn.state().current()<burn.state().maximum(),"exclusive burn applies periodic damage");
         var poison=new SceneHealth(content);poison.hit(hit(20),1000);poison.hit(status("Poison"),1001);
         check(poison.status().modifiers().attackDamage()<1&&poison.status().modifiers().defense()<1&&!poison.heal(20),"poison weakens attack/defense and blocks player healing");
         var stun=new SceneHealth(content);stun.hit(status("Stun"),1000);

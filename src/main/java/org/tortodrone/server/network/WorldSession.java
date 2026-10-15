@@ -209,7 +209,7 @@ final class WorldSession implements AutoCloseable {
             if(request.arguments().size()!=1||!(request.arguments().getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid conversation close");
             if(created!=conversationCreated)return false;closeConversation();return true;
         }
-        if(request.service()!=SceneConversation.SERVICE)return false;
+        if(!ownsScene(request.oid())||request.service()!=SceneConversation.SERVICE)return false;
         var args=request.arguments();
         if(!ownsScene(request.oid())||!entered||conversation==null||request.method()!=1||args.size()!=2
                 ||!(args.get(0) instanceof Integer choice)||!(args.get(1) instanceof SessionDecoder.Listener listener)
