@@ -43,13 +43,13 @@ For portable deployments place these **beside one another**:
 Tortodrone/
   tortodrone.jar
   tortodrone-admin.jar
-  config/content.properties
   content/packs/vanilla/
-  custom/packs/              # optional selected packs
-  data/                 # created at runtime; keep across updates
+  content/custom/packs/  # optional selected packs
+  data/                 # keep across updates
+    server.properties
 ```
 
-The build prepares `build/content/packs/vanilla/`; deploy it beside the JARs with `config/content.properties`. A versioned release archive, when published, packages the JARs and vanilla content but not Java or private `data/`. **Do not deploy only the two JARs** and rely on startup downloads.
+The build prepares `build/content/packs/vanilla/` and generates `build/data/server.properties` when missing. Deploy the complete content beside the JARs. A versioned release archive packages the JARs and vanilla content without private `data/`; the server generates settings on first startup. **Do not deploy only the two JARs** and rely on startup downloads.
 
 ## Client connection
 
@@ -74,6 +74,8 @@ max-clients=16
 log-mode=normal
 log-max-mib=10
 log-retention=5
+content-packs=vanilla
+legacy-content=auto
 ```
 
 `--config path/to/server.properties` changes the settings file **only**, not the adjacent `data/` path. Type `help` in the server terminal/window for local commands; `stop` shuts down terminal hosting. Logs are under `data/logs/`. Local admin tools have no exposed admin network listener.

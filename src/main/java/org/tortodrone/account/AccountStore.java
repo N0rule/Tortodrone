@@ -40,6 +40,10 @@ public final class AccountStore implements AutoCloseable {
     public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent()).items()); }
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
+    public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
+        if(username!=null)validateUsername(username);if(database==null)throw new IOException("Knight progress requires SQLite storage");
+        return database.progress(username,knight,expectedAccount,expectedWorld,rank,subrank,prestige);
+    }
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);

@@ -98,15 +98,13 @@ public final class Server {
     private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
-        var content=org.tortodrone.resources.ContentManager.load(dataDirectory.getParent());
+        var content=org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings);
         var scenes=content.createScenes();
         org.tortodrone.world.SceneRegistry.install(scenes);
         var catalog=content.items();
         for(String warning:content.warnings())log.warn(warning);
         log.info("Content packs: "+content.packs());
         content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
-        try {content.writeLockfile(dataDirectory.getParent());}
-        catch(IOException cacheUnavailable){log.warn("Content lockfile unavailable: "+cacheUnavailable.getMessage());}
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");

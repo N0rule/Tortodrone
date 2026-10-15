@@ -14,7 +14,7 @@ public final class WeaponCatalogTest {
             var bash = new WeaponCatalog.Attack(400, 250, 800, false, 0, 625, 5, 0);
             var weapon = new WeaponCatalog.Weapon("Weapon/Sword/Proto Sword", 3000, 3, 500, true, false,
                 1f, 1.25f, List.of(normal, normal, normal), null, charged, null);
-            var shield = new WeaponCatalog.Shield("Shield/Proto", 100, 8000, 3000, -0.5f, 0.5f, bash);
+            var shield = new WeaponCatalog.Shield("Shield/Proto", 100, 8000, 3000, -0.5f, 0.5f, bash,9000);
             Path file = root.resolve("weapons.tsv");
             WeaponCatalog.write(file, List.of(weapon), List.of(shield), 2500);
             var loaded = WeaponCatalog.load(file);
@@ -22,6 +22,9 @@ public final class WeaponCatalogTest {
             check(loaded.find("weapon/sword/proto sword").equals(weapon), "weapon lookup is case insensitive");
             check(loaded.findShield("shield/proto").equals(shield), "shield depth-zero health, hit delay, defending speed, bash cost and timing round trip");
             check(loaded.dodgeCooldown() == 2500, "stock knight dodge cooldown round trips");
+            check(loaded.findShield("Shield/Proto").breakDelay()==9000,"shield break delay is distinct from its hit delay");
+            Path legacy=root.resolve("legacy.tsv");Files.writeString(legacy,"TORTODRONE-COMBAT\t1\nC\t0\nS\tShield/Old\t100\t5000\t2000\t0\t0\n");
+            check(WeaponCatalog.load(legacy).findShield("Shield/Old").breakDelay()==7000,"legacy shield rows retain the native default break delay");
             try { loaded.require("missing"); throw new AssertionError("Unknown weapon accepted"); }
             catch (IOException expected) { }
 

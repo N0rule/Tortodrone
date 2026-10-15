@@ -31,8 +31,6 @@ public final class CheckClientWorld {
             }
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
-            Files.createDirectories(scratch.resolve("config"));
-            Files.writeString(scratch.resolve("config/content.properties"),"format=1\nenabled=vanilla\nlegacy=disabled\n");
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
             run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
@@ -77,7 +75,7 @@ public final class CheckClientWorld {
             run(export,"item-export","",60);
             var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("exports/items/catalog.json").toString()));
             run(catalogCheck,"item-catalog","",60);
-            Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\n");
+            Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\ncontent-packs=vanilla\nlegacy-content=disabled\n");
             for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
             Path serverLog = scratch.resolve("server.log");
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog);

@@ -74,8 +74,9 @@ public final class MapPreparationIntegrationTest {
         Path project=home.resolve("checked-in map source project");
         Path maps=project.resolve("content/packs/vanilla/maps");
         copyTree(Path.of("content/packs/vanilla"),project.resolve("content/packs/vanilla"));
-        if(Files.isDirectory(Path.of("config")))copyTree(Path.of("config"),project.resolve("config"));
-        if(Files.isDirectory(Path.of("custom/packs")))copyTree(Path.of("custom/packs"),project.resolve("custom/packs"));
+        Files.createDirectories(project.resolve("src/main/resources"));
+        Files.copy(Path.of("src/main/resources/server.properties"),project.resolve("src/main/resources/server.properties"));
+        if(Files.isDirectory(Path.of("content/custom/packs")))copyTree(Path.of("content/custom/packs"),project.resolve("content/custom/packs"));
         Path tool=project.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tool);
         Path mapsOutput=project.resolve("deployment/defaults/maps");
         check(runTool(project,tool,"maps",mapsOutput.toString())==0,"maps prepare from the checked-in source alone");
@@ -88,6 +89,14 @@ public final class MapPreparationIntegrationTest {
             &&SceneCatalog.load(vanillaOutput.resolve("maps")).scenes().size()==7
             &&Files.isRegularFile(vanillaOutput.resolve("items/catalog.json")),
             "full content preparation includes maps, item definitions and combat data");
+        Path settings=project.resolve("deployment/data/server.properties");
+        check(Files.readString(settings).contains("content-packs=vanilla")
+            &&Files.exists(project.resolve("deployment/content/custom/packs/.gitkeep"))
+            &&!Files.exists(project.resolve("deployment/config"))&&!Files.exists(project.resolve("deployment/cache")),
+            "preparation uses one server settings file and content-local custom packs without config/cache directories");
+        Files.writeString(settings,"server-port=47699\n");
+        check(runTool(project,tool,"content",vanillaOutput.toString())==0&&Files.readString(settings).equals("server-port=47699\n"),
+            "preparation preserves existing operator settings");
         Path absent=home.resolve("absent vanilla source project");
         Files.createDirectories(absent);
         Path absentTool=absent.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),absentTool);

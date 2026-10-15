@@ -33,26 +33,26 @@ public final class ContentMigrationTest {
             unchanged(before,root);
             try(var channel=FileChannel.open(data.resolve("server.lock"),StandardOpenOption.WRITE);var lock=channel.lock()) {
                 fail(()->ContentMigration.migrate(root));
-                check(!Files.exists(root.resolve("custom")),"held deployment lock refuses migration before creating output");
+                check(!Files.exists(root.resolve("content/custom")),"held deployment lock refuses migration before creating output");
             }
             ContentMigration.migrate(root);unchanged(before,root);
-            Path candidate=root.resolve("config/content-migrated.properties");
-            check(Files.readString(candidate).contains("enabled=legacy-import"),"migration produces a reviewable selection candidate");
-            check(!Files.exists(root.resolve("config/content.properties")),"migration never implicitly changes enabled content");
-            Files.copy(candidate,root.resolve("config/content.properties"));
+            Path candidate=root.resolve("data/server-migrated.properties");
+            check(Files.readString(candidate).contains("content-packs=legacy-import"),"migration produces a reviewable selection candidate");
+            check(Arrays.equals(before.get(Path.of("data/server.properties")),Files.readAllBytes(root.resolve("data/server.properties"))),"migration never implicitly changes enabled content");
+            Files.copy(candidate,root.resolve("data/server.properties"),StandardCopyOption.REPLACE_EXISTING);
             var migrated=ContentManager.load(root);
             check(migrated.packs().equals(List.of(new ContentRegistry.Pack("legacy-import","1.0.0")))&&migrated.warnings().isEmpty(),"exported independent pack replaces compatibility only on explicit selection");
             check(migrated.scenes().scene(2).instances()==2&&migrated.items().entries().equals(legacy.items().entries())
                 &&migrated.weapons().weapons().equals(legacy.weapons().weapons())&&migrated.fires().entries().equals(legacy.fires().entries()),"export preserves maps, item identity, combat controls and fire graphs");
             var after=bytes(root);fail(()->ContentMigration.migrate(root));unchanged(after,root);
             // Invalid legacy content is never replaced by shipped vanilla or a reduced catalog.
-            Files.delete(root.resolve("config/content.properties"));
+            Files.writeString(root.resolve("data/server.properties"),"server-port=47699\n");
             Files.writeString(root.resolve("maps/catalog.properties"),"entry-scene=999999\n");
             var damaged=bytes(root);fail(()->ContentManager.load(root));unchanged(damaged,root);
             Path conflict=home.resolve("conflict");copy(Path.of("content/packs/vanilla"),conflict.resolve("defaults"));
-            Files.createDirectories(conflict.resolve("custom/packs/legacy-import"));Files.writeString(conflict.resolve("custom/packs/legacy-import/owner"),"custom content");
+            Files.createDirectories(conflict.resolve("content/custom/packs/legacy-import"));Files.writeString(conflict.resolve("content/custom/packs/legacy-import/owner"),"custom content");
             var owner=bytes(conflict);fail(()->ContentMigration.migrate(conflict));unchanged(owner,conflict);
-            check(!Files.exists(conflict.resolve("config/content-migrated.properties")),"existing operator pack refuses export before candidate creation");
+            check(!Files.exists(conflict.resolve("data/server-migrated.properties")),"existing operator pack refuses export before candidate creation");
             System.out.println("PASS: legacy precedence, safe explicit pack export, exact catalog preservation, held locks, invalid content and existing destinations; data/keys/settings untouched");
         } finally {try(var paths=Files.walk(home)){for(Path p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }

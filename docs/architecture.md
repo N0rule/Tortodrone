@@ -59,6 +59,32 @@ Clients send facing/activity/input intent, **not authoritative coordinates**. Mo
 
 `WorldStatePoller` batches identity/role/revision inspection outside session/simulation locks and publishes changed saved inventory/balances; do not use log scraping as a state source. Chat/tells and inspection are scoped by authenticated identities and current ready/owned scenes. Trading requires synchronous revision/owner checks and atomic bilateral transfer.
 
+Knights retain mission rank/subrank and prestige in namespaced rows of schema 8's existing
+integer metadata table. Missing values mean Recruit 1-1 and zero prestige; invalid saved
+values fail closed. Local console commands `rank <knight> <rank> <subrank>` and
+`prestige <knight> <total>` (or admin CLI `--set-rank` / `--set-prestige`) update these
+transactionally with the world revision and audit. Selection, inspection, picker rank and
+occupant rank/prestige badges use saved values; connected selected knights receive updates.
+Rank grants the verified gear eligibility bits, without inventing mission completions,
+prestige awards or Arcade clearances. Ordinary helms, armor and shields can occupy native
+costume slots 3, 4 and 15; those slots change appearance without adding combat stats.
+
+Fire catalog v4 resolves full damage-scale references, including arguments and weapon
+rarity, at depth zero/MEDIUM during stock export. Same-type damage is accumulated before
+defense mitigation. Shield defense executes the named push-back graph with its rarity,
+nearby-monster and 1500-ms cooldown guards; missing bindings/guards are restored from the
+local archive and its surviving power choices. Bash uses the archive's capture-calibrated
+forward sweep (0.60 ahead, radius 0.67, armed at 550/attackSpeed ms), once per target per
+bash, and applies native impulses. Status hits consume shield health with the native
+per-status one-second cooloff. The bash region and missing shield binding are labelled
+reconstructions, not recovered retail server code.
+
+These paths have focused Java and stock-reader checks, without new graphical validation.
+Arbitrary stripped conditions, weapon self-status actions, delayed developer shield actions,
+Sealed Sword table spawns, gear/variant status resistance and full item-level damage bonuses
+remain incomplete. The exporter retains unsupported-action diagnostics; v1-v3 fire packs
+remain readable but require re-export for resolved damage values and shield action graphs.
+
 ## Implemented versus missing gameplay
 
 The server currently supports Haven towns, solo interiors, persistent inventories, a portion of authored equipment/combat controls, scene chat, emotes, trading, inspection/privacy and local account/GM management. **It is not a complete vanilla server.** Training Hall now has a bounded implementation of prepared actors, interactive props, traps, pickups, damage, status and conversation. Do not infer general NPC service logic, arbitrary monster behavior/drops, crafting, missions, arbitrary dungeons, full party matchmaking or guilds from those mechanics or client data.

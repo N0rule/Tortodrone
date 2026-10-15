@@ -18,6 +18,7 @@ public final class FireCatalogExport {
     private static final Set<String> NESTED_FIRES = new HashSet<>();
     private static final Set<String> NESTED_ACTORS = new HashSet<>();
     private static int actionCount, projectileCount;
+    private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
         if (args.length != 2) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory");
@@ -34,6 +35,7 @@ public final class FireCatalogExport {
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
+            damageRarity=item.rarity;
             if (item instanceof ItemConfig.Weapon weapon) addWeapon(manager, config.getName(), weapon, entries);
             else if (item instanceof ItemConfig.Shield shield) addShield(manager, config.getName(), shield, entries);
         }
@@ -56,6 +58,14 @@ public final class FireCatalogExport {
     }
     private static void addShield(ConfigManager manager, String name, ItemConfig.Shield shield, List<AttackFire> entries) throws Exception {
         addAttack(manager,name,287,shield.bash,entries);
+        ActionConfig defense=shield.action;
+        if(defense instanceof DungeonActionConfig.FireAction fire&&fire.fireAction==null){
+            // Reconstructed missing binding to the surviving stock push-back base;
+            // its own rarity/intersection/cooldown guards remain authoritative.
+            var restored=new DungeonActionConfig.FireAction();restored.fireAction=new ConfigReference<>("Item/Gear/Shield/PushBack (Base)");defense=restored;
+        }
+        if(defense!=null)entries.add(new AttackFire(name,284,new StarterCatalog.Model("ShieldDefense",Map.of("rarity",shield.rarity)),1,List.of(
+            new FireRef(new StarterCatalog.Model("ShieldDefense",Map.of()),shield.actionDelay,0,false,0,0,0,readAction(manager,defense),null))));
     }
     private static void addAttack(ConfigManager manager, String weapon, int activity,
             ConfigReference<AttackConfig> reference, List<AttackFire> entries) throws Exception {
@@ -64,6 +74,16 @@ public final class FireCatalogExport {
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
         var refs = new ArrayList<FireRef>();
+        if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
+            &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
+            // Capture-calibrated archive reconstruction: 0.60 ahead, radius 0.67,
+            // armed at 550/attackSpeed ms; one hit per target for this bash.
+            var args=new TreeMap<String,Object>();args.put("damage",resolvedDamage(manager,hit.damage));
+            var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=.67f;args.put("shape",argumentValue(shape));
+            args.put("impulse",argumentValue(hit.impulseDealt));args.put("impulse-origin",argumentValue(new Vector2f(hit.impulseTranslation.x-.6f,hit.impulseTranslation.y)));
+            Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,handler.mask,false,List.of(),"");
+            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.Qh()),50,false,0,0,0,sweep,null));
+        }
         if (attack.fireRefs != null) for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {
             if (fireRef == null || fireRef.ref == null) {
                 UNSUPPORTED.merge("null-fire-reference",1,Integer::sum);
@@ -98,6 +118,10 @@ public final class FireCatalogExport {
     static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
         if (action == null) return null;
         actionCount++;
+        if(action instanceof ActionConfig.Conditional conditional){
+            return new Action(Kind.CONDITIONAL,new StarterCatalog.Model("Condition",Map.of("condition",argumentValue(conditional.condition))),null,"Source","","",0,0,0,0,true,0,0,0,0,false,
+                List.of(conditional.action==null?noop():readAction(manager,conditional.action),conditional.elseAction==null?noop():readAction(manager,conditional.elseAction)),"");
+        }
         if (action instanceof DungeonActionConfig.FireAction fireAction) {
             FireActionConfig fire = fireAction.fireAction == null ? null : manager.a(FireActionConfig.class, fireAction.fireAction);
             if (fire == null) throw new IOException("Unresolved nested fire action " + fireAction.fireAction);
@@ -110,15 +134,20 @@ public final class FireCatalogExport {
                 0,0,0,0,false,0,0,0,0,false,List.of(),"");
         }
         if(action instanceof DungeonActionConfig.DamageRegionFromPoint damage){
-            var data=new TreeMap<String,Object>();data.put("damage",argumentValue(damage.damage));
+            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));
             data.put("region",argumentValue(damage.region));
+            data.put("impulse",argumentValue(damage.impulseDealt));data.put("impulse-origin",argumentValue(damage.impulseTranslation));
             return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegionFromPoint",data),null,
                 target(damage.location),"","",damage.translation.x,damage.translation.y,0,0,true,0,0,0,
                 damage.collisionMask,false,List.of(),"");
         }
         if(action instanceof DungeonActionConfig.DamageRegion damage){
-            var data=new TreeMap<String,Object>();data.put("damage",argumentValue(damage.damage));data.put("region",argumentValue(damage.region));
+            var data=new TreeMap<String,Object>();data.put("damage",resolvedDamage(manager,damage.damage));data.put("region",argumentValue(damage.region));
             return new Action(Kind.DAMAGE_REGION,new StarterCatalog.Model("DamageRegion",data),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        }
+        if(action instanceof DungeonActionConfig.ImpartImpulse impulse){
+            var data=new TreeMap<String,Object>();data.put("region",argumentValue(impulse.region));data.put("impulse",argumentValue(impulse.impulseDealt));data.put("impulse-origin",argumentValue(impulse.impulseTranslation));data.put("flags",impulse.flags);
+            return new Action(Kind.IMPULSE_REGION,new StarterCatalog.Model("ImpartImpulse",data),null,target(impulse.location),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         }
         if (action instanceof DungeonActionConfig.SpawnTransformedPrespawnedArgModify modified)
             return readPrespawned(manager, modified);
@@ -199,7 +228,30 @@ public final class FireCatalogExport {
     }
     static Action readFireAction(ConfigManager manager, ConfigReference<FireActionConfig> reference,
             FireActionConfig fire) throws Exception {
-        Action action = readAction(manager, fire.action);
+        ActionConfig raw=fire.action;
+        if(reference.getName().equals("Item/Gear/Shield/PushBack (Base)")){
+            // Authored fire_action.xml guards survive only as empty Tagged placeholders
+            // in the installed binary. Restore this named graph, including cooldown.
+            if(!(raw instanceof ActionConfig.Conditional first)||!(first.action instanceof ActionConfig.Conditional second))throw new IOException("Shield push-back graph changed");
+            var outer=(ActionConfig.Conditional)first.clone();var inner=(ActionConfig.Conditional)second.clone();
+            var rarity=new com.threerings.projectx.config.ProjectXConditionConfig.ShieldRarityEquipped();rarity.rarity=2;
+            var intersection=new ConditionConfig.Intersecting();var region=new RegionConfig.Transformed();var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=1.1f;region.shape=circle;
+            intersection.first=region;var monsters=new RegionConfig.Default();var type=new TargetConfig.InstanceOf();type.logicClass="com.threerings.projectx.dungeon.server.logic.MonsterLogic";monsters.location=type;intersection.second=monsters;
+            var all=new ConditionConfig.All();all.conditions=new ConditionConfig[]{rarity,intersection};outer.condition=all;
+            var cooldown=new ConditionConfig.Cooldown();cooldown.time=1500;inner.condition=cooldown;outer.action=inner;raw=outer;
+            if(!(inner.action instanceof ActionConfig.Compound original))throw new IOException("Shield push-back action changed");
+            var compound=(ActionConfig.Compound)original.clone();compound.actions=original.actions.clone();
+            var choice=(com.threerings.config.Parameter.Choice)fire.getParameter("Knock-Back Power");
+            String selected=Objects.toString(reference.kW().get("Knock-Back Power"),choice.choice);ImpulseConfig.DamageImpulse impulse=null;
+            for(var option:choice.options)if(option.name.equals(selected)){var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);impulse=(ImpulseConfig.DamageImpulse)((Map<?,?>)field.get(option)).get("KB");}
+            if(impulse==null)throw new IOException("Shield push-back power binding changed");
+            for(int i=0;i<compound.actions.length;i++)if(compound.actions[i] instanceof DungeonActionConfig.ImpartImpulse push){
+                var restored=(DungeonActionConfig.ImpartImpulse)push.clone();restored.impulseDealt=impulse;
+                var area=new RegionConfig.Transformed();area.shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();restored.region=area;compound.actions[i]=restored;
+            }
+            inner.action=compound;
+        }
+        Action action = readAction(manager, raw);
         if(reference.getName().equals("Traps and Hazards/Trap, floor")){
             // Prepared Training content has depth zero: preserve the authored first
             // tier's damage graph. Its stripped UP guard is enforced by Trap runtime.
@@ -251,6 +303,29 @@ public final class FireCatalogExport {
         String type=action.getClass().getName();
         UNSUPPORTED.merge(type,1,Integer::sum);
         return new Action(Kind.UNSUPPORTED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),type);
+    }
+    private static Object resolvedDamage(ConfigManager manager,DamageConfig damage)throws Exception{
+        if(damage instanceof DamageConfig.Compound compound){
+            var fields=new ArrayList<FieldValue>();var children=new ArrayList<Object>();for(var child:compound.damages)children.add(resolvedDamage(manager,child));
+            fields.add(new FieldValue("damages",DamageConfig[].class.getName(),new ListValue(DamageConfig.class.getName(),children)));
+            return new DataValue(DamageConfig.Compound.class.getName(),fields);
+        }
+        if(!(damage instanceof DamageConfig.DepthScale scaled))return argumentValue(damage);
+        var config=manager.a(DepthScaleConfig.class,scaled.depthScale);if(config==null)throw new IOException("Unresolved damage scale "+scaled.depthScale);
+        float amount=config.a(manager,0,damageRarity,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM);
+        if(scaled instanceof DamageConfig.DepthScaleMulti multi){
+            var split=manager.a(DepthScaleConfig.class,multi.splitDepth);
+            float fraction=split==null?.5f:split.a(manager,0,damageRarity,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM),offset=fraction>0&&fraction<1?.02f:0;
+            return new DataValue(DamageConfig.Compound.class.getName(),List.of(new FieldValue("damages",DamageConfig[].class.getName(),new ListValue(DamageConfig.class.getName(),List.of(
+                flatDamage(scaled,scaled.type,com.threerings.projectx.dungeon.util.DamageSummary.v(amount,Math.min(1,fraction+offset))),
+                flatDamage(scaled,multi.type2,com.threerings.projectx.dungeon.util.DamageSummary.v(amount,Math.min(1,1-fraction+offset))))))));
+        }
+        return flatDamage(scaled,scaled.type,amount);
+    }
+    private static Object flatDamage(DamageConfig.DepthScale source,com.threerings.projectx.dungeon.util.DamageSummary.DamageType type,float amount)throws IOException{
+        DamageConfig.Base result=switch(type){case NORMAL->new DamageConfig.Normal();case PIERCING->new DamageConfig.Piercing();case ELEMENTAL->new DamageConfig.Elemental();case SHADOW->new DamageConfig.Shadow();case UNBLOCKABLE->new DamageConfig.Unblockable();};
+        result.amount=amount;result.flags=source.flags;result.shouldReact=source.shouldReact;result.majorReact=source.majorReact;result.limiter=source.limiter;
+        return argumentValue(result);
     }
     private static ActorSpec actor(ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor) throws Exception {
         String type; int fuse=0; float speed=0,maxStep=-1,ox=0,oy=0,height=0;Action detonation=null; OrbitSpec orbit=null;

@@ -4,16 +4,17 @@ import java.util.List;
 
 /** Server-owned character state persisted across sessions. */
 public record WorldProfile(int worldId, int accountId, int knightId, int crowns, int energy,
-        long revision, List<Item> items) {
-    public WorldProfile { items = List.copyOf(items); }
+        long revision, List<Item> items,KnightProgress progress) {
+    public WorldProfile(int worldId,int accountId,int knightId,int crowns,int energy,long revision,List<Item> items){this(worldId,accountId,knightId,crowns,energy,revision,items,KnightProgress.RECRUIT);}
+    public WorldProfile { items = List.copyOf(items);java.util.Objects.requireNonNull(progress); }
     public enum Slot {
         HELM, ARMOR, SWORD, GUN, SHIELD, BOMB, HELM_COSTUME, ARMOR_COSTUME, SHIELD_COSTUME, TRINKET, OTHER;
         public boolean weapon() { return this==SWORD || this==GUN || this==BOMB; }
         public boolean accepts(int index) {
             return switch(this) {
-                case HELM -> index==0;
-                case ARMOR -> index==1;
-                case SHIELD -> index==2;
+                case HELM -> index==0||index==3;
+                case ARMOR -> index==1||index==4;
+                case SHIELD -> index==2||index==15;
                 case SWORD, GUN, BOMB -> index==6 || index==7;
                 case HELM_COSTUME -> index==3;
                 case ARMOR_COSTUME -> index==4;

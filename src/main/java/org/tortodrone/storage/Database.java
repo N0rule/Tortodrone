@@ -211,6 +211,7 @@ public final class Database {
         write(c -> { int id = requireId(c,username);
             if (expectedId >= 0 && id != expectedId) throw new IOException("Account changed; refresh the account list");
             try (PreparedStatement s = c.prepareStatement("DELETE FROM accounts WHERE id=?")) { s.setInt(1,id); s.executeUpdate(); }
+            WorldProfiles.cleanProgress(c);
             try(var s=c.prepareStatement("DELETE FROM metadata WHERE key=?")){s.setString(1,"account."+id+".inspection-hidden");s.executeUpdate();}
             event(c,id,"deleted"); return null;
         });
@@ -264,6 +265,7 @@ public final class Database {
             if(world!=expectedWorld)throw new IOException("Knight changed; refresh the knight list");
             try(var s=c.prepareStatement("DELETE FROM currency_events WHERE world_id=?")){s.setInt(1,world);s.executeUpdate();}
             try(var s=c.prepareStatement("DELETE FROM knights WHERE account_id=? AND id=?")){s.setInt(1,account);s.setInt(2,knight);s.executeUpdate();}
+            WorldProfiles.cleanProgress(c);
             try(var s=c.prepareStatement("UPDATE accounts SET auth_revision=auth_revision+1,revision=revision+1 WHERE id=?")){s.setInt(1,account);s.executeUpdate();}
             event(c,account,"knight deleted; world="+world);return null;
         });
@@ -316,6 +318,22 @@ public final class Database {
     }
     public WorldProfile inspectKnight(String username, String knightName) throws IOException {
         return read(c->{c.setAutoCommit(false);var result=administrativeProfile(c,username,knightName,-1,-1);c.commit();return result;});
+    }
+    /** Local administration only; target identity, revision and audit share one transaction. */
+    public WorldProfile progress(String username,String knightName,int expectedAccount,int expectedWorld,Integer rank,Integer subrank,Integer prestige)throws IOException{
+        return write(c->{var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);var old=profile.progress();
+            org.tortodrone.character.KnightProgress next;
+            try{if((rank==null)!=(subrank==null))throw new IllegalArgumentException();next=new org.tortodrone.character.KnightProgress(rank==null?old.rank():rank,subrank==null?old.subrank():subrank,prestige==null?old.prestige():prestige);}
+            catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1-10, subrank 1-4 and prestige nonnegative",invalid);}
+            if(next.equals(old))return profile;
+            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
+                s.setString(1,WorldProfiles.progressKey(profile.worldId(),"rank"));s.setInt(2,next.rank()*10+next.subrank());s.executeUpdate();
+                s.setString(1,WorldProfiles.progressKey(profile.worldId(),"prestige"));s.setInt(2,next.prestige());s.executeUpdate();
+            }
+            try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
+            event(c,profile.accountId(),"knight progress; world="+profile.worldId()+"; rank="+next.rankPair()+"; prestige="+next.prestige());
+            return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
+        });
     }
     public WorldProfile currency(String username,String knightName,int expectedAccount,int expectedWorld,
             org.tortodrone.character.Currency currency,long delta) throws IOException {
@@ -476,6 +494,7 @@ public final class Database {
         for (Knight k : knights) try (PreparedStatement s = c.prepareStatement("INSERT INTO knights VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,id) DO UPDATE SET name=excluded.name,name_key=excluded.name_key,helm=excluded.helm,armor=excluded.armor,helm_accessory=excluded.helm_accessory,armor_accessory=excluded.armor_accessory,costume=excluded.costume,color=excluded.color,height=excluded.height,eye=excluded.eye,created_at=excluded.created_at")) {
             s.setInt(1,id); s.setInt(2,k.id()); s.setString(3,k.name()); s.setString(4,k.name().toLowerCase(Locale.ROOT)); s.setString(5,k.helm()); s.setString(6,k.armor()); s.setString(7,k.helmAccessory()); s.setString(8,k.armorAccessory()); s.setString(9,k.costume()); s.setInt(10,k.color()); s.setInt(11,k.height()); s.setInt(12,k.eye()); s.setLong(13,k.createdAt()); s.executeUpdate();
         }
+        WorldProfiles.cleanProgress(c);
     }
     private static IOException failure(SQLException e) {
         if(e.getMessage()!=null&&e.getMessage().contains("UNIQUE constraint failed: knights.name_key"))return new KnightNameInUse(e);

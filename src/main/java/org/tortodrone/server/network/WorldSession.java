@@ -68,7 +68,7 @@ final class WorldSession implements AutoCloseable {
     private WorldProfile visibleProfile(){
         if(temporaryItems.isEmpty())return profile;
         var items=new ArrayList<>(profile.items());items.addAll(temporaryItems.values());
-        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items);
+        return new WorldProfile(profile.worldId(),profile.accountId(),profile.knightId(),profile.crowns(),profile.energy(),profile.revision(),items,profile.progress());
     }
     private void collectPickups()throws IOException {
         for(var pickup:membership.takePickups()){
@@ -762,6 +762,7 @@ final class WorldSession implements AutoCloseable {
             if(fresh.revision()>profile.revision()) {
                 var visibleBefore=visibleProfile();var previous=profile;profile=fresh;
                 if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
+                if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
                 if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
             }
         }
@@ -778,6 +779,7 @@ final class WorldSession implements AutoCloseable {
     private void attach() {
         rebuildAppearance();var place=scene;
         membership=place.simulation().join(actorAppearance(),snapshot->offer(place,snapshot));
+        membership.equipment(visibleProfile());
         if(!place.map().town())membership.combat(weapons,scenes.equipment(),visibleProfile());
     }
     private void rebuildAppearance() {

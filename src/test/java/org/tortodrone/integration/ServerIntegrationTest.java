@@ -157,7 +157,7 @@ public final class ServerIntegrationTest {
 
     private static void missingDefaultsWorkflow(Path sourceJar,Path directory)throws Exception {
         Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");Files.copy(sourceJar,jar);
-        Path config=directory.resolve("config/server.properties");Files.createDirectories(config.getParent());
+        Path config=directory.resolve("data/server.properties");Files.createDirectories(config.getParent());
         Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
         rejected(jar,config,directory,"Missing content file", "incomplete deployment fails before account/key initialization");
         check(!Files.exists(directory.resolve("data/keys"))&&!Files.exists(directory.resolve("data/tortodrone.db")),
@@ -180,7 +180,7 @@ public final class ServerIntegrationTest {
         var original=new java.util.HashMap<Path,byte[]>();for(Path file:files)original.put(file,Files.readAllBytes(file));
         org.tortodrone.resources.ContentMigration.migrate(root);
         for(Path file:files)check(Arrays.equals(original.get(file),Files.readAllBytes(file)),"migration preserves database, identity and settings: "+file.getFileName());
-        Files.copy(root.resolve("config/content-migrated.properties"),root.resolve("config/content.properties"));
+        Files.copy(root.resolve("data/server-migrated.properties"),root.resolve("data/server.properties"),java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         try(var server=new Running(jar,null,root);var socket=new Socket("127.0.0.1",server.ready())) {
             TestClient.authenticate(socket,publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),true,
                 (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,false));
@@ -197,7 +197,7 @@ public final class ServerIntegrationTest {
         org.tortodrone.support.TestDeployment.copyServer(jar, deployedJar);
         seed(deployedJar,deployment);
         Path data = deployment.resolve("data");
-        Path config = deployment.resolve("config/server.properties");
+        Path config = deployment.resolve("data/server.properties");
         ServerSettings defaults = ServerSettings.load(config);
         check(defaults.logMode() == ServerSettings.LogMode.NORMAL, "default logs use normal mode");
         check(!properties(config).containsKey("data-directory"), "generated settings omit data-directory");
@@ -238,9 +238,8 @@ public final class ServerIntegrationTest {
             && !log.contains("snapshot sent") && !log.contains("InvocationRequestEvent"), "normal mode suppresses verbose protocol logs");
         check(log.contains("Connected | session=")&&log.contains("Disconnected | session=")&&log.contains("account=tortodrone (#1)")&&log.contains("rosterId=")&&!log.contains("client-cpu"),"normal logs correlate verified account and distinct knight identities without client hardware claims");
         check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
-        try (var entries = Files.list(deployment)) {
-            check(entries.count() == 5, "deployment separates the JAR, content, config, cache and persistent data");
-        }
+        check(!Files.exists(deployment.resolve("config"))&&!Files.exists(deployment.resolve("cache"))
+            &&Files.isRegularFile(data.resolve("server.properties")),"startup keeps settings in data and creates no separate config/cache directories");
     }
 
     private static void managementWorkflow(Path jar, Path directory) throws Exception {

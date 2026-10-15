@@ -39,6 +39,20 @@ public final class TrainingCompatibility {
         if(FireCompatibility.field(nativePc,"_actionDesc")==null||FireCompatibility.field(nativePc,"_actionEntity")==null)throw new AssertionError("Native interaction prompt missing");
         var pcDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(pc),new int[0],Map.of(1,pc),true));
         pcDelta.aek()[0].apply(nativePc);
+        var corpse=new ActorState(pc.id(),pc.clientOid(),pc.name(),pc.color(),pc.created(),pc.x(),pc.y(),pc.rotation(),pc.direction(),0,TownMovement.DEAD,150,
+            pc.config(),false,null,null,null,new InteractionState(pc.id(),null,"Resurrect"),new SceneKnightState(null,0));
+        var corpseEvent=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,150,(short)50,List.of(),List.of(corpse),new int[0],Map.of(pc.id(),pc),true));
+        var nativeCorpse=corpseEvent.aek()[0].apply(nativePc);
+        if((int)FireCompatibility.field(nativeCorpse,"_activity")!=281
+            ||!FireCompatibility.field(nativeCorpse,"_actionDesc").getClass().getName().equals("com.threerings.projectx.config.ActionDesc$Resurrect")
+            ||(int)FireCompatibility.field(FireCompatibility.field(nativeCorpse,"_actionEntity"),"_id")!=pc.id())
+            throw new AssertionError("Native corpse/revival prompt mismatch");
+        var revived=new ActorState(corpse.id(),corpse.clientOid(),corpse.name(),corpse.color(),corpse.created(),corpse.x(),corpse.y(),corpse.rotation(),corpse.direction(),64,TownMovement.RESURRECT,200,
+            corpse.config(),false,null,null,null,null,new SceneKnightState(null,0));
+        var reviveEvent=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,150,(short)0,150,200,(short)50,List.of(),List.of(revived),new int[0],Map.of(pc.id(),corpse),true));
+        var nativeRevived=reviveEvent.aek()[0].apply(nativeCorpse);
+        if((int)FireCompatibility.field(nativeRevived,"_activity")!=282||((int)FireCompatibility.field(nativeRevived,"_flags")&64)==0||FireCompatibility.field(nativeRevived,"_actionDesc")!=null)
+            throw new AssertionError("Native revival delta did not clear the corpse prompt or set protection");
         // Exercise non-empty native status/lift fields, not just null/default masks.
         var condition=content.statuses().entrySet().stream().filter(e->e.getValue().text("class","").equals("Freeze")).findFirst().orElseThrow();
         var status=new SceneStatus.State(List.of(new StarterCatalog.Model(condition.getKey(),Map.of())),List.of(5000),
@@ -52,6 +66,7 @@ public final class TrainingCompatibility {
         gameplay(content);
         quickbar(status);
         damageFeedback();
+        progress();
         var conversation=content.conversations().get(npc.config().name());
         var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
         for(var frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),
@@ -155,6 +170,26 @@ public final class TrainingCompatibility {
                     ||!event.Ra().name().equals(sample.performance())||!event.getName().equals("damage"))throw new AssertionError("Native party damage feedback mismatch");
         }
         System.out.println("PASS: native party damage events preserve timestamp, target, encoded knight/raw monster amounts, source and performance");
+    }
+    private static void progress()throws Exception{
+        var knight=new Knight(1,"Rank-Fixture","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
+        var progress=new KnightProgress(10,3,45000);var profile=new WorldProfile(219,1,1,0,0,1,List.of(),progress);
+        var notification=(com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().selected(1001,knight,profile));
+        var selected=(com.threerings.presents.dobj.CompoundEvent)notification.yj();boolean rank=false,prestige=false;
+        for(var raw:selected.xE())if(raw instanceof com.threerings.presents.dobj.AttributeChangedEvent event){
+            if(event.getName().equals("rank")){var pair=(com.threerings.projectx.mission.data.RankPair)event.getValue();rank=pair.rank==10&&pair.subrank==3;}
+            if(event.getName().equals("prestige"))prestige=Integer.valueOf(45000).equals(event.getValue());
+        }
+        if(!rank||!prestige)throw new AssertionError("Native selected rank/prestige mismatch");
+        var model=new StarterCatalog.Model("Character/PC/Default",Map.of());
+        var actor=new ActorState(219,1001,"Rank-Fixture",256,100,0,0,0,0,0,0,100,model,false,null,null,null,null,new SceneKnightState(null,0,SceneStatus.State.NORMAL,progress));
+        var occupants=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().occupants(140,List.of(actor)))).yj();
+        var set=(com.threerings.presents.dobj.DSet<?>)((com.threerings.presents.dobj.AttributeChangedEvent)occupants.xE().get(1)).getValue();
+        var info=(com.threerings.projectx.data.ProjectXOccupantInfo)set.iterator().next();
+        if(info.rank!=10||info.pr.ordinal()!=5)throw new AssertionError("Native occupant rank/prestige badge mismatch");
+        var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().knightProgress(1001,profile))).yj();
+        if(update.xE().size()!=3)throw new AssertionError("Native progress update framing mismatch");
+        System.out.println("PASS: native selected rank/subrank, prestige total, occupant rank/badge and live progress events");
     }
 
 }

@@ -18,6 +18,7 @@ public final class AdminApplication {
                 System.out.println("No command opens the desktop account manager.");
                 System.out.println("Commands: --list-accounts | --create-account username [--gm] | --set-password username | --check-password username | --set-gm username true|false | --delete-account username | --version");
                 System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");
+                System.out.println("Progress: --set-rank username knight-name rank subrank | --set-prestige username knight-name total");
                 System.out.println("Items: --items [search] | --give-item username knight-name quantity \"catalogue ID or exact item config\"");return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
@@ -45,6 +46,13 @@ public final class AdminApplication {
         SwingUtilities.invokeLater(()->{DesktopTheme.installDefault();new AdminWindow(data,knight).setVisible(true);});
     }
     private static void command(AccountStore accounts,String[] args) throws IOException {
+        if(args[0].equals("--set-rank")&&args.length==5||args[0].equals("--set-prestige")&&args.length==4){
+            try{
+                var before=accounts.worldProfile(args[1],args[2]);boolean rank=args[0].equals("--set-rank");
+                var profile=accounts.progress(args[1],args[2],rank?Integer.valueOf(args[3]):null,rank?Integer.valueOf(args[4]):null,rank?null:Integer.valueOf(args[3]),before.accountId(),before.worldId());
+                System.out.println("Rank: "+profile.progress().rankPair()+"; Prestige: "+profile.progress().prestige());return;
+            }catch(NumberFormatException invalid){throw new IOException("Rank and prestige must be whole numbers");}
+        }
         if(args[0].equals("--items")&&args.length<=2) {
             System.out.println(org.tortodrone.server.ItemCommands.execute("items"+(args.length==2?" "+args[1]:""),accounts.catalog(),(u,k,c,n)->null));return;
         }

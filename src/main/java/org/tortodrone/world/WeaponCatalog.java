@@ -39,7 +39,11 @@ public final class WeaponCatalog {
     }
 
     public record Shield(String config, int health, int regenTime, int regenDelay,
-            float defendingSpeed, float bashHealthPct, Attack bash) {
+            float defendingSpeed, float bashHealthPct, Attack bash,int breakDelay) {
+        public Shield(String config,int health,int regenTime,int regenDelay,float defendingSpeed,float bashHealthPct,Attack bash){
+            // Legacy seven-column exports omitted the stock Shield default breakTime.
+            this(config,health,regenTime,regenDelay,defendingSpeed,bashHealthPct,bash,7000);
+        }
         /** Compatibility constructor for small fixtures that do not exercise shield speed or bash cost. */
         public Shield(String config, int health, int regenTime, int regenDelay, Attack bash) {
             this(config, health, regenTime, regenDelay, 0f, 0f, bash);
@@ -49,6 +53,7 @@ public final class WeaponCatalog {
             if (health < 0 || health > 100_000) throw new IllegalArgumentException("Invalid shield health");
             if (regenTime < 1 || regenTime > 600_000) throw new IllegalArgumentException("Invalid shield regen time");
             boundedTime(regenDelay, "shield regen delay");
+            boundedTime(breakDelay, "shield break delay");
             // Stock Dungeoneer speed is multiplied by 1 + defendingSpeed; installed shields use [-1, 0].
             if (!Float.isFinite(defendingSpeed) || defendingSpeed < -1 || defendingSpeed > 0)
                 throw new IllegalArgumentException("Invalid shield defending speed");
@@ -125,8 +130,8 @@ public final class WeaponCatalog {
                         } else attacks.computeIfAbsent(weaponKey, ignored -> new ArrayList<>()).add(new AttackRow(kind, index, attack));
                     }
                     case "S" -> {
-                        requireFields(f, 7);
-                        Shield s = new Shield(f[1], integer(f[2]), integer(f[3]), integer(f[4]), decimal(f[5]), decimal(f[6]), null);
+                        if(f.length!=7&&f.length!=8)throw new IllegalArgumentException("Invalid shield row");
+                        Shield s = new Shield(f[1], integer(f[2]), integer(f[3]), integer(f[4]), decimal(f[5]), decimal(f[6]), null,f.length==8?integer(f[7]):7000);
                         if (shieldRows.put(key(s.config()), s) != null) throw new IllegalArgumentException("Duplicate shield reference");
                     }
                     case "C" -> {
@@ -164,7 +169,7 @@ public final class WeaponCatalog {
         for (var entry : shieldRows.entrySet()) {
             Attack bash = shieldBashes.remove(entry.getKey()); Shield s = entry.getValue();
             shields.add(new Shield(s.config(), s.health(), s.regenTime(), s.regenDelay(), s.defendingSpeed(),
-                bash == null ? 0f : s.bashHealthPct(), bash));
+                bash == null ? 0f : s.bashHealthPct(), bash,s.breakDelay()));
         }
         if (!shieldBashes.isEmpty()) throw new IOException("Shield bash metadata has no shield row");
         if (dodgeCooldown == null) throw new IOException("Missing knight dodge cooldown");
@@ -191,7 +196,7 @@ public final class WeaponCatalog {
         }
         for (Shield s : shields.stream().sorted(Comparator.comparing(Shield::config)).toList()) {
             lines.add(String.join("\t", "S", s.config(), Integer.toString(s.health()), Integer.toString(s.regenTime()),
-                Integer.toString(s.regenDelay()), Float.toString(s.defendingSpeed()), Float.toString(s.bashHealthPct())));
+                Integer.toString(s.regenDelay()), Float.toString(s.defendingSpeed()), Float.toString(s.bashHealthPct()),Integer.toString(s.breakDelay())));
             if (s.bash() != null) lines.add(attackLine(s.config(), "BASH", 0, s.bash()));
         }
         Files.createDirectories(file.toAbsolutePath().normalize().getParent());

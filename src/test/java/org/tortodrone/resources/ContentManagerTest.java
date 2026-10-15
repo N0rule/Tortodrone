@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import static org.tortodrone.support.TestWire.check;
 
-/** Isolated versioned-content resolution, adversarial pack validation and cache behavior. */
+/** Isolated versioned-content resolution, adversarial pack validation and read-only resolution. */
 public final class ContentManagerTest {
     private static final Path VANILLA=Path.of("content/packs/vanilla");
     private static final Path BAZAAR=VANILLA.resolve("maps/bazaar");
@@ -13,7 +13,7 @@ public final class ContentManagerTest {
     public static void main(String[] args) throws Exception {
         Path home=Files.createTempDirectory("tortodrone-content-test-").toRealPath();
         try {
-            Path base=deployment(home,"base");selection(base,"vanilla","auto");
+            Path base=deployment(home,"base");
             var registry=ContentManager.load(base);
             check(registry.packs().stream().anyMatch(p->p.id().equals("vanilla")),"default selection resolves vanilla");
             check(registry.scenes().scenes().size()==7&&registry.scenes().entry().id()==1,"all stock scenes and the authored entry load");
@@ -31,8 +31,8 @@ public final class ContentManagerTest {
             resourcePaths(home);
             boundedInputs(home);
             semanticReferences(home);
-            advisoryLockfile(home,base,registry);
-            System.out.println("PASS: vanilla resolution, explicit additive and override packs, dependency and ID conflicts, adversarial manifests, semantic references, path safety and advisory cache behavior");
+            readOnlyResolution(home,base,registry);
+            System.out.println("PASS: vanilla resolution, explicit additive and override packs, dependency and ID conflicts, adversarial manifests, semantic references, path safety and read-only resolution");
         } finally {
             try(var paths=Files.walk(home)) {
                 for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);
@@ -41,7 +41,7 @@ public final class ContentManagerTest {
     }
 
     private static void additiveAndOverride(Path home,ContentRegistry baseline)throws Exception {
-        Path deployment=deployment(home,"additive");Path addon=deployment.resolve("custom/packs/addon");
+        Path deployment=deployment(home,"additive");Path addon=deployment.resolve("content/custom/packs/addon");
         Path replacement=addon.resolve("maps/bazaar-replacement"),extra=addon.resolve("maps/extra");
         copyTree(BAZAAR,replacement);copyTree(BAZAAR,extra);
         setMap(replacement,2,"Bazaar replacement",false);setMap(extra,905,"Test addition",true);
@@ -59,13 +59,13 @@ public final class ContentManagerTest {
             "dependency order is retained in the resolved snapshot");
 
         Path undeclared=deployment(home,"undeclared-override");
-        Path bad=undeclared.resolve("custom/packs/addon");copyTree(replacement,bad.resolve("maps/bazaar-replacement"));
+        Path bad=undeclared.resolve("content/custom/packs/addon");copyTree(replacement,bad.resolve("maps/bazaar-replacement"));
         writePack(bad,"addon","1.0.0",Map.of(),Map.of(),Map.of("scene.2","maps/bazaar-replacement"));
         selection(undeclared,"vanilla,addon","disabled");
         expectFailure(()->ContentManager.load(undeclared),"same-key resources cannot silently shadow another pack");
 
         Path wrongProvider=deployment(home,"wrong-override-provider");
-        Path wrong=wrongProvider.resolve("custom/packs/addon");copyTree(replacement,wrong.resolve("maps/bazaar-replacement"));
+        Path wrong=wrongProvider.resolve("content/custom/packs/addon");copyTree(replacement,wrong.resolve("maps/bazaar-replacement"));
         writePack(wrong,"addon","1.0.0",Map.of("vanilla",vanillaVersion),Map.of("scene.2","other-pack"),Map.of("scene.2","maps/bazaar-replacement"));
         selection(wrongProvider,"vanilla,addon","disabled");
         expectFailure(()->ContentManager.load(wrongProvider),"override must name the current resource provider");
@@ -74,8 +74,8 @@ public final class ContentManagerTest {
 
     private static void ignoredPacks(Path home)throws Exception {
         Path deployment=deployment(home,"ignored");
-        Files.createDirectories(deployment.resolve("custom/packs/not-enabled"));
-        Files.writeString(deployment.resolve("custom/packs/not-enabled/pack.properties"),"invalid=ignored\n");
+        Files.createDirectories(deployment.resolve("content/custom/packs/not-enabled"));
+        Files.writeString(deployment.resolve("content/custom/packs/not-enabled/pack.properties"),"invalid=ignored\n");
         selection(deployment,"vanilla","disabled");
         check(ContentManager.load(deployment).packs().size()==1,"disabled custom packs are not inspected or auto-enabled");
         selection(deployment,"vanilla,missing-pack","disabled");
@@ -114,7 +114,7 @@ public final class ContentManagerTest {
         expectFailure(()->ContentManager.load(mismatched),"scene resource key must match its native map scene ID");
 
         Path duplicate=deployment(home,"duplicate-scene-id");
-        Path addon=duplicate.resolve("custom/packs/addon");copyTree(BAZAAR,addon.resolve("maps/duplicate"));
+        Path addon=duplicate.resolve("content/custom/packs/addon");copyTree(BAZAAR,addon.resolve("maps/duplicate"));
         writePack(addon,"addon","1.0.0",Map.of(),Map.of(),Map.of("scene.905","maps/duplicate"));
         selection(duplicate,"vanilla,addon","disabled");
         expectFailure(()->ContentManager.load(duplicate),"two resource keys cannot publish one native scene ID");
@@ -134,7 +134,8 @@ public final class ContentManagerTest {
         mutateVanilla(home,"invalid-scene-key",p->p.setProperty("resource.scene.0","maps/bazaar"));
         mutateVanilla(home,"unpaired-checksum",p->p.setProperty("sha256.unused","0".repeat(64)));
         Path unknownSetting=deployment(home,"unknown-selection-setting");
-        Files.writeString(unknownSetting.resolve("config/content.properties"),"format=1\nenabled=vanilla\nlegacy=disabled\nimplicit=true\n");
+        Files.createDirectories(unknownSetting.resolve("data"));
+        Files.writeString(unknownSetting.resolve("data/server.properties"),"content-packs=vanilla\nlegacy-content=disabled\nimplicit=true\n");
         expectFailure(()->ContentManager.load(unknownSetting),"unknown operator selection settings fail closed");
     }
 
@@ -185,21 +186,13 @@ public final class ContentManagerTest {
         expectFailure(()->ContentManager.load(badCombat),"combat controls cannot reference an absent item definition");
     }
 
-    private static void advisoryLockfile(Path home,Path base,ContentRegistry initial)throws Exception {
+    private static void readOnlyResolution(Path home,Path base,ContentRegistry initial)throws Exception {
         Path data=base.resolve("data");Files.createDirectories(data);Path sentinel=data.resolve("owner-state");
         byte[] original="keep player data byte-for-byte".getBytes(java.nio.charset.StandardCharsets.UTF_8);Files.write(sentinel,original);
-        initial.writeLockfile(base);
-        Path lockfile=base.resolve("cache/content.lock");check(Files.isRegularFile(lockfile),"resolved pack versions and resource hashes can be recorded diagnostically");
-        Files.writeString(lockfile,"invalid cache contents\n");
-        var afterCorruption=ContentManager.load(base);
-        check(afterCorruption.resources().equals(initial.resources()),"corrupt lockfile never selects or alters resources");
-        Files.delete(lockfile);
-        var afterDeletion=ContentManager.load(base);
-        check(afterDeletion.packs().equals(initial.packs())&&afterDeletion.resources().equals(initial.resources()),
-            "deleting the advisory lockfile does not change resolution");
-        afterDeletion.writeLockfile(base);
-        check(Files.isRegularFile(lockfile),"the diagnostic lockfile can be rebuilt from validated resources");
-        check(Arrays.equals(original,Files.readAllBytes(sentinel)),"content resolution and cache rebuild preserve persistent data bytes");
+        var reloaded=ContentManager.load(base);
+        check(reloaded.resources().equals(initial.resources()),"reloading content validates the same resources");
+        check(!Files.exists(base.resolve("cache")),"content resolution creates no diagnostic cache");
+        check(Arrays.equals(original,Files.readAllBytes(sentinel)),"content resolution preserves persistent data bytes");
     }
 
     private static void addScenePack(Path deployment,String id,int sceneId,Map<String,String> requires,
@@ -208,7 +201,7 @@ public final class ContentManagerTest {
     }
     private static void addScenePack(Path deployment,String id,int sceneId,Map<String,String> requires,
             Map<String,String> overrides,Map<String,String> extra,boolean changeId)throws Exception {
-        Path pack=deployment.resolve("custom/packs").resolve(id);Path scene=pack.resolve("maps/extra");
+        Path pack=deployment.resolve("content/custom/packs").resolve(id);Path scene=pack.resolve("maps/extra");
         copyTree(BAZAAR,scene);setMap(scene,changeId?sceneId:2,"Test addition",true);
         var resources=new TreeMap<String,String>(extra);resources.put("scene."+sceneId,"maps/extra");
         writePack(pack,id,"1.0.0",requires,overrides,resources);
@@ -249,11 +242,11 @@ public final class ContentManagerTest {
     }
     private static String packVersion(Path manifest)throws Exception {return properties(manifest).getProperty("version");}
     private static Path deployment(Path home,String name)throws Exception {
-        Path target=home.resolve(name);copyTree(VANILLA,target.resolve("content/packs/vanilla"));Files.createDirectories(target.resolve("config"));return target;
+        Path target=home.resolve(name);copyTree(VANILLA,target.resolve("content/packs/vanilla"));return target;
     }
     private static void selection(Path deployment,String enabled,String legacy)throws Exception {
-        Path file=deployment.resolve("config/content.properties");Files.createDirectories(file.getParent());
-        Files.writeString(file,"format=1\nenabled="+enabled+"\nlegacy="+legacy+"\n");
+        Path file=deployment.resolve("data/server.properties");Files.createDirectories(file.getParent());
+        Files.writeString(file,"content-packs="+enabled+"\nlegacy-content="+legacy+"\n");
     }
     private static Properties properties(Path file)throws IOException {Properties p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}return p;}
     private static void writeProperties(Path file,Properties p)throws IOException {Files.createDirectories(file.getParent());try(var out=Files.newOutputStream(file)){p.store(out,"isolated content test fixture");}}

@@ -80,8 +80,8 @@ public final class BuildTools {
             // Operator packs are not build inputs. Copy only the shipped empty directory marker.
             // Arbitrary staging pack outputs receive no config files outside the requested tree.
             if(output.endsWith(Path.of("content/packs/vanilla"))||output.endsWith(Path.of("defaults"))) {
-                plan(project.resolve("config"),deploymentRoot.resolve("config"),copies,null,null,"content.properties");
-                plan(project.resolve("custom/packs"),deploymentRoot.resolve("custom/packs"),copies,null,null,".gitkeep");
+                plan(project.resolve("src/main/resources"),deploymentRoot.resolve("data"),copies,null,null,"server.properties");
+                plan(project.resolve("content/custom/packs"),deploymentRoot.resolve("content/custom/packs"),copies,null,null,".gitkeep");
             }
         }
         // Refuse all planned content changes while the target deployment is locked.

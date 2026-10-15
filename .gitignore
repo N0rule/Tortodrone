@@ -15,8 +15,5 @@ build/
 
 # Local deployment state and enabled operator packs
 /data/
-/cache/
-/config/server.properties
-/config/content-migrated.properties
-/custom/packs/*
-!/custom/packs/.gitkeep
+/content/custom/packs/*
+!/content/custom/packs/.gitkeep

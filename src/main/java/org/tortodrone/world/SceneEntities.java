@@ -17,6 +17,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
         final SceneStatus status;
         final Object shape;
+        KnightCombat.Impulse impulse;int impulseAdvanced;
         final Map<Integer,Integer> hazardHits=new HashMap<>();
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
@@ -43,7 +44,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private int nextId=1_000_000_000,lastStamp;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
-    public record PlayerHit(int actor,Object damage,int timestamp,int source) { }
+    public record PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier) {
+        public PlayerHit(int actor,Object damage,int timestamp,int source){this(actor,damage,timestamp,source,1);}
+    }
     private java.util.function.Consumer<PlayerHit> playerDamage=hit->{};
     public void playerDamage(java.util.function.BiConsumer<Integer,Object> damage){Objects.requireNonNull(damage);playerDamage=hit->damage.accept(hit.actor(),hit.damage());}
     public void playerHits(java.util.function.Consumer<PlayerHit> damage){playerDamage=Objects.requireNonNull(damage);}
@@ -51,6 +54,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public void feedback(java.util.function.Consumer<SceneCombatEvent> value){feedback=Objects.requireNonNull(value);}
     private java.util.function.BiPredicate<Integer,Integer> playerHeal=(actor,amount)->false;
     public void playerHeal(java.util.function.BiPredicate<Integer,Integer> heal){playerHeal=Objects.requireNonNull(heal);}
+    private java.util.function.IntPredicate playerActive=id->true;
+    public void playerActive(java.util.function.IntPredicate predicate){playerActive=Objects.requireNonNull(predicate);}
+    private java.util.function.BiConsumer<Integer,KnightCombat.Impulse> playerImpulse=(id,impulse)->{};
+    public void playerImpulse(java.util.function.BiConsumer<Integer,KnightCombat.Impulse> callback){playerImpulse=Objects.requireNonNull(callback);}
     private java.util.function.BiConsumer<ActorState,FireCatalog.Action> attack=(actor,action)->{};
     public void attacks(java.util.function.BiConsumer<ActorState,FireCatalog.Action> fire){attack=Objects.requireNonNull(fire);}
     private List<ActorState> players=List.of();
@@ -154,8 +161,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         String description=nearest.spec.text("description","");
         return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),nearest.kind.equals("DungeonLift")?"Lift":nearest.spec.text("interaction-action","Interact"));
     }
-    public void advance(int stamp,List<ActorState> players){
-        this.players=List.copyOf(players);
+    public void advance(int stamp,List<ActorState> occupants){
+        var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
+        this.players=players;
         while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();clearLinks(link.entity(),stamp,link.ghost());}
         float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;
         for(var e:List.copyOf(entities.values())){
@@ -200,8 +208,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.hazardHits.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id));
             }
             if(e.kind.equals("Pickup")&&e.claim==0)collect(e,elapsed,players);
-            if(e.kind.equals("Monster"))move(e,stamp,elapsed,players);
-            if(e.kind.equals("Monster"))e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->hurt(e,(float)amount,stamp),amount->e.health=Math.min(e.spec.number("health",0),e.health+(float)amount));
+            if(e.kind.equals("Monster")){
+                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.spec.number("health",0),e.health+(float)amount);});
+                if(e.health==0)e.status.clear();else {advanceImpulse(e,stamp);move(e,stamp,elapsed,players);}
+            }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
         }
@@ -230,6 +240,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void collect(Entity e,float elapsed,List<ActorState> players){
         if(e.spec.text("pickup-item","").isEmpty())return;
         for(var player:players){
+            if(!playerActive.test(player.id()))continue;
             float dx=player.x()-e.x,dy=player.y()-e.y,distance=(float)Math.hypot(dx,dy);
             float reach=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS;
             if(distance>reach+e.spec.number("vacuum-expansion",0)){e.refusedPickups.remove(player.id());continue;}
@@ -245,14 +256,19 @@ public final class SceneEntities implements SceneWeapons.Targets {
         float distance=e.spec.number("acquire-distance",0);if(distance<=0)return;
         if(stamp>=e.nextAcquire){
             float nearest=distance;e.target=0;
-            for(var player:players){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
+            for(var player:players)if(playerActive.test(player.id())){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
             e.nextAcquire=stamp+e.spec.integer("acquisition-interval",0);
         }
-        ActorState target=players.stream().filter(p->p.id()==e.target).findFirst().orElse(null);
+        ActorState target=players.stream().filter(p->p.id()==e.target&&playerActive.test(p.id())).findFirst().orElse(null);
         float nearest=target==null?Float.POSITIVE_INFINITY:(float)Math.hypot(target.x()-e.x,target.y()-e.y);
         e.flags=target==null?0:16;
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
         int slot=e.spec.integer("attack",-1);String prefix="attack."+slot+".";
+        var modifiers=e.status.state().modifiers();
+        if(!modifiers.canAttack()){
+            if(e.activity>=4){e.activity=0;e.fired.clear();}
+            e.flags&=~2;return;
+        }
         if(e.activity>=4){
             for(String fire:e.spec.text(prefix+"fires","").split(",")){
                 if(fire.isBlank()||e.fired.contains(fire))continue;
@@ -346,8 +362,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
         damage(region,x,y,rotation,stamp,owner,null);
     }
     @Override public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){
+        damage(region,x,y,rotation,stamp,owner,sourceShape,null);
+    }
+    @Override public void sweep(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){
+        damage(region,x,y,rotation,stamp,owner,null,hit);
+    }
+    private void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape,Set<Integer> hitOnce){
         Object damage=region.arguments().get("damage"),shape=region.arguments().get("region");
         var source=entities.get(owner);float expansion=SceneDamage.number(shape,"expansion",0);
+        float multiplier=source==null?players.stream().filter(p->p.id()==owner&&p.sceneKnight()!=null).map(p->p.sceneKnight().status().modifiers().attackDamage()).findFirst().orElse(1f):source.status.state().modifiers().attackDamage();
         Object defined=region.arguments().getOrDefault("shape",SceneDamage.field(shape,"shape"));
         if(!(defined instanceof FireCatalog.DataValue)&&shape instanceof FireCatalog.DataValue value&&value.type().endsWith("$Default")){
             var model=source==null?null:source.spec.model("source-shape");
@@ -360,7 +383,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
                 boolean hit=defined instanceof FireCatalog.DataValue?SceneShape.intersects(defined,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+expansion;
                 int sourceId=source==null?owner:source.kind.equals("Monster")?owner:source.kind.equals("DungeonLift")?source.owner:0;
-                if(hit){
+                if(hit&&(hitOnce==null||hitOnce.add(player.id()))){
                     // One trap action can cover several occupants. Record each
                     // hit here so the next sensor cannot damage them again on
                     // the same tick or before the authored refractory deadline.
@@ -368,7 +391,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                         if(stamp<source.hazardHits.getOrDefault(player.id(),0))continue;
                         source.hazardHits.put(player.id(),stamp+source.spec.integer("hazard-refractory",0));
                     }
-                    playerDamage.accept(new PlayerHit(player.id(),damage,stamp,sourceId));
+                    playerDamage.accept(new PlayerHit(player.id(),damage,stamp,sourceId,multiplier));
                 }
             }
         }
@@ -382,25 +405,67 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     SceneCollision.overlaps(geometry,x,y,rotation,e.shape,e.x,e.y,e.rotation,Math.max(0,expansion));
             }else hit=e.spec.contains(e.x,e.y,e.rotation,x,y,Math.max(0,expansion));
             if(!hit)continue;
+            if(hitOnce!=null&&!hitOnce.add(e.id))continue;
             if(e.kind.equals("Switch")){
                 String mode=e.spec.text("switch-mode","");
-                if(mode.startsWith("damage-")&&stamp>=e.nextSwitch&&SceneDamage.amount(damage,content,e.spec)>0){
+                if(mode.startsWith("damage-")&&stamp>=e.nextSwitch&&SceneDamage.amount(damage,content,e.spec,multiplier)>0){
                     setSwitch(e,e.state==0?1:0,stamp);e.nextSwitch=stamp+e.spec.integer(mode.equals("damage-timed")?"switch-delay":"switch-cooldown",0);
                 }
                 continue;
             }
             if(e.spec.integer("damage-mask",0)==0)continue;
             Object accepted=SceneDamage.prune(damage,e.spec.integer("damage-mask",0));
-            float amount=SceneDamage.amount(accepted,content,e.spec);
+            var defense=new HashMap<>(e.spec.fields());
+            defense.replaceAll((key,value)->key.startsWith("defense.")?Float.toString(Float.parseFloat(value)*e.status.state().modifiers().defense()):value);
+            float amount=SceneDamage.amount(accepted,content,new SceneContent.Spec(defense),multiplier);
             if(e.kind.equals("Monster")){
                 e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
+                    applyImpulse(e,region,x,y,rotation,stamp);
+                    if(e.health==0)e.status.clear();
                     int sourceId=source!=null&&source.kind.equals("DungeonLift")?source.owner:owner;
                     float fraction=dealt/e.spec.number("health",1);
                     feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,fraction>.4f?"NORMAL_LARGE":fraction>.2f?"NORMAL_MEDIUM":"NORMAL_SMALL"));
                 }
             }else if(amount>0&&e.kind.startsWith("Block"))blockHit(e,stamp);
         }
+    }
+    @Override public void impulse(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
+        Object raw=region.arguments().get("region"),shape=region.arguments().getOrDefault("shape",SceneDamage.field(raw,"shape"));
+        float expansion=SceneDamage.number(raw,"expansion",0),c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
+        int flags=region.arguments().get("flags") instanceof Number n?n.intValue():1;
+        for(var e:entities.values())if(e.id!=owner&&e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE&&(e.spec.integer("damage-mask",0)&flags)!=0){
+            float dx=e.x-x,dy=e.y-y;
+            if(shape instanceof FireCatalog.DataValue?SceneShape.intersects(shape,dx*c+dy*s,-dx*s+dy*c,e.spec.number("radius",0)+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+e.spec.number("radius",0)+expansion)
+                applyImpulse(e,region,x,y,rotation,stamp);
+        }
+        if((flags&Math.round(content.stats().getOrDefault("player.damage-mask",13f)))!=0)for(var player:players)if(player.id()!=owner&&playerActive.test(player.id())){
+            float dx=player.x()-x,dy=player.y()-y;
+            if(shape instanceof FireCatalog.DataValue?SceneShape.intersects(shape,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=2*ScenePortals.PAWN_RADIUS+expansion){
+                var impulse=createImpulse(region,x,y,rotation,player.x(),player.y(),Math.round(content.stats().getOrDefault("player.impulse-level",1f)),stamp);
+                if(impulse!=null)playerImpulse.accept(player.id(),impulse);
+            }
+        }
+    }
+    @Override public boolean monsters(Object region,float x,float y,float rotation){
+        Object shape=SceneDamage.field(region,"shape");float expansion=SceneDamage.number(region,"expansion",0),c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
+        for(var e:entities.values())if(e.kind.equals("Monster")&&e.destroyed==Integer.MAX_VALUE){
+            float dx=e.x-x,dy=e.y-y;if(shape instanceof FireCatalog.DataValue?SceneShape.intersects(shape,dx*c+dy*s,-dx*s+dy*c,e.spec.number("radius",0)+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+e.spec.number("radius",0)+expansion)return true;
+        }return false;
+    }
+    private KnightCombat.Impulse createImpulse(StarterCatalog.Model region,float x,float y,float rotation,float tx,float ty,int level,int stamp){
+        Object origin=region.arguments().get("impulse-origin");float ox=SceneDamage.number(origin,"x",0),oy=SceneDamage.number(origin,"y",0),c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
+        return SceneDamage.impulse(region.arguments().get("impulse"),x+ox*c-oy*s,y+ox*s+oy*c,tx,ty,level,stamp);
+    }
+    private void applyImpulse(Entity entity,StarterCatalog.Model region,float x,float y,float rotation,int stamp){
+        var impulse=createImpulse(region,x,y,rotation,entity.x,entity.y,entity.spec.integer("impulse-level",1),stamp);
+        if(impulse!=null){entity.impulse=SceneDamage.combine(impulse,entity.impulse);entity.impulseAdvanced=stamp;}
+    }
+    private void advanceImpulse(Entity e,int stamp){
+        if(e.impulse==null)return;float portion=e.impulse.fraction(stamp)-e.impulse.fraction(e.impulseAdvanced);e.impulseAdvanced=stamp;
+        float dx=e.impulse.x()*portion,dy=e.impulse.y()*portion;int steps=Math.max(1,(int)Math.ceil(Math.hypot(dx,dy)/.1));
+        for(int i=0;i<steps;i++){float x=e.x+dx/steps,y=e.y+dy/steps;if(terrain.walkableSegment(e.x,e.y,x,y)&&walkable(x,y,e.id)){e.x=x;e.y=y;}else break;}
+        if(stamp>=e.impulse.started()+e.impulse.duration())e.impulse=null;
     }
     private void blockHit(Entity e,int stamp){
         e.hitTime=stamp;

@@ -18,31 +18,27 @@ public final class ContentManager {
         System.out.println("PASS: content packs "+content.packs()+"; "+content.scenes().scenes().size()+" scenes, "+content.items().entries().size()+" items, "+content.weapons().weapons().size()+" weapons, "+content.fires().entries().size()+" fire graphs");
     }
     public static ContentRegistry load(Path deployment) throws IOException {
+        return load(deployment, org.tortodrone.config.ServerSettings.read(
+            org.tortodrone.config.ServerSettings.defaultPath(deployment)));
+    }
+    public static ContentRegistry load(Path deployment,org.tortodrone.config.ServerSettings settings) throws IOException {
         deployment=deployment.toAbsolutePath().normalize();ContentFiles.safe(deployment);
-        Path selection=deployment.resolve("config/content.properties");
         var declarations=new LinkedHashMap<Path,String>();
-        boolean configured=Files.exists(selection,LinkOption.NOFOLLOW_LINKS);
-        if(configured)declarations.put(selection,ContentFiles.digest(selection));
-        var settings=new Properties();
-        settings.setProperty("format","1");settings.setProperty("enabled","vanilla");settings.setProperty("legacy","auto");
-        if(Files.exists(selection,LinkOption.NOFOLLOW_LINKS))settings.putAll(ContentFiles.properties(selection));
-        for(String key:settings.stringPropertyNames())if(!Set.of("format","enabled","legacy").contains(key))throw new IOException("Unknown content setting: "+key);
-        if(!settings.getProperty("format").equals("1"))throw new IOException("Unsupported content selection format");
-        String legacy=settings.getProperty("legacy");
-        if(!Set.of("auto","disabled").contains(legacy))throw new IOException("legacy must be auto or disabled");
-        List<String> enabled=names(settings.getProperty("enabled"));
+        String legacy=settings.legacyContent();
+        if(!Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
+        List<String> enabled=names(settings.contentPacks());
         if(enabled.isEmpty()||enabled.size()>32)throw new IOException("Enable between 1 and 32 content packs");
         var warnings=new ArrayList<String>();
         Map<String,ContentRegistry.Resource> resources=new TreeMap<>();
         var packs=new ArrayList<ContentRegistry.Pack>();
         if(legacy.equals("auto")&&LegacyContent.present(deployment)) {
-            if(!enabled.equals(List.of("vanilla")))throw new IOException("Legacy resources cannot be mixed with versioned custom packs; migrate them or set legacy=disabled");
+            if(!enabled.equals(List.of("vanilla")))throw new IOException("Legacy resources cannot be mixed with versioned custom packs; migrate them or set legacy-content=disabled");
             resources.putAll(LegacyContent.resolve(deployment,warnings));
             packs.add(new ContentRegistry.Pack("legacy","unversioned"));
         } else {
             var manifests=new LinkedHashMap<String,Manifest>();
             for(String id:enabled) {
-                Path root=deployment.resolve(id.equals("vanilla")?"content/packs/vanilla":"custom/packs/"+id);
+                Path root=deployment.resolve(id.equals("vanilla")?"content/packs/vanilla":"content/custom/packs/"+id);
                 declarations.put(root.resolve("pack.properties"),ContentFiles.digest(root.resolve("pack.properties")));
                 Manifest manifest=manifest(root);
                 if(!manifest.pack().id().equals(id))throw new IOException("Content pack folder/ID mismatch: "+id);
@@ -64,7 +60,6 @@ public final class ContentManager {
         }
         try {
             var result=validate(packs,resources,warnings);
-            if(configured!=Files.exists(selection,LinkOption.NOFOLLOW_LINKS))throw new IOException("Content selection changed during loading");
             for(var declaration:declarations.entrySet())if(!ContentFiles.digest(declaration.getKey()).equals(declaration.getValue()))
                 throw new IOException("Content declaration changed during loading: "+declaration.getKey());
             return result;

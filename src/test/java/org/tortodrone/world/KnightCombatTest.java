@@ -66,6 +66,12 @@ public final class KnightCombatTest {
         geared.input(4,9000,9000,0,0,true);geared.input(4,9000,9167,0,0,true);
         check(geared.activity()==KnightCombat.CHARGE,"attack-speed bonus advances the held-charge rearm deadline");
         geared.input(0,9000,9687,0,0,true);check(geared.activity()==KnightCombat.CHARGED,"capped gear charge bonus shortens the authored charge duration");
+        var stunned=new KnightCombat(catalog);stunned.equipment(profile("Sword","Gun"));stunned.reset(10000);
+        stunned.status(new SceneStatus.Modifiers(1,.5f,1,1,1,true,true,true,false,false));
+        var starts=new ArrayList<KnightCombat.AttackStart>();stunned.attacks(starts::add);
+        stunned.input(4,10000,10000,0,0,true);
+        check(starts.size()==1&&starts.getFirst().land()==200&&starts.getFirst().clear()==1200&&starts.getFirst().attackSpeed()==.5f,
+            "status attack speed scales both attack animation and weapon fire deadlines");
         System.out.println("KnightCombatTest passed");
     }
     private static WorldProfile profile(String first,String second) {

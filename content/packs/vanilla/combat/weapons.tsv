@@ -2091,244 +2091,244 @@ A	Weapon/Sword/_Frost Sword	NORMAL	1	200	433	766	false	100	150	1.25	0.0
 A	Weapon/Sword/_Frost Sword	NORMAL	2	200	877	877	false	100	150	2.0	0.0
 A	Weapon/Sword/_Frost Sword	INCOMPLETE	0	175	408	741	false	0	175	1.0	0.0
 A	Weapon/Sword/_Frost Sword	CHARGED	0	571	921	1810	false	300	200	1.0	0.0
-S	Gear/Shield/(Dev) Deadzone	10000	6000	3000	0.0	0.0
-S	Gear/Shield/(Dev) Nuke-Pave	10000	6000	3000	-0.5	0.0
-S	Gear/Shield/(Dev) OOO Crest	50	6000	3000	-0.5	0.0
-S	Gear/Shield/(Dev) Shield Bracelet	50	6000	3000	-0.5	0.0
-S	Gear/Shield/(Dev) Translocator	10000	6000	3000	0.0	0.0
-S	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	50	6000	3000	-0.5	0.5
+S	Gear/Shield/(Dev) Deadzone	10000	6000	3000	0.0	0.0	100
+S	Gear/Shield/(Dev) Nuke-Pave	10000	6000	3000	-0.5	0.0	8000
+S	Gear/Shield/(Dev) OOO Crest	50	6000	3000	-0.5	0.0	8000
+S	Gear/Shield/(Dev) Shield Bracelet	50	6000	3000	-0.5	0.0	8000
+S	Gear/Shield/(Dev) Translocator	10000	6000	3000	0.0	0.0	1000
+S	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	50	6000	3000	-0.5	0.5
+S	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash	50	6000	3000	-0.5	0.5
+S	Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash	50	6000	3000	-0.5	0.5
+S	Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash	50	6000	3000	-0.5	0.5
+S	Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Aegis	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Aegis	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Aegis	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Airbraker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Airbraker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Airbraker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Ancient Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Ancient Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Ancient Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Barbarous Thorn Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Barbarous Thorn Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Barbarous Thorn Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Barrier Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Barrier Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Barrier Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Blackened Crest	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Blackened Crest	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Blackened Crest	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Blazebreak Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Blazebreak Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Blazebreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Blizzbreaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Blizzbreaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Blizzbreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Boosted Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Boosted Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Boosted Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Bristling Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Bristling Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Bristling Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Brute Jelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Brute Jelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Brute Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Celestial Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Celestial Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Celestial Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Circuit Breaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Circuit Breaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Circuit Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Crest of Almire	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Crest of Almire	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Crest of Almire	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Crystalline Defender	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Crystalline Defender	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Crystalline Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Dark Thorn Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Dark Thorn Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Dark Thorn Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Defender	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Defender	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Dragon Scale Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Dragon Scale Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Dragon Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Drake Scale Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Drake Scale Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Drake Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Dread Skelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Dread Skelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Dread Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Emberbreak Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Emberbreak Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Emberbreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Feral Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Feral Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Feral Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Firebreak Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Firebreak Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Firebreak Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Force Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Force Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Force Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Frostbreaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Frostbreaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Frostbreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Gorgomega	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Gorgomega	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Gorgomega	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Grand Tortoise	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Grand Tortoise	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Grand Tortoise	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Great Defender	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Great Defender	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Great Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Green Ward	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Green Ward	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Green Ward	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Grey Owlite Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Grey Owlite Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Grey Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Grim Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Grim Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Grim Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Heater Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Heater Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Heater Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Heavy Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Heavy Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Heavy Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Honor Shield 1	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Honor Shield 1	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Honor Shield 1	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Honor Shield 2	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Honor Shield 2	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Honor Shield 2	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Honor Shield 3	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Honor Shield 3	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Honor Shield 3	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Honor Shield 4	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Honor Shield 4	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Honor Shield 4	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Horned Owlite Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Horned Owlite Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Horned Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Icebreaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Icebreaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Icebreaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Iron Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Iron Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Iron Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Ironmight Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Ironmight Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Ironmight Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Jelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Jelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Mighty Defender	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Mighty Defender	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Mighty Defender	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Mighty Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Mighty Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Mighty Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Nether Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Nether Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Nether Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Amethyst	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Amethyst	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Amethyst	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Aquamarine	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Aquamarine	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Aquamarine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Blue	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Blue	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Blue	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Citrine	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Citrine	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Citrine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Curse	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Curse	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Curse	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Dangerous	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Dangerous	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Dangerous	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Diamond	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Diamond	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Diamond	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Divine	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Divine	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Divine	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Emerald	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Emerald	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Emerald	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Garnet	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Garnet	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Garnet	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Glacial	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Glacial	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Glacial	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Gold	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Gold	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Gold	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Green	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Green	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Green	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Hazardous	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Hazardous	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Hazardous	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Heavy	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Heavy	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Heavy	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Hunter	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Hunter	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Hunter	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Opal	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Opal	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Opal	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Pearl	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Pearl	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Pearl	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Peridot	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Peridot	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Peridot	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Pink	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Pink	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Pink	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Purple	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Purple	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Purple	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Red	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Red	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Ruby	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Ruby	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Ruby	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Sapphire	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Sapphire	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Sapphire	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Shadow	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Shadow	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Shadow	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Turquoise	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Turquoise	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Turquoise	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Node Slime/Node Slime, Volcanic	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Node Slime/Node Slime, Volcanic	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Node Slime/Node Slime, Volcanic	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Omega Shell	62	6000	3000	-0.5	0.5
+S	Gear/Shield/Omega Shell	62	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Omega Shell	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Omegaward	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Omegaward	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Omegaward	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Owlite Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Owlite Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Power Mitt	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Power Mitt	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Power Mitt	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Primal Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Primal Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Primal Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Proto Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Proto Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Proto Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Raider Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Raider Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Raider Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Rock Jelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Rock Jelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Rock Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Royal Jelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Royal Jelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Royal Jelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Savage Tortoise	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Savage Tortoise	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Savage Tortoise	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Scale Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Scale Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Scarlet Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Scarlet Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Scarlet Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Scary Skelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Scary Skelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Scary Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Shining Ward	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Shining Ward	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Shining Ward	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Ship Wheel	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Ship Wheel	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Ship Wheel	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Sinister Skelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Sinister Skelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Sinister Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Skelly Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Skelly Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Skelly Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Stoic Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Stoic Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Stoic Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Stone Tortoise	62	6000	3000	-0.5	0.5
+S	Gear/Shield/Stone Tortoise	62	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Stone Tortoise	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Stop Sign	50	6000	3000	-1.0	0.5
+S	Gear/Shield/Stop Sign	50	6000	3000	-1.0	0.5	10000
 A	Gear/Shield/Stop Sign	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Surge Breaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Surge Breaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Surge Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Swiftstrike Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Swiftstrike Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Swiftstrike Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/The Bitter End	50	6000	3000	-0.5	0.5
+S	Gear/Shield/The Bitter End	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/The Bitter End	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/The Bitter End, Red	50	6000	3000	-0.5	0.5
+S	Gear/Shield/The Bitter End, Red	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/The Bitter End, Red	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Thwacker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Thwacker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Thwacker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Twisted Targe	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Twisted Targe	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Twisted Targe	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Volcanic Plate Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Volcanic Plate Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Volcanic Plate Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Volt Breaker Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Volt Breaker Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Volt Breaker Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Wild Shell	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Wild Shell	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Wild Shell	BASH	0	500	1500	1600	false	525	600	6.0	0.0
-S	Gear/Shield/Wise Owlite Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Wise Owlite Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Wise Owlite Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0
-S	Gear/Shield/Wyvern Scale Shield	50	6000	3000	-0.5	0.5
+S	Gear/Shield/Wyvern Scale Shield	50	6000	3000	-0.5	0.5	8000
 A	Gear/Shield/Wyvern Scale Shield	BASH	0	500	1500	1600	false	525	800	6.0	0.0

@@ -73,7 +73,7 @@ public final class WeaponCatalogExport {
             throw new IllegalStateException("Shield bash reference is not a ShieldBash: " + name);
         float bashHealthPct = bashOriginal == null ? 0f : ((AttackConfig.ShieldBash)bashOriginal).bashHealthPct;
         Attack bash = readAttack(false, bashOriginal);
-        return new Shield(name, health, shield.regenTime, shield.hitTime, shield.defendingSpeed, bashHealthPct, bash);
+        return new Shield(name, health, shield.regenTime, shield.hitTime, shield.defendingSpeed, bashHealthPct, bash,shield.breakTime);
     }
 
     private static Attack readAttackRef(ConfigManager manager, boolean blended,

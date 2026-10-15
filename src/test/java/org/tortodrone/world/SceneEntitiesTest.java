@@ -44,7 +44,38 @@ public final class SceneEntitiesTest {
         thrown(map,-11.5f,-16.5f,(float)Math.PI,true);
         thrown(map,3.5f,-20.5f,(float)Math.PI,false);
         trapOccupants(map);
+        monsterStatus(map);
         System.out.println("PASS: rounded/rotated hitboxes, edge damage, damage masks and native thrown-lift collision profiles");
+    }
+    private static void monsterStatus(SceneCatalog.MapScene map) {
+        var pad=map.content().entries().stream().filter(e->e.spec().child().text("native-type","").endsWith(".Monster")
+            &&e.spec().child().number("acquire-distance",0)>0).findFirst().orElseThrow();
+        var fields=new HashMap<>(pad.spec().child().fields());
+        fields.put("activate-time","0");fields.put("acquisition-interval","0");fields.put("attack-distance","3");
+        var content=new SceneContent(List.of(new SceneContent.Entry("cube",5.5f,-12.5f,0,new SceneContent.Spec(fields))),
+            map.content().scales(),Map.of(),map.content().stats(),Map.of(),Map.of(),map.content().statuses());
+        var world=new SceneEntities(content,map.collision());var cube=world.actors().getFirst();int stamp=SceneClock.now()+10;
+        var model=new StarterCatalog.Model("Fixture",Map.of());
+        var dead=new ActorState(219,1001,"Fixture",256,stamp,6,-12.5f,0,0,0,TownMovement.DEAD,stamp,model,false);
+        world.advance(stamp,List.of(dead));
+        check(world.actor(cube.id()).activity()==0&&(world.actor(cube.id()).flags()&16)==0,"cube ignores defeated knights");
+        var live=new ActorState(219,1001,"Fixture",256,stamp,6,-12.5f,0,0,0,0,stamp,model,false);
+        world.advance(stamp+50,List.of(live));
+        check(world.actor(cube.id()).activity()>=4,"cube attacks a live target in range");
+        int[] fired={0};world.attacks((actor,action)->fired[0]++);
+        Object sleep=SceneLifeTest.condition(content,"Sleep");
+        // A player attack uses mask 2; the helper's default mask 1 is for player hazards.
+        var sleepFields=new ArrayList<>(((FireCatalog.DataValue)sleep).fields());
+        sleepFields.set(0,new FireCatalog.FieldValue("flags","int",2));
+        world.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",new FireCatalog.DataValue(((FireCatalog.DataValue)sleep).type(),sleepFields),
+            "shape",shape("Circle",Map.of("radius",.1f)))),cube.x(),cube.y(),0,stamp+51,219);
+        world.advance(stamp+100,List.of(live));
+        check(world.actor(cube.id()).activity()==0&&fired[0]==0,"sleep cancels a pending cube attack before its damage fires");
+
+        var plain=new SceneContent.Spec(Map.of());
+        check(SceneDamage.amount(SceneLifeTest.damage(40),content,plain,.5f)==20,"attack damage status scales raw damage before defense");
+        check(SceneDamage.amount(SceneLifeTest.damage(40),content,new SceneContent.Spec(Map.of("defense.normal","20")),.5f)==10,
+            "defense mitigates the status-adjusted amount");
     }
     private static void trapOccupants(SceneCatalog.MapScene map) {
         var spike=map.content().entries().stream().filter(e->e.spec().text("config","").endsWith("/Spikes")).findFirst().orElseThrow();

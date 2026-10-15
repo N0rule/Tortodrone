@@ -124,6 +124,12 @@ final class ServerConsole implements AutoCloseable {
                 if(failure.getMessage().startsWith("Usage:"))throw new IOException(ConsoleHelp.usage(words));
                 throw failure;
             }
+        } else if(command.equals("rank")||command.equals("prestige")){
+            if(words.length!=(command.equals("rank")?4:3))throw new IOException(ConsoleHelp.usage(words));
+            try{
+                var profile=accounts.progress(null,words[1],command.equals("rank")?Integer.valueOf(words[2]):null,command.equals("rank")?Integer.valueOf(words[3]):null,command.equals("prestige")?Integer.valueOf(words[2]):null,-1,-1);
+                log.info("Knight "+words[1]+" | rank="+profile.progress().rankPair()+" | prestige="+profile.progress().prestige());
+            }catch(NumberFormatException invalid){throw new IOException("Rank and prestige must be whole numbers");}
         } else if (words.length == 1 && command.equals("status")) {
             if(control==null)log.info("Server running. Accounts: " + accounts.list().size());
             else {

@@ -22,7 +22,7 @@ final class LegacyContent {
             Path custom=root.resolve(catalog.getValue());
             add(resources,catalog.getKey(),Files.exists(custom,LinkOption.NOFOLLOW_LINKS)?custom:base.resolve(catalog.getValue()));
         }
-        warnings.add("Legacy resource paths are active (read-only compatibility); migrate to a versioned pack or set config/content.properties legacy=disabled. Base: "+base+"; maps: "+maps);
+        warnings.add("Legacy resource paths are active (read-only compatibility); migrate to a versioned pack or set data/server.properties legacy-content=disabled. Base: "+base+"; maps: "+maps);
         return resources;
     }
     private static void add(Map<String,ContentRegistry.Resource> resources,String key,Path path) throws IOException {

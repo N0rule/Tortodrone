@@ -21,7 +21,9 @@ public final class CharacterStore {
     private final Set<RosterListener> listeners = new LinkedHashSet<>();
 
     /** One published available knight: identity plus the preview model the picker renders. */
-    public record RosterEntry(Knight knight, StarterCatalog.Model preview) { }
+    public record RosterEntry(Knight knight, StarterCatalog.Model preview,int rank) {
+        public RosterEntry(Knight knight,StarterCatalog.Model preview){this(knight,preview,1);}
+    }
 
     @FunctionalInterface public interface RosterListener { void receive(List<RosterEntry> roster) throws IOException; }
     @FunctionalInterface public interface Subscription extends AutoCloseable { @Override void close(); }
@@ -93,7 +95,10 @@ public final class CharacterStore {
     public synchronized List<RosterEntry> available() throws IOException {
         refresh();
         var result = new ArrayList<RosterEntry>();
-        for (Knight knight : knights) result.add(new RosterEntry(knight, preview(knight)));
+        for (Knight knight : knights) {
+            WorldProfile profile=null;if(database!=null)try{profile=database.profile(accountId,knight.id());}catch(IOException unreadable){/* Preserve the creation-outfit fallback. */}
+            result.add(new RosterEntry(knight,profile==null?preview(knight):StarterCatalog.equipped(knight,profile,catalog),profile==null?1:profile.progress().rank()));
+        }
         return List.copyOf(result);
     }
 

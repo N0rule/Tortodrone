@@ -77,9 +77,10 @@ public final class StarterCatalog {
         boolean weapon=false;
         for(var item:profile.items().stream().filter(i->i.equippedSlot()!=null)
                 .sorted(Comparator.comparingInt(WorldProfile.Item::equippedSlot)).toList()) {
-            if(item.slot()==WorldProfile.Slot.HELM && profile.equipment()[3]!=0
-                || item.slot()==WorldProfile.Slot.ARMOR && profile.equipment()[4]!=0
-                || item.slot()==WorldProfile.Slot.SHIELD && profile.equipment()[15]!=0)continue;
+            int equipped=item.equippedSlot();
+            if(equipped==0 && profile.equipment()[3]!=0
+                || equipped==1 && profile.equipment()[4]!=0
+                || equipped==2 && profile.equipment()[15]!=0)continue;
             if(view==View.INTERIOR&&(item.slot()==WorldProfile.Slot.SHIELD||item.slot()==WorldProfile.Slot.SHIELD_COSTUME))continue;
             if(item.slot().weapon()) {if(view!=View.EQUIPPED||weapon)continue;weapon=true;}
             var entry=catalog.find(item.config());

@@ -7,6 +7,8 @@ import java.util.Locale;
 final class ConsoleHelp {
     private record Entry(String command, String action, String syntax, String description, String example) { }
     private static final List<Entry> ENTRIES = List.of(
+        new Entry("rank","","rank <knight-name> <1-10> <subrank 1-4>","Set saved mission rank without awarding missions or items.","rank Jane 10 3"),
+        new Entry("prestige","","prestige <knight-name> <total>","Set a saved nonnegative prestige total.","prestige Jane 5000"),
         new Entry("help", "", "help [command] [action]", "Show all commands or help for one command.", "help account create"),
         new Entry("status", "", "status", "Show version, uptime, sessions, resources and memory.", "status"),
         new Entry("players", "", "players", "List current TCP sessions, verified identities and locations.", "players"),
@@ -53,6 +55,7 @@ final class ConsoleHelp {
         lines.add("  grant | set             Change balances by unique knight name.");
         lines.add("  currency                Give or withdraw crowns/energy.");
         lines.add("  items | giveitem        Find items or grant them to a knight.");
+        lines.add("  rank | prestige         Set a knight's saved rank or prestige.");
         lines.add("Try: help account create. You can also type account, account help, or account create --help.");
         lines.add("<...> is required; [...] is optional. Passwords are entered only at prompts.");
         lines.add("Up/Down recalls the last 100 typed commands, including typos. A leading / is optional.");

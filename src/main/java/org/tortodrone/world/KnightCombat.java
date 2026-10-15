@@ -5,7 +5,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Stock 2026 interior input state. Peaceful town Knights never instantiate this controller. */
 public final class KnightCombat {
-    public static final int CHARGE=283, DEFENSE=284, DODGE=286, BASH=287,
+    public static final int HURT_DEFENSE=277, CHARGE=283, DEFENSE=284, DODGE=286, BASH=287,
         INCOMPLETE=289, CHARGED=290, COOLDOWN=291, NORMAL=292;
     public record Impulse(int started,int duration,float x,float y) {
         public float fraction(int time) {
@@ -40,6 +40,8 @@ public final class KnightCombat {
     private float shieldHealth;
     private int shieldHit=-300000,shieldRegenStart;
     private boolean bashSpent;
+    private SceneStatus.Modifiers status=SceneStatus.Modifiers.NORMAL;
+    public void status(SceneStatus.Modifiers value){status=Objects.requireNonNull(value);}
     public record AttackStart(String config,int activity,int started,int land,int clear,float attackSpeed) {
         public AttackStart(String config,int activity,int started,int land,int clear) {
             this(config,activity,started,land,clear,1f);
@@ -86,7 +88,7 @@ public final class KnightCombat {
             // verified shield slowdown until the full equipment export is supplied.
             if(modifiers.isEmpty()&&shieldDefinition!=null)equipmentModifiers=new EquipmentCatalog.Modifiers(0,0,0,shieldDefinition.defendingSpeed());}
         catch(java.io.IOException invalid){throw new IllegalArgumentException("Equipped item has no verified control metadata",invalid);}}
-    private float attackSpeed(){return EquipmentCatalog.attackSpeedMultiplier(equipmentModifiers,weaponModifiers);}
+    private float attackSpeed(){return Math.max(.01f,EquipmentCatalog.attackSpeedMultiplier(equipmentModifiers,weaponModifiers)*status.attackSpeed());}
     private WeaponCatalog.Attack scaled(WeaponCatalog.Attack attack){if(attack==null)return null;float speed=attackSpeed();
         return new WeaponCatalog.Attack((int)(attack.land()/speed),(int)(attack.rearm()/speed),(int)(attack.clear()/speed),attack.blended(),
             attack.impulseDelay()<0?-1:(int)(attack.impulseDelay()/speed),attack.impulseDuration(),attack.impulseX(),attack.impulseY());}
@@ -94,6 +96,20 @@ public final class KnightCombat {
         return base*(activity==DEFENSE?EquipmentCatalog.defenseSpeedMultiplier(equipmentModifiers):activity==CHARGE&&definition!=null?definition.chargingSpeed():activity>=INCOMPLETE&&definition!=null?definition.attackingSpeed():1);}
     public State state(){return new State(weapon,shield,shieldCostume,shieldDefinition==null?0:shieldDefinition.health(),chainCount,chainReset,nextDodge,impulse,shieldHealth,shieldHit,shieldRegenStart,equipmentModifiers,weaponModifiers);}
     private int currentShieldHealth(int time){return shieldDefinition==null?0:Math.min(shieldDefinition.health(),(int)Math.ceil(Math.max(shieldHealth,shieldHealth+(time-shieldHit-shieldRegenStart)*(float)shieldDefinition.health()/shieldDefinition.regenTime())));}
+    public boolean defending(int stamp){return activity==DEFENSE&&currentShieldHealth(stamp)>0;}
+    public int shieldHealth(int stamp){return currentShieldHealth(stamp);}
+    /** Native blockable spill fraction; unblockable damage bypasses shield health. */
+    public float block(int amount,int stamp){
+        if(!defending(stamp)||amount<=0)return 1;
+        return block(amount,0,stamp);
+    }
+    public float block(int amount,int statusAmount,int stamp){
+        if(!defending(stamp))return 1;
+        int hp=currentShieldHealth(stamp);boolean survives=hp>(long)amount+statusAmount;shieldHit=stamp;shieldHealth=survives?hp-amount-statusAmount:0;
+        shieldRegenStart=survives?shieldDefinition.regenDelay():shieldDefinition.breakDelay();
+        if(survives){activity=HURT_DEFENSE;started=stamp;attack=null;impulse=null;return 0;}
+        return amount>0?Math.max(0,(amount-hp)/(float)amount):1;
+    }
     public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
         advance(time,facing);
         if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<2)select(6+index);}return;}
@@ -118,7 +134,8 @@ public final class KnightCombat {
             if(changed>=started)startAttack(definition.attacks().isEmpty()?CHARGE:activity>=NORMAL?nextNormal(time):NORMAL,time);
             else if(canCharge()&&changed+350<started){activity=CHARGE;started=time;attack=null;}
         }
-        if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;}
+        if((flags&64)!=0&&shieldDefinition!=null&&(activity==0||rearmed)) {activity=DEFENSE;started=time;attack=null;
+            attackSink.accept(new AttackStart(shield,DEFENSE,started,0,600000,1));}
         if((flags&2048)!=0&&shieldDefinition!=null&&shieldDefinition.bash()!=null&&currentShieldHealth(time)==shieldDefinition.health()&&(activity==0||activity==DEFENSE||rearmed)) {
             activity=BASH;started=time;attack=scaled(shieldDefinition.bash());impulseApplied=false;bashSpent=false;
             attackSink.accept(new AttackStart(shield,activity,started,attack.land(),attack.clear(),attackSpeed()));
@@ -160,7 +177,9 @@ public final class KnightCombat {
             }
             if(attack!=null&&time>=started+attack.clear())clear(started+attack.clear());
         }else if(activity==DODGE&&time>=started+625)clear(started+625);
+        else if(activity==HURT_DEFENSE&&time>=started+411)clear(started+411);
         // Keep a completed impulse through its final integration interval; movement retires it.
     }
     public void retireImpulse(int time){if(impulse!=null&&time>=impulse.started()+impulse.duration())impulse=null;}
+    public void impulse(Impulse value){if(value!=null)impulse=SceneDamage.combine(value,impulse);}
 }

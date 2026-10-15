@@ -12,7 +12,7 @@ public final class ContentMigration {
         if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp tortodrone.jar org.tortodrone.resources.ContentMigration /deployment");
         Path root=Path.of(args[0]).toAbsolutePath().normalize();
         migrate(root);
-        System.out.println("Exported custom/packs/legacy-import and config/content-migrated.properties. Review the candidate, then select it as config/content.properties while stopped. Original resources and data are unchanged.");
+        System.out.println("Exported content/custom/packs/legacy-import and data/server-migrated.properties. Review the candidate, then select it as data/server.properties while stopped. Original resources and data are unchanged.");
     }
     public static void migrate(Path deployment) throws IOException {
         Path root=deployment.toAbsolutePath().normalize();ContentFiles.safe(root);
@@ -20,7 +20,7 @@ public final class ContentMigration {
         try(var channel=Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;
             FileLock lock=acquire(channel)) {
             var content=ContentManager.load(root);
-            Path parent=root.resolve("custom/packs"),target=parent.resolve("legacy-import"),candidate=root.resolve("config/content-migrated.properties");
+            Path parent=root.resolve("content/custom/packs"),target=parent.resolve("legacy-import"),candidate=root.resolve("data/server-migrated.properties");
             ContentFiles.safe(target);ContentFiles.safe(candidate);
             if(Files.exists(target,LinkOption.NOFOLLOW_LINKS)||Files.exists(candidate,LinkOption.NOFOLLOW_LINKS))throw new IOException("Migration destination already exists; nothing replaced");
             Files.createDirectories(parent);Files.createDirectories(candidate.getParent());
@@ -46,8 +46,10 @@ public final class ContentMigration {
                 try(var output=Files.newOutputStream(staging.resolve("pack.properties"),StandardOpenOption.CREATE_NEW)){manifest.store(output,"Validated legacy export; independent complete pack");}
                 // No REPLACE_EXISTING anywhere: conflicts preserve the owner's files.
                 Files.move(staging,target);published=true;
-                try {Files.writeString(candidate,"format=1\nenabled=legacy-import\nlegacy=disabled\n",StandardOpenOption.CREATE_NEW);}
-                catch(IOException failed){throw new IOException("Pack exported to "+target+" but candidate creation failed. Select enabled=legacy-import, legacy=disabled explicitly in config/content.properties; existing files were preserved",failed);}
+                var settings=org.tortodrone.config.ServerSettings.properties(root.resolve("data/server.properties"));
+                settings.setProperty("content-packs","legacy-import");settings.setProperty("legacy-content","disabled");
+                try(var output=Files.newOutputStream(candidate,StandardOpenOption.CREATE_NEW)) {settings.store(output,"Review before replacing data/server.properties; original settings are unchanged");}
+                catch(IOException failed){throw new IOException("Pack exported to "+target+" but candidate creation failed. Select content-packs=legacy-import, legacy-content=disabled explicitly in data/server.properties; existing files were preserved",failed);}
             } finally {
                 if(!published)try(var paths=Files.walk(staging)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}
             }

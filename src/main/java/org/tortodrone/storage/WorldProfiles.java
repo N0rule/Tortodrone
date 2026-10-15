@@ -94,6 +94,16 @@ final class WorldProfiles {
             }
         }
         if (items.stream().filter(WorldProfile.Item::starter).count()!=5) throw new IOException("Incomplete starter inventory; restore the saved database");
-        return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items);
+        int rank=11,prestige=0;
+        try(var s=c.prepareStatement("SELECT key,value FROM metadata WHERE key IN(?,?)")){
+            s.setString(1,progressKey(worldId,"rank"));s.setString(2,progressKey(worldId,"prestige"));
+            try(var r=s.executeQuery()){while(r.next()){long value=r.getLong(2);if(value<0||value>Integer.MAX_VALUE)throw new IOException("Invalid saved knight progress");if(r.getString(1).endsWith(".rank"))rank=(int)value;else prestige=(int)value;}}
+        }
+        try{return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige));}
+        catch(IllegalArgumentException invalid){throw new IOException("Invalid saved knight progress",invalid);}
+    }
+    static String progressKey(int world,String field){return "knight.progress."+world+"."+field;}
+    static void cleanProgress(Connection c)throws SQLException{
+        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key LIKE 'knight.progress.%' AND key NOT IN (SELECT 'knight.progress.'||world_id||'.rank' FROM world_characters UNION ALL SELECT 'knight.progress.'||world_id||'.prestige' FROM world_characters)");}
     }
 }

@@ -10,7 +10,7 @@ import org.tortodrone.resources.Json;
 /** Numeric/reference-only stock action graphs for player weapon attacks. */
 public final class FireCatalog {
     private static final int MAX_BYTES = 64 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 500_000;
-    public enum Kind { COMPOUND, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, DESTROY_SOURCE, UNSUPPORTED }
+    public enum Kind { COMPOUND, CONDITIONAL, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, UNSUPPORTED }
     public enum NullValue { INSTANCE }
     public record EnumValue(String type, String name, int ordinal) {
         public EnumValue(String type,String name){this(type,name,-1);}
@@ -145,7 +145,7 @@ public final class FireCatalog {
             }
             row.put("fireRefs", refs); rows.add(row);
         }
-        var root = new LinkedHashMap<String,Object>(); root.put("format","tortodrone-fires"); root.put("version",3); root.put("entries",rows);
+        var root = new LinkedHashMap<String,Object>(); root.put("format","tortodrone-fires"); root.put("version",4); root.put("entries",rows);
         root.put("unsupported",new TreeMap<>(unsupported));
         Files.createDirectories(file.toAbsolutePath().normalize().getParent());
         Files.writeString(file, Json.stringify(root,128), StandardOpenOption.CREATE_NEW);
@@ -155,7 +155,7 @@ public final class FireCatalog {
         try {
             var root = object(Json.parse(Files.readString(file),128), Set.of("format","version","entries","unsupported"));
             int version=integer(root.get("version")); boolean legacy=version==1;
-            if (!"tortodrone-fires".equals(root.get("format")) || version < 1 || version > 3) throw new IOException("Unsupported fire catalogue");
+            if (!"tortodrone-fires".equals(root.get("format")) || version < 1 || version > 4) throw new IOException("Unsupported fire catalogue");
             if (!(root.get("entries") instanceof List<?> rows) || rows.size() > MAX_ENTRIES) throw new IOException("Invalid fire entries");
             var entries = new ArrayList<AttackFire>(); int[] nodes = {0};
             for (Object value : rows) {
@@ -257,5 +257,5 @@ public final class FireCatalog {
     private static String text(String s,int max){if(s==null||s.isBlank()||s.length()>max||s.chars().anyMatch(c->c<32))throw new IllegalArgumentException("Invalid fire text");return s;}
     private static String plainText(String s,int max){if(s==null||s.length()>max||s.chars().anyMatch(c->c<32))throw new IllegalArgumentException("Invalid fire text");return s;}
     private static String key(String weapon,int activity){text(weapon,512);if(!activityValid(activity))throw new IllegalArgumentException("Invalid activity");return weapon.toLowerCase(Locale.ROOT)+"\0"+activity;}
-    private static boolean activityValid(int a){return a==287||a>=289&&a<=291||a>=292&&a<324;}
+    private static boolean activityValid(int a){return a==284||a==287||a>=289&&a<=291||a>=292&&a<324;}
 }

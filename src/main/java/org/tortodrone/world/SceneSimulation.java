@@ -57,7 +57,7 @@ public final class SceneSimulation {
                 var old=previous.byId.get(actor.id());
                 if(old==null)added.add(actor);else {
                     // Stock prediction mutates activity on its reference: transmit every actor.
-                    if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&old.gameMaster()!=actor.gameMaster())changed.add(actor);
+                    if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&(old.gameMaster()!=actor.gameMaster()||!Objects.equals(old.sceneKnight()==null?null:old.sceneKnight().progress(),actor.sceneKnight()==null?null:actor.sceneKnight().progress())))changed.add(actor);
                 }
             }
             int[] removed=previous.byId.keySet().stream().filter(id->!byId.containsKey(id)).mapToInt(Integer::intValue).toArray();
@@ -74,11 +74,12 @@ public final class SceneSimulation {
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
+        private org.tortodrone.character.KnightProgress progress=org.tortodrone.character.KnightProgress.RECRUIT;
         private long pendingItem;private int itemLand;private SceneContent.Spec itemSpec;
         private final ArrayDeque<Long> usedItems=new ArrayDeque<>();
         public List<Long> takeUsedItems(){synchronized(SceneSimulation.this){check();var used=List.copyOf(usedItems);usedItems.clear();return used;}}
         public boolean useItem(long id,SceneContent.Spec spec){synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||pendingItem!=0||lift!=0)return false;
+            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0)return false;
             if(spec.text("kind","").equals("vial")){
                 int stamp=SceneClock.now();if(!movement.lift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
                 if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);return true;
@@ -97,6 +98,7 @@ public final class SceneSimulation {
             appearance=actor;this.publish=publish;
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
+            movement.revival(stamp->instance.map().kind().equals("training")&&health.revive(stamp));
             movement.dynamicCollision((x,y)->entities.walkable(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation());
@@ -122,7 +124,7 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
-            synchronized(SceneSimulation.this){check();if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+            synchronized(SceneSimulation.this){check();progress=profile.progress();if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
                 if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile);}
         }
         public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
@@ -130,7 +132,7 @@ public final class SceneSimulation {
         }
         public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
-                combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
+                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile);combat.attacks(attack->weapons.attack(appearance.id(),attack));movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
@@ -138,14 +140,23 @@ public final class SceneSimulation {
         public boolean emote(PlayerEmotes.Descriptor emote,int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.emote(emote,sceneTime,now);}
         }
+        private void updateLife(int stamp){
+            if(health.alive()||movement.dead())return;
+            weapons.cancelAttacks(appearance.id());
+            entities.cancelClaims(appearance.id());
+            if(lift!=0)entities.dropLift(lift,actor(),stamp);
+            lift=dropAt=interactionTarget=0;pendingItem=0;itemSpec=null;
+            movement.die(stamp);
+        }
         public void appearance(ActorState actor) {
             synchronized(SceneSimulation.this){check();if(actor.id()!=appearance.id()||actor.clientOid()!=appearance.clientOid())throw new IllegalArgumentException("Actor ownership changed");appearance=actor;}
         }
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
-                movement.rotation(),movement.direction(),movement.flags(),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
-                entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status()));
+                movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
+                movement.activity()==TownMovement.DEAD&&instance.map().kind().equals("training")?new InteractionState(a.id(),null,"Resurrect"):
+                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
         @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
@@ -167,8 +178,12 @@ public final class SceneSimulation {
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
         entities.feedback(this::feedback);
+        entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
+        entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
-            var result=member.health.hit(hit.damage(),hit.timestamp());
+            var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.combat);
+            member.updateLife(hit.timestamp());
+            member.movement.status(member.health.status().modifiers());
             if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
         }});
         entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.health.heal(amount);});
@@ -210,6 +225,7 @@ public final class SceneSimulation {
             // collision stages run here once per instance, independent of observer count.
             for(var member:members.values())if(member.entered&&member.portal==null) {
                 member.health.advance(stamp,previous==null?0:stamp-previous.timestamp(),(member.movement.flags()&2)!=0);
+                member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
                 member.movement.advance(stamp,now);
                 if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}

@@ -9,6 +9,9 @@ public final class SceneWeapons {
         default boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return contact(x,y,owner);}
         void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
         default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
+        default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Set<Integer> hit){damage(region,x,y,rotation,stamp,owner);}
+        default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
+        default boolean monsters(Object region,float x,float y,float rotation){return false;}
     }
     private Targets targets;
     public void targets(Targets value){targets=value;}
@@ -19,6 +22,7 @@ public final class SceneWeapons {
     }
     private static final class Run {
         final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;
+        final Set<Integer> hit=new HashSet<>();
         Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack){this.start=start;this.attack=attack;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
     }
     private static final class Shot {
@@ -43,6 +47,8 @@ public final class SceneWeapons {
     private final ArrayDeque<SceneEffect> effects=new ArrayDeque<>();
     private FireCatalog catalog=FireCatalog.empty();
     private int nextId=1_500_000_000,lastStamp;
+    private Map<Integer,ActorState> currentOwners=Map.of();
+    private final Map<Integer,IdentityHashMap<Object,Integer>> cooldowns=new HashMap<>();
     private long sequence;
     public SceneWeapons(CollisionMap terrain){this.terrain=Objects.requireNonNull(terrain);}
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
@@ -51,7 +57,7 @@ public final class SceneWeapons {
         var list=runs.computeIfAbsent(owner,k->new ArrayList<>());
         if(list.size()<MAX_RUNS)list.add(new Run(start,attack));
     }
-    public void cancel(int owner){runs.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
+    public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
     public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),source.clientOid()),stamp,0);}
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
@@ -62,6 +68,7 @@ public final class SceneWeapons {
     public List<SceneEffect> effects(){return List.copyOf(effects);}
     public void advance(int stamp,List<ActorState> players){
         var owners=new HashMap<Integer,ActorState>();for(var player:players)owners.put(player.id(),player);
+        currentOwners=owners;
         for(var iterator=runs.entrySet().iterator();iterator.hasNext();){var e=iterator.next();var actor=owners.get(e.getKey());if(actor==null){iterator.remove();continue;}
             var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.id(),actor.clientOid());
             e.getValue().removeIf(run->{
@@ -79,7 +86,10 @@ public final class SceneWeapons {
                     // A later activity can cancel an attack before its land time. Events
                     // already due before that transition still execute on this scene tick.
                     if(fired>=cutoff){run.done[i]=true;continue;}
-                    execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
+                    if(ref.action().kind()==FireCatalog.Kind.SWEEP_DAMAGE){
+                        float c=(float)Math.cos(pose.rotation),s=(float)Math.sin(pose.rotation);
+                        if(stamp<cutoff&&targets!=null)targets.sweep(ref.action().config(),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
+                    }else execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
                     run.loops[i]++;
                     if(refractory<=0)run.done[i]=true;
                 }
@@ -167,6 +177,10 @@ public final class SceneWeapons {
     }
     private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth,int seed){
         if(action==null||depth>96)return false;
+        if(action.kind()==FireCatalog.Kind.CONDITIONAL){
+            Boolean result=condition(action.config().arguments().get("condition"),source,stamp,0);
+            return result!=null&&action.children().size()==2&&execute(action.children().get(result?0:1),source,stamp,depth+1,seed);
+        }
         if(action.kind()==FireCatalog.Kind.RANDOM_EQUAL){return action.children().isEmpty()||execute(action.children().get(java.util.concurrent.ThreadLocalRandom.current().nextInt(action.children().size())),source,stamp,depth+1,seed);}
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
@@ -177,6 +191,7 @@ public final class SceneWeapons {
                 targets.damage(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
             return true;
         }
+        if(action.kind()==FireCatalog.Kind.IMPULSE_REGION){if(targets!=null)targets.impulse(action.config(),source.x,source.y,source.rotation,stamp,source.ownerId);return true;}
         if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
         if(action.kind()==FireCatalog.Kind.UNSUPPORTED&&nonTargetAction(action.unsupportedType()))return true;
         if(action.kind()!=FireCatalog.Kind.EMIT_PROJECTILE)return false;
@@ -210,5 +225,34 @@ public final class SceneWeapons {
         }return result;
     }
     private static boolean nonTargetAction(String type){return type.endsWith("$DamageRegionFromPoint")||type.endsWith("$ApplyStatus")||type.endsWith("$ImpartImpulse");}
+    private Boolean condition(Object raw,Pose source,int stamp,int depth){
+        if(depth>16||!(raw instanceof FireCatalog.DataValue value))return null;
+        String type=value.type().substring(value.type().lastIndexOf('$')+1);
+        if(type.equals("Always"))return true;if(type.equals("Never"))return false;
+        if(type.equals("All")||type.equals("Any")){
+            Object children=SceneDamage.field(raw,"conditions");if(!(children instanceof FireCatalog.ListValue list))return null;
+            for(Object child:list.values()){Boolean result=condition(child,source,stamp,depth+1);if(result==null)return null;if(type.equals("All")&&!result)return false;if(type.equals("Any")&&result)return true;}
+            return type.equals("All");
+        }
+        if(type.equals("Not")){Boolean result=condition(SceneDamage.field(raw,"condition"),source,stamp,depth+1);return result==null?null:!result;}
+        if(type.equals("Cooldown")){
+            var deadlines=cooldowns.computeIfAbsent(source.ownerId,id->new IdentityHashMap<>());
+            if(stamp<deadlines.getOrDefault(raw,Integer.MIN_VALUE))return false;
+            if(deadlines.size()>=256&&!deadlines.containsKey(raw))return false;
+            deadlines.put(raw,stamp+Math.max(0,(int)SceneDamage.number(raw,"time",0)));return true;
+        }
+        if(type.equals("ShieldRarityEquipped")){
+            var owner=currentOwners.get(source.ownerId);var combat=owner==null?null:owner.combat();
+            var defense=combat==null||combat.shield()==null?null:catalog.find(combat.shield(),KnightCombat.DEFENSE);
+            Object rarity=defense==null?null:defense.attack().arguments().get("rarity");
+            return rarity instanceof Number n&&n.intValue()>=SceneDamage.number(raw,"rarity",0);
+        }
+        if(type.equals("Intersecting")){
+            Object second=SceneDamage.field(raw,"second"),location=SceneDamage.field(second,"location");
+            if(!Objects.equals(SceneDamage.field(location,"logicClass"),"com.threerings.projectx.dungeon.server.logic.MonsterLogic"))return null;
+            return targets!=null&&targets.monsters(SceneDamage.field(raw,"first"),source.x,source.y,source.rotation);
+        }
+        return null;
+    }
     private static boolean sourceTarget(String type){return type.isEmpty()||type.equals("Source")||type.equals("Activator");}
 }

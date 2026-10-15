@@ -24,7 +24,30 @@ public final class SceneStatus {
     }
     private final SceneContent content;private final boolean monster;
     private final Map<String,Active> active=new LinkedHashMap<>();
+    private final Map<Integer,Integer> shieldCooloff=new HashMap<>();
     public SceneStatus(SceneContent content,boolean monster){this.content=content;this.monster=monster;}
+    public void clear(){active.clear();}
+    /** Native status hits charge shield health at most once per flag each second. */
+    public int shieldDamage(Object damage,int stamp){
+        if(!(damage instanceof FireCatalog.DataValue value))return 0;
+        if(value.type().endsWith("$Compound")){int amount=0;if(SceneDamage.field(damage,"damages") instanceof FireCatalog.ListValue list)for(Object child:list.values())amount+=shieldDamage(child,stamp);return amount;}
+        return value.type().endsWith("$Status")&&SceneDamage.field(damage,"statusCondition") instanceof StarterCatalog.Model reference?shieldDamage(reference,stamp,0):0;
+    }
+    private int shieldDamage(StarterCatalog.Model reference,int stamp,int depth){
+        if(depth>8)return 0;var spec=content.statuses().get(reference.name());if(spec==null)return 0;
+        Object data=spec.model("data").arguments().get("data");
+        if(spec.text("class","").equals("DepthScaled")){
+            Object choices=SceneDamage.field(data,"conditions");StarterCatalog.Model selected=null;float highest=-1;
+            if(choices instanceof FireCatalog.ListValue list)for(Object choice:list.values()){float at=SceneDamage.number(choice,"depth",0);if(at<=0&&at>=highest&&SceneDamage.field(choice,"statusCondition") instanceof StarterCatalog.Model model){selected=model;highest=at;}}
+            if(selected==null)return 0;var args=new HashMap<>(selected.arguments());args.putAll(reference.arguments());return shieldDamage(new StarterCatalog.Model(selected.name(),args),stamp,depth+1);
+        }
+        int flags=spec.integer("flags",0);if(stamp<shieldCooloff.getOrDefault(flags,Integer.MIN_VALUE))return 0;
+        Object scale=SceneDamage.field(data,"shieldDamage");if(!(scale instanceof StarterCatalog.Model model))return 0;
+        if(Math.random()>=parameter(reference,"Chance",spec.number("effective-chance",0),"Status Chance","status-chance."))return 0;
+        float power=parameter(reference,"Power",spec.number("effective-power",0),"Status Power","status-power.");
+        shieldCooloff.put(flags,stamp+1000);
+        return (int)Math.ceil(relativePower(power,0)*content.scales().getOrDefault(model.name(),0f));
+    }
     public void apply(Object damage,int stamp){
         if(!(damage instanceof FireCatalog.DataValue value))return;
         if(value.type().endsWith("$Compound")){
