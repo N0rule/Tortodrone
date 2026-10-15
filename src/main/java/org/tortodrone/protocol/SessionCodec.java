@@ -678,9 +678,8 @@ public final class SessionCodec {
             value(out,scene.map().town()?0:interiorPartyOid(scene));});
     }
     public byte[] sceneLocation(int oid,SceneRegistry.Instance scene) throws IOException {
-        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?4:3);
+        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?3:2);
             if(scene.map().town())attribute(out,oid,"lastTownSceneId",o->value(o,scene.map().id()));
-            attribute(out,oid,"partyOid",o->value(o,scene.map().town()?0:interiorPartyOid(scene)));
             attribute(out,oid,"zoneId",o->value(o,scene.map().zone()));
             attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(scene.oid());o.writeInt(scene.map().id());}); });
     }

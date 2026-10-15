@@ -51,9 +51,9 @@ final class WorldSession implements AutoCloseable {
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
     private int subscribedPartyOid;
+    private int announcedPartyOid;
     private SceneHealth.State publishedHealth;
     private SceneStatus.State publishedStatus;
-    private int publishedVitalsStamp;
     private Set<Integer> occupants = Set.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
     private org.tortodrone.town.TownCatalog.Station townDialog;
@@ -259,7 +259,7 @@ final class WorldSession implements AutoCloseable {
         profile=loadProfile(profile);
         var health=membership.health();var status=membership.status();output.send(()->codec.interiorParty(message,SessionCodec.interiorPartyOid(scene),oid,knight,profile,scene,health,status));
         subscribedPartyOid=SessionCodec.interiorPartyOid(scene);
-        publishedHealth=health;publishedStatus=status;publishedVitalsStamp=SceneClock.now();
+        publishedHealth=health;publishedStatus=status;
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
         }
@@ -535,7 +535,11 @@ final class WorldSession implements AutoCloseable {
                 // requests in the client's ten-message TCP fallback queue.
                 output.send(codec::interiorInputThrottle);interiorThrottleSent=true;
             }
-            output.send(() -> codec.sceneParty(oid,scene));
+            int party=scene.map().town()?0:SessionCodec.interiorPartyOid(scene);
+            // The stock PartyDirector resubscribes on every partyOid event,
+            // even when its value is unchanged. Existing HUD listeners retain
+            // the previous party object if a second snapshot replaces it.
+            if(party!=announcedPartyOid){output.send(() -> codec.sceneParty(oid,scene));announcedPartyOid=party;}
             // The stock dungeon HUD creates its quickbar once, while the scene
             // model is attached. Let its party subscription complete first.
             if(scene.map().town()||subscribedPartyOid==SessionCodec.interiorPartyOid(scene))completeMove(listener.requestId(),zone);
@@ -866,9 +870,9 @@ final class WorldSession implements AutoCloseable {
         if(!previousCurse.equals(currentCurse))output.send(()->codec.itemChanges(oid,knight,visibleProfile(previousCurse),visibleProfile(currentCurse)));
         if(subscribedPartyOid==SessionCodec.interiorPartyOid(scene)&&health!=null&&currentOwn.sceneKnight()!=null){
             var status=currentOwn.sceneKnight().status();
-            if(!health.equals(publishedHealth)||!status.equals(publishedStatus)||stamp-publishedVitalsStamp>=1000){
+            if(!health.equals(publishedHealth)||!status.equals(publishedStatus)){
                 output.send(()->codec.partyVitals(subscribedPartyOid,oid,health,status));
-                publishedHealth=health;publishedStatus=status;publishedVitalsStamp=stamp;
+                publishedHealth=health;publishedStatus=status;
             }
         }
         if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot))output.send(()->codec.partyDamage(SessionCodec.interiorPartyOid(scene),event));

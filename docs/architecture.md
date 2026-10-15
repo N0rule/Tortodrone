@@ -69,6 +69,11 @@ Rank grants the verified gear eligibility bits, without inventing mission comple
 prestige awards or Arcade clearances. Ordinary helms, armor and shields can occupy native
 costume slots 3, 4 and 15; those slots change appearance without adding combat stats.
 
+Party identity is announced only when `partyOid` changes, before interior travel completes.
+Location and profile refreshes must not repeat that attribute: the stock PartyDirector
+resubscribes even for an unchanged value, replacing the object while the HUD still listens
+to the old instance. HP and status updates then reach a different object from the HUD.
+
 Fire catalog v4 resolves full damage-scale references, including arguments and weapon
 rarity, at depth zero/MEDIUM during stock export. Same-type damage is accumulated before
 defense mitigation. Shield defense executes the named push-back graph with its rarity,

@@ -12,10 +12,11 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 3) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only]");
         }
-        boolean trainingOnly=Arrays.asList(args).contains("--training-only");
-        String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.equals("--training-only")).findFirst().orElse(null);
+        boolean healthOnly=Arrays.asList(args).contains("--health-only");
+        boolean trainingOnly=healthOnly||Arrays.asList(args).contains("--training-only");
+        String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
         if (!Files.isRegularFile(game.resolve("full.dat")) ||
@@ -47,6 +48,7 @@ public final class CheckCombatRendering {
             copyTree(defaults, scratch.resolve("content/packs/vanilla"));
             Path maps = scratch.resolve("content/packs/vanilla");
             requireMaps(maps);
+            if(healthOnly)healthFixture(maps);
             Files.createDirectories(scratch.resolve("data"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("home/system-prefs"));
@@ -87,15 +89,15 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
-            Path peerLog=output.resolve("peer-client.log");Process peer=start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=healthOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
-            while(peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
-            if(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready")))
+            while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
+            if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
                 throw new IOException("Graphical peer did not become ready:\n"+tail(peerLog));
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add("--training-only");
+            if(trainingOnly)graphical.add(healthOnly?"--health-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
@@ -105,8 +107,8 @@ public final class CheckCombatRendering {
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
                 throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
-            if(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
-                    ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:")))
+            if(peer!=null&&(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
+                    ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:"))))
                 throw new IOException("Graphical peer did not pass:\n"+tail(peerLog));
             System.out.println(log.lines().filter(line -> line.startsWith("PASS:")).findFirst().orElseThrow());
             System.out.println("Combat screenshots and logs retained at " + output);
@@ -135,6 +137,28 @@ public final class CheckCombatRendering {
             if (!Files.isDirectory(maps.resolve("maps").resolve(name)))
                 throw new IOException("Missing prepared scene map " + maps.resolve("maps").resolve(name));
         }
+    }
+
+    /** Move one authored spike into the entrance corridor in this disposable copy only. */
+    private static void healthFixture(Path pack)throws Exception {
+        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
+        Properties map=properties(descriptor),actors=properties(content);
+        String spike=Arrays.stream(actors.getProperty("entries").split(",")).map(id->"entry."+id+".")
+            .filter(prefix->actors.getProperty(prefix+"cycle","").endsWith("|UP")).findFirst().orElseThrow();
+        actors.setProperty(spike+"x",map.getProperty("spawn-x"));
+        actors.setProperty(spike+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+3));
+        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
+        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
+        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
+    }
+    private static Properties properties(Path file)throws IOException {var values=new Properties();try(var in=Files.newInputStream(file)){values.load(in);}return values;}
+    private static void save(Path file,Properties values)throws IOException {try(var out=Files.newOutputStream(file)){values.store(out,"Disposable health HUD fixture");}}
+    private static String digest(Path path)throws Exception {
+        var hash=java.security.MessageDigest.getInstance("SHA-256");
+        if(Files.isDirectory(path)){try(var files=Files.walk(path)){for(Path file:files.filter(Files::isRegularFile).sorted(Comparator.comparing(p->path.relativize(p).toString().replace('\\','/'))).toList()){
+            hash.update(path.relativize(file).toString().replace('\\','/').getBytes(java.nio.charset.StandardCharsets.UTF_8));hash.update((byte)0);hash.update(HexFormat.of().parseHex(digest(file)));
+        }}}else hash.update(Files.readAllBytes(path));
+        return HexFormat.of().formatHex(hash.digest());
     }
 
     private static void rejectUnsafeOutput(Path output, Path project, Path game) throws IOException {

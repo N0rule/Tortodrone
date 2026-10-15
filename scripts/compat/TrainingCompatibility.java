@@ -174,6 +174,8 @@ public final class TrainingCompatibility {
         });
         if(health.current!=193||health.maximum!=200||condition.conditions.length!=1||!Arrays.equals(condition.expires,new int[]{5000}))throw new AssertionError("Party resubscription lost current health/status");
         if(party.D(party.members.iterator().next().name)!=health||condition.flags!=1)throw new AssertionError("Native HUD health lookup or emergency revive entitlement differs");
+        var location=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().sceneLocation(1001,scene))).yj();
+        for(var child:location.xE())if(child instanceof com.threerings.presents.dobj.AttributeChangedEvent changed&&changed.getName().equals("partyOid"))throw new AssertionError("Location publication resubscribes and detaches the HUD from its party");
         for(int flags:new int[]{9,0}){
             var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(0,200,0,flags),status))).yj();
             for(var child:update.xE()){if(!child.b(party))throw new AssertionError("Native HUD update was not applied");party.d(child);}

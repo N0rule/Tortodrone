@@ -50,6 +50,9 @@ public final class CombatRenderingCheck {
     private final Path output;
     private final boolean peer;
     private final boolean trainingOnly;
+    private boolean healthOnly;
+    private int healthMaximum;
+    private float hazardX,hazardY;
     private float peerStartX,peerStartY;
     private float peerRenderedX,peerRenderedY;
     private boolean peerBaseline,peerMotion;
@@ -90,7 +93,7 @@ public final class CombatRenderingCheck {
         if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&args[3].equals("--training-only");
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -105,6 +108,7 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
+        probe.healthOnly=Arrays.asList(args).contains("--health-only");
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
         timer.scheduleAtFixedRate(new TimerTask(){public void run(){if(pending.compareAndSet(false,true))app.getRunQueue().postRunnable(()->{try{probe.tick();}finally{pending.set(false);}});}},50,40);
@@ -148,7 +152,8 @@ public final class CombatRenderingCheck {
             if(peer){peerTick(view);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;stage=1;return;}
+            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
                 if(GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                     throw new AssertionError("Disposable primary client must be focused for native town input");
@@ -459,6 +464,38 @@ public final class CombatRenderingCheck {
         String config=actor.Mv().getName();
         return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
             ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
+    }
+    private void healthTick(View view,long now)throws Exception {
+        var party=(com.threerings.projectx.dungeon.data.PartyObject)app.GQ().CW();
+        Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
+        Object panel=field(hud,"aEc").get(hud);
+        if(stage==2){
+            capture("health-before");
+            Object bound=field(panel,"aEO").get(panel);
+            System.out.println("HEALTH HUD: panel="+panel.getClass().getName()+" bound="+(bound==party)+" party="+party+" fields="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel));
+            if(bound!=party)throw new AssertionError("Native health panel was not bound to the subscribed party");
+            healthMaximum=party.health.iterator().next().maximum;
+            trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+            var own=authoritative.get(app.CT().pawnId);
+            var hazard=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Trap")).min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
+            hazardX=hazard.tz().x;hazardY=hazard.tz().y;konwayRoute=new ArrayList<>(routeTo(trainingMap,own.tz().x,own.tz().y,hazardX,hazardY));konwayRoute.add(new float[]{hazardX,hazardY});konwayRouteIndex=0;started=now;stage=40;return;
+        }
+        var own=authoritative.get(app.CT().pawnId);
+        var hp=party.health.iterator().next();
+        if(now-started>60_000_000_000L)throw new AssertionError("HUD damage timeout: hp="+hp.current+"/"+hp.maximum+" hud="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel)+" actor="+own.tz());
+        if(konwayRouteIndex<konwayRoute.size()){
+            float[] point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+            if(Math.hypot(dx,dy)<.25){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);
+            return;
+        }
+        moveToward(view,0,0,false);
+        if(hp.current<healthMaximum){
+            int goal=field(panel,"aTs").getInt(panel),visible=field(panel,"aTt").getInt(panel);
+            System.out.println("HEALTH DAMAGE: native="+hp.current+"/"+hp.maximum+" hud="+goal+","+visible);
+            if(goal!=hp.current)throw new AssertionError("Native health HUD did not consume the party damage update");
+            if(visible>=healthMaximum)return;
+            capture("health-damaged");finishImages();passed=done=true;System.out.println("PASS: native Training health HUD displays damage from an authored spike trap");app.shutdown();
+        }
     }
     private void peerTick(View view)throws Exception {
         if(!Files.exists(output.resolve("peer-ready"))){capture("town-peer");Files.writeString(output.resolve("peer-ready"),"");}
