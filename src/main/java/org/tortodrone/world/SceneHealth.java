@@ -8,7 +8,9 @@ public final class SceneHealth {
     public record State(int current,int maximum,int bonus,int reviveFlags) {
         public State(int current,int maximum,int bonus){this(current,maximum,bonus,1);}
     }
-    public record Hit(int amount,int feedback) { }
+    public record Hit(int amount,int feedback,boolean react) {
+        public Hit(int amount,int feedback){this(amount,feedback,false);}
+    }
     private static final Set<Integer> GEAR=Set.of(0,1,2,5,10,11,12);
     private final SceneContent content;
     private final SceneStatus status;
@@ -81,7 +83,9 @@ public final class SceneHealth {
         amount=Math.max(0,spriteShield.applyAsInt(amount));
         amount+=(int)Math.ceil(status.damaged(amount,stamp));
         if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount,stamp);died(stamp);
-        return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale));
+        boolean react=amount>0&&SceneDamage.reacts(damage);
+        if(react&&alive())invulnerableUntil=stamp+1000;
+        return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale),react);
     }
     private boolean rawDamage(int amount,int stamp){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);hitTime=stamp;return true;}
     public boolean heal(int amount){amount=(int)Math.ceil(amount*status.state().modifiers().heal());if(amount<=0||current==0||current==maximum)return false;current=Math.min(maximum,current+amount);return true;}

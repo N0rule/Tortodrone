@@ -86,6 +86,8 @@ public final class SceneWeaponsTest {
         var recursiveOwner=new ActorState(10,1001,"Fixture",257,100,map.spawnX(),map.spawnY(),0,0,0,292,1300,model);
         weapons.advance(1301,List.of(recursiveOwner));weapons.advance(1302,List.of(recursiveOwner));
         check(weapons.actors().stream().anyMatch(a->a.created()==1302),"recursive detonation resolves matching authored config without infinite catalogue expansion");
+        weapons.fire(effect,recursiveOwner,1400);
+        check(weapons.effects().getLast().ownerOid()==0,"server-triggered effects are not suppressed for their controlling client");
         blockedCellCannotBeSkipped();
         fireTracksAttackAnimationSpeed(map.collision());
         System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");

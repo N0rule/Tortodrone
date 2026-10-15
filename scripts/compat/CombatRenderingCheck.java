@@ -125,6 +125,8 @@ public final class CombatRenderingCheck {
                     "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));}
                 finally{Arrays.fill(password,'\0');}
             }
+            store.grantItems("LanPlayer","Town-Knight","Gear/Shield/Grey Owlite Shield",1,-1,-1);
+            store.grantItems("LanPlayer","Town-Knight","Rarity/Spark of Life",2,-1,-1);
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
@@ -465,12 +467,21 @@ public final class CombatRenderingCheck {
         return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
             ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
     }
-    private boolean checkedStatuses,checkedEmergency;
+    private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;
+    private Confirm sparkReply;
     private void healthTick(View view,long now)throws Exception {
         var party=(com.threerings.projectx.dungeon.data.PartyObject)app.GQ().CW();
         Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
         Object panel=field(hud,"aEc").get(hud);
         if(stage==2){
+            if(!healthShieldEquipped){
+                if(equip==null){
+                    long id=0;for(var item:app.CT().items)if(item.Vx().getName().equals("Gear/Shield/Grey Owlite Shield"))id=item.VA();
+                    if(id==0)throw new AssertionError("Missing reported shield fixture");
+                    equip=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,2,equip);return;
+                }
+                if(!equip.done)return;if(equip.reason!=null)throw new AssertionError(equip.reason);healthShieldEquipped=true;
+            }
             capture("health-before");
             party.speakService.a("Training chat remains connected",(byte)0);
             Object bound=field(panel,"aEO").get(panel);
@@ -484,7 +495,16 @@ public final class CombatRenderingCheck {
         }
         var own=authoritative.get(app.CT().pawnId);
         var hp=party.health.iterator().next();
-        if(now-started>60_000_000_000L)throw new AssertionError("HUD damage timeout: hp="+hp.current+"/"+hp.maximum+" hud="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel)+" actor="+own.tz());
+        if(now-started>90_000_000_000L)throw new AssertionError("HUD damage timeout: hp="+hp.current+"/"+hp.maximum+" hud="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel)+" actor="+own.tz());
+        if(stage==41){
+            if(sparkReply.done&&sparkReply.reason!=null)throw new AssertionError(sparkReply.reason);
+            if(hp.current>0&&sawSparkEffect){
+                if(!sawHurt||!sawHealEffect)throw new AssertionError("Missing hurt or healing feedback");
+                capture("spark-revived");finishImages();passed=done=true;System.out.println("PASS: original Fire/Shock traps with lowered Grey Owlite Shield, hurt animation, healing sound effect and paid Spark revive effect");app.shutdown();
+            }
+            return;
+        }
+        if(healingWalk&&hp.current==healthMaximum){checkedHealing=true;healingWalk=false;konwayRoute=new ArrayList<>(routeTo(trainingMap,own.tz().x,own.tz().y,hazardX,hazardY));konwayRoute.add(new float[]{hazardX,hazardY});konwayRouteIndex=0;}
         if(konwayRouteIndex<konwayRoute.size()){
             float[] point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
             if(Math.hypot(dx,dy)<.25){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);
@@ -501,6 +521,7 @@ public final class CombatRenderingCheck {
             var status=party.status.iterator().next();
             if(status.conditions!=null&&Arrays.stream(status.conditions).anyMatch(c->c.getName().equals("Fire"))&&Arrays.stream(status.conditions).anyMatch(c->c.getName().equals("Shock"))){
                 if(!checkedStatuses)System.out.println("CHECK: native player Fire and Shock conditions, expiry and hit transient timestamp");checkedStatuses=true;
+                if(!checkedHealing&&!healingWalk){healingWalk=true;konwayRoute=new ArrayList<>(routeTo(trainingMap,own.tz().x,own.tz().y,trainingMap.spawnX(),trainingMap.spawnY()+1));konwayRoute.add(new float[]{trainingMap.spawnX(),trainingMap.spawnY()+1});konwayRouteIndex=0;}
             }
             if(hp.current>0&&status.flags==0)checkedEmergency=true;
             if(hp.current==0&&status.flags==0){
@@ -511,7 +532,7 @@ public final class CombatRenderingCheck {
                     if(component instanceof com.threerings.projectx.dungeon.client.ai)spark=true;
                 }
                 if(!spark)return;
-                capture("health-damaged");finishImages();passed=done=true;System.out.println("PASS: native player damage/hurt state, Fire/Shock, chat, emergency revive and second-death Spark panel");app.shutdown();
+                capture("spark-panel");sparkReply=new Confirm();party.partyService.a(app.CT().knight,-1,sparkReply);stage=41;
             }
         }
     }
@@ -536,10 +557,15 @@ public final class CombatRenderingCheck {
     }
     private void receive(SceneDeltaEvent event){
         lastStamp=event.QY();
+        if(healthOnly&&event.aem()!=null)for(var effect:event.aem()){
+            String reference=effect.Mv().toString();
+            sawHealEffect|=reference.contains("heart_acquire_01.ogg");sawSparkEffect|=reference.contains("Player/Spark Rez");
+        }
         if(event.aeh()==0)authoritative.clear();
         if(event.aej()!=null)for(var actor:event.aej())authoritative.put(actor.vw(),(Actor)actor.copy(null));
         if(event.aek()!=null)for(var delta:event.aek()){Actor old=authoritative.get(delta.vw());if(old!=null)authoritative.put(delta.vw(),(Actor)delta.apply(old));}
         if(event.ael()!=null)for(int id:event.ael())authoritative.remove(id);
+        if(healthOnly&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own)sawHurt|=own.adU()==274;
         if(stage==6&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own){
             activities.add(own.adU());
             if(own.adU()==ACTIONS.get(index).required)requiredStarted=own.adV();

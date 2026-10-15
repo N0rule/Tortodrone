@@ -67,7 +67,7 @@ public final class SceneWeapons {
     }
     public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
-    public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),source.clientOid()),stamp,0);}
+    public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0),stamp,0);}
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
         if(config==null)return;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();
         // These server-fired effects must reach the controlling client too;

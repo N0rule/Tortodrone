@@ -123,7 +123,8 @@ public final class SceneStatus {
         if(reference.arguments().get("Mask") instanceof Number mask){var fields=new HashMap<>(spec.fields());fields.put("mask",Integer.toString(mask.intValue()));spec=new SceneContent.Spec(fields);}
         int flags=spec.integer("flags",0),mask=spec.integer("mask",flags),resist=0;
         for(var a:active.values())if(a.spec.text("class","").equals("Resist")&&(a.spec.integer("mask",0)&flags)!=0)resist+=(int)parameter(a.reference,"Power",SceneDamage.number(a.data,"power",0),"Status Power","status-power.");
-        if(equipment!=null)for(var item:equipment.items())if(item.equippedSlot()!=null&&Set.of(0,1,2,5,10,11,12).contains(item.equippedSlot())){
+        // Shield resistance belongs to active blocking, never passive knight defense.
+        if(equipment!=null)for(var item:equipment.items())if(item.equippedSlot()!=null&&Set.of(0,1,5,10,11,12).contains(item.equippedSlot())){
             int base=Math.round(content.stats().getOrDefault("gear."+item.config()+".status-resist."+flags,0f)),extra=0;
             for(var variant:item.variants()){
                 String prefix="gear.variant."+variant.name()+".status-resist.";

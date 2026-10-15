@@ -12,8 +12,9 @@ public final class TownMovement {
     // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
-    public static final int SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
-    public static final int DYING_MILLIS=1290, RESURRECT_MILLIS=400;
+    public static final int HURT=274, SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
+    // Native character/pc/hurt_soft.dat duration (11 frames at 25 Hz, including transition).
+    public static final int HURT_MILLIS=425, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
@@ -36,6 +37,10 @@ public final class TownMovement {
     private java.util.function.IntPredicate revival=stamp->false;
     public void revival(java.util.function.IntPredicate handler){revival=java.util.Objects.requireNonNull(handler);}
     public boolean dead(){return activity==DYING||activity==DEAD;}
+    public void hurt(int stamp){
+        if(dead()||activity==RESURRECT||activity==SHOCKED)return;
+        resetInput(stamp);setActivity(HURT,stamp);updateFlags();
+    }
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
     private org.tortodrone.character.StarterCatalog.Model activityData;
@@ -183,7 +188,7 @@ public final class TownMovement {
     private void moveTo(int target) {
         if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
         if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
-        int duration = activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == 5 ? 1433 : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        int duration = activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == 5 ? 1433 : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();

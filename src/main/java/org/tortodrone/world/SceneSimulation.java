@@ -78,7 +78,7 @@ public final class SceneSimulation {
         private final SceneHealth health=new SceneHealth(instance.map().content());
         private boolean revivePending;
         public boolean beginRevive(){synchronized(SceneSimulation.this){check();if(!entered||portal!=null||revivePending||!health.canSparkRevive())return false;revivePending=true;return true;}}
-        public void finishRevive(boolean success){synchronized(SceneSimulation.this){check();if(!revivePending)return;revivePending=false;if(success&&health.revive(SceneClock.now())){movement.resurrect(SceneClock.now());weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Energy Rez",Map.of()),actor(),SceneClock.now());}}}
+        public void finishRevive(boolean success){synchronized(SceneSimulation.this){check();if(!revivePending)return;revivePending=false;if(success&&health.revive(SceneClock.now())){movement.resurrect(SceneClock.now());weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),actor(),SceneClock.now());}}}
         private org.tortodrone.town.TownState.Sprite sprite;
         private org.tortodrone.town.TownState.Harness harness;
         private final int petId=nextPetId++;
@@ -130,7 +130,13 @@ public final class SceneSimulation {
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
         public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){check();health.inventory(profile);}}
         public SceneStatus.State status(){synchronized(SceneSimulation.this){check();return health.status();}}
-        public boolean heal(int amount){synchronized(SceneSimulation.this){check();return health.heal(amount);}}
+        public boolean heal(int amount){synchronized(SceneSimulation.this){check();return heal(amount,SceneClock.now());}}
+        private boolean heal(int amount,int stamp){
+            if(!health.heal(amount))return false;
+            var capsule=instance.map().content().items().get("Pickup/Capsule/Health Capsule");
+            if(capsule!=null)weapons.effect(capsule.model("use-effect"),actor(),stamp);
+            return true;
+        }
         public int takeInteraction(){synchronized(SceneSimulation.this){check();int target=interactionTarget;interactionTarget=0;return target;}}
         public List<SceneEntities.Pickup> takePickups(){synchronized(SceneSimulation.this){check();return entities.takePickups(appearance.id());}}
         public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){check();entities.completePickup(appearance.id(),entity,success);}}
@@ -221,17 +227,22 @@ public final class SceneSimulation {
     private long tickCount;
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
+        weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
         entities.feedback(this::feedback);
         entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
         entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
             var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.combat);
+            if(result.react()&&member.health.alive()){
+                weapons.cancelAttacks(hit.actor());
+                if(member.lift!=0){entities.dropLift(member.lift,member.actor(),hit.timestamp());member.lift=member.dropAt=0;}
+                member.movement.hurt(hit.timestamp());
+            }
             member.updateLife(hit.timestamp());
             member.movement.status(member.health.status().modifiers());
             if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
         }});
-        entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.health.heal(amount);});
-        weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
+        entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.heal(amount,SceneClock.now());});
         weapons.petActions(action->{var member=members.get(action.owner());if(member==null||!member.entered)return;
             switch(action.kind()){
                 case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.character.StarterCatalog.Model ref){

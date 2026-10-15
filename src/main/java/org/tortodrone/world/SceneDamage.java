@@ -6,6 +6,11 @@ import org.tortodrone.character.StarterCatalog;
 public final class SceneDamage {
     private SceneDamage() { }
     public static boolean status(Object damage){return damage instanceof FireCatalog.DataValue value&&(value.type().endsWith("$Status")||value.type().endsWith("$ExclusiveStatus"));}
+    public static boolean reacts(Object damage){
+        if(!(damage instanceof FireCatalog.DataValue value))return false;
+        if(value.type().endsWith("$Compound")&&field(damage,"damages") instanceof FireCatalog.ListValue list)return list.values().stream().anyMatch(SceneDamage::reacts);
+        return Boolean.TRUE.equals(field(damage,"shouldReact"));
+    }
     public static KnightCombat.Impulse impulse(Object config,float ox,float oy,float x,float y,int level,int stamp){
         if(!(config instanceof FireCatalog.DataValue))return null;
         int difference=level-(int)number(config,"level",1);if(difference>2)return null;

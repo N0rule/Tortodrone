@@ -10,6 +10,19 @@ public final class SceneStatusTest {
     public static void main(String[] args)throws Exception{
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var content=map.content();
         thrownVials(content);
+        var owlite=new WorldProfile.Item(99,WorldProfile.Slot.SHIELD,"Gear/Shield/Grey Owlite Shield",null,0,2,false,false,false);
+        for(String kind:List.of("Fire","Shock")){
+            var knight=new SceneHealth(content);knight.equipment(new WorldProfile(219,1,1,0,0,1,List.of(owlite)));
+            knight.hit(status(kind),1000);knight.advance(1001,1,false);
+            check(!knight.status().conditions().isEmpty(),"lowered Grey Owlite Shield does not grant passive "+kind+" immunity");
+        }
+        var reactive=new SceneHealth(content);
+        var blow=new FireCatalog.DataValue("Damage$Normal",Map.of("amount",10f,"flags",8,"shouldReact",true));
+        check(reactive.hit(blow,1000).react()&&reactive.invulnerable(1999)&&reactive.hit(blow,1500).amount()==0,"authored hurt reaction grants one second of protection");
+        check(reactive.hit(blow,2000).amount()>0,"hurt protection expires on its deadline");
+        var hurt=new TownMovement(map.collision(),map.spawnX(),map.spawnY());hurt.combat(new KnightCombat(WeaponCatalog.empty()));hurt.resetInput(1000);hurt.hurt(1000);
+        hurt.advance(1424,1424);check(hurt.activity()==TownMovement.HURT,"hurt animation lasts its native 425 ms");
+        hurt.advance(1425,1425);check(hurt.activity()==0,"hurt animation finishes without leaving the knight stuck");
         for(String kind:List.of("Fire","Shock")){
             var scaled=content.statuses().get(kind+" (Scaled)");
             var player=new SceneHealth(content);
