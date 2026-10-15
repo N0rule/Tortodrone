@@ -236,8 +236,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             float x=e.x+(float)Math.cos(e.direction)*distance/steps,y=e.y+(float)Math.sin(e.direction)*distance/steps;
             boolean clear=staticCollision.isEmpty()||e.shape==null?terrain.walkableSegment(e.x,e.y,x,y):
                 staticCollision.clearSegment(e.spec.integer("thrown-collision-mask",0),e.shape,e.x,e.y,x,y,e.rotation);
-            if(!clear||contact(x,y,e.rotation,e.id,e.shape,e.spec.integer("thrown-collision-mask",-1))){collided=true;break;}
+            if(!clear){collided=true;break;}
             e.x=x;e.y=y;
+            // Execute the landing action at the colliding substep. Keeping the
+            // previous clear pose left a thrown vial outside the victim's shape.
+            if(contact(x,y,e.rotation,e.id,e.shape,e.spec.integer("thrown-collision-mask",-1))){collided=true;break;}
         }
         if(stamp-e.thrownAt>=e.spec.integer("throw-time",0))e.z=Math.max(0,e.z-e.spec.number("fall-speed",0)*elapsed);
         if(collided||e.z<=0||stamp-e.thrownAt>=e.spec.integer("fuse",0))land(e,stamp);

@@ -51,6 +51,9 @@ final class WorldSession implements AutoCloseable {
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
     private int subscribedPartyOid;
+    private SceneHealth.State publishedHealth;
+    private SceneStatus.State publishedStatus;
+    private int publishedVitalsStamp;
     private Set<Integer> occupants = Set.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
     private org.tortodrone.town.TownCatalog.Station townDialog;
@@ -256,6 +259,7 @@ final class WorldSession implements AutoCloseable {
         profile=loadProfile(profile);
         var health=membership.health();var status=membership.status();output.send(()->codec.interiorParty(message,SessionCodec.interiorPartyOid(scene),oid,knight,profile,scene,health,status));
         subscribedPartyOid=SessionCodec.interiorPartyOid(scene);
+        publishedHealth=health;publishedStatus=status;publishedVitalsStamp=SceneClock.now();
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
         }
@@ -854,14 +858,18 @@ final class WorldSession implements AutoCloseable {
         short elapsed=(short)Math.max(1,Math.min(Short.MAX_VALUE,stamp-lastStamp));
         output.send(()->codec.sceneDelta(oid,scene.oid(),acknowledge,ping,reference,stamp,elapsed,
             delta.added(),delta.updated(),delta.removed(),delta.baseline(),!scene.map().town(),effects));
-        var health=current.health(profile.worldId());
-        var currentOwn=current.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
+        var currentOwn=current.players().stream().filter(a->a.clientOid()==oid).findFirst().orElse(null);
+        var health=currentOwn==null?null:current.health(currentOwn.id());
         var previousOwn=lastSnapshot==null?null:lastSnapshot.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
         Set<Long> previousCurse=previousOwn==null||previousOwn.sceneKnight()==null?Set.of():previousOwn.sceneKnight().status().cursedItems();
         Set<Long> currentCurse=currentOwn==null||currentOwn.sceneKnight()==null?Set.of():currentOwn.sceneKnight().status().cursedItems();
         if(!previousCurse.equals(currentCurse))output.send(()->codec.itemChanges(oid,knight,visibleProfile(previousCurse),visibleProfile(currentCurse)));
-        if(subscribedPartyOid==SessionCodec.interiorPartyOid(scene)&&health!=null&&currentOwn!=null&&currentOwn.sceneKnight()!=null&&(lastSnapshot==null||!health.equals(lastSnapshot.health(profile.worldId()))||previousOwn==null||previousOwn.sceneKnight()==null||!currentOwn.sceneKnight().status().equals(previousOwn.sceneKnight().status()))){
-            var status=currentOwn.sceneKnight().status();output.send(()->codec.partyVitals(SessionCodec.interiorPartyOid(scene),oid,health,status));
+        if(subscribedPartyOid==SessionCodec.interiorPartyOid(scene)&&health!=null&&currentOwn.sceneKnight()!=null){
+            var status=currentOwn.sceneKnight().status();
+            if(!health.equals(publishedHealth)||!status.equals(publishedStatus)||stamp-publishedVitalsStamp>=1000){
+                output.send(()->codec.partyVitals(subscribedPartyOid,oid,health,status));
+                publishedHealth=health;publishedStatus=status;publishedVitalsStamp=stamp;
+            }
         }
         if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot))output.send(()->codec.partyDamage(SessionCodec.interiorPartyOid(scene),event));
         lastStamp=reference=stamp;lastSnapshot=current;

@@ -46,6 +46,21 @@ public final class TrainingSessionTest {
                 var memberField=WorldSession.class.getDeclaredField("membership");memberField.setAccessible(true);var member=(SceneSimulation.Membership)memberField.get(world);
                 var healthField=member.getClass().getDeclaredField("health");healthField.setAccessible(true);var health=(SceneHealth)healthField.get(member);
                 synchronized(place.simulation()){
+                    int stamp=SceneClock.now();
+                    health.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",40f,"flags",1)),stamp);
+                    var freeze=place.map().content().statuses().get("Freeze");
+                    health.condition(new StarterCatalog.Model("Freeze",Map.of("Chance",1f,"Power",100,"Duration",20000)),freeze.model("data").arguments().get("data"),stamp);
+                }
+                var sentHealth=WorldSession.class.getDeclaredField("publishedHealth");sentHealth.setAccessible(true);
+                var sentStatus=WorldSession.class.getDeclaredField("publishedStatus");sentStatus.setAccessible(true);
+                boolean published=false;long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(3);
+                while(System.nanoTime()<deadline){synchronized(world){
+                    var hp=(SceneHealth.State)sentHealth.get(world);var status=(SceneStatus.State)sentStatus.get(world);
+                    if(hp!=null&&hp.current()<hp.maximum()&&status!=null&&!status.conditions().isEmpty()){published=true;break;}}
+                    Thread.sleep(20);
+                }
+                check(published,"entered Training session publishes changed HP and non-empty HUD statuses");
+                synchronized(place.simulation()){
                     int stamp=SceneClock.now();health.hit(hit(),stamp);health.advance(stamp+5000,5000,false);
                     var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);immunity.setInt(health,0);
                     health.hit(hit(),SceneClock.now());

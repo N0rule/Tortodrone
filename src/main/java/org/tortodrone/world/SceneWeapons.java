@@ -70,7 +70,9 @@ public final class SceneWeapons {
     public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),source.clientOid()),stamp,0);}
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
         if(config==null)return;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();
-        effects.addLast(new SceneEffect(++sequence,config,stamp,source.x(),source.y(),source.rotation(),source.clientOid()));
+        // These server-fired effects must reach the controlling client too;
+        // _clientOid denotes a pre-executed effect that client already showed.
+        effects.addLast(new SceneEffect(++sequence,config,stamp,source.x(),source.y(),source.rotation(),0,source.id()));
     }
     public List<ActorState> actors(){return shots.values().stream().map(Shot::snapshot).toList();}
     public List<SceneEffect> effects(){return List.copyOf(effects);}

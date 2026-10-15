@@ -9,6 +9,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class SceneStatusTest {
     public static void main(String[] args)throws Exception{
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var content=map.content();
+        thrownVials(content);
         var burn=new SceneHealth(content);burn.hit(status("Fire"),1000);burn.advance(1000,0,false);
         check(burn.state().current()<burn.state().maximum(),"exclusive burn applies periodic damage");
         var poison=new SceneHealth(content);poison.hit(hit(20),1000);poison.hit(status("Poison"),1001);
@@ -47,6 +48,26 @@ public final class SceneStatusTest {
         check(!health.alive()&&health.canSparkRevive()&&health.state().reviveFlags()==0,"second death requires a Spark instead of another free revive");
         check(health.revive(17000)&&!health.revive(17000),"paid revival cannot raise a living player twice");
         System.out.println("PASS: seven status effects, frozen shield/dodge movement, curse use/expiry and one emergency revive");
+    }
+    private static void thrownVials(SceneContent prepared)throws Exception{
+        var terrain=SceneWeaponsTest.openTerrain();
+        var shape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f));
+        var fields=new HashMap<>(Map.of("native-type","Monster","config","Monster/Fixture","health","10000","radius",".4","damage-mask","3","collision-flags","8"));
+        fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",shape))));
+        for(String kind:List.of("Freeze","Fire","Shock")){
+            var content=new SceneContent(List.of(new SceneContent.Entry("victim",2,0,0,new SceneContent.Spec(fields))),prepared.scales(),Map.of(),prepared.stats(),prepared.items(),Map.of(),prepared.statuses());
+            var world=new SceneEntities(content,terrain);var weapons=new SceneWeapons(terrain);weapons.targets(world);
+            int stamp=SceneClock.now();world.attacks((actor,action)->weapons.fire(action,actor,stamp));
+            var player=new ActorState(10,1001,"Fixture",0,stamp,0,0,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));
+            world.advance(stamp,List.of(player));
+            var item=content.items().get("Pickup/Vial/"+kind+" Vial");check(item!=null,"prepared "+kind+" vial exists");
+            int vial=world.vial(player,item,stamp);check(vial!=0,"vial is held by its owner");world.throwLift(vial,player,stamp);
+            boolean applied=false;
+            for(int at=stamp+20;at<stamp+2000;at+=20){world.advance(at,List.of(player));
+                var victim=world.actors().stream().filter(a->a.entity().kind().equals("Monster")).findFirst().orElseThrow();
+                if(!victim.entity().status().conditions().isEmpty()){applied=true;break;}}
+            check(applied,"thrown "+kind+" vial applies a status to the monster it hits");
+        }
     }
     private static Object status(String name){return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$ExclusiveStatus",List.of(
         new FireCatalog.FieldValue("flags","int",1),new FireCatalog.FieldValue("statusCondition","com.threerings.config.ConfigReference",new StarterCatalog.Model(name,Map.of("Chance",1f,"Power",100,"Duration",20000)))));}

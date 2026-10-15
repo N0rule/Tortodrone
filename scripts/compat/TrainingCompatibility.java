@@ -53,6 +53,13 @@ public final class TrainingCompatibility {
         var nativeRevived=reviveEvent.aek()[0].apply(nativeCorpse);
         if((int)FireCompatibility.field(nativeRevived,"_activity")!=282||((int)FireCompatibility.field(nativeRevived,"_flags")&64)==0||FireCompatibility.field(nativeRevived,"_actionDesc")!=null)
             throw new AssertionError("Native revival delta did not clear the corpse prompt or set protection");
+        var effects=new SceneWeapons(CollisionMap.read(Path.of("content/packs/vanilla/maps/advanced_training/walkability.gz")));
+        effects.effect(new StarterCatalog.Model("Player/Emergency Rez",Map.of()),revived,200);
+        var effectDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,150,(short)0,150,200,(short)50,List.of(),List.of(),new int[0],Map.of(),true,effects.effects()));
+        Object nativeEffects=null;
+        for(var f:effectDelta.getClass().getDeclaredFields())if(f.getType().isArray()&&f.getType().getComponentType().getName().endsWith(".Effect")){f.setAccessible(true);nativeEffects=f.get(effectDelta);}
+        var effect=java.lang.reflect.Array.get(nativeEffects,0);
+        if(!FireCompatibility.field(effect,"_target").equals(new com.threerings.tudey.data.EntityKey.Actor(pc.id()))||(int)FireCompatibility.field(effect,"_clientOid")!=0)throw new AssertionError("Emergency revive effect is unattached or suppressed for its owner");
         // Exercise non-empty native status/lift fields, not just null/default masks.
         var condition=content.statuses().entrySet().stream().filter(e->e.getValue().text("class","").equals("Freeze")).findFirst().orElseThrow();
         var status=new SceneStatus.State(List.of(new StarterCatalog.Model(condition.getKey(),Map.of())),List.of(5000),
@@ -157,15 +164,24 @@ public final class TrainingCompatibility {
         if(party.speakService==null)throw new AssertionError("Native Training party chat has no service");
         if(!party.members.e(1001))throw new AssertionError("Native party does not contain its local player oid");
         var health=party.health.iterator().next();var condition=party.status.iterator().next();
+        var notifications=new ArrayList<String>();
+        party.a(new com.threerings.presents.dobj.s<com.threerings.presents.dobj.DSet.Entry>(){
+            public void a(com.threerings.presents.dobj.EntryAddedEvent<com.threerings.presents.dobj.DSet.Entry> event){}
+            public void a(com.threerings.presents.dobj.EntryRemovedEvent<com.threerings.presents.dobj.DSet.Entry> event){}
+            public void a(com.threerings.presents.dobj.EntryUpdatedEvent<com.threerings.presents.dobj.DSet.Entry> event){
+                if(Integer.valueOf(1001).equals(event.lj()))notifications.add(event.getName());
+            }
+        });
         if(health.current!=193||health.maximum!=200||condition.conditions.length!=1||!Arrays.equals(condition.expires,new int[]{5000}))throw new AssertionError("Party resubscription lost current health/status");
         if(party.D(party.members.iterator().next().name)!=health||condition.flags!=1)throw new AssertionError("Native HUD health lookup or emergency revive entitlement differs");
         for(int flags:new int[]{9,0}){
             var update=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(0,200,0,flags),status))).yj();
-            for(var child:update.xE())child.b(party);
+            for(var child:update.xE()){if(!child.b(party))throw new AssertionError("Native HUD update was not applied");party.d(child);}
             if(party.health.iterator().next().current!=0||party.status.iterator().next().flags!=flags||party.z(party.members.iterator().next().name)!=(flags==0))throw new AssertionError("Native free/Spark death panel gate differs");
         }
         var revived=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().partyVitals(640,1001,new SceneHealth.State(200,200,0,0),SceneStatus.State.NORMAL))).yj();
-        for(var child:revived.xE())child.b(party);
+        for(var child:revived.xE()){if(!child.b(party))throw new AssertionError("Native revive update was not applied");party.d(child);}
+        if(Collections.frequency(notifications,"health")!=3||Collections.frequency(notifications,"status")!=3)throw new AssertionError("Native HUD set listeners did not receive health/status updates: "+notifications);
         if(party.D(party.members.iterator().next().name).current!=200||party.z(party.members.iterator().next().name))throw new AssertionError("Native HUD health does not recover on revive");
         var event=(com.threerings.presents.dobj.CompoundEvent)((com.threerings.presents.net.EventNotification)nativeMessage(new SessionCodec().quickbar(1001,new long[]{-1,-2,0,0}))).yj();
         if(event.xE().size()!=4||!Long.valueOf(-1).equals(((com.threerings.presents.dobj.ElementUpdatedEvent)event.xE().getFirst()).getValue()))throw new AssertionError("Native quickbar slot event mismatch");

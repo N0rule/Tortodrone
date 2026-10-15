@@ -121,7 +121,7 @@ public final class SceneWeaponsTest {
         check(shards.size()==2&&shards.stream().allMatch(FireCatalog.Action::relative)&&Math.abs(shards.get(0).rotation()-(float)(Math.PI*.75))<.001&&Math.abs(shards.get(1).rotation()-(float)(Math.PI*1.25))<.001,"charged Alchemer splits into the two archived backward directions");
         check(catalog.find("Weapon/Handgun/Tortafist/Grand Tortofist",290).fireRefs().getFirst().action().actor().detonation().count()==6,"Tortofist charge scatters six crystals");
     }
-    private static CollisionMap openTerrain()throws Exception {
+    static CollisionMap openTerrain()throws Exception {
         Path file=Files.createTempFile("tortodrone-weapon-open-",".gz");
         try{
             try(var out=new DataOutputStream(new GZIPOutputStream(Files.newOutputStream(file)))){
@@ -146,7 +146,7 @@ public final class SceneWeaponsTest {
             var timing=timings.find(name).charged();scene.attack(10,new KnightCombat.AttackStart(name,290,100,timing.land(),timing.clear()));
             for(int stamp=101;stamp<6500;stamp+=20)scene.advance(stamp,List.of(owner));
             check(targets.actors().getFirst().entity().health()<1,name+" charge reduces real monster HP");
-            if(name.endsWith("Magnus")||name.endsWith("Callahan"))check(targets.actors().get(1).entity().health()<1,name+" piercing charge damages a second monster");
+            if(name.endsWith("Magnus")||name.endsWith("Callahan")||name.endsWith("Avenger")||name.endsWith("Faust"))check(targets.actors().get(1).entity().health()<1,name+" charge projectile damages a monster outside melee reach");
         }
         var target=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("impact",0,3,0,new SceneContent.Spec(fields))),Map.of()),terrain);
         var scene=new SceneWeapons(terrain);scene.catalog(catalog);scene.targets(target);

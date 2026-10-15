@@ -452,6 +452,11 @@ public final class FireCatalogExport {
                         // Archived Spur/Winmillion combat description: the short
                         // piercing charge projectile can hit up to three times.
                         timers.add(new ActorTimer(0,Math.max(1,fuse/3),3,action,null));
+                    }else if(type.equals("BULLET")&&speed>0&&(actor.collisionMask&8)==0&&delay>=fuse){
+                        // Stripped timers can outlive their moving blade. Its
+                        // surviving damage graph is a piercing contact attack.
+                        int step=Math.max(16,(fuse+126)/127);
+                        timers.add(new ActorTimer(0,step,Math.min(128,1+(fuse+step-1)/step),intersectionDamage(action),null));
                     }else timers.add(new ActorTimer(delay,interval,Math.min(128,timer.limit==0?128:timer.limit),action,null));
                 }
             }
