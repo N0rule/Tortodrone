@@ -13,7 +13,8 @@ public final class SceneWeapons {
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape) {
+    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId) {
+        Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape){this(x,y,rotation,ownerId,ownerOid,shape,ownerId);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid){this(x,y,rotation,ownerId,ownerOid,null);}
     }
     private static final class Run {
@@ -22,8 +23,8 @@ public final class SceneWeapons {
     }
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
-        float x,y,relativeX,relativeY;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
-        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;}
+        final int[] timers;float x,y,relativeX,relativeY;int advanced;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
+        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];}
         ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),0,relativeX,relativeY,collided,rotation,source.ownerId);
             // Native _z is the source's floor elevation, not the authored bullet
             // height. Knights have no explicit Z; their client resolves the floor.
@@ -86,22 +87,45 @@ public final class SceneWeapons {
                 return finished||stamp-run.start.started()>=run.start.clear()||actor.activityStarted()>run.start.started();
             });if(e.getValue().isEmpty())iterator.remove();
         }
-        int previous=lastStamp==0?stamp:lastStamp;
-        // Detonation can add child projectiles; advance only the tick's existing actors.
+        // Each actor owns its clock: children born during another actor's
+        // detonation catch up next tick without losing their first movement step.
         for(var shot:List.copyOf(shots.values())){
             if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=100)shots.remove(shot.id);continue;}
             int end=Math.min(stamp,shot.created+shot.spec.fuse());
-            if(shot.spec.nativeType().equals("BULLET")){
-                int from=Math.max(previous,shot.created);float distance=shot.spec.speed()*Math.max(0,end-from)/1000f;
-                int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
-                for(int n=0;n<steps;n++){float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
-                    if(!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){destroy(shot,stamp,false);break;}
-                    shot.x=x;shot.y=y;
-                    if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){destroy(shot,stamp,false);break;}}
-            }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,Math.max(previous,shot.created),owners.get(shot.source.ownerId));
+            while(shot.destroyed==Integer.MAX_VALUE){
+                int selected=-1,due=Integer.MAX_VALUE;
+                for(int i=0;i<shot.timers.length;i++){
+                    var timer=shot.spec.timers().get(i);int fired=shot.timers[i];
+                    if(fired>timer.limit()||fired==timer.limit()&&timer.endAction()==null)continue;
+                    int deadline=shot.created+timer.delay()+timer.interval()*fired;
+                    if(deadline<=end&&deadline<due){selected=i;due=deadline;}
+                }
+                if(selected<0)break;
+                advanceShot(shot,due,owners.get(shot.source.ownerId));
+                if(shot.destroyed!=Integer.MAX_VALUE)break;
+                var timer=shot.spec.timers().get(selected);int fired=shot.timers[selected]++;
+                execute(fired<timer.limit()?timer.action():timer.endAction(),shotPose(shot),due,0);
+            }
+            if(shot.destroyed==Integer.MAX_VALUE)advanceShot(shot,end,owners.get(shot.source.ownerId));
             if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
+    }
+    private Pose shotPose(Shot shot){return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shot.spec.collisionShape(),shot.id);}
+    private void advanceShot(Shot shot,int end,ActorState home){
+        if(end<=shot.advanced)return;
+        if(shot.spec.nativeType().equals("BULLET")){
+            int from=shot.advanced;float distance=shot.spec.speed()*(end-from)/1000f;
+            int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
+            for(int n=0;n<steps;n++){
+                int time=from+(int)((long)(end-from)*(n+1)/steps);
+                float x=shot.x+(float)Math.cos(shot.rotation)*distance/steps,y=shot.y+(float)Math.sin(shot.rotation)*distance/steps;
+                if(!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){destroy(shot,time,false);break;}
+                shot.x=x;shot.y=y;
+                if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){destroy(shot,time,false);break;}
+            }
+        }else if(shot.spec.orbit()!=null)advanceOrbit(shot,end,shot.advanced,home);
+        shot.advanced=end;
     }
     // Transcribed from the archive's 2026-compatible OrbitalBulletAdvancer:
     // fly the centre out, home to the owner, and compute the orbit at 1/60 s steps.
@@ -131,9 +155,13 @@ public final class SceneWeapons {
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
-    private void destroy(Shot shot,int stamp,boolean fizzle){shot.destroyed=stamp;shot.fizzle=fizzle;
+    private void destroy(Shot shot,int stamp,boolean fizzle){if(shot.destroyed!=Integer.MAX_VALUE)return;shot.destroyed=stamp;shot.fizzle=fizzle;
+        if(shot.spec.shutdown()!=null)execute(shot.spec.shutdown(),shotPose(shot),stamp,0);
         var detonation=catalog.detonation(shot.spec);
-        if(!fizzle&&detonation!=null)execute(detonation,new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.source.ownerOid,shot.spec.collisionShape()),stamp,0);}
+        // Stock BulletLogic executes the detonation even when its advancer marked
+        // fuse expiry as FIZZLE. Tortofist's invisible carrier relies on this to
+        // release missiles; the flag only chooses the client's destruction visual.
+        if(detonation!=null)execute(detonation,shotPose(shot),stamp,0);}
     private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth){
         return execute(action,source,stamp,depth,stamp);
     }
@@ -143,6 +171,7 @@ public final class SceneWeapons {
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
         if(!sourceTarget(action.targetType()))return false;
+        if(action.kind()==FireCatalog.Kind.DESTROY_SOURCE){var shot=shots.get(source.actorId);if(shot==null)return false;destroy(shot,stamp,false);return true;}
         if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
             if(targets!=null){float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
                 targets.damage(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
@@ -169,7 +198,7 @@ public final class SceneWeapons {
             if(!action.parameter().isEmpty()&&!action.values().isEmpty()){
                 var arguments=new HashMap<>(spec.config().arguments());arguments.put(action.parameter(),action.values().get(Math.floorMod(seed,action.values().size())));
                 var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
-                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape());
+                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown());
             }
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;

@@ -71,7 +71,18 @@ public final class FireCatalogExport {
             }
             FireActionConfig fire = manager.a(FireActionConfig.class, fireRef.ref);
             if (fire == null) throw new IOException("Unresolved fire action " + fireRef.ref.getName());
-            Action action = readFireAction(manager, fireRef.ref, fire);
+            Action action;
+            if(fire.action instanceof DungeonActionConfig.SpawnPrespawned spawn&&spawn.actor!=null
+                &&(spawn.actor.getName().equals("Bullet/Sword/Burst Bullet")||spawn.actor.getName().equals("Bullet/Sword/Burst Bullet (Obsidian)"))){
+                // Stock charge parameters address pre-strip fire-ref indices.
+                // The official captures retain the weapon's Burst Color/Damage
+                // on its carrier and trails; bind the surviving attack arguments.
+                var bound=(DungeonActionConfig.SpawnPrespawned)spawn.clone();
+                bound.actor=new ConfigReference<>(spawn.actor.getName());bound.actor.kW().putAll(spawn.actor.kW());
+                if(reference.kW().containsKey("Burst Color"))bound.actor.kW().put("Color",reference.kW().get("Burst Color"));
+                if(reference.kW().containsKey("Burst Damage"))bound.actor.kW().put("Damage",reference.kW().get("Burst Damage"));
+                action=readPrespawned(manager,bound);
+            }else action = readFireAction(manager, fireRef.ref, fire);
             if (action == null) throw new IOException("Stock fire reference has no action: " + fireRef.ref.getName());
             int loop = fire instanceof FireActionConfig.Looped l ? l.maxLoop : 0;
             int success = fire instanceof FireActionConfig.IncreasingLooped l ? l.successIncrement : 0;
@@ -257,7 +268,92 @@ public final class FireCatalogExport {
         nativeActor.init(manager);
         int flags=intField(nativeActor,"_flags");
         if(nativeActor instanceof com.threerings.tudey.data.actor.Mobile)maxStep=floatField(nativeActor,"_maxStep");
-        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape));
+        var timers=new ArrayList<ActorTimer>();var shutdown=new ArrayList<Action>();
+        for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Shutdown ended){
+            Action action=readAction(manager,ended.action);if(action!=null)shutdown.add(action);
+        }
+        if(refName.equals("Bullet/Sword/Burst Bullet")||refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")) {
+            // The stock Timer retains the trail reference/arguments but strips its
+            // interval and counter. Local official captures contain five trails
+            // at +123,+224,+324,+424,+526 ms; the authored Burst Count is five.
+            if(actor.handlers.length!=3||!(actor.handlers[1] instanceof HandlerConfig.Timer timer)
+                ||!(timer.action instanceof ActionConfig.Conditional conditional)
+                ||!(conditional.action instanceof ActionConfig.Compound compound)||compound.actions.length!=1
+                ||!(compound.actions[0] instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null)
+                throw new IOException("Burst bullet timer layout changed");
+            Object count=reference.kW().get("Burst Count");
+            if(count!=null){int bursts=Integer.parseInt(count.toString());
+                if(bursts<1||bursts>32)throw new IOException("Invalid burst count");
+                // Retail's parameter paths still address stripped server nodes.
+                // Captures show the carrier's Color/Damage/FX passed verbatim to
+                // each trail, with Burst Scale renamed Scale. Resolve that child
+                // afresh so it cannot retain the prototype's monster damage.
+                var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;
+                trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.kW().putAll(spawn.actor.kW());
+                for(String key:List.of("Color","Damage","Extra FX","Ground Scar"))
+                    if(reference.kW().containsKey(key))trail.actor.kW().put(key,reference.kW().get(key));
+                if(reference.kW().containsKey("Burst Scale"))trail.actor.kW().put("Scale",reference.kW().get("Burst Scale"));
+                timers.add(new ActorTimer(100,100,bursts,readAction(manager,trail),destroySource()));}
+        } else if(refName.startsWith("Bullet/Handgun/Pulsar/")&&!refName.contains("(Charged)")) {
+            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer
+                &&timer.action instanceof ActionConfig.Compound compound
+                &&Arrays.stream(compound.actions).anyMatch(a->a instanceof ActionConfig.SpawnActor spawn
+                    &&spawn.actor!=null&&spawn.actor.getName().equals("Bullet/Handgun/Pulsar/Parts/Base Stage2"))) {
+                // Maturation replaces the first stage; never repeat a replacement
+                // every tick. Stage2's fuse, visuals and damage remain stock data.
+                timers.add(new ActorTimer(1000,0,1,readAction(manager,timer.action),destroySource()));
+            }
+        }
+        if(refName.startsWith("Bullet/Handgun/Parts/Alchemical/")&&refName.endsWith("/Secondary")
+            &&detonation!=null&&detonation.kind()==Kind.COMPOUND){
+            // The local official Voltech capture has twenty secondary -> tertiary
+            // bounces in the parent's +90..180 degree sector, rather than the
+            // stripped SpawnRotatedActor default of absolute east. This bounded
+            // fan is a capture reconstruction; charged fan angles remain unknown.
+            var children=new ArrayList<Action>();
+            for(var child:detonation.children()){
+                if(child.kind()==Kind.EMIT_PROJECTILE&&child.actor().config().name().endsWith("/Tirtiary"))
+                    child=new Action(child.kind(),child.config(),child.actor(),child.targetType(),child.facingType(),child.collisionSourceType(),child.x(),child.y(),(float)(Math.PI*.75),(float)(Math.PI*.5),true,child.count(),child.stepSize(),child.steps(),child.collisionMask(),child.stopOnFailure(),child.children(),child.unsupportedType(),child.parameter(),child.values());
+                children.add(child);
+            }
+            detonation=new Action(detonation.kind(),detonation.config(),detonation.actor(),detonation.targetType(),detonation.facingType(),detonation.collisionSourceType(),detonation.x(),detonation.y(),detonation.rotation(),detonation.rotationVariance(),detonation.relative(),detonation.count(),detonation.stepSize(),detonation.steps(),detonation.collisionMask(),detonation.stopOnFailure(),children,detonation.unsupportedType(),detonation.parameter(),detonation.values());
+        }
+        detonation=restoreDamageShape(manager,reference,detonation);
+        return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
+            shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""));
+    }
+    private static Action destroySource(){return new Action(Kind.DESTROY_SOURCE,null,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");}
+    private static Action restoreDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,Action action)throws Exception {
+        if(action==null)return null;
+        // Choice arguments survive stripping even when the region they address
+        // does not. Follow the actual derived bindings and restore only an
+        // explicitly authored detonation circle radius, never a guessed area.
+        var seen=new HashSet<String>();
+        while(reference!=null&&seen.add(reference.getName())){
+            var config=manager.a(ActorConfig.class,reference);if(config==null)break;
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Choice choice){
+                for(var direct:choice.directs)for(String path:direct.paths)
+                    if(path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")){
+                        String selected=Objects.toString(reference.kW().get(choice.name),choice.choice);
+                        for(var option:choice.options)if(option.name.equals(selected)){
+                            var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
+                            Object value=((Map<?,?>)field.get(option)).get(direct.name);
+                            if(value instanceof Number radius){var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=radius.floatValue();
+                                Object shape=argumentValue(circle);
+                                var index=java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
+                                if(index.matches()){
+                                    int at=Integer.parseInt(index.group(1));
+                                    if(action.kind()!=Kind.COMPOUND||at>=action.children().size())throw new IOException("Detonation shape path changed: "+path);
+                                    var children=new ArrayList<>(action.children());children.set(at,withShape(children.get(at),shape));
+                                    action=new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+                                }else if(action.kind()==Kind.DAMAGE_REGION)action=withShape(action,shape);
+                                else throw new IOException("Detonation circle has no matching damage action: "+path);}
+                        }
+                    }
+            }
+            reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
+        }
+        return action;
     }
     private static boolean isProjectile(String type) { return type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
     private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }

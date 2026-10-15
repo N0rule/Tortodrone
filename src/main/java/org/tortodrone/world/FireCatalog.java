@@ -10,7 +10,7 @@ import org.tortodrone.resources.Json;
 /** Numeric/reference-only stock action graphs for player weapon attacks. */
 public final class FireCatalog {
     private static final int MAX_BYTES = 64 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 500_000;
-    public enum Kind { COMPOUND, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, UNSUPPORTED }
+    public enum Kind { COMPOUND, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, DESTROY_SOURCE, UNSUPPORTED }
     public enum NullValue { INSTANCE }
     public record EnumValue(String type, String name, int ordinal) {
         public EnumValue(String type,String name){this(type,name,-1);}
@@ -38,8 +38,17 @@ public final class FireCatalog {
         }
         public boolean compound() { return secondOrbitRadius != null; }
     }
+    public record ActorTimer(int delay,int interval,int limit,Action action,Action endAction) {
+        public ActorTimer { time(delay);time(interval);if(limit<1||limit>128||interval==0&&limit!=1)throw new IllegalArgumentException("Invalid actor timer limit");Objects.requireNonNull(action); }
+    }
     public record ActorSpec(String nativeType, StarterCatalog.Model config, int fuse, float speed,
-            float maxStep, int flags, float offsetX, float offsetY, float height, Action detonation, OrbitSpec orbit,int collisionMask,Object collisionShape) {
+            float maxStep, int flags, float offsetX, float offsetY, float height, Action detonation, OrbitSpec orbit,int collisionMask,Object collisionShape,List<ActorTimer> timers,Action shutdown) {
+        public ActorSpec(String nativeType,StarterCatalog.Model config,int fuse,float speed,float maxStep,int flags,float offsetX,float offsetY,float height,Action detonation,OrbitSpec orbit,int collisionMask,Object collisionShape,List<ActorTimer> timers){
+            this(nativeType,config,fuse,speed,maxStep,flags,offsetX,offsetY,height,detonation,orbit,collisionMask,collisionShape,timers,null);
+        }
+        public ActorSpec(String nativeType,StarterCatalog.Model config,int fuse,float speed,float maxStep,int flags,float offsetX,float offsetY,float height,Action detonation,OrbitSpec orbit,int collisionMask,Object collisionShape){
+            this(nativeType,config,fuse,speed,maxStep,flags,offsetX,offsetY,height,detonation,orbit,collisionMask,collisionShape,List.of());
+        }
         public ActorSpec(String nativeType, StarterCatalog.Model config, int fuse, float speed,float maxStep,int flags,float offsetX,float offsetY,float height,Action detonation,OrbitSpec orbit){
             this(nativeType,config,fuse,speed,maxStep,flags,offsetX,offsetY,height,detonation,orbit,43,null);
         }
@@ -50,6 +59,7 @@ public final class FireCatalog {
         public ActorSpec {
             text(nativeType, 128); Objects.requireNonNull(config); time(fuse); finite(speed); finite(maxStep);
             finite(offsetX); finite(offsetY); finite(height);
+            timers=List.copyOf(timers);if(timers.size()>64)throw new IllegalArgumentException("Too many actor timers");
             if ((nativeType.equals("ORBITAL_BULLET") || nativeType.equals("COMPOUND_ORBITAL_BULLET")) != (orbit != null))
                 throw new IllegalArgumentException("Orbital native actor metadata mismatch");
             if (orbit != null && orbit.compound() != nativeType.equals("COMPOUND_ORBITAL_BULLET"))
@@ -117,7 +127,9 @@ public final class FireCatalog {
     public Action detonation(ActorSpec actor){return actor.detonation()!=null?actor.detonation():detonations.get(actor.config());}
     private static void indexDetonations(Action action,Map<StarterCatalog.Model,Action> result){
         if(action==null)return;
-        if(action.actor()!=null&&action.actor().detonation()!=null){result.putIfAbsent(action.actor().config(),action.actor().detonation());indexDetonations(action.actor().detonation(),result);}
+        if(action.actor()!=null){if(action.actor().detonation()!=null){result.putIfAbsent(action.actor().config(),action.actor().detonation());indexDetonations(action.actor().detonation(),result);}
+            indexDetonations(action.actor().shutdown(),result);
+            for(var timer:action.actor().timers()){indexDetonations(timer.action(),result);indexDetonations(timer.endAction(),result);}}
         for(var child:action.children())indexDetonations(child,result);
     }
 
@@ -133,7 +145,7 @@ public final class FireCatalog {
             }
             row.put("fireRefs", refs); rows.add(row);
         }
-        var root = new LinkedHashMap<String,Object>(); root.put("format","tortodrone-fires"); root.put("version",2); root.put("entries",rows);
+        var root = new LinkedHashMap<String,Object>(); root.put("format","tortodrone-fires"); root.put("version",3); root.put("entries",rows);
         root.put("unsupported",new TreeMap<>(unsupported));
         Files.createDirectories(file.toAbsolutePath().normalize().getParent());
         Files.writeString(file, Json.stringify(root,128), StandardOpenOption.CREATE_NEW);
@@ -143,7 +155,7 @@ public final class FireCatalog {
         try {
             var root = object(Json.parse(Files.readString(file),128), Set.of("format","version","entries","unsupported"));
             int version=integer(root.get("version")); boolean legacy=version==1;
-            if (!"tortodrone-fires".equals(root.get("format")) || version != 1 && version != 2) throw new IOException("Unsupported fire catalogue");
+            if (!"tortodrone-fires".equals(root.get("format")) || version < 1 || version > 3) throw new IOException("Unsupported fire catalogue");
             if (!(root.get("entries") instanceof List<?> rows) || rows.size() > MAX_ENTRIES) throw new IOException("Invalid fire entries");
             var entries = new ArrayList<AttackFire>(); int[] nodes = {0};
             for (Object value : rows) {
@@ -172,7 +184,7 @@ public final class FireCatalog {
     public static String actionJson(Action action)throws IOException{return Json.stringify(action(action,0,new int[]{0}),128);}
     public static Action actionJson(String json)throws IOException{return readAction(Json.parse(json,128),0,new int[]{0},false);}
     private static Object orbit(OrbitSpec o)throws IOException{if(o==null)return null;var m=new LinkedHashMap<String,Object>();m.put("radius",o.radius());m.put("angularSpeed",o.angularSpeed());m.put("startingRotation",o.startingRotation());m.put("flightSpeed",o.flightSpeed());m.put("outDuration",o.outDuration());m.put("lifespan",o.lifespan());m.put("follow",o.follow());m.put("alternateSpin",o.alternateSpin());m.put("secondOrbitRadius",o.secondOrbitRadius());m.put("secondSpeed",o.secondSpeed());m.put("secondStartingRotation",o.secondStartingRotation());return m;}
-    private static Object actor(ActorSpec a,int depth,int[] n)throws IOException{node(depth,n);var m=new LinkedHashMap<String,Object>();m.put("nativeType",a.nativeType());m.put("config",model(a.config(),depth+1,n));m.put("fuse",a.fuse());m.put("speed",a.speed());m.put("maxStep",a.maxStep());m.put("flags",a.flags());m.put("offsetX",a.offsetX());m.put("offsetY",a.offsetY());m.put("height",a.height());m.put("detonation",actionOrNull(a.detonation(),depth+1,n));m.put("orbit",orbit(a.orbit()));m.put("collisionMask",a.collisionMask());m.put("collisionShape",a.collisionShape()==null?null:value(a.collisionShape(),depth+1,n));return m;}
+    private static Object actor(ActorSpec a,int depth,int[] n)throws IOException{node(depth,n);var m=new LinkedHashMap<String,Object>();m.put("nativeType",a.nativeType());m.put("config",model(a.config(),depth+1,n));m.put("fuse",a.fuse());m.put("speed",a.speed());m.put("maxStep",a.maxStep());m.put("flags",a.flags());m.put("offsetX",a.offsetX());m.put("offsetY",a.offsetY());m.put("height",a.height());m.put("detonation",actionOrNull(a.detonation(),depth+1,n));m.put("orbit",orbit(a.orbit()));m.put("collisionMask",a.collisionMask());m.put("collisionShape",a.collisionShape()==null?null:value(a.collisionShape(),depth+1,n));var timers=new ArrayList<Object>();for(var timer:a.timers()){var t=new LinkedHashMap<String,Object>();t.put("delay",timer.delay());t.put("interval",timer.interval());t.put("limit",timer.limit());t.put("action",action(timer.action(),depth+1,n));t.put("endAction",actionOrNull(timer.endAction(),depth+1,n));timers.add(t);}m.put("timers",timers);m.put("shutdown",actionOrNull(a.shutdown(),depth+1,n));return m;}
     private static Object actionOrNull(Action a,int d,int[] n)throws IOException{return a==null?null:action(a,d,n);}
     private static Object model(StarterCatalog.Model m,int depth,int[] n)throws IOException{node(depth,n);return Map.of("name",m.name(),"arguments",values(m.arguments(),depth+1,n));}
     private static Map<String,Object> values(Map<String,Object> args,int d,int[] n)throws IOException {
@@ -198,7 +210,11 @@ public final class FireCatalog {
     }
     private static Action readAction(Object v,int d,int[] n,boolean legacy)throws IOException{node(d,n);if(v==null)return null;v=defaults(v,legacy,Map.of("parameter","","values",List.of()));var m=object(v,Set.of("kind","config","actor","targetType","facingType","collisionSourceType","x","y","rotation","rotationVariance","relative","count","stepSize","steps","collisionMask","stopOnFailure","children","unsupportedType","parameter","values"));if(!(m.get("children") instanceof List<?> list)||list.size()>10_000||!(m.get("values") instanceof List<?> rawValues)||rawValues.size()>10_000)throw new IOException("Invalid action children or argument values");var children=new ArrayList<Action>();for(Object c:list)children.add(readAction(c,d+1,n,legacy));var values=new ArrayList<String>();for(Object item:rawValues)values.add(plainText(item,65536));return new Action(Kind.valueOf(text(m.get("kind"),64)),readModelOrNull(m.get("config"),d+1,n),readActorOrNull(m.get("actor"),d+1,n,legacy),plainText(m.get("targetType"),128),plainText(m.get("facingType"),128),plainText(m.get("collisionSourceType"),128),decimal(m.get("x")),decimal(m.get("y")),decimal(m.get("rotation")),decimal(m.get("rotationVariance")),bool(m.get("relative")),integer(m.get("count")),decimal(m.get("stepSize")),integer(m.get("steps")),integer(m.get("collisionMask")),bool(m.get("stopOnFailure")),children,plainText(m.get("unsupportedType"),256),plainText(m.get("parameter"),1024),values);}
     private static Action readActionOrNull(Object v,int d,int[] n,boolean legacy)throws IOException{return v==null?null:readAction(v,d,n,legacy);}
-    private static ActorSpec readActorOrNull(Object v,int d,int[] n,boolean legacy)throws IOException{if(v==null)return null;node(d,n);v=defaults(v,legacy,Collections.singletonMap("orbit",null));var extra=new HashMap<String,Object>();extra.put("collisionMask",43);extra.put("collisionShape",null);v=defaults(v,true,extra);var m=object(v,Set.of("nativeType","config","fuse","speed","maxStep","flags","offsetX","offsetY","height","detonation","orbit","collisionMask","collisionShape"));return new ActorSpec(text(m.get("nativeType"),128),readModel(m.get("config"),d+1,n),integer(m.get("fuse")),decimal(m.get("speed")),decimal(m.get("maxStep")),integer(m.get("flags")),decimal(m.get("offsetX")),decimal(m.get("offsetY")),decimal(m.get("height")),readActionOrNull(m.get("detonation"),d+1,n,legacy),readOrbit(m.get("orbit")),integer(m.get("collisionMask")),m.get("collisionShape")==null?null:readValue(m.get("collisionShape"),d+1,n));}
+    private static ActorSpec readActorOrNull(Object v,int d,int[] n,boolean legacy)throws IOException{if(v==null)return null;node(d,n);v=defaults(v,legacy,Collections.singletonMap("orbit",null));var extra=new HashMap<String,Object>();extra.put("collisionMask",43);extra.put("collisionShape",null);extra.put("timers",List.of());extra.put("shutdown",null);v=defaults(v,true,extra);var m=object(v,Set.of("nativeType","config","fuse","speed","maxStep","flags","offsetX","offsetY","height","detonation","orbit","collisionMask","collisionShape","timers","shutdown"));return new ActorSpec(text(m.get("nativeType"),128),readModel(m.get("config"),d+1,n),integer(m.get("fuse")),decimal(m.get("speed")),decimal(m.get("maxStep")),integer(m.get("flags")),decimal(m.get("offsetX")),decimal(m.get("offsetY")),decimal(m.get("height")),readActionOrNull(m.get("detonation"),d+1,n,legacy),readOrbit(m.get("orbit")),integer(m.get("collisionMask")),m.get("collisionShape")==null?null:readValue(m.get("collisionShape"),d+1,n),readTimers(m.get("timers"),d+1,n,legacy),readActionOrNull(m.get("shutdown"),d+1,n,legacy));}
+    private static List<ActorTimer> readTimers(Object v,int d,int[] n,boolean legacy)throws IOException {
+        if(!(v instanceof List<?> rows)||rows.size()>64)throw new IOException("Invalid actor timers");
+        var result=new ArrayList<ActorTimer>();for(Object row:rows){node(d,n);var m=object(row,Set.of("delay","interval","limit","action","endAction"));result.add(new ActorTimer(integer(m.get("delay")),integer(m.get("interval")),integer(m.get("limit")),readAction(m.get("action"),d+1,n,legacy),readActionOrNull(m.get("endAction"),d+1,n,legacy)));}return result;
+    }
     private static OrbitSpec readOrbit(Object v)throws IOException{if(v==null)return null;var m=object(v,Set.of("radius","angularSpeed","startingRotation","flightSpeed","outDuration","lifespan","follow","alternateSpin","secondOrbitRadius","secondSpeed","secondStartingRotation"));boolean compound=m.get("secondOrbitRadius")!=null;Float radius=compound?decimal(m.get("secondOrbitRadius")):null;Float speed=compound?decimal(m.get("secondSpeed")):null;Float rotation=compound?decimal(m.get("secondStartingRotation")):null;if(!compound&&(m.get("secondSpeed")!=null||m.get("secondStartingRotation")!=null))throw new IOException("Incomplete compound orbit metadata");return new OrbitSpec(decimal(m.get("radius")),decimal(m.get("angularSpeed")),decimal(m.get("startingRotation")),decimal(m.get("flightSpeed")),integer(m.get("outDuration")),integer(m.get("lifespan")),text(m.get("follow"),128),bool(m.get("alternateSpin")),radius,speed,rotation);}
     private static StarterCatalog.Model readModelOrNull(Object v,int d,int[] n)throws IOException{return v==null?null:readModel(v,d,n);}
     private static StarterCatalog.Model readModel(Object v,int d,int[] n) throws IOException {node(d,n);var m=object(v,Set.of("name","arguments"));if(!(m.get("arguments") instanceof Map<?,?> args)||args.size()>4096)throw new IOException("Invalid fire arguments");var out=new TreeMap<String,Object>();for(var e:args.entrySet())out.put(text(e.getKey(),1024),readValue(e.getValue(),d+1,n));return new StarterCatalog.Model(text(m.get("name"),1024),out);}

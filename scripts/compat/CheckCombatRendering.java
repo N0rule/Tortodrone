@@ -98,7 +98,7 @@ public final class CheckCombatRendering {
             if(trainingOnly)graphical.add("--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
-            if (!client.waitFor(trainingOnly?320:240, TimeUnit.SECONDS)) {
+            if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
             String log = Files.readString(clientLog);

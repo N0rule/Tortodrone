@@ -13,7 +13,7 @@ public final class FireCatalogTest {
             var detonation=new FireCatalog.Action(FireCatalog.Kind.UNSUPPORTED,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"DamageRegion");
             var actor=new FireCatalog.ActorSpec("BULLET",bulletModel,1200,8.5f,-1,4,0.25f,0,0.4f,detonation);
             var orbit=new FireCatalog.OrbitSpec(1.25f,0.33f,0.2f,8f,750,1700,"NONE",true,null,null,null);
-            var orbital=new FireCatalog.ActorSpec("ORBITAL_BULLET",bulletModel,1700,0.33f,-1,4,0,0,0.4f,null,orbit);
+            var orbital=new FireCatalog.ActorSpec("ORBITAL_BULLET",bulletModel,1700,0.33f,-1,4,0,0,0.4f,null,orbit,43,null,List.of(new FireCatalog.ActorTimer(25,100,3,detonation,null)),detonation);
             var compoundOrbit=new FireCatalog.OrbitSpec(2f,-1.5f,0.4f,8f,750,1700,"NONE",false,0.667f,-1.5f,0f);
             var compoundActor=new FireCatalog.ActorSpec("COMPOUND_ORBITAL_BULLET",bulletModel,1700,-1.5f,-1,4,0,0,0.4f,null,compoundOrbit);
             var modifiedSpawn=new FireCatalog.Action(FireCatalog.Kind.EMIT_PROJECTILE,null,orbital,"Source","","",1,0,0.1f,0,true,0,0,0,0,false,List.of(),"","Color",List.of("Red","Blue"));

@@ -38,7 +38,14 @@ public final class CombatRenderingCheck {
         new Action("bash",SWORD,2048,120,287,false),
         new Action("dodge",SWORD,1024,120,286,false),
         new Action("blitz-needle",NEEDLE,4,120,292,true),
-        new Action("blitz-needle-charge",NEEDLE,4,4000,290,true));
+        new Action("blitz-needle-charge",NEEDLE,4,4000,290,true),
+        new Action("amputator","Weapon/Sword/Amputator",4,120,292,false),
+        new Action("amputator-charge","Weapon/Sword/Amputator",4,4000,290,true),
+        new Action("combuster-charge","Weapon/Sword/Combuster",4,4000,290,true),
+        new Action("pulsar","Weapon/Handgun/Pulsar",4,120,292,true),
+        new Action("pulsar-charge","Weapon/Handgun/Pulsar",4,4000,290,true),
+        new Action("alchemer-charge","Weapon/Handgun/Voltech Alchemer Mk II",4,4000,290,true),
+        new Action("tortofist-charge","Weapon/Handgun/Tortafist/Grand Tortofist",4,4000,290,true));
     private final ProjectXApp app;
     private final Path output;
     private final boolean peer;
@@ -55,7 +62,7 @@ public final class CombatRenderingCheck {
     private final List<Future<?>> writes=new ArrayList<>();
     private static final int[] TOUR={2,3,445,30893,318};
     private int tour;
-    private int stage,index,frames,lastStamp,actionStamp,requiredStarted;
+    private int stage,index,frames,lastStamp,actionStamp,requiredStarted,burstFrames;
     private float moveX,moveY;
     private long deadline,started,nextFrame,lastStatus;
     private boolean listening,released,projectile,aftermath,done,passed;
@@ -78,7 +85,7 @@ public final class CombatRenderingCheck {
     private String lastAnimation="";
     private Throwable failure;
 
-    private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?360:trainingOnly?300:260)*1_000_000_000L;}
+    private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
         if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
         boolean peer=args.length>=4&&args[0].equals("--peer");
@@ -114,7 +121,7 @@ public final class CombatRenderingCheck {
                     "Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));}
                 finally{Arrays.fill(password,'\0');}
             }
-            for(String item:List.of(SWORD,GUN,BOMB,NEEDLE))store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
+            for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
     private void tick(){
@@ -383,7 +390,7 @@ public final class CombatRenderingCheck {
                 }
                 var body=(com.threerings.config.ConfigReference<?>)view.PO().acU().Mv().kW().get("Model");
                 if(body==null||body.kW().containsKey("Weapon")||body.kW().containsKey("Shield")||body.kW().containsKey("Weapon Idle"))throw new AssertionError("Interior base model duplicates held equipment");
-                activities.clear();renderedActivities.clear();animations.clear();capturedProjectiles.clear();frames=0;projectile=false;released=false;aftermath=false;lastAnimation="";
+                activities.clear();renderedActivities.clear();animations.clear();capturedProjectiles.clear();frames=0;burstFrames=0;projectile=false;released=false;aftermath=false;lastAnimation="";
                 previousActors.clear();previousActors.addAll(authoritative.keySet());actionStamp=lastStamp;requiredStarted=Integer.MAX_VALUE;
                 started=now;nextFrame=now+60_000_000L;flags(view,ACTIONS.get(index).flags);stage=6;
                 System.out.println("ACTION: "+ACTIONS.get(index).name);return;
@@ -400,12 +407,14 @@ public final class CombatRenderingCheck {
                 // retained full-resolution frames per press/release phase too.
                 if(now>=nextFrame&&frames<3){capture(action.name+(released?"-release-":"-")+String.format(Locale.ROOT,"%02d",frames++));nextFrame=now+300_000_000L;}
                 if(!aftermath&&action.name.equals("bomb-charge")&&elapsed>action.held+1800){capture("bomb-charge-aftermath");aftermath=true;}
+                if(action.name.equals("combuster-charge")&&burstFrames<3&&elapsed>action.held+1100+300*burstFrames)
+                    capture("combuster-bursts-"+burstFrames++);
                 // A held gun press fires normally before entering charge. Only
                 // projectiles born after the required release activity qualify.
                 for(var actor:authoritative.values())if(activities.contains(action.required)
                     &&!previousActors.contains(actor.vw())&&actor.adX()>=Math.max(actionStamp,requiredStarted)
                     &&Set.of("Bullet","Bomb","OrbitalBullet","CompoundOrbitalBullet").contains(actor.getClass().getSimpleName())
-                    &&(int)field(actor,"_clientOid").get(actor)==app.CT().xL()){
+                    &&ownedProjectile(actor,action)){
                     var sprite=view.gk(actor.vw());
                     if(sprite!=null&&sprite.acL().getConfig()!=null&&sprite.acL().isVisible()&&capturedProjectiles.add(actor.vw())){
                         if(action.name.startsWith("blitz-needle")){
@@ -439,10 +448,17 @@ public final class CombatRenderingCheck {
             // Scene identity changes before its first rendered frame. Let Haven
             // settle before saving the return image and reporting completion.
             if(stage==7&&view.sceneId()==1){started=now;stage=10;return;}
-            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, eleven combat actions, native animations and server projectile sprites");app.shutdown();}
+            if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, eighteen combat actions, native animations and server projectile sprites");app.shutdown();}
         }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdown();
             try{images.awaitTermination(15,TimeUnit.SECONDS);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
             images.shutdownNow();app.shutdown();}
+    }
+    private boolean ownedProjectile(Actor actor,Action action)throws Exception {
+        if((int)field(actor,"_clientOid").get(actor)==app.CT().xL())return true;
+        if(!actor.getClass().getSimpleName().equals("Bomb"))return (int)field(actor,"_faction").get(actor)==app.CT().pawnId;
+        String config=actor.Mv().getName();
+        return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
+            ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
     }
     private void peerTick(View view)throws Exception {
         if(!Files.exists(output.resolve("peer-ready"))){capture("town-peer");Files.writeString(output.resolve("peer-ready"),"");}

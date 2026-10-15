@@ -49,7 +49,7 @@ public final class FireCompatibility {
     }
     static void collect(FireCatalog.Action action,Map<String,FireCatalog.ActorSpec> actors,Map<String,StarterCatalog.Model> effects){
         if(action==null)return;
-        if(action.actor()!=null){var spec=action.actor();if(spec.nativeType().equals("BULLET")||spec.nativeType().equals("BOMB")||spec.orbit()!=null)actors.putIfAbsent(spec.nativeType()+shape(spec.config()),spec);collect(spec.detonation(),actors,effects);}
+        if(action.actor()!=null){var spec=action.actor();if(spec.nativeType().equals("BULLET")||spec.nativeType().equals("BOMB")||spec.orbit()!=null)actors.putIfAbsent(spec.nativeType()+shape(spec.config()),spec);collect(spec.detonation(),actors,effects);collect(spec.shutdown(),actors,effects);for(var timer:spec.timers()){collect(timer.action(),actors,effects);collect(timer.endAction(),actors,effects);}}
         if(action.kind()==FireCatalog.Kind.FIRE_EFFECT&&action.config()!=null)effects.putIfAbsent(shape(action.config()),action.config());
         for(var child:action.children())collect(child,actors,effects);
     }
