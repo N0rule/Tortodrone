@@ -64,9 +64,9 @@ public final class TestWire {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
-        check(in.readBoolean() && in.readInt() == 15, "login service count");
+        check(in.readBoolean() && in.readInt() == 16, "login service count");
         Set<String> services = new HashSet<>();
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 16; i++) {
             String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
@@ -85,7 +85,8 @@ public final class TestWire {
         check(in.readBoolean() && in.readInt() == 1 && in.readInt() == port, "advertised TCP port");
         check(in.readBoolean() && in.readInt() == 0, "no UDP endpoints");
         check(in.readInt() == 1, "server object identity");
-        for (int i = 1; i < 10; i++) check(in.readInt() == 0, "unavailable optional object");
+        check(in.readInt() == 4,"Energy Exchange object identity");
+        for (int i = 2; i < 10; i++) check(in.readInt() == 0, "unavailable optional object");
         end(in); return oid;
     }
 

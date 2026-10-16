@@ -13,6 +13,9 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "exchange-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("exchange-check expects game-directory");fixture="ExchangeCompatibility";
+            }
             case "previews" -> {
                 if (args.length != 2) throw new IllegalArgumentException("previews expects only a game directory");
                 fixture = "PreviewCompatibility";

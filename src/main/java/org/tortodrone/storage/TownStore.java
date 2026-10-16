@@ -15,6 +15,7 @@ public final class TownStore {
     public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;}
     static void initialize(Connection c)throws SQLException{
         DepotStore.initialize(c);
+        EnergyExchange.initialize(c);
         try(var s=c.createStatement()){
             s.execute("ALTER TABLE inventory_items ADD COLUMN level INTEGER NOT NULL DEFAULT 0 CHECK(level BETWEEN 0 AND 99)");
             s.execute("ALTER TABLE inventory_items ADD COLUMN heat_progress REAL NOT NULL DEFAULT 0 CHECK(heat_progress BETWEEN 0 AND 1)");
@@ -97,27 +98,30 @@ public final class TownStore {
     }
     private List<Integer> availability(Connection c,WorldProfile p,TownCatalog.Station station,long cycle)throws SQLException{
         var result=new ArrayList<Integer>();for(var good:rules.goods(station.shop(),cycle,p.worldId())){
-            int available=-1;if(cycle!=0&&good.limit()!=0){int purchased=0;try(var s=c.prepareStatement("SELECT purchased FROM town_purchases WHERE world_id=? AND catalog=? AND item=? AND cycle=?")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);try(var r=s.executeQuery()){if(r.next())purchased=r.getInt(1);}}available=Math.max(0,good.limit()-purchased);}result.add(available);
+            int available=-1;if(good.limit()>0){int purchased=0;try(var s=c.prepareStatement("SELECT purchased FROM town_purchases WHERE world_id=? AND catalog=? AND item=? AND cycle=?")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);try(var r=s.executeQuery()){if(r.next())purchased=r.getInt(1);}}available=Math.max(0,good.limit()-purchased);}result.add(available);
         }return List.copyOf(result);
     }
     public Result shop(int account,int knight,long auth,TownCatalog.Station station,long cycle,Map<Integer,Integer> buys,Map<Long,Integer> sells)throws IOException{
         return change(account,knight,auth,(c,p)->{
             if(cycle!=0&&cycle<=System.currentTimeMillis())throw new IOException("Shop catalogue changed; reopen the shop");
             var goods=rules.goods(station.shop(),cycle,p.worldId());var available=availability(c,p,station,cycle);var consume=new HashMap<Long,Integer>(sells);var tokens=new HashMap<String,Integer>();
+            var purchased=new HashMap<String,Integer>();var limits=new HashMap<String,Integer>();for(int i=0;i<goods.size();i++)if(available.get(i)>=0)limits.merge(goods.get(i).item(),available.get(i),Math::min);
             long crowns=0,energy=0;
             for(var sale:sells.entrySet()){var item=owned(p,sale.getKey());var def=items.require(item.config());int price=rules.price(item.config(),def.rarity(),false);if(sale.getValue()<1||sale.getValue()>item.count()||item.equippedSlot()!=null||item.permanent()||price<=0)throw new IOException("Item cannot be sold");crowns+=(long)price*sale.getValue();}
             for(var buy:buys.entrySet()){
                 int index=buy.getKey(),count=buy.getValue();if(index<0||index>=goods.size()||count<1||count>9999||available.get(index)>=0&&count>available.get(index))throw new IOException("This good is not available");
                 var good=goods.get(index);var def=items.require(good.item());int price=good.price()>=0?good.price():rules.price(good.item(),def.rarity(),true);
+                purchased.merge(good.item(),count,Math::addExact);
                 if(!good.token().isEmpty()){long tokenCount=(long)good.tokenCount()*count;if(tokenCount>9999)throw new IOException("Token requirement exceeds limit");tokens.merge(good.token(),(int)tokenCount,Math::addExact);}else{crowns-=(long)price*count;energy+=(long)good.energy()*count;}
             }
+            for(var entry:purchased.entrySet())if(limits.containsKey(entry.getKey())&&entry.getValue()>limits.get(entry.getKey()))throw new IOException("This good is not available");
             for(var required:tokens.entrySet()){int needed=required.getValue();for(var held:p.items())if(held.config().equals(required.getKey())&&held.equippedSlot()==null&&!held.permanent()){
                     int free=held.count()-consume.getOrDefault(held.id(),0),used=Math.min(Math.max(0,free),needed);if(used>0){consume.merge(held.id(),used,Math::addExact);needed-=used;}if(needed==0)break;}
                 if(needed!=0)throw new IOException("m.nsf_tokens");}
             if(crowns+ p.crowns()<0||crowns+p.crowns()>Integer.MAX_VALUE||energy<0||energy>p.energy())throw new IOException("m.insufficient_funds");
             credit(c,p.worldId(),Math.toIntExact(crowns),-(int)energy);for(var use:consume.entrySet())consume(c,p,use.getKey(),use.getValue());
             for(var buy:buys.entrySet()){var good=goods.get(buy.getKey());long quantity=(long)good.count()*buy.getValue();if(quantity>9999)throw new IOException("Purchase count exceeds limit");var d=items.require(good.item());boolean locked=station.shop().preparer().equals("LOCKED")||station.shop().preparer().equals("LOCK_NON_STACKABLE")&&!d.stackable();create(c,p,good.item(),(int)quantity,locked,0,0,List.of());
-                if(cycle!=0&&good.limit()!=0)try(var s=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,?,?,?,?) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+excluded.purchased")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);s.setInt(5,buy.getValue());s.executeUpdate();}
+                if(limits.containsKey(good.item()))try(var s=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,?,?,?,?) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+excluded.purchased")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);s.setInt(5,buy.getValue());s.executeUpdate();}
             }return null;
         });
     }

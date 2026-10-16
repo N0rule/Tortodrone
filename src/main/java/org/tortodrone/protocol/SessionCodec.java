@@ -25,6 +25,7 @@ public final class SessionCodec {
     public static final int SERVER_OID = 1;
     public static final int CONFIG_OID = 2;
     public static final int INVOCATION_OID = 3;
+    public static final int EXCHANGE_OID = 4, EXCHANGE_SERVICE = 1;
     /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
     public static final int ADMIN_SERVICE = 13;
     /** Handles needed by current login observers; operations remain explicitly limited. */
@@ -84,7 +85,7 @@ public final class SessionCodec {
             // Current build: server, exchange, PvP, PvP info, mission, open hall,
             // admin, status, place browser, client timings.
             out.writeInt(SERVER_OID);
-            out.writeInt(0); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
+            out.writeInt(EXCHANGE_OID); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
             out.writeInt(0); out.writeInt(0); // mission, open hall
             // Stock ProjectXSession only names the admin object for ADMIN-tier accounts. A
             // support-plus account keeps zero and still reaches the admin service, which is
@@ -194,6 +195,19 @@ public final class SessionCodec {
         });
     }
 
+    public byte[] exchange(short messageId,org.tortodrone.town.ExchangeState.Book book)throws IOException{
+        return frame(out->{objectHeader(out,messageId,"com.threerings.projectx.exchange.data.ExchangeObject",EXCHANGE_OID);
+            type(out,"com.threerings.projectx.exchange.data.ExchangeMarshaller");out.writeInt(EXCHANGE_OID);out.writeInt(EXCHANGE_SERVICE);
+            out.writeInt(book.lastPrice());exchangeLevels(out,book.buys());exchangeLevels(out,book.sells());});
+    }
+    public byte[] exchangeChanged(org.tortodrone.town.ExchangeState.Book book)throws IOException{
+        return frame(out->{eventHeader(out,"CompoundEvent",EXCHANGE_OID);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);
+            attribute(out,EXCHANGE_OID,"lastPrice",o->value(o,book.lastPrice()));attribute(out,EXCHANGE_OID,"buyOffers",o->exchangeLevels(o,book.buys()));attribute(out,EXCHANGE_OID,"sellOffers",o->exchangeLevels(o,book.sells()));});
+    }
+    private void exchangeLevels(DataOutputStream out,List<org.tortodrone.town.ExchangeState.Level> levels)throws IOException{
+        type(out,"[Lcom.threerings.projectx.exchange.data.ConsolidatedOffer;");out.writeInt(levels.size());
+        for(var level:levels){type(out,"com.threerings.projectx.exchange.data.ConsolidatedOffer");out.writeInt(level.volume());out.writeInt(level.price());}
+    }
     private void objectHeader(DataOutputStream out, short id, String name, int oid) throws IOException {
         type(out, PREFIX + "ObjectResponse"); out.writeShort(id); type(out, name); out.writeInt(oid);
     }
@@ -573,6 +587,7 @@ public final class SessionCodec {
 
     private void townValue(DataOutputStream out,Object value)throws IOException {
         if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
+        else if(value instanceof org.tortodrone.town.ExchangeState.Offer offer){type(out,"com.threerings.coin.data.CoinExOfferInfo");out.writeInt(offer.id());out.writeBoolean(offer.buy());out.writeInt(offer.price());out.writeInt(offer.volume());}
         else if(value instanceof org.tortodrone.town.TownCatalog.DepotOffers offers){
             type(out,"java.util.HashMap");out.writeInt(offers.goods().size());for(var entry:new java.util.TreeMap<>(offers.goods()).entrySet()){
                 value(out,entry.getKey());type(out,"com.threerings.projectx.mission.data.RankGood");var g=entry.getValue().good();

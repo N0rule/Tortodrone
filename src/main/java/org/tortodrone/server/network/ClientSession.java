@@ -88,6 +88,8 @@ final class ClientSession {
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
+                            } else if (request.objectId() == SessionCodec.EXCHANGE_OID) {
+                                try{world.subscribeExchange(request.messageId());}catch(IOException unavailable){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),unavailable.getMessage()));}
                             } else if(world.ownsTrade(request.objectId())) {
                                 try{world.subscribeTrade(request.objectId(),request.messageId());}
                                 catch(IOException expired){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),"Trade is no longer available"));}
@@ -106,6 +108,7 @@ final class ClientSession {
                             }
                             if(world.ownsScene(request.objectId()))world.unsubscribe();
                             if(world.ownsTrade(request.objectId()))world.unsubscribeTrade(request.objectId());
+                            if(request.objectId()==SessionCodec.EXCHANGE_OID)world.unsubscribeExchange();
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -165,6 +168,7 @@ final class ClientSession {
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
             if(world.interiorPartyInvocation(invocation))return;
+            if(world.exchangeInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;
             if(world.townInvocation(invocation))return;
             if(world.conversationInvocation(invocation))return;

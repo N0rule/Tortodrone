@@ -132,6 +132,31 @@ final class WorldSession implements AutoCloseable {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));output.send(()->codec.townState(oid,after));
     }
+    private boolean exchangeSubscribed;
+    private long exchangeRevision=-1;
+    synchronized boolean wantsExchange(){return !closed&&exchangeSubscribed;}
+    synchronized void subscribeExchange(short message)throws IOException{
+        if(closed||!selected())throw new IOException("Select a knight first");
+        try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}var book=characters.exchange().book();exchangeSubscribed=true;exchangeRevision=book.revision();output.send(()->codec.exchange(message,book));
+    }
+    synchronized void unsubscribeExchange(){exchangeSubscribed=false;exchangeRevision=-1;}
+    synchronized void refreshExchange(org.tortodrone.town.ExchangeState.Book book)throws IOException{
+        if(!closed&&exchangeSubscribed&&book.revision()>exchangeRevision){exchangeRevision=book.revision();output.send(()->codec.exchangeChanged(book));}
+    }
+    synchronized boolean exchangeInvocation(SessionDecoder.Invocation request)throws IOException{
+        if(request.oid()!=SessionCodec.EXCHANGE_OID||request.service()!=SessionCodec.EXCHANGE_SERVICE)return false;
+        var a=request.arguments();int method=request.method();
+        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(method==1?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid Energy Exchange listener");
+        boolean valid=switch(method){case 1->a.size()==2&&a.getFirst() instanceof Integer;case 2->a.size()==1;case 3->a.size()==5&&a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean&&a.get(3) instanceof Boolean;default->false;};
+        if(!valid)throw new SessionDecoder.Rejected("Invalid Energy Exchange request");
+        try{
+            if(closed||!selected()||!entered||!subscribed||!exchangeSubscribed||!scene.map().town()&&!scene.map().kind().equals("training"))throw new IOException("Open the Energy Exchange in town first");
+            if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+            var exchange=characters.exchange();var result=switch(method){case 1->exchange.cancel(characters.accountId(),knight.id(),authRevision,(Integer)a.getFirst());case 2->exchange.offers(characters.accountId(),knight.id(),authRevision);default->exchange.trade(characters.accountId(),knight.id(),authRevision,(Integer)a.get(0),(Integer)a.get(1),(Boolean)a.get(2),(Boolean)a.get(3));};
+            townChanged(result);refreshExchange(exchange.book());
+            if(method==1)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));else output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));
+        }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
+    }
     private final Map<Integer,org.tortodrone.storage.DepotStore.Quote> depotOffers=new HashMap<>();
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=16)return false;
