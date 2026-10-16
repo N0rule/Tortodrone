@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit;
 /** Read-only installed-client exporters/checks, with disposable home/preferences and Java 25 compilation. */
 public final class StockTools {
     public static void main(String[] args) throws Exception {
-        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check game-directory [arguments]");
+        if (args.length < 2) throw new IllegalArgumentException("Usage: java scripts/StockTools.java previews|items|weapons|fires|equipment|scene|haven|town|town-check|recipes|craft-check game-directory [arguments]");
         Path project = Path.of("").toAbsolutePath(), game = Path.of(args[1]).toAbsolutePath();
         if (!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))) throw new IOException("Missing installed stock game JAR");
         String fixture;
@@ -58,6 +58,15 @@ public final class StockTools {
             }
             case "town-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("town-check expects game-directory");fixture="TownCompatibility";
+            }
+            case "recipes" -> {
+                if(args.length!=3)throw new IllegalArgumentException("recipes expects game-directory fresh-output-directory");
+                fixture="RecipeCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/RecipeCatalogExport.java"));
+            }
+            case "craft-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("craft-check expects game-directory");fixture="CraftCompatibility";
+                sources.add(project.resolve("scripts/compat/CraftCompatibility.java"));
             }
             case "training-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("training-check expects game-directory");fixture="TrainingCompatibility";

@@ -202,6 +202,10 @@ final class WorldSession implements AutoCloseable {
         if(townDialog!=null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1){
             if(a.size()!=1||!(a.getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid Town dialog close");if(created!=townCreated)return false;closeTownDialog();return true;
         }
+        if(townDialog==null&&conversation==null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1&&a.size()==1&&a.getFirst() instanceof Long){
+            // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
+            output.send(()->codec.conversationDialog(oid,scene.oid(),null,null,null,0));return true;
+        }
         boolean open=ownsScene(request.oid())&&request.service()==11;
         boolean operation=ownsScene(request.oid())&&request.service()>=100;
         boolean sprite=global&&request.service()==14;

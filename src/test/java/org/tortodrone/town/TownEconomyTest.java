@@ -75,6 +75,17 @@ public final class TownEconomyTest {
             check(revived.items().stream().filter(i->i.id()==spark).findFirst().orElseThrow().count()==1&&revived.energy()==beforeRevive.energy(),"Spark revive consumes exactly one owned unit without charging energy");
             db.currency("Alice","Alice-Knight",a,-1,Currency.ENERGY,100);
             check(town.revive(a,1,1,50).profile().energy()==revived.energy()+50,"native buy-and-use approval charges the archive's 50 energy cost");
+            // Stock machine-catalog crafting: the Battle Sprite alchemy machine serves its own recipes without learning them.
+            var station=rules.station("scene.1.6837.39");check(station!=null&&!station.recipes().isEmpty(),"the Battle Sprite machine serves a native catalog");
+            for(String text:station.recipes())check(rules.recipe(text)!=null,"machine catalog recipe "+text+" resolves");
+            var mote=rules.recipe("Sprite/Food/Power Mote");check(mote!=null,"sprite food recipe imported from the stock machine");
+            refused(()->town.craft(a,1,1,"Sprite/Food/Power Mote",new long[0],false,false));
+            grant(db,items,"Alice","Alice-Knight","Material/Beast Scale",2);grant(db,items,"Alice","Alice-Knight","Mineral/Inventory/Crimsonite",5);
+            long scale=id(db.worldProfile(a,1,1),"Material/Beast Scale"),crimsonite=id(db.worldProfile(a,1,1),"Mineral/Inventory/Crimsonite");
+            var beforeFood=db.worldProfile(a,1,1);refused(()->town.craft(b,1,1,"Sprite/Food/Power Mote",new long[]{scale,crimsonite},false,false));
+            var craftedFood=town.craft(a,1,1,"Sprite/Food/Power Mote",new long[]{scale,crimsonite},false,true);
+            check(craftedFood.profile().crowns()==beforeFood.crowns()-mote.cost(items.require("Food/Power Mote").rarity()),"machine-catalog sprite food charges the stock rarity price");
+            check(!db.worldProfile(a,1,1).items().stream().anyMatch(i->i.id()==scale||i.id()==crimsonite)&&db.worldProfile(a,1,1).items().stream().anyMatch(i->i.config().equals("Food/Power Mote")),"machine-catalog sprite food consumes its native ingredients exactly once");
             System.out.println("PASS: Town crafting, sprite persistence, auction escrow, mail ownership and rollback");
         }finally{try(var paths=Files.walk(home)){for(var file:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(file);}}
     }
