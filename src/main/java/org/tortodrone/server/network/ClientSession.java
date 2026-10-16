@@ -109,6 +109,7 @@ final class ClientSession {
                             if(world.ownsScene(request.objectId()))world.unsubscribe();
                             if(world.ownsTrade(request.objectId()))world.unsubscribeTrade(request.objectId());
                             if(request.objectId()==SessionCodec.EXCHANGE_OID)world.unsubscribeExchange();
+                            world.unsubscribeInteriorParty(request.objectId());
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -167,6 +168,7 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if(world.partyInvocation(invocation))return;
             if(world.interiorPartyInvocation(invocation))return;
             if(world.exchangeInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;

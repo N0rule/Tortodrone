@@ -8,16 +8,20 @@ import java.util.*;
 public final class SceneRegistry {
     public static final String ZONE_RECEIVER="2d900cf54355111b4bb4befcdff42b82";
     public static final class Instance {
-        private final int oid,index;
+        private final int oid,index,partyOwner;
         private final SceneCatalog.MapScene map;
         private final SceneSimulation simulation;
-        public Instance(int oid,int index,SceneCatalog.MapScene map){this.oid=oid;this.index=index;this.map=map;simulation=new SceneSimulation(this);}
+        public Instance(int oid,int index,SceneCatalog.MapScene map){this(oid,index,map,0);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;simulation=new SceneSimulation(this);}
+        public int partyOwner(){return partyOwner;}
         public int oid(){return oid;}
         public int index(){return index;}
         public SceneCatalog.MapScene map(){return map;}
         public SceneSimulation simulation(){return simulation;}
     }
     private final SceneCatalog catalog;
+    private final PartyRegistry parties=new PartyRegistry();
+    public PartyRegistry parties(){return parties;}
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
     public org.tortodrone.town.TownCatalog town(){return town;}
     public void town(org.tortodrone.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
@@ -35,6 +39,7 @@ public final class SceneRegistry {
     private final Map<Integer,List<Instance>> instances=new HashMap<>();
     private record InteriorKey(int scene,int worldId){}
     private final Map<InteriorKey,Instance> interiors=new HashMap<>();
+    private final Map<Instance,Set<Integer>> interiorLeases=new IdentityHashMap<>();
     // Static places end before 138; player/trade objects start at 1000. Keep
     // active solo interior places and their party objects in disjoint ranges.
     private final ArrayDeque<Integer> interiorOids=new ArrayDeque<>();
@@ -71,19 +76,28 @@ public final class SceneRegistry {
         if(copies==null||index<0||index>=copies.size())throw new IOException("Scene instance is not available");return copies.get(index);
     }
     public synchronized Instance destination(int scene,int worldId)throws IOException {
+        return destination(scene,worldId,null);
+    }
+    public synchronized Instance destination(int scene,int worldId,PartyRegistry.Member member)throws IOException {
         var map=catalog.scene(scene);
         if(!map.town()) {
             if(worldId<1)throw new IOException("Invalid interior owner");
-            var key=new InteriorKey(scene,worldId);var existing=interiors.get(key);
-            if(existing!=null)return existing;
+            int owner=map.kind().equals("training")&&member!=null?parties.owner(member,worldId):0;
+            var key=new InteriorKey(scene,owner==0?worldId:-owner);var existing=interiors.get(key);
+            if(existing!=null){interiorLeases.get(existing).add(worldId);return existing;}
             var oid=interiorOids.pollFirst();if(oid==null)throw new IOException("Interior capacity is full; try again later");
-            var created=new Instance(oid,0,map);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);return created;
+            var created=new Instance(oid,0,map,owner);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
     }
     public synchronized void release(Instance scene,int worldId) {
         if(scene==null||scene.map().town())return;
-        if(interiors.remove(new InteriorKey(scene.map().id(),worldId),scene))interiorOids.addLast(scene.oid());
+        var leases=interiorLeases.get(scene);if(leases==null)return;leases.remove(worldId);
+        if(leases.isEmpty()&&scene.simulation().playerCount()==0){interiorLeases.remove(scene);interiors.values().removeIf(value->value==scene);interiorOids.addLast(scene.oid());}
+    }
+    public boolean authorized(Instance scene,int world,PartyRegistry.Member member){
+        if(scene.partyOwner()==0)return true;
+        try{return parties.owner(member,world)==scene.partyOwner();}catch(IOException invalid){return false;}
     }
     public static synchronized SceneRegistry system()throws IOException {
         if(system==null) {

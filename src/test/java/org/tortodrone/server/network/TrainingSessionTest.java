@@ -35,7 +35,8 @@ public final class TrainingSessionTest {
                 var begin=WorldSession.class.getDeclaredMethod("beginPortal",ScenePortals.Trigger.class);begin.setAccessible(true);
                 synchronized(world){begin.invoke(world,portal);}
                 world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(scenes.catalog().scene(294).zone(),294,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)3))));
-                var place=scenes.destination(294,characters.worldProfile(knight.name(),1).worldId());int party=SessionCodec.interiorPartyOid(place);
+                var partyField=WorldSession.class.getDeclaredField("partyMember");partyField.setAccessible(true);var partyMember=(PartyRegistry.Member)partyField.get(world);
+                var place=scenes.destination(294,characters.worldProfile(knight.name(),1).worldId(),partyMember);int party=scenes.parties().view(partyMember).oid();
                 world.subscribeInteriorParty((short)4);world.subscribe((short)5);world.entered();
                 var chat=new SessionDecoder.Invocation(party,SceneChat.PARTY_SERVICE,1,List.of("training-chat-fixture",(byte)0));
                 check(!world.interiorPartyInvocation(chat),"party chat is routed to its SpeakMarshaller instead of the revive service");
