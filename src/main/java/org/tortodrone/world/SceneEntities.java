@@ -17,6 +17,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
         final SceneStatus status;
         final Object shape;
+        final int collisionFlags;
+        final boolean circularPawnBounds,compoundPawnBounds;
+        final float pawnRadius,pawnMinX,pawnMinY,pawnMaxX,pawnMaxY;
+        final SceneCollision.PawnShape pawnShape;
+        SceneCollision.PawnShape posedPawnShape;
+        float pawnX,pawnY,pawnRotation;
         KnightCombat.Impulse impulse;int impulseAdvanced;
         final Map<Integer,Integer> hazardHits=new HashMap<>();
         final Set<Integer> refusedPickups=new HashSet<>();
@@ -27,11 +33,27 @@ public final class SceneEntities implements SceneWeapons.Targets {
             activityStarted=stateEntered=stamp;
             status=new SceneStatus(content,true);
             var preparedShape=spec.model("source-shape");shape=preparedShape==null?null:preparedShape.arguments().get("value");
+            collisionFlags=spec.integer("collision-flags",0);
+            circularPawnBounds=spec.fields().containsKey("radius");compoundPawnBounds=spec.text("shape","").equals("Compound")&&shape!=null;
+            pawnRadius=spec.number("radius",0);pawnMinX=spec.number("bounds-min-x",-spec.number("width",0)/2);pawnMaxX=spec.number("bounds-max-x",spec.number("width",0)/2);
+            pawnMinY=spec.number("bounds-min-y",-spec.number("height",0)/2);pawnMaxY=spec.number("bounds-max-y",spec.number("height",0)/2);
+            pawnShape=collisionFlags==0?null:SceneCollision.pawnShape(spec,shape);
             speed=spec.number("speed",0);
             faction=spec.integer("faction",0);
             if(kind.equals("Switch"))flags|=2; // Native Switch constructor's START flag, including help bubbles.
             if(spec.flag("start-open",false))flags|=2;
             cycle=spec.text("cycle","");int split=cycle.lastIndexOf('|');if(split>=0)cycle=cycle.substring(split+1);
+        }
+        boolean containsPawn(float px,float py){
+            if(circularPawnBounds)return Math.hypot(x-px,y-py)<=pawnRadius+ScenePortals.PAWN_RADIUS;
+            float dx=px-x,dy=py-y,c=(float)Math.cos(rotation),s=(float)Math.sin(rotation),tx=dx*c+dy*s,ty=-dx*s+dy*c;
+            if(compoundPawnBounds)return SceneShape.intersects(shape,tx,ty,ScenePortals.PAWN_RADIUS);
+            float gapX=Math.max(pawnMinX-tx,Math.max(0,tx-pawnMaxX)),gapY=Math.max(pawnMinY-ty,Math.max(0,ty-pawnMaxY));
+            return gapX*gapX+gapY*gapY<=ScenePortals.PAWN_RADIUS*ScenePortals.PAWN_RADIUS;
+        }
+        SceneCollision.Penetration penetration(float px,float py){
+            if(posedPawnShape==null||pawnX!=x||pawnY!=y||pawnRotation!=rotation){posedPawnShape=pawnShape.at(x,y,rotation);pawnX=x;pawnY=y;pawnRotation=rotation;}
+            return posedPawnShape.penetration(px,py,ScenePortals.PAWN_RADIUS);
         }
         ActorState snapshot(){return new ActorState(id,0,"",0,created,x,y,rotation,direction,flags,activity,activityStarted,config,false,null,null,
             new SceneEntityState(kind,destroyed,speed,spec.number("radius",0),
@@ -40,6 +62,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private final SceneContent content;private final CollisionMap terrain;
     private final SceneCollision staticCollision;
+    private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
     private record Link(Entity entity,int stamp,boolean ghost) { }
@@ -65,7 +88,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         this(content,terrain,SceneCollision.empty());
     }
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
-        this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);int stamp=SceneClock.now();
+        this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
         for(var binding:content.entries())spawn(binding,binding.spec(),null,stamp);
     }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
@@ -355,28 +378,16 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE)continue;
             if(e.carrier!=0)continue;
             if(e.kind.equals("Door")&&(e.flags&6)==2)continue;
-            int mask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));
-            if((e.spec.integer("collision-flags",0)&mask)!=0&&e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS))return false;
+            if((e.collisionFlags&pawnCollisionMask)!=0&&e.containsPawn(x,y))return false;
         }return true;
     }
     /** Same mask and live actor exclusions as pawn collision, retaining the separating direction. */
     public SceneCollision.Penetration penetration(float x,float y,int ignore){
         var result=SceneCollision.Penetration.NONE;
-        int mask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));
         for(var e:entities.values()){
             if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2
-                    ||(e.spec.integer("collision-flags",0)&mask)==0||!e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS))continue;
-            Object shape=e.shape;
-            if(shape==null){
-                if(e.spec.fields().containsKey("radius"))shape=new FireCatalog.DataValue("Shape$Circle",Map.of("radius",e.spec.number("radius",0)));
-                else{
-                    float minX=e.spec.number("bounds-min-x",-e.spec.number("width",0)/2),maxX=e.spec.number("bounds-max-x",e.spec.number("width",0)/2);
-                    float minY=e.spec.number("bounds-min-y",-e.spec.number("height",0)/2),maxY=e.spec.number("bounds-max-y",e.spec.number("height",0)/2);
-                    var vertices=new ArrayList<Object>();for(float[] p:new float[][]{{minX,minY},{maxX,minY},{maxX,maxY},{minX,maxY}})vertices.add(new FireCatalog.DataValue("Vector2f",Map.of("x",p[0],"y",p[1])));
-                    shape=new FireCatalog.DataValue("Shape$Polygon",Map.of("vertices",new FireCatalog.ListValue("Vector2f",vertices)));
-                }
-            }
-            result=result.deepest(SceneCollision.penetration(shape,e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS));
+                    ||(e.collisionFlags&pawnCollisionMask)==0||!e.containsPawn(x,y))continue;
+            result=result.deepest(e.penetration(x,y));
         }
         return result;
     }

@@ -57,6 +57,7 @@ public final class SceneCollisionCompatibility {
             @SuppressWarnings("unchecked") var ref=(ConfigReference<ActorConfig>)FireCompatibility.reference(spec.config());
             var original=cm.a(ActorConfig.class,ref).ai(cm);
             var nativeShape=original.shape.acP().d(new Transform2D(new Vector2f(1.25f,-.75f),.63f));
+            var compiledShape=SceneCollision.pawnShape(data.arguments().get("value")).at(1.25f,-.75f,.63f);
             for(float dx=-1.71f;dx<=1.71f;dx+=.19f)for(float dy=-1.71f;dy<=1.71f;dy+=.19f){
                 float x=1.25f+dx,y=-.75f+dy;
                 boolean expected=nativeShape.b(disc.acP().d(new Transform2D(new Vector2f(x,y),0)));
@@ -65,7 +66,7 @@ public final class SceneCollisionCompatibility {
                 if(spec.contains(1.25f,-.75f,.63f,x,y,disc.radius)!=expected)throw new AssertionError("Dynamic pawn collision differs: "+spec.config().name());
                 if(expected){
                     var separating=nativeShape.a(disc.acP().d(new Transform2D(new Vector2f(x,y),0)),new Vector2f());
-                    var actualSeparation=SceneCollision.penetration(data.arguments().get("value"),1.25f,-.75f,.63f,x,y,disc.radius);
+                    var actualSeparation=compiledShape.penetration(x,y,disc.radius);
                     separation(separating,actualSeparation,spec.config().name()+" at "+dx+","+dy);
                 }
                 dynamic++;

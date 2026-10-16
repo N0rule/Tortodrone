@@ -29,10 +29,29 @@ public final class SceneCollision {
         public boolean present(){return x!=0||y!=0;}
         public Penetration deepest(Penetration other){return other.x*other.x+other.y*other.y>x*x+y*y?other:this;}
     }
+    /** Immutable compiled shape; scene entities retain a posed copy until their pose changes. */
+    public static final class PawnShape {
+        private final List<Obstacle> parts;
+        private PawnShape(List<Geom> geometry){parts=geometry.stream().map(g->new Obstacle(0,g)).toList();}
+        public PawnShape at(float x,float y,float rotation){
+            float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
+            return new PawnShape(parts.stream().map(part->transform(part.geometry,x,y,c,s,1)).toList());
+        }
+        public Penetration penetration(float x,float y,float radius){
+            var center=new Point(x,y);var result=Penetration.NONE;
+            for(var part:parts)if(part.bounds.near(x,y,radius))result=result.deepest(SceneCollision.penetration(part.geometry,center,radius));
+            return result;
+        }
+    }
+    public static PawnShape pawnShape(Object shape){return new PawnShape(fromData(shape,0));}
+    static PawnShape pawnShape(SceneContent.Spec spec,Object shape){
+        if(shape!=null)return pawnShape(shape);
+        if(spec.fields().containsKey("radius"))return new PawnShape(List.of(new Circle(new Point(0,0),spec.number("radius",0))));
+        return new PawnShape(List.of(rectangle(spec.number("bounds-min-x",-spec.number("width",0)/2),spec.number("bounds-min-y",-spec.number("height",0)/2),
+            spec.number("bounds-max-x",spec.number("width",0)/2),spec.number("bounds-max-y",spec.number("height",0)/2))));
+    }
     public static Penetration penetration(Object shape,float shapeX,float shapeY,float rotation,float x,float y,float radius) {
-        float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);var result=Penetration.NONE;
-        for(var local:fromData(shape,0))result=result.deepest(penetration(transform(local,shapeX,shapeY,c,s,1),new Point(x,y),radius));
-        return result;
+        return pawnShape(shape).at(shapeX,shapeY,rotation).penetration(x,y,radius);
     }
     public Penetration penetration(int mask,float x,float y,float radius) {
         if(mask==0||isEmpty())return Penetration.NONE;
@@ -41,21 +60,19 @@ public final class SceneCollision {
             Integer flags=tiles.get(key(cx,cy));
             if(flags!=null&&(flags&mask)!=0)result=result.deepest(penetration(rectangle(cx,cy,cx+1,cy+1),center,radius));
         }
-        for(var obstacle:obstacles)if((obstacle.mask&mask)!=0&&x+radius>=obstacle.bounds.minX&&x-radius<=obstacle.bounds.maxX
-                &&y+radius>=obstacle.bounds.minY&&y-radius<=obstacle.bounds.maxY)result=result.deepest(penetration(obstacle.geometry,center,radius));
+        for(var obstacle:obstacles)if((obstacle.mask&mask)!=0&&obstacle.bounds.near(x,y,radius))result=result.deepest(penetration(obstacle.geometry,center,radius));
         return result;
     }
     private static Penetration penetration(Geom obstacle,Point center,float radius) {
         if(obstacle instanceof Circle circle)return radial(center,circle.center,radius+circle.radius);
         if(obstacle instanceof Capsule capsule)return radial(center,nearest(center,capsule.a,capsule.b),radius+capsule.radius);
         var polygon=(Polygon)obstacle;Point closest=null;double best=Double.POSITIVE_INFINITY;
-        double area=0;for(int i=0;i<polygon.points.size();i++){var p=polygon.points.get(i);var q=polygon.points.get((i+1)%polygon.points.size());area+=(double)p.x*q.y-(double)q.x*p.y;}
-        float winding=area>=0?1:-1,depth=Float.POSITIVE_INFINITY;int edge=-1;boolean interior=true;
+        float winding=polygon.winding,depth=Float.POSITIVE_INFINITY;int edge=-1;boolean interior=true;
         for(int i=0;i<polygon.points.size();i++){
             var a=polygon.points.get(i);var b=polygon.points.get((i+1)%polygon.points.size());
             var point=nearest(center,a,b);
             double distance=distance2(center,point);if(distance<best){best=distance;closest=point;}
-            float nx=a.y-b.y,ny=b.x-a.x,length=(float)Math.hypot(nx,ny);if(length==0)continue;
+            float nx=a.y-b.y,ny=b.x-a.x,length=polygon.edgeLengths[i];if(length==0)continue;
             // Keep native float plane distances, including their tie order at inside corners.
             float signed=(nx*center.x+ny*center.y-nx*a.x-ny*a.y)*winding;
             interior&=signed>=0;float separation=signed/length;
@@ -63,7 +80,7 @@ public final class SceneCollision {
         }
         if(!interior||edge<0)return radial(center,closest,radius);
         var a=polygon.points.get(edge);var b=polygon.points.get((edge+1)%polygon.points.size());
-        float length=(float)Math.hypot(b.x-a.x,b.y-a.y);if(length==0)return Penetration.NONE;
+        float length=polygon.edgeLengths[edge];if(length==0)return Penetration.NONE;
         float scale=winding*(radius+depth)/length;
         return new Penetration((b.y-a.y)*scale,(a.x-b.x)*scale);
     }
@@ -279,8 +296,21 @@ public final class SceneCollision {
     private record Point(float x,float y) { Point { if(!Float.isFinite(x)||!Float.isFinite(y))throw new IllegalArgumentException("Non-finite point"); } }
     private record Circle(Point center,float radius) implements Geom { Circle { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid circle"); } }
     private record Capsule(Point a,Point b,float radius) implements Geom { Capsule { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid capsule"); } }
-    private record Polygon(List<Point> points) implements Geom { Polygon { points=List.copyOf(points);if(points.size()<3||points.size()>4096)throw new IllegalArgumentException("Invalid polygon"); } }
-    private record Bounds(float minX,float minY,float maxX,float maxY) { }
+    private static final class Polygon implements Geom {
+        final List<Point> points;final float winding;final float[] edgeLengths;
+        Polygon(List<Point> points){
+            this.points=List.copyOf(points);if(points.size()<3||points.size()>4096)throw new IllegalArgumentException("Invalid polygon");
+            edgeLengths=new float[points.size()];double area=0;
+            for(int i=0;i<points.size();i++){
+                var a=points.get(i);var b=points.get((i+1)%points.size());area+=(double)a.x*b.y-(double)b.x*a.y;
+                edgeLengths[i]=(float)Math.hypot(a.y-b.y,b.x-a.x);
+            }
+            winding=area>=0?1:-1;
+        }
+    }
+    private record Bounds(float minX,float minY,float maxX,float maxY) {
+        boolean near(float x,float y,float radius){return x+radius>=minX&&x-radius<=maxX&&y+radius>=minY&&y-radius<=maxY;}
+    }
     private record Obstacle(int mask,Geom geometry,Bounds bounds) {
         private Obstacle(int mask,Geom geometry){this(mask,geometry,SceneCollision.bounds(geometry));}
     }

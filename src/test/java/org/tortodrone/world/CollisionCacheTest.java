@@ -1,0 +1,35 @@
+package org.tortodrone.world;
+
+import java.util.*;
+import org.tortodrone.character.StarterCatalog;
+import static org.tortodrone.support.TestWire.check;
+
+/** Cached pawn geometry follows actual entity movement, rotation, ownership and destruction. */
+public final class CollisionCacheTest {
+    public static void main(String[] args)throws Exception {
+        var rectangle=new FireCatalog.DataValue("Shape$Rectangle",Map.of("width",2f,"height",.5f));
+        var fields=new HashMap<String,String>();
+        fields.put("native-type","Monster");fields.put("config","Fixture");fields.put("health","100");fields.put("damage-mask","2");fields.put("collision-flags","8");
+        fields.put("width","2");fields.put("height",".5");fields.put("speed","1");fields.put("acquire-distance","10");
+        fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",rectangle))));
+        var content=new SceneContent(List.of(new SceneContent.Entry("mob",0,0,0,new SceneContent.Spec(fields))),Map.of());
+        var terrain=SceneWeaponsTest.openTerrain();var moving=new SceneEntities(content,terrain);var isolated=new SceneEntities(content,terrain);
+        var initial=moving.actors().getFirst();var before=moving.penetration(1.2f,0,219);
+        check(before.x()>0&&before.y()==0,"initial horizontal rectangle has an edge contact");
+        int stamp=SceneClock.now()+10;moving.advance(stamp,List.of(player(stamp,3,0)));moving.advance(stamp+100,List.of(player(stamp,3,0)));
+        check(moving.actor(initial.id()).x()>.09,"fixture monster moves toward its target");
+        check(moving.penetration(1.2f,0,219).x()>before.x()+.09,"translation refreshes an already cached world shape");
+        moving.advance(stamp+200,List.of(player(stamp, .1f,3)));
+        var turned=moving.actor(initial.id());
+        check(Math.abs(turned.rotation()-(float)Math.PI/2)<.001,"fixture monster turns toward its new target");
+        check(!moving.penetration(turned.x()+.6f,turned.y(),219).present(),"rotation removes an old horizontal contact");
+        check(moving.penetration(turned.x(),turned.y()+1.2f,219).y()>0,"rotation creates the matching vertical contact");
+        check(isolated.penetration(1.2f,0,219).equals(before),"shared definitions do not share mutable pose caches between instances");
+        check(!moving.penetration(turned.x(),turned.y()+1.2f,initial.id()).present(),"cached shapes still respect ignored actor ownership");
+        var lethal=new FireCatalog.DataValue("Damage$Normal",Map.of("flags",2,"amount",1000f));
+        moving.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",lethal)),turned.x(),turned.y(),0,stamp+201,219);
+        check(moving.actor(initial.id())==null&&!moving.penetration(turned.x(),turned.y()+1.2f,219).present(),"destroyed actors stop colliding despite a populated cache");
+        System.out.println("PASS: cached collision translation/rotation refresh, instance isolation, ignored ownership and destruction");
+    }
+    private static ActorState player(int stamp,float x,float y){return new ActorState(219,1001,"Fixture",0,stamp,x,y,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));}
+}
