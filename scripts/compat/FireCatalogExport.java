@@ -119,6 +119,9 @@ public final class FireCatalogExport {
     static Action readAction(ConfigManager manager, ActionConfig action) throws Exception {
         if (action == null) return null;
         actionCount++;
+        if(action instanceof ActionConfig.Delayed delayed){
+            return new Action(Kind.DELAYED,new StarterCatalog.Model("Delayed",Map.of("delay",delayed.delay,"variance",delayed.variance)),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(delayed.action==null?noop():readAction(manager,delayed.action)),"");
+        }
         if(action.getClass().getSimpleName().equals("DestroyActor"))return destroySource();
         if(action instanceof ActionConfig.Fail)return new Action(Kind.FAIL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
         if(action instanceof DungeonActionConfig.ApplyStatus status){

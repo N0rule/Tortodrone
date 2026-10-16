@@ -54,6 +54,7 @@ final class WorldSession implements AutoCloseable {
     private int announcedPartyOid;
     private SceneHealth.State publishedHealth;
     private SceneStatus.State publishedStatus;
+    private Boolean publishedArsenal;
     private PartyRegistry.Member partyMember;
     private PartyRegistry.View publishedParty;
     private final ArrayDeque<PartyRegistry.Event> partyEvents=new ArrayDeque<>();
@@ -173,10 +174,18 @@ final class WorldSession implements AutoCloseable {
     }
     private void openTownDialog(org.tortodrone.town.TownCatalog.Station station,ActorState source)throws IOException {
         if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade before using a town station");
-        townTradeGeneration=tradeMember==null?0:tradeMember.dialogGeneration;closeConversation();closeTownDialog();townDialog=station;townSource=source;townCreated=Math.max(System.currentTimeMillis(),townCreated+1);townService++;
+        if(station.kind().equals("OpenArsenal")){
+            closeConversation();closeTownDialog();output.send(()->codec.controllerAction(oid,"show_arsenal_station",source));return;
+        }
+        townTradeGeneration=tradeMember==null?0:tradeMember.dialogGeneration;closeConversation();closeTownDialog();
         var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("Knight left scene"));townX=own.x();townY=own.y();
-        if(station.kind().equals("OpenShop")||station.kind().equals("OpenHarnessInstaller")){townShopCycle=scenes.town().shopCycle(station.shop());publishShop();}
-        output.send(()->codec.townDialog(oid,scene.oid(),station,source,townCreated,townService));
+        townDialog=station;townSource=source;townCreated=Math.max(System.currentTimeMillis(),townCreated+1);townService++;
+        try{
+            if(station.kind().equals("OpenShop")||station.kind().equals("OpenHarnessInstaller")){townShopCycle=scenes.town().shopCycle(station.shop());publishShop();}
+            output.send(()->codec.townDialog(oid,scene.oid(),station,source,townCreated,townService));
+        }catch(IOException failure){
+            try{closeTownDialog();}catch(IOException closing){failure.addSuppressed(closing);}throw failure;
+        }
     }
     private void publishShop()throws IOException {
         var goods=scenes.town().goods(townDialog.shop(),townShopCycle,profile.worldId()).stream().map(g->{var def=characters.catalog().find(g.item());int price=g.price()>=0?g.price():def==null?0:scenes.town().price(g.item(),def.rarity(),true);return new org.tortodrone.town.TownCatalog.Good(g.item(),g.count(),price,g.energy(),g.limit(),g.token(),g.tokenCount());}).toList();
@@ -253,9 +262,32 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
-        if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration){townDialog=null;townSource=null;townService++;}
+        if(global&&request.service()==1&&(request.method()==8||request.method()==14)){
+            boolean rename=request.method()==8;
+            if(a.size()!=(rename?2:1)||rename&&!(a.getFirst() instanceof String)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid knight rename request");
+            try{
+                if(closed||!selected()||!entered||!subscribed||!scene.map().town())throw new IOException("Enter a town first");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                if(rename){
+                    var result=characters.town(scenes.town()).rename(characters.accountId(),knight.id(),authRevision,(String)a.getFirst());
+                    characters.refresh();knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();
+                    closeConversation();closeTownDialog();leaveChat();townChanged(result);partyState();
+                    output.send(()->codec.knightName(oid,knight.name()));
+                    int place=scene.oid(),generation=sceneGeneration;
+                    chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
+                    tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
+                    persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
+                }else{
+                    var current=loadProfile(profile);
+                    if(current.items().stream().noneMatch(i->i.config().equals("Upgrade/Rename Knight")))throw new IOException("m.no_rename_item");
+                }
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+            return true;
+        }
+        if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration)closeTownDialog();
         if(townDialog!=null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1){
-            if(a.size()!=1||!(a.getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid Town dialog close");if(created!=townCreated)return false;closeTownDialog();return true;
+            if(a.size()!=1||!(a.getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid Town dialog close");if(created!=townCreated)return true;closeTownDialog();return true;
         }
         if(townDialog==null&&conversation==null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1&&a.size()==1&&a.getFirst() instanceof Long){
             // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
@@ -265,12 +297,17 @@ final class WorldSession implements AutoCloseable {
         boolean operation=ownsScene(request.oid())&&request.service()>=100;
         boolean sprite=global&&request.service()==14;
         boolean hatch=global&&request.service()==9&&request.method()==7;
+        boolean wrap=global&&request.service()==9&&request.method()==15;
+        boolean unwrap=global&&request.service()==9&&request.method()==13;
         boolean forge=global&&request.service()==9&&request.method()==8;
-        boolean learn=global&&request.service()==9&&request.method()==1&&a.size()==2&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("recipe"));
-        boolean harness=global&&request.service()==9&&request.method()==1&&a.size()==2&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("harness"));
-        if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness)return false;
+        // The stock inventory's Use action sends method 14 [item, data, confirm].
+        // Method 1 is deleteItem, and must never learn a recipe as a side effect.
+        boolean use=global&&request.service()==9&&request.method()==14&&a.size()==3&&a.get(1)==null;
+        boolean learn=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("recipe"));
+        boolean harness=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("harness"));
+        if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap)return false;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener))throw new SessionDecoder.Rejected("Missing Town listener");
-        boolean resultListener=hatch||forge||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
+        boolean resultListener=hatch||forge||unwrap||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
         if(!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
         try{
             if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
@@ -310,11 +347,21 @@ final class WorldSession implements AutoCloseable {
                     else{if(request.method()!=2||!(a.get(0) instanceof Long id))throw new SessionDecoder.Rejected("Invalid recipe request");recipe=profile.town().recipes().stream().filter(r->r.id()==id).map(org.tortodrone.town.TownState.LearnedRecipe::config).findFirst().orElseThrow(()->new IOException("Recipe not learned"));if(!townDialog.recipes().isEmpty()&&!townDialog.recipes().contains(recipe))throw new IOException("Recipe not served here");}
                     result=store.craft(characters.accountId(),knight.id(),authRevision,recipe,ids,upgrade,catalog);
                 }else throw new IOException("This station's operation is unavailable");
+            }else if(wrap||unwrap){
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                if(unwrap){if(a.size()!=2||!(a.getFirst() instanceof Long id))throw new SessionDecoder.Rejected("Invalid gift unwrap request");result=store.unwrap(characters.accountId(),knight.id(),authRevision,id);}
+                else{
+                    if(a.size()!=4||!(a.get(0) instanceof Long paper)||!(a.get(1) instanceof SessionDecoder.Multiset contents)||!(a.get(2) instanceof String message)||!contents.counts().keySet().stream().allMatch(k->k instanceof Long))throw new SessionDecoder.Rejected("Invalid gift wrap request");
+                    var selected=new LinkedHashMap<Long,Integer>();contents.counts().forEach((key,count)->selected.put((Long)key,count));
+                    result=store.wrap(characters.accountId(),knight.id(),authRevision,paper,selected,message,knight.costume());
+                }
             }else if(forge){
                 if(a.size()!=4||!(a.get(0) instanceof Long item)||!(a.get(1) instanceof Integer crystals)||!(a.get(2) instanceof Integer level))throw new SessionDecoder.Rejected("Invalid forge request");
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
                 result=store.forge(characters.accountId(),knight.id(),authRevision,item,crystals,level);
-            }else if(hatch||learn||harness){if(a.size()!=2||!(a.get(0) instanceof Long id))throw new SessionDecoder.Rejected("Invalid Town item request");result=hatch?store.hatch(characters.accountId(),knight.id(),authRevision,id):harness?store.installHarness(characters.accountId(),knight.id(),authRevision,id):store.learn(characters.accountId(),knight.id(),authRevision,id);
+            }else if(hatch||learn||harness){if(a.size()!=(hatch?2:3)||!(a.get(0) instanceof Long id))throw new SessionDecoder.Rejected("Invalid Town item request");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                result=hatch?store.hatch(characters.accountId(),knight.id(),authRevision,id):harness?store.installHarness(characters.accountId(),knight.id(),authRevision,id):store.learn(characters.accountId(),knight.id(),authRevision,id);
             }else{
                 int method=request.method();int[] counts={0,4,6,3,2,3,3,4,3,4};if(method<1||method>9||a.size()!=counts[method])throw new SessionDecoder.Rejected("Invalid sprite argument count");
                 boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpritePerk"));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate");default->false;};
@@ -329,7 +376,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean conversationInvocation(SessionDecoder.Invocation request)throws IOException {
         if(conversation!=null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1){
             if(request.arguments().size()!=1||!(request.arguments().getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid conversation close");
-            if(created!=conversationCreated)return false;closeConversation();return true;
+            if(created!=conversationCreated)return true;closeConversation();return true;
         }
         if(!ownsScene(request.oid())||request.service()!=SceneConversation.SERVICE)return false;
         var args=request.arguments();
@@ -343,6 +390,8 @@ final class WorldSession implements AutoCloseable {
             var station=scenes.town().station(response.station());
             if(station==null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Town service is unavailable"));return true;}
             try{openTownDialog(station,conversationSource);}catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));return true;}
+        }else if(!response.command().isEmpty()){
+            var source=conversationSource;closeConversation();output.send(()->codec.controllerAction(oid,response.command(),source));
         }else if(destination.isEmpty())closeConversation();else{
             conversationNode=destination;output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
         }
@@ -399,10 +448,11 @@ final class WorldSession implements AutoCloseable {
         if(request.service()==20&&request.method()==4){
             if(args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof Integer cost)||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid revive request");
             try{
-                if(closed||!subscribed||!entered||!knight.name().equalsIgnoreCase(target)||!membership.beginRevive())throw new IOException("m.no_revive");
-                boolean success=false;
-                try{var result=characters.town(scenes.town()).revive(characters.accountId(),knight.id(),authRevision,cost);success=true;townChanged(result);}
-                finally{membership.finishRevive(success);}
+                if(closed||!subscribed||!entered||scene.map().town())throw new IOException("m.no_revive");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                var result=scenes.parties().revive(partyMember,request.oid(),target,world->
+                    scene.simulation().revive(membership,world,()->characters.town(scenes.town()).revive(characters.accountId(),knight.id(),authRevision,cost)));
+                townChanged(result);
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.reviveFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
@@ -767,6 +817,7 @@ final class WorldSession implements AutoCloseable {
             if (location.ordinal() != 0 && location.ordinal() != 1) {
                 throw new IOException("Only inventory and equipment moves are available");
             }
+            if(!subscribed||!entered||!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
             var before=visibleProfile();
             profile = characters.equip(knight.id(), authRevision, item, location.ordinal() == 0 ? null : slot);
             updateAppearance();
@@ -1023,7 +1074,9 @@ final class WorldSession implements AutoCloseable {
             publishQuickbar();
         }
         var own=current.players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
-        if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration){townDialog=null;townSource=null;townService++;}
+        boolean arsenal=membership.arsenalZone();
+        if(publishedArsenal==null||publishedArsenal!=arsenal){publishedArsenal=arsenal;output.send(()->codec.equipPolicy(oid,arsenal));}
+        if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration)closeTownDialog();
         if(townDialog!=null&&(own==null||Math.hypot(own.x()-townX,own.y()-townY)>1))closeTownDialog();
         if(conversation!=null&&(own==null||Math.hypot(own.x()-conversationX,own.y()-conversationY)>1))closeConversation();
         int target=membership.takeInteraction();

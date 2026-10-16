@@ -77,6 +77,11 @@ public final class StockTools {
                 if(args.length!=3)throw new IllegalArgumentException("statuses expects game-directory fresh-output-file");fixture="StatusRuntimeExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 for(String source:List.of("StatusRuntimeExport","SceneStatusExport","ScenePlayerStatsExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
+            case "town-services" -> {
+                if(args.length!=4)throw new IllegalArgumentException("town-services expects game-directory maps-directory fresh-output-directory");
+                fixture="TownServicesExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+                for(String source:List.of("TownServicesExport","SceneStatusExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "town" -> {
                 if(args.length!=4)throw new IllegalArgumentException("town expects game-directory maps-directory fresh-output-directory");
                 fixture="TownSceneExport";fixtureArgs.add(args[2].equals("--accessories")?args[2]:Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());

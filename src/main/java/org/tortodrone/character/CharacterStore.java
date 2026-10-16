@@ -255,7 +255,7 @@ public final class CharacterStore {
             && !value.contains("..") && !value.contains("\\") && !value.startsWith("/");
     }
     private static String canonical(String name) { return name.toLowerCase(Locale.ROOT); }
-    private static String nameError(String name) {
+    public static String nameError(String name) {
         if (name == null || name.length() < 3) return "Knight names need at least three letters";
         if (name.length() > 16) return "Knight names may contain at most sixteen characters";
         if (!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*")) return "Use letters with optional single hyphens in the knight name";

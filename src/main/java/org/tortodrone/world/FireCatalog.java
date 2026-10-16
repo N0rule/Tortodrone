@@ -10,7 +10,7 @@ import org.tortodrone.resources.Json;
 /** Numeric/reference-only stock action graphs for player weapon attacks. */
 public final class FireCatalog {
     private static final int MAX_BYTES = 128 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 2_000_000;
-    public enum Kind { COMPOUND, CONDITIONAL, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, APPLY_STATUS, START_SPRITE_SHIELD, END_SPRITE_SHIELD, FAIL, UNSUPPORTED }
+    public enum Kind { COMPOUND, CONDITIONAL, DELAYED, MULTI_PRESPAWNED, RANDOM_EQUAL, SPAWN_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, APPLY_STATUS, START_SPRITE_SHIELD, END_SPRITE_SHIELD, FAIL, UNSUPPORTED }
     public enum NullValue { INSTANCE }
     public record EnumValue(String type, String name, int ordinal) {
         public EnumValue(String type,String name){this(type,name,-1);}

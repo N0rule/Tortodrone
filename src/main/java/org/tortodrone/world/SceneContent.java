@@ -6,7 +6,9 @@ import java.util.*;
 import org.tortodrone.character.StarterCatalog;
 
 /** Prepared native actor bindings. Runtime instances never depend on client resources. */
-public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses) {
+public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons) {
+    public record MapIcon(String icon,float x,float y) { }
+    public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses){this(entries,scales,conversations,stats,items,cycles,statuses,List.of());}
     public SceneContent(List<Entry> entries,Map<String,Float> scales){this(entries,scales,Map.of(),Map.of(),Map.of(),Map.of(),Map.of());}
     public record Spec(Map<String,String> fields) {
         public Spec { fields=Map.copyOf(fields); }
@@ -36,19 +38,19 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
             return contains(cx,cy,0,x,y,radius);
         }
         public boolean contains(float cx,float cy,float rotation,float x,float y,float radius){
-            if(fields.containsKey("radius"))return Math.hypot(cx-x,cy-y)<=number("radius",0)+radius;
             float dx=x-cx,dy=y-cy,c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float tx=dx*c+dy*s,ty=-dx*s+dy*c;
-            if(text("shape","").equals("Compound")){
+            if(flag("interaction-area",false)||text("shape","").equals("Compound")){
                 var shape=model("source-shape");if(shape!=null)return SceneShape.intersects(shape.arguments().get("value"),tx,ty,radius);
             }
+            if(fields.containsKey("radius"))return Math.hypot(cx-x,cy-y)<=number("radius",0)+radius;
             float gapX=Math.max(number("bounds-min-x",-number("width",0)/2)-tx,Math.max(0,tx-number("bounds-max-x",number("width",0)/2)));
             float gapY=Math.max(number("bounds-min-y",-number("height",0)/2)-ty,Math.max(0,ty-number("bounds-max-y",number("height",0)/2)));
             return gapX*gapX+gapY*gapY<=radius*radius;
         }
     }
     public record Entry(String key,float x,float y,float rotation,Spec spec) { }
-    public SceneContent { entries=List.copyOf(entries);scales=Map.copyOf(scales);conversations=Map.copyOf(conversations);stats=Map.copyOf(stats);items=Map.copyOf(items);cycles=Map.copyOf(cycles);statuses=Map.copyOf(statuses); }
+    public SceneContent { entries=List.copyOf(entries);scales=Map.copyOf(scales);conversations=Map.copyOf(conversations);stats=Map.copyOf(stats);items=Map.copyOf(items);cycles=Map.copyOf(cycles);statuses=Map.copyOf(statuses);mapIcons=List.copyOf(mapIcons); }
     public static SceneContent empty(){return new SceneContent(List.of(),Map.of());}
     public static SceneContent load(Path folder,String layoutHash)throws IOException {
         Path file=folder.resolve("content.properties");if(!Files.exists(file))return empty();
@@ -88,7 +90,14 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
                 var spec=new Spec(fields);String name=spec.text("config","");if(name.isBlank()||statuses.putIfAbsent(name,spec)!=null)throw new IllegalArgumentException("Invalid status config");
             }
-            return new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses);
+            var icons=new LinkedHashSet<MapIcon>();
+            for(var entry:entries){String icon=entry.spec().text("minimap-icon","");if(!icon.isEmpty())icons.add(new MapIcon(icon,entry.x(),entry.y()));}
+            for(String key:new TreeSet<>(p.stringPropertyNames()))if(key.startsWith("minimap.")&&key.endsWith(".icon")){
+                String prefix=key.substring(0,key.length()-4);String icon=p.getProperty(key);
+                icons.add(new MapIcon(icon,finite(Float.parseFloat(p.getProperty(prefix+"x"))),finite(Float.parseFloat(p.getProperty(prefix+"y")))));
+            }
+            if(icons.size()>2048)throw new IllegalArgumentException("Too many minimap icons");
+            return new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons));
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid prepared scene content",invalid);}
     }
     private static float finite(float f){if(!Float.isFinite(f)||Math.abs(f)>1_000_000)throw new IllegalArgumentException("Invalid content number");return f;}

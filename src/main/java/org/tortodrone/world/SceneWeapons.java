@@ -55,6 +55,8 @@ public final class SceneWeapons {
     private Map<Integer,ActorState> currentOwners=Map.of();
     private final Map<Integer,IdentityHashMap<Object,Integer>> cooldowns=new HashMap<>();
     private long sequence;
+    private record Delayed(int stamp,FireCatalog.Action action,Pose source,int seed,int depth) { }
+    private final PriorityQueue<Delayed> delayed=new PriorityQueue<>(Comparator.comparingInt(Delayed::stamp));
     public SceneWeapons(CollisionMap terrain){this.terrain=Objects.requireNonNull(terrain);}
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
     public void attack(int owner,KnightCombat.AttackStart start){
@@ -65,7 +67,7 @@ public final class SceneWeapons {
         var list=runs.computeIfAbsent(owner,k->new ArrayList<>());
         if(list.size()<MAX_RUNS)list.add(new Run(start,attack));
     }
-    public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);}
+    public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);delayed.removeIf(d->d.source().ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
     public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0),stamp,0);}
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
@@ -79,6 +81,13 @@ public final class SceneWeapons {
     public void advance(int stamp,List<ActorState> players){
         var owners=new HashMap<Integer,ActorState>();for(var player:players)owners.put(player.id(),player);
         currentOwners=owners;
+        int delayedBudget=MAX_EFFECTS;
+        while(!delayed.isEmpty()&&delayed.peek().stamp()<=stamp&&delayedBudget-->0){
+            var next=delayed.remove();var shot=shots.get(next.source().actorId);
+            // Delayed actor actions disappear with their source, as in ActionLogic.removed.
+            if(shot!=null&&shot.destroyed==Integer.MAX_VALUE)execute(next.action(),shotPose(shot),next.stamp(),next.depth(),next.seed());
+            else if(next.source().actorId==next.source().ownerId&&owners.containsKey(next.source().ownerId))execute(next.action(),next.source(),next.stamp(),next.depth(),next.seed());
+        }
         for(var iterator=runs.entrySet().iterator();iterator.hasNext();){var e=iterator.next();var actor=owners.get(e.getKey());if(actor==null){iterator.remove();continue;}
             var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),actor.clientOid(),null,actor.id());
             e.getValue().removeIf(run->{
@@ -204,6 +213,14 @@ public final class SceneWeapons {
     }
     private boolean execute(FireCatalog.Action action,Pose source,int stamp,int depth,int seed){
         if(action==null||depth>96)return false;
+        if(action.kind()==FireCatalog.Kind.DELAYED){
+            int delay=((Number)action.config().arguments().get("delay")).intValue(),variance=((Number)action.config().arguments().get("variance")).intValue();
+            if(delay<0||variance<0||delay>600000||variance>600000||action.children().size()!=1)return false;
+            if(variance>0)delay=Math.max(0,delay+java.util.concurrent.ThreadLocalRandom.current().nextInt(variance*2)-variance);
+            if(delay==0)return execute(action.children().getFirst(),source,stamp,depth+1,seed);
+            if(delayed.size()>=MAX_EFFECTS)return false;
+            delayed.add(new Delayed(stamp+delay,action.children().getFirst(),source,seed,depth+1));return true;
+        }
         if(action.kind()==FireCatalog.Kind.CONDITIONAL){
             Boolean result=condition(action.config().arguments().get("condition"),source,stamp,0);
             return result!=null&&action.children().size()==2&&execute(action.children().get(result?0:1),source,stamp,depth+1,seed);

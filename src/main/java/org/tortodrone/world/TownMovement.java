@@ -14,8 +14,9 @@ public final class TownMovement {
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
     public static final int HURT=274, SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
-    // Native character/pc/hurt_soft.dat duration (11 frames at 25 Hz, including transition).
-    public static final int HURT_MILLIS=425, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
+    // DungeoneerAdvancer registers HURT_SOFT as Activity(true, 500):
+    // movement and rotation continue during the reaction, independently of its animation.
+    public static final int HURT_MILLIS=500, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
     private static final int MAX_PENDING = 256;
     private record Frame(int timestamp, float rotation, float direction, int flags,int actionChanged) { }
     private final ArrayDeque<Frame> pending = new ArrayDeque<>();
@@ -40,7 +41,10 @@ public final class TownMovement {
     public boolean dead(){return activity==DYING||activity==DEAD;}
     public void hurt(int stamp){
         if(dead()||activity==RESURRECT||activity==SHOCKED)return;
-        resetInput(stamp);setActivity(HURT,stamp);updateFlags();
+        // Damage is not a scene transition. Retain queued intent, the monotonic input
+        // watermark and any received knockback instead of discarding prediction input.
+        if(combat!=null)combat.interrupt(stamp);
+        setActivity(HURT,stamp);updateFlags();
     }
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
@@ -200,7 +204,7 @@ public final class TownMovement {
             int ended = activityStarted + duration;
             // A movement-enabled animation permits the same movement before and after
             // its exact deadline, so integrate the whole interval in one pass.
-            if (!movingEmote && ended - timestamp > 0) timestamp = ended;
+            if (!movingEmote && activity!=HURT && ended - timestamp > 0) timestamp = ended;
             setActivity(0, ended);
             updateFlags();
         }
@@ -266,7 +270,7 @@ public final class TownMovement {
         activityStarted = started;
     }
     private boolean activityAllowsMovement() {
-        if(activity==269)return true;
+        if(activity==269||activity==HURT)return true;
         var emote=PlayerEmotes.byActivity(activity);
         return emote!=null&&emote.allowsMovement();
     }

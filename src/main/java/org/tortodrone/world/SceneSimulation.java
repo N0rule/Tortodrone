@@ -8,6 +8,23 @@ import java.util.function.Consumer;
  * Session callbacks only offer publications to bounded mailboxes; no socket or storage work
  * runs on the simulation thread. Terrain and future world systems belong to this instance. */
 public final class SceneSimulation {
+    @FunctionalInterface public interface RevivePayment<T>{T commit()throws java.io.IOException;}
+    /** Run on the requesting session thread. No network I/O occurs under this lock.
+     * Holding the scene through commit makes departure and competing revives mutually
+     * exclusive with payment; the health/effect change is published only after commit. */
+    public synchronized <T> T revive(Membership payer,int targetWorld,RevivePayment<T> payment)throws java.io.IOException {
+        var target=members.get(targetWorld);
+        if(payer==null||members.get(payer.appearance.id())!=payer||!payer.entered||payer.portal!=null
+                ||target==null||!target.entered||target.portal!=null||target.revivePending
+                ||target!=payer&&!payer.health.alive()||!target.health.canSparkRevive())throw new java.io.IOException("m.no_revive");
+        target.revivePending=true;
+        try{
+            T result=payment.commit();int stamp=SceneClock.now();
+            target.health.revive(stamp);target.movement.resurrect(stamp);
+            weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),target.actor(),stamp);
+            return result;
+        }finally{target.revivePending=false;}
+    }
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
     public synchronized void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
     public record Delta(List<ActorState> added, List<ActorState> updated, int[] removed,
@@ -59,7 +76,7 @@ public final class SceneSimulation {
                 var old=previous.byId.get(actor.id());
                 if(old==null)added.add(actor);else {
                     // Stock prediction mutates activity on its reference: transmit every actor.
-                    if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&(old.gameMaster()!=actor.gameMaster()||!Objects.equals(old.sceneKnight()==null?null:old.sceneKnight().progress(),actor.sceneKnight()==null?null:actor.sceneKnight().progress())))changed.add(actor);
+                    if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&(!old.name().equals(actor.name())||old.gameMaster()!=actor.gameMaster()||!Objects.equals(old.sceneKnight()==null?null:old.sceneKnight().progress(),actor.sceneKnight()==null?null:actor.sceneKnight().progress())))changed.add(actor);
                 }
             }
             int[] removed=previous.byId.keySet().stream().filter(id->!byId.containsKey(id)).mapToInt(Integer::intValue).toArray();
@@ -77,8 +94,6 @@ public final class SceneSimulation {
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
         private boolean revivePending;
-        public boolean beginRevive(){synchronized(SceneSimulation.this){check();if(!entered||portal!=null||revivePending||!health.canSparkRevive())return false;revivePending=true;return true;}}
-        public void finishRevive(boolean success){synchronized(SceneSimulation.this){check();if(!revivePending)return;revivePending=false;if(success&&health.revive(SceneClock.now())){movement.resurrect(SceneClock.now());weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),actor(),SceneClock.now());}}}
         private org.tortodrone.town.TownState.Sprite sprite;
         private org.tortodrone.town.TownState.Harness harness;
         private final int petId=nextPetId++;
@@ -128,6 +143,8 @@ public final class SceneSimulation {
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
+        public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&instance.map().content().entries().stream().anyMatch(e->e.spec().flag("arsenal-zone",false)&&e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
+        public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
         public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){check();health.inventory(profile);}}
         public SceneStatus.State status(){synchronized(SceneSimulation.this){check();return health.status();}}
         public boolean heal(int amount){synchronized(SceneSimulation.this){check();return heal(amount,SceneClock.now());}}
@@ -145,7 +162,6 @@ public final class SceneSimulation {
             health.spriteShield(amount->{var shield=auraOwner==0?this:members.get(auraOwner);if(shield==null||!shield.entered||shield.petShield<=0)return amount;int absorbed=Math.min(amount,shield.petShield);shield.petShield-=absorbed;return amount-absorbed;});
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
-            movement.revival(stamp->instance.map().kind().equals("training")&&health.revive(stamp));
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation());
@@ -204,7 +220,6 @@ public final class SceneSimulation {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
                 movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
-                movement.activity()==TownMovement.DEAD&&instance.map().kind().equals("training")?new InteractionState(a.id(),null,"Resurrect"):
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill,health.hitTime()));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}

@@ -42,6 +42,13 @@ public final class PartyRegistry {
     private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList());}
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}
+    @FunctionalInterface public interface ReviveTransaction<T>{T commit(int targetWorld)throws IOException;}
+    /** Pin both current party memberships through the authenticated revive transaction. */
+    public synchronized <T> T revive(Member payer,int oid,String name,ReviveTransaction<T> transaction)throws IOException {
+        require(payer);if(payer.party.oid!=oid)throw new IOException("m.no_revive");
+        var target=payer.party.members.stream().filter(m->m.knight.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("m.no_revive"));
+        return transaction.commit(target.worldId);
+    }
     public synchronized void state(Member member,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status,boolean town)throws IOException {
         require(member);boolean changed=!member.knight.equals(knight)||!member.profile.equals(profile)||!member.health.equals(health)||!member.status.equals(status);
         member.knight=knight;member.profile=profile;member.health=health;member.status=status;member.town=town;if(changed)publish(member.party);

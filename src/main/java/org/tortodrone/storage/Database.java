@@ -12,7 +12,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 12;
+    public static final int SCHEMA_VERSION = 13;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -42,7 +42,7 @@ public final class Database {
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
         if (Files.exists(file)) {
-            if((version()==9||version()==10||version()==11)&&!deploymentLocked){
+            if((version()==9||version()==10||version()==11||version()==12)&&!deploymentLocked){
                 try(var channel=FileChannel.open(directory.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.tryLock()){
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
@@ -60,7 +60,7 @@ public final class Database {
     }
     private void requireCurrentVersion() throws IOException {
         int version = version();
-        if(version==9||version==10||version==11){
+        if(version==9||version==10||version==11||version==12){
             // Only known predecessors are eligible; unknown versions remain untouched.
             try(var c=connect();var statement=c.createStatement()){
                 statement.execute("PRAGMA foreign_keys=OFF");statement.execute("BEGIN IMMEDIATE");
@@ -68,8 +68,9 @@ public final class Database {
                     int lockedVersion;try(var r=statement.executeQuery("PRAGMA user_version")){r.next();lockedVersion=r.getInt(1);}
                     if(lockedVersion==9){AuctionSchema.upgrade(c);DepotStore.initialize(c);}
                     else if(lockedVersion==10)DepotStore.initialize(c);
-                    else if(lockedVersion!=11&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
+                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
                     if(lockedVersion<12)EnergyExchange.initialize(c);
+                    if(lockedVersion<13)GiftStore.initialize(c);
                     try(var r=statement.executeQuery("PRAGMA foreign_key_check")){if(r.next())throw new IOException("Database upgrade failed foreign key validation");}
                     statement.execute("PRAGMA user_version="+SCHEMA_VERSION);statement.execute("COMMIT");
                 }catch(SQLException|IOException|RuntimeException failure){statement.execute("ROLLBACK");throw failure;}

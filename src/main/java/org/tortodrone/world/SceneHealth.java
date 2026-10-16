@@ -56,7 +56,10 @@ public final class SceneHealth {
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
     private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+5000;}}
     public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}
-    public boolean revive(int stamp){if(alive())return false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+2000;return true;}
+    public boolean revive(int stamp){if(alive())return false;
+        // A manual Training resurrection can answer the pending automatic charge.
+        // Both paths spend the same charge; neither a Spark nor equipment replenishes it.
+        emergencyRevive=false;current=maximum;status.clear();emergencyAt=0;invulnerableUntil=stamp+2000;return true;}
     public boolean damage(Object damage,int stamp){
         return hit(damage,stamp).amount()>0;
     }

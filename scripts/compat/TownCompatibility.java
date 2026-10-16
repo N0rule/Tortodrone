@@ -80,7 +80,39 @@ public final class TownCompatibility {
         for(int i=0;i<3;i++){var nativeAux=auxUpdate.aek()[i].apply(auxAdd.aej()[i]);if(i==1&&!field(nativeAux,"_endPoint").equals(new com.threerings.math.Vector2f(4,0)))throw new AssertionError("Laser endpoint differs");if(i==2&&!field(nativeAux,"_followId").equals(42))throw new AssertionError("Orbital follow identity differs");}
         if(in.available()!=0)throw new AssertionError("Trailing Town wire bytes");
         upstream();
+        serviceMessages();
         System.out.println("PASS: stock reader accepts recipes, sprites, harnesses, stations, auction listings and attachment mail");
+    }
+    private static void serviceMessages()throws Exception {
+        var codec=new SessionCodec(ItemCatalog.load(java.nio.file.Path.of("content/packs/vanilla/items/catalog.json")));var bytes=new ByteArrayOutputStream();
+        append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
+        append(bytes,codec.controllerAction(1002,"forge",null));
+        append(bytes,codec.controllerAction(1002,"show_arsenal_station",null));
+        var registry=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.load(java.nio.file.Path.of("content/packs/vanilla/maps")));
+        append(bytes,codec.scene((short)3,registry.entry(),List.of()));
+        append(bytes,codec.equipPolicy(1002,true));
+        var giftContent=new WorldProfile.Item(0,WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false,1,false,2,.4f,List.of(new StarterCatalog.Model("Weapon/Damage 1",Map.of())));
+        var giftItem=new WorldProfile.Item(70,WorldProfile.Slot.OTHER,"Upgrade/Gift Box/Checker Gift Box (Blue)",null,0,null,false,false,false,1,false).withGift(new WorldProfile.Gift(1,"Gift-Alice","A gift for you",List.of(giftContent)));
+        var owner=new WorldProfile(42,1,1,0,0,1,List.of(giftItem));
+        append(bytes,codec.player((short)4,1002,1,"Fixture"));append(bytes,codec.itemChanges(1002,choices(),new WorldProfile(42,1,1,0,0,1,List.of()),owner));
+        append(bytes,codec.townResult(1002,(short)8,new SessionDecoder.Multiset(Map.of(71L,1)),owner));
+        var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
+        for(String command:List.of("forge","show_arsenal_station")){
+            var event=(MessageEvent)((EventNotification)in.qe()).yj();
+            var action=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)event.yd()[0];
+            if(!event.getName().equals("forceClientAction")||!action.command.equals(command)||!action.argument.equals(""))throw new AssertionError("Native controller action layout differs");
+        }
+        var scene=(com.threerings.projectx.data.ProjectXSceneObject)((ObjectResponse)in.qe()).yk();
+        if(scene.mapIcons.size()!=registry.entry().map().content().mapIcons().size()||scene.mapIcons.isEmpty())throw new AssertionError("Native scene minimap markers missing");
+        for(var icon:scene.mapIcons)if(!icon.getIcon().startsWith("ui/minimap/"))throw new AssertionError("Non-stock minimap icon");
+        var policy=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        if(policy.getValue()!=PlayerObject.EquipPolicy.ANY)throw new AssertionError("Native equipment policy differs");
+        var player=(PlayerObject)((ObjectResponse)in.qe()).yk();apply(in,player);
+        var gift=(com.threerings.projectx.item.data.GiftBoxItem)player.items.iterator().next();
+        if(!gift.getMessage().equals("A gift for you")||!field(gift,"_wrapperName").equals("Gift-Alice")||((com.google.common.collect.Multiset<?>)field(gift,"_gifts")).size()!=1)throw new AssertionError("Native gift contents or author fields differ");
+        var unwrapped=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
+        if(!unwrapped.yd()[0].equals(com.google.common.collect.ImmutableMultiset.of(71L))||in.available()!=0)throw new AssertionError("Native unwrap callback differs");
     }
     private static void upstream()throws Exception{
         var buys=com.google.common.collect.HashMultiset.<Integer>create();buys.add(2,3);var sells=com.google.common.collect.HashMultiset.<Long>create();sells.add(45L,2);

@@ -45,6 +45,22 @@ public class CooperativeTrainingTest {
                     check(b.place().simulation().snapshot().actors().stream().anyMatch(p->p.id()==cube.id()&&p.entity().health()==0),"both sessions observe the same defeated enemy");
                 }
                 await(()->b.peerHurt(a.member().playerOid));check(b.membership().health().current()==b.membership().health().maximum(),"peer damage leaves the other knight's health independent");
+                db.grantItems("Alice",a.name,-1,-1,items.require("Rarity/Spark of Life"),2,-1,-1);
+                synchronized(shared.simulation()){
+                    var down=(SceneHealth)field(b.membership(),"health");int now=SceneClock.now();
+                    down.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",100000f,"flags",1)),now);
+                    down.revive(now); // Spend the single emergency charge before the qualifying Spark death.
+                    down.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",100000f,"flags",1)),now+2000);
+                }
+                var beforeSpark=db.worldProfile(1,1,1);
+                var revive=new SessionDecoder.Invocation(party,20,4,List.of(b.name,-1,listener()));
+                check(!c.world.interiorPartyInvocation(revive),"unrelated party cannot invoke the victim's revive service");
+                a.world.interiorPartyInvocation(new SessionDecoder.Invocation(party,20,4,List.of("Missing-Knight",-1,listener())));
+                check(db.worldProfile(1,1,1).equals(beforeSpark),"invalid revive target preserves the payer's Spark");
+                a.world.interiorPartyInvocation(revive);var afterSpark=db.worldProfile(1,1,1);
+                check(b.membership().health().current()==b.membership().health().maximum()&&b.membership().health().reviveFlags()==0,"cooperative revive restores the target without replenishing Emergency Revive");
+                check(afterSpark.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")).mapToInt(WorldProfile.Item::count).sum()==1,"the living caller pays exactly one Spark");
+                a.world.interiorPartyInvocation(revive);check(db.worldProfile(1,1,1).equals(afterSpark),"duplicate revive cannot consume a second Spark");
                 b.operation(3,null);b.world.subscribeInteriorParty((short)6);b.travel(1);
                 await(()->shared.simulation().playerCount()==1&&a.publishedMembers()==1);
                 check(a.place()==shared&&a.membership().health().current()>0,"leaving returns only that member and preserves the remaining simulation");

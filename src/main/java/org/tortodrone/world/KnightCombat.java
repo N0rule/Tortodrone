@@ -77,6 +77,8 @@ public final class KnightCombat {
         if(activity!=DEFENSE)clear(started);
     }
     public void reset(int time) { clear(time);chainCount=chainReset=0;impulse=null; }
+    /** A soft hit interrupts attacks but retains the independently applied damage impulse. */
+    public void interrupt(int time) { clear(time);chainCount=chainReset=0; }
     private void clear(int time) { activity=0;started=time;attack=null;impulseApplied=false; }
     public int activity(){return activity;}
     public int flags(){return impulseApplied?128:0;}

@@ -14,6 +14,7 @@ public final class TownStore {
     private final TownCatalog rules;
     public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;}
     static void initialize(Connection c)throws SQLException{
+        GiftStore.initialize(c);
         DepotStore.initialize(c);
         EnergyExchange.initialize(c);
         try(var s=c.createStatement()){
@@ -44,9 +45,24 @@ public final class TownStore {
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}
     static List<StarterCatalog.Model> variants(String json)throws IOException{var result=new ArrayList<StarterCatalog.Model>();for(var v:(List<?>)Json.parse(json))result.add(new StarterCatalog.Model((String)v,Map.of()));return List.copyOf(result);}
     public record Result(WorldProfile profile,Object result) { }
+    /** The rename ticket and globally unique identity commit in the same authenticated write. */
+    public Result rename(int account,int knight,long auth,String name)throws IOException {
+        String error=CharacterStore.nameError(name);if(error!=null)throw new IOException(error);
+        return change(account,knight,auth,(c,p)->{
+            var ticket=p.items().stream().filter(i->i.config().equals("Upgrade/Rename Knight")).findFirst().orElseThrow(()->new IOException("m.no_rename_item"));
+            try(var st=c.prepareStatement("UPDATE knights SET name=?,name_key=? WHERE account_id=? AND id=? AND name_key<>?")){
+                st.setString(1,name);st.setString(2,name.toLowerCase(Locale.ROOT));st.setInt(3,account);st.setInt(4,knight);st.setString(5,name.toLowerCase(Locale.ROOT));
+                if(st.executeUpdate()!=1)throw new IOException("Choose a different knight name");
+            }
+            consume(c,p,ticket.id(),1);
+            try(var st=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){st.setInt(1,account);st.executeUpdate();}
+            return name;
+        });
+    }
     public static final int SPARK_COST=50;
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
+        if(approvedCost < -1)throw new IOException("m.costupdate");
         return change(account,knight,auth,(c,p)->{
             if(approvedCost<0){
                 var spark=p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")&&i.count()>0).findFirst().orElseThrow(()->new IOException("m.costupdate"));
@@ -193,6 +209,35 @@ public final class TownStore {
             var prior=p.town().recipes().stream().filter(r->r.config().equals(config)).findFirst().orElse(null);
             long now=System.currentTimeMillis();if(prior!=null&&(prior.expires()==0||prior.expires()>now))throw new IOException("Recipe already learned");
             consume(c,p,item,1);learn(c,p,config,now);return null;});
+    }
+    public Result wrap(int account,int knight,long auth,long paperId,Map<Long,Integer> contents,String message,String costume)throws IOException {
+        if(message==null||message.length()>300||message.chars().anyMatch(ch->ch==0)||contents.isEmpty()||contents.size()>256)throw new IOException("e.not_wrapable");
+        var selected=Map.copyOf(contents);
+        return change(account,knight,auth,(c,p)->{
+            var paper=owned(p,paperId);String box=rules.item(paper.config()).get("giftBox");
+            if(box==null||!items.require(paper.config()).type().equals("WrappingPaper")||!items.require(box).type().equals("GiftBox"))throw new IOException("e.not_wrapable");
+            var gifts=new ArrayList<WorldProfile.Item>();int total=0;
+            for(var entry:selected.entrySet()){
+                var item=owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
+                if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
+                gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)));
+            }
+            String name;try(var st=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){st.setInt(1,account);st.setInt(2,knight);try(var row=st.executeQuery()){if(!row.next())throw new IOException("m.internal_error");name=row.getString(1);}}
+            consume(c,p,paperId,1);for(var entry:selected.entrySet())consume(c,p,entry.getKey(),entry.getValue());
+            long id=create(c,p,box,1,false,0,0,List.of());GiftStore.save(c,id,new WorldProfile.Gift(p.worldId(),name,message,gifts));return null;
+        });
+    }
+    public Result unwrap(int account,int knight,long auth,long boxId)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            var box=owned(p,boxId);if(!items.require(box.config()).type().equals("GiftBox")||box.gift()==null)throw new IOException("m.internal_error");
+            var contents=box.gift().contents();consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
+            for(var item:contents){
+                long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants());
+                try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
+                result.put(id,item.count());
+            }
+            return new org.tortodrone.protocol.SessionDecoder.Multiset(result);
+        });
     }
     private void learn(Connection c,WorldProfile p,String config,long now)throws SQLException,IOException{
         var r=rules.recipe(config);if(r==null)throw new IOException("Unknown recipe");

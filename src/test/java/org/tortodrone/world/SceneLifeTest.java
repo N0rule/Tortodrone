@@ -14,7 +14,7 @@ public final class SceneLifeTest {
         shields();
         movement(map);
         training(map);
-        System.out.println("PASS: death, free Training resurrection, input/instance isolation and health/status invariants");
+        System.out.println("PASS: death, once-per-level Emergency Revive, input/instance isolation and health/status invariants");
     }
     private static void shields()throws Exception{
         var content=new SceneContent(List.of(),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
@@ -67,9 +67,18 @@ public final class SceneLifeTest {
         health.equipment(profile);
         check(health.state().current()==0&&health.state().maximum()==240,"equipping bonus health cannot resurrect");
         check(health.revive(1000)&&health.state().current()==240,"explicit revival restores maximum health");
+        check(health.state().reviveFlags()==0,"manual revival consumes the same pending emergency charge");
         check(!health.revive(1001),"a live knight cannot reset revival protection");
         check(health.hit(damage(10),2999).amount()==0&&health.invulnerable(2999),"revival protection lasts two seconds");
         check(health.hit(damage(10),3000).amount()==10&&!health.invulnerable(3000),"damage resumes at the protection deadline");
+        health.hit(damage(1000),3001);health.advance(9000,5999,false);
+        check(!health.alive()&&health.canSparkRevive()&&health.state().reviveFlags()==0,"a second death cannot schedule another free revive");
+        var automatic=new SceneHealth(content);automatic.hit(damage(10000),100);
+        check(automatic.state().reviveFlags()==9&&!automatic.canSparkRevive(),"automatic revival publishes its native pending flags without a Spark offer");
+        automatic.advance(5099,4999,false);check(!automatic.alive(),"emergency delay has not elapsed");
+        automatic.advance(5100,1,false);check(automatic.alive()&&automatic.state().reviveFlags()==0&&automatic.invulnerable(10099),"automatic revival restores full health and five-second protection");
+        automatic.equipment(profile);automatic.heal(10000);automatic.hit(damage(10000),10100);automatic.advance(16000,5900,false);
+        check(!automatic.alive()&&automatic.canSparkRevive(),"healing and equipment cannot replenish a spent charge");
         // A status tick can kill while SceneStatus is iterating its active conditions.
         var tiny=new SceneHealth(new SceneContent(List.of(),prepared.scales(),Map.of(),Map.of("player.base-health",1f),Map.of(),Map.of(),prepared.statuses()));
         tiny.hit(condition(content,"Fire"),100);
@@ -110,17 +119,18 @@ public final class SceneLifeTest {
             player.combat(WeaponCatalog.empty(),new WorldProfile(219,1,1,0,0,1,List.of()));player.enter();
             var dead=await(queue,s->s.actors().getFirst().activity()==TownMovement.DEAD);
             var corpse=dead.actors().getFirst();
-            check(dead.health(219).current()==0&&corpse.interaction()!=null&&corpse.interaction().action().equals("Resurrect")&&corpse.interaction().actorId()==219,"Training exposes a self-targeted native revival prompt");
+            check(dead.health(219).current()==0&&corpse.interaction()==null&&dead.health(219).reviveFlags()==9,"pending Emergency Revive has no manual resurrection prompt");
             check(!player.useItem(1,new SceneContent.Spec(Map.of("kind","vial"))),"dead knight cannot use temporary items");
             check(other.snapshot().health(219).current()==1,"death does not affect another instance of the map");
             int stamp=SceneClock.now();check(player.input(stamp,0,0,4,stamp,stamp,System.nanoTime()/1_000_000L),"action intent reaches the corpse");
             var revived=await(queue,s->s.health(219).current()>0);
             check(revived.actors().getFirst().activity()==TownMovement.RESURRECT&&(revived.actors().getFirst().flags()&64)!=0,"Training revival restores health and streams the native protection flag");
             check(revived.actors().getFirst().interaction()==null,"revival clears the corpse prompt");
+            check(revived.health(219).reviveFlags()==0,"the pending automatic charge is consumed exactly once");
         }
     }
     private static SceneSimulation.Snapshot await(BlockingQueue<SceneSimulation.Snapshot> queue,java.util.function.Predicate<SceneSimulation.Snapshot> ready)throws Exception {
-        long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(4);
+        long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(7);
         while(System.nanoTime()<deadline){var snapshot=queue.poll(100,TimeUnit.MILLISECONDS);if(snapshot!=null&&ready.test(snapshot))return snapshot;}
         throw new AssertionError("Scene lifecycle publication missing");
     }

@@ -453,6 +453,21 @@ public final class SessionCodec {
             attribute(out,oid,"knightId",o -> value(o,profile.worldId()));
         });
     }
+    public byte[] knightName(int oid,String knight)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"knight");name(out,knight);});
+    }
+    public byte[] equipPolicy(int oid,boolean station)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"equipPolicy");value(out,new SessionDecoder.EnumValue("com.threerings.projectx.data.PlayerObject$EquipPolicy",station?2:0));});
+    }
+    /** TudeyBodyObject.FORCE_CLIENT_ACTION, as emitted by ForceClientAction logic. */
+    public byte[] controllerAction(int oid,String command,ActorState source)throws IOException {
+        if(!java.util.Set.of("forge","show_arsenal_station").contains(command))throw new IOException("Unsupported controller action");
+        return frame(out->{eventHeader(out,"MessageEvent",oid);string(out,"forceClientAction");
+            out.writeBoolean(true);out.writeInt(2); // MessageEvent's declared Object[] field.
+            type(out,"com.threerings.tudey.config.ClientActionConfig$ControllerAction");string(out,command);string(out,"");
+            if(source==null)out.writeShort(0);else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
+        });
+    }
 
     public byte[] balances(int oid,WorldProfile profile) throws IOException {
         return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
@@ -587,7 +602,8 @@ public final class SessionCodec {
     }
 
     private void townValue(DataOutputStream out,Object value)throws IOException {
-        if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
+        if(value instanceof SessionDecoder.Multiset multiset){type(out,"com.google.common.collect.HashMultiset");out.writeInt(multiset.counts().size());for(var entry:multiset.counts().entrySet()){value(out,entry.getKey());out.writeInt(entry.getValue());}}
+        else if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
         else if(value instanceof org.tortodrone.town.ExchangeState.Offer offer){type(out,"com.threerings.coin.data.CoinExOfferInfo");out.writeInt(offer.id());out.writeBoolean(offer.buy());out.writeInt(offer.price());out.writeInt(offer.volume());}
         else if(value instanceof org.tortodrone.town.TownCatalog.DepotOffers offers){
             type(out,"java.util.HashMap");out.writeInt(offers.goods().size());for(var entry:new java.util.TreeMap<>(offers.goods()).entrySet()){
@@ -625,7 +641,7 @@ public final class SessionCodec {
                 type(o,"com.threerings.projectx.data.ConversationDialogInfo");
                 type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());
                 vector(o,source.x(),source.y());o.writeFloat(source.rotation());value(o,node.transientModel());o.writeShort(0);
-                o.writeShort(0);value(o,conversation.model());value(o,node.animation());o.writeShort(0);
+                value(o,node.userInterface());value(o,conversation.model());value(o,node.animation());o.writeShort(0);
                 string(o,conversation.name());string(o,conversation.bundle());string(o,node.message());
                 type(o,"[Ljava.lang.String;");int count=node.responses().size();o.writeInt(count);
                 o.writeShort((count+7)/8);
@@ -731,7 +747,9 @@ public final class SessionCodec {
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
             type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(10);
             type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(6);
-            emptyDSet(out);
+            var icons=scene.map().content().mapIcons();
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(icons.size());int marker=1;
+            for(var icon:icons){type(out,"com.threerings.projectx.data.IconMapEntry$FixedEntry");out.writeInt(marker++);string(out,icon.icon());vector(out,icon.x(),icon.y());}
             if(scene.map().town()){type(out,"com.threerings.projectx.town.data.TownSceneMarshaller");out.writeInt(scene.oid());out.writeInt(11);}
         });
     }
@@ -762,7 +780,7 @@ public final class SessionCodec {
             out.writeShort(0);out.writeInt(managed?PartyRegistry.CAPACITY:training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
             out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
-            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(3); // SUBTOWN
+            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
             primitiveInts(out,new int[]{0});out.writeBoolean(true);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(!managed);
             emptyDSet(out);string(out,null);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(4);
@@ -929,7 +947,14 @@ public final class SessionCodec {
     private void item(DataOutputStream out,String costume,int worldId,WorldProfile.Item item)throws IOException {
             var definition=itemCatalog.find(item.config());
             boolean seeded=item.slot()==WorldProfile.Slot.OTHER&&definition!=null&&definition.variant()==ItemCatalog.Variant.SEED_ITEM;
-            type(out,"com.threerings.projectx.item.data."+(item.slot()==WorldProfile.Slot.OTHER?seeded?"SeedItem":definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM?"LevelItem":"Item":"LevelItem"));
+            boolean gift=definition!=null&&definition.type().equals("GiftBox");
+            type(out,"com.threerings.projectx.item.data."+(gift?"GiftBoxItem":item.slot()==WorldProfile.Slot.OTHER?seeded?"SeedItem":definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM?"LevelItem":"Item":"LevelItem"));
+            if(gift){
+                var record=item.gift();out.writeBoolean(record!=null);if(record!=null){
+                    out.writeInt(record.contents().size());for(var content:record.contents()){value(out,giftReference(content));out.writeInt(content.count());}
+                }
+                string(out,record==null?null:record.message());out.writeInt(record==null?0:record.wrapperId());string(out,record==null?null:record.wrapperName());
+            }
             if(seeded)out.writeLong(definition.seed());
             boolean level=item.slot()!=WorldProfile.Slot.OTHER||definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM;
             if(level) {
@@ -944,6 +969,14 @@ public final class SessionCodec {
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
             out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0) | (item.cursed()?4:0));
+    }
+    private StarterCatalog.Model giftReference(WorldProfile.Item item){
+        var args=new java.util.TreeMap<String,Object>();
+        if(item.slot()!=WorldProfile.Slot.OTHER){args.put("_setLevel",item.level());args.put("_setHeat",item.heatProgress());}
+        if(!item.variants().isEmpty())args.put("_setVariants",new FireCatalog.ListValue("com.threerings.config.ConfigReference",new java.util.ArrayList<>(item.variants())));
+        var accessories=item.nativeAccessories("");if(!accessories.isEmpty())args.put("_setAccessories",new FireCatalog.ListValue("com.threerings.config.ConfigReference",accessories.stream().map(a->(Object)new StarterCatalog.Model(a,Map.of())).toList()));
+        if(item.bound())args.put("_createLocked",true);
+        return new StarterCatalog.Model(item.config(),args);
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);

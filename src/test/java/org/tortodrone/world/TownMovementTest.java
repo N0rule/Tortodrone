@@ -18,8 +18,17 @@ public final class TownMovementTest {
                 out.writeFloat(-1);out.writeFloat(-9);out.writeFloat(.25f);
                 out.write(java.util.Arrays.copyOf(clear.toByteArray(),(width*height+7)/8));
             }
-            corridor=CollisionMap.read(fixture);verify();
+            corridor=CollisionMap.read(fixture);verify();hurt();
         } finally {java.nio.file.Files.deleteIfExists(fixture);}
+    }
+    private static void hurt(){
+        var player=movement();player.resetInput(1000);
+        check(player.accept(1000,0,0,1,1000,1000),"initial movement accepted");player.advance(1050,1050);
+        check(player.accept(1100,.4f,.4f,1,1050,1050),"future intent queued before damage");
+        float x=player.x();player.hurt(1050);player.advance(1100,1100);
+        check(player.activity()==TownMovement.HURT&&player.x()>x&&player.rotation()>.3f,"native soft hit permits movement/rotation and preserves queued intent");
+        check(!player.accept(1050,0,0,1,1100,1100),"damage does not reset the accepted-input watermark");
+        player.advance(1550,1550);check(player.activity()==0,"soft reaction ends at the native 500 ms deadline");
     }
     private static void verify() throws Exception {
         byte[] scene = TownSquare.model();

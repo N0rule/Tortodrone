@@ -49,9 +49,9 @@ public final class TownAdministrationTest {
                 check(town.depot(2,1,1,saved.id(),2,energyQuote).profile().energy()==98,"new quote uses the configured Energy price and rejects a player override");
                 check(new DepotStore(new Database(root,false),items,rules).snapshot().equals(repriced),"depot edits survive reopening the same SQLite database");
             }
-            // A real schema-10 layout contains no depot table; preserve its character state.
+            // A real schema-10 layout has no depot, Energy Exchange or gift tables; preserve character state.
             Path old=root.resolve("old");var db=new Database(old,false);int account=db.create("Old",new org.tortodrone.account.Passwords.Protection(new byte[16],new byte[32]),false);new CharacterStore(db,account,"Old",items).create(knight("Old-Knight"));var before=db.worldProfile(account,1,1);
-            db.write(c->{try(var s=c.createStatement()){s.execute("DROP TABLE town_depot_offers");s.execute("DROP TABLE town_energy_offers");s.execute("PRAGMA user_version=10");}return null;});
+            db.write(c->{try(var s=c.createStatement()){s.execute("DROP TABLE town_gifts");s.execute("DROP TABLE town_depot_offers");s.execute("DROP TABLE town_energy_offers");s.execute("PRAGMA user_version=10");}return null;});
             var migrated=new Database(old,false);check(migrated.worldProfile(account,1,1).equals(before)&&new DepotStore(migrated,items,rules).snapshot().revision()==0,"schema-10 migration preserves existing characters and imports no invented stock");
             System.out.println("PASS: admin gear grants/edits, UV validation, ownership/stale revision/audit rollback, depot prices/limits/quotes/persistence and schema-10 upgrade");
         }finally{try(var files=Files.walk(root)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}

@@ -32,6 +32,15 @@ public final class CraftCompatibility {
         check("items type",invocation.arguments().get(1) instanceof long[] ids && ids.length==2 && ids[0]==22L && ids[1]==44L,true);
         check("upgrade",invocation.arguments().get(2),Boolean.TRUE);
         listener(invocation.arguments().get(3),true);
+        var itemService=new com.threerings.projectx.item.data.ItemMarshaller();itemService.a(3,9,dispatch);
+        itemService.a(22L,(Object)null,(A.a)null);invocation=decode(dispatch.event);
+        check("inventory use method",invocation.method(),14);check("inventory use arguments",invocation.arguments().size(),3);listener(invocation.arguments().get(2),false);
+        var gifts=com.google.common.collect.HashMultiset.<Long>create();gifts.add(44L,2);
+        itemService.a(22L,gifts,"A gift",(A.a)null);invocation=decode(dispatch.event);
+        check("wrap method",invocation.method(),15);check("wrap arguments",invocation.arguments().size(),4);
+        check("wrap contents",invocation.arguments().get(1),new SessionDecoder.Multiset(Map.of(44L,2)));listener(invocation.arguments().get(3),false);
+        itemService.e(55L,(A.c)null);invocation=decode(dispatch.event);
+        check("unwrap method",invocation.method(),13);check("unwrap arguments",invocation.arguments().size(),2);listener(invocation.arguments().get(1),true);
         // Plain crafters send the learned recipe identifier instead.
         craft.a(77L,new long[]{88L},false,(A.c)null);
         invocation=decode(dispatch.event);check("method",invocation.method(),2);
@@ -70,7 +79,7 @@ public final class CraftCompatibility {
         // The alchemy machines' catalogs must resolve server-side with matchable native ingredients.
         var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
         var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
-        for(String actor:List.of("Shop/Haven/Alchemy, Battle Sprites","scene.1.6837.39","scene.30893.207.4")){
+        for(String actor:List.of("Shop/Haven/Alchemy, Battle Sprites","scene.1.6837.39","scene.30893.207.4","scene.2.placed.5184")){
             var station=rules.station(actor);
             if(station==null)throw new AssertionError("Missing station: "+actor);
             for(String text:station.recipes()){

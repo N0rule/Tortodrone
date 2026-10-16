@@ -73,7 +73,7 @@ public final class ItemCatalogExport {
     static boolean plainPlayerType(String type) {
         return Set.of("ActionItem","Craft","Recipe","Mineral","Token","Artifact","Ticket","AccessoryTicket","VariantTicket","InstantAction",
             "SpriteEgg","Harness","Color","Eye","Height","Lockbox","Pack","GuildBond","GuildHallGlobalTicket",
-            "RenameGuild","RenameKnight","WrappingPaper","AnimatedAction","Lift","SpawnActor","TokenArtifact",
+            "RenameGuild","RenameKnight","WrappingPaper","GiftBox","AnimatedAction","Lift","SpawnActor","TokenArtifact",
             "Capsule","Vial").contains(type);
     }
     static Map<String,Object> convert(Map<String,Object> a,Map<String,Object> b)throws IOException {

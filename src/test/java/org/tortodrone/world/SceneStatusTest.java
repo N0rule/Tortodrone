@@ -21,8 +21,9 @@ public final class SceneStatusTest {
         check(reactive.hit(blow,1000).react()&&reactive.invulnerable(1999)&&reactive.hit(blow,1500).amount()==0,"authored hurt reaction grants one second of protection");
         check(reactive.hit(blow,2000).amount()>0,"hurt protection expires on its deadline");
         var hurt=new TownMovement(map.collision(),map.spawnX(),map.spawnY());hurt.combat(new KnightCombat(WeaponCatalog.empty()));hurt.resetInput(1000);hurt.hurt(1000);
-        hurt.advance(1424,1424);check(hurt.activity()==TownMovement.HURT,"hurt animation lasts its native 425 ms");
-        hurt.advance(1425,1425);check(hurt.activity()==0,"hurt animation finishes without leaving the knight stuck");
+        hurt.advance(1425,1425);check(hurt.activity()==TownMovement.HURT,"native hurt activity continues beyond the animation-only 425 ms cutoff");
+        hurt.advance(1499,1499);check(hurt.activity()==TownMovement.HURT,"native hurt activity lasts 500 ms");
+        hurt.advance(1500,1500);check(hurt.activity()==0,"hurt activity finishes at its native deadline without leaving the knight stuck");
         for(String kind:List.of("Fire","Shock")){
             var scaled=content.statuses().get(kind+" (Scaled)");
             var player=new SceneHealth(content);

@@ -86,6 +86,29 @@ public final class TownEconomyTest {
             var craftedFood=town.craft(a,1,1,"Sprite/Food/Power Mote",new long[]{scale,crimsonite},false,true);
             check(craftedFood.profile().crowns()==beforeFood.crowns()-mote.cost(items.require("Food/Power Mote").rarity()),"machine-catalog sprite food charges the stock rarity price");
             check(!db.worldProfile(a,1,1).items().stream().anyMatch(i->i.id()==scale||i.id()==crimsonite)&&db.worldProfile(a,1,1).items().stream().anyMatch(i->i.config().equals("Food/Power Mote")),"machine-catalog sprite food consumes its native ingredients exactly once");
+            // Reported five-star failure: exact stock recipe, matching material, mineral and cost.
+            var star=rules.recipe("Sprite/Food/Divine Star");
+            check(star!=null&&star.cost(5)==500&&star.count()==1&&star.ingredients().getFirst().rarity()==5,"Divine Star uses the verified stock five-star recipe");
+            grant(db,items,"Alice","Alice-Knight","Material/Silverweave",2);grant(db,items,"Alice","Alice-Knight","Mineral/Inventory/Luminite",20);grant(db,items,"Alice","Alice-Knight","Mineral/Inventory/Luminite",5);
+            var starBefore=db.worldProfile(a,1,1);long material=id(starBefore,"Material/Silverweave");
+            refused(()->town.craft(a,1,1,star.config(),new long[]{material},false,true));
+            check(db.worldProfile(a,1,1).equals(starBefore),"incomplete five-star craft rolls back every resource");
+            long[] starIngredients=starBefore.items().stream().filter(i->i.id()==material||i.config().equals("Mineral/Inventory/Luminite")).mapToLong(WorldProfile.Item::id).toArray();
+            var madeStar=town.craft(a,1,1,star.config(),starIngredients,false,true).profile();
+            check(madeStar.crowns()==starBefore.crowns()-500&&madeStar.items().stream().anyMatch(i->i.config().equals("Food/Divine Star")),"Divine Star crafts through the machine catalogue");
+            var brinks=rules.station("scene.2.2354.21");var tokenGoods=rules.goods(brinks.shop(),0,madeStar.worldId());
+            check(tokenGoods.size()==128&&tokenGoods.getFirst().tokenCount()==10,"Brinks documented original token stock is bound to the spawned merchant");
+            grant(db,items,"Alice","Alice-Knight",tokenGoods.getFirst().token(),10);
+            var tokenBefore=db.worldProfile(a,1,1);refused(()->town.shop(b,1,1,brinks,0,Map.of(0,1),Map.of()));
+            var tokenPurchase=town.shop(a,1,1,brinks,0,Map.of(0,1),Map.of()).profile();
+            check(tokenPurchase.crowns()==tokenBefore.crowns()&&tokenPurchase.items().stream().anyMatch(i->i.config().equals(tokenGoods.getFirst().item())&&i.bound()),"token purchase consumes tokens and binds equipment without charging crowns");
+            // Rename failures never spend the ticket or partially publish an identity.
+            grant(db,items,"Alice","Alice-Knight","Upgrade/Rename Knight",1);var renameBefore=db.worldProfile(a,1,1);
+            refused(()->town.rename(a,1,1,"Bob-Knight"));refused(()->town.rename(a,1,1,"invalid name"));refused(()->town.rename(a,1,999,"Changed-Knight"));
+            check(db.worldProfile(a,1,1).equals(renameBefore),"duplicate, invalid and stale-auth renames preserve the ticket and inventory");
+            town.rename(a,1,1,"Changed-Knight");alice.refresh();
+            check(alice.roster().getFirst().name().equals("Changed-Knight")&&db.worldProfile(a,1,1).items().stream().noneMatch(i->i.config().equals("Upgrade/Rename Knight")),"rename and ticket consumption persist atomically");
+            refused(()->town.rename(a,1,1,"Another-Knight"));
             System.out.println("PASS: Town crafting, sprite persistence, auction escrow, mail ownership and rollback");
         }finally{try(var paths=Files.walk(home)){for(var file:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(file);}}
     }
