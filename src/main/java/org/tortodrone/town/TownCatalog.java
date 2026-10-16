@@ -22,6 +22,10 @@ public final class TownCatalog {
     public record Shop(String catalog,int level,String preparer,String cycle,boolean perKnight){public static final Shop EMPTY=new Shop("",10,"BASIC","CONSTANT",false);}
     public record Bonus(String weapon,int health,float charge,float speed,float attack) { }
     public record Good(String item,int count,int price,int energy,int limit,String token,int tokenCount) { }
+    public record DepotGood(Good good,boolean featured) { }
+    public record DepotOffers(Map<Integer,DepotGood> goods) { public DepotOffers{goods=Map.copyOf(goods);} }
+    private List<DepotGood> depot=List.of();
+    public List<DepotGood> depot(){return depot;}
     public record Catalog(String name,String kind,List<String> includes,List<Good> goods,int min,int max,float chance) { }
     public record Station(String actor,String kind,String type,String group,String name,String title,String model,String description,List<String> recipes,Shop shop) {
         public Station(String actor,String kind,String type,String group,String name,String title,String model,String description,List<String> recipes){this(actor,kind,type,group,name,title,model,description,recipes,Shop.EMPTY);}
@@ -32,6 +36,28 @@ public final class TownCatalog {
     private final List<Perk> perks;
     private final Map<String,Station> stations;
     private Map<String,Map<String,Object>> variantTables=Map.of();
+    private GearRules gear=GearRules.empty();
+    public GearRules gear(){return gear;}
+    public static String itemGroup(org.tortodrone.character.ItemCatalog.Entry item){return switch(item.type()){case "Sword"->"SWORD";case "Gun","Handgun","SwingingHandgun"->"HANDGUN";case "Bomb","BlastNetworkBomb"->"BOMB";case "HelmCostume"->"COSTUME_HELM";case "ArmorCostume"->"COSTUME_ARMOR";case "ShieldCostume"->"COSTUME_SHIELD";case "Material","Craft"->"CRAFT";default->item.type().toUpperCase(Locale.ROOT);};}
+    public List<String> availableVariants(String group){
+        if(!Set.of("SWORD","HANDGUN","BOMB","HELM","ARMOR","SHIELD","TRINKET").contains(group))return List.of();
+        var result=new TreeSet<String>();collectVariants(variantTables.get("Shop/Variant 3"),group,result,0);return List.copyOf(result);
+    }
+    private void collectVariants(Map<String,Object> node,String group,Set<String> result,int depth){
+        if(node==null||depth>32)return;String kind=string(node,"kind");if(kind.equals("GroupEntry")&&!group.equals(string(node,"group")))return;
+        if(kind.equals("VariantEntry")){result.add(string(node,"variant"));return;}
+        var entries=list(node,"entries");if((kind.equals("TableEntry")||kind.equals("Derived"))&&entries.isEmpty())collectVariants(variantTables.get(string(node,"table")),group,result,depth+1);
+        for(var e:entries)collectVariants(object(object(e).get("node")),group,result,depth+1);
+    }
+    public void validateVariants(String group,List<String> selected)throws IOException{
+        if(selected.size()>3||new HashSet<>(selected).size()!=selected.size()||!availableVariants(group).containsAll(selected))throw new IOException("Choose up to three distinct UVs valid for this item");
+        validateVariantFamilies(variantTables.get("Shop/Variant 3"),group,new HashSet<>(selected),0);
+    }
+    private void validateVariantFamilies(Map<String,Object> node,String group,Set<String> selected,int depth)throws IOException{
+        if(node==null||depth>32)return;String kind=string(node,"kind");if(kind.equals("GroupEntry")&&!group.equals(string(node,"group")))return;
+        var entries=list(node,"entries");if((kind.equals("TableEntry")||kind.equals("Derived"))&&entries.isEmpty())validateVariantFamilies(variantTables.get(string(node,"table")),group,selected,depth+1);
+        for(var e:entries){var child=object(object(e).get("node"));if(Boolean.TRUE.equals(node.get("exclude"))){var family=new HashSet<String>();collectVariants(child,group,family,depth+1);family.retainAll(selected);if(family.size()>1)throw new IOException("Choose only one UV from each variant family");}validateVariantFamilies(child,group,selected,depth+1);}
+    }
     private Map<String,Accessory> accessories=Map.of();
     private Map<String,Set<String>> blockers=Map.of();
     private Map<String,String> harnesses=Map.of();
@@ -70,27 +96,42 @@ public final class TownCatalog {
     public Set<String> blockers(String name){return blockers.getOrDefault(name,Set.of());}
     public String harnessDamage(String name){return harnesses.get(name);}
     public String accessoryTicket(String accessory){var grants=items.entrySet().stream().filter(e->accessory.equals(e.getValue().get("accessory"))).map(Map.Entry::getKey).filter(k->!k.contains("/Parts/")).sorted().toList();return grants.size()==1?grants.getFirst():null;}
-    public List<org.tortodrone.character.StarterCatalog.Model> roll(String table,String group)throws IOException{
-        var result=new ArrayList<org.tortodrone.character.StarterCatalog.Model>();rollTable(table,group,result,0);return List.copyOf(result);
+    public List<org.tortodrone.character.StarterCatalog.Model> roll(String table,String group)throws IOException{return roll(table,group,List.of());}
+    /** Retained UVs exclude their entire weighted branch, including other tiers of that UV. */
+    public List<org.tortodrone.character.StarterCatalog.Model> roll(String table,String group,List<org.tortodrone.character.StarterCatalog.Model> retained)throws IOException{
+        var result=new ArrayList<org.tortodrone.character.StarterCatalog.Model>();var excluded=retained.stream().map(org.tortodrone.character.StarterCatalog.Model::name).collect(java.util.stream.Collectors.toSet());
+        if(!table.isEmpty()){
+            var root=variantTables.get(table);if(root==null)throw new IOException("Missing variant table: "+table);
+            int limit=integer(root,"maxResults")-retained.size();if(limit>0){rollNode(root,group,result,excluded,0);trim(result,limit);}
+        }
+        result.addAll(retained);return List.copyOf(result);
     }
-    private void rollTable(String name,String group,List<org.tortodrone.character.StarterCatalog.Model> result,int depth)throws IOException{
-        if(name.isEmpty())return;var root=variantTables.get(name);if(root==null)throw new IOException("Missing variant table: "+name);rollNode(root,group,result,depth+1);
-    }
-    private void rollNode(Map<String,Object> node,String group,List<org.tortodrone.character.StarterCatalog.Model> result,int depth)throws IOException{
+    private static void trim(List<?> values,int maximum){while(values.size()>maximum)values.remove(java.util.concurrent.ThreadLocalRandom.current().nextInt(values.size()));}
+    private void rollNode(Map<String,Object> node,String group,List<org.tortodrone.character.StarterCatalog.Model> result,Set<String> excluded,int depth)throws IOException{
         if(depth>32)throw new IOException("Variant table recursion limit");String kind=string(node,"kind");var entries=list(node,"entries");var random=java.util.concurrent.ThreadLocalRandom.current();
         switch(kind){
             case "VariantEntry"->{String name=string(node,"variant");if(!name.isEmpty())result.add(new org.tortodrone.character.StarterCatalog.Model(name,Map.of()));}
-            case "TableEntry","Derived"->rollTable(string(node,"table"),group,result,depth+1);
-            case "GroupEntry"->{if(group.equals(string(node,"group"))&&!entries.isEmpty())rollNode(object(object(entries.getFirst()).get("node")),group,result,depth+1);}
-            case "OptionalEntry"->{if(random.nextFloat()<((Number)node.get("probability")).floatValue()&&!entries.isEmpty())rollNode(object(object(entries.getFirst()).get("node")),group,result,depth+1);}
+            case "TableEntry","Derived"->{
+                Map<String,Object> root=entries.isEmpty()?variantTables.get(string(node,"table")):object(object(entries.getFirst()).get("node"));
+                if(root==null)throw new IOException("Missing variant table: "+string(node,"table"));rollNode(root,group,result,excluded,depth+1);
+            }
+            case "GroupEntry"->{if(group.equals(string(node,"group"))&&!entries.isEmpty())rollNode(object(object(entries.getFirst()).get("node")),group,result,excluded,depth+1);}
+            case "OptionalEntry"->{if(random.nextFloat()<((Number)node.get("probability")).floatValue()&&!entries.isEmpty())rollNode(object(object(entries.getFirst()).get("node")),group,result,excluded,depth+1);}
             case "RandomEntry","SelectionEntry","RandomSelectionEntry"->{
                 int selections=kind.equals("RandomEntry")?1:kind.equals("SelectionEntry")?integer(node,"selections"):weighted(list(node,"selectionWeights").stream().mapToDouble(v->((Number)v).doubleValue()).toArray());
-                var weights=entries.stream().mapToDouble(v->((Number)object(v).get("weight")).doubleValue()).toArray();
-                for(int i=0;i<selections;i++){int selected=weighted(weights);if(selected<0)break;rollNode(object(object(entries.get(selected)).get("node")),group,result,depth+1);weights[selected]=0;}
+                double[] weights=new double[entries.size()];for(int i=0;i<weights.length;i++){var entry=object(entries.get(i));weights[i]=Boolean.TRUE.equals(node.get("exclude"))&&containsVariant(object(entry.get("node")),group,excluded,depth+1)?0:((Number)entry.get("weight")).doubleValue();}
+                for(int i=0;i<selections;i++){int selected=weighted(weights);if(selected<0)break;rollNode(object(object(entries.get(selected)).get("node")),group,result,excluded,depth+1);weights[selected]=0;}
             }
-            case "CompoundEntry","Original","VariantTableConfig"->{for(var e:entries)rollNode(object(object(e).get("node")),group,result,depth+1);if(!kind.equals("CompoundEntry")){int max=integer(node,"maxResults");while(result.size()>max)result.remove(random.nextInt(result.size()));}}
+            case "CompoundEntry"->{for(var e:entries)rollNode(object(object(e).get("node")),group,result,excluded,depth+1);}
+            case "Original","VariantTableConfig"->{var local=new ArrayList<org.tortodrone.character.StarterCatalog.Model>();for(var e:entries)rollNode(object(object(e).get("node")),group,local,excluded,depth+1);trim(local,integer(node,"maxResults"));result.addAll(local);}
             default->throw new IOException("Unsupported variant table node: "+kind);
         }
+    }
+    private boolean containsVariant(Map<String,Object> node,String group,Set<String> variants,int depth)throws IOException{
+        if(depth>32)throw new IOException("Variant table recursion limit");String kind=string(node,"kind");if(kind.equals("VariantEntry"))return variants.contains(string(node,"variant"));
+        if(kind.equals("GroupEntry")&&!group.equals(string(node,"group")))return false;
+        var entries=list(node,"entries");if((kind.equals("TableEntry")||kind.equals("Derived"))&&entries.isEmpty()){var root=variantTables.get(string(node,"table"));return root!=null&&containsVariant(root,group,variants,depth+1);}
+        for(var entry:entries)if(containsVariant(object(object(entry).get("node")),group,variants,depth+1))return true;return false;
     }
     private static int weighted(double[] weights){double total=0;for(double weight:weights)total+=Math.max(0,weight);if(total<=0)return -1;double pick=java.util.concurrent.ThreadLocalRandom.current().nextDouble(total);for(int i=0;i<weights.length;i++){pick-=Math.max(0,weights[i]);if(pick<0)return i;}return -1;}
     private TownCatalog(Map<String,Recipe> recipes,Map<String,Map<String,String>> items,Map<String,Sprite> sprites,List<Perk> perks,Map<String,Station> stations){
@@ -119,7 +160,7 @@ public final class TownCatalog {
             for(var value:list(root,"sprites")){var s=object(value);var skills=new ArrayList<Skill>();for(var raw:(List<?>)s.getOrDefault("skills",List.of())){var skill=object(raw);skills.add(new Skill(strings(skill,"attacks"),bool(skill,"follow"),list(skill,"recharge").stream().map(v->((Number)v).intValue()).toList(),list(skill,"minimum").stream().map(v->((Number)v).intValue()).toList()));}sprites.put(string(s,"config"),new Sprite(string(s,"config"),strings(s,"preferredFood"),(String)s.getOrDefault("restrictDamageType","UNBLOCKABLE"),List.copyOf(skills)));}
             for(var value:list(root,"perks")){var p=object(value);perks.add(new Perk(string(p,"name"),integer(p,"tier"),string(p,"variant"),string(p,"previous")));}
             for(var value:list(root,"stations")){var s=object(value);var station=new Station(string(s,"actor"),string(s,"kind"),string(s,"type"),string(s,"group"),string(s,"name"),string(s,"title"),string(s,"model"),string(s,"description"),strings(s,"recipes"),new Shop((String)s.getOrDefault("catalog",""),((Number)s.getOrDefault("level",10)).intValue(),(String)s.getOrDefault("preparer","BASIC"),(String)s.getOrDefault("cycle","CONSTANT"),(Boolean)s.getOrDefault("perKnight",false)));stations.put(station.actor(),station);}
-            var result=new TownCatalog(recipes,items,sprites,perks,stations);
+            var result=new TownCatalog(recipes,items,sprites,perks,stations);result.gear=GearRules.load(root);
             var tables=new HashMap<String,Map<String,Object>>();for(var value:list(root,"variantTables")){var t=object(value);tables.put(string(t,"config"),object(t.get("root")));}result.variantTables=Map.copyOf(tables);
             var accessories=new HashMap<String,Accessory>();for(var value:list(root,"accessories")){var v=object(value);accessories.put(string(v,"config"),new Accessory(string(v,"config"),string(v,"location"),Set.copyOf(strings(v,"blocks")),bool(v,"remove"),bool(v,"destroy")));}result.accessories=Map.copyOf(accessories);
             var blockers=new HashMap<String,Set<String>>();for(var value:list(root,"blockers")){var v=object(value);blockers.put(string(v,"config"),Set.copyOf(strings(v,"slots")));}result.blockers=Map.copyOf(blockers);
@@ -127,6 +168,7 @@ public final class TownCatalog {
             var catalogs=new HashMap<String,Catalog>();for(var value:list(root,"catalogs")){var v=object(value);var goods=new ArrayList<Good>();for(var raw:list(v,"goods")){var g=object(raw);goods.add(new Good(string(g,"item"),integer(g,"count"),integer(g,"price"),integer(g,"energy"),integer(g,"limit"),string(g,"token"),integer(g,"tokenCount")));}catalogs.put(string(v,"config"),new Catalog(string(v,"config"),string(v,"kind"),strings(v,"includes"),List.copyOf(goods),integer(v,"min"),integer(v,"max"),((Number)v.get("chance")).floatValue()));}result.catalogs=Map.copyOf(catalogs);
             var bonuses=new HashMap<String,Bonus>();for(var value:list(root,"bonuses")){var v=object(value);bonuses.put(string(v,"config"),new Bonus(string(v,"weapon"),integer(v,"health"),((Number)v.get("charge")).floatValue(),((Number)v.get("speed")).floatValue(),((Number)v.get("attack")).floatValue()));}result.bonuses=Map.copyOf(bonuses);
             var models=new HashMap<String,org.tortodrone.character.StarterCatalog.Model>();var parameters=new HashMap<String,String>();for(var value:list(root,"accessories")){var v=object(value);if(v.containsKey("model")){models.put(string(v,"config"),org.tortodrone.world.FireCatalog.modelJson(string(v,"model")));parameters.put(string(v,"config"),string(v,"parameter"));}}result.accessoryModels=Map.copyOf(models);result.accessoryParameters=Map.copyOf(parameters);
+            var depot=new ArrayList<DepotGood>();for(var raw:(List<?>)root.getOrDefault("depot",List.of())){var v=object(raw);depot.add(new DepotGood(new Good(string(v,"item"),integer(v,"count"),integer(v,"price"),integer(v,"energy"),integer(v,"limit"),"",0),bool(v,"featured")));}result.depot=List.copyOf(depot);
             return result;
         }catch(IllegalArgumentException|ClassCastException|NullPointerException bad){throw new IOException("Invalid Town catalogue",bad);}
     }

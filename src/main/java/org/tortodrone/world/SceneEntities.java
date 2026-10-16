@@ -151,11 +151,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",670);}
     public InteractionState interaction(float x,float y,float rotation){
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((content.conversations().containsKey(e.config.name())||e.spec.fields().containsKey("town-kind")||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        for(var e:entities.values())if((content.conversations().containsKey(e.spec.text("dialogue",e.config.name()))||e.spec.fields().containsKey("town-station")||e.spec.fields().containsKey("town-kind")||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
-            if((e.spec.flag("interaction-area",false)?SceneShape.intersects(e.shape,x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y,e.spec.number("interaction-radius",.4f)):distance<=e.spec.number("interaction-radius",.4f)+e.spec.number("radius",0)+e.spec.number("interaction-expansion",0))&&distance<best){nearest=e;best=distance;}
+            float radius=e.spec.number("interaction-radius",.4f)+e.spec.number("interaction-expansion",0);
+            if(e.spec.contains(e.x,e.y,e.rotation,x+ox*c-oy*s,y+ox*s+oy*c,radius)&&distance<best){nearest=e;best=distance;}
         }
         if(nearest==null)return null;
         String description=nearest.spec.text("description","");

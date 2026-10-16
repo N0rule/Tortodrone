@@ -34,17 +34,20 @@ final class AdminWindow extends JFrame {
     private String requestedKnight;
     private String requestedUsername;
     private final KnightPanel knightPanel=new KnightPanel(this);
+    private final AuctionPanel auctionPanel=new AuctionPanel(this);
+    private final DepotPanel depotPanel=new DepotPanel(this);
+    private final JList<String> navigation=new JList<>(new String[]{"Accounts & knights","Supply Depot","Auction House"});
 
     AdminWindow(Path directory) { this(directory,null); }
     AdminWindow(Path directory,String initialKnight) {
-        super("Tortodrone — Account Manager");
+        super("Tortodrone — Administration");
         setJMenuBar(DesktopTheme.menuBar());
         requestedKnight=initialKnight;
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1000,600)); setSize(1400,760); setLocationByPlatform(true);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE); setMinimumSize(new Dimension(1200,640)); setSize(1400,760); setLocationByPlatform(true);
         JPanel content = new JPanel(new BorderLayout(12,12)); content.setBorder(BorderFactory.createEmptyBorder(16,16,16,16)); setContentPane(content);
         JPanel heading = new JPanel(new BorderLayout(8,8));
-        JLabel title = new JLabel("Account manager"); title.setFont(title.getFont().deriveFont(Font.BOLD,24f)); heading.add(title,BorderLayout.NORTH);
-        JLabel location=new JLabel("Local accounts, knights and inventory");location.setToolTipText(directory.toAbsolutePath().normalize().resolve("tortodrone.db").toString());heading.add(location);content.add(heading,BorderLayout.NORTH);
+        JLabel title = new JLabel("Tortodrone administration"); title.setFont(title.getFont().deriveFont(Font.BOLD,24f)); heading.add(title,BorderLayout.NORTH);
+        JLabel location=new JLabel("Accounts, gear and Town services");location.setToolTipText(directory.toAbsolutePath().normalize().resolve("tortodrone.db").toString());heading.add(location);content.add(heading,BorderLayout.NORTH);
         JTextField search = accountSearch;DesktopWidgets.searchField(search,"Find username or knight");
         DesktopWidgets.configureTable(table);
         var sorter = new TableRowSorter<>(model); table.setRowSorter(sorter); table.getColumnModel().getColumn(0).setMaxWidth(80); table.getColumnModel().getColumn(2).setMaxWidth(80);
@@ -54,7 +57,10 @@ final class AdminWindow extends JFrame {
         accountPane.add(new JScrollPane(table));
         JPanel accountFooter=new JPanel(new BorderLayout(0,8));accountFooter.add(accountDetails,BorderLayout.NORTH);JPanel actions=new JPanel(new GridLayout(0,2,6,6));
         button(actions,"Change password",true,this::password);button(actions,"Check password",true,this::check);button(actions,"Set Game Master",true,this::gameMaster);button(actions,"Delete account",true,this::delete);accountFooter.add(actions);accountFooter.add(accountCount,BorderLayout.SOUTH);accountPane.add(accountFooter,BorderLayout.SOUTH);
-        JSplitPane split=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,accountPane,knightPanel);split.setResizeWeight(.28);split.setDividerLocation(350);split.setContinuousLayout(true);content.add(split);
+        JSplitPane split=new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,accountPane,knightPanel);split.setResizeWeight(.28);split.setDividerLocation(330);split.setContinuousLayout(true);
+        var cards=new JPanel(new CardLayout(12,0));cards.add(split,"Accounts & knights");cards.add(depotPanel,"Supply Depot");cards.add(auctionPanel,"Auction House");
+        navigation.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);navigation.setFixedCellHeight(46);navigation.setBorder(BorderFactory.createEmptyBorder(4,4,4,4));navigation.setSelectedIndex(0);navigation.setPreferredSize(new Dimension(175,0));navigation.addListSelectionListener(e->{if(!e.getValueIsAdjusting()&&navigation.getSelectedValue()!=null){String selected=navigation.getSelectedValue();((CardLayout)cards.getLayout()).show(cards,selected);if(selected.equals("Supply Depot"))depotPanel.refresh();else if(selected.equals("Auction House"))auctionPanel.refresh();}});
+        var workspace=new JPanel(new BorderLayout(8,0));workspace.add(navigation,BorderLayout.WEST);workspace.add(cards);content.add(workspace);
         search.getDocument().addDocumentListener(new DocumentListener() {
             private void update() { sorter.setRowFilter(search.getText().isEmpty() ? null : RowFilter.regexFilter("(?i)"+Pattern.quote(search.getText()),1,3));accountCount.setText(table.getRowCount()+" of "+model.getRowCount()+" accounts"); }
             public void insertUpdate(DocumentEvent event) { update(); } public void removeUpdate(DocumentEvent event) { update(); } public void changedUpdate(DocumentEvent event) { update(); }
@@ -134,6 +140,7 @@ final class AdminWindow extends JFrame {
     private void gameMaster() {
         var account = selected(); if (account == null) return;
         JCheckBox flag = new JCheckBox("Game Master",account.gameMaster());
+        flag.setToolTipText("Enables stock staff commands and extra item actions, including Trash on ordinary inventory items.");
         if (JOptionPane.showConfirmDialog(this,flag,"Game Master status — "+account.username(),JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE) != JOptionPane.OK_OPTION) return;
         boolean gameMaster = flag.isSelected();
         execute(() -> { accounts.setGameMaster(account.username(),gameMaster,account.id()); return loadRows(); },rows -> { loaded(rows); status.setText("Game Master status updated."); });
@@ -160,11 +167,11 @@ final class AdminWindow extends JFrame {
     AccountStore accounts() { return accounts; }
     boolean selectedAccount(int id) { var current=selected();return current!=null&&current.id()==id; }
     <T> void execute(Work<T> work,Consumer<T> success) {
-        if (busy || closed) return; busy = true; table.setEnabled(false); accountSearch.setEnabled(false); knightPanel.busy(true); enableActions(); status.setText("Working…");
+        if (busy || closed) return; busy = true; navigation.setEnabled(false);table.setEnabled(false); accountSearch.setEnabled(false); knightPanel.busy(true); auctionPanel.busy(true);depotPanel.busy(true); enableActions(); status.setText("Working…");
         new SwingWorker<T,Void>() {
             @Override protected T doInBackground() throws Exception { return work.run(); }
             @Override protected void done() {
-                busy = false; table.setEnabled(true); accountSearch.setEnabled(true); knightPanel.busy(false);
+                busy = false; navigation.setEnabled(true);table.setEnabled(true); accountSearch.setEnabled(true); knightPanel.busy(false); auctionPanel.busy(accounts==null);depotPanel.busy(accounts==null);
                 try { T value=get(); if (!closed) { status.setText("Ready."); success.accept(value); } }
                 catch (InterruptedException failure) { Thread.currentThread().interrupt(); status.setText("Operation interrupted."); }
                 catch (ExecutionException failure) {

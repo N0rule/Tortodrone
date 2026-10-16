@@ -29,6 +29,20 @@ public final class TownEconomyTest {
             refused(()->town.craft(b,1,1,r.config(),supplied,false,false));check(db.worldProfile(a,1,1).equals(before),"foreign crafting leaves owner unchanged");
             long[] duplicate={supplied[0],supplied[0]};refused(()->town.craft(a,1,1,r.config(),duplicate,false,false));check(db.worldProfile(a,1,1).equals(before),"invalid craft rolls back inventory and crowns");
             var crafted=town.craft(a,1,1,r.config(),supplied,false,false);check(crafted.profile().crowns()==before.crowns()-r.cost(output.rarity())&&crafted.profile().town().recipes().getFirst().crafted()==1,"craft price and learned recipe progression commit together");
+            long craftedGear=(Long)crafted.result();var beforeVariant=db.worldProfile(a,1,1);
+            refused(()->town.variant(b,1,1,1,craftedGear,0,0,false));refused(()->town.variant(a,1,1,4,craftedGear,0,0,false));
+            check(beforeVariant.equals(db.worldProfile(a,1,1)),"foreign and invalid variant operations preserve resources");
+            var varied=town.variant(a,1,1,1,craftedGear,0,0,false);
+            check(varied.profile().crowns()==beforeVariant.crowns()-20000&&varied.profile().items().stream().filter(i->i.id()==craftedGear).findFirst().orElseThrow().variants().size()==1,"variant service charges the stock crown price and updates the owned item");
+            String custom=items.entries().stream().map(ItemCatalog.Entry::config).filter(v->rules.item(v).containsKey("variant")&&Arrays.asList(rules.item(v).getOrDefault("variantGroups","").split(",")).contains("ARMOR")&&varied.profile().items().stream().filter(i->i.id()==craftedGear).findFirst().orElseThrow().variants().stream().noneMatch(m->m.name().equals(rules.item(v).get("variant")))).findFirst().orElseThrow();grant(db,items,"Alice","Alice-Knight",custom,1);
+            town.variant(a,1,1,1,craftedGear,id(db.worldProfile(a,1,1),custom),1,true);
+            check(db.worldProfile(a,1,1).items().stream().filter(i->i.id()==craftedGear).findFirst().orElseThrow().variants().stream().anyMatch(v->v.name().equals(rules.item(custom).get("variant"))),"custom ticket preserves the locked variant and adds its verified group-specific variant");
+            int depot=-1;for(int i=0;i<rules.depot().size();i++){var good=rules.depot().get(i).good();var definition=items.find(good.item());if(definition!=null&&definition.grantable()&&good.energy()>0&&good.energy()<10000){depot=i;break;}}
+            check(depot>=0,"captured depot contains a supported offer");final int offered=depot;var good=rules.depot().get(offered).good();
+            db.currency("Alice","Alice-Knight",a,-1,Currency.ENERGY,good.energy());var beforeDepot=db.worldProfile(a,1,1);
+            refused(()->town.depot(a,1,1,offered,good.energy()-1));check(db.worldProfile(a,1,1).equals(beforeDepot),"depot refuses a stale or forged price without spending");
+            var depotPurchase=town.depot(a,1,1,offered,good.energy());check(depotPurchase.profile().energy()==beforeDepot.energy()-good.energy()&&depotPurchase.profile().crowns()==beforeDepot.crowns(),"energy depot offer charges only its displayed currency");
+            crafted=new TownStore.Result(depotPurchase.profile(),craftedGear);
             var shop=new TownCatalog.Station("fixture","OpenShop","CROWN","NORMAL","~","~","","",List.of(),new TownCatalog.Shop("Captured/Hall of Heroes/Cobalt",10,"BASIC","CONSTANT",false));
             var goods=rules.goods(shop.shop(),0,crafted.profile().worldId());check(!goods.isEmpty()&&goods.getFirst().price()==1000,"captured merchant price preserved");
             var bought=town.shop(a,1,1,shop,0,Map.of(0,1),Map.of());check(bought.profile().crowns()==crafted.profile().crowns()-1000,"merchant purchase debits the displayed price");

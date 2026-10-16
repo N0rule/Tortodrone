@@ -43,7 +43,8 @@ public final class SessionCodec {
         "com.threerings.projectx.social.data.SocialMarshaller",
         "com.threerings.projectx.admin.data.ProjectXAdminMarshaller",
         "com.threerings.projectx.sprites.data.BattleSpriteMarshaller",
-        "com.threerings.projectx.auction.data.AuctionMarshaller");
+        "com.threerings.projectx.auction.data.AuctionMarshaller",
+        "com.threerings.projectx.mission.data.MissionMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int INTERIOR_TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -243,6 +244,11 @@ public final class SessionCodec {
         });
     }
 
+    /** Item forge callbacks resolve these keys in the stock item bundle. */
+    public byte[] forgeFailure(int clientOid,short requestId,String reason)throws IOException{
+        if(!java.util.Set.of("m.forge_already","m.forge_locked","m.insufficient_crystals","m.costupdate").contains(reason))return invocationFailure(clientOid,requestId,reason);
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",clientOid);out.writeShort(requestId);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason);});
+    }
     /** Listener method zero is the standard failure callback; reason is literal display text. */
     public byte[] invocationFailure(int clientOid, short requestId, String reason) throws IOException {
         return frame(out -> {
@@ -505,6 +511,7 @@ public final class SessionCodec {
             attribute(out,playerOid,"sceneDialog",o->{
                 if(station==null){o.writeShort(0);return;}
                 String kind=station.kind();
+                if(kind.equals("OpenDepot")){type(o,"com.threerings.projectx.exchange.data.DepotDialogInfo");o.writeShort(0);o.writeShort(0);o.writeFloat(0);o.writeShort(0);o.writeShort(0);string(o,station.type());return;}
                 if(kind.equals("OpenAuction")){type(o,"com.threerings.projectx.auction.data.AuctionDialogInfo");if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}o.writeShort(0);o.writeShort(0);return;}
                 if(kind.equals("OpenShop")){
                     type(o,"com.threerings.projectx.shop.data.ShopDialogInfo");
@@ -513,6 +520,12 @@ public final class SessionCodec {
                     o.writeInt(station.shop().level());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.data.ShopDialogInfo$Type",station.type().equals("ENERGY")?1:station.type().equals("TOKEN")?2:0));
                     int preparer=List.of("BASIC","GREMLIN","LOCKED","LOCK_NON_STACKABLE","DEPOT","STATUE").indexOf(station.shop().preparer());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.util.ItemPreparer",Math.max(0,preparer)));o.writeBoolean(station.shop().perKnight());
                     type(o,"com.threerings.projectx.shop.data.ShopMarshaller");o.writeInt(sceneOid);o.writeInt(service);return;
+                }
+                if(kind.equals("OpenHarnessInstaller")){
+                    type(o,"com.threerings.projectx.sprites.data.HarnessDialogInfo");
+                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                    o.writeShort(0);o.writeShort(0);value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
+                    type(o,"com.threerings.projectx.sprites.data.HarnessInstallerMarshaller");o.writeInt(sceneOid);o.writeInt(service);return;
                 }
                 String dialog=kind.equals("OpenUnbinder")?"UnbindDialogInfo":kind.equals("OpenAccessorizer")?"AccessoryDialogInfo":kind.equals("OpenVariantMaker")?"VariantMakerDialogInfo":"CrafterDialogInfo";
                 type(o,"com.threerings.projectx.craft.data."+dialog);
@@ -560,6 +573,13 @@ public final class SessionCodec {
 
     private void townValue(DataOutputStream out,Object value)throws IOException {
         if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
+        else if(value instanceof org.tortodrone.town.TownCatalog.DepotOffers offers){
+            type(out,"java.util.HashMap");out.writeInt(offers.goods().size());for(var entry:new java.util.TreeMap<>(offers.goods()).entrySet()){
+                value(out,entry.getKey());type(out,"com.threerings.projectx.mission.data.RankGood");var g=entry.getValue().good();
+                type(out,"com.threerings.projectx.shop.config.GoodConfig$Item");out.writeInt(g.price());out.writeInt(g.energy());out.writeInt(0);out.writeBoolean(false);out.writeInt(g.count());out.writeInt(g.limit());value(out,new StarterCatalog.Model(g.item(),Map.of()));
+                out.writeBoolean(false);string(out,null);string(out,null);
+            }
+        }
         else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
         else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}
@@ -575,7 +595,7 @@ public final class SessionCodec {
         if(a.participated()&&a.bidder()!=0&&!a.mine())status=a.bidder()==listingViewer?2:3;else if(!a.participated()&&a.watching())status=4;
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
         long hours=(a.expires()-System.currentTimeMillis())/3600000;int time=a.cancelled()?6:a.ended()||a.expires()<=System.currentTimeMillis()?5:hours<1?0:hours<4?1:hours<12?2:hours<48?3:4;
-        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());out.writeShort(0);
+        value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());if(a.featured()){type(out,"com.threerings.projectx.auction.data.FeaturedInfo");out.writeShort(a.featuredRemaining());out.writeShort(a.featuredTotal());}else out.writeShort(0);
     }
     private int listingViewer;
 

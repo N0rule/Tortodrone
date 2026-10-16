@@ -20,12 +20,16 @@ public final class TownCompatibility {
         var codec=new SessionCodec();var bytes=new ByteArrayOutputStream();
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));append(bytes,codec.player((short)3,1002,1,"Fixture"));append(bytes,codec.itemChanges(1002,choices(),new WorldProfile(42,1,1,0,0,1,List.of()),profile));append(bytes,codec.townState(1002,profile));
         var source=new org.tortodrone.world.ActorState(1000000000,0,"",0,1,0,0,0,0,0,0,0,new StarterCatalog.Model("Shop/Haven/Alchemy",Map.of()),false);
-        for(String kind:List.of("OpenCrafter","OpenCatalogCrafter","OpenUnbinder","OpenAccessorizer","OpenVariantMaker","OpenAuction","OpenShop")){
+        for(String kind:List.of("OpenCrafter","OpenCatalogCrafter","OpenUnbinder","OpenAccessorizer","OpenVariantMaker","OpenAuction","OpenShop","OpenDepot","OpenHarnessInstaller")){
             var station=new TownCatalog.Station("",kind,"","NORMAL","~","~","","",kind.equals("OpenCatalogCrafter")?List.of("Sprite/Food/Power Mote"):List.of());append(bytes,codec.townDialog(1002,10,station,source,123456,101));
         }
         append(bytes,codec.townShop(1002,List.of(new TownCatalog.Good("Weapon/Sword/Calibur",1,100,0,0,"",0)),List.of(-1)));
         append(bytes,codec.townResult(1002,(short)4,sprite,profile));append(bytes,codec.townResult(1002,(short)5,List.of(mail),profile));
         var listing=new AuctionState.Listing(5,42,item,100,1000,0,Long.MAX_VALUE,false,false,true,false,10);append(bytes,codec.townResult(1002,(short)6,new AuctionState.Page(1,List.of(listing)),profile));
+        var featured=new AuctionState.Listing(6,0,item,100,1000,0,Long.MAX_VALUE,false,false,false,false,0,false,10,9,12345);
+        append(bytes,codec.townResult(1002,(short)7,new AuctionState.Page(1,List.of(featured)),profile));
+        append(bytes,codec.townResult(1002,(short)8,new TownCatalog.DepotOffers(Map.of(7,new TownCatalog.DepotGood(new TownCatalog.Good("Weapon/Sword/Calibur",1,500,200,0,"",0),true))),profile));
+        int callbackEnd=bytes.size();
         var actor=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0,org.tortodrone.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness")));
         var changed=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,1,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0));
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,0,100,(short)50,List.of(actor),List.of(),new int[0],Map.of(),false));
@@ -49,10 +53,18 @@ public final class TownCompatibility {
         append(bytes,codec.sceneDelta(1002,10,0,(short)0,400,450,(short)50,List.of(),auxiliary,new int[0],Map.of(),true));
         var in=new v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();var player=(PlayerObject)((ObjectResponse)in.qe()).yk();apply(in,player);apply(in,player);
         if(!field(player.items.iterator().next(),"_level").equals(2))throw new AssertionError("Native crafted item level missing");
+        if(!field(player.items.iterator().next(),"_heatProgress").equals(.4f)||java.lang.reflect.Array.getLength(field(player.items.iterator().next(),"_variants"))!=1)throw new AssertionError("Native heat or UV item state differs");
         if(player.sprites.size()!=1||player.recipes.size()!=1||player.equippedSprite!=7||player.harnesses.size()!=1||player.newMailInfo.size()!=1)throw new AssertionError("Native Town sets differ");
-        for(int i=0;i<7;i++){apply(in,player);if(player.sceneDialog==null||player.sceneDialogCreated!=123456)throw new AssertionError("Native station dialog missing");}
+        for(int i=0;i<9;i++){apply(in,player);if(player.sceneDialog==null||player.sceneDialogCreated!=123456)throw new AssertionError("Native station dialog missing");}
         apply(in,player);if(!(player.uniqueDialog instanceof com.threerings.projectx.shop.data.UniqueShopInfo))throw new AssertionError("Native shop stock missing");
         for(int i=0;i<3;i++)if(!(in.qe() instanceof EventNotification))throw new AssertionError("Missing Town callback");
+        var featuredReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
+        var nativeFeatured=((com.threerings.projectx.auction.data.ListingsPage)featuredReply.yd()[0]).listings.getFirst();
+        if(nativeFeatured.featured==null||nativeFeatured.featured.total!=10||nativeFeatured.featured.remaining!=9||nativeFeatured.myAuction)throw new AssertionError("Featured stock/ownership fields differ");
+        var depotReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
+        var nativeGood=(com.threerings.projectx.mission.data.RankGood)((Map<?,?>)depotReply.yd()[0]).get(7);
+        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||nativeGood.special||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
+        if(bytes.size()-in.available()!=callbackEnd)throw new AssertionError("Callback boundary differs by "+(bytes.size()-in.available()-callbackEnd)+" bytes");
         var added=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativeActor=(com.threerings.projectx.data.actor.Knight)added.aej()[0];if(field(nativeActor,"_sprite")==null)throw new AssertionError("Native equipped sprite absent from Knight");
         var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeActor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(nativeActor);if(field(nativeActor,"_sprite")!=null)throw new AssertionError("Native sprite removal delta failed");
         var petAdded=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativePet=(com.threerings.projectx.dungeon.data.actor.SpriteActor)petAdded.aej()[0];
@@ -75,6 +87,8 @@ public final class TownCompatibility {
         var confirm=new com.threerings.presents.data.InvocationMarshaller.ConfirmMarshaller();
         var invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(10,100,1,new Object[]{buys,sells,confirm}));
         if(!((SessionDecoder.Multiset)invocation.arguments().get(0)).counts().equals(Map.of(2,3))||!((SessionDecoder.Multiset)invocation.arguments().get(1)).counts().equals(Map.of(45L,2)))throw new AssertionError("Native shop multiset layout differs");
+        invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(10,101,1,new Object[]{new java.util.HashSet<Integer>(Set.of(1,2)),confirm}));
+        if(!new java.util.HashSet<>((List<?>)invocation.arguments().getFirst()).equals(Set.of(1,2)))throw new AssertionError("Native harness index set layout differs");
         var search=new com.threerings.projectx.auction.data.Search();search.group=com.threerings.projectx.item.data.ItemCodes.Group.ARMOR;search.configs=new java.util.HashSet<>(Set.of(123));search.sort=com.threerings.projectx.auction.data.Search.Sort.BID_PRICE;search.ascending=true;
         var result=new com.threerings.presents.data.InvocationMarshaller.ResultMarshaller();invocation=decode(new com.threerings.presents.dobj.InvocationRequestEvent(3,15,5,new Object[]{search,0,result}));
         var parsed=(SessionDecoder.AuctionSearch)invocation.arguments().get(0);if(parsed.sort()!=1||!parsed.ascending()||!parsed.configs().equals(search.configs))throw new AssertionError("Native auction search layout differs");

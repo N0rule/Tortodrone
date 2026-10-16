@@ -8,7 +8,9 @@ import org.tortodrone.character.StarterCatalog;
 public record SceneConversation(String actor,String name,String bundle,String initial,
         StarterCatalog.Model model,Map<String,Node> nodes) {
     public static final int SERVICE=21;
-    public record Response(String text,String destination) { }
+    public record Response(String text,String destination,String station) {
+        public Response(String text,String destination){this(text,destination,"");}
+    }
     public record Node(String id,String message,List<Response> responses,
             StarterCatalog.Model animation,StarterCatalog.Model transientModel) {
         public Node { responses=List.copyOf(responses); }
@@ -22,7 +24,7 @@ public record SceneConversation(String actor,String name,String bundle,String in
             for(String n:required(p,prefix+"nodes").split(",")){
                 String np=prefix+"node."+n+".";String name=required(p,np+"name");var responses=new ArrayList<Response>();
                 int count=Integer.parseInt(required(p,np+"responses"));if(count<0||count>32)throw new IOException("Invalid conversation responses");
-                for(int i=0;i<count;i++)responses.add(new Response(required(p,np+"response."+i+".text"),p.getProperty(np+"response."+i+".destination","")));
+                for(int i=0;i<count;i++)responses.add(new Response(required(p,np+"response."+i+".text"),p.getProperty(np+"response."+i+".destination",""),p.getProperty(np+"response."+i+".station","")));
                 var node=new Node(name,required(p,np+"message"),responses,model(p,np+"animation"),model(p,np+"transient"));
                 if(nodes.putIfAbsent(name,node)!=null)throw new IOException("Duplicate conversation node");
             }

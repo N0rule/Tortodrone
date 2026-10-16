@@ -9,6 +9,20 @@ import static org.tortodrone.support.TestWire.check;
 public final class SceneEntitiesTest {
     public static void main(String[] args)throws Exception {
         var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+        var haven=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(1);
+        var townEntities=new SceneEntities(haven.content(),haven.collision());
+        var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();
+        var prompt=townEntities.interaction(clock.x()-1.9f,clock.y(),0);
+        check(prompt!=null&&prompt.actorId()==clock.id(),"Haven NPC interaction resolves its prepared dialogue binding");
+        check(townEntities.interaction(clock.x()-1.9f,clock.y(),(float)Math.PI)==null,"NPC interaction respects the knight's facing and range");
+        var auction=townEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Misc/Interact Node/Base")).findFirst().orElseThrow();
+        check(townEntities.interaction(auction.x()-.9f,auction.y(),0)!=null,"auction interaction node is eligible in Haven");
+        var hall=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+        check(hall.content().conversations().size()==9,"all captured Hall of Heroes vendors have authored conversations");
+        for(var dialogue:hall.content().conversations().values()){
+            String station=dialogue.nodes().get(dialogue.initial()).responses().getFirst().station();var service=rules.station(station);
+            check(service!=null&&service.kind().equals("OpenShop")&&!rules.goods(service.shop(),0,1).isEmpty(),"vendor dialogue opens its captured catalogue");
+        }
         var rectangle=shape("Rectangle",Map.of("width",2f,"height",1f));
         var circle=shape("Circle",Map.of("radius",.1f));
         var fields=new HashMap<String,String>();

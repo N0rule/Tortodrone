@@ -22,6 +22,7 @@ public final class AccountStore implements AutoCloseable {
     private record Stored(int id,String username,Passwords.Protection password,boolean gameMaster,long revision,CharacterStore characters) { }
     private final Database database;
     private final ItemCatalog catalog;
+    private final org.tortodrone.town.TownCatalog town;
     private final Map<String,Stored> memory = new TreeMap<>();
     private final Map<Integer,CharacterStore> rosters = new ConcurrentHashMap<>();
     private final Map<Integer,Attached> sessions = new ConcurrentHashMap<>();
@@ -31,15 +32,25 @@ public final class AccountStore implements AutoCloseable {
 
     /** Isolated wire tests retain their explicit synthetic account, never a production backdoor. */
     public AccountStore(CharacterStore characters) throws IOException {
-        database = null; catalog=characters.catalog();nextId = characters.accountId()+1;
+        database = null; catalog=characters.catalog();town=org.tortodrone.town.TownCatalog.empty();nextId = characters.accountId()+1;
         char[] password = DEFAULT_USERNAME.toCharArray();
         try { memory.put(canonical(characters.username()),new Stored(characters.accountId(),characters.username(),Passwords.protect(password),false,1,characters)); }
         finally { Arrays.fill(password,'\0'); }
     }
     public AccountStore(Path directory) throws IOException { this(directory,false); }
-    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent()).items()); }
-    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this.catalog=Objects.requireNonNull(catalog);database = new Database(directory,deploymentLocked); }
+    public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent())); }
+    private AccountStore(Path directory,boolean deploymentLocked,org.tortodrone.resources.ContentRegistry content)throws IOException{this(directory,deploymentLocked,content.items(),content.resources().containsKey("town")?org.tortodrone.town.TownCatalog.load(content.resources().get("town").path()):org.tortodrone.town.TownCatalog.empty());}
+    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this(directory,deploymentLocked,catalog,org.tortodrone.town.TownCatalog.empty()); }
+    public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog,org.tortodrone.town.TownCatalog town) throws IOException { this.catalog=Objects.requireNonNull(catalog);this.town=Objects.requireNonNull(town);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}
+    public org.tortodrone.town.TownCatalog townRules(){return town;}
+    public org.tortodrone.storage.DepotStore depot()throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,town);}
+    /** Local admin access; no game invocation dispatch exposes these methods. */
+    public org.tortodrone.storage.AuctionHouse auctions()throws IOException{
+        if(database==null)throw new IOException("Auctions require SQLite storage");
+        return new org.tortodrone.storage.AuctionHouse(database,catalog,org.tortodrone.town.TownCatalog.empty());
+    }
+
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
         return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);
     }
@@ -50,6 +61,14 @@ public final class AccountStore implements AutoCloseable {
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);
+    }
+    public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld,org.tortodrone.character.ItemModifiers modifiers)throws IOException{
+        validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
+        return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1,modifiers,town);
+    }
+    public WorldProfile itemModifiers(String username,String knight,long itemId,org.tortodrone.character.ItemModifiers modifiers,int expectedAccount,int expectedWorld,long expectedRevision)throws IOException{
+        validateUsername(username);if(database==null)throw new IOException("Item editing requires SQLite storage");
+        return database.itemModifiers(username,knight,expectedAccount,expectedWorld,expectedRevision,itemId,modifiers,catalog,town);
     }
     public void observeDatabase(Database.Observer observer) {if(database!=null)database.observe(observer);}
     public Path databaseFile() { return database == null ? null : database.file(); }

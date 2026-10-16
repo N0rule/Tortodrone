@@ -70,11 +70,12 @@ public final class TestWire {
             String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
-        check(services.size() == 15 && services.contains("com.threerings.projectx.data.KnightMarshaller")
+        check(services.size() == 16 && services.contains("com.threerings.projectx.data.KnightMarshaller")
             &&services.contains("com.threerings.projectx.social.data.SocialMarshaller")
             &&services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller")
             &&services.contains("com.threerings.projectx.sprites.data.BattleSpriteMarshaller")
-            &&services.contains("com.threerings.projectx.auction.data.AuctionMarshaller"),
+            &&services.contains("com.threerings.projectx.auction.data.AuctionMarshaller")
+            &&services.contains("com.threerings.projectx.mission.data.MissionMarshaller"),
             "distinct login, trade, admin and other response services");
         check(in.readInt() == 2, "configuration identity");
         check(in.readBoolean(), "bootstrap host present");

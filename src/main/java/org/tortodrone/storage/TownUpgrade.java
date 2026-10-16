@@ -5,7 +5,7 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.sql.*;
 
-/** Explicit, offline schema-8 to schema-9 candidate export. Never updates the original database. */
+/** Explicit, offline schema-8 to current-schema candidate export. Never updates the original database. */
 public final class TownUpgrade {
     private TownUpgrade() { }
     public static void main(String[] args)throws Exception{
@@ -25,6 +25,6 @@ public final class TownUpgrade {
                 s.execute("PRAGMA foreign_keys=ON");s.execute("BEGIN IMMEDIATE");try{TownStore.initialize(c);s.execute("PRAGMA user_version="+Database.SCHEMA_VERSION);s.execute("COMMIT");}catch(Exception failure){s.execute("ROLLBACK");throw failure;}
             }
         }
-        System.out.println("Exported schema-9 candidate; original database unchanged: "+output.resolve("tortodrone.db"));
+        System.out.println("Exported schema-"+Database.SCHEMA_VERSION+" candidate; original database unchanged: "+output.resolve("tortodrone.db"));
     }
 }

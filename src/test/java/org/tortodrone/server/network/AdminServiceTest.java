@@ -42,8 +42,8 @@ public final class AdminServiceTest {
                 response(playerFrames, playerSocket, (short) 5, (byte) 0, "Game Master permission required");
                 check(players.worldProfile(player.name(), 1).items().stream().allMatch(i -> i.starter()),
                     "no admin item reaches an unprivileged account");
-                for(int method:new int[]{8,44,45,46}){
-                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 44->new Object[]{99};case 45->new Object[]{0,0,3};default->new Object[]{0,1};};
+                for(int method:new int[]{8,45,46,47}){
+                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 45->new Object[]{99};case 46->new Object[]{0,0,3};default->new Object[]{0,1};};
                     world.admin(spriteInvoke(method,(short)20,values));
                     response(playerFrames,playerSocket,(short)20,(byte)0,"Game Master permission required");
                 }
@@ -77,12 +77,13 @@ public final class AdminServiceTest {
                 response(staffFrames, staffSocket, (short) 9, (byte) 0, "Item expiry is not supported yet");
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1, true, 0, (short) 10));
                 response(staffFrames, staffSocket, (short) 10, (byte) 0, "Locked items are not supported for this catalogue entry");
-                world.admin(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID, SessionCodec.ADMIN_SERVICE, 47,
+                world.admin(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID, SessionCodec.ADMIN_SERVICE, 99,
                     List.of("Gear/Shield/Proto Shield", new SessionDecoder.Listener(
                         "com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller", (short) 11))));
                 response(staffFrames, staffSocket, (short) 11, (byte) 0, "This admin tool is not available yet");
                 check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 3,
                     "refused admin operations grant nothing");
+                gearCommands(world,staffFrames,staffSocket,staff,knight,database);
                 spriteCommands(world,staffFrames,staffSocket,staff,knight,accounts,database,scenes);
             }
             // A second stock session after a reconnect still owns the granted item.
@@ -107,23 +108,40 @@ public final class AdminServiceTest {
         }
     }
 
+    private static void gearCommands(WorldSession world,Frames frames,Socket socket,CharacterStore staff,Knight knight,Database database)throws Exception{
+        world.admin(spriteInvoke(41,(short)50,6,.5f));response(frames,socket,(short)50,(byte)1,null);
+        var gear=staff.worldProfile(knight.name(),1).items().stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).findFirst().orElseThrow();
+        check(gear.heatProgress()==.5f,"native /heat persists fractional heat without rounding it away");
+        world.admin(spriteInvoke(42,(short)51,6,2));response(frames,socket,(short)51,(byte)1,null);
+        check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==2&&i.heatProgress()==0),"native /level resets progress at the selected item level");
+        world.admin(spriteInvoke(42,(short)52,6,0));response(frames,socket,(short)52,(byte)1,null);
+        world.admin(spriteInvoke(41,(short)53,6,1f));response(frames,socket,(short)53,(byte)1,null);
+        var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
+        database.grantItems("Master",knight.name(),2,-1,items.require("Rarity/Fire Crystal/Cracked"),1,-1,-1);
+        var result=new SessionDecoder.Listener(TestWire.INV+"ResultMarshaller",(short)54);
+        check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,9,8,List.of(gear.id(),1,0,result))),"stock forge request reaches the Town item handler");
+        response(frames,socket,(short)54,(byte)1,"m.forge_success");
+        check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==1&&i.heatProgress()==0),"forge commits its level before publishing the callback");
+        check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,9,8,List.of(gear.id(),1,0,result))),"stale forge request is handled");response(frames,socket,(short)54,(byte)0,"m.costupdate");
+    }
+
     private static void spriteCommands(WorldSession world,Frames frames,Socket socket,CharacterStore staff,Knight knight,
             AccountStore accounts,Database database,org.tortodrone.world.SceneRegistry scenes)throws Exception{
-        world.admin(spriteInvoke(44,(short)30,99));
+        world.admin(spriteInvoke(45,(short)30,99));
         response(frames,socket,(short)30,(byte)0,"Equip a battle sprite first; /sprite_list shows owned sprite IDs");
         world.admin(spriteInvoke(8,(short)31,new SessionDecoder.ConfigReference("Drakon",Map.of())));
         response(frames,socket,(short)31,(byte)1,null);
         var initial=staff.worldProfile(knight.name(),1);int first=initial.town().equippedSprite();
         check(initial.town().sprites().size()==1&&first==initial.town().sprites().getFirst().id(),"Sprite Creator grants and equips the first pet");
-        world.admin(spriteInvoke(45,(short)32,2,2,3));response(frames,socket,(short)32,(byte)1,null);
-        world.admin(spriteInvoke(46,(short)33,2,2));response(frames,socket,(short)33,(byte)1,null);
+        world.admin(spriteInvoke(46,(short)32,2,2,3));response(frames,socket,(short)32,(byte)1,null);
+        world.admin(spriteInvoke(47,(short)33,2,2));response(frames,socket,(short)33,(byte)1,null);
         var edited=staff.worldProfile(knight.name(),1).town().sprites().getFirst();
         check(edited.level()==0&&edited.powers().get(8)==3&&edited.ultimates().get(2)==2,"GM setters bypass point and skill unlock requirements at level 1");
-        world.admin(spriteInvoke(44,(short)34,99));response(frames,socket,(short)34,(byte)1,null);
+        world.admin(spriteInvoke(45,(short)34,99));response(frames,socket,(short)34,(byte)1,null);
         var baseline=staff.worldProfile(knight.name(),1);
-        for(Object[] invalid:new Object[][]{{44,-1},{44,100},{45,3,0,1},{45,0,3,1},{45,0,0,4},{46,0,3},{8,new SessionDecoder.ConfigReference("Not a sprite",Map.of())}}){
+        for(Object[] invalid:new Object[][]{{45,-1},{45,100},{46,3,0,1},{46,0,3,1},{46,0,0,4},{47,0,3},{8,new SessionDecoder.ConfigReference("Not a sprite",Map.of())}}){
             world.admin(spriteInvoke((Integer)invalid[0],(short)35,Arrays.copyOfRange(invalid,1,invalid.length)));
-            String reason=switch((Integer)invalid[0]){case 44->"Sprite level must be between 1 and 100";case 45->"Sprite skill and power must be 1-3; value must be 0-3";case 46->"Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)";default->"Unknown sprite configuration";};
+            String reason=switch((Integer)invalid[0]){case 45->"Sprite level must be between 1 and 100";case 46->"Sprite skill and power must be 1-3; value must be 0-3";case 47->"Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)";default->"Unknown sprite configuration";};
             response(frames,socket,(short)35,(byte)0,reason);
             check(staff.worldProfile(knight.name(),1).equals(baseline),"invalid sprite admin write rolls back without a revision change");
         }
@@ -136,17 +154,17 @@ public final class AdminServiceTest {
         response(frames,socket,(short)37,(byte)1,null);
         var actor=scenes.entry().simulation().snapshot().players().stream().filter(a->a.id()==two.worldId()).findFirst().orElseThrow();
         check(actor.sceneKnight().sprite().id()==second,"sprite equip immediately updates the live knight");
-        world.admin(spriteInvoke(44,(short)38,49));response(frames,socket,(short)38,(byte)1,null);
+        world.admin(spriteInvoke(45,(short)38,49));response(frames,socket,(short)38,(byte)1,null);
         check(staff.worldProfile(knight.name(),1).town().sprites().get(1).level()==49,"GM setters address the newly equipped sprite");
         check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,14,4,List.of(first,confirm))),"owned sprite can be re-equipped");
         response(frames,socket,(short)37,(byte)1,null);
         baseline=staff.worldProfile(knight.name(),1);
         accounts.setGameMaster("Master",false);
         // The role source deliberately remains true: the database must independently reject revocation.
-        world.admin(spriteInvoke(44,(short)39,0));response(frames,socket,(short)39,(byte)0,"Game Master permission required");
+        world.admin(spriteInvoke(45,(short)39,0));response(frames,socket,(short)39,(byte)0,"Game Master permission required");
         check(staff.worldProfile(knight.name(),1).equals(baseline),"revoked GM cannot edit a sprite using stale session privileges");
         accounts.setGameMaster("Master",true);
-        try{staff.town(scenes.town()).adminSprite(2,knight.id(),999,44,List.of(0));throw new AssertionError("Stale authentication accepted");}catch(IOException expected){}
+        try{staff.town(scenes.town()).adminSprite(2,knight.id(),999,45,List.of(0));throw new AssertionError("Stale authentication accepted");}catch(IOException expected){}
         check(database.worldProfile(2,knight.id(),1).equals(baseline),"stale authentication leaves all sprite state unchanged");
     }
 
@@ -194,7 +212,7 @@ public final class AdminServiceTest {
             if (in.readBoolean()) {
                 in.readInt(); reader.type(in);
                 String text = in.readUTF();
-                check(reason != null && text.equals("~" + reason), "admin failure reason");
+                check(reason != null && text.equals(method==0&&!reason.startsWith("m.")?"~"+reason:reason), "admin failure reason");
             } else {
                 check(reason == null, "successful admin operation reports no reason");
             }

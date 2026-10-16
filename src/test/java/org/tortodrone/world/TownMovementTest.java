@@ -107,6 +107,12 @@ public final class TownMovementTest {
         inventory.resetInput(1200);
         check(inventory.activity()==0 && inventory.activityStarted()==1200 && inventory.flags()==0,
             "re-entry clears inventory activity");
+        var interacting=movement();interacting.resetInput(100);int[] interactions={0};
+        interacting.interaction(time->{interactions[0]++;return true;});
+        check(interacting.accept(100,0,0,4,100,1000),"peaceful interaction input accepted");interacting.advance(150,1050);
+        check(interactions[0]==1&&interacting.activity()==2,"Town interaction button reaches the handler without a combat controller");
+        check(interacting.accept(151,0,0,4,100,151,1051),"held interaction accepted");interacting.advance(152,1052);
+        check(interactions[0]==1,"held interaction does not repeat an operation");
         var peaceful=movement();peaceful.resetInput(100);
         check(peaceful.accept(100,1,0,4|8|16|32,100,1000),"combat input remains bounded input");
         peaceful.advance(150,1050);

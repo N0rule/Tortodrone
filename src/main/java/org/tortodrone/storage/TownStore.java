@@ -14,6 +14,7 @@ public final class TownStore {
     private final TownCatalog rules;
     public TownStore(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;this.rules=rules;}
     static void initialize(Connection c)throws SQLException{
+        DepotStore.initialize(c);
         try(var s=c.createStatement()){
             s.execute("ALTER TABLE inventory_items ADD COLUMN level INTEGER NOT NULL DEFAULT 0 CHECK(level BETWEEN 0 AND 99)");
             s.execute("ALTER TABLE inventory_items ADD COLUMN heat_progress REAL NOT NULL DEFAULT 0 CHECK(heat_progress BETWEEN 0 AND 1)");
@@ -25,8 +26,8 @@ public final class TownStore {
             s.execute("CREATE TABLE town_sprites(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,config TEXT NOT NULL,name TEXT,level INTEGER NOT NULL DEFAULT 0,heat REAL NOT NULL DEFAULT 0,last_full INTEGER,full_stamp INTEGER NOT NULL DEFAULT 0,perk_level INTEGER NOT NULL DEFAULT 0,perks TEXT NOT NULL DEFAULT '[]',perk INTEGER,powers TEXT NOT NULL DEFAULT '[0,0,0,0,0,0,0,0,0]',ultimates TEXT NOT NULL DEFAULT '[0,0,0]',harness INTEGER NOT NULL DEFAULT 0)");
             s.execute("CREATE TABLE town_harnesses(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,config TEXT NOT NULL)");
             s.execute("CREATE TABLE town_equipped(world_id INTEGER PRIMARY KEY REFERENCES world_characters(world_id) ON DELETE CASCADE,sprite INTEGER NOT NULL DEFAULT 0)");
-            s.execute("CREATE TABLE town_auctions(id INTEGER PRIMARY KEY AUTOINCREMENT,seller INTEGER NOT NULL REFERENCES world_characters(world_id),item TEXT NOT NULL,start_bid INTEGER NOT NULL,buy_price INTEGER NOT NULL,bid INTEGER NOT NULL,bidder INTEGER REFERENCES world_characters(world_id),expires INTEGER NOT NULL,ended INTEGER NOT NULL DEFAULT 0,cancelled INTEGER NOT NULL DEFAULT 0,fee INTEGER NOT NULL DEFAULT 0)");
-            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0)");
+            AuctionSchema.create(c);
+            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id))");
             s.execute("CREATE TABLE town_auction_bids(auction INTEGER NOT NULL REFERENCES town_auctions(id),world_id INTEGER NOT NULL REFERENCES world_characters(world_id),watching INTEGER NOT NULL DEFAULT 0,has_bid INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(auction,world_id))");
         }
     }
@@ -121,6 +122,68 @@ public final class TownStore {
         });
     }
 
+    public Result depot(int account,int knight,long auth,int index,int quotedPrice)throws IOException{
+        return depot(account,knight,auth,index,quotedPrice,null);
+    }
+    public Result depot(int account,int knight,long auth,int index,int quotedPrice,DepotStore.Quote quote)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            var snapshot=DepotStore.load(c,rules);var offer=snapshot.offers().stream().filter(o->o.id()==index&&o.enabled()).findFirst().orElseThrow(()->new IOException("e.good_unavailable"));
+            if(quote!=null&&(quote.revision()!=snapshot.revision()||!offer.equals(quote.offer())))throw new IOException("e.good_unavailable");var good=offer.good();var def=items.require(good.item());
+            int price=good.price()>=0?good.price():rules.price(good.item(),def.rarity(),true),cost=good.energy()>0?good.energy():price;
+            if(cost<0||quotedPrice!=cost||!def.grantable())throw new IOException("e.good_unavailable");
+            if(good.limit()>0){try(var st=c.prepareStatement("SELECT purchased FROM town_purchases WHERE world_id=? AND catalog='Supply Depot' AND item=? AND cycle=0")){st.setInt(1,p.worldId());st.setString(2,good.item());try(var r=st.executeQuery()){if(r.next()&&r.getInt(1)>=good.limit())throw new IOException("e.good_unavailable");}}}
+            pay(c,p,good.energy()>0?0:cost,good.energy()>0?cost:0);
+            boolean locked=def.variant()==ItemCatalog.Variant.LEVEL_ITEM&&!def.type().endsWith("Costume");create(c,p,good.item(),good.count(),locked,0,0,List.of());
+            try(var st=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,'Supply Depot',?,0,1) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+1")){st.setInt(1,p.worldId());st.setString(2,good.item());st.executeUpdate();}return null;
+        });
+    }
+    private static final String[] FIRE_CRYSTALS={"Cracked","Dim","Warm","Glowing","Shining","Radiant"};
+    public Result forge(int account,int knight,long auth,long itemId,int crystals,int expectedLevel)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            var item=owned(p,itemId);var definition=items.require(item.config());var gear=rules.gear().gear(item.config());
+            if(gear==null||gear.maximum(item.level()))throw new IOException("m.forge_already");
+            if(item.level()!=expectedLevel)throw new IOException("m.costupdate");
+            if(item.heatProgress()!=1)throw new IOException("m.forge_locked");
+            var props=rules.gear().forge(gear,item.level());if(props==null)throw new IOException("m.forge_already");
+            float chance=props.chance(crystals,true);int rarity=definition.rarity();if(rarity<0||rarity>=FIRE_CRYSTALS.length)throw new IOException("m.internal_error");
+            int remaining=crystals;var consumes=new LinkedHashMap<Long,Integer>();String config="Rarity/Fire Crystal/"+FIRE_CRYSTALS[rarity];
+            for(var held:p.items())if(held.config().equals(config)&&held.equippedSlot()==null&&!held.permanent()&&remaining>0){int take=Math.min(held.count(),remaining);consumes.put(held.id(),take);remaining-=take;}
+            if(remaining!=0)throw new IOException("m.insufficient_crystals");
+            for(var consume:consumes.entrySet())consume(c,p,consume.getKey(),consume.getValue());
+            // Like the archive, failed attempts spend crystals but preserve the full heat bar.
+            if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
+            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return "m.forge_success";
+        });
+    }
+    /** Trusted heat awards split only across equipped gear still able to receive heat. */
+    public Result addHeat(int account,int knight,long auth,float amount)throws IOException{
+        if(!Float.isFinite(amount)||amount<=0||amount>1_000_000)throw new IOException("Invalid heat award");
+        return change(account,knight,auth,(c,p)->{
+            var eligible=p.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot())).filter(i->{var g=rules.gear().gear(i.config());return g!=null&&!g.maximum(i.level())&&i.heatProgress()<1;}).toList();
+            for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),amount/eligible.size()));}return null;
+        });
+    }
+    private static void setGearProgress(Connection c,int world,long item,int level,float heat)throws SQLException,IOException{
+        try(var st=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=? WHERE world_id=? AND item_id=?")){st.setInt(1,level);st.setFloat(2,heat);st.setInt(3,world);st.setLong(4,item);if(st.executeUpdate()!=1)throw new IOException("Item changed");}
+    }
+    private static void requireGameMaster(Connection c,int account,long auth)throws SQLException,IOException{
+        try(var st=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){st.setInt(1,account);st.setLong(2,auth);try(var r=st.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}}
+    }
+    /** Current stock /heat, /level and /forge commands; setters never grant normal-player authority. */
+    public Result adminGear(int account,int knight,long auth,int method,List<Object> args)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            requireGameMaster(c,account,auth);int slot=(Integer)args.get(0);
+            var item=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
+            var gear=rules.gear().gear(item.config());if(gear==null||gear.levels()<1)throw new IOException("This item has no heat progression");
+            if(method==41){float heat=(Float)args.get(1);if(!Float.isFinite(heat)||heat<0||heat>1)throw new IOException("Heat progress must be between 0 and 1");setGearProgress(c,p.worldId(),item.id(),item.level(),heat);return null;}
+            if(method==42){int level=(Integer)args.get(1);if(level<0||level>=gear.levels())throw new IOException("Item level is outside its progression table");setGearProgress(c,p.worldId(),item.id(),level,0);return null;}
+            if(method!=23)throw new IOException("Unknown gear admin operation");
+            if(gear.maximum(item.level()))return null;var props=rules.gear().forge(gear,item.level());if(props==null)return null;
+            int crystals=(Integer)args.get(1);if(crystals<0||crystals>9999)throw new IOException("Invalid forge crystal tier");
+            float chance=props.chance(crystals,false);if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
+            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return item.level()+1;
+        });
+    }
     public Result learn(int account,int knight,long auth,long item)throws IOException{
         return change(account,knight,auth,(c,p)->{var held=owned(p,item);String config=rules.item(held.config()).get("recipe");if(config==null||rules.recipe(config)==null)throw new IOException("m.internal_error");
             var prior=p.town().recipes().stream().filter(r->r.config().equals(config)).findFirst().orElse(null);
@@ -163,7 +226,30 @@ public final class TownStore {
         if(i.kind().equals("ItemGroup"))return (i.rarity()==-1||i.rarity()==d.rarity())&&group(d).equals(i.group());
         return (item.config().equals(i.item())||i.options().contains(item.config()))&&(!i.kind().endsWith("LevelItem")||item.level()>=i.level()-1);
     }
-    static String group(ItemCatalog.Entry entry){return switch(entry.type()){case "Sword"->"SWORD";case "Gun","Handgun","SwingingHandgun"->"HANDGUN";case "Bomb","BlastNetworkBomb"->"BOMB";case "HelmCostume"->"COSTUME_HELM";case "ArmorCostume"->"COSTUME_ARMOR";case "ShieldCostume"->"COSTUME_SHIELD";case "Material","Craft"->"CRAFT";default->entry.type().toUpperCase(Locale.ROOT);};}
+    static String group(ItemCatalog.Entry entry){return TownCatalog.itemGroup(entry);}
+    /** Native VariantMarshaller: custom ticket, or a selected random-variant count. */
+    public Result variant(int account,int knight,long auth,int count,long gearId,long ticketId,int keepMask,boolean custom)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            var gear=owned(p,gearId);var def=items.require(gear.config());String group=group(def);
+            if(!Set.of("SWORD","HANDGUN","BOMB","HELM","ARMOR","SHIELD","TRINKET").contains(group)||gear.variants().size()>3||keepMask<0||(keepMask>>>gear.variants().size())!=0)throw new IOException("e.wrong_item_group");
+            var kept=new ArrayList<StarterCatalog.Model>();for(int i=0;i<gear.variants().size();i++)if((keepMask&(1<<i))!=0)kept.add(gear.variants().get(i));
+            if(custom){
+                var ticket=owned(p,ticketId);var metadata=rules.item(ticket.config());String variant=metadata.get("variant");
+                if(variant==null||!Arrays.asList(metadata.getOrDefault("variantGroups","").split(",")).contains(group))throw new IOException("e.wrong_item_group");
+                if(gear.variants().stream().anyMatch(v->v.name().equals(variant)))throw new IOException("e.already_have_variant");
+                if(gear.variants().size()<3&&kept.size()!=gear.variants().size()||kept.size()>2)throw new IOException("Invalid retained variants");
+                consume(c,p,ticketId,1);kept.add(new StarterCatalog.Model(variant,Map.of()));
+            }else{
+                if(count<1||count>3||kept.size()>=count)throw new IOException("Invalid variant count");
+                if(ticketId==0)pay(c,p,new int[]{20000,75000,225000}[count-1],0);
+                else{var ticket=owned(p,ticketId);if(!ticket.config().equals("Ticket/Variants/Variants "+count))throw new IOException("Invalid variant ticket");consume(c,p,ticketId,1);}
+                var rolled=rules.roll("Shop/Variant "+count,group,kept);kept.clear();kept.addAll(rolled);
+                if(kept.size()!=count)throw new IOException("Variant table did not supply the selected outcome");
+            }
+            try(var st=c.prepareStatement("UPDATE inventory_items SET variants=? WHERE world_id=? AND item_id=?")){st.setString(1,Json.stringify(kept.stream().map(StarterCatalog.Model::name).toList()));st.setInt(2,p.worldId());st.setLong(3,gearId);if(st.executeUpdate()!=1)throw new IOException("Item changed");}
+            return gearId;
+        });
+    }
     public Result unbind(int account,int knight,long auth,long item,long ticket)throws IOException{
         return change(account,knight,auth,(c,p)->{var i=owned(p,item);var def=items.require(i.config());int rarity=def.rarity();
             if(!i.bound())throw new IOException("e.not_bound");if(i.permanent()||i.starter()||def.variant()!=ItemCatalog.Variant.LEVEL_ITEM&&i.slot()==WorldProfile.Slot.OTHER||rarity<1||rarity>5)throw new IOException("e.cannot_unbind");if(i.equippedSlot()!=null)throw new IOException("e.equipped");
@@ -214,10 +300,7 @@ public final class TownStore {
     /** Stock ProjectXAdminMarshaller IDs; GM setters bypass normal point/catalyst requirements. */
     public Result adminSprite(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return change(account,knight,auth,(c,p)->{
-            try(var s=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){
-                s.setInt(1,account);s.setLong(2,auth);
-                try(var r=s.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}
-            }
+            requireGameMaster(c,account,auth);
             if(method==8){
                 String config=((org.tortodrone.protocol.SessionDecoder.ConfigReference)args.get(0)).name();
                 if(config==null||rules.sprite(config)==null)throw new IOException("Unknown sprite configuration");
@@ -226,11 +309,11 @@ public final class TownStore {
             var sprite=p.town().sprites().stream().filter(s->s.id()==p.town().equippedSprite()).findFirst().orElseThrow(()->new IOException("Equip a battle sprite first; /sprite_list shows owned sprite IDs"));
             String field,json=null;int level=sprite.level();
             switch(method){
-                case 44->{level=(Integer)args.get(0);if(level<0||level>99)throw new IOException("Sprite level must be between 1 and 100");field="level";}
-                case 45->{int skill=(Integer)args.get(0),power=(Integer)args.get(1),value=(Integer)args.get(2);
+                case 45->{level=(Integer)args.get(0);if(level<0||level>99)throw new IOException("Sprite level must be between 1 and 100");field="level";}
+                case 46->{int skill=(Integer)args.get(0),power=(Integer)args.get(1),value=(Integer)args.get(2);
                     if(skill<0||skill>=3||power<0||power>=3||value<0||value>3)throw new IOException("Sprite skill and power must be 1-3; value must be 0-3");
                     var powers=new ArrayList<>(sprite.powers());powers.set(skill*3+power,value);field="powers";json=Json.stringify(powers);}
-                case 46->{int skill=(Integer)args.get(0),ultimate=(Integer)args.get(1);
+                case 47->{int skill=(Integer)args.get(0),ultimate=(Integer)args.get(1);
                     if(skill<0||skill>=3||ultimate<0||ultimate>2)throw new IOException("Sprite skill must be 1-3; ultimate must be 0 (none), 1 (A) or 2 (B)");
                     var ultimates=new ArrayList<>(sprite.ultimates());ultimates.set(skill,ultimate);field="ultimates";json=Json.stringify(ultimates);}
                 default->throw new IOException("Unknown sprite admin operation");
@@ -245,6 +328,20 @@ public final class TownStore {
     public Result hatch(int account,int knight,long auth,long egg)throws IOException{
         return change(account,knight,auth,(c,p)->{var item=owned(p,egg);String config=rules.item(item.config()).get("sprite");if(config==null||rules.sprite(config)==null)throw new IOException("m.internal_error");
             consume(c,p,egg,1);try(var s=c.prepareStatement("INSERT INTO town_sprites(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();try(var keys=s.getGeneratedKeys()){keys.next();return keys.getInt(1);}}});
+    }
+    public Result installHarnesses(int account,int knight,long auth,TownCatalog.Station station,long cycle,Set<Integer> selected)throws IOException{
+        return change(account,knight,auth,(c,p)->{
+            if(selected.isEmpty()||selected.size()>100||cycle!=0&&cycle<=System.currentTimeMillis())throw new IOException("e.good_unavailable");
+            var goods=rules.goods(station.shop(),cycle,p.worldId());var configs=new ArrayList<String>();long crowns=0,energy=0;
+            for(int index:selected){
+                if(index<0||index>=goods.size())throw new IOException("e.good_unavailable");var good=goods.get(index);String config=rules.item(good.item()).get("harness");
+                if(config==null||rules.harnessDamage(config)==null||!good.token().isEmpty()||good.count()!=1||good.limit()!=0)throw new IOException("e.good_unavailable");
+                var def=items.require(good.item());int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();if(price<0||good.energy()<0)throw new IOException("e.good_unavailable");
+                crowns+=price;energy+=good.energy();configs.add(config);
+            }
+            if(crowns>Integer.MAX_VALUE||energy>Integer.MAX_VALUE)throw new IOException("m.insufficient_funds");pay(c,p,(int)crowns,(int)energy);
+            for(String config:configs)try(var st=c.prepareStatement("INSERT INTO town_harnesses(world_id,config) VALUES(?,?)")){st.setInt(1,p.worldId());st.setString(2,config);st.executeUpdate();}return null;
+        });
     }
     /** Archive HarnessManager.installFromKit keeps the kit and persists a newly allocated harness. */
     public Result installHarness(int account,int knight,long auth,long kit)throws IOException{

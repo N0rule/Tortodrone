@@ -79,7 +79,7 @@ public final class DesktopCheck {
             edt(()->{inventory.setRowSelectionInterval(0,0);return null;});check(edt(()->!button((Container)panel,"Set quantity").isEnabled()&&!button((Container)panel,"Remove item").isEnabled()),"protected items explain disabled mutation actions");
             SwingUtilities.invokeLater(()->button((Container)panel,"Add item").doClick());await(()->dialog("Add item")!=null,"catalogue dialog");JDialog catalogue=dialog("Add item");
             edt(()->{JTextField query=components(catalogue,JTextField.class).getFirst();query.setText("Proto Sword");JList<?> list=components(catalogue,JList.class).getFirst();list.setSelectedIndex(0);components(catalogue,JSpinner.class).getFirst().setValue(2);return null;});capture(catalogue,root.resolve("catalogue.png"));
-            edt(()->{button(catalogue,"Grant").doClick();return null;});await(()->edt(()->inventory.getRowCount()==7),"UI grants and refreshed inventory");
+            SwingUtilities.invokeLater(()->button(catalogue,"Select").doClick());await(()->dialog("Grant Proto Sword")!=null,"gear modifiers form");JDialog modifiers=dialog("Grant Proto Sword");edt(()->{components(modifiers,JOptionPane.class).getFirst().setValue(JOptionPane.OK_OPTION);return null;});await(()->edt(()->inventory.getRowCount()==7),"UI grants and refreshed inventory");
             edt(()->{inventory.setRowSelectionInterval(6,6);return null;});check(edt(()->button((Container)panel,"Set quantity").isEnabled()),"ordinary unequipped item actions are available");
             Object selectedItem=edt(()->inventory.getModel().getValueAt(inventory.convertRowIndexToModel(inventory.getSelectedRow()),5));
             SwingUtilities.invokeLater(()->button((Container)panel,"Currency").doClick());await(()->dialog("Currency")!=null,"currency dialog");JDialog currency=dialog("Currency");
@@ -97,7 +97,7 @@ public final class DesktopCheck {
         } finally {release.countDown();if(unauth!=null)unauth.close();network.shutdownNow();if(window!=null){((ServerControl)field(window,"control")).exit();window.close();}hosting.join(15000);edt(()->{for(Window w:Window.getWindows())w.dispose();return null;});}
     }
     private static Object field(Object target,String name)throws Exception{Field f=target.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(target);}
-    private static JFrame admin()throws Exception{return edt(()->{for(Window w:Window.getWindows())if(w instanceof JFrame frame&&frame.isShowing()&&frame.getTitle().contains("Account Manager"))return frame;return null;});}
+    private static JFrame admin()throws Exception{return edt(()->{for(Window w:Window.getWindows())if(w instanceof JFrame frame&&frame.isShowing()&&frame.getTitle().equals("Tortodrone — Administration"))return frame;return null;});}
     private static JDialog dialog(String title)throws Exception{return edt(()->{for(Window w:Window.getWindows())if(w instanceof JDialog d&&d.isShowing()&&d.getTitle().startsWith(title))return d;return null;});}
     private static <T extends Window>T find(Class<T> type)throws Exception{return edt(()->{for(Window w:Window.getWindows())if(type.isInstance(w)&&w.isShowing())return type.cast(w);return null;});}
     private static <T extends Component>List<T> components(Container parent,Class<T> type){var result=new java.util.ArrayList<T>();for(Component c:parent.getComponents()){if(type.isInstance(c))result.add(type.cast(c));if(c instanceof Container container)result.addAll(components(container,type));}return result;}

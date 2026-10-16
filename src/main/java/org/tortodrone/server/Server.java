@@ -150,7 +150,7 @@ public final class Server {
             }
         }, "ServerShutdown");
         Runtime.getRuntime().addShutdownHook(shutdown);
-        try {
+        try (var expiry=new AuctionExpiry(accounts.auctions(),log)) {
             log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             log.info("Server ready ("+String.format(java.util.Locale.ROOT,"%.3fs",(System.nanoTime()-startup)/1e9)+")");

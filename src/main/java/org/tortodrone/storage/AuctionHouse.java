@@ -24,22 +24,29 @@ public final class AuctionHouse {
                     if(listing.seller()==p.worldId()||amount<=0)throw new IOException("m.internal_error");
                     if(listing.ended()||listing.expires()<=System.currentTimeMillis()){result=new AuctionState.Update(listing,"e.auction_ended");break;}
                     int minimum=nextBid(listing.bid(),listing.buy(),listing.bidder()==0);if(amount<minimum||listing.buy()!=0&&amount>listing.buy())throw new IOException("e.bid_insufficient");
-                    TownStore.pay(c,p,amount,0);if(listing.bidder()==p.worldId())TownStore.credit(c,p.worldId(),listing.bid(),0);else if(listing.bidder()!=0)mail(c,listing.bidder(),compose("s.bid_outbid",display(listing.item())),"m.bid_outbid",listing.bid(),null);
+                    if(listing.stock()){
+                        if(amount!=listing.buy()||listing.featuredRemaining()<1)throw new IOException("e.bid_insufficient");
+                        TownStore.pay(c,p,amount,0);
+                        try(var st=c.prepareStatement("UPDATE town_auctions SET featured_remaining=featured_remaining-1,ended=CASE WHEN featured_remaining=1 THEN 1 ELSE 0 END WHERE id=? AND ended=0 AND featured_remaining>0")){st.setLong(1,id);if(st.executeUpdate()!=1)throw new IOException("e.auction_ended");}
+                        mail(c,id,p.worldId(),compose("s.bid_complete",display(listing.item())),"m.bid_complete",0,listing.item());
+                        recordBid(c,id,p.worldId());result=new AuctionState.Update(require(c,id,p.worldId()),null);break;
+                    }
+                    TownStore.pay(c,p,amount-(listing.bidder()==p.worldId()?listing.bid():0),0);if(listing.bidder()!=0&&listing.bidder()!=p.worldId())mail(c,id,listing.bidder(),compose("s.bid_outbid",display(listing.item())),"m.bid_outbid",listing.bid(),null);
                     boolean buy=listing.buy()!=0&&amount==listing.buy();try(var s=c.prepareStatement("UPDATE town_auctions SET bid=?,bidder=?,expires=CASE WHEN ? THEN ? ELSE expires END WHERE id=? AND ended=0")){s.setInt(1,amount);s.setInt(2,p.worldId());s.setBoolean(3,buy);s.setLong(4,System.currentTimeMillis());s.setLong(5,id);if(s.executeUpdate()!=1)throw new IOException("e.auction_busy");}
                     try(var s=c.prepareStatement("INSERT INTO town_auction_bids(auction,world_id,has_bid) VALUES(?,?,1) ON CONFLICT(auction,world_id) DO UPDATE SET has_bid=1")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}
-                    if(buy)sweep(c);result=new AuctionState.Update(require(c,id,p.worldId()),null);
+                    if(buy)settle(c,id);result=new AuctionState.Update(require(c,id,p.worldId()),null);
                 }
-                case 2->{long id=(Long)args.get(0);var listing=require(c,id,p.worldId());if(listing.seller()!=p.worldId()&&!staff)throw new IOException("m.access_denied");if(listing.ended()){result=new AuctionState.Update(listing,"e.auction_ended");break;}if(listing.bidder()!=0&&!staff)throw new IOException("e.auction_bid");
-                    try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}sweep(c);result=new AuctionState.Update(require(c,id,p.worldId()),null);}
+                case 2->{long id=(Long)args.get(0);var listing=require(c,id,p.worldId());if(listing.featured()||listing.seller()!=p.worldId())throw new IOException("m.access_denied");if(listing.ended()){result=new AuctionState.Update(listing,"e.auction_ended");break;}if(listing.bidder()!=0)throw new IOException("e.auction_bid");
+                    try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}settle(c,id);result=new AuctionState.Update(require(c,id,p.worldId()),null);}
                 case 3,4->{var all=list(c,p.worldId());result=all.stream().filter(v->method==3?v.seller()==p.worldId():v.participated()||v.watching()).toList();}
-                case 5->{var search=(SessionDecoder.AuctionSearch)args.get(0);int page=(Integer)args.get(1);if(page<0||page>100000)throw new IOException("Invalid auction page");var all=new ArrayList<>(list(c,p.worldId()).stream().filter(v->!v.ended()&&!search.featured()).filter(v->search.configs()==null||items.find(v.item().config())!=null&&search.configs().contains(items.find(v.item().config()).stockId())).filter(v->search.group()==null||groupOrdinal(items.find(v.item().config()))==search.group().ordinal()).toList());
+                case 5->{var search=(SessionDecoder.AuctionSearch)args.get(0);int page=(Integer)args.get(1);if(page<0||page>100000)throw new IOException("Invalid auction page");var all=new ArrayList<>(list(c,p.worldId()).stream().filter(v->!v.ended()&&v.expires()>System.currentTimeMillis()&&v.featured()==search.featured()).filter(v->search.configs()==null||items.find(v.item().config())!=null&&search.configs().contains(items.find(v.item().config()).stockId())).filter(v->search.group()==null||groupOrdinal(items.find(v.item().config()))==search.group().ordinal()).toList());
                     Comparator<AuctionState.Listing> sort=switch(search.sort()){case 1->Comparator.comparingInt(AuctionState.Listing::bid);case 2->Comparator.comparingInt(AuctionState.Listing::buy);case 3->Comparator.comparingInt(v->v.item().count());case 4->Comparator.comparingInt(v->{var d=items.find(v.item().config());return d==null?0:d.rarity();});case 5->Comparator.comparingInt(v->v.item().variants().size());default->Comparator.comparingLong(AuctionState.Listing::expires);};if(!search.ascending())sort=sort.reversed();all.sort(sort.thenComparingLong(AuctionState.Listing::id));int pages=(all.size()+49)/50,start=Math.min(all.size(),page*50);result=new AuctionState.Page(pages,all.subList(start,Math.min(start+50,all.size())));}
                 case 6->{long itemId=(Long)args.get(0);int count=(Integer)args.get(1),bid=(Integer)args.get(2),buy=(Integer)args.get(3),duration=((SessionDecoder.EnumValue)args.get(4)).ordinal();boolean featured=(Boolean)args.get(5);
-                    if(duration<0||duration>=9||duration>=4&&!staff||featured||count<1||bid<1||buy<0||buy!=0&&buy<bid)throw new IOException("Invalid auction listing");
+                    if(duration<0||duration>=9||duration>=4||featured||count<1||bid<1||buy<0||buy!=0&&buy<bid)throw new IOException("Invalid auction listing");
                     var item=TownStore.owned(p,itemId);var d=items.require(item.config());if(count>item.count()||item.bound()||item.permanent()||item.starter()||item.equippedSlot()!=null||d.locked())throw new IOException("Item cannot be auctioned");
                     int fee=listingFee(d.rarity(),count,duration,bid,buy);TownStore.pay(c,p,fee,0);TownStore.consume(c,p,itemId,count);
                     var held=new WorldProfile.Item(item.id(),item.slot(),item.config(),item.accessory(),item.heat(),null,item.bound(),item.bindOnEquip(),false,count,item.permanent(),item.level(),item.heatProgress(),item.variants(),item.additionalAccessories());
-                    try(var s=c.prepareStatement("INSERT INTO town_auctions(seller,item,start_bid,buy_price,bid,expires,fee) VALUES(?,?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){s.setInt(1,p.worldId());s.setString(2,encode(held));s.setInt(3,bid);s.setInt(4,buy);s.setInt(5,bid);s.setLong(6,System.currentTimeMillis()+HOURS[duration]*3600000L);s.setInt(7,fee);s.executeUpdate();try(var keys=s.getGeneratedKeys()){keys.next();result=require(c,keys.getLong(1),p.worldId());}}
+                    try(var s=c.prepareStatement("INSERT INTO town_auctions(seller,item,start_bid,buy_price,bid,expires,fee,created) VALUES(?,?,?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){s.setInt(1,p.worldId());s.setString(2,encode(held));s.setInt(3,bid);s.setInt(4,buy);s.setInt(5,bid);s.setLong(6,System.currentTimeMillis()+HOURS[duration]*3600000L);s.setInt(7,fee);s.setLong(8,System.currentTimeMillis());s.executeUpdate();try(var keys=s.getGeneratedKeys()){keys.next();result=require(c,keys.getLong(1),p.worldId());}}
                 }
                 case 7->{long id=(Long)args.get(0);require(c,id,p.worldId());try(var s=c.prepareStatement("INSERT INTO town_auction_bids(auction,world_id,watching) VALUES(?,?,1) ON CONFLICT(auction,world_id) DO UPDATE SET watching=1-watching")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}result=new AuctionState.Update(require(c,id,p.worldId()),null);}
                 default->throw new IOException("Unknown auction operation");
@@ -49,18 +56,60 @@ public final class AuctionHouse {
     private static int groupOrdinal(ItemCatalog.Entry d){if(d==null)return 22;return switch(d.type()){case "Sword"->2;case "Gun","Handgun","SwingingHandgun"->3;case "Bomb","BlastNetworkBomb"->4;case "Helm"->5;case "Armor"->6;case "Shield"->7;case "Trinket"->8;case "HelmCostume"->9;case "ArmorCostume"->10;case "ShieldCostume"->11;case "Rarity"->12;case "Mineral"->13;case "Material","Craft"->14;case "Recipe"->15;case "Token"->16;case "Upgrade"->17;case "SpriteEgg"->18;case "AccessoryTicket"->19;case "Key"->20;case "Ticket"->21;case "Artifact"->23;default->22;};}
     private static List<AuctionState.Listing> list(Connection c,int world)throws SQLException,IOException{var result=new ArrayList<AuctionState.Listing>();try(var s=c.prepareStatement("SELECT a.*,EXISTS(SELECT 1 FROM town_auction_bids b WHERE b.auction=a.id AND b.world_id=? AND b.has_bid=1) participated,EXISTS(SELECT 1 FROM town_auction_bids w WHERE w.auction=a.id AND w.world_id=? AND w.watching=1) watching FROM town_auctions a ORDER BY a.id DESC LIMIT 5000")){s.setInt(1,world);s.setInt(2,world);try(var r=s.executeQuery()){while(r.next())result.add(row(r,world));}}return result;}
     private static AuctionState.Listing require(Connection c,long id,int world)throws SQLException,IOException{try(var s=c.prepareStatement("SELECT a.*,EXISTS(SELECT 1 FROM town_auction_bids b WHERE b.auction=a.id AND b.world_id=? AND b.has_bid=1) participated,EXISTS(SELECT 1 FROM town_auction_bids w WHERE w.auction=a.id AND w.world_id=? AND w.watching=1) watching FROM town_auctions a WHERE a.id=?")){s.setInt(1,world);s.setInt(2,world);s.setLong(3,id);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Unknown auction");return row(r,world);}}}
-    private static AuctionState.Listing row(ResultSet r,int world)throws SQLException,IOException{return new AuctionState.Listing(r.getLong("id"),r.getInt("seller"),decode(r.getString("item")),r.getInt("bid"),r.getInt("buy_price"),r.getInt("bidder"),r.getLong("expires"),r.getBoolean("ended"),r.getBoolean("cancelled"),r.getInt("seller")==world,r.getBoolean("participated"),r.getInt("fee"),r.getBoolean("watching"));}
+    private static AuctionState.Listing row(ResultSet r,int world)throws SQLException,IOException{return new AuctionState.Listing(r.getLong("id"),r.getInt("seller"),decode(r.getString("item")),r.getInt("bid"),r.getInt("buy_price"),r.getInt("bidder"),r.getLong("expires"),r.getBoolean("ended"),r.getBoolean("cancelled"),r.getInt("seller")==world,r.getBoolean("participated"),r.getInt("fee"),r.getBoolean("watching"),r.getInt("featured_total"),r.getInt("featured_remaining"),r.getLong("created"));}
     static void sweep(Connection c)throws SQLException,IOException{
         var expired=new ArrayList<Long>();try(var s=c.prepareStatement("SELECT id FROM town_auctions WHERE ended=0 AND expires<=? ORDER BY id LIMIT 100")){s.setLong(1,System.currentTimeMillis());try(var r=s.executeQuery()){while(r.next())expired.add(r.getLong(1));}}
-        for(long id:expired){var a=require(c,id,0);try(var s=c.prepareStatement("UPDATE town_auctions SET ended=1 WHERE id=? AND ended=0")){s.setLong(1,id);if(s.executeUpdate()!=1)continue;}
-            if(!a.cancelled()&&a.bidder()!=0){long payout=(long)a.bid()-wonFee(a.bid())+a.fee();if(payout>Integer.MAX_VALUE)throw new IOException("Auction payout exceeds limit");mail(c,a.seller(),compose("s.auction_complete",display(a.item())),compose("m.auction_complete","~"+a.bid(),"~"+a.fee(),"~"+wonFee(a.bid())),(int)payout,null);mail(c,a.bidder(),compose("s.bid_complete",display(a.item())),"m.bid_complete",0,a.item());}
-            else{mail(c,a.seller(),compose(a.cancelled()?"s.auction_cancelled":"s.auction_incomplete",display(a.item())),a.cancelled()?"m.auction_cancelled":"m.auction_incomplete",0,a.item());if(a.cancelled()&&a.bidder()!=0)mail(c,a.bidder(),compose("s.bid_cancelled",display(a.item())),"m.bid_cancelled",a.bid(),null);}
+        for(long id:expired)settle(c,id);
+    }
+    private static void settle(Connection c,long id)throws SQLException,IOException{
+        var a=require(c,id,0);if(a.ended()||a.expires()>System.currentTimeMillis())return;
+        try(var s=c.prepareStatement("UPDATE town_auctions SET ended=1 WHERE id=? AND ended=0")){s.setLong(1,id);if(s.executeUpdate()!=1)return;}
+        if(!a.cancelled()&&a.bidder()!=0){
+            if(!a.featured()){
+                long payout=(long)a.bid()-wonFee(a.bid())+a.fee();if(payout>Integer.MAX_VALUE)throw new IOException("Auction payout exceeds limit");
+                mail(c,id,a.seller(),compose("s.auction_complete",display(a.item())),compose("m.auction_complete","~"+a.bid(),"~"+a.fee(),"~"+wonFee(a.bid())),(int)payout,null);
+            }
+            mail(c,id,a.bidder(),compose("s.bid_complete",display(a.item())),"m.bid_complete",0,a.item());
+        }else{
+            if(!a.featured())mail(c,id,a.seller(),compose(a.cancelled()?"s.auction_cancelled":"s.auction_incomplete",display(a.item())),a.cancelled()?"m.auction_cancelled":"m.auction_incomplete",0,a.item());
+            if(a.cancelled()&&a.bidder()!=0)mail(c,id,a.bidder(),compose("s.bid_cancelled",display(a.item())),"m.bid_cancelled",a.bid(),null);
         }
+    }
+    private static void recordBid(Connection c,long id,int world)throws SQLException{
+        try(var s=c.prepareStatement("INSERT INTO town_auction_bids(auction,world_id,has_bid) VALUES(?,?,1) ON CONFLICT(auction,world_id) DO UPDATE SET has_bid=1")){s.setLong(1,id);s.setInt(2,world);s.executeUpdate();}
+    }
+    /** Trusted local administration only; never called by a game-client invocation. */
+    public AuctionState.Listing createFeatured(String config,int quantity,int bid,int buy,int duration,int stock)throws IOException{
+        var def=items.require(config);
+        if(!def.grantable()||quantity<1||quantity>9999||!def.stackable()&&quantity!=1||duration<0||duration>=HOURS.length||stock<1||stock>32767||bid<1||buy<0||buy!=0&&buy<bid||stock>1&&(buy==0||bid!=buy))throw new IOException("Invalid featured item, quantity, price, duration or stock");
+        return database.write(c->{
+            var held=new WorldProfile.Item(0,def.slot(),def.config(),null,0,null,def.locked(),def.bindOnEquip(),false,quantity,def.permanent(),0,0,List.of(),List.of());
+            try(var s=c.prepareStatement("INSERT INTO town_auctions(seller,item,start_bid,buy_price,bid,expires,created,featured_total,featured_remaining) VALUES(NULL,?,?,?,?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS)){
+                s.setString(1,encode(held));s.setInt(2,bid);s.setInt(3,buy);s.setInt(4,bid);s.setLong(5,System.currentTimeMillis()+HOURS[duration]*3600000L);s.setLong(6,System.currentTimeMillis());s.setInt(7,stock);s.setInt(8,stock);s.executeUpdate();
+                try(var keys=s.getGeneratedKeys()){keys.next();return require(c,keys.getLong(1),0);}
+            }
+        });
+    }
+    public record Overview(AuctionState.Listing listing,String seller,String bidder) { }
+    public List<Overview> overview()throws IOException{
+        return database.read(c->{c.setAutoCommit(false);var names=new HashMap<Integer,String>();
+            try(var s=c.createStatement();var r=s.executeQuery("SELECT w.world_id,k.name FROM world_characters w JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")){while(r.next())names.put(r.getInt(1),r.getString(2));}
+            var rows=list(c,0).stream().map(a->new Overview(a,a.featured()?"System":names.getOrDefault(a.seller(),"#"+a.seller()),names.getOrDefault(a.bidder(),a.bidder()==0?"—":"#"+a.bidder()))).toList();c.commit();return rows;});
+    }
+    public AuctionState.Listing cancel(long id)throws IOException{
+        return database.write(c->{var a=require(c,id,0);if(!a.ended()){
+            try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}settle(c,id);
+        }return require(c,id,0);});
+    }
+    public void settleExpired()throws IOException{database.write(c->{sweep(c);return null;});}
+    public record Delivery(long id,int recipient,int crowns,boolean item,boolean claimed) { }
+    public List<Delivery> deliveries(long auction)throws IOException{
+        return database.read(c->{var result=new ArrayList<Delivery>();try(var s=c.prepareStatement("SELECT id,world_id,crowns,item IS NOT NULL,claimed FROM town_mail WHERE auction=? ORDER BY id")){s.setLong(1,auction);try(var r=s.executeQuery()){while(r.next())result.add(new Delivery(r.getLong(1),r.getInt(2),r.getInt(3),r.getBoolean(4),r.getBoolean(5)));}}return List.copyOf(result);});
     }
     private static String display(WorldProfile.Item item){return "~"+item.config().substring(item.config().lastIndexOf('/')+1);}
     private static String compose(String key,String... args){var result=new StringBuilder(key);for(String arg:args)result.append('|').append(arg.replace("\\","\\\\").replace("|","\\!"));return result.toString();}
-    static void mail(Connection c,int world,String subject,String body,int crowns,WorldProfile.Item item)throws SQLException,IOException{
-        try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,item) VALUES(?,?,?,?,?,?)")){s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%auction:"+subject);s.setString(4,"%auction:"+body);s.setInt(5,crowns);s.setString(6,item==null?null:encode(item));s.executeUpdate();}TownStore.touch(c,world);
+    private static void mail(Connection c,long auction,int world,String subject,String body,int crowns,WorldProfile.Item item)throws SQLException,IOException{
+        try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,item,auction) VALUES(?,?,?,?,?,?,?)")){s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%auction:"+subject);s.setString(4,"%auction:"+body);s.setInt(5,crowns);s.setString(6,item==null?null:encode(item));s.setLong(7,auction);s.executeUpdate();}TownStore.touch(c,world);
     }
     public TownStore.Result mail(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);Object result=null;

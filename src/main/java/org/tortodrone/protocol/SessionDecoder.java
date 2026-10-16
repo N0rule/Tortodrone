@@ -166,7 +166,7 @@ public final class SessionDecoder {
             case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
             case "com.threerings.config.ConfigReference" -> configReference(in,depth);
             case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
-            case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List" -> values(in, depth);
+            case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
             case "com.threerings.projectx.data.ProjectXCodes$KnightHeight" -> enumeration(in, type, 5);
             case "com.threerings.projectx.data.ProjectXCodes$EyeType" -> enumeration(in, type, 47);
             case "com.threerings.projectx.item.data.ItemCodes$Location" -> enumeration(in,type,4);

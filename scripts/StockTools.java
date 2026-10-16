@@ -26,6 +26,13 @@ public final class StockTools {
                 fixtureArgs.add(args.length == 3 ? Path.of(args[2]).toAbsolutePath().toString() : project.resolve("build/exports/items").toString());
                 if(!Files.isRegularFile(project.resolve("build/tortodrone.jar")))throw new IOException("Build the server JAR before exporting items: ./gradlew buildServer");
             }
+            case "gear-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("gear-check expects game-directory");fixture="GearProgressionCompatibility";
+            }
+            case "gear-progression" -> {
+                if(args.length!=3)throw new IllegalArgumentException("gear-progression expects game-directory fresh-output-directory");
+                fixture="GearProgressionExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
             case "pets" -> {
                 if(args.length!=3)throw new IllegalArgumentException("pets expects game-directory fresh-output-directory");
                 fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

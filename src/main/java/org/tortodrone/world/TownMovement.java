@@ -114,7 +114,7 @@ public final class TownMovement {
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
         if(combat!=null&&Math.abs((long)actionChanged-stamp)>600000)return false;
-        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?3:4095),actionChanged));
+        pending.addLast(new Frame(stamp, normalize(facing), normalize(heading), inputFlags & (combat==null?7:4095),actionChanged));
         lastTimestamp = stamp;
         lastInputAt = now;
         inputSeen = true;
