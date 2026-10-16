@@ -9,6 +9,7 @@ public final class TownMovement {
     public static final float MAX_STEP = .333333f;
     // Verified stock KnightAdvancer inventory activities and closing duration.
     public static final int INVENTORY = 3, INVENTORY_END = 4, INVENTORY_END_MILLIS = 889;
+    public static final int USE_ITEM=5, USE_ITEM_MILLIS=1433;
     // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
@@ -54,10 +55,11 @@ public final class TownMovement {
     public org.tortodrone.character.StarterCatalog.Model activityData(){return activityData;}
     public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
         if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
-        if(combat!=null)combat.reset(stamp);setActivity(5,stamp);activityData=item;updateFlags();return true;
+        if(combat!=null)combat.reset(stamp);setActivity(USE_ITEM,stamp);activityData=item;updateFlags();return true;
     }
     private java.util.function.IntPredicate interaction=stamp->false;
     private java.util.function.BiPredicate<Float,Float> dynamicCollision=(x,y)->true;
+    private java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> dynamicPenetration=(x,y)->SceneCollision.Penetration.NONE;
     private SceneCollision staticCollision=SceneCollision.empty();
     private int collisionMask=43;
     private static final Object PAWN_SHAPE=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
@@ -72,6 +74,7 @@ public final class TownMovement {
     }
     public void interaction(java.util.function.IntPredicate handler){interaction=java.util.Objects.requireNonNull(handler);}
     public void dynamicCollision(java.util.function.BiPredicate<Float,Float> predicate){dynamicCollision=java.util.Objects.requireNonNull(predicate);}
+    public void dynamicPenetration(java.util.function.BiFunction<Float,Float,SceneCollision.Penetration> query){dynamicPenetration=java.util.Objects.requireNonNull(query);}
 
     public void combat(KnightCombat controller){combat=java.util.Objects.requireNonNull(controller);}
     public KnightCombat.State combatState(){return combat==null?null:combat.state();}
@@ -188,7 +191,7 @@ public final class TownMovement {
     private void moveTo(int target) {
         if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
         if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
-        int duration = activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == 5 ? 1433 : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        int duration = activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();
@@ -212,13 +215,33 @@ public final class TownMovement {
             float dx=(float)Math.cos(direction)*distance,dy=(float)Math.sin(direction)*distance;
             var impulse=combat==null?null:combat.state().impulse();
             if(impulse!=null&&status.canMove()){float portion=impulse.fraction(timestamp)-impulse.fraction(previous);dx+=impulse.x()*portion;dy+=impulse.y()*portion;}
-            float nx = x + dx;
-            float ny = y + dy;
-            if (walkable(nx, ny)&&dynamicCollision.test(nx,ny)) { x = nx; y = ny; }
-            else if (walkable(nx, y)&&dynamicCollision.test(nx,y)) x = nx;
-            else if (walkable(x, ny)&&dynamicCollision.test(x,ny)) y = ny;
+            move(dx,dy);
             if(combat!=null)combat.retireImpulse(timestamp);
             if(!dead()&&detectPortal(target))return;
+        }
+    }
+    private void move(float dx,float dy){
+        if(dx==0&&dy==0)return;
+        float length=(float)Math.hypot(dx,dy);
+        if(length>MAX_STEP){dx*=MAX_STEP/length;dy*=MAX_STEP/length;}
+        float nx=x+dx,ny=y+dy;
+        // Stock MobileAdvancer resolves the deepest penetration, with three bounded attempts.
+        // Endpoint rejection and axis sliding cannot escape an existing overlap or round a corner.
+        for(int attempt=0;attempt<3;attempt++){
+            var penetration=staticCollision.penetration(collisionMask,nx,ny,ScenePortals.PAWN_RADIUS)
+                .deepest(dynamicPenetration.apply(nx,ny));
+            if(!penetration.present()){
+                boolean floor=staticCollision.isEmpty()?terrain.walkableSegment(x,y,nx,ny):staticCollision.floorSupported(nx,ny);
+                if(floor&&dynamicCollision.test(nx,ny)){x=nx;y=ny;return;}
+                break;
+            }
+            nx+=penetration.x()*1.001f;ny+=penetration.y()*1.001f;
+        }
+        // Legacy packs have only a sampled walkability grid, without a separating vector.
+        if(staticCollision.isEmpty()){
+            nx=x+dx;ny=y+dy;
+            if(walkable(nx,y)&&dynamicCollision.test(nx,y)&&!dynamicPenetration.apply(nx,y).present())x=nx;
+            else if(walkable(x,ny)&&dynamicCollision.test(x,ny)&&!dynamicPenetration.apply(x,ny).present())y=ny;
         }
     }
     private boolean detectPortal(int sceneTime) {
@@ -233,7 +256,7 @@ public final class TownMovement {
     public float y() { return y; }
     public float rotation() { return rotation; }
     public float direction() { return direction; }
-    public int flags() { return flags; }
+    public int flags() { return flags|(combat==null?0:combat.flags()); }
     public int inputFlags(){return inputFlags;}
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }

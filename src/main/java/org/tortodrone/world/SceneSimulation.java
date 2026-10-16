@@ -146,7 +146,7 @@ public final class SceneSimulation {
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
             movement.revival(stamp->instance.map().kind().equals("training")&&health.revive(stamp));
-            movement.dynamicCollision((x,y)->entities.walkable(x,y,actor.id()));
+            movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
             movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation());
                 if(prompt==null)return false;
@@ -299,12 +299,16 @@ public final class SceneSimulation {
                 member.updateLife(stamp);
                 member.movement.status(member.health.status().modifiers());
                 if(member.health.status().modifiers().shocked()&&member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
+                if(member.pendingItem!=0){
+                    if(member.movement.activity()!=TownMovement.USE_ITEM){member.pendingItem=0;member.itemSpec=null;}
+                    else if(stamp>=member.itemLand){
+                        if(member.health.heal(member.itemSpec.integer("heal",0))){member.usedItems.add(member.pendingItem);weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);}
+                        member.pendingItem=0;member.itemSpec=null;
+                    }
+                }
+                // Resolve the delayed action before natural animation completion on a late tick.
                 member.movement.advance(stamp,now);
                 if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
-                if(member.pendingItem!=0&&stamp>=member.itemLand){
-                    if(member.health.heal(member.itemSpec.integer("heal",0))){member.usedItems.add(member.pendingItem);weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);}
-                    member.pendingItem=0;member.itemSpec=null;
-                }
                 member.portal=member.movement.portal();member.advancePet(stamp);
             }
             var players=members.values().stream().filter(m->m.entered).map(Membership::actor).toList();

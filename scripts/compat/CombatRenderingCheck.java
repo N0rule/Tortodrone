@@ -51,6 +51,8 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean healthOnly;
+    private boolean movementOnly;
+    private List<Action> actions=ACTIONS;
     private int healthMaximum;
     private float hazardX,hazardY;
     private float peerStartX,peerStartY;
@@ -93,7 +95,7 @@ public final class CombatRenderingCheck {
         if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -109,6 +111,8 @@ public final class CombatRenderingCheck {
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
+        probe.movementOnly=Arrays.asList(args).contains("--movement-only");
+        if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
         timer.scheduleAtFixedRate(new TimerTask(){public void run(){if(pending.compareAndSet(false,true))app.getRunQueue().postRunnable(()->{try{probe.tick();}finally{pending.set(false);}});}},50,40);
@@ -154,7 +158,7 @@ public final class CombatRenderingCheck {
             if(peer){peerTick(view);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
             if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
                 if(GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
@@ -211,6 +215,7 @@ public final class CombatRenderingCheck {
                 var server=authoritative.get(app.CT().pawnId);
                 if(server==null||server.tz().y<moveY+2)throw new AssertionError("Native movement did not reach the training corridor away from its south exit");
                 capture("training-movement");System.out.println("CHECK: native controlled movement and authoritative position");
+                if(movementOnly){stage=4;return;}
                 var stranger=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.data.actor.Stranger)
                     .filter(a->a.Mv().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
                     .filter(a->Math.hypot(a.tz().x-5.818864,a.tz().y-2.6403537)<.05).findFirst()
@@ -379,8 +384,8 @@ public final class CombatRenderingCheck {
             if(stage==17&&now-started>700_000_000L){moveEast(view,false);started=now;needleFacingReady=true;stage=18;return;}
             if(stage==18&&now-started>500_000_000L){stage=4;return;}
             if(stage==4){
-                if(index==ACTIONS.size()){capture("training-complete");if(trainingOnly){finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, focused Training Hall actors and native combat actions including Blitz Needle normal/charged projectiles");app.shutdown();}else{app.GF().bl(1);stage=7;}return;}
-                var action=ACTIONS.get(index);
+                if(index==actions.size()){capture("training-complete");if(trainingOnly){finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println(movementOnly?"PASS: stock graphical Training movement, sword lunge and dodge with native impulse guards and settled prediction":"PASS: two stock graphical clients, focused Training Hall actors and native combat actions including Blitz Needle normal/charged projectiles");app.shutdown();}else{app.GF().bl(1);stage=7;}return;}
+                var action=actions.get(index);
                 if(action.name.equals("blitz-needle-charge")&&!needleFacingReady){moveEast(view,true);started=now;stage=17;return;}
                 equip=new Confirm();long id=0;
                 for(var item:app.CT().items)if(item.Vx().getName().equals(action.weapon)){id=item.VA();break;}
@@ -391,19 +396,19 @@ public final class CombatRenderingCheck {
                 if(!equip.done)return;if(equip.reason!=null)throw new AssertionError("Equip refused: "+equip.reason);
                 var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
                 Object impl=view.PO().implementation();var renderedWeapon=(Item)field(impl,"_weapon").get(impl);
-                if(weapon==null||!weapon.Vx().getName().equals(ACTIONS.get(index).weapon)||renderedWeapon==null||!renderedWeapon.Vx().getName().equals(ACTIONS.get(index).weapon)){
-                    if(now-started>5_000_000_000L)throw new AssertionError("Actor/sprite weapon did not converge to "+ACTIONS.get(index).weapon);
+                if(weapon==null||!weapon.Vx().getName().equals(actions.get(index).weapon)||renderedWeapon==null||!renderedWeapon.Vx().getName().equals(actions.get(index).weapon)){
+                    if(now-started>5_000_000_000L)throw new AssertionError("Actor/sprite weapon did not converge to "+actions.get(index).weapon);
                     return;
                 }
                 var body=(com.threerings.config.ConfigReference<?>)view.PO().acU().Mv().kW().get("Model");
                 if(body==null||body.kW().containsKey("Weapon")||body.kW().containsKey("Shield")||body.kW().containsKey("Weapon Idle"))throw new AssertionError("Interior base model duplicates held equipment");
                 activities.clear();renderedActivities.clear();animations.clear();capturedProjectiles.clear();frames=0;burstFrames=0;projectile=false;released=false;aftermath=false;lastAnimation="";
                 previousActors.clear();previousActors.addAll(authoritative.keySet());actionStamp=lastStamp;requiredStarted=Integer.MAX_VALUE;
-                started=now;nextFrame=now+60_000_000L;flags(view,ACTIONS.get(index).flags);stage=6;
-                System.out.println("ACTION: "+ACTIONS.get(index).name);return;
+                started=now;nextFrame=now+60_000_000L;flags(view,actions.get(index).flags);stage=6;
+                System.out.println("ACTION: "+actions.get(index).name);return;
             }
             if(stage==6){
-                var action=ACTIONS.get(index);int elapsed=(int)((now-started)/1_000_000L);
+                var action=actions.get(index);int elapsed=(int)((now-started)/1_000_000L);
                 if(!released&&elapsed>=action.held){flags(view,0);released=true;frames=0;nextFrame=now+60_000_000L;}
                 var own=view.PO();int activity=((Dungeoneer)own.acU()).adU();
                 var names=new TreeSet<String>();playing(own.acL(),names,0);
@@ -447,6 +452,11 @@ public final class CombatRenderingCheck {
                 if(elapsed>action.held+2500&&server instanceof Dungeoneer knight&&knight.adU()==0){
                     if(!activities.contains(action.required)||!renderedActivities.contains(action.required))throw new AssertionError(action.name+" missed authoritative/rendered activity "+action.required+": "+activities+" / "+renderedActivities);
                     if(action.projectile&&!projectile)throw new AssertionError(action.name+" has no rendered server projectile");
+                    if(movementOnly){
+                        double drift=Math.hypot(own.acU().tz().x-server.tz().x,own.acU().tz().y-server.tz().y);
+                        if(drift>.05)throw new AssertionError(action.name+" settled prediction differs from the server by "+drift);
+                        System.out.println("CHECK: "+action.name+" settled prediction drift="+drift);
+                    }
                     System.out.println("CHECK: "+action.name+" server="+activities+" rendered="+renderedActivities+" animations="+animations);
                     index++;stage=4;return;
                 }
@@ -568,7 +578,8 @@ public final class CombatRenderingCheck {
         if(healthOnly&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own)sawHurt|=own.adU()==274;
         if(stage==6&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own){
             activities.add(own.adU());
-            if(own.adU()==ACTIONS.get(index).required)requiredStarted=own.adV();
+            if(own.adU()==actions.get(index).required)requiredStarted=own.adV();
+            if(movementOnly&&own.Ru()!=null&&own.adU()==actions.get(index).required&&!own.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED))throw new AssertionError("Authoritative lunge is missing its native impulse guard");
         }
     }
     private static void flags(View view,int flags)throws Exception{

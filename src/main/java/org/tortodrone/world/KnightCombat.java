@@ -79,6 +79,7 @@ public final class KnightCombat {
     public void reset(int time) { clear(time);chainCount=chainReset=0;impulse=null; }
     private void clear(int time) { activity=0;started=time;attack=null;impulseApplied=false; }
     public int activity(){return activity;}
+    public int flags(){return impulseApplied?128:0;}
     public int started(){return started;}
     public boolean canOverride(){return activity==0||activity==DEFENSE;}
     public boolean allowsMovement(){return activity==0||activity==CHARGE||activity==DEFENSE||attack!=null&&attack.blended()&&definition!=null&&definition.blended();}

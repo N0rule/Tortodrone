@@ -359,6 +359,27 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if((e.spec.integer("collision-flags",0)&mask)!=0&&e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS))return false;
         }return true;
     }
+    /** Same mask and live actor exclusions as pawn collision, retaining the separating direction. */
+    public SceneCollision.Penetration penetration(float x,float y,int ignore){
+        var result=SceneCollision.Penetration.NONE;
+        int mask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));
+        for(var e:entities.values()){
+            if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2
+                    ||(e.spec.integer("collision-flags",0)&mask)==0||!e.spec.contains(e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS))continue;
+            Object shape=e.shape;
+            if(shape==null){
+                if(e.spec.fields().containsKey("radius"))shape=new FireCatalog.DataValue("Shape$Circle",Map.of("radius",e.spec.number("radius",0)));
+                else{
+                    float minX=e.spec.number("bounds-min-x",-e.spec.number("width",0)/2),maxX=e.spec.number("bounds-max-x",e.spec.number("width",0)/2);
+                    float minY=e.spec.number("bounds-min-y",-e.spec.number("height",0)/2),maxY=e.spec.number("bounds-max-y",e.spec.number("height",0)/2);
+                    var vertices=new ArrayList<Object>();for(float[] p:new float[][]{{minX,minY},{maxX,minY},{maxX,maxY},{minX,maxY}})vertices.add(new FireCatalog.DataValue("Vector2f",Map.of("x",p[0],"y",p[1])));
+                    shape=new FireCatalog.DataValue("Shape$Polygon",Map.of("vertices",new FireCatalog.ListValue("Vector2f",vertices)));
+                }
+            }
+            result=result.deepest(SceneCollision.penetration(shape,e.x,e.y,e.rotation,x,y,ScenePortals.PAWN_RADIUS));
+        }
+        return result;
+    }
     @Override public boolean contact(float x,float y,int owner){
         return contact(x,y,0,owner,null,-1);
     }

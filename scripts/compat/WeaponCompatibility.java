@@ -23,7 +23,7 @@ public final class WeaponCompatibility {
             var changed=new KnightCombat.State(null,null,null,0,2,800,1000,new KnightCombat.Impulse(150,625,5,0),0,-300000,0,EquipmentCatalog.Modifiers.ZERO,modifiers);
             var model=new StarterCatalog.Model("Character/PC/Level",Map.of());
             var a=new ActorState(51,1001,"Fixture",257,100,0,0,0,0,0,292,100,model,false,first);
-            var b=new ActorState(51,1001,"Fixture",257,100,1,0,1,0,0,286,150,model,false,changed);
+            var b=new ActorState(51,1001,"Fixture",257,100,1,0,1,0,128,286,150,model,false,changed);
             var codec=new SessionCodec(items);var bytes=new ByteArrayOutputStream();
             for(byte[] frame:List.of(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"),
                 HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"),
@@ -47,6 +47,7 @@ public final class WeaponCompatibility {
             check((float)field(field(applied,"_equipMod"),"_attackSpeed")==0&&(float)field(field(applied,"_weaponMod"),"_attackSpeed")==.12f,"delta replaces both native modifier objects");
             Object impulse=field(applied,"_impulse");
             check(impulse!=null&&(int)field(impulse,"_started")==150&&(int)field(impulse,"_duration")==625,"native dodge impulse");
+            check(applied.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED),"delta retains the native one-time attack impulse guard");
             check((int)field(applied,"_activity")==286&&in.available()==0,"exact stock stream framing");checked++;
         }
         projectiles(items);

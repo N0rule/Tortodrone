@@ -23,6 +23,60 @@ public final class SceneCollision {
     }
 
     public static SceneCollision empty() { return EMPTY; }
+    /** Minimum separating translation for the circular stock pawn; compounds use the deepest contact. */
+    public record Penetration(float x,float y) {
+        public static final Penetration NONE=new Penetration(0,0);
+        public boolean present(){return x!=0||y!=0;}
+        public Penetration deepest(Penetration other){return other.x*other.x+other.y*other.y>x*x+y*y?other:this;}
+    }
+    public static Penetration penetration(Object shape,float shapeX,float shapeY,float rotation,float x,float y,float radius) {
+        float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);var result=Penetration.NONE;
+        for(var local:fromData(shape,0))result=result.deepest(penetration(transform(local,shapeX,shapeY,c,s,1),new Point(x,y),radius));
+        return result;
+    }
+    public Penetration penetration(int mask,float x,float y,float radius) {
+        if(mask==0||isEmpty())return Penetration.NONE;
+        var center=new Point(x,y);var result=Penetration.NONE;
+        for(int cy=floor(y-radius);cy<=floor(y+radius);cy++)for(int cx=floor(x-radius);cx<=floor(x+radius);cx++){
+            Integer flags=tiles.get(key(cx,cy));
+            if(flags!=null&&(flags&mask)!=0)result=result.deepest(penetration(rectangle(cx,cy,cx+1,cy+1),center,radius));
+        }
+        for(var obstacle:obstacles)if((obstacle.mask&mask)!=0&&x+radius>=obstacle.bounds.minX&&x-radius<=obstacle.bounds.maxX
+                &&y+radius>=obstacle.bounds.minY&&y-radius<=obstacle.bounds.maxY)result=result.deepest(penetration(obstacle.geometry,center,radius));
+        return result;
+    }
+    private static Penetration penetration(Geom obstacle,Point center,float radius) {
+        if(obstacle instanceof Circle circle)return radial(center,circle.center,radius+circle.radius);
+        if(obstacle instanceof Capsule capsule)return radial(center,nearest(center,capsule.a,capsule.b),radius+capsule.radius);
+        var polygon=(Polygon)obstacle;Point closest=null;double best=Double.POSITIVE_INFINITY;
+        double area=0;for(int i=0;i<polygon.points.size();i++){var p=polygon.points.get(i);var q=polygon.points.get((i+1)%polygon.points.size());area+=(double)p.x*q.y-(double)q.x*p.y;}
+        float winding=area>=0?1:-1,depth=Float.POSITIVE_INFINITY;int edge=-1;boolean interior=true;
+        for(int i=0;i<polygon.points.size();i++){
+            var a=polygon.points.get(i);var b=polygon.points.get((i+1)%polygon.points.size());
+            var point=nearest(center,a,b);
+            double distance=distance2(center,point);if(distance<best){best=distance;closest=point;}
+            float nx=a.y-b.y,ny=b.x-a.x,length=(float)Math.hypot(nx,ny);if(length==0)continue;
+            // Keep native float plane distances, including their tie order at inside corners.
+            float signed=(nx*center.x+ny*center.y-nx*a.x-ny*a.y)*winding;
+            interior&=signed>=0;float separation=signed/length;
+            if(separation<depth){depth=separation;edge=i;}
+        }
+        if(!interior||edge<0)return radial(center,closest,radius);
+        var a=polygon.points.get(edge);var b=polygon.points.get((edge+1)%polygon.points.size());
+        float length=(float)Math.hypot(b.x-a.x,b.y-a.y);if(length==0)return Penetration.NONE;
+        float scale=winding*(radius+depth)/length;
+        return new Penetration((b.y-a.y)*scale,(a.x-b.x)*scale);
+    }
+    private static Penetration radial(Point center,Point closest,float radius) {
+        float dx=center.x-closest.x,dy=center.y-closest.y,distance=(float)Math.hypot(dx,dy);
+        if(distance==0||distance>=radius)return Penetration.NONE;
+        float scale=radius/distance-1;return new Penetration(dx*scale,dy*scale);
+    }
+    private static Point nearest(Point p,Point a,Point b) {
+        float dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
+        float t=length==0?0:Math.clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/length,0,1);
+        return new Point(a.x+t*dx,a.y+t*dy);
+    }
     /** Native actor shapes at two world poses, with a rounded damage-region expansion. */
     public static boolean overlaps(Object first,float x,float y,float rotation,Object second,float otherX,float otherY,float otherRotation,float expansion) {
         float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation),oc=(float)Math.cos(otherRotation),os=(float)Math.sin(otherRotation);
@@ -227,5 +281,7 @@ public final class SceneCollision {
     private record Capsule(Point a,Point b,float radius) implements Geom { Capsule { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid capsule"); } }
     private record Polygon(List<Point> points) implements Geom { Polygon { points=List.copyOf(points);if(points.size()<3||points.size()>4096)throw new IllegalArgumentException("Invalid polygon"); } }
     private record Bounds(float minX,float minY,float maxX,float maxY) { }
-    private record Obstacle(int mask,Geom geometry) { }
+    private record Obstacle(int mask,Geom geometry,Bounds bounds) {
+        private Obstacle(int mask,Geom geometry){this(mask,geometry,SceneCollision.bounds(geometry));}
+    }
 }
