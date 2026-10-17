@@ -24,4 +24,5 @@ Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; no
 
 ## Finish
 - Review `git diff --check`, changed files and **actual** test results; update one canonical doc only when needed.
+- **Commit completed work** when acceptance criteria pass: stage the change set and make one descriptive commit on the current branch. Uncommitted finished work is lost work; do not leave a checkpoint uncommitted unless the owner asked for a dirty tree.
 - Do not push, merge, force-update or delete branches without owner approval. Bump `VERSION` for behavioral releases, not docs-only changes.
