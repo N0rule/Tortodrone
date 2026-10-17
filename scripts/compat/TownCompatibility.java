@@ -63,7 +63,7 @@ public final class TownCompatibility {
         if(nativeFeatured.featured==null||nativeFeatured.featured.total!=10||nativeFeatured.featured.remaining!=9||nativeFeatured.myAuction)throw new AssertionError("Featured stock/ownership fields differ");
         var depotReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
         var nativeGood=(com.threerings.projectx.mission.data.RankGood)((Map<?,?>)depotReply.yd()[0]).get(7);
-        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||nativeGood.special||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
+        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||!nativeGood.special||!nativeGood.TY()||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
         if(bytes.size()-in.available()!=callbackEnd)throw new AssertionError("Callback boundary differs by "+(bytes.size()-in.available()-callbackEnd)+" bytes");
         var added=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativeActor=(com.threerings.projectx.data.actor.Knight)added.aej()[0];if(field(nativeActor,"_sprite")==null)throw new AssertionError("Native equipped sprite absent from Knight");
         var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeActor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(nativeActor);if(field(nativeActor,"_sprite")!=null)throw new AssertionError("Native sprite removal delta failed");

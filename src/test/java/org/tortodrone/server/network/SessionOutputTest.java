@@ -19,6 +19,14 @@ public final class SessionOutputTest {
         byte[] bytes = socket.bytes.toByteArray(); check(bytes.length == 40, "clean close drains responses");
         for (int i = 0; i < bytes.length; i++) check(bytes[i] == i, "encoding and frame order serialized together");
 
+        RecordingSocket renamed=new RecordingSocket(false);
+        try(var output=new SessionOutput(renamed)){
+            output.send(()->new byte[]{1});output.send(()->new byte[]{2});
+            output.disconnect();
+            check(renamed.closed&&java.util.Arrays.equals(renamed.bytes.toByteArray(),new byte[]{1,2}),"post-rename disconnect delivers queued updates and confirmation before EOF");
+            rejected(()->output.send(()->new byte[]{3}));
+        }
+
         RecordingSocket stalled = new RecordingSocket(true);
         try (SessionOutput output = new SessionOutput(stalled)) {
             output.send(() -> new byte[] {1});

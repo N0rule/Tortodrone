@@ -592,7 +592,7 @@ public final class SessionCodec {
     }
     /** Single stock PlayerObject.recipes entry; open alchemy dialogs refresh on this event. */
     public byte[] recipeAdded(int oid,org.tortodrone.town.TownState.LearnedRecipe recipe)throws IOException {
-        return frame(out->{event(out,"EntryAddedEvent",oid);string(out,"recipes");
+        return frame(out->{eventHeader(out,"EntryAddedEvent",oid);string(out,"recipes");
             type(out,"com.threerings.projectx.craft.data.Recipe");out.writeBoolean(true);out.writeLong(recipe.id());string(out,recipe.config());});
     }
     private void harness(DataOutputStream out,org.tortodrone.town.TownState.Harness h)throws IOException {type(out,"com.threerings.projectx.sprites.data.Harness");out.writeBoolean(true);out.writeLong(h.id());value(out,new StarterCatalog.Model(h.config(),Map.of()));}
@@ -606,12 +606,11 @@ public final class SessionCodec {
         value(out,s.perk()==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",s.perk()));out.writeInt(s.id());out.writeInt(worldId);out.writeUTF(s.config());harness(out,h==null?new org.tortodrone.town.TownState.Harness(0,"Iron Harness"):h);
     }
     public byte[] townResult(int oid,short request,Object result,WorldProfile profile)throws IOException {
-        listingViewer=profile.worldId();
+        listingViewer=profile==null?0:profile.worldId();
         return frame(out->{eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);
             if(result instanceof org.tortodrone.town.TownState.Sprite s)sprite(out,profile,s);else townValue(out,result);});
     }
 
-    public record BillingInfo() { }
     private void townValue(DataOutputStream out,Object value)throws IOException {
         if(value instanceof SessionDecoder.Multiset multiset){type(out,"com.google.common.collect.HashMultiset");out.writeInt(multiset.counts().size());for(var entry:multiset.counts().entrySet()){value(out,entry.getKey());out.writeInt(entry.getValue());}}
         else if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
@@ -620,13 +619,9 @@ public final class SessionCodec {
             type(out,"java.util.HashMap");out.writeInt(offers.goods().size());for(var entry:new java.util.TreeMap<>(offers.goods()).entrySet()){
                 value(out,entry.getKey());type(out,"com.threerings.projectx.mission.data.RankGood");var g=entry.getValue().good();
                 type(out,"com.threerings.projectx.shop.config.GoodConfig$Item");out.writeInt(g.price());out.writeInt(g.energy());out.writeInt(0);out.writeBoolean(false);out.writeInt(g.count());out.writeInt(g.limit());value(out,new StarterCatalog.Model(g.item(),Map.of()));
-                out.writeBoolean(false);string(out,null);string(out,null);
+                out.writeBoolean(entry.getValue().featured());string(out,null);string(out,null);
             }
         }
-        else if(value instanceof BillingInfo){type(out,"com.threerings.billing.data.BillingInfo");out.writeShort(0);out.writeLong(0); // no credit card on file, nothing paid through
-            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);
-            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);
-            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);}
         else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
         else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}

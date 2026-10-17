@@ -42,6 +42,18 @@ public final class TownServicesSessionTest {
                 var learned=db.worldProfile(account,knight.id(),1);
                 check(learned.town().recipes().size()==1&&learned.items().stream().filter(i->i.config().equals(recipe)).mapToInt(WorldProfile.Item::count).sum()==1,"native Use consumes one recipe and publishes the learned book");
                 world.townInvocation(use);check(db.worldProfile(account,knight.id(),1).equals(learned),"duplicate Use preserves recipes, currency, revision and remaining item");
+                var temporaryField=WorldSession.class.getDeclaredField("temporaryItems");temporaryField.setAccessible(true);
+                @SuppressWarnings("unchecked") var temporary=(Map<Long,WorldProfile.Item>)temporaryField.get(world);
+                temporary.put(-1L,new WorldProfile.Item(-1,WorldProfile.Slot.OTHER,"Gear/Dungeon/Vitapod/Health +01",null,0,0,false,false,false,1,false));
+                temporary.put(-2L,new WorldProfile.Item(-2,WorldProfile.Slot.OTHER,recipe,null,0,null,false,false,false,1,true));
+                temporary.put(-3L,new WorldProfile.Item(-3,WorldProfile.Slot.OTHER,recipe,null,0,null,false,false,false,3,false));
+                world.townInvocation(new SessionDecoder.Invocation(3,9,1,List.of(-1L,confirm)));
+                world.townInvocation(new SessionDecoder.Invocation(3,9,1,List.of(-2L,confirm)));
+                check(temporary.containsKey(-1L)&&temporary.containsKey(-2L),"temporary equipped and permanent items cannot be trashed");
+                world.townInvocation(new SessionDecoder.Invocation(3,9,1,List.of(-3L,confirm)));
+                world.townInvocation(new SessionDecoder.Invocation(3,9,1,List.of(-3L,confirm)));
+                check(!temporary.containsKey(-3L)&&db.worldProfile(account,knight.id(),1).equals(learned),"temporary stack Trash and replay leave persistent state unchanged");
+                temporary.clear();
                 check(world.townInvocation(new SessionDecoder.Invocation(3,1,2,List.of(confirm))),"native rename eligibility callback is implemented");
                 world.townInvocation(new SessionDecoder.Invocation(3,1,8,List.of("Renamed-Knight",confirm)));
                 check(characters.roster().getFirst().name().equals("Renamed-Knight"),"native rename updates the connected character store");

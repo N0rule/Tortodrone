@@ -50,6 +50,7 @@ public final class CombatRenderingCheck {
     private final Path output;
     private final boolean peer;
     private final boolean trainingOnly;
+    private boolean depotOnly;
     private boolean healthOnly;
     private boolean movementOnly;
     private List<Action> actions=ACTIONS;
@@ -92,10 +93,17 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&args[0].equals("--seed")){seed(Path.of(args[1]));return;}
+        if(args.length==2&&(args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+            seed(Path.of(args[1]));
+            if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
+                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
+                store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
+            }
+            return;
+        }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -110,6 +118,7 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
+        probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
         if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
@@ -156,6 +165,7 @@ public final class CombatRenderingCheck {
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(peer){peerTick(view);return;}
+            if(depotOnly){depotTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
             if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
@@ -564,6 +574,73 @@ public final class CombatRenderingCheck {
             if(!peerMotion)throw new AssertionError("Peer did not render the moving knight");
             finishImages();passed=done=true;System.out.println("PASS: graphical peer renders shared Town Square and the other knight's movement");app.shutdown();
         }
+    }
+    private com.threerings.projectx.exchange.client.e depotWindow;
+    private String depotItem;
+    private int depotCount,depotQuantity,depotPrice,depotCrowns,depotEnergy,depotOfferId;
+    private boolean depotUsesEnergy;
+    private Confirm depotBuy,depotBilling;
+    private Result depotInfo;
+    private void depotTick(View view,long now)throws Exception {
+        var own=authoritative.get(app.CT().pawnId);if(own==null)return;
+        if(stage==0){
+            GLFW.glfwFocusWindow(app.getWindow());
+            trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(1);
+            var entry=trainingMap.content().entries().stream().filter(e->e.spec().text("config","").equals("Shop/Haven/Spiral Quartermaster")).findFirst().orElseThrow();
+            var npc=authoritative.values().stream().filter(a->Math.hypot(a.tz().x-entry.x(),a.tz().y-entry.y())<.1).findFirst().orElseThrow();
+            konwayActor=npc.vw();konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,npc.tz().x,npc.tz().y);konwayRouteIndex=0;started=now;stage=60;return;
+        }
+        if(stage==60){
+            var npc=authoritative.get(konwayActor);
+            if(konwayRouteIndex<konwayRoute.size()){
+                var point=konwayRoute.get(konwayRouteIndex);float dx=point[0]-own.tz().x,dy=point[1]-own.tz().y;
+                if(Math.hypot(dx,dy)<.30){konwayRouteIndex++;moveToward(view,0,0,false);}else moveToward(view,dx,dy,true);return;
+            }
+            float dx=npc.tz().x-own.tz().x,dy=npc.tz().y-own.tz().y;
+            Object prompt=field(own,"_actionEntity").get(own);
+            if(prompt instanceof com.threerings.tudey.data.EntityKey.Actor key&&key.vw()==konwayActor){moveToward(view,dx,dy,false);flags(view,4);started=now;stage=61;return;}
+            moveToward(view,dx,dy,Math.hypot(dx,dy)>.82);return;
+        }
+        if(stage==61){
+            flags(view,0);
+            for(int i=0;i<app.getRoot().getWindowCount();i++)if(app.getRoot().getWindow(i) instanceof com.threerings.projectx.exchange.client.e depot)depotWindow=depot;
+            if(depotWindow==null){if(now-started>10_000_000_000L)throw new AssertionError("Supply Depot NPC did not construct its window");return;}
+            if(!(app.CT().sceneDialog instanceof com.threerings.projectx.exchange.data.DepotDialogInfo))throw new AssertionError("Missing native Depot dialog");
+            @SuppressWarnings("unchecked") var offers=(Map<Integer,com.threerings.projectx.mission.data.RankGood>)field(depotWindow,"bmK").get(depotWindow);
+            if(offers==null||offers.isEmpty())return;
+            var entry=offers.entrySet().stream().filter(e->e.getValue().special&&e.getValue().good instanceof com.threerings.projectx.shop.config.GoodConfig.Item).findFirst().orElseThrow(()->new AssertionError("Featured Depot offers lost the native special flag"));
+            var good=(com.threerings.projectx.shop.config.GoodConfig.Item)entry.getValue().good;
+            int energy=(int)field(good,"_realEnergy").get(good),crowns=(int)field(good,"_realPrice").get(good);
+            depotUsesEnergy=energy>0;depotPrice=depotUsesEnergy?energy:crowns;depotItem=good.item.getName();depotQuantity=good.count;depotCount=itemCount(depotItem);
+            depotCrowns=app.CT().crowns;depotEnergy=app.CT().energy;depotOfferId=entry.getKey();started=now;stage=64;return;
+        }
+        if(stage==64){
+            if(now-started<1_000_000_000L)return;
+            if(depotWindow.getGroup()!=com.threerings.projectx.item.data.ItemCodes.Group.SPECIALS||((List<?>)field(depotWindow,"bmJ").get(depotWindow)).isEmpty())throw new AssertionError("Kozma did not display populated Specials");
+            capture("depot-npc-offers");
+            depotBuy=new Confirm();((com.threerings.projectx.mission.client.q)app.zr().bU(com.threerings.projectx.mission.client.q.class)).f(depotOfferId,depotPrice,depotBuy);
+            started=now;stage=62;return;
+        }
+        if(stage==62){
+            if(depotBuy.reason!=null)throw new AssertionError("In-game Depot purchase refused: "+depotBuy.reason);
+            if(!depotBuy.done||now-started<1_000_000_000L)return;
+            if(itemCount(depotItem)!=depotCount+depotQuantity||app.CT().crowns!=depotCrowns-(depotUsesEnergy?0:depotPrice)||app.CT().energy!=depotEnergy-(depotUsesEnergy?depotPrice:0))throw new AssertionError("Native in-game purchase delivery/debit differs");
+            capture("depot-in-game-purchase");depotWindow.fl("purchase");
+            depotInfo=new Result();depotBilling=new Confirm();
+            var billing=(com.threerings.projectx.billing.a.a)app.zr().bU(com.threerings.projectx.billing.a.a.class);
+            billing.b("en",depotInfo);billing.c(0,"",depotBilling);started=now;stage=63;return;
+        }
+        if(stage==63){
+            if(!depotInfo.done||!depotBilling.done||now-started<2_000_000_000L)return;
+            if(depotInfo.reason==null||depotBilling.reason==null)throw new AssertionError("Unsupported billing operation reported success");
+            if(!app.zr().isLoggedOn()||itemCount(depotItem)!=depotCount+depotQuantity)throw new AssertionError("Billing refusal altered session or inventory");
+            capture("depot-disabled-purchase-tab");finishImages();passed=done=true;
+            System.out.println("PASS: stock Supply Depot NPC opens, offers load, in-game purchase delivers/debits, purchase tab stays visible and billing requests fail safely");app.shutdown();
+        }
+    }
+    private static final class Result implements com.threerings.presents.client.A.c {
+        boolean done;String reason;Object value;
+        public void br(Object result){value=result;done=true;}public void aT(String error){reason=error;done=true;}
     }
     private void receive(SceneDeltaEvent event){
         lastStamp=event.QY();

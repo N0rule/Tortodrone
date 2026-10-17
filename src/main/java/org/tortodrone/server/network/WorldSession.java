@@ -112,6 +112,7 @@ final class WorldSession implements AutoCloseable {
     }
     private Set<Integer> occupants = Set.of();
     private Map<Integer,Boolean> occupantRoles=Map.of();
+    private static final String DISABLED="Sorry, but P2W features are disabled on this server.";
     private org.tortodrone.town.TownCatalog.Station townDialog;
     private ActorState townSource;
     private long townCreated;
@@ -193,8 +194,12 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.townShop(oid,goods,available));
     }
     private void townChanged(org.tortodrone.storage.TownStore.Result result)throws IOException {
+        townChanged(result,true);
+    }
+    private void townChanged(org.tortodrone.storage.TownStore.Result result,boolean publishTown)throws IOException {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
-        output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));output.send(()->codec.townState(oid,after));
+        output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
+        if(publishTown)output.send(()->codec.townState(oid,after));
     }
     private boolean exchangeSubscribed;
     private long exchangeRevision=-1;
@@ -259,28 +264,28 @@ final class WorldSession implements AutoCloseable {
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
     }
 
-    /** Stock BillingMarshaller: the depot purchase tab needs the service at window construction;
-     * getBillingInfo answers an account with no saved card and no purchasable packs, and every
-     * buy or micro-transaction call is refused with the native BillingResponseCode.ERROR code. */
+    /** Compatibility only: the stock Depot constructs its purchase panel using this service.
+     * No payment operation, account lookup or entitlement mutation is supported.
+     * Current stock IDs: 6=[int,String,Confirm], 7=[int,String,Result],
+     * 8=[long,boolean,Confirm]. Older archives incorrectly place method 8 at 7. */
     synchronized boolean billingInvocation(SessionDecoder.Invocation request)throws IOException {
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.BILLING_SERVICE)return false;
-        var a=request.arguments();int method=request.method();
-        boolean confirm=method==6||method==7;
-        // Native shapes: 1=[String,int,boolean,Result], 2=[String,String,int,int,String,String,int,boolean,Result],
-        // 3=[String,Result], 6=[int,String,Confirm], 7=[long,boolean,Confirm].
-        int count=switch(method){case 1->4;case 2->9;case 3->2;case 6,7->3;default->0;};
-        // A shape the client sends but we do not model must never kill the session; only
-        // answerable requests get an addressed failure, everything else is ignored.
-        if(count==0||a.size()!=count||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(confirm?"ConfirmMarshaller":"ResultMarshaller"))){
-            if(a.getLast() instanceof SessionDecoder.Listener other)output.send(()->codec.invocationFailure(oid,other.requestId(),"Billing is not available"));
-            return true;
-        }
-        try{
-            if(closed||!selected())throw new IOException("Select a knight first");
-            if(method==3)output.send(()->codec.townResult(oid,listener.requestId(),new SessionCodec.BillingInfo(),profile));
-            else if(confirm)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
-            else output.send(()->codec.townResult(oid,listener.requestId(),-1,profile));
-        }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+        var a=request.arguments();
+        if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)
+                ||!Set.of("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",
+                    "com.threerings.presents.data.InvocationMarshaller$ResultMarshaller").contains(listener.type()))return true;
+        boolean result=listener.type().endsWith("$ResultMarshaller");
+        boolean buy=result&&switch(request.method()){
+            case 1->a.size()==4&&a.get(0) instanceof String&&a.get(1) instanceof Integer&&a.get(2) instanceof Boolean;
+            case 2->a.size()==9&&a.get(0) instanceof String&&a.get(1) instanceof String
+                &&a.get(2) instanceof Integer&&a.get(3) instanceof Integer&&a.get(4) instanceof String
+                &&a.get(5) instanceof String&&a.get(6) instanceof Integer&&a.get(7) instanceof Boolean;
+            default->false;
+        };
+        // Native buy callbacks accept BillingResponseCode.ERROR (-1). All other calls,
+        // including getBillingInfo and unknown shapes, use the native requestFailed path.
+        output.send(buy?()->codec.townResult(oid,listener.requestId(),-1,profile)
+            :()->codec.invocationFailure(oid,listener.requestId(),DISABLED));
         return true;
     }
 
@@ -320,6 +325,8 @@ final class WorldSession implements AutoCloseable {
                 characters.worldProfile(knight.name(),authRevision,profile);
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
                 if(temporaryItems.containsKey(id)){
+                    var item=temporaryItems.get(id);
+                    if(item.permanent()||item.equippedSlot()!=null)throw new IOException("m.internal_error");
                     var before=visibleProfile();temporaryItems.remove(id);var after=visibleProfile();
                     output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();
                 }else townChanged(characters.town(scenes.town()).trash(characters.accountId(),knight.id(),authRevision,id));
@@ -410,7 +417,9 @@ final class WorldSession implements AutoCloseable {
                 boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpritePerk"));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate");default->false;};
                 if(!valid)throw new SessionDecoder.Rejected("Invalid sprite arguments");result=store.sprite(characters.accountId(),knight.id(),authRevision,method,a,staff);
             }
-            townChanged(result);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();
+            // Learning publishes its committed recipe through EntryAddedEvent below. Replacing
+            // recipes first makes the stock DSet reject that addition and suppress its observer.
+            townChanged(result,!learn);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();
             if(learn){
                 var fresh=result.profile().town().recipes().stream()
                     .filter(r->priorRecipes.stream().noneMatch(p->p.id()==r.id())).toList();
