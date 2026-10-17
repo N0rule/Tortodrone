@@ -123,10 +123,18 @@ public final class SceneWeaponsTest {
         check(shards.size()==2&&shards.stream().allMatch(FireCatalog.Action::relative)&&Math.abs(shards.get(0).rotation()-(float)(Math.PI*.75))<.001&&Math.abs(shards.get(1).rotation()-(float)(Math.PI*1.25))<.001,"charged Alchemer splits into the two archived backward directions");
         check(catalog.find("Weapon/Handgun/Tortafist/Grand Tortofist",290).fireRefs().getFirst().action().actor().detonation().count()==6,"Tortofist charge scatters six crystals");
         scene.cancel(10);
+        var pops=new ArrayList<Float>();var splats=new ArrayList<StarterCatalog.Model>();
+        scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return false;}
+            public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){splats.add(region);pops.add(x);}});
         var bomber=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,290,2500,model);
         scene.attack(10,new KnightCombat.AttackStart("Weapon/Bomb/Rock Salt Bomb",290,2500,0,2000));
         scene.advance(2501,List.of(bomber));scene.advance(3501,List.of(bomber));
-        check(scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).count()==6,"Rock Salt Bomb timer executes all six native delayed shard branches");
+        var spread=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).toList();
+        check(spread.size()==6&&spread.stream().map(a->Math.round(a.rotation()*100)).distinct().count()==6,"Rock Salt Bomb fans all six native delayed shard branches");
+        for(int stamp=3526;stamp<3900;stamp+=25)scene.advance(stamp,List.of(bomber));
+        var seeds=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Timer)")).toList();
+        check(seeds.size()==6&&seeds.stream().map(a->Math.round(a.x()*16)*31+Math.round(a.y()*16)).distinct().count()==6,"each shard plants its seed at its own landing point");
+        check(splats.size()>=7&&splats.stream().allMatch(r->r.name().equals("DamageRegionFromPoint")),"planted shards pop their own shard damage");
     }
     static CollisionMap openTerrain()throws Exception {
         Path file=Files.createTempFile("tortodrone-weapon-open-",".gz");

@@ -259,10 +259,30 @@ final class WorldSession implements AutoCloseable {
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
     }
 
+    /** Stock BillingMarshaller: the depot purchase tab needs the service at window construction;
+     * getBillingInfo answers an account with no saved card and no purchasable packs, and every
+     * buy or micro-transaction call is refused with the native BillingResponseCode.ERROR code. */
+    synchronized boolean billingInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.BILLING_SERVICE)return false;
+        var a=request.arguments();int method=request.method();
+        boolean confirm=method==6||method==7;
+        int count=switch(method){case 1->4;case 2->9;case 3,6,7->3;default->0;};
+        if(count==0||a.size()!=count||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(confirm?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid billing request");
+        try{
+            if(closed||!selected())throw new IOException("Select a knight first");
+            if(method==3)output.send(()->codec.townResult(oid,listener.requestId(),new SessionCodec.BillingInfo(),profile));
+            else if(confirm)output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            else output.send(()->codec.townResult(oid,listener.requestId(),-1,profile));
+        }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+        return true;
+    }
+
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
-        if(global&&request.service()==1&&(request.method()==8||request.method()==14)){
+        if(billingInvocation(request))return true;
+        // KnightMarshaller 2 is canRename (30-day window check); 8 is renameKnight [Name, Confirm].
+        if(global&&request.service()==1&&(request.method()==2||request.method()==8)){
             boolean rename=request.method()==8;
             if(a.size()!=(rename?2:1)||rename&&!(a.getFirst() instanceof String)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid knight rename request");
             try{
@@ -273,16 +293,31 @@ final class WorldSession implements AutoCloseable {
                     characters.refresh();knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();
                     closeConversation();closeTownDialog();leaveChat();townChanged(result);partyState();
                     output.send(()->codec.knightName(oid,knight.name()));
-                    int place=scene.oid(),generation=sceneGeneration;
-                    chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
-                    tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
-                    persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
+                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+                    // Official dV companion dY ends the session after a rename and returns to the
+                    // login window carrying the new name, so the server closes it here.
+                    renameDisconnect=true;
                 }else{
-                    var current=loadProfile(profile);
-                    if(current.items().stream().noneMatch(i->i.config().equals("Upgrade/Rename Knight")))throw new IOException("m.no_rename_item");
+                    characters.town(scenes.town()).canRename(characters.accountId(),knight.id(),authRevision);
+                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
                 }
-                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+            return true;
+        }
+        // ItemMarshaller 1 is the stock Trash action [itemId, Confirm]; every persistent owned
+        // non-permanent item is deletable, whole. Scene-item Use (method 14) stays separate.
+        if(global&&request.service()==9&&request.method()==1){
+            if(a.size()!=2||!(a.getFirst() instanceof Long id)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid item deletion request");
+            try{
+                if(closed||!selected()||!entered||!subscribed)throw new IOException("Select a knight first");
+                characters.worldProfile(knight.name(),authRevision,profile);
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                if(temporaryItems.containsKey(id)){
+                    var before=visibleProfile();temporaryItems.remove(id);var after=visibleProfile();
+                    output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();
+                }else townChanged(characters.town(scenes.town()).trash(characters.accountId(),knight.id(),authRevision,id));
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration)closeTownDialog();
@@ -315,6 +350,7 @@ final class WorldSession implements AutoCloseable {
             boolean staff=roles.gameMaster();
             if(!scene.map().town()&&!scene.map().kind().equals("training")&&!staff)throw new IOException("This operation requires a town");
             var store=characters.town(scenes.town());org.tortodrone.storage.TownStore.Result result;
+            var priorRecipes=profile.town().recipes();
             if(open){
                 if(!scene.map().town()||a.size()!=1||request.method()<1||request.method()>4)throw new IOException("Invalid town service");
                 String kind=switch(request.method()){case 1->"OpenAccessorizer";case 2->"OpenCrafter";case 3->"OpenUnbinder";default->"OpenVariantMaker";};
@@ -367,7 +403,12 @@ final class WorldSession implements AutoCloseable {
                 boolean valid=switch(method){case 1->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof Integer;case 2->a.subList(0,5).stream().allMatch(v->v instanceof Integer);case 3->a.get(0) instanceof Integer&&(a.get(1)==null||a.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpritePerk"));case 4->a.get(0) instanceof Integer;case 5->a.get(0) instanceof Integer&&a.get(1) instanceof Long;case 6->a.get(0) instanceof Long&&a.get(1) instanceof Integer;case 7->a.get(0) instanceof Integer&&a.get(1) instanceof Long&&a.get(2) instanceof Boolean;case 8->a.get(0) instanceof Integer&&a.get(1) instanceof String;case 9->a.get(0) instanceof Integer&&a.get(1) instanceof Integer&&a.get(2) instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate");default->false;};
                 if(!valid)throw new SessionDecoder.Rejected("Invalid sprite arguments");result=store.sprite(characters.accountId(),knight.id(),authRevision,method,a,staff);
             }
-            townChanged(result);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();if(hatch&&payload instanceof Integer id)payload=profile.town().sprites().stream().filter(s->s.id()==id).findFirst().orElseThrow();
+            townChanged(result);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();
+            if(learn){
+                var fresh=result.profile().town().recipes().stream()
+                    .filter(r->priorRecipes.stream().noneMatch(p->p.id()==r.id())).toList();
+                for(var recipe:fresh){var entry=recipe;output.send(()->codec.recipeAdded(oid,entry));}
+            }if(hatch&&payload instanceof Integer id)payload=profile.town().sprites().stream().filter(s->s.id()==id).findFirst().orElseThrow();
             final Object response=payload;if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),response,profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(CharacterStore.Refused|IOException refused){if(refused instanceof SessionDecoder.Rejected rejected)throw rejected;output.send(()->forge?codec.forgeFailure(oid,listener.requestId(),refused.getMessage()):codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
         return true;
@@ -611,10 +652,9 @@ final class WorldSession implements AutoCloseable {
             equip(args);
             return true;
         }
-        if(service==9&&(request.method()==1||request.method()==14)){
-            int count=request.method()==1?2:3;
-            if(args.size()!=count||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller")
-                ||count==3&&args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
+        // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
+        if(service==9&&request.method()==14){
+            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller")||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
             var item=temporaryItems.get(id);var spec=item==null||!selected()?null:scene.map().content().items().get(item.config());
             if(spec!=null&&membership.useItem(id,spec))output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             else output.send(()->codec.invocationFailure(oid,listener.requestId(),"That item cannot be used now"));return true;
@@ -1174,6 +1214,10 @@ final class WorldSession implements AutoCloseable {
         log.scene(scene.map().id(),scene.oid(),scene.map().name());
         log.info("Scene entered; scene="+scene.map().name()+" (#"+scene.map().id()+"); instanceId="+scene.oid());
     }
+    /** Set once a successful rename answered its confirm; honored by the connection loop. */
+    private boolean renameDisconnect;
+    synchronized boolean takeRenameDisconnect(){boolean requested=renameDisconnect;renameDisconnect=false;return requested;}
+
     @Override public synchronized void close() {
         leaveChat();
         closed = true;

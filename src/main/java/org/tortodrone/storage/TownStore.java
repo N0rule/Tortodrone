@@ -31,7 +31,42 @@ public final class TownStore {
             AuctionSchema.create(c);
             s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id))");
             s.execute("CREATE TABLE town_auction_bids(auction INTEGER NOT NULL REFERENCES town_auctions(id),world_id INTEGER NOT NULL REFERENCES world_characters(world_id),watching INTEGER NOT NULL DEFAULT 0,has_bid INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(auction,world_id))");
+            knightRenameClock(c);
         }
+    }
+    /** Stored thirty-day rename clock; 0 means the knight has never been renamed. Idempotent:
+     *  databases created at schema 14 already carry the column, so the 13&rarr;14 upgrade and
+     *  fresh initialization share one guarded ALTER. */
+    static void knightRenameClock(Connection c)throws SQLException{
+        try(var r=c.createStatement().executeQuery("SELECT 1 FROM pragma_table_info('knights') WHERE name='last_renamed'")){
+            if(r.next())return;
+        }
+        try(var s=c.prepareStatement("ALTER TABLE knights ADD COLUMN last_renamed INTEGER NOT NULL DEFAULT 0")){s.executeUpdate();}
+    }
+    public static final long RENAME_INTERVAL=30L*24*60*60*1000;
+    /** Stock canRename: the window only opens inside the thirty-day rename interval. */
+    public void canRename(int account,int knight,long auth)throws IOException {
+        database.read(c->{checkRenamable(c,account,knight,auth);return null;});
+    }
+    private static void checkRenamable(Connection c,int account,int knight,long auth)throws SQLException,IOException {
+        WorldProfiles.load(c,account,knight,auth);
+        long last;try(var s=c.prepareStatement("SELECT last_renamed FROM knights WHERE account_id=? AND id=?")){s.setInt(1,account);s.setInt(2,knight);try(var r=s.executeQuery()){if(!r.next())throw new IOException("m.internal_error");last=r.getLong(1);}}
+        if(last>0&&System.currentTimeMillis()-last<RENAME_INTERVAL)throw new IOException("m.rename_too_soon");
+    }
+    /** The rename ticket and globally unique identity commit in the same authenticated write. */
+    public Result rename(int account,int knight,long auth,String name)throws IOException {
+        String error=CharacterStore.nameError(name);if(error!=null)throw new IOException(error);
+        return change(account,knight,auth,(c,p)->{
+            checkRenamable(c,account,knight,auth);
+            var ticket=p.items().stream().filter(i->i.config().equals("Upgrade/Rename Knight")).findFirst().orElseThrow(()->new IOException("m.no_rename_item"));
+            try(var st=c.prepareStatement("UPDATE knights SET name=?,name_key=?,last_renamed=? WHERE account_id=? AND id=? AND name_key<>?")){
+                st.setString(1,name);st.setString(2,name.toLowerCase(Locale.ROOT));st.setLong(3,System.currentTimeMillis());st.setInt(4,account);st.setInt(5,knight);st.setString(6,name.toLowerCase(Locale.ROOT));
+                if(st.executeUpdate()!=1)throw new IOException("Choose a different knight name");
+            }
+            consume(c,p,ticket.id(),1);
+            try(var st=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){st.setInt(1,account);st.executeUpdate();}
+            return name;
+        });
     }
     static TownState load(Connection c,int world)throws SQLException,IOException{
         var recipes=new ArrayList<TownState.LearnedRecipe>();var sprites=new ArrayList<TownState.Sprite>();var harnesses=new ArrayList<TownState.Harness>();int equipped=0;
@@ -45,21 +80,16 @@ public final class TownStore {
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}
     static List<StarterCatalog.Model> variants(String json)throws IOException{var result=new ArrayList<StarterCatalog.Model>();for(var v:(List<?>)Json.parse(json))result.add(new StarterCatalog.Model((String)v,Map.of()));return List.copyOf(result);}
     public record Result(WorldProfile profile,Object result) { }
-    /** The rename ticket and globally unique identity commit in the same authenticated write. */
-    public Result rename(int account,int knight,long auth,String name)throws IOException {
-        String error=CharacterStore.nameError(name);if(error!=null)throw new IOException(error);
+    public static final int SPARK_COST=50;
+    /** Official ItemMarshaller.deleteItem: one owned, non-permanent, unequipped item goes whole. */
+    public Result trash(int account,int knight,long auth,long item)throws IOException {
         return change(account,knight,auth,(c,p)->{
-            var ticket=p.items().stream().filter(i->i.config().equals("Upgrade/Rename Knight")).findFirst().orElseThrow(()->new IOException("m.no_rename_item"));
-            try(var st=c.prepareStatement("UPDATE knights SET name=?,name_key=? WHERE account_id=? AND id=? AND name_key<>?")){
-                st.setString(1,name);st.setString(2,name.toLowerCase(Locale.ROOT));st.setInt(3,account);st.setInt(4,knight);st.setString(5,name.toLowerCase(Locale.ROOT));
-                if(st.executeUpdate()!=1)throw new IOException("Choose a different knight name");
-            }
-            consume(c,p,ticket.id(),1);
-            try(var st=c.prepareStatement("UPDATE accounts SET revision=revision+1 WHERE id=?")){st.setInt(1,account);st.executeUpdate();}
-            return name;
+            var held=owned(p,item);
+            if(held.permanent()||held.equippedSlot()!=null)throw new IOException("m.internal_error");
+            consume(c,p,item,held.count());
+            return null;
         });
     }
-    public static final int SPARK_COST=50;
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");

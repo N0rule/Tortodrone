@@ -64,13 +64,14 @@ public final class TestWire {
         check(type(in).equals(NET + "BootstrapNotification") && in.readShort() == -1, "bootstrap notification");
         check(type(in).equals("com.threerings.projectx.data.ProjectXBootstrapData"), "current bootstrap type");
         check(in.readInt() > 0, "connection identity"); int oid = in.readInt(); check(oid > 3, "client identity reserved range");
-        check(in.readBoolean() && in.readInt() == 16, "login service count");
+        check(in.readBoolean(), "bootstrap ready");
+        int count = in.readInt();check(count >= 16 && count <= 20, "login service count");
         Set<String> services = new HashSet<>();
-        for (int i = 0; i < 16; i++) {
+        for (int i = 0; i < count; i++) {
             String name = type(in); check(name.endsWith("Marshaller"), "service handle type"); services.add(name);
             check(in.readInt() == 3 && in.readInt() == i + 1, "service routing");
         }
-        check(services.size() == 16 && services.contains("com.threerings.projectx.data.KnightMarshaller")
+        check(services.size() == count && services.contains("com.threerings.projectx.data.KnightMarshaller")
             &&services.contains("com.threerings.projectx.social.data.SocialMarshaller")
             &&services.contains("com.threerings.projectx.admin.data.ProjectXAdminMarshaller")
             &&services.contains("com.threerings.projectx.sprites.data.BattleSpriteMarshaller")

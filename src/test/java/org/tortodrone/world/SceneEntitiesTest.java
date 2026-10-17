@@ -59,8 +59,96 @@ public final class SceneEntitiesTest {
         thrown(map,3.5f,-20.5f,(float)Math.PI,false);
         trapOccupants(map);
         monsterStatus(map);
-        System.out.println("PASS: rounded/rotated hitboxes, edge damage, damage masks and native thrown-lift collision profiles");
+        pots(map);
+        System.out.println("PASS: rounded/rotated hitboxes, edge damage, damage masks, thrown-lift profiles and the served gym pot chain");
     }
+    /** The served gym pot chain: thrown fire pots smash with their Blast Radius depth damage and
+     *  Fire ailment (ULTRA status chance, so ignition repeats across spare pots), flip a
+     *  damage-toggle lever, and leave a ScorcherTorch hazard that burns for its authored
+     *  Lifetime; oil pots leave nine inert slick patches; closed Lift Barriers, native
+     *  lift-collision bit included, catch thrown pots before they cross. */
+    private static void pots(SceneCatalog.MapScene map)throws java.io.IOException {
+        int stamp=SceneClock.now()+600;
+        var leverFields=new HashMap<String,String>();
+        leverFields.put("native-type","com.threerings.projectx.dungeon.data.actor.Switch");
+        leverFields.put("config","Dynamic/Switch/Lever/Damage Toggle");leverFields.put("switch-mode","damage-toggle");
+        leverFields.put("radius","0.4");
+        var cubeFields=new HashMap<String,String>();
+        cubeFields.put("native-type","com.threerings.projectx.dungeon.data.actor.Monster");
+        cubeFields.put("config","Training Cube");cubeFields.put("kind","Monster");cubeFields.put("health","500");
+        cubeFields.put("damage-mask","2");cubeFields.put("collision-flags","8");
+        cubeFields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",shape("Circle",Map.of("radius",.4f))))));
+        var potFields=new HashMap<String,String>();
+        potFields.put("native-type","com.threerings.projectx.dungeon.data.actor.DungeonLift");
+        potFields.put("config","Dynamic/Lift Objects/Fire Pot");potFields.put("kind","DungeonLift");
+        potFields.put("damage-mask","0");potFields.put("collision-flags","514");potFields.put("can-throw","true");
+        potFields.put("thrown-collision-mask","137");potFields.put("thrown-collision-flags","512");
+        potFields.put("speed","11.69");potFields.put("throw-time","650");potFields.put("fall-speed","0");potFields.put("fuse","1500");
+        potFields.put("destroy-on-land","true");potFields.put("explode-on-impact","false");
+        potFields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",shape("Circle",Map.of("radius",.45f))))));
+        var doorFields=new HashMap<String,String>();
+        doorFields.put("native-type","com.threerings.projectx.dungeon.data.actor.Door");
+        doorFields.put("config","Dynamic/Barrier/Lift/Lift Barrier x3");doorFields.put("collision-flags","8192");
+        doorFields.put("door-speed","0");doorFields.put("start-open","false");doorFields.put("is-static","true");
+        doorFields.put("shape","Rectangle");doorFields.put("width","1");doorFields.put("height","3");
+        doorFields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",shape("Rectangle",Map.of("width",1f,"height",3f))))));
+        var oilFields=new HashMap<>(potFields);oilFields.put("config","Dynamic/Lift Objects/Oil Pot");
+        var barrier=new SceneContent.Entry("barrier",21f,12f,0,new SceneContent.Spec(doorFields));
+        var entries=new ArrayList<SceneContent.Entry>(List.of(
+            new SceneContent.Entry("lever",9.4f,9f,0,new SceneContent.Spec(leverFields)),
+            new SceneContent.Entry("cube",9.9f,9f,0,new SceneContent.Spec(cubeFields)),
+            new SceneContent.Entry("pot",8.4f,9f,0,new SceneContent.Spec(potFields)),
+            new SceneContent.Entry("oil",20.4f,12f,0,new SceneContent.Spec(oilFields)),barrier));
+        // Spares for the ignition loop: the served Fire Pot ailment carries Status Chance ULTRA
+        // (status-chance.ULTRA=0.65), so a landed pot ignites only with native probability.
+        for(int i=2;i<=13;i++)entries.add(3,new SceneContent.Entry("pot"+i,8.4f,9f,0,new SceneContent.Spec(potFields)));
+        var content=new SceneContent(entries,
+            map.content().scales(),Map.of(),map.content().stats(),Map.of(),Map.of(),map.content().statuses());
+        var world=new SceneEntities(content,map.collision());
+        var players=new ArrayList<ActorState>();
+        players.add(new ActorState(219,1001,"Fixture",256,stamp,8.4f,9f,0,0,0,new StarterCatalog.Model("Fixture",Map.of())));
+        players.add(new ActorState(220,1002,"Fixture",256,stamp,20.4f,12f,0,0,0,new StarterCatalog.Model("Fixture",Map.of())));
+        var pot=world.actors().stream().filter(a->a.entity().key().equals("pot")).findFirst().orElseThrow();
+        var oil=world.actors().stream().filter(a->a.entity().key().equals("oil")).findFirst().orElseThrow();
+        world.advance(stamp,players);
+        check(world.carry(pot.id(),players.getFirst(),stamp+1),"knight grabs the gym fire pot");
+        world.throwLift(pot.id(),players.getFirst(),stamp+1);
+        world.advance(stamp+120,players);
+        var cube=world.actors().stream().filter(a->a.entity().key().equals("cube")).findFirst().orElseThrow();
+        var torch=world.actors().stream().filter(a->a.config().name().equals("Bomb/Monster/ScorcherTorch")).findFirst().orElseThrow();
+        check(Math.abs(cube.entity().health()-.96f)<.0001,"smash depth damage PC/Damage/Base/Default (20 of 500) reaches the cube");
+        check(world.actors().stream().anyMatch(a->a.entity().key().equals("lever")&&a.entity().state()!=0),
+            "smash region flips a damage-toggle lever inside the pot's blast");
+        check(world.actor(torch.id())!=null,"a ScorcherTorch patch spawns from the Fire Pot's Extra Action");
+        world.advance(stamp+620,players);
+        // The served Fire Pot ailment carries Status Chance ULTRA (0.65), so ignition is
+        // probabilistic: throw the spare pots (and let the torch tick) until Fire sticks.
+        boolean ignited=onFire(world.actor(cube.id()));int step=650;
+        for(int i=2;i<=13&&!ignited;i++){
+            int index=i;
+            var spare=world.actors().stream().filter(a->a.entity().key().equals("pot"+index)).findFirst().orElseThrow();
+            check(world.carry(spare.id(),players.getFirst(),stamp+step),"knight grabs spare fire pot "+i);
+            world.throwLift(spare.id(),players.getFirst(),stamp+step);
+            world.advance(stamp+step+120,players);
+            var live=world.actor(cube.id());ignited=live!=null&&onFire(live);step+=140;
+        }
+        check(ignited,"the Fire ailment applies to the cube at its native ULTRA status chance");
+        check(world.actor(torch.id())!=null,"the torch patch stays alive while it burns");
+        world.advance(stamp+4620,players);
+        check(world.actor(torch.id())==null,"ScorcherTorch patch expires at its authored 4 Seconds lifetime");
+        check(world.carry(oil.id(),players.getLast(),stamp+5000),"knight grabs the gym oil pot");
+        world.throwLift(oil.id(),players.getLast(),stamp+5000);
+        world.advance(stamp+5120,players);
+        var slicks=world.actors().stream().filter(a->a.config().name().equals("Bomb/Monster/Oil Slick")).toList();
+        check(slicks.size()==9,"oil pot leaves the served nine inert Oil Slick patches");
+        check(slicks.stream().allMatch(s->s.x()<21.6f),
+            "thrown pot stopped west of the closed Lift Barrier instead of crossing it");
+    }
+
+    private static boolean onFire(ActorState actor){
+        return actor.entity().status().conditions().stream().anyMatch(c->c.name().equals("Fire"));
+    }
+
     private static void monsterStatus(SceneCatalog.MapScene map) {
         var pad=map.content().entries().stream().filter(e->e.spec().child().text("native-type","").endsWith(".Monster")
             &&e.spec().child().number("acquire-distance",0)>0).findFirst().orElseThrow();

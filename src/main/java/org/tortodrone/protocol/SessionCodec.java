@@ -46,7 +46,10 @@ public final class SessionCodec {
         "com.threerings.projectx.admin.data.ProjectXAdminMarshaller",
         "com.threerings.projectx.sprites.data.BattleSpriteMarshaller",
         "com.threerings.projectx.auction.data.AuctionMarshaller",
-        "com.threerings.projectx.mission.data.MissionMarshaller");
+        "com.threerings.projectx.mission.data.MissionMarshaller",
+        // The supply depot's purchase tab requires the billing service at window
+        // construction; the stock exchange window throws and wedges without it.
+        "com.threerings.projectx.billing.data.BillingMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int INTERIOR_TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -535,6 +538,8 @@ public final class SessionCodec {
             });});
     }
     public static final int CRAFT_SERVICE=22, UNBIND_SERVICE=23, ACCESSORY_SERVICE=24, VARIANT_SERVICE=25;
+    /** The announced BillingMarshaller slot; the depot purchase tab resolves it at window build. */
+    public static final int BILLING_SERVICE=SERVICES.size();
     public byte[] townDialog(int playerOid,int sceneOid,org.tortodrone.town.TownCatalog.Station station,ActorState source,long created,int service)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
             attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
@@ -585,6 +590,11 @@ public final class SessionCodec {
             attribute(out,oid,"sprites",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().sprites().size());for(var sprite:profile.town().sprites())sprite(o,profile,sprite);});
             attribute(out,oid,"equippedSprite",o->value(o,profile.town().equippedSprite()));});
     }
+    /** Single stock PlayerObject.recipes entry; open alchemy dialogs refresh on this event. */
+    public byte[] recipeAdded(int oid,org.tortodrone.town.TownState.LearnedRecipe recipe)throws IOException {
+        return frame(out->{event(out,"EntryAddedEvent",oid);string(out,"recipes");
+            type(out,"com.threerings.projectx.craft.data.Recipe");out.writeBoolean(true);out.writeLong(recipe.id());string(out,recipe.config());});
+    }
     private void harness(DataOutputStream out,org.tortodrone.town.TownState.Harness h)throws IOException {type(out,"com.threerings.projectx.sprites.data.Harness");out.writeBoolean(true);out.writeLong(h.id());value(out,new StarterCatalog.Model(h.config(),Map.of()));}
     private void sprite(DataOutputStream out,WorldProfile owner,org.tortodrone.town.TownState.Sprite s)throws IOException {
         var h=owner.town().harnesses().stream().filter(v->v.id()==s.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));sprite(out,owner.worldId(),s,h);
@@ -601,6 +611,7 @@ public final class SessionCodec {
             if(result instanceof org.tortodrone.town.TownState.Sprite s)sprite(out,profile,s);else townValue(out,result);});
     }
 
+    public record BillingInfo() { }
     private void townValue(DataOutputStream out,Object value)throws IOException {
         if(value instanceof SessionDecoder.Multiset multiset){type(out,"com.google.common.collect.HashMultiset");out.writeInt(multiset.counts().size());for(var entry:multiset.counts().entrySet()){value(out,entry.getKey());out.writeInt(entry.getValue());}}
         else if(value instanceof java.util.List<?> list){type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)townValue(out,element);}
@@ -612,6 +623,10 @@ public final class SessionCodec {
                 out.writeBoolean(false);string(out,null);string(out,null);
             }
         }
+        else if(value instanceof BillingInfo){type(out,"com.threerings.billing.data.BillingInfo");out.writeShort(0);out.writeLong(0); // no credit card on file, nothing paid through
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);
+            type(out,"com.threerings.util.StreamableArrayList");out.writeInt(0);}
         else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
         else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}

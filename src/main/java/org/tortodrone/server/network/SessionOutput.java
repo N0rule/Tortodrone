@@ -66,5 +66,21 @@ final class SessionOutput implements AutoCloseable {
         }
     }
 
+    /** Drains queued frames, then closes the socket: the official post-rename session end. */
+    void disconnect() {
+        synchronized (this) {
+            if (closed) return;
+            closed = true;
+            if (!pending.offer(END)) { closeSocket(); writer.interrupt(); }
+        }
+        try {
+            writer.join(5000);
+            closeSocket();
+            writer.join(1000);
+        } catch (InterruptedException e) {
+            closeSocket(); writer.interrupt(); Thread.currentThread().interrupt();
+        }
+    }
+
     private void closeSocket() { try { socket.close(); } catch (IOException ignored) { } }
 }

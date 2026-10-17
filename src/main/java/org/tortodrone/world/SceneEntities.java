@@ -15,6 +15,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
+        Object hazardStatus;int hazardNext;
         final SceneStatus status;
         final Object shape;
         final int collisionFlags;
@@ -60,6 +61,33 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 spec.number("health",0)>0?health/spec.number("health",0):-1,state,stateEntered,count,hitTime,binding.key(),
                 kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime));}
     }
+    /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
+     *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
+     *  resting collision masks, so thrown lifts stop at closed barriers (see the archive's
+     *  vendored {@code Lift} base and LiftBarrierProbe: every served lift stops, carriers not). */
+    private static final int LIFT_COLLISION=8192;
+
+    /** Served {@code Dynamic/Lift Objects} pot arguments, condensed to what the land handler
+     *  executes: {@code Pot (Base)} {@code land} runs DamageRegionFromPoint with damage
+     *  [Status(Ailment), DepthScale PC/Damage/Base/Default (flags 2)] and region expansion
+     *  = Blast Radius, then the per-variant Extra Action spawns ground hazards (Fire Pot one
+     *  ScorcherTorch, Damage {flags 2, Fire 1.0/80, ULTRA/MODERATE, 4s lifetime}; Oil Pot nine
+     *  Oil Slick patches). Served values only; pots without an entry below stay inert. */
+    private record Pot(float blast,StarterCatalog.Model ailment,Object hazardDamage,String hazardConfig,float hazardRadius,int hazardLifetime) { }
+    private static final Map<String,Pot> POTS=Map.of(
+        "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
+        "Dynamic/Lift Objects/Fire Pot",new Pot(1f,new StarterCatalog.Model("Fire",Map.of(
+                "Chance",1f,"Power",80,
+                "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA"),
+                "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE"))),
+            new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of(
+                "flags",2,"statusCondition",new StarterCatalog.Model("Fire",Map.of(
+                    "Chance",1f,"Power",80,
+                    "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA"),
+                    "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE"))))),
+            "Bomb/Monster/ScorcherTorch",1f,4000),
+        "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
+
     private final SceneContent content;private final CollisionMap terrain;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
@@ -205,6 +233,22 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(stamp>=e.nextGeneration){e.flags&=~2;generate(e,e.nextGeneration);}
             }
             if(e.kind.equals("Trap"))cycle(e,stamp);
+            if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0))e.destroyed=stamp;
+            if(e.hazardStatus!=null&&stamp>=e.hazardNext){
+                // Native Extra Action torch: applies its status damage region to everything
+                // inside the patch on the Floor trap cadence (hazard-refractory, default 500).
+                e.hazardNext=stamp+e.spec.integer("hazard-refractory",500);
+                var args=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
+                    "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
+                        "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",0f))));
+                var shape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
+                    List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
+                var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
+                    "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
+                        "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",0f))));
+                hitArgs.put("shape",shape);
+                damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
+            }
             if(e.detonateAt>0&&stamp>=e.detonateAt){
                 e.destroyed=e.detonateAt;
                 String graph=e.spec.text("detonation-action","");if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid block detonation",invalid);}
@@ -256,25 +300,74 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if((e.flags&2)==0)return;
         float distance=e.speed*elapsed;boolean collided=false;
         int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/.1f));
+        // Thrown lifts also collide with the native lift bit, so closed Lift Barriers catch them.
+        int thrownMask=e.spec.integer("thrown-collision-mask",-1);
+        int flightMask=thrownMask>=0?thrownMask|LIFT_COLLISION:thrownMask;
         for(int step=0;step<steps;step++){
             float x=e.x+(float)Math.cos(e.direction)*distance/steps,y=e.y+(float)Math.sin(e.direction)*distance/steps;
             boolean clear=staticCollision.isEmpty()||e.shape==null?terrain.walkableSegment(e.x,e.y,x,y):
-                staticCollision.clearSegment(e.spec.integer("thrown-collision-mask",0),e.shape,e.x,e.y,x,y,e.rotation);
+                staticCollision.clearSegment(flightMask,e.shape,e.x,e.y,x,y,e.rotation);
             if(!clear){collided=true;break;}
             e.x=x;e.y=y;
             // Execute the landing action at the colliding substep. Keeping the
             // previous clear pose left a thrown vial outside the victim's shape.
-            if(contact(x,y,e.rotation,e.id,e.shape,e.spec.integer("thrown-collision-mask",-1))){collided=true;break;}
+            if(contact(x,y,e.rotation,e.id,e.shape,flightMask)){collided=true;break;}
         }
         if(stamp-e.thrownAt>=e.spec.integer("throw-time",0))e.z=Math.max(0,e.z-e.spec.number("fall-speed",0)*elapsed);
         if(collided||e.z<=0||stamp-e.thrownAt>=e.spec.integer("fuse",0))land(e,stamp);
     }
     private void land(Entity e,int stamp){
         e.flags&=~2;
+        potLand(e,stamp);
         String graph=e.vial==null?e.spec.text("land-action",""):e.vial.text("use-action","");
         if(!graph.isBlank())try{attack.accept(e.snapshot(),FireCatalog.actionJson(graph));}catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared lift action",invalid);}
         if(e.spec.flag("destroy-on-land",false))e.destroyed=stamp;
     }
+    /** Native {@code Pot (Base)} land handler: smash region, then per-variant Extra Action. */
+    private void potLand(Entity e,int stamp){
+        var pot=POTS.get(e.spec.config().name());if(pot==null)return;
+        var damages=new ArrayList<Object>();
+        if(pot.ailment()!=null)damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",
+            Map.of("flags",2,"statusCondition",pot.ailment())));
+        damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$DepthScale",Map.of(
+            "depthScale",new StarterCatalog.Model("PC/Damage/Base/Default",Map.of()),
+            "type",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$DamageType","NORMAL"),"flags",2)));
+        var args=new LinkedHashMap<String,Object>(Map.of("damage",new FireCatalog.DataValue(
+                "com.threerings.projectx.dungeon.config.DamageConfig$Compound",Map.of("damages",
+                    new FireCatalog.ListValue("com.threerings.projectx.dungeon.config.DamageConfig",damages))),
+            "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
+                "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",pot.blast()))));
+        var prepared=e.spec.model("source-shape");
+        if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
+        damage(new StarterCatalog.Model("DamageRegionFromPoint",args),e.x,e.y,e.rotation,stamp,e.id,null);
+        if(pot.hazardConfig()!=null)ignite(pot,e.x,e.y,stamp);
+    }
+    /** Extra Action ground hazard: a trap-shaped patch whose hazard applies native status
+     *  damage on the Floor trap cadence (hazard-refractory 500), expiring at its Lifetime. */
+    private void ignite(Pot pot,float x,float y,int stamp){
+        if(pot.hazardDamage()==null){
+            // Oil Pot: nine slick patches at the landing point (the served Extra Action
+            // spawns them without scatter offsets); inert until a fire source ignites them.
+            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),x,y,stamp);
+            return;
+        }
+        hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),x,y,stamp);
+    }
+    private void hazard(String config,Object hazard,float radius,int lifetime,float x,float y,int stamp){
+        var fields=new TreeMap<String,String>();
+        fields.put("config",config);
+        fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Trap");
+        fields.put("shape","Circle");
+        fields.put("radius",Float.toString(radius));
+        fields.put("collision-flags","16");
+        fields.put("hazard-lifetime",Integer.toString(lifetime));
+        var spec=new SceneContent.Spec(fields);
+        var binding=new SceneContent.Entry("hazard:"+nextId,x,y,0,spec);
+        var entity=new Entity(nextId++,stamp,binding,spec,null,content);
+        entity.hazardStatus=hazard;
+        entities.put(entity.id,entity);
+    }
+
     private void collect(Entity e,float elapsed,List<ActorState> players){
         if(e.spec.text("pickup-item","").isEmpty())return;
         for(var player:players){

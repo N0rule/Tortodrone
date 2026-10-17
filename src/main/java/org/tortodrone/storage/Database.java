@@ -12,7 +12,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 13;
+    public static final int SCHEMA_VERSION = 14;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -60,7 +60,7 @@ public final class Database {
     }
     private void requireCurrentVersion() throws IOException {
         int version = version();
-        if(version==9||version==10||version==11||version==12){
+        if(version==9||version==10||version==11||version==12||version==13){
             // Only known predecessors are eligible; unknown versions remain untouched.
             try(var c=connect();var statement=c.createStatement()){
                 statement.execute("PRAGMA foreign_keys=OFF");statement.execute("BEGIN IMMEDIATE");
@@ -68,9 +68,10 @@ public final class Database {
                     int lockedVersion;try(var r=statement.executeQuery("PRAGMA user_version")){r.next();lockedVersion=r.getInt(1);}
                     if(lockedVersion==9){AuctionSchema.upgrade(c);DepotStore.initialize(c);}
                     else if(lockedVersion==10)DepotStore.initialize(c);
-                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
+                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=13&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
                     if(lockedVersion<12)EnergyExchange.initialize(c);
                     if(lockedVersion<13)GiftStore.initialize(c);
+                    if(lockedVersion<14)TownStore.knightRenameClock(c);
                     try(var r=statement.executeQuery("PRAGMA foreign_key_check")){if(r.next())throw new IOException("Database upgrade failed foreign key validation");}
                     statement.execute("PRAGMA user_version="+SCHEMA_VERSION);statement.execute("COMMIT");
                 }catch(SQLException|IOException|RuntimeException failure){statement.execute("ROLLBACK");throw failure;}
@@ -540,7 +541,7 @@ public final class Database {
         try (PreparedStatement s = c.prepareStatement("DELETE FROM knights WHERE account_id=?" + (knights.isEmpty() ? "" : " AND id NOT IN(" + placeholders + ")"))) {
             s.setInt(1,id); for (int i=0;i<knights.size();i++) s.setInt(i+2,knights.get(i).id()); s.executeUpdate();
         }
-        for (Knight k : knights) try (PreparedStatement s = c.prepareStatement("INSERT INTO knights VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,id) DO UPDATE SET name=excluded.name,name_key=excluded.name_key,helm=excluded.helm,armor=excluded.armor,helm_accessory=excluded.helm_accessory,armor_accessory=excluded.armor_accessory,costume=excluded.costume,color=excluded.color,height=excluded.height,eye=excluded.eye,created_at=excluded.created_at")) {
+        for (Knight k : knights) try (PreparedStatement s = c.prepareStatement("INSERT INTO knights(account_id,id,name,name_key,helm,armor,helm_accessory,armor_accessory,costume,color,height,eye,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(account_id,id) DO UPDATE SET name=excluded.name,name_key=excluded.name_key,helm=excluded.helm,armor=excluded.armor,helm_accessory=excluded.helm_accessory,armor_accessory=excluded.armor_accessory,costume=excluded.costume,color=excluded.color,height=excluded.height,eye=excluded.eye,created_at=excluded.created_at,last_renamed=knights.last_renamed")) {
             s.setInt(1,id); s.setInt(2,k.id()); s.setString(3,k.name()); s.setString(4,k.name().toLowerCase(Locale.ROOT)); s.setString(5,k.helm()); s.setString(6,k.armor()); s.setString(7,k.helmAccessory()); s.setString(8,k.armorAccessory()); s.setString(9,k.costume()); s.setInt(10,k.color()); s.setInt(11,k.height()); s.setInt(12,k.eye()); s.setLong(13,k.createdAt()); s.executeUpdate();
         }
         WorldProfiles.cleanProgress(c);

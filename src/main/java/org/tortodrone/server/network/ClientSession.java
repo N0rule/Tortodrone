@@ -172,7 +172,10 @@ final class ClientSession {
             if(world.interiorPartyInvocation(invocation))return;
             if(world.exchangeInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;
-            if(world.townInvocation(invocation))return;
+            if(world.townInvocation(invocation)){
+                if(world.takeRenameDisconnect()){output.disconnect();world.close();}
+                return;
+            }
             if(world.conversationInvocation(invocation))return;
             if(world.tradeInvocation(invocation))return;
             if(world.departingScene(invocation.oid())&&invocation.service()==10
