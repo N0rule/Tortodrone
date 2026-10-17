@@ -173,7 +173,7 @@ final class ClientSession {
             if(world.exchangeInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;
             if(world.townInvocation(invocation)){
-                if(world.takeRenameDisconnect()){output.disconnect();world.close();}
+                if(world.takeRenameDisconnect()){world.close();output.disconnect();}
                 return;
             }
             if(world.conversationInvocation(invocation))return;

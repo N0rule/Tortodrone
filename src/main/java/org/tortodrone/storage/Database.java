@@ -42,7 +42,7 @@ public final class Database {
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
         if (Files.exists(file)) {
-            if((version()==9||version()==10||version()==11||version()==12)&&!deploymentLocked){
+            if((version()==9||version()==10||version()==11||version()==12||version()==13)&&!deploymentLocked){
                 try(var channel=FileChannel.open(directory.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.tryLock()){
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
