@@ -73,8 +73,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  executes: {@code Pot (Base)} {@code land} runs DamageRegionFromPoint with damage
      *  [Status(Ailment), DepthScale PC/Damage/Base/Default (flags 2)] and region expansion
      *  = Blast Radius, then the per-variant Extra Action spawns ground hazards (Fire Pot one
-     *  ScorcherTorch, Damage {flags 2, Fire 1.0/80, ULTRA/MODERATE, 4s lifetime}; Oil Pot nine
-     *  Oil Slick patches). Served values only; pots without an entry below stay inert. */
+     *  ScorcherTorch, Damage {flags 2, Fire 1.0/80, ULTRA/MODERATE}, toggled by its Lifetime
+     *  argument's served choice to a 6 Second cleanup fuse while the streamed Lifetime argument
+     *  renders the flame for its authored 4 seconds; Oil Pot nine Oil Slick patches).
+     *  Served values only; pots without an entry below stay inert. */
     private record Pot(float blast,StarterCatalog.Model ailment,Object hazardDamage,String hazardConfig,float hazardRadius,int hazardLifetime) { }
     private static final Map<String,Pot> POTS=Map.of(
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
@@ -87,7 +89,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     "Chance",1f,"Power",80,
                     "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA"),
                     "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE"))))),
-            "Bomb/Monster/ScorcherTorch",1f,4000),
+            "Bomb/Monster/ScorcherTorch",1f,6000),
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
 
     private final SceneContent content;private final CollisionMap terrain;
@@ -350,12 +352,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(pot.hazardDamage()==null){
             // Oil Pot: nine slick patches at the landing point (the served Extra Action
             // spawns them without scatter offsets); inert until a fire source ignites them.
-            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),x,y,stamp);
+            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),Map.of(),x,y,stamp);
             return;
         }
-        hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),x,y,stamp);
+        // The Fire Pot spawns its torch with served arguments: the Lifetime argument selects
+        // the "4 Seconds" choice, whose Creation Life renders the client flame for 4 seconds.
+        hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),
+            Map.of("config.argument.(Lifetime)","string|4 Seconds"),x,y,stamp);
     }
-    private void hazard(String config,Object hazard,float radius,int lifetime,float x,float y,int stamp){
+    private void hazard(String config,Object hazard,float radius,int lifetime,Map<String,String> arguments,float x,float y,int stamp){
         var fields=new TreeMap<String,String>();
         fields.put("config",config);
         fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Trap");
@@ -363,6 +368,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         fields.put("radius",Float.toString(radius));
         fields.put("collision-flags","16");
         fields.put("hazard-lifetime",Integer.toString(lifetime));
+        fields.putAll(arguments);
         var spec=new SceneContent.Spec(fields);
         var binding=new SceneContent.Entry("hazard:"+nextId,x,y,0,spec);
         var entity=new Entity(nextId++,stamp,binding,spec,null,content);

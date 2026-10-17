@@ -64,9 +64,10 @@ public final class SceneEntitiesTest {
     }
     /** The served gym pot chain: thrown fire pots smash with their Blast Radius depth damage and
      *  Fire ailment (ULTRA status chance, so ignition repeats across spare pots), flip a
-     *  damage-toggle lever, and leave a ScorcherTorch hazard that burns for its authored
-     *  Lifetime; oil pots leave nine inert slick patches; closed Lift Barriers, native
-     *  lift-collision bit included, catch thrown pots before they cross. */
+     *  damage-toggle lever, and leave a ScorcherTorch hazard that burns past its 4 second
+     *  flame until the served 6 Second cleanup fuse expires; oil pots leave nine inert
+     *  slick patches; closed Lift Barriers, native lift-collision bit included, catch
+     *  thrown pots before they cross. */
     private static void pots(SceneCatalog.MapScene map)throws java.io.IOException {
         int stamp=SceneClock.now()+600;
         var leverFields=new HashMap<String,String>();
@@ -135,10 +136,12 @@ public final class SceneEntitiesTest {
         check(ignited,"the Fire ailment applies to the cube at its native ULTRA status chance");
         check(world.actor(torch.id())!=null,"the torch patch stays alive while it burns");
         world.advance(stamp+4620,players);
-        check(world.actor(torch.id())==null,"ScorcherTorch patch expires at its authored 4 Seconds lifetime");
-        check(world.carry(oil.id(),players.getLast(),stamp+5000),"knight grabs the gym oil pot");
-        world.throwLift(oil.id(),players.getLast(),stamp+5000);
-        world.advance(stamp+5120,players);
+        check(world.actor(torch.id())!=null,"the torch outlives its 4 second flame (the served Lifetime choice keeps a 6 Second cleanup fuse)");
+        world.advance(stamp+6200,players);
+        check(world.actor(torch.id())==null,"ScorcherTorch patch expires at the served 6 Second cleanup fuse");
+        check(world.carry(oil.id(),players.getLast(),stamp+7000),"knight grabs the gym oil pot");
+        world.throwLift(oil.id(),players.getLast(),stamp+7000);
+        world.advance(stamp+7120,players);
         var slicks=world.actors().stream().filter(a->a.config().name().equals("Bomb/Monster/Oil Slick")).toList();
         check(slicks.size()==9,"oil pot leaves the served nine inert Oil Slick patches");
         check(slicks.stream().allMatch(s->s.x()<21.6f),
