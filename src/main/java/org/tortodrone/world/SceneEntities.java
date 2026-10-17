@@ -64,7 +64,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
      *  resting collision masks, so thrown lifts stop at closed barriers (see the archive's
-     *  vendored {@code Lift} base and LiftBarrierProbe: every served lift stops, carriers not). */
+     *  vendored {@code Lift} base and LiftBarrierProbe). Carriers are stopped by the pawn rule
+     *  in {@link #penetration}, because the raw mask test alone never blocks them: the pawn mask
+     *  lacks the bit and a carried lift's own collision drops to 0 in 2026. */
     private static final int LIFT_COLLISION=8192;
 
     /** Served {@code Dynamic/Lift Objects} pot arguments, condensed to what the land handler
@@ -474,12 +476,27 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if((e.collisionFlags&pawnCollisionMask)!=0&&e.containsPawn(x,y))return false;
         }return true;
     }
-    /** Same mask and live actor exclusions as pawn collision, retaining the separating direction. */
+    /** Same mask and live actor exclusions as pawn collision, retaining the separating direction.
+     *  Closed Lift Barriers additionally block a pawn that is carrying a lift. The served evidence
+     *  never states that rule on the raw mask test (the pawn mask is 43, the barrier's lift bit
+     *  8192), yet the gym's Lift Barrier doors are the served
+     *  {@code DungeonActorSpriteConfig$SubjectiveDoor}: the client judges each door per viewer,
+     *  open exactly when the viewer's target actor cannot collide with it, and a knight carrying
+     *  a statue reads every closed Lift Barrier as closed ("when you pick up a statue, they go
+     *  purple, and you are not supposed to go through them, only if you put down the statue").
+     *  With the old raw-mask pass the server kept moving the pawn through a gate the client
+     *  closed, which was the reported gradual penetration; matching the client server-side ends
+     *  it. A lift at rest releases the pawn again, and an open barrier (open flag set) blocks
+     *  nobody. */
     public SceneCollision.Penetration penetration(float x,float y,int ignore){
+        boolean carrying=ignore!=0&&entities.values().stream().anyMatch(e->e.kind.equals("DungeonLift")
+            &&e.carrier==ignore&&e.destroyed==Integer.MAX_VALUE);
         var result=SceneCollision.Penetration.NONE;
         for(var e:entities.values()){
             if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2
-                    ||(e.collisionFlags&pawnCollisionMask)==0||!e.containsPawn(x,y))continue;
+                    ||!e.containsPawn(x,y))continue;
+            if((e.collisionFlags&pawnCollisionMask)==0&&!(carrying&&e.kind.equals("Door")
+                    &&(e.collisionFlags&LIFT_COLLISION)!=0))continue;
             result=result.deepest(e.penetration(x,y));
         }
         return result;

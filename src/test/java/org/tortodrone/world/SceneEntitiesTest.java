@@ -143,6 +143,22 @@ public final class SceneEntitiesTest {
         check(slicks.size()==9,"oil pot leaves the served nine inert Oil Slick patches");
         check(slicks.stream().allMatch(s->s.x()<21.6f),
             "thrown pot stopped west of the closed Lift Barrier instead of crossing it");
+        // The served SubjectiveDoor rule server-side: a knight holding a lift is stopped by a
+        // closed Lift Barrier, a knight with nothing in hand passes it, and putting the lift
+        // down (release clears the carrier) opens the pawn again.
+        entries.add(new SceneContent.Entry("hold",16.5f,12f,0,new SceneContent.Spec(oilFields)));
+        var contentHeld=new SceneContent(entries,
+            map.content().scales(),Map.of(),map.content().stats(),Map.of(),Map.of(),map.content().statuses());
+        var held=new SceneEntities(contentHeld,map.collision());
+        var grab=held.actors().stream().filter(a->a.entity().key().equals("hold")).findFirst().orElseThrow();
+        var carrier=new ActorState(219,1001,"Fixture",256,stamp,20.4f,12f,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));
+        held.advance(stamp,List.of(carrier));
+        check(held.carry(grab.id(),carrier,stamp+1),"knight grabs a lift beside the closed Lift Barrier");
+        check(held.penetration(21f,12f,carrier.id()).present(),
+            "carrying a lift stops the pawn at the closed Lift Barrier's footprint");
+        held.throwLift(grab.id(),carrier,stamp+2);
+        check(!held.penetration(21f,12f,carrier.id()).present(),
+            "after putting the lift down the pawn passes the Lift Barrier again");
     }
 
     private static boolean onFire(ActorState actor){
