@@ -64,8 +64,8 @@ public final class SceneEntitiesTest {
     }
     /** The served gym pot chain: thrown fire pots smash with their Blast Radius depth damage and
      *  Fire ailment (ULTRA status chance, so ignition repeats across spare pots), flip a
-     *  damage-toggle lever, and leave a ScorcherTorch hazard that burns past its 4 second
-     *  flame until the served 6 Second cleanup fuse expires; oil pots leave nine inert
+     *  damage-toggle lever, and leave a ScorcherTorch hazard retained past its 4 second
+     *  damage/flame limit until the served 6 Second cleanup fuse expires; oil pots leave nine inert
      *  slick patches; closed Lift Barriers, native lift-collision bit included, catch
      *  thrown pots before they cross. */
     private static void pots(SceneCatalog.MapScene map)throws java.io.IOException {

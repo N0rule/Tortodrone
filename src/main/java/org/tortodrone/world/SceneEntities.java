@@ -76,7 +76,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  ScorcherTorch, Damage {flags 2, Fire 1.0/80, ULTRA/MODERATE}, toggled by its Lifetime
      *  argument's served choice to a 6 Second cleanup fuse while the streamed Lifetime argument
      *  renders the flame for its authored 4 seconds; Oil Pot nine Oil Slick patches).
-     *  Served values only; pots without an entry below stay inert. */
+     *  Damage stops at 4 seconds conservatively: stripped handler conditions do not establish
+     *  the native damage cutoff. Cleanup must never extend the active damage region.
+     *  Pots without an entry below stay inert. */
     private record Pot(float blast,StarterCatalog.Model ailment,Object hazardDamage,String hazardConfig,float hazardRadius,int hazardLifetime) { }
     private static final Map<String,Pot> POTS=Map.of(
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
@@ -237,14 +239,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(stamp>=e.nextGeneration){e.flags&=~2;generate(e,e.nextGeneration);}
             }
             if(e.kind.equals("Trap"))cycle(e,stamp);
-            if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0))e.destroyed=stamp;
-            if(e.hazardStatus!=null&&stamp>=e.hazardNext){
+            if(e.spec.fields().containsKey("hazard-lifetime")&&stamp-e.created>=e.spec.integer("hazard-lifetime",0)){
+                e.destroyed=e.created+e.spec.integer("hazard-lifetime",0);
+                continue;
+            }
+            if(e.hazardStatus!=null&&stamp-e.created<e.spec.integer("hazard-active-lifetime",e.spec.integer("hazard-lifetime",Integer.MAX_VALUE))&&stamp>=e.hazardNext){
                 // Native Extra Action torch: applies its status damage region to everything
                 // inside the patch on the Floor trap cadence (hazard-refractory, default 500).
                 e.hazardNext=stamp+e.spec.integer("hazard-refractory",500);
-                var args=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
-                    "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
-                        "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",0f))));
                 var shape=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",
                     List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
                 var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
@@ -358,7 +360,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         // The Fire Pot spawns its torch with served arguments: the Lifetime argument selects
         // the "4 Seconds" choice, whose Creation Life renders the client flame for 4 seconds.
         hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),
-            Map.of("config.argument.(Lifetime)","string|4 Seconds"),x,y,stamp);
+            Map.of("config.argument.(Lifetime)","string|4 Seconds","hazard-active-lifetime","4000"),x,y,stamp);
     }
     private void hazard(String config,Object hazard,float radius,int lifetime,Map<String,String> arguments,float x,float y,int stamp){
         var fields=new TreeMap<String,String>();
