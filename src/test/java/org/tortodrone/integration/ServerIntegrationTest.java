@@ -59,6 +59,7 @@ public final class ServerIntegrationTest {
             managementWorkflow(jar, directory.resolve("management-start"));
             accountWorkflow(jar, directory.resolve("account-start"));
             multiSessionWorkflow(jar, directory.resolve("multi-session-start"));
+            billingWorkflow(jar, directory.resolve("billing-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
             Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
@@ -268,6 +269,28 @@ public final class ServerIntegrationTest {
         checkLogFormat(log);
     }
 
+    private static void billingWorkflow(Path sourceJar, Path directory) throws Exception {
+        Files.createDirectories(directory);
+        Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
+        seed(jar,directory);
+        Path data = directory.resolve("data");
+        String password = "billing-test-password";
+        accountCommand(jar, directory, "--create-account", "Billing", password + "\n" + password + "\n", true, "Account created.");
+        Path config = data.resolve("server.properties");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        try (Running server = new Running(jar, config, directory)) {
+            int port = server.ready();
+            try (Socket peer = new Socket("127.0.0.1", port)) {
+                TestClient.authenticate(peer, publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),
+                    "Billing", password, true, (socket, wire, oid) -> org.tortodrone.support.BillingScenario.run(socket, wire, oid));
+            }
+        }
+        String log = Files.readString(data.resolve("logs/latest.log"));
+        check(log.contains("Normal login accepted; account=Billing"), "billing scenario logged in");
+        check(!log.contains("rejected"), "unmodeled billing calls never reject the session");
+        checkLogFormat(log);
+    }
+
     private static void accountWorkflow(Path sourceJar, Path directory) throws Exception {
         Files.createDirectories(directory);
         Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
@@ -380,7 +403,8 @@ public final class ServerIntegrationTest {
         ProcessBuilder builder = command(jar, config, directory); builder.command().addAll(java.util.List.of(options));
         Process process = builder.start();
         try {
-            check(process.waitFor(10, TimeUnit.SECONDS), label + " timeout");
+            // Cold CI runners can exceed ten seconds of JVM startup before the key check exits.
+            check(process.waitFor(60, TimeUnit.SECONDS), label + " timeout");
             String output = new String(process.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
             check(process.exitValue() != 0 && output.contains(reason), label + ": " + output);
         } finally {

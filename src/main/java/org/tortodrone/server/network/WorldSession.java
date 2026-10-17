@@ -266,8 +266,15 @@ final class WorldSession implements AutoCloseable {
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.BILLING_SERVICE)return false;
         var a=request.arguments();int method=request.method();
         boolean confirm=method==6||method==7;
-        int count=switch(method){case 1->4;case 2->9;case 3,6,7->3;default->0;};
-        if(count==0||a.size()!=count||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(confirm?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid billing request");
+        // Native shapes: 1=[String,int,boolean,Result], 2=[String,String,int,int,String,String,int,boolean,Result],
+        // 3=[String,Result], 6=[int,String,Confirm], 7=[long,boolean,Confirm].
+        int count=switch(method){case 1->4;case 2->9;case 3->2;case 6,7->3;default->0;};
+        // A shape the client sends but we do not model must never kill the session; only
+        // answerable requests get an addressed failure, everything else is ignored.
+        if(count==0||a.size()!=count||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(confirm?"ConfirmMarshaller":"ResultMarshaller"))){
+            if(a.getLast() instanceof SessionDecoder.Listener other)output.send(()->codec.invocationFailure(oid,other.requestId(),"Billing is not available"));
+            return true;
+        }
         try{
             if(closed||!selected())throw new IOException("Select a knight first");
             if(method==3)output.send(()->codec.townResult(oid,listener.requestId(),new SessionCodec.BillingInfo(),profile));
