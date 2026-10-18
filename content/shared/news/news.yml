@@ -1,8 +1,8 @@
 # Uplink News banners shown after knight login. Each request shows one pack at
-# random; a pack is a featured banner (recommended 1600x900 or 16:9 image) with
-# optional left/right spotlights (recommended 300x200 or 3:2 image). The stock
-# client fetches each image as content_url + news/<file>, so the launcher's
-# content_url must point at this server's news-port.
+# random; a pack is a featured banner (recommended 570x300, the client's top slot)
+# with optional left/right spotlights (recommended 280x190, the client's side
+# slots). The stock client fetches each image as content_url + news/<file>, so the
+# launcher's content_url must point at this server's news-port.
 enabled: true
 packs:
   - featured:

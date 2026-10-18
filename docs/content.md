@@ -120,10 +120,12 @@ packs:
 
 Every pack needs a `featured` banner; `spotlights.left` and `spotlights.right` are
 optional side banners. Each banner needs a PNG or JPEG `image` stored directly in
-this folder. The optional `tooltip` shows only when the same banner also sets a
-`url`, which opens in the player's browser. Images may not escape the folder, and a
-missing, non-image or escaping file stops startup, as does `enabled: true` with no
-packs. An absent `news.yml`, or `enabled: false`, answers the client with no News.
+this folder, sized for the client's news window: 570x300 for `featured` and 280x190
+for the spotlights, the same sizes as the window's shipped parts. The optional
+`tooltip` shows only when the same banner also sets a `url`, which opens in the
+player's browser. Images may not escape the folder, and a missing, non-image or
+escaping file stops startup, as does `enabled: true` with no packs. An absent
+`news.yml`, or `enabled: false`, answers the client with no News.
 The server serves this folder over HTTP on `server-ip:news-port` and refuses
 traversal, non-image paths and unknown files, so keep the launcher's `news-port`
 aligned with `config/server.yml`.
