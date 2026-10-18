@@ -1,0 +1,16 @@
+# Uplink News banners shown after knight login. The stock client fetches each image
+# as content_url + news/<file>, so the launcher's content_url must point at this
+# server's news-port. Set enabled: false to answer with no News.
+enabled: true
+featured:
+  image: featured.png
+spotlights:
+  left:
+    image: left.png
+  right:
+    image: right.png
+# Each banner also accepts an optional tooltip shown with a link:
+#   featured:
+#     image: featured.png
+#     tooltip: Server news
+#     url: https://example.invalid/news

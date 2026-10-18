@@ -1,6 +1,8 @@
 # Restart the server after editing. Port 0 selects an ephemeral port for isolated tests.
 server-ip: 0.0.0.0
 server-port: 47624
+# Uplink News image HTTP port, bound to server-ip. 0 selects an ephemeral port.
+news-port: 8080
 max-clients: 16
 log-mode: normal
 log-max-mib: 10

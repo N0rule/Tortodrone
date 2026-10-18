@@ -657,11 +657,21 @@ final class WorldSession implements AutoCloseable {
             move(args, service == 5);
             return true;
         }
-        if ((service == 10 && request.method() == 7) || (service == 11 && request.method() == 1)) {
-            if (args.size() != 2 || !(args.get(1) instanceof SessionDecoder.Listener listener)
-                    || !listener.type().endsWith("$ResultMarshaller")
-                    || (service == 10 ? !(args.get(0) instanceof String) : !(args.get(0) instanceof Long))) {
-                throw new SessionDecoder.Rejected("Invalid town feed request");
+        if (service == 10 && request.method() == 7) {
+            if (args.size() != 2 || !(args.get(0) instanceof String)
+                    || !(args.get(1) instanceof SessionDecoder.Listener listener)
+                    || !listener.type().endsWith("$ResultMarshaller")) {
+                throw new SessionDecoder.Rejected("Invalid Uplink News request");
+            }
+            if (selected()) { var news=scenes.news(); output.send(() -> codec.listResult(oid, listener.requestId(), news.propertyList())); }
+            else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
+            return true;
+        }
+        if (service == 11 && request.method() == 1) {
+            if (args.size() != 2 || !(args.get(0) instanceof Long)
+                    || !(args.get(1) instanceof SessionDecoder.Listener listener)
+                    || !listener.type().endsWith("$ResultMarshaller")) {
+                throw new SessionDecoder.Rejected("Invalid social feed request");
             }
             if (selected()) output.send(() -> codec.emptyListResult(oid, listener.requestId()));
             else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));

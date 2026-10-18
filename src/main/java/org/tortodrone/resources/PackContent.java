@@ -120,7 +120,8 @@ final class PackContent {
         for(var resource:resources.values())if(!ContentFiles.digest(resource.path()).equals(resource.sha256()))throw new IOException("Content changed during loading: "+resource.path());
         return new ContentRegistry(packs,resources,scenes,items,weapons,equipment,fires,warnings,
             resources.containsKey("town")?org.tortodrone.town.TownCatalog.load(resources.get("town").path()):org.tortodrone.town.TownCatalog.empty(),
-            resources.containsKey("pet-fires")?FireCatalog.load(resources.get("pet-fires").path()):FireCatalog.empty());
+            resources.containsKey("pet-fires")?FireCatalog.load(resources.get("pet-fires").path()):FireCatalog.empty(),
+            org.tortodrone.news.NewsCatalog.disabled());
     }
     private static void requireItem(ItemCatalog items,String config) throws IOException {if(items.find(config)==null)throw new IOException("Combat reference has no item definition: "+config);}
     static int sceneId(String key) throws IOException {
