@@ -10,25 +10,39 @@ import static org.tortodrone.resources.Yaml.*;
 public final class TownYaml {
     public static final Map<String,List<String>> SECTIONS;
     static {var m=new LinkedHashMap<String,List<String>>();
-        m.put("shops",List.of("catalogs","depot"));m.put("recipes",List.of("recipes"));m.put("stations",List.of("stations"));
+        m.put("shops",List.of("catalogs"));m.put("recipes",List.of("recipes"));m.put("stations",List.of("stations"));
         m.put("sprites",List.of("sprites","perks","harnesses"));m.put("variants",List.of("variantTables","bonuses"));
         m.put("accessories",List.of("accessories","blockers"));m.put("progression",List.of("items","forgeTables","gearProgression"));SECTIONS=Collections.unmodifiableMap(m);}
     private static final Map<String,String> FIELDS=Map.ofEntries(
         Map.entry("accessories","blocks config destroy location model parameter remove"),Map.entry("blockers","config slots"),
         Map.entry("bonuses","attack charge config health speed weapon"),Map.entry("catalogs","chance config goods includes kind max min"),
-        Map.entry("depot","count energy featured item limit price"),Map.entry("forgeTables","config rows"),
+        Map.entry("forgeTables","config rows"),
         Map.entry("gearProgression","baseHeat config forge levels maxHeat"),Map.entry("harnesses","config damageType rechargeModifier"),
         Map.entry("items","accessory buyPrices config crowns giftBox harness itemProp levelProp rarity recipe sellPrices sprite spriteFoodRole type variant variantGroups"),
         Map.entry("perks","name previous tier variant"),Map.entry("recipes","config count crowns ingredients item locked maxHours oneTime useOrbs variantTable"),
         Map.entry("sprites","config preferredFood restrictDamageType skills"),Map.entry("stations","actor catalog cycle description group kind level model name perKnight preparer recipes title type"),
         Map.entry("variantTables","config root"));
     private TownYaml() { }
-    public static Map<String,Object> data(Path directory)throws IOException {
+    public static Map<String,Object> data(Path directory)throws IOException {return data(directory,false);}
+    /** Offline upgrade only; the runtime parser rejects depot YAML. */
+    public static Map<String,Object> migrationData(Path directory)throws IOException {return data(directory,true);}
+    private static Map<String,Object> data(Path directory,boolean migration)throws IOException {
         var result=new LinkedHashMap<String,Object>();result.put("format",1);
+        Path nativeFile=directory.resolve("../_internal/town-definitions.json").normalize();
+        var nativeData=Files.exists(nativeFile)?map(Json.parseCatalog(Files.readString(nativeFile)),"native Town definitions"):Map.<String,Object>of();
         for(var section:SECTIONS.entrySet()) {
-            Path path=directory.resolve(section.getKey()+".yml");var yaml=read(path);fields(yaml,path.toString(),section.getValue().toArray(String[]::new));
+            Path path=directory.resolve(section.getKey()+".yml");var yaml=read(path);if(migration&&section.getKey().equals("shops")) {
+                fields(yaml,path.toString(),"catalogs","depot");
+                if(yaml.containsKey("depot"))result.put("depot",list(yaml.get("depot"),"legacy Depot"));
+            } else fields(yaml,path.toString(),section.getValue().toArray(String[]::new));
             for(String field:section.getValue()) {
+                if(Set.of("items","variantTables").contains(field)&&!yaml.containsKey(field)&&!nativeData.containsKey(field))throw new IOException("Missing native Town defaults for "+field+": "+nativeFile);
                 var values=list(yaml.getOrDefault(field,List.of()),path+": "+field);var ids=new HashSet<Object>();
+                if(nativeData.containsKey(field)) {
+                    var merged=new LinkedHashMap<String,Object>();for(Object raw:list(nativeData.get(field),"native "+field)){var row=map(raw,field);if(merged.putIfAbsent(text(row.get("config"),"config"),new LinkedHashMap<>(row))!=null)throw new IOException("Duplicate native "+field+" ID "+row.get("config"));}
+                    var edits=new HashSet<String>();for(Object raw:values){var row=map(raw,field);String id=text(row.get("config"),"config");if(!edits.add(id))throw new IOException("Duplicate "+field+" ID "+id);var target=new LinkedHashMap<>(map(merged.getOrDefault(id,Map.of()),field));target.putAll(row);merged.put(id,target);}values=new ArrayList<>(merged.values());
+                }
+                for(Object raw:values)defaults(field,map(raw,field));
                 for(Object raw:values) {var row=map(raw,path+": "+field);fields(row,path+": "+field,FIELDS.get(field).split(" "));validate(field,row,path.toString());Object id=row.get(field.equals("stations")?"actor":field.equals("perks")?"name":"config");
                     if(id!=null&&!ids.add(id))throw new IOException(path+": duplicate "+field+" ID "+id);}
                 result.put(field,values);
@@ -36,9 +50,21 @@ public final class TownYaml {
         }
         return result;
     }
+    private static void defaults(String section,Map<String,Object> r)throws IOException {
+        Map<String,Object> defaults=switch(section) {
+            case "catalogs"->Map.of("kind","Original","includes",List.of(),"goods",List.of(),"min",1,"max",1,"chance",0);
+            case "recipes"->Map.of("count",1,"locked",false,"oneTime",false,"maxHours",0,"variantTable","");
+            case "stations"->Map.of("level",10,"preparer","BASIC","cycle","CONSTANT","perKnight",false,"recipes",List.of());
+            default->Map.of();
+        };
+        defaults.forEach(r::putIfAbsent);
+        if(section.equals("catalogs"))for(Object raw:list(r.get("goods"),"goods")) {
+            var g=map(raw,"good");Map.<String,Object>of("count",1,"price",-1,"energy",0,"limit",0,"token","","tokenCount",0).forEach(g::putIfAbsent);
+        }
+        if(section.equals("stations"))for(String field:List.of("catalog","type","group","name","title","model","description"))r.putIfAbsent(field,"");
+    }
     private static void validate(String section,Map<String,Object> row,String path)throws IOException {
         String where=path+": "+row.getOrDefault("config",row.getOrDefault("actor",section));
-        if(section.equals("depot"))good(row,where,true);
         if(section.equals("catalogs")) {
             for(Object value:list(row.get("goods"),where+" goods"))good(map(value,where),where,false);
             for(String field:List.of("min","max"))if(integer(row.get(field),where+" "+field)<0)throw new IOException(where+": "+field+" must be nonnegative");
@@ -72,7 +98,7 @@ public final class TownYaml {
         for(Object raw:list(data.get("catalogs"),"catalogs"))for(Object included:list(map(raw,"catalog").get("includes"),"includes")) {
             String name=text(included,"catalog include");if(!name.isEmpty()&&!catalogs.contains(name))throw new IOException("Missing included shop catalog: "+name);
         }
-        for(String field:List.of("recipes","catalogs","depot"))for(Object value:list(data.get(field),field)) {
+        for(String field:List.of("recipes","catalogs"))for(Object value:list(data.get(field),field)) {
             var row=map(value,field);
             if(field.equals("catalogs")) {for(Object good:list(row.get("goods"),"goods"))item(map(good,"good").get("item"),items);}
             else {item(row.get("item"),items);if(field.equals("recipes"))for(Object raw:list(row.get("ingredients"),"ingredients")) {

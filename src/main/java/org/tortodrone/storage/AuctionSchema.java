@@ -11,6 +11,10 @@ final class AuctionSchema {
             s.execute("CREATE INDEX town_auction_expiry ON town_auctions(ended,expires)");
         }
     }
+    static void economyUpgrade(Connection c)throws SQLException {
+        try(var s=c.createStatement();var r=s.executeQuery("SELECT 1 FROM pragma_table_info('town_auctions') WHERE name='available_at'")){if(r.next())return;}
+        try(var s=c.createStatement()){s.execute("ALTER TABLE town_auctions ADD COLUMN available_at INTEGER NOT NULL DEFAULT 0 CHECK(available_at>=0)");}
+    }
     // The caller disables foreign keys before BEGIN, checks them before COMMIT, and restores them.
     static void upgrade(Connection c)throws SQLException {
         try(var s=c.createStatement()){

@@ -160,6 +160,7 @@ public final class CheckCombatRendering {
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
         float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));int pot=0;boolean pad=false;
         var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");var nativeActors=Yaml.map(bindings.get("actors"),"actors");
+        inheritFixtureActors(bindings,actors);
         for(var actor:actors.entrySet()) {
             var fixed=Yaml.map(nativeActors.get(actor.getKey()),"binding");var value=Yaml.map(actor.getValue(),"actor");String config=(String)fixed.get("config");
             if(kind.equals("hazards")&&(fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Fire Pot")||fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Oil Pot"))){value.put("x",x+(pot++==0?-.8f:.8f));value.put("y",y+1);}
@@ -175,6 +176,8 @@ public final class CheckCombatRendering {
         String prefix=Arrays.stream(props.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
             .filter(key->props.getProperty(key+"kind","").equals("Monster")).findFirst().orElseThrow();
         var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");var bindings=Yaml.map(Json.parseCatalog(Files.readString(bindingFile)),"bindings");
+        inheritFixtureActors(bindings,actors);
+        bindings.remove("actorDefaults");bindings.remove("actorOrder");bindings.remove("actorAliases");
         var fixedActors=Yaml.map(bindings.get("actors"),"actors");var fields=Yaml.map(bindings.get("actorFields"),"actor fields");var types=Yaml.map(bindings.get("actorTypes"),"actor types");
         float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"))+3;
         for(int i=0;i<2;i++) {
@@ -191,6 +194,12 @@ public final class CheckCombatRendering {
         Files.delete(file);Yaml.write(file,yaml);Files.writeString(bindingFile,Json.stringify(bindings));
         Path metadata=map.resolve("native/metadata.properties");var descriptor=new Properties();descriptor.putAll(properties(metadata));descriptor.setProperty("sha256.bindings.json",ContentFiles.digest(bindingFile));save(metadata,descriptor);
         Path portals=map.resolve("portals.yml");var p=Yaml.read(portals);String spawn=Yaml.text(Yaml.read(map.resolve("map.yml")).get("defaultSpawn"),"default spawn");Yaml.map(Yaml.map(p.get("entrances"),"entrances").get(spawn),"entrance").put("y",y);Files.delete(portals);Yaml.write(portals,p);
+    }
+    private static void inheritFixtureActors(Map<String,Object> bindings,Map<String,Object> actors)throws IOException {
+        var defaults=Yaml.map(bindings.getOrDefault("actorDefaults",Map.of()),"actor defaults");
+        if(defaults.isEmpty())return;var full=new LinkedHashMap<String,Object>();
+        for(Object raw:Yaml.list(bindings.get("actorOrder"),"actor order")){String id=Yaml.text(raw,"actor ID");var row=new LinkedHashMap<>(Yaml.map(defaults.get(id),"actor default"));if(actors.containsKey(id))row.putAll(Yaml.map(actors.get(id),"actor override"));full.put(id,row);}
+        actors.clear();actors.putAll(full);
     }
     private static Properties properties(Path file)throws IOException {var values=new Properties();try(var in=Files.newInputStream(file)){values.load(in);}return values;}
     private static void save(Path file,Properties values)throws IOException {try(var out=Files.newOutputStream(file)){values.store(out,"Disposable health HUD fixture");}}

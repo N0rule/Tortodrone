@@ -9,7 +9,19 @@ import org.tortodrone.world.*;
 public final class ContentManager {
     private ContentManager() { }
     public static void main(String[] args)throws IOException {
-        if(args.length!=1)throw new IllegalArgumentException("Usage: ContentManager /deployment");
+        if(args.length==3&&args[0].equals("--actors")) {
+            if(!args[2].matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("Invalid map name");
+            Path folder=Path.of(args[1]).resolve("content/maps").resolve(args[2]);
+            MapYaml.prepare(folder,folder.getParent().getParent().resolve("shared"));
+            var bindings=Yaml.map(Json.parseCatalog(Files.readString(folder.resolve("native/bindings.json"))),"bindings");
+            var actors=Yaml.map(bindings.get("actors"),"actors");
+            for(var alias:new TreeMap<>(Yaml.map(bindings.getOrDefault("actorAliases",Map.of()),"aliases")).entrySet()) {
+                var fixed=Yaml.map(actors.get(alias.getValue()),"native actor");
+                System.out.println(alias.getKey()+"\t"+fixed.get("config")+"\t"+alias.getValue());
+            }
+            return;
+        }
+        if(args.length!=1)throw new IllegalArgumentException("Usage: ContentManager /deployment, or --actors /deployment map_name");
         var c=load(Path.of(args[0]));System.out.println("PASS: unified content; "+c.scenes().scenes().size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons");
     }
     public static ContentRegistry load(Path deployment)throws IOException {

@@ -36,8 +36,8 @@ public final class TownAdministrationTest {
                 refused(()->accounts.itemModifiers("Alice","Alice-Knight",id,modifiers,1,world,changed.revision()));check(accounts.worldProfile("Alice","Alice-Knight").equals(changed),"audit failure rolls back all modifier fields and revision");
                 db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_admin");}return null;});
                 accounts.setCurrency("Alice","Alice-Knight",Currency.CROWNS,500,1,world);var bob=accounts.worldProfile("Bob","Bob-Knight");accounts.setCurrency("Bob","Bob-Knight",Currency.ENERGY,100,2,bob.worldId());
-                var depot=accounts.depot();var defaults=depot.snapshot();check(defaults.revision()==0&&defaults.offers().size()==rules.depot().size(),"original depot remains the initial catalogue");
-                var offer=new DepotStore.Offer(-1,new TownCatalog.Good("Material/Gel Drop",3,70,0,1,"",0),true,true);var created=depot.save(0,offer);var saved=created.offers().getLast();var quote=new DepotStore.Quote(created.revision(),saved);
+                var depot=accounts.depot();var defaults=depot.snapshot();check(defaults.revision()==1&&defaults.offers().size()==DepotSeed.bundled().offers().size(),"original depot remains the initial catalogue");
+                var offer=new DepotStore.Offer(-1,new TownCatalog.Good("Material/Gel Drop",3,70,0,1,"",0),true,true);var created=depot.save(defaults.revision(),offer);var saved=created.offers().getLast();var quote=new DepotStore.Quote(created.revision(),saved);
                 refused(()->depot.save(0,offer));refused(()->depot.save(created.revision(),new DepotStore.Offer(-1,new TownCatalog.Good("Material/Gel Drop",1,10,10,0,"",0),false,true)));
                 var town=new TownStore(db,items,rules);var bought=town.depot(1,1,1,saved.id(),70,quote).profile();
                 check(bought.crowns()==430&&bought.items().stream().anyMatch(i->i.config().equals("Material/Gel Drop")&&i.count()==3),"configured depot charges the quoted currency and grants the exact quantity");
@@ -51,8 +51,8 @@ public final class TownAdministrationTest {
             }
             // A real schema-10 layout has no depot, Energy Exchange or gift tables; preserve character state.
             Path old=root.resolve("old");var db=new Database(old,false);int account=db.create("Old",new org.tortodrone.account.Passwords.Protection(new byte[16],new byte[32]),false);new CharacterStore(db,account,"Old",items).create(knight("Old-Knight"));var before=db.worldProfile(account,1,1);
-            db.write(c->{try(var s=c.createStatement()){s.execute("DROP TABLE town_gifts");s.execute("DROP TABLE town_depot_offers");s.execute("DROP TABLE town_energy_offers");s.execute("PRAGMA user_version=10");}return null;});
-            var migrated=new Database(old,false);check(migrated.worldProfile(account,1,1).equals(before)&&new DepotStore(migrated,items,rules).snapshot().revision()==0,"schema-10 migration preserves existing characters and imports no invented stock");
+            db.write(c->{org.tortodrone.support.SchemaFixture.depotBefore15(c);try(var s=c.createStatement()){s.execute("DELETE FROM metadata WHERE key LIKE 'supply-depot-%'");s.execute("DROP TABLE town_gifts");s.execute("DROP TABLE town_depot_offers");s.execute("DROP TABLE town_energy_offers");s.execute("PRAGMA user_version=10");}return null;});
+            var migrated=org.tortodrone.support.SchemaFixture.upgrade(old);check(migrated.worldProfile(account,1,1).equals(before)&&new DepotStore(migrated,items,rules).snapshot().revision()==1,"schema-10 migration preserves existing characters and imports no invented stock");
             System.out.println("PASS: admin gear grants/edits, UV validation, ownership/stale revision/audit rollback, depot prices/limits/quotes/persistence and schema-10 upgrade");
         }finally{try(var files=Files.walk(root)){for(var path:files.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }

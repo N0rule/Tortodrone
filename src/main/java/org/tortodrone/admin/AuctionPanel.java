@@ -17,7 +17,7 @@ final class AuctionPanel extends JPanel {
     private final JTable table=new JTable(model);
     private final List<JButton> actions=new ArrayList<>();
     private final JTextField search=new JTextField();
-    private final JComboBox<String> state=new JComboBox<>(new String[]{"All statuses","Active","Ended","Cancelled"});
+    private final JComboBox<String> state=new JComboBox<>(new String[]{"All statuses","Active","Scheduled","Ended","Cancelled"});
     private final JComboBox<String> ownership=new JComboBox<>(new String[]{"All sellers","Player-owned","Featured / system"});
     private boolean busy;
     AuctionPanel(AdminWindow window){
@@ -45,13 +45,14 @@ final class AuctionPanel extends JPanel {
         ItemPicker.choose(window,"Featured auction item",9999,(item,quantity)->{
             if(!item.stackable()&&quantity!=1){window.message("Equipment listings contain one item per offer.",true);return;}
             var type=new JComboBox<>(new String[]{"Bidding / optional buyout","Fixed price stock"});var bid=number(100,1,Integer.MAX_VALUE);var buy=number(0,0,Integer.MAX_VALUE);var stock=number(2,2,32767);stock.setEnabled(false);
+            var starts=new JSpinner(new SpinnerDateModel());starts.setEditor(new JSpinner.DateEditor(starts,"yyyy-MM-dd HH:mm:ss"));
             var duration=new JComboBox<>(new String[]{"4 hours","12 hours","24 hours","48 hours","72 hours","96 hours","120 hours","144 hours","168 hours"});
             type.addActionListener(e->{boolean fixed=type.getSelectedIndex()==1;stock.setEnabled(fixed);bid.setEnabled(!fixed);});
-            JPanel form=new JPanel(new GridLayout(0,2,8,8));for(Object v:new Object[]{"Item",new JLabel(item.displayName()+" × "+quantity),"Listing type",type,"Starting bid",bid,"Buyout / price per offer",buy,"Number of offers",stock,"Duration",duration})form.add(v instanceof String label?new JLabel(label):(Component)v);
+            JPanel form=new JPanel(new GridLayout(0,2,8,8));for(Object v:new Object[]{"Item",new JLabel(item.displayName()+" × "+quantity),"Listing type",type,"Starting bid",bid,"Buyout / price per offer",buy,"Number of offers",stock,"Starts ("+ZoneId.systemDefault()+")",starts,"Duration",duration})form.add(v instanceof String label?new JLabel(label):(Component)v);
             if(JOptionPane.showConfirmDialog(window,form,"Create system-owned featured auction",JOptionPane.OK_CANCEL_OPTION,JOptionPane.PLAIN_MESSAGE)!=JOptionPane.OK_OPTION)return;
-            try{bid.commitEdit();buy.commitEdit();stock.commitEdit();}catch(java.text.ParseException invalid){window.message("Enter valid whole-number prices and stock.",true);return;}
+            try{bid.commitEdit();buy.commitEdit();stock.commitEdit();starts.commitEdit();}catch(java.text.ParseException invalid){window.message("Enter valid whole-number prices and stock.",true);return;}
             boolean fixed=type.getSelectedIndex()==1;int price=(Integer)buy.getValue(),start=fixed?price:(Integer)bid.getValue(),offers=fixed?(Integer)stock.getValue():1,d=duration.getSelectedIndex();
-            window.execute(()->{window.accounts().auctions().createFeatured(item.config(),quantity,start,price,d,offers);return window.accounts().auctions().overview();},this::replace);
+            window.execute(()->{window.accounts().auctions().scheduleFeatured(item.config(),quantity,start,price,offers,((Date)starts.getValue()).getTime(),((Date)starts.getValue()).getTime()+new int[]{4,12,24,48,72,96,120,144,168}[d]*3600000L);return window.accounts().auctions().overview();},this::replace);
         });
     }
     private static JSpinner number(int initial,int min,int max){return new JSpinner(new SpinnerNumberModel(initial,min,max,1));}
@@ -61,13 +62,13 @@ final class AuctionPanel extends JPanel {
     }
     private void inspect(){var row=selected();if(row==null)return;var a=row.listing();
         window.execute(()->window.accounts().auctions().deliveries(a.id()),deliveries->{
-            StringBuilder text=new StringBuilder("Auction #"+a.id()+"\n"+a.item().config()+" × "+a.item().count()+"\nSeller: "+row.seller()+"; highest bidder: "+row.bidder()+"\nStatus: "+status(a)+"; bid: "+a.bid()+"; buyout: "+a.buy()+"\nCreated: "+date(a.created())+"; expires: "+date(a.expires())+"\nFeatured stock: "+a.featuredRemaining()+" / "+a.featuredTotal()+"\nEscrow item instance: "+a.item().id()+"\n\nDeliveries (older schema-9 mail has no auction association):\n");
+            StringBuilder text=new StringBuilder("Auction #"+a.id()+"\n"+a.item().config()+" × "+a.item().count()+"\nSeller: "+row.seller()+"; highest bidder: "+row.bidder()+"\nStatus: "+status(a)+"; bid: "+a.bid()+"; buyout: "+a.buy()+"\nAvailable: "+date(a.availableAt())+" (administrator schedule)\nCreated: "+date(a.created())+"; expires: "+date(a.expires())+"\nFeatured stock: "+a.featuredRemaining()+" / "+a.featuredTotal()+"\nEscrow item instance: "+a.item().id()+"\n\nDeliveries (older schema-9 mail has no auction association):\n");
             for(var d:deliveries)text.append("Mail #").append(d.id()).append(" → world #").append(d.recipient()).append(": ").append(d.crowns()).append(" crowns, item=").append(d.item()).append(", claimed=").append(d.claimed()).append('\n');
             var area=new JTextArea(text.toString(),18,75);area.setEditable(false);JOptionPane.showMessageDialog(window,new JScrollPane(area),"Auction details",JOptionPane.INFORMATION_MESSAGE);
         });
     }
     private static String date(long value){return value==0?"Unknown":Instant.ofEpochMilli(value).atZone(ZoneId.systemDefault()).toLocalDateTime().withNano(0).toString();}
-    private static String status(AuctionState.Listing a){return a.cancelled()?"Cancelled":a.ended()||a.expires()<=System.currentTimeMillis()?"Ended":"Active";}
+    private static String status(AuctionState.Listing a){return a.cancelled()?"Cancelled":a.ended()||a.expires()<=System.currentTimeMillis()?"Ended":a.availableAt()>System.currentTimeMillis()?"Scheduled":"Active";}
     private static final class Model extends AbstractTableModel {
         List<AuctionHouse.Overview> rows=List.of();
         final String[] columns={"ID","Item","Quantity","Seller","Current bid","Buyout","Highest bidder","Created","Expires","Status","Featured","Stock"};

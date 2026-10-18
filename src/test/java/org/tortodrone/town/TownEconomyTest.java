@@ -37,8 +37,8 @@ public final class TownEconomyTest {
             String custom=items.entries().stream().map(ItemCatalog.Entry::config).filter(v->rules.item(v).containsKey("variant")&&Arrays.asList(rules.item(v).getOrDefault("variantGroups","").split(",")).contains("ARMOR")&&varied.profile().items().stream().filter(i->i.id()==craftedGear).findFirst().orElseThrow().variants().stream().noneMatch(m->m.name().equals(rules.item(v).get("variant")))).findFirst().orElseThrow();grant(db,items,"Alice","Alice-Knight",custom,1);
             town.variant(a,1,1,1,craftedGear,id(db.worldProfile(a,1,1),custom),1,true);
             check(db.worldProfile(a,1,1).items().stream().filter(i->i.id()==craftedGear).findFirst().orElseThrow().variants().stream().anyMatch(v->v.name().equals(rules.item(custom).get("variant"))),"custom ticket preserves the locked variant and adds its verified group-specific variant");
-            int depot=-1;for(int i=0;i<rules.depot().size();i++){var good=rules.depot().get(i).good();var definition=items.find(good.item());if(definition!=null&&definition.grantable()&&good.energy()>0&&good.energy()<10000){depot=i;break;}}
-            check(depot>=0,"captured depot contains a supported offer");final int offered=depot;var good=rules.depot().get(offered).good();
+            var depotOffer=new DepotStore(db,items,rules).catalog().offers().stream().filter(o->o.enabled()&&o.good().energy()>0&&o.good().energy()<10000).findFirst().orElseThrow();
+            final int offered=depotOffer.id();var good=depotOffer.good();
             db.currency("Alice","Alice-Knight",a,-1,Currency.ENERGY,good.energy());var beforeDepot=db.worldProfile(a,1,1);
             refused(()->town.depot(a,1,1,offered,good.energy()-1));check(db.worldProfile(a,1,1).equals(beforeDepot),"depot refuses a stale or forged price without spending");
             var depotPurchase=town.depot(a,1,1,offered,good.energy());check(depotPurchase.profile().energy()==beforeDepot.energy()-good.energy()&&depotPurchase.profile().crowns()==beforeDepot.crowns(),"energy depot offer charges only its displayed currency");

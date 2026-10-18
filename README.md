@@ -51,9 +51,8 @@ Tortodrone/
 
 The build prepares `build/{config,content,plugins}/` beside both JARs. Deploy these
 complete directories. Release archives include defaults and omit private `data/`.
-Tortodrone has no public releases before 1.0.0, so there are no earlier published
-versions to upgrade from and no migration procedure is provided; deploy the current
-defaults directly.
+Existing schemas 9–14 require an explicit offline economy upgrade candidate; see
+[Upgrading](docs/content.md#upgrading). Keep the original Depot YAML until export.
 
 ## Client connection
 
@@ -89,7 +88,9 @@ terminal hosting. Logs are under `data/logs/`.
 Open `content/maps/advanced_training/npcs/konway.yml` to edit Konway's readable
 stock dialogue selections (literal text is restricted by the unchanged client),
 `content/items/weapons.yml` for weapon controls, or `content/town/shops.yml`
-for catalog goods. Save, validate and restart; no manifests or manual hashes.
+for ordinary merchant goods. Actor/item YAML inherits native defaults and contains
+overrides. Save, validate and restart for static content; use the account manager
+to edit SQLite Depot offers/promotions and auctions live. No manual hashes.
 See [Content](docs/content.md) for schemas, imports and native limits.
 Back up the whole stopped `data/`, `config/` and `content/` before changing the deployment.
 

@@ -177,9 +177,9 @@ public final class TownStore {
     }
     public Result depot(int account,int knight,long auth,int index,int quotedPrice,DepotStore.Quote quote)throws IOException{
         return change(account,knight,auth,(c,p)->{
-            var snapshot=DepotStore.load(c,rules);var offer=snapshot.offers().stream().filter(o->o.id()==index&&o.enabled()).findFirst().orElseThrow(()->new IOException("e.good_unavailable"));
+            var snapshot=DepotStore.effective(c,System.currentTimeMillis());var offer=snapshot.offers().stream().filter(o->o.id()==index&&o.enabled()).findFirst().orElseThrow(()->new IOException("e.good_unavailable"));
             if(quote!=null&&(quote.revision()!=snapshot.revision()||!offer.equals(quote.offer())))throw new IOException("e.good_unavailable");var good=offer.good();var def=items.require(good.item());
-            int price=good.price()>=0?good.price():rules.price(good.item(),def.rarity(),true),cost=good.energy()>0?good.energy():price;
+            int cost=good.energy()>0?good.energy():good.price();
             if(cost<0||quotedPrice!=cost||!def.grantable())throw new IOException("e.good_unavailable");
             if(good.limit()>0){try(var st=c.prepareStatement("SELECT purchased FROM town_purchases WHERE world_id=? AND catalog='Supply Depot' AND item=? AND cycle=0")){st.setInt(1,p.worldId());st.setString(2,good.item());try(var r=st.executeQuery()){if(r.next()&&r.getInt(1)>=good.limit())throw new IOException("e.good_unavailable");}}}
             pay(c,p,good.energy()>0?0:cost,good.energy()>0?cost:0);

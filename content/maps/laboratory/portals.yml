@@ -1,10 +1,10 @@
 entrances:
   level_start:
     id: 825
-    facing: -179.9999640278213
+    facing: -180
     x: -0.5
     y: -3.5
 portals:
-  '945':
+  to_garrison_1:
     destination: garrison
     entrance: from_lab

@@ -44,7 +44,10 @@ public final class ItemCatalog {
     private final List<Entry> sorted;
     private final Map<String,String> aliases;
     private final Map<Integer,List<Entry>> ids;
-    public ItemCatalog(Collection<Entry> entries) {
+    private final Map<String,String> displayNames;
+    public ItemCatalog(Collection<Entry> entries) {this(entries,Map.of());}
+    private ItemCatalog(Collection<Entry> entries,Map<String,String> displayNames) {
+        this.displayNames=Map.copyOf(displayNames);
         var map=new TreeMap<String,Entry>();
         for(var e:entries) if(e.config().isBlank() || map.put(e.config().toLowerCase(Locale.ROOT),e)!=null)
             throw new IllegalArgumentException("Duplicate or empty item reference");
@@ -59,6 +62,12 @@ public final class ItemCatalog {
         var byId=new HashMap<Integer,List<Entry>>();
         for(var e:entries)byId.computeIfAbsent(e.stockId(),ignored->new ArrayList<>()).add(e);
         byId.replaceAll((id,list)->List.copyOf(list));this.ids=Map.copyOf(byId);
+    }
+    /** Administrator discovery only; never serialized as a client display-name override. */
+    public String displayName(Entry entry){return displayNames.getOrDefault(entry.config(),entry.displayName());}
+    public ItemCatalog withDisplayNames(Map<String,String> names)throws IOException {
+        for(var e:names.entrySet())if(find(e.getKey())==null||e.getValue().isBlank()||e.getValue().length()>512)throw new IOException("Invalid native item discovery name: "+e.getKey());
+        return new ItemCatalog(entries(),names);
     }
     public static ItemCatalog starter() { return new ItemCatalog(StarterCatalog.catalogEntries()); }
     public String alias(Entry entry) { return aliases.get(entry.config()); }
@@ -85,7 +94,7 @@ public final class ItemCatalog {
     public List<Entry> search(String query) {
         String key=query.toLowerCase(Locale.ROOT);
         return entries().stream().filter(e->Integer.toString(e.stockId()).equals(key) || e.config().toLowerCase(Locale.ROOT).contains(key)
-            || e.nameKey().toLowerCase(Locale.ROOT).contains(key) || e.displayName().toLowerCase(Locale.ROOT).contains(key)
+            || displayName(e).toLowerCase(Locale.ROOT).contains(key) || e.nameKey().toLowerCase(Locale.ROOT).contains(key) || e.displayName().toLowerCase(Locale.ROOT).contains(key)
             || alias(e).contains(key) || e.category().toLowerCase(Locale.ROOT).contains(key)).toList();
     }
     public record Page(List<Entry> entries,int total,int number,int size) { public Page { entries=List.copyOf(entries); } }
@@ -103,7 +112,7 @@ public final class ItemCatalog {
         if(matches.isEmpty() && key.matches("[+-]?\\d+")) {
             int id;try{id=Integer.parseInt(key);}catch(NumberFormatException invalid){throw new IOException("Invalid catalogue ID");}
             matches=ids.getOrDefault(id,List.of());
-        } else if(matches.isEmpty()) matches=entries().stream().filter(e->e.displayName().equalsIgnoreCase(key)).toList();
+        } else if(matches.isEmpty()) matches=entries().stream().filter(e->e.displayName().equalsIgnoreCase(key)||displayName(e).equalsIgnoreCase(key)).toList();
         if(matches.isEmpty())throw new IOException("Unknown item; use !items or items to find a catalogue ID or exact config reference");
         if(matches.size()>1)throw new IOException("Ambiguous item reference; choose "+String.join("; ",matches.stream().sorted(Comparator.comparing(Entry::config)).limit(5).map(e->alias(e)+" ("+e.config()+")").toList())+(matches.size()>5?"; "+matches.size()+" choices; use items <search> --page N":""));
         return matches.get(0);

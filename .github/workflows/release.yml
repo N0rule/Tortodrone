@@ -80,6 +80,13 @@ jobs:
           cp -a docs "$root/docs"
           java -cp "$root/tortodrone.jar" org.tortodrone.resources.ContentManager "$root"
           cp VERSION README.md "$root/"
+          if find "$root" -type f \( -name '*.db' -o -name '*.db-wal' -o -name '*.db-shm' -o -name '*.db-journal' -o -name '*.sqlite*' -o -name '*.key' -o -name '*.pk8' -o -path '*/keys/*' -o -name '*.hprof' -o -name '*private*.pem' -o -name 'private.txt' -o -name '*.pcap*' -o -name 'tokens.json' \) -print -quit | grep -q .; then
+            echo "Refusing release containing runtime state, secrets or captures" >&2
+            exit 1
+          fi
+          test ! -d "$root/data"
+          test ! -d "$root/content-updates"
+
           cat > "$root/START-HERE.txt" <<'EOF'
           Tortodrone — portable Java 25 distribution
 

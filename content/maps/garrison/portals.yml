@@ -16,19 +16,19 @@ entrances:
     y: 9.634001
   from_town_square_east:
     id: 3574
-    facing: 90.00002299504568
+    facing: 90
     x: 1.5
     y: 2.499998
 portals:
-  '3313':
+  to_arcade_1:
     destination: arcade
     entrance: from_garrison_north
-  '3560':
+  to_haven_1:
     destination: haven
     entrance: from_garrison_west
-  '3770':
+  to_laboratory_1:
     destination: laboratory
     entrance: level_start
-  '3568':
+  to_hall_of_heroes_1:
     destination: hall_of_heroes
     entrance: level_start

@@ -1,34 +1,34 @@
 entrances:
   from_bazaar_northwest:
     id: 2967
-    facing: 90.00007763655904
+    facing: 90.0001
     x: -37
     y: -0.5
   from_bazaar_west:
     id: 760
-    facing: -179.99990938630796
+    facing: -179.9999
     x: -29
     y: -4
   from_garrison_north:
     id: 2190
-    facing: -179.9998957259296
+    facing: -179.9999
     x: 37
     y: -4
   from_town_square_north:
     id: 462
-    facing: -179.9999230466863
+    facing: -179.9999
     x: 3.5
     y: -4
 portals:
-  '2194':
+  to_garrison_1:
     destination: garrison
     entrance: from_arcade_east
-  '2980':
+  to_bazaar_1:
     destination: bazaar
     entrance: from_arcade_northwest
-  '933':
+  to_haven_1:
     destination: haven
     entrance: from_arcade_central
-  '934':
+  to_bazaar_2:
     destination: bazaar
     entrance: from_arcade_west

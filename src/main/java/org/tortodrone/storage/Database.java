@@ -12,7 +12,7 @@ import org.tortodrone.character.WorldProfile;
 
 /** Local SQLite database. Transactions are short; password derivation runs outside them. */
 public final class Database {
-    public static final int SCHEMA_VERSION = 14;
+    public static final int SCHEMA_VERSION = 15;
     public static final class KnightNameInUse extends IOException {
         private KnightNameInUse(SQLException cause) { super("That knight name is already in use",cause); }
     }
@@ -36,13 +36,17 @@ public final class Database {
     private final Path file;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
-    public Database(Path directory, boolean deploymentLocked) throws IOException {
+    private final boolean upgradeCandidate;
+    private final DepotSeed.Data legacyDepot;
+    public Database(Path directory, boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,false,null); }
+    Database(Path directory,boolean deploymentLocked,boolean upgradeCandidate,DepotSeed.Data legacyDepot)throws IOException {
+        this.upgradeCandidate=upgradeCandidate;this.legacyDepot=legacyDepot;
         file = directory.toAbsolutePath().normalize().resolve("tortodrone.db");
         try { Class.forName("org.sqlite.JDBC"); }
         catch (ClassNotFoundException e) { throw new IOException("Missing bundled SQLite driver", e); }
         Files.createDirectories(file.getParent());
         if (Files.exists(file)) {
-            if((version()==9||version()==10||version()==11||version()==12||version()==13)&&!deploymentLocked){
+            if((version()==9||version()==10||version()==11||version()==12||version()==13||version()==14)&&!deploymentLocked){
                 try(var channel=FileChannel.open(directory.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.tryLock()){
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
@@ -60,7 +64,8 @@ public final class Database {
     }
     private void requireCurrentVersion() throws IOException {
         int version = version();
-        if(version==9||version==10||version==11||version==12||version==13){
+        if(version==9||version==10||version==11||version==12||version==13||version==14){
+            if(!upgradeCandidate)throw new IOException("Database schema "+version+" requires offline EconomyUpgrade; export and review a fresh candidate. Saved data was not changed");
             // Only known predecessors are eligible; unknown versions remain untouched.
             try(var c=connect();var statement=c.createStatement()){
                 statement.execute("PRAGMA foreign_keys=OFF");statement.execute("BEGIN IMMEDIATE");
@@ -68,10 +73,11 @@ public final class Database {
                     int lockedVersion;try(var r=statement.executeQuery("PRAGMA user_version")){r.next();lockedVersion=r.getInt(1);}
                     if(lockedVersion==9){AuctionSchema.upgrade(c);DepotStore.initialize(c);}
                     else if(lockedVersion==10)DepotStore.initialize(c);
-                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=13&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
+                    else if(lockedVersion!=11&&lockedVersion!=12&&lockedVersion!=13&&lockedVersion!=14&&lockedVersion!=SCHEMA_VERSION)throw new IOException("Database schema changed during upgrade");
                     if(lockedVersion<12)EnergyExchange.initialize(c);
                     if(lockedVersion<13)GiftStore.initialize(c);
                     if(lockedVersion<14)TownStore.knightRenameClock(c);
+                    if(lockedVersion<15)DepotStore.upgrade(c,legacyDepot);
                     try(var r=statement.executeQuery("PRAGMA foreign_key_check")){if(r.next())throw new IOException("Database upgrade failed foreign key validation");}
                     statement.execute("PRAGMA user_version="+SCHEMA_VERSION);statement.execute("COMMIT");
                 }catch(SQLException|IOException|RuntimeException failure){statement.execute("ROLLBACK");throw failure;}
@@ -80,7 +86,7 @@ public final class Database {
             return;
         }
         if (version != SCHEMA_VERSION) throw new IOException("Unsupported database schema " + version
-            + "; expected " + SCHEMA_VERSION + ". Use a fresh data directory; saved data was not changed");
+            + "; expected " + SCHEMA_VERSION + ". Inspect a backup or use a supported explicit upgrade; saved data was not changed");
     }
     public Path file() { return file; }
     private Connection connect() throws SQLException {
@@ -128,6 +134,7 @@ public final class Database {
             }
             WorldProfiles.initialize(connection);
             TownStore.initialize(connection);
+            DepotStore.upgrade(connection,DepotSeed.bundled());
             try (Statement s = connection.createStatement()) {
                 s.execute("CREATE UNIQUE INDEX global_knight_names ON knights(name_key)");
                 s.execute("PRAGMA user_version="+SCHEMA_VERSION);

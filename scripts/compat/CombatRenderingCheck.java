@@ -102,6 +102,9 @@ public final class CombatRenderingCheck {
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
+                var depot=store.depot();var snapshot=depot.snapshot();
+                var key=snapshot.offers().stream().filter(o->o.good().item().equals("Ticket/Keys/Silver Key")).findFirst().orElseThrow();
+                depot.schedule(snapshot.revision(),new org.tortodrone.storage.DepotStore.Promotion(0,key.id(),0,Long.MAX_VALUE,0,500,750,true,false));
             }
             return;
         }
@@ -766,9 +769,10 @@ public final class CombatRenderingCheck {
             if(!(app.CT().sceneDialog instanceof com.threerings.projectx.exchange.data.DepotDialogInfo))throw new AssertionError("Missing native Depot dialog");
             @SuppressWarnings("unchecked") var offers=(Map<Integer,com.threerings.projectx.mission.data.RankGood>)field(depotWindow,"bmK").get(depotWindow);
             if(offers==null||offers.isEmpty())return;
-            var entry=offers.entrySet().stream().filter(e->e.getValue().special&&e.getValue().good instanceof com.threerings.projectx.shop.config.GoodConfig.Item).findFirst().orElseThrow(()->new AssertionError("Featured Depot offers lost the native special flag"));
+            var entry=offers.entrySet().stream().filter(e->e.getValue().special&&e.getValue().good instanceof com.threerings.projectx.shop.config.GoodConfig.Item&&((com.threerings.projectx.shop.config.GoodConfig.Item)e.getValue().good).item.getName().equals("Ticket/Keys/Silver Key")).findFirst().orElseThrow(()->new AssertionError("Featured Depot offers lost the native special flag"));
             var good=(com.threerings.projectx.shop.config.GoodConfig.Item)entry.getValue().good;
             int energy=(int)field(good,"_realEnergy").get(good),crowns=(int)field(good,"_realPrice").get(good);
+            if(!(boolean)field(good,"_sale").get(good)||(int)field(good,"_originalPrice").get(good)!=750||energy!=500)throw new AssertionError("Native discounted sale fields missing");
             depotUsesEnergy=energy>0;depotPrice=depotUsesEnergy?energy:crowns;depotItem=good.item.getName();depotQuantity=good.count;depotCount=itemCount(depotItem);
             depotCrowns=app.CT().crowns;depotEnergy=app.CT().energy;depotOfferId=entry.getKey();started=now;stage=64;return;
         }

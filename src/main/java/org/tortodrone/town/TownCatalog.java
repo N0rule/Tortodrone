@@ -22,10 +22,10 @@ public final class TownCatalog {
     public record Shop(String catalog,int level,String preparer,String cycle,boolean perKnight){public static final Shop EMPTY=new Shop("",10,"BASIC","CONSTANT",false);}
     public record Bonus(String weapon,int health,float charge,float speed,float attack) { }
     public record Good(String item,int count,int price,int energy,int limit,String token,int tokenCount) { }
-    public record DepotGood(Good good,boolean featured) { }
+    public record DepotGood(Good good,boolean featured,int originalPrice,boolean sale) {
+        public DepotGood(Good good,boolean featured){this(good,featured,0,false);}
+    }
     public record DepotOffers(Map<Integer,DepotGood> goods) { public DepotOffers{goods=Map.copyOf(goods);} }
-    private List<DepotGood> depot=List.of();
-    public List<DepotGood> depot(){return depot;}
     public record Catalog(String name,String kind,List<String> includes,List<Good> goods,int min,int max,float chance) { }
     public record Station(String actor,String kind,String type,String group,String name,String title,String model,String description,List<String> recipes,Shop shop) {
         public Station(String actor,String kind,String type,String group,String name,String title,String model,String description,List<String> recipes){this(actor,kind,type,group,name,title,model,description,recipes,Shop.EMPTY);}
@@ -171,7 +171,6 @@ public final class TownCatalog {
             var catalogs=new HashMap<String,Catalog>();for(var value:list(root,"catalogs")){var v=object(value);var goods=new ArrayList<Good>();for(var raw:list(v,"goods")){var g=object(raw);goods.add(new Good(string(g,"item"),integer(g,"count"),integer(g,"price"),integer(g,"energy"),integer(g,"limit"),string(g,"token"),integer(g,"tokenCount")));}catalogs.put(string(v,"config"),new Catalog(string(v,"config"),string(v,"kind"),strings(v,"includes"),List.copyOf(goods),integer(v,"min"),integer(v,"max"),((Number)v.get("chance")).floatValue()));}result.catalogs=Map.copyOf(catalogs);
             var bonuses=new HashMap<String,Bonus>();for(var value:list(root,"bonuses")){var v=object(value);bonuses.put(string(v,"config"),new Bonus(string(v,"weapon"),integer(v,"health"),((Number)v.get("charge")).floatValue(),((Number)v.get("speed")).floatValue(),((Number)v.get("attack")).floatValue()));}result.bonuses=Map.copyOf(bonuses);
             var models=new HashMap<String,org.tortodrone.character.StarterCatalog.Model>();var parameters=new HashMap<String,String>();for(var value:list(root,"accessories")){var v=object(value);if(v.containsKey("model")){models.put(string(v,"config"),org.tortodrone.world.FireCatalog.modelJson(string(v,"model")));parameters.put(string(v,"config"),string(v,"parameter"));}}result.accessoryModels=Map.copyOf(models);result.accessoryParameters=Map.copyOf(parameters);
-            var depot=new ArrayList<DepotGood>();for(var raw:(List<?>)root.getOrDefault("depot",List.of())){var v=object(raw);depot.add(new DepotGood(new Good(string(v,"item"),integer(v,"count"),integer(v,"price"),integer(v,"energy"),integer(v,"limit"),"",0),bool(v,"featured")));}result.depot=List.copyOf(depot);
             return result;
         }catch(IllegalArgumentException|ClassCastException|NullPointerException bad){throw new IOException("Invalid Town catalogue",bad);}
     }

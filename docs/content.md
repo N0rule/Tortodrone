@@ -24,20 +24,20 @@ content/
     accessories.yml
     materials.yml
     consumables.yml
-    misc.yml                 every remaining verified definition
+    misc.yml                 optional overrides for other indexed items
   town/
-    shops.yml                merchant catalogs and initial Depot stock
+    shops.yml                ordinary merchant catalogs only
     recipes.yml
     stations.yml
     sprites.yml
     variants.yml
     accessories.yml
-    progression.yml          item prices, forge tables and gear progression
+    progression.yml          forge tables and gear progression
   shared/
     trap-cycles.yml
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
-  _internal/                 fire graphs, native item arguments and provenance
+  _internal/                 native item/Town defaults, names, fire graphs and provenance
 plugins/README.md            reservation only; no plugin loader
 src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system
 data/                        private runtime state, keys and logs; never in Git
@@ -75,8 +75,8 @@ town; Ready Room/progression onboarding is not implemented. `--config path.yml`
 changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
 `config/combat.yml` holds the verified global dodge cooldown in milliseconds.
-Economy rules already have concrete owners in Town files; no empty economy file
-is shipped.
+Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
+belong exclusively to SQLite; no Depot YAML or empty economy file is shipped.
 
 Validate without starting a listener or opening SQLite/keys:
 
@@ -143,10 +143,17 @@ Shipped defaults contain resolved text and need no installed client. The
 ## Items and weapon controls
 
 Each category has an `items` mapping keyed by the exact stock configuration path.
-Search by the visible item's name. `stockId` is the retained catalog identifier;
-it is neither the persistent inventory-row ID nor an invitation to replace saved
-integer identities. Defaults omit irrelevant flags/zero modifiers. Required stock
-model arguments have one owner in `_internal/item-arguments.json`.
+It contains overrides and supported combat controls. The 9,348 stock definitions,
+IDs, localization keys, types and zero-valued equipment defaults are inherited from
+`_internal/item-definitions.json`; model arguments remain in
+`_internal/item-arguments.json`. An empty category means no overrides, not no items.
+Do not copy these native records into ordinary YAML. Omitted fields inherit their
+native value. Existing full definitions remain readable for upgrade review.
+
+Use the account manager's item picker or `items <search>` to search by name, stock
+ID, localization key or config path. `_internal/item-names.json` adds 1,885 verified
+plain English names from the native item bundle. Templated/unresolved names retain
+the config-path fallback. These are discovery labels, never client name overrides.
 
 A supported weapon's `combat` section exposes `chargeTimeMs`, `chainCooldownMs`,
 `maxChain`, `cycle`, `blended`, `attackMovementSpeed`, `chargeMovementSpeed`, and its
@@ -182,7 +189,10 @@ requires a verified reimport. `instances` remains bounded to 1–16 per template
 64 templates and 128 total configured instances.
 
 `portals.yml` distinguishes `entrances` (arrival ID, x, y, facing in degrees) from
-`portals` (native trigger ID, destination map folder, arrival entrance). Rectangular
+`portals` (readable trigger alias, destination map folder, arrival entrance).
+Aliases resolve to unchanged native trigger IDs. Displayed arrival headings use up
+to four decimal places; unchanged displayed values restore the exact inherited
+radians, so this cleanup changes no effective orientation. Rectangular
 and convex polygon geometry stays with verified native bindings. To redirect the
 Advanced Training exit, change its existing portal's `destination` and `entrance`;
 there is no need to copy vertices. Destination entrances must exist and be walkable;
@@ -193,40 +203,130 @@ marker identities. A default entrance is used
 only when no explicit arrival applies. Travel/subscription generations, parties
 and scene ownership still use the existing runtime implementation.
 
-`actors.yml` keys include readable config/source identifiers and the handler
-index. A config path alone never identifies a placed actor. Edit supported
-placement/gameplay fields, such as a training generator's `child.health`, its
-position or a trap's `cycle`. `facing` is degrees in [-180,180]. Numeric and boolean
-field types are checked; unknown native fields and actor additions/removals fail
-binding validation. Source keys, handler bindings, native class/model data and
-native-layout association remain pinned. A changed native scene requires a
-reimport, not a guessed binding.
+`actors.yml` contains **only overrides**; shipped files start with `actors: {}`.
+Every placed actor, its order, stable key, source/handler bindings, precise heading,
+shape and defaults remain in `native/bindings.json`. Omitting an actor keeps it.
+Actor creation/removal is not a supported YAML operation. Readable aliases identify
+individual placements, not just a shared config path. Discover them without a server:
 
-Optional `mechanics.yml` contains only each map's own rules; maps with no local rules omit it.
+```sh
+java -cp tortodrone.jar org.tortodrone.resources.ContentManager --actors /deployment advanced_training
+```
+
+For example, this intentional health edit targets an existing training generator:
+
+```yaml
+actors:
+  respawn_pad_1:
+    monster:
+      health: 31
+```
+
+Verified semantic controls are `position: {x, y}` in game units, `facing` in degrees
+[-180,180], and `monster.health` / `monster.attackIntervalMs` where that actor has
+the corresponding native health/attack-interval field. Millisecond intervals are
+not rounded. Advanced existing flat fields (for example `child.health` or `cycle`)
+remain supported; unknown fields, duplicate alias/native references and identity
+changes fail validation. Do not edit internal bindings to create new gameplay.
+
+Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
+markers moved to immutable bindings: travel uses the single editable arrival in
+`portals.yml`. The retained markers are scene metadata, not a second travel control.
 `shared/combat.yml` owns global player/scaling/status parameters and sparse gear
 defenses; omitted gear values default to zero. Shared `trap-cycles.yml` owns
 stock presets A/B/A2/B2, slow/cross variants and their inverse references.
 `up`, `down`, `warn` and `offset` are **seconds**. An actor references its preset
 by name. The engine's switch/signal transitions, offsets, collision and inverse
-cycle behavior are retained. Shared statuses and complex native status actions
-remain prepared data; their presence does not claim every original effect works.
+cycle behavior are retained. Serialized status objects/actions live in `_internal/statuses.json`.
+`shared/statuses.yml` starts empty and permits only advanced existing numeric
+fields; immutable config/class/action/data fields cannot be overridden there.
+This keeps the native behavior without presenting class graphs as ordinary
+configuration. Their presence does not claim every original effect works.
 
 ## Town editing
 
-`town/shops.yml` contains catalog goods and initial Depot offers; good entries
-retain exact item references, count, Crown/Energy prices and purchase limits.
-`recipes.yml` retains ingredients, counts, rarity-dependent costs, outputs and
-verified variant tables. `stations.yml` owns global service definitions; map-local
-NPC actions reference them. Sprite progression, accessories, variants and gear
-progression each have their own files. Unresolved/random original stock is not
-replaced with invented goods or probabilities.
+`town/shops.yml` contains ordinary merchant goods. Omitted good fields mean count
+1, native price lookup (`-1`), Energy 0, limit 0 and no token requirement. Catalogs
+omit irrelevant defaults. Recipes retain every output/ingredient relationship and
+rarity-dependent cost; stations retain verified NPC services. Opaque item-property
+and variant trees are in `_internal/town-definitions.json`; ordinary progression
+and variants YAML no longer duplicate them. Advanced overrides merge by exact
+`config`, with duplicate IDs rejected. No entries, rare goods or probabilities were
+invented or removed. NPC filenames use verified native names where available;
+`id` and native dialogue bindings remain authoritative even after a file rename.
 
-Storage still rechecks authentication, item ownership, balances, quantities,
-limits and stale quotes at the atomic transaction boundary. Player data does not
-move into YAML. After the first admin-managed Supply Depot edit, that deployment's
-managed offers live in SQLite; the YAML Depot entries remain the initial defaults.
-Editing YAML does not overwrite a managed catalog. The account manager retains
-its existing live Depot/auction controls.
+## Live economy administration
+
+The Supply Depot and Auction House are **SQLite-only**. Use the existing account
+manager's Supply Depot and Auctions panels while the server is running. Static
+merchant YAML still requires validation and restart. Game-client GM status does not
+expose the local economy-administration API.
+
+A new database transactionally installs all **328** captured Depot offers from the
+read-only JAR resource `seeds/supply-depot.json` (seed version 1, pinned SHA-256).
+The exact ordered section from `0078b50` is retained, with its existing zero-based
+Tortodrone offer IDs, quantities, Energy prices, limits and featured flags.
+`sourcePrice=-1` records native item-property lookup; the stored Crown value is its
+resolved value, even when positive Energy is the currency selected by the client.
+The seed records provenance and derived support status. Nine indexed records have
+unsupported grant representations; they remain visible to administrators, disabled
+with exact support reasons. Catalog fidelity does not imply upgrade-item gameplay.
+No game installation, capture or network access is needed to create a database.
+
+Explicit initialization/seed-version metadata makes seeding one-time. Restart,
+disabling all offers or intentionally clearing a managed catalog never reseeds it.
+Existing purchases remain in the original `town_purchases` ledger: lifetime purchase
+counts per knight and item config, shared by separate offers for that same item.
+This is retained compatibility, **not proof of official per-account or per-offer
+purchase-limit semantics**. `goodLimit` also has native client-owned-count UI
+behavior; backend scope is not established. Quantity is items per purchase, not
+finite global stock. Depot global stock and account/window limits are not supplied.
+
+Offer edits use an expected catalog revision. Item, quantity, enabled state,
+current price/currency, authentication, balance, grantability and shared lifetime
+limits are checked in the same `BEGIN IMMEDIATE` transaction as debit, grant and
+ledger update. The network path always supplies its server-issued quote. Failed
+or stale purchases return the existing native failure callback and roll back.
+
+**Promotions:** select an offer and Schedule special; browse Active, Scheduled,
+Expired or Cancelled in Promotions, and use Player preview for the effective
+catalog. `promotionOnly` makes an enabled offer available only during a promotion.
+An ordinary offer retains its permanent price. Promotion rows store a direct price,
+optional genuine regular-price comparison and temporary featured status. A supplied
+comparison must match the offer's regular price and currency at scheduling time
+and exceed the sale price. Without a comparison, the offer is a temporary price,
+not advertised as a discount. A discount uses native `_originalPrice` / `_sale`;
+featured goods use `RankGood.special`. No new packet or countdown was introduced.
+
+Times persist as Unix milliseconds UTC, **start inclusive, end exclusive**; the
+admin forms show the local timezone. Overlapping uncancelled windows for the same
+offer are rejected, adjacent flash-sale windows are allowed, and different offers
+may run simultaneously. Cancelling restores the ordinary offer immediately (or
+hides a promotion-only offer). Effective offers are resolved on each catalog
+request and again inside purchase transactions, including after downtime/restart.
+Expired/changed displayed quotes cannot spend. The stock window can retain an old
+visual until its next supported catalog request/reopen; there is no invented push
+refresh. Promotion-specific binding and complete mission-rank gates remain
+unverified/unimplemented; ordinary non-costume level-equipment binding is retained.
+
+**Auctions:** player escrow, bids, fees, cancellation, watches, expiry and mail
+settlement stay durable and atomic. Existing native rounded 5% bid increments,
+4/12/24/48-hour player durations, fee calculation and sale fee/refund behavior are
+preserved. Bid/buy ordering now compares price per item, and old active listings
+cannot disappear behind a 5,000-row history cap before filtering/pagination.
+Featured bid auctions and finite fixed-price stock retain native total/remaining
+fields. Scheduled publication is a **Tortodrone administration extension**: it
+uses the existing listing format, hides future listings and rejects early bids.
+There is no randomized official rotation. The panel retains delivery inspection,
+stock/status/time display and confirmed cancellation. New escrow records retain
+source item-instance IDs for inspection; older records without that field show 0.
+Attachment grants retain the existing safe inventory-ID allocation behavior.
+
+Outbid refunds remain durable mail for both online/offline players. Historical
+online direct refunds/chat are a known parity gap; presence/notification handoff
+has not been verified sufficiently to replace the safe path. Exact current
+last-minute extension timing and destructive 30-day mail purging are deferred.
+See the [evidence matrix](research.md#economy-parity-baseline-2026-10-18).
 
 ## Native map import
 
@@ -264,10 +364,39 @@ stock client. No proprietary assets/captures belong in Git.
 
 ## Upgrading
 
-Tortodrone has no public releases before 1.0.0: there are no earlier published
-deployments, so no migration procedure exists or is needed. Keep the existing
-`data/` directory with its SQLite state and keys. Back up the stopped `data/`,
-configuration and content, then place the current JARs beside the prepared
-`config/` and `content/` directories. Preparation fills missing files and
-preserves edited/unknown files; it never overwrites administrator edits. Unknown
-SQLite schemas are refused rather than modified.
+SQLite schema 15 requires an **explicit offline candidate** for known schemas
+9–14. Normal startup refuses those predecessors and all unknown versions, leaving
+saved state unchanged. Never reset the database or regenerate keys.
+
+1. Stop the server and account manager; back up the complete `data/`, `content/`
+   and `config/`, including WAL/SHM and keys. Keep the original Depot YAML until
+   export: preparation refuses to replace it beside an existing database.
+2. With the new JAR, export to a fresh directory outside the source deployment:
+
+   ```sh
+   java -cp /new/tortodrone.jar org.tortodrone.storage.EconomyUpgrade /old/deployment /backup/economy-candidate
+   ```
+
+3. Review the candidate DB and `economy-upgrade.txt`. The tool holds the deployment
+   lock, uses SQLite `VACUUM INTO` for a consistent source copy, upgrades only that
+   copy in one transaction and runs foreign-key/integrity checks before publication.
+   Existing managed offers, IDs, enabled state and revision are retained, including
+   an empty catalog; managed upgrades do not read obsolete Depot YAML. Revision-zero installs import their exact effective old YAML
+   once, including local edits; missing legacy input is refused instead of replaced
+   with stock defaults. ContentMigration's `legacy-depot-import.json` is also a
+   migration-only input. Purchase history and unrelated player/auction state stay
+   unchanged. Unknown schemas and failed imports publish no candidate.
+4. Prepare new content in a separate directory, apply/review your overrides and
+   remove the legacy Depot section from the new `shops.yml`. Validate with
+   ContentManager. Install the reviewed candidate `tortodrone.db` while stopped,
+   retaining the original keys and other runtime files. Do not mix an old DB's
+   WAL/SHM with the candidate; retain those old files together in the stopped backup.
+
+Build preparation replaces only recognized unmodified defaults and fills missing
+files. Customized files receive upstream `.proposed` files plus `review.txt` under
+**`content-updates/` beside content**, outside runtime inputs. These are review
+candidates, not a semantic merge. Known unchanged renamed defaults may retire;
+customized removed/renamed paths produce `conflicts.txt` and stop preparation
+before runtime content changes. Prepare a fresh candidate and transfer the edits
+manually. Validate the whole candidate, including native resources/descriptors,
+before installation. Runtime `data/` is never copied as default content or packaged.

@@ -25,12 +25,12 @@ public final class RenameMigrationTest {
             new CharacterStore(db,b,"Bob",items).create(knight("Bob-Knight"));
             db.grantItems("Alice","Alice-Knight",a,-1,items.require("Upgrade/Rename Knight"),2,-1,-1);
             var before=db.worldProfile(a,1,1);
-            db.write(c->{try(var s=c.createStatement()){s.execute("ALTER TABLE knights DROP COLUMN last_renamed");s.execute("PRAGMA user_version=13");}return null;});
+            db.write(c->{try(var s=c.createStatement()){org.tortodrone.support.SchemaFixture.depotBefore15(c);s.execute("ALTER TABLE knights DROP COLUMN last_renamed");s.execute("PRAGMA user_version=13");}return null;});
             try(var channel=FileChannel.open(home.resolve("server.lock"),StandardOpenOption.CREATE,StandardOpenOption.WRITE);var lock=channel.lock()){
                 refused(()->new Database(home,false));
                 check(version(db)==13,"locked predecessor is untouched");
             }
-            db=new Database(home,false);check(version(db)==14&&db.worldProfile(a,1,1).equals(before),"schema 13 upgrades without losing items or identity");
+            db=org.tortodrone.support.SchemaFixture.upgrade(home);check(version(db)==15&&db.worldProfile(a,1,1).equals(before),"schema 13 upgrades without losing items or identity");
             var store=new TownStore(db,items,rules);store.canRename(a,1,1);
             refused(()->store.rename(a,1,1,"Bob-Knight"));
             refused(()->store.rename(a,1,1,"Alice-Knight"));

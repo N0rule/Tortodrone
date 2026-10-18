@@ -1,11 +1,5 @@
 items:
   Weapon/Bomb/Ash of Agni:
-    bindOnEquip: true
-    nameKey: m.ash_agni
-    rarity: 5
-    slot: BOMB
-    stockId: 1020838150
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -26,14 +20,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Big Angry Bomb:
-    bindOnEquip: true
-    nameKey: m.big_angry_bomb
-    rarity: 5
-    stockId: 465973211
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -55,12 +42,6 @@ items:
         clearMs: 400
         blended: true
   Weapon/Bomb/Blast Bomb:
-    bindOnEquip: true
-    nameKey: m.blast_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: 462654372
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -81,15 +62,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Celestial Vortex:
-    bindOnEquip: true
-    nameKey: m.celestial_vortex
-    rarity: 5
-    slot: BOMB
-    stockId: 1502463568
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -110,15 +83,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Cold Snap:
-    bindOnEquip: true
-    nameKey: m.cold_snap
-    rarity: 1
-    slot: BOMB
-    stockId: -1715933012
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -139,15 +104,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Crystal Bomb:
-    bindOnEquip: true
-    nameKey: m.crystal_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: -1568429402
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -168,15 +125,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Dark Briar Barrage:
-    bindOnEquip: true
-    nameKey: m.dark_briar_barrage
-    rarity: 5
-    slot: BOMB
-    stockId: -616092134
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -197,15 +146,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Dark Matter Bomb:
-    bindOnEquip: true
-    nameKey: m.dark_matter_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: -1816157391
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -226,15 +167,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Charcoaler:
-    bindOnEquip: true
-    nameKey: m.deadly_charcoaler
-    rarity: 5
-    slot: BOMB
-    stockId: -1187609329
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -255,15 +188,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Charcoaler, Tech Pink:
-    bindOnEquip: true
-    nameKey: a.wtp|m.deadly_charcoaler
-    rarity: 5
-    slot: BOMB
-    stockId: 848222557
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -284,15 +209,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Charcoaler, Tech Yellow:
-    bindOnEquip: true
-    nameKey: a.wty|m.deadly_charcoaler
-    rarity: 5
-    slot: BOMB
-    stockId: -647995749
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -313,15 +230,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Crystal Bomb:
-    bindOnEquip: true
-    nameKey: m.deadly_crystal_bomb
-    rarity: 5
-    slot: BOMB
-    stockId: -1583174175
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -342,15 +251,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Dark Matter Bomb:
-    bindOnEquip: true
-    nameKey: m.deadly_dark_matter_bomb
-    rarity: 5
-    slot: BOMB
-    stockId: 417632492
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -371,15 +272,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Shard Bomb:
-    bindOnEquip: true
-    nameKey: m.deadly_shard_bomb
-    rarity: 5
-    slot: BOMB
-    stockId: -82107527
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -400,15 +293,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deadly Splinter Bomb:
-    bindOnEquip: true
-    nameKey: m.deadly_splinter_bomb
-    rarity: 5
-    slot: BOMB
-    stockId: -1529962336
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -429,15 +314,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Deconstructor:
-    bindOnEquip: true
-    nameKey: m.deconstructor
-    rarity: 3
-    slot: BOMB
-    stockId: -1513796897
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -458,15 +335,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Electron Bomb:
-    bindOnEquip: true
-    nameKey: m.electron_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: 2116415558
-    type: Bomb
     combat:
       chargeTimeMs: 2500
       maxChain: 0
@@ -487,15 +356,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Electron Charge:
-    bindOnEquip: true
-    nameKey: m.electron_charge
-    rarity: 3
-    slot: BOMB
-    stockId: -1917321384
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -516,15 +377,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Electron Vortex:
-    bindOnEquip: true
-    nameKey: m.electron_vortex
-    rarity: 5
-    slot: BOMB
-    stockId: -1366394542
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -545,15 +398,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Fiery Atomizer:
-    bindOnEquip: true
-    nameKey: m.fiery_atomizer
-    rarity: 4
-    slot: BOMB
-    stockId: 2045806016
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -574,15 +419,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Fiery Vaporizer:
-    bindOnEquip: true
-    nameKey: m.fiery_vaporizer
-    rarity: 2
-    slot: BOMB
-    stockId: 1892568117
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -603,15 +440,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Fiery Vaporizer Mk II:
-    bindOnEquip: true
-    nameKey: m.fiery_vaporizer_mkii
-    rarity: 3
-    slot: BOMB
-    stockId: -1499931881
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -632,15 +461,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Firecracker:
-    bindOnEquip: true
-    nameKey: m.firecracker
-    rarity: 1
-    slot: BOMB
-    stockId: 35789943
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -661,15 +482,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Freezing Atomizer:
-    bindOnEquip: true
-    nameKey: m.freezing_atomizer
-    rarity: 4
-    slot: BOMB
-    stockId: 790220449
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -690,15 +503,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Freezing Vaporizer:
-    bindOnEquip: true
-    nameKey: m.freezing_vaporizer
-    rarity: 2
-    slot: BOMB
-    stockId: 1624121204
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -719,15 +524,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Freezing Vaporizer Mk II:
-    bindOnEquip: true
-    nameKey: m.freezing_vaporizer_mkii
-    rarity: 3
-    slot: BOMB
-    stockId: 584516374
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -748,15 +545,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Graviton Bomb:
-    bindOnEquip: true
-    nameKey: m.graviton_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: -938996610
-    type: Bomb
     combat:
       chargeTimeMs: 2500
       maxChain: 0
@@ -777,15 +566,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Graviton Charge:
-    bindOnEquip: true
-    nameKey: m.graviton_charge
-    rarity: 3
-    slot: BOMB
-    stockId: -410784368
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -806,15 +587,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Graviton Vortex:
-    bindOnEquip: true
-    nameKey: m.graviton_vortex
-    rarity: 5
-    slot: BOMB
-    stockId: 140142474
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -835,15 +608,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Haze Bomb:
-    bindOnEquip: true
-    nameKey: m.haze_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: -1224537980
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -864,15 +629,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Haze Bomb Mk II:
-    bindOnEquip: true
-    nameKey: m.haze_bomb_mkii
-    rarity: 3
-    slot: BOMB
-    stockId: -597893082
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -893,15 +650,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Haze Burst:
-    bindOnEquip: true
-    nameKey: m.haze_burst
-    rarity: 4
-    slot: BOMB
-    stockId: 694212478
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -922,15 +671,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Heavy Crystal Bomb:
-    bindOnEquip: true
-    nameKey: m.heavy_crystal_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: -1003731457
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -951,15 +692,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Heavy Dark Matter Bomb:
-    bindOnEquip: true
-    nameKey: m.heavy_dark_matter_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: 780724746
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -980,15 +713,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Heavy Deconstructor:
-    bindOnEquip: true
-    nameKey: m.heavy_deconstructor
-    rarity: 4
-    slot: BOMB
-    stockId: -1188029786
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1009,15 +734,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Heavy Shard Bomb:
-    bindOnEquip: true
-    nameKey: m.heavy_shard_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: -725079273
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1038,15 +755,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Heavy Splinter Bomb:
-    bindOnEquip: true
-    nameKey: m.heavy_splinter_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: -747107262
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1067,15 +776,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Humbug Hazer:
-    bindOnEquip: true
-    nameKey: m.humbug_hazer
-    rarity: 5
-    slot: BOMB
-    stockId: 1636138620
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1096,15 +797,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Ionized Salt Bomb:
-    bindOnEquip: true
-    nameKey: m.ionized_salt_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: 1598744234
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1125,15 +818,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Irontech Bomb:
-    bindOnEquip: true
-    nameKey: m.irontech_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: -352608182
-    type: Bomb
     combat:
       chargeTimeMs: 2500
       maxChain: 0
@@ -1154,15 +839,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Irontech Destroyer:
-    bindOnEquip: true
-    nameKey: m.irontech_destroyer
-    rarity: 5
-    slot: BOMB
-    stockId: -1142720129
-    type: Bomb
     combat:
       chargeTimeMs: 2500
       maxChain: 0
@@ -1183,15 +860,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Jack Froster:
-    bindOnEquip: true
-    nameKey: m.jack_froster
-    rarity: 5
-    slot: BOMB
-    stockId: -1187130294
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1212,15 +881,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Lightning Capacitor:
-    bindOnEquip: true
-    nameKey: m.lightning_capacitor
-    rarity: 3
-    slot: BOMB
-    stockId: 681193810
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1241,15 +902,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Master Blast Bomb:
-    bindOnEquip: true
-    nameKey: m.master_blast_bomb
-    rarity: 4
-    slot: BOMB
-    stockId: 1728763790
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1270,15 +923,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Nitronome:
-    bindOnEquip: true
-    nameKey: m.nitronome
-    rarity: 5
-    slot: BOMB
-    stockId: 1289611061
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1299,15 +944,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Obsidian Crusher:
-    bindOnEquip: true
-    nameKey: m.obsidian_crusher
-    rarity: 5
-    slot: BOMB
-    stockId: 1721603069
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1328,68 +965,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
-  Weapon/Bomb/Parts/Base:
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (ChargeOnly):
-    bindOnEquip: true
-    nameKey: Base Bomb
-    rarity: 3
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (Chemical):
-    bindOnEquip: true
-    nameKey: Base Bomb
-    rarity: 3
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (Deadly Charcoaler):
-    bindOnEquip: true
-    nameKey: m.deadly_charcoaler
-    rarity: 5
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (Relic):
-    bindOnEquip: true
-    nameKey: Base Bomb
-    rarity: 3
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (Shard):
-    bindOnEquip: true
-    nameKey: Base Bomb
-    rarity: 3
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Base (Shard) (Promo):
-    bindOnEquip: true
-    nameKey: Base Bomb
-    rarity: 3
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Parts/Virulent Seedling, Base:
-    bindOnEquip: true
-    nameKey: m.virulent_seedling
-    rarity: 5
-    stockId: 0
-    type: Bomb
-  Weapon/Bomb/Piggy Banker/Parts/Piggy Banker, Base:
-    bindOnEquip: true
-    nameKey: m.piggy_banker
-    rarity: 5
-    stockId: 0
-    type: Bomb
   Weapon/Bomb/Piggy Banker/Piggy Banker:
-    bindOnEquip: true
-    nameKey: m.piggy_banker
-    rarity: 5
-    slot: BOMB
-    stockId: 2104607093
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1410,15 +986,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Piggy Banker/Piggy Banker, Grey:
-    bindOnEquip: true
-    nameKey: a.gry|m.piggy_banker
-    rarity: 5
-    slot: BOMB
-    stockId: -242204632
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1439,15 +1007,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Plasma Capacitor:
-    bindOnEquip: true
-    nameKey: m.plasma_capacitor
-    rarity: 4
-    slot: BOMB
-    stockId: 2027745406
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1468,15 +1028,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Pot O' Crowns:
-    bindOnEquip: true
-    nameKey: m.potocrowns
-    rarity: 5
-    slot: BOMB
-    stockId: 710493215
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1497,15 +1049,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Powder Keg:
-    bindOnEquip: true
-    nameKey: m.powderkeg
-    rarity: 5
-    slot: BOMB
-    stockId: -216251392
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1526,15 +1070,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Proto Bomb:
-    bindOnEquip: true
-    nameKey: m.proto_bomb
-    rarity: 0
-    slot: BOMB
-    stockId: -874460748
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1555,15 +1091,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Punkin Cinnamug:
-    bindOnEquip: true
-    nameKey: m.punkin_cinnamug
-    rarity: 5
-    slot: BOMB
-    stockId: -276065565
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1584,15 +1112,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Radiant Sun Shards:
-    bindOnEquip: true
-    nameKey: m.radiant_sun_shards
-    rarity: 4
-    slot: BOMB
-    stockId: 1810555504
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1613,15 +1133,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Rock Salt Bomb:
-    bindOnEquip: true
-    nameKey: m.rock_salt_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: 2064303083
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1642,15 +1154,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Scalding Hot Cocoa:
-    bindOnEquip: true
-    nameKey: m.scalding_hot_cocoa
-    rarity: 5
-    slot: BOMB
-    stockId: 78921737
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1671,15 +1175,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Scintillating Sun Shards:
-    bindOnEquip: true
-    nameKey: m.scintillating_sun_shards
-    rarity: 5
-    slot: BOMB
-    stockId: -121831234
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1700,15 +1196,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Shard Bomb:
-    bindOnEquip: true
-    nameKey: m.shard_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: -1288794754
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1729,15 +1217,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Shivermist Buster:
-    bindOnEquip: true
-    nameKey: m.shivermist_buster
-    rarity: 5
-    slot: BOMB
-    stockId: 59279227
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1758,15 +1238,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Shocking Salt Bomb:
-    bindOnEquip: true
-    nameKey: m.shocking_salt_bomb
-    rarity: 5
-    slot: BOMB
-    stockId: -1994552378
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1787,15 +1259,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Sloppy Shard Bomb:
-    bindOnEquip: true
-    nameKey: ~Sloppy Shard Bomb
-    rarity: 5
-    slot: BOMB
-    stockId: 444437415
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1816,15 +1280,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Slumber Smogger:
-    bindOnEquip: true
-    nameKey: m.slumber_smogger
-    rarity: 2
-    slot: BOMB
-    stockId: -1255568666
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1845,15 +1301,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Slumber Smogger Mk II:
-    bindOnEquip: true
-    nameKey: m.slumber_smogger_mkii
-    rarity: 3
-    slot: BOMB
-    stockId: 1346146568
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1874,15 +1322,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Slumber Squall:
-    bindOnEquip: true
-    nameKey: m.slumber_squall
-    rarity: 4
-    slot: BOMB
-    stockId: -1422108314
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -1903,15 +1343,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Spike Shower:
-    bindOnEquip: true
-    nameKey: m.spike_shower
-    rarity: 4
-    slot: BOMB
-    stockId: 1641376542
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1932,15 +1364,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Spine Cone:
-    bindOnEquip: true
-    nameKey: m.spine_cone
-    rarity: 2
-    slot: BOMB
-    stockId: -1032336230
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1961,15 +1385,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Splinter Bomb:
-    bindOnEquip: true
-    nameKey: m.splinter_bomb
-    rarity: 2
-    slot: BOMB
-    stockId: -1072874373
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -1990,15 +1406,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Stagger Storm:
-    bindOnEquip: true
-    nameKey: m.stagger_storm
-    rarity: 5
-    slot: BOMB
-    stockId: -1828347748
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2019,15 +1427,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Static Capacitor:
-    bindOnEquip: true
-    nameKey: m.static_capacitor
-    rarity: 2
-    slot: BOMB
-    stockId: -437013846
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2048,15 +1448,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Static Flash:
-    bindOnEquip: true
-    nameKey: m.static_flash
-    rarity: 1
-    slot: BOMB
-    stockId: 1751307480
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2077,15 +1469,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Sun Shards:
-    bindOnEquip: true
-    nameKey: m.sun_shards
-    rarity: 3
-    slot: BOMB
-    stockId: 1985665155
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2106,15 +1490,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Super Blast Bomb:
-    bindOnEquip: true
-    nameKey: m.super_blast_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: -1147653623
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2135,15 +1511,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Super Crystal Bomb:
-    bindOnEquip: true
-    nameKey: m.super_crystal_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: 1408781259
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2164,15 +1532,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Super Dark Matter Bomb:
-    bindOnEquip: true
-    nameKey: m.super_dark_matter_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: 1241852374
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2193,15 +1553,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Super Shard Bomb:
-    bindOnEquip: true
-    nameKey: m.super_shard_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: 1395864547
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2222,15 +1574,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Super Splinter Bomb:
-    bindOnEquip: true
-    nameKey: m.super_splinter_bomb
-    rarity: 3
-    slot: BOMB
-    stockId: 1026342902
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2251,15 +1595,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Torpor Tantrum:
-    bindOnEquip: true
-    nameKey: m.torpor_tantrum
-    rarity: 5
-    slot: BOMB
-    stockId: 2144192717
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2280,15 +1616,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Toxic Atomizer:
-    bindOnEquip: true
-    nameKey: m.toxic_atomizer
-    rarity: 4
-    slot: BOMB
-    stockId: -1023870958
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2309,15 +1637,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Toxic Vaporizer:
-    bindOnEquip: true
-    nameKey: m.toxic_vaporizer
-    rarity: 2
-    slot: BOMB
-    stockId: 1221862435
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2338,15 +1658,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Toxic Vaporizer Mk II:
-    bindOnEquip: true
-    nameKey: m.toxic_vaporizer_mkii
-    rarity: 3
-    slot: BOMB
-    stockId: 816613509
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2367,15 +1679,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Twisted Spine Cone:
-    bindOnEquip: true
-    nameKey: m.twisted_spine_cone
-    rarity: 3
-    slot: BOMB
-    stockId: -1011436
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2396,15 +1700,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Venom Veiler:
-    bindOnEquip: true
-    nameKey: m.venom_veiler
-    rarity: 5
-    slot: BOMB
-    stockId: 1838310748
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2425,15 +1721,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Virulent Seedling:
-    bindOnEquip: true
-    nameKey: m.virulent_seedling
-    rarity: 5
-    slot: BOMB
-    stockId: 1512780440
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2454,15 +1742,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Virulent Seedling, Tech Azure:
-    bindOnEquip: true
-    nameKey: a.wtz|m.virulent_seedling
-    rarity: 5
-    slot: BOMB
-    stockId: 553152401
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2483,15 +1763,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Voltaic Tempest:
-    bindOnEquip: true
-    nameKey: m.voltaic_tempest
-    rarity: 5
-    slot: BOMB
-    stockId: -285517038
-    type: Bomb
     combat:
       chargeTimeMs: 3000
       maxChain: 0
@@ -2512,17 +1784,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Warmaster Bomb 1:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.warmaster_bomb_1
-    permanent: true
-    rarity: 2
-    slot: BOMB
-    stockId: 1321940003
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2543,17 +1805,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Warmaster Bomb 2:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.warmaster_bomb_2
-    permanent: true
-    rarity: 3
-    slot: BOMB
-    stockId: 1321940004
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2574,17 +1826,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Bomb/Warmaster Bomb 3:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.warmaster_bomb_3
-    permanent: true
-    rarity: 5
-    slot: BOMB
-    stockId: 1321940005
-    type: Bomb
     combat:
       chargeTimeMs: 2000
       maxChain: 0
@@ -2605,15 +1847,7 @@ items:
         rearmMs: 200
         clearMs: 400
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Antigua:
-    bindOnEquip: true
-    nameKey: m.antigua
-    rarity: 3
-    slot: GUN
-    stockId: -1691304224
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -2660,15 +1894,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Arcana:
-    bindOnEquip: true
-    nameKey: m.arcana
-    rarity: 5
-    slot: GUN
-    stockId: 918453267
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -2707,15 +1933,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Argent Peacemaker:
-    bindOnEquip: true
-    nameKey: m.argent_peacemaker
-    rarity: 5
-    slot: GUN
-    stockId: -599067024
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -2762,15 +1980,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Autogun:
-    bindOnEquip: true
-    nameKey: m.autogun
-    rarity: 2
-    slot: GUN
-    stockId: -1490721408
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -2802,15 +2012,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Biohazard:
-    bindOnEquip: true
-    nameKey: m.biohazard
-    rarity: 5
-    slot: GUN
-    stockId: 341105577
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -2849,15 +2051,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Black Chaingun:
-    bindOnEquip: true
-    nameKey: m.black_chaingun
-    rarity: 4
-    slot: GUN
-    stockId: -75231535
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -2889,15 +2083,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Blackhawk:
-    bindOnEquip: true
-    nameKey: m.blackhawk
-    rarity: 4
-    slot: GUN
-    stockId: 1599973019
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -2944,15 +2130,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Blaster:
-    bindOnEquip: true
-    nameKey: m.blaster
-    rarity: 2
-    slot: GUN
-    stockId: -878295820
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -2991,15 +2169,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Blazing Pulsar:
-    bindOnEquip: true
-    nameKey: m.blazing_pulsar
-    rarity: 4
-    slot: GUN
-    stockId: 1055304879
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3038,15 +2208,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Blight Needle:
-    bindOnEquip: true
-    nameKey: m.blight_needle
-    rarity: 4
-    slot: GUN
-    stockId: 2048798058
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3078,15 +2240,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Blitz Needle:
-    bindOnEquip: true
-    nameKey: m.blitz_needle
-    rarity: 5
-    slot: GUN
-    stockId: 1646001691
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3118,15 +2272,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Breach Blaster:
-    bindOnEquip: true
-    nameKey: m.breach_blaster
-    rarity: 4
-    slot: GUN
-    stockId: -1662505337
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3165,15 +2311,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Buccaneer Broadsider:
-    bindOnEquip: true
-    nameKey: m.buccaneer_broadsider
-    rarity: 5
-    slot: GUN
-    stockId: -1694155432
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3217,15 +2355,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Callahan:
-    bindOnEquip: true
-    nameKey: m.callahan
-    rarity: 5
-    slot: GUN
-    stockId: -579269757
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3269,15 +2399,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Catalyzer:
-    bindOnEquip: true
-    nameKey: m.catalyzer
-    rarity: 2
-    slot: GUN
-    stockId: 1723337246
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -3316,15 +2438,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Celestial Orbitgun:
-    bindOnEquip: true
-    nameKey: m.celestial_orbitgun
-    rarity: 5
-    slot: GUN
-    stockId: -1945593745
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3363,15 +2477,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Celestial Orbitgun (OLD):
-    bindOnEquip: true
-    nameKey: ~OLD Celestial Orbitgun
-    rarity: 5
-    slot: GUN
-    stockId: 1107171385
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3410,15 +2516,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Chilling Duelist:
-    bindOnEquip: true
-    nameKey: m.chilling_duelist
-    rarity: 1
-    slot: GUN
-    stockId: 230831905
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -3465,15 +2563,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Cryo Driver:
-    bindOnEquip: true
-    nameKey: m.cryo_driver
-    rarity: 4
-    slot: GUN
-    stockId: 1445715410
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3508,15 +2598,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Cryotech Alchemer:
-    bindOnEquip: true
-    nameKey: m.cryotech_alchemer
-    rarity: 2
-    slot: GUN
-    stockId: -1980816007
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3551,15 +2633,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Cryotech Alchemer Mk II:
-    bindOnEquip: true
-    nameKey: m.cryotech_alchemer_mkii
-    rarity: 3
-    slot: GUN
-    stockId: -1659195045
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3594,15 +2668,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Dark Chaingun:
-    bindOnEquip: true
-    nameKey: m.dark_chaingun
-    rarity: 3
-    slot: GUN
-    stockId: 2076351864
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3634,15 +2700,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Elemental Blaster:
-    bindOnEquip: true
-    nameKey: m.elemental_blaster
-    rarity: 3
-    slot: GUN
-    stockId: -1690638565
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3681,15 +2739,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Fiery Diskgun:
-    bindOnEquip: true
-    nameKey: m.fiery_diskgun
-    rarity: 5
-    slot: GUN
-    stockId: -1433514981
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3728,15 +2778,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Fiery Pepperbox:
-    bindOnEquip: true
-    nameKey: m.fiery_pepperbox
-    rarity: 4
-    slot: GUN
-    stockId: -40628223
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3768,15 +2810,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Firo Driver:
-    bindOnEquip: true
-    nameKey: m.firo_driver
-    rarity: 4
-    slot: GUN
-    stockId: 1885729527
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3811,15 +2845,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Firotech Alchemer:
-    bindOnEquip: true
-    nameKey: m.firotech_alchemer
-    rarity: 2
-    slot: GUN
-    stockId: 416025310
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3854,15 +2880,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Firotech Alchemer Mk II:
-    bindOnEquip: true
-    nameKey: m.firotech_alchemer_mkii
-    rarity: 3
-    slot: GUN
-    stockId: 1758279424
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -3897,15 +2915,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Flaming Pulsar:
-    bindOnEquip: true
-    nameKey: m.flaming_pulsar
-    rarity: 3
-    slot: GUN
-    stockId: 918601566
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3944,15 +2954,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Freezing Pulsar:
-    bindOnEquip: true
-    nameKey: m.freezing_pulsar
-    rarity: 3
-    slot: GUN
-    stockId: 977892600
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -3991,15 +2993,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Frost Gun:
-    bindOnEquip: true
-    nameKey: m.frost_gun
-    rarity: 1
-    slot: GUN
-    stockId: 536407635
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4038,15 +3032,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Frozen Pulsar:
-    bindOnEquip: true
-    nameKey: m.frozen_pulsar
-    rarity: 4
-    slot: GUN
-    stockId: -648154580
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4085,15 +3071,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Fusion Blaster:
-    bindOnEquip: true
-    nameKey: m.fusion_blaster
-    rarity: 4
-    slot: GUN
-    stockId: -271519430
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4132,15 +3110,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Gigawatt Pulsar:
-    bindOnEquip: true
-    nameKey: m.gigawatt_pulsar
-    rarity: 4
-    slot: GUN
-    stockId: -1062698938
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4179,15 +3149,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Gilded Griffin:
-    bindOnEquip: true
-    nameKey: m.gilded_griffin
-    rarity: 5
-    slot: GUN
-    stockId: 1121157965
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -4234,15 +3196,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Grim Repeater:
-    bindOnEquip: true
-    nameKey: m.grim_repeater
-    rarity: 5
-    slot: GUN
-    stockId: 125423208
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4274,15 +3228,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Hail Driver:
-    bindOnEquip: true
-    nameKey: m.hail_driver
-    rarity: 5
-    slot: GUN
-    stockId: -1982307877
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4317,15 +3263,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Heavy Pulsar:
-    bindOnEquip: true
-    nameKey: m.heavy_pulsar
-    rarity: 3
-    slot: GUN
-    stockId: -1599098329
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4364,15 +3302,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Industrial Catalyzer:
-    bindOnEquip: true
-    nameKey: m.industrial_catalyzer
-    rarity: 3
-    slot: GUN
-    stockId: 722887833
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -4411,15 +3341,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Iron Slug:
-    bindOnEquip: true
-    nameKey: m.iron_slug
-    rarity: 5
-    slot: GUN
-    stockId: -810155086
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4463,15 +3385,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Kilowatt Pulsar:
-    bindOnEquip: true
-    nameKey: m.kilowatt_pulsar
-    rarity: 3
-    slot: GUN
-    stockId: 1012684033
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4510,15 +3424,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Magma Driver:
-    bindOnEquip: true
-    nameKey: m.magma_driver
-    rarity: 5
-    slot: GUN
-    stockId: 623111538
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4553,15 +3459,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Magnus:
-    bindOnEquip: true
-    nameKey: m.magnus
-    rarity: 3
-    slot: GUN
-    stockId: 1246435114
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4605,15 +3503,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Master Blaster:
-    bindOnEquip: true
-    nameKey: m.master_blaster
-    rarity: 4
-    slot: GUN
-    stockId: -1498680936
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -4652,15 +3542,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Mega Magnus:
-    bindOnEquip: true
-    nameKey: m.mega_magnus
-    rarity: 4
-    slot: GUN
-    stockId: -1297423946
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4704,15 +3586,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Mega Tundrus:
-    bindOnEquip: true
-    nameKey: m.mega_tundrus
-    rarity: 4
-    slot: GUN
-    stockId: 930868860
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4756,15 +3630,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Needle Shot:
-    bindOnEquip: true
-    nameKey: m.needle_shot
-    rarity: 3
-    slot: GUN
-    stockId: 811269338
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4796,15 +3662,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Neutralizer:
-    bindOnEquip: true
-    nameKey: m.neutralizer
-    rarity: 5
-    slot: GUN
-    stockId: 763361460
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -4843,15 +3701,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Nog Blaster:
-    bindOnEquip: true
-    nameKey: m.nog_blaster
-    rarity: 5
-    slot: GUN
-    stockId: -1379844614
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4886,15 +3736,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Nova Driver:
-    bindOnEquip: true
-    nameKey: m.nova_driver
-    rarity: 5
-    slot: GUN
-    stockId: 1946515339
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -4929,15 +3771,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Obsidian Carbine:
-    bindOnEquip: true
-    nameKey: m.obsidian_carbine
-    rarity: 5
-    slot: GUN
-    stockId: -1630041666
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -4984,15 +3818,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Overcharged Mixmaster:
-    bindOnEquip: true
-    nameKey: m.overcharged_mixmaster
-    rarity: 5
-    slot: GUN
-    stockId: -653644951
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5031,15 +3857,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Overcharged Mixmaster (OLD):
-    bindOnEquip: true
-    nameKey: ~OLD overcharged mixmaster
-    rarity: 5
-    slot: GUN
-    stockId: 14682035
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5078,15 +3896,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Blue:
-    bindOnEquip: true
-    nameKey: a.blu|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 619206498
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5118,15 +3928,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Divine:
-    bindOnEquip: true
-    nameKey: a.dvn|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: -1888484681
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5158,15 +3960,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Gold:
-    bindOnEquip: true
-    nameKey: a.gld|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 619358056
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5198,15 +3992,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Green:
-    bindOnEquip: true
-    nameKey: a.grn|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 2020313339
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5238,15 +4024,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Grey:
-    bindOnEquip: true
-    nameKey: a.gry|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 619360743
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5278,15 +4056,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Heavy:
-    bindOnEquip: true
-    nameKey: a.hvy|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 2020846271
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5318,15 +4088,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Pink:
-    bindOnEquip: true
-    nameKey: a.pnk|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: 619620478
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5358,15 +4120,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Purple:
-    bindOnEquip: true
-    nameKey: a.prp|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: -1533965116
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5398,15 +4152,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Red:
-    bindOnEquip: true
-    nameKey: a.red|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: -949841783
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5438,15 +4184,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Shadow:
-    bindOnEquip: true
-    nameKey: a.shd|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: -1460601304
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5478,15 +4216,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Owlite Wand/Owlite Wand, Volcanic:
-    bindOnEquip: true
-    nameKey: a.vol|m.owlite_wand
-    rarity: 5
-    slot: GUN
-    stockId: -313917697
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -5518,118 +4248,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
-  Weapon/Handgun/Owlite Wand/Parts/Owlite Wand, Base:
-    bindOnEquip: true
-    nameKey: m.owlite_wand
-    rarity: 5
-    stockId: 0
-    type: SwingingHandgun
-  Weapon/Handgun/Parts/Base:
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Alchemer):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Alchemer) (Wand):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: SwingingHandgun
-  Weapon/Handgun/Parts/Base (Auto Shell):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Auto Shell) (1 Shot):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Catalyzer Gun):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Catalyzer Gun) (Arg Modify):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Heavy Shell):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Heavy Shell) (1 Shot):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Heavy Shell) (Animated):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Pulse Gun):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Pulse Gun) (Charged Attack):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Revolver Shell):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Simple):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Simple) (Bladed):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Spiral Soaker):
-    bindOnEquip: true
-    nameKey: m.spiral_soaker
-    rarity: 5
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Twin Diskgun):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Base (Twin Mixer):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Parts/Pollinator, Base:
-    bindOnEquip: true
-    nameKey: m.pollinator
-    rarity: 5
-    stockId: 0
-    type: Handgun
   Weapon/Handgun/Pepperbox:
-    bindOnEquip: true
-    nameKey: m.pepperbox
-    rarity: 3
-    slot: GUN
-    stockId: -749733640
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -5661,15 +4280,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Peppermint Repeater:
-    bindOnEquip: true
-    nameKey: m.peppermint_repeater
-    rarity: 5
-    slot: GUN
-    stockId: 1802917011
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -5701,15 +4312,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Permafroster:
-    bindOnEquip: true
-    nameKey: m.permafroster
-    rarity: 5
-    slot: GUN
-    stockId: -733945103
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5748,15 +4351,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Phantamos:
-    bindOnEquip: true
-    nameKey: m.phantamos
-    rarity: 5
-    slot: GUN
-    stockId: -287824626
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5795,15 +4390,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Pierce Blaster:
-    bindOnEquip: true
-    nameKey: m.pierce_blaster
-    rarity: 3
-    slot: GUN
-    stockId: -1160737666
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5842,15 +4429,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Plague Needle:
-    bindOnEquip: true
-    nameKey: m.plague_needle
-    rarity: 5
-    slot: GUN
-    stockId: 1332409452
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -5882,15 +4461,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Polaris:
-    bindOnEquip: true
-    nameKey: m.polaris
-    rarity: 5
-    slot: GUN
-    stockId: -1242638025
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -5929,15 +4500,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Pollinator:
-    bindOnEquip: true
-    nameKey: m.pollinator
-    rarity: 5
-    slot: GUN
-    stockId: -187138613
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -5976,15 +4539,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Pollinator, Tech Violet:
-    bindOnEquip: true
-    nameKey: a.wtv|m.pollinator
-    rarity: 5
-    slot: GUN
-    stockId: 11315050
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -6023,15 +4578,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Prisma Driver:
-    bindOnEquip: true
-    nameKey: m.prisma_driver
-    rarity: 4
-    slot: GUN
-    stockId: 1177312311
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6066,15 +4613,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Prismatech Alchemer:
-    bindOnEquip: true
-    nameKey: m.prismatech_alchemer
-    rarity: 2
-    slot: GUN
-    stockId: -1443986402
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6109,15 +4648,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Prismatech Alchemer Mk II:
-    bindOnEquip: true
-    nameKey: m.prismatech_alchemer_mkii
-    rarity: 3
-    slot: GUN
-    stockId: 603963456
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6152,15 +4683,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Proto Duelist:
-    bindOnEquip: true
-    nameKey: m.proto_duelist
-    rarity: 0
-    slot: GUN
-    stockId: 1131822921
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -6207,15 +4730,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Proto Gun:
-    bindOnEquip: true
-    nameKey: m.proto_gun
-    rarity: 0
-    slot: GUN
-    stockId: -334256265
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6254,15 +4769,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Pulsar:
-    bindOnEquip: true
-    nameKey: m.pulsar
-    rarity: 2
-    slot: GUN
-    stockId: 1350946126
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6301,15 +4808,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Pummel Gun:
-    bindOnEquip: true
-    nameKey: m.pummel_gun
-    rarity: 1
-    slot: GUN
-    stockId: 70040093
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6353,15 +4852,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Punch Gun:
-    bindOnEquip: true
-    nameKey: m.punch_gun
-    rarity: 0
-    slot: GUN
-    stockId: -781456451
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6405,15 +4896,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Radiant Pulsar:
-    bindOnEquip: true
-    nameKey: m.radiant_pulsar
-    rarity: 4
-    slot: GUN
-    stockId: -181743941
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6452,15 +4935,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Raptor:
-    bindOnEquip: true
-    nameKey: m.raptor
-    rarity: 4
-    slot: GUN
-    stockId: 1389854567
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -6507,15 +4982,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Riftlocker:
-    bindOnEquip: true
-    nameKey: m.riftlocker
-    rarity: 5
-    slot: GUN
-    stockId: -1595344402
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6554,15 +5021,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Sentenza:
-    bindOnEquip: true
-    nameKey: m.sentenza
-    rarity: 5
-    slot: GUN
-    stockId: 855711417
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -6609,15 +5068,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Shadow Blaster:
-    bindOnEquip: true
-    nameKey: m.shadow_blaster
-    rarity: 3
-    slot: GUN
-    stockId: 249537110
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6656,15 +5107,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Shadow Driver:
-    bindOnEquip: true
-    nameKey: m.shadow_driver
-    rarity: 4
-    slot: GUN
-    stockId: -483099561
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6699,15 +5142,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Shadowtech Alchemer:
-    bindOnEquip: true
-    nameKey: m.shadowtech_alchemer
-    rarity: 2
-    slot: GUN
-    stockId: -987362242
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6742,15 +5177,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Shadowtech Alchemer Mk II:
-    bindOnEquip: true
-    nameKey: m.shadowtech_alchemer_mkii
-    rarity: 3
-    slot: GUN
-    stockId: -1506234272
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -6785,15 +5212,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Silversix:
-    bindOnEquip: true
-    nameKey: m.silversix
-    rarity: 4
-    slot: GUN
-    stockId: 1715887940
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 6
@@ -6840,15 +5259,7 @@ items:
         rearmMs: 622
         clearMs: 622
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Slicer/Mandolin:
-    bindOnEquip: true
-    nameKey: m.mandolin
-    rarity: 5
-    slot: GUN
-    stockId: 548962954
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6887,15 +5298,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Slicer/Slicer:
-    bindOnEquip: true
-    nameKey: m.slicer
-    rarity: 2
-    slot: GUN
-    stockId: 361125406
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6934,15 +5337,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Slicer/Thricer Slicer:
-    bindOnEquip: true
-    nameKey: m.thricer_slicer
-    rarity: 4
-    slot: GUN
-    stockId: 2047363065
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -6981,15 +5376,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Slicer/Twicer Slicer:
-    bindOnEquip: true
-    nameKey: m.twicer_slicer
-    rarity: 3
-    slot: GUN
-    stockId: 216143640
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7028,15 +5415,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Spiral Soaker:
-    bindOnEquip: true
-    nameKey: m.spiral_soaker
-    rarity: 5
-    slot: GUN
-    stockId: -1427436559
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7068,15 +5447,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Spiral Soaker, Tech Blue:
-    bindOnEquip: true
-    nameKey: a.wtb|m.spiral_soaker
-    rarity: 5
-    slot: GUN
-    stockId: -1346879457
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7108,15 +5479,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Spiral Soaker, Tech Violet:
-    bindOnEquip: true
-    nameKey: a.wtv|m.spiral_soaker
-    rarity: 5
-    slot: GUN
-    stockId: -996358396
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7148,15 +5511,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Spitfire:
-    bindOnEquip: true
-    nameKey: m.spitfire
-    rarity: 1
-    slot: GUN
-    stockId: 1885196303
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7195,15 +5550,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Static Diskgun:
-    bindOnEquip: true
-    nameKey: m.static_diskgun
-    rarity: 5
-    slot: GUN
-    stockId: -1578792062
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7242,15 +5589,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Storm Driver:
-    bindOnEquip: true
-    nameKey: m.storm_driver
-    rarity: 5
-    slot: GUN
-    stockId: -965287824
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7285,15 +5624,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Strike Needle:
-    bindOnEquip: true
-    nameKey: m.strike_needle
-    rarity: 4
-    slot: GUN
-    stockId: 1503108588
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7325,15 +5656,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Stun Gun:
-    bindOnEquip: true
-    nameKey: m.stun_gun
-    rarity: 0
-    slot: GUN
-    stockId: 1476134475
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7372,15 +5695,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Super Blaster:
-    bindOnEquip: true
-    nameKey: m.super_blaster
-    rarity: 3
-    slot: GUN
-    stockId: -1373927953
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7419,15 +5734,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Super Stun Gun:
-    bindOnEquip: true
-    nameKey: m.super_stun_gun
-    rarity: 1
-    slot: GUN
-    stockId: -1003559760
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7466,15 +5773,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Supernova:
-    bindOnEquip: true
-    nameKey: m.supernova
-    rarity: 5
-    slot: GUN
-    stockId: -64989514
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -7513,15 +5812,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Barrier Cannon:
-    bindOnEquip: true
-    nameKey: m.barrier_cannon
-    rarity: 4
-    slot: GUN
-    stockId: -446052386
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7565,15 +5856,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Feral Cannon:
-    bindOnEquip: true
-    nameKey: m.feral_cannon
-    rarity: 4
-    slot: GUN
-    stockId: 1058385079
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7617,15 +5900,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Gorgofist:
-    bindOnEquip: true
-    nameKey: m.gorgofist
-    rarity: 5
-    slot: GUN
-    stockId: -1377615074
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7669,15 +5944,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Grand Tortofist:
-    bindOnEquip: true
-    nameKey: m.grand_tortofist
-    rarity: 5
-    slot: GUN
-    stockId: 1481168394
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7721,15 +5988,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Grim Buster:
-    bindOnEquip: true
-    nameKey: m.grim_buster
-    rarity: 3
-    slot: GUN
-    stockId: 1208538234
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7773,15 +6032,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Mighty Cannon:
-    bindOnEquip: true
-    nameKey: m.mighty_cannon
-    rarity: 4
-    slot: GUN
-    stockId: -533498109
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7825,15 +6076,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Nether Cannon:
-    bindOnEquip: true
-    nameKey: m.nether_cannon
-    rarity: 4
-    slot: GUN
-    stockId: -1201520467
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7877,15 +6120,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Omega Tortofist:
-    bindOnEquip: true
-    nameKey: m.omega_tortofist
-    rarity: 5
-    slot: GUN
-    stockId: -2091797473
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -7929,35 +6164,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
-  Weapon/Handgun/Tortafist/Parts/Base (Tortafist):
-    bindOnEquip: true
-    rarity: 5
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Tortafist/Parts/Tortafist (Rank3):
-    bindOnEquip: true
-    rarity: 3
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Tortafist/Parts/Tortafist (Rank4):
-    bindOnEquip: true
-    rarity: 4
-    stockId: 0
-    type: Handgun
-  Weapon/Handgun/Tortafist/Parts/Tortafist (Rank5):
-    bindOnEquip: true
-    rarity: 5
-    stockId: 0
-    type: Handgun
   Weapon/Handgun/Tortafist/Primal Buster:
-    bindOnEquip: true
-    nameKey: m.primal_buster
-    rarity: 3
-    slot: GUN
-    stockId: -1743271368
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8001,15 +6208,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Savage Tortofist:
-    bindOnEquip: true
-    nameKey: m.savage_tortofist
-    rarity: 5
-    slot: GUN
-    stockId: 348944069
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8053,15 +6252,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Stoic Buster:
-    bindOnEquip: true
-    nameKey: m.stoic_buster
-    rarity: 3
-    slot: GUN
-    stockId: 2051372369
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8105,15 +6296,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tortafist/Wild Buster:
-    bindOnEquip: true
-    nameKey: m.wild_buster
-    rarity: 3
-    slot: GUN
-    stockId: 362921887
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8157,15 +6340,7 @@ items:
         rearmMs: 1417
         clearMs: 1417
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Toxic Catalyzer:
-    bindOnEquip: true
-    nameKey: m.toxic_catalyzer
-    rarity: 3
-    slot: GUN
-    stockId: 1761736981
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -8204,15 +6379,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Toxic Needle:
-    bindOnEquip: true
-    nameKey: m.toxic_needle
-    rarity: 3
-    slot: GUN
-    stockId: 1198099145
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8244,15 +6411,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Tundrus:
-    bindOnEquip: true
-    nameKey: m.tundrus
-    rarity: 3
-    slot: GUN
-    stockId: -1813878904
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8296,15 +6455,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Umbra Driver:
-    bindOnEquip: true
-    nameKey: m.umbra_driver
-    rarity: 5
-    slot: GUN
-    stockId: 2102423264
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8339,15 +6490,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Umbral Blaster:
-    bindOnEquip: true
-    nameKey: m.umbral_blaster
-    rarity: 4
-    slot: GUN
-    stockId: -328676023
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -8386,15 +6529,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Valiance:
-    bindOnEquip: true
-    nameKey: m.valiance
-    rarity: 5
-    slot: GUN
-    stockId: -1828376504
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -8433,15 +6568,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Valiance (Bladed):
-    bindOnEquip: true
-    nameKey: m.valiance
-    rarity: 5
-    slot: GUN
-    stockId: -1587408403
-    type: Handgun
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -8484,15 +6611,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Virulent Catalyzer:
-    bindOnEquip: true
-    nameKey: m.virulent_catalyzer
-    rarity: 4
-    slot: GUN
-    stockId: -822052459
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -8531,15 +6650,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Volatile Catalyzer:
-    bindOnEquip: true
-    nameKey: m.volatile_catalyzer
-    rarity: 4
-    slot: GUN
-    stockId: 1687998524
-    type: Handgun
     combat:
       chargeTimeMs: 1000
       maxChain: 3
@@ -8578,15 +6689,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Volcanic Pepperbox:
-    bindOnEquip: true
-    nameKey: m.volcanic_pepperbox
-    rarity: 5
-    slot: GUN
-    stockId: 690382769
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8618,15 +6721,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Volt Driver:
-    bindOnEquip: true
-    nameKey: m.volt_driver
-    rarity: 4
-    slot: GUN
-    stockId: 104139798
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8661,15 +6756,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Voltech Alchemer:
-    bindOnEquip: true
-    nameKey: m.voltech_alchemer
-    rarity: 2
-    slot: GUN
-    stockId: 1472984621
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8704,15 +6791,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Voltech Alchemer Mk II:
-    bindOnEquip: true
-    nameKey: m.voltech_alchemer_mkii
-    rarity: 3
-    slot: GUN
-    stockId: -671274225
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8747,15 +6826,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Wildfire:
-    bindOnEquip: true
-    nameKey: m.wildfire
-    rarity: 5
-    slot: GUN
-    stockId: -1579944303
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -8794,15 +6865,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Winter Grave:
-    bindOnEquip: true
-    nameKey: m.winter_grave
-    rarity: 5
-    slot: GUN
-    stockId: 647375323
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 2
@@ -8846,27 +6909,7 @@ items:
         rearmMs: 933
         clearMs: 933
         blended: true
-    modifiers: {
-      }
-  Weapon/Handgun/WizardWand/Parts/Wanderer's Wand, Base:
-    bindOnEquip: true
-    nameKey: m.wanderers_wand
-    rarity: 5
-    stockId: 0
-    type: SwingingHandgun
-  Weapon/Handgun/WizardWand/Parts/Wanderer's Wand, Recolor:
-    bindOnEquip: true
-    nameKey: m.wanderers_wand
-    rarity: 5
-    stockId: 0
-    type: SwingingHandgun
   Weapon/Handgun/WizardWand/Wanderer's Wand, Cool:
-    bindOnEquip: true
-    nameKey: a.blu|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: -2054829052
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -8898,15 +6941,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Divine:
-    bindOnEquip: true
-    nameKey: a.dvn|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 1017534378
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -8938,15 +6973,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Dusky:
-    bindOnEquip: true
-    nameKey: a.prp|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 725915029
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -8978,15 +7005,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Fancy:
-    bindOnEquip: true
-    nameKey: a.pnk|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 727161198
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9018,15 +7037,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Heavy:
-    bindOnEquip: true
-    nameKey: a.hvy|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 729115500
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9058,15 +7069,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Military:
-    bindOnEquip: true
-    nameKey: a.grn|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 1112271944
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9098,15 +7101,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Prismatic:
-    bindOnEquip: true
-    nameKey: a.pris|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: -588995725
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9138,15 +7133,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Regal:
-    bindOnEquip: true
-    nameKey: a.gld|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 738355812
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9178,15 +7165,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Shadow:
-    bindOnEquip: true
-    nameKey: a.shd|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 1445417755
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9218,15 +7197,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Toasty:
-    bindOnEquip: true
-    nameKey: a.red|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 1480526125
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9258,15 +7229,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/WizardWand/Wanderer's Wand, Volcanic:
-    bindOnEquip: true
-    nameKey: a.vol|m.wanderers_wand
-    rarity: 5
-    slot: GUN
-    stockId: 641655602
-    type: SwingingHandgun
     combat:
       chargeTimeMs: 1600
       maxChain: 0
@@ -9298,15 +7261,7 @@ items:
         rearmMs: 1133
         clearMs: 1133
         blended: true
-    modifiers: {
-      }
   Weapon/Handgun/Zapper:
-    bindOnEquip: true
-    nameKey: m.zapper
-    rarity: 1
-    slot: GUN
-    stockId: 1618883621
-    type: Handgun
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -9345,26 +7300,7 @@ items:
         rearmMs: 944
         clearMs: 944
         blended: true
-    modifiers: {
-      }
-  Weapon/PvP/Blast Network/Default:
-    bindOnEquip: true
-    nameKey: m.pvp_bomb
-    rarity: 0
-    stockId: 0
-    type: BlastNetworkBomb
-  Weapon/PvP/Blast Network/Parts/Base:
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: BlastNetworkBomb
   Weapon/Sword/Acheron:
-    bindOnEquip: true
-    nameKey: m.acheron
-    rarity: 5
-    slot: SWORD
-    stockId: -564359187
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9406,15 +7342,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Advanced Cautery Sword:
-    bindOnEquip: true
-    nameKey: m.advanced_cautery_sword
-    rarity: 4
-    slot: SWORD
-    stockId: -1931826381
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9456,15 +7384,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Alpha Claw Gauntlet:
-    bindOnEquip: true
-    nameKey: m.alpha_claw_gauntlet
-    rarity: 5
-    slot: SWORD
-    stockId: -179207020
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -9520,15 +7440,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Alpha Claw Gauntlet, Grey:
-    bindOnEquip: true
-    nameKey: a.gry|m.alpha_claw_gauntlet
-    rarity: 5
-    slot: SWORD
-    stockId: -1926041593
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -9584,15 +7496,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Amputator:
-    bindOnEquip: true
-    nameKey: m.amputator
-    rarity: 5
-    slot: SWORD
-    stockId: -1965464684
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9634,15 +7538,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Amputator (Calibur):
-    bindOnEquip: true
-    nameKey: m.amputator
-    rarity: 5
-    slot: SWORD
-    stockId: -1036189407
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9684,15 +7580,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Arc Razor:
-    bindOnEquip: true
-    nameKey: m.arc_razor
-    rarity: 3
-    slot: SWORD
-    stockId: 1336101947
-    type: Sword
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -9730,15 +7618,7 @@ items:
         landMs: 666
         rearmMs: 799
         clearMs: 1825
-    modifiers: {
-      }
   Weapon/Sword/Ascended Calibur:
-    bindOnEquip: true
-    nameKey: m.ascended_calibur
-    rarity: 4
-    slot: SWORD
-    stockId: 995111730
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9780,15 +7660,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Avenger:
-    bindOnEquip: true
-    nameKey: m.avenger
-    rarity: 4
-    slot: SWORD
-    stockId: -22918639
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -9819,15 +7691,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Barbarous Thorn Blade:
-    bindOnEquip: true
-    nameKey: m.barbarous_thorn_blade
-    rarity: 5
-    slot: SWORD
-    stockId: -653916457
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9869,15 +7733,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Beast Basher:
-    bindOnEquip: true
-    nameKey: m.beast_basher
-    rarity: 0
-    slot: SWORD
-    stockId: 720762951
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9919,15 +7775,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Big Beast Basher:
-    bindOnEquip: true
-    nameKey: m.big_beast_basher
-    rarity: 1
-    slot: SWORD
-    stockId: -1633987321
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -9969,15 +7817,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Blazebrand:
-    bindOnEquip: true
-    nameKey: m.blazebrand
-    rarity: 4
-    slot: SWORD
-    stockId: 152690954
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10019,15 +7859,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Blizzbrand:
-    bindOnEquip: true
-    nameKey: m.blizzbrand
-    rarity: 4
-    slot: SWORD
-    stockId: 1811483917
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10069,15 +7901,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Boltbrand:
-    bindOnEquip: true
-    nameKey: m.boltbrand
-    rarity: 4
-    slot: SWORD
-    stockId: 412889709
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10119,15 +7943,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Bolted Blade:
-    bindOnEquip: true
-    nameKey: m.bolted_blade
-    rarity: 1
-    slot: SWORD
-    stockId: -896895855
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10169,15 +7985,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Brandish:
-    bindOnEquip: true
-    nameKey: m.brandish
-    rarity: 2
-    slot: SWORD
-    stockId: 1662683100
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10219,15 +8027,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Caladbolg:
-    bindOnEquip: true
-    nameKey: m.caladbolg
-    rarity: 5
-    slot: SWORD
-    stockId: -566675756
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10269,15 +8069,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Calibur:
-    bindOnEquip: true
-    nameKey: m.calibur
-    rarity: 2
-    slot: SWORD
-    stockId: 1157187935
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10319,15 +8111,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cautery Sword:
-    bindOnEquip: true
-    nameKey: m.cautery_sword
-    rarity: 3
-    slot: SWORD
-    stockId: 479889959
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10369,15 +8153,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Celestial Saber:
-    bindOnEquip: true
-    nameKey: m.celestial_saber
-    rarity: 5
-    slot: SWORD
-    stockId: -821962444
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10419,15 +8195,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cleaver, Freeze:
-    bindOnEquip: true
-    nameKey: m.frozen_great_cleaver
-    rarity: 5
-    slot: SWORD
-    stockId: 152434180
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -10458,15 +8226,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cleaver, Stun:
-    bindOnEquip: true
-    nameKey: m.mighty_great_cleaver
-    rarity: 5
-    slot: SWORD
-    stockId: 854178663
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -10497,15 +8257,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cold Iron Carver:
-    bindOnEquip: true
-    nameKey: m.cold_iron_carver
-    rarity: 4
-    slot: SWORD
-    stockId: -1961547344
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10547,15 +8299,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cold Iron Vanquisher:
-    bindOnEquip: true
-    nameKey: m.cold_iron_vanquisher
-    rarity: 5
-    slot: SWORD
-    stockId: -662901915
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10597,15 +8341,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Combuster:
-    bindOnEquip: true
-    nameKey: m.combuster
-    rarity: 5
-    slot: SWORD
-    stockId: -1004791107
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10647,15 +8383,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Cutter:
-    bindOnEquip: true
-    nameKey: m.cutter
-    rarity: 2
-    slot: SWORD
-    stockId: -359593948
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -10711,15 +8439,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Daring Rigadoon:
-    bindOnEquip: true
-    nameKey: m.daring_rigadoon
-    rarity: 4
-    slot: SWORD
-    stockId: -2070704311
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10761,15 +8481,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Dark Thorn Blade:
-    bindOnEquip: true
-    nameKey: m.dark_thorn_blade
-    rarity: 4
-    slot: SWORD
-    stockId: -1365400566
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10811,15 +8523,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Deadly Candy Poker:
-    bindOnEquip: true
-    nameKey: m.deadly_candy_poker
-    rarity: 5
-    slot: SWORD
-    stockId: 1342870932
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -10861,15 +8565,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Divine Avenger:
-    bindOnEquip: true
-    nameKey: m.divine_avenger
-    rarity: 5
-    slot: SWORD
-    stockId: 1824942570
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -10900,15 +8596,7 @@ items:
         impulseDurationMs: 150
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Dread Captain Cutlass:
-    bindOnEquip: true
-    nameKey: m.dread_captain_cutlass
-    rarity: 5
-    slot: SWORD
-    stockId: -849587632
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -10964,15 +8652,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Dread Venom Striker:
-    bindOnEquip: true
-    nameKey: m.dread_venom_striker
-    rarity: 5
-    slot: SWORD
-    stockId: -1352471470
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -11028,15 +8708,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Fang of Vog:
-    bindOnEquip: true
-    nameKey: m.fang_of_vog
-    rarity: 5
-    slot: SWORD
-    stockId: -1817541012
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11078,15 +8750,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Faust:
-    bindOnEquip: true
-    nameKey: m.faust
-    rarity: 4
-    slot: SWORD
-    stockId: -1671992106
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11117,15 +8781,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Fearless Rigadoon:
-    bindOnEquip: true
-    nameKey: m.fearless_rigadoon
-    rarity: 5
-    slot: SWORD
-    stockId: -2071976595
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11167,15 +8823,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Fierce Flamberge:
-    bindOnEquip: true
-    nameKey: m.fierce_flamberge
-    rarity: 4
-    slot: SWORD
-    stockId: 657214226
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11217,15 +8865,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Final Flourish:
-    bindOnEquip: true
-    nameKey: m.final_flourish
-    rarity: 5
-    slot: SWORD
-    stockId: -1345031673
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11267,15 +8907,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Fireburst Brandish:
-    bindOnEquip: true
-    nameKey: m.fireburst_brandish
-    rarity: 3
-    slot: SWORD
-    stockId: 1818637426
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11317,15 +8949,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Firestorm Skeggox:
-    bindOnEquip: true
-    nameKey: m.raiders_axe
-    rarity: 5
-    slot: SWORD
-    stockId: 85366756
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11367,15 +8991,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Flamberge:
-    bindOnEquip: true
-    nameKey: m.flamberge
-    rarity: 3
-    slot: SWORD
-    stockId: -533838378
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11417,15 +9033,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Flourish:
-    bindOnEquip: true
-    nameKey: m.flourish
-    rarity: 2
-    slot: SWORD
-    stockId: -578375107
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11467,15 +9075,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Furious Flamberge:
-    bindOnEquip: true
-    nameKey: m.furious_flamberge
-    rarity: 5
-    slot: SWORD
-    stockId: -1453813731
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11517,15 +9117,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Furious Fork:
-    bindOnEquip: true
-    nameKey: m.furious_fork
-    rarity: 5
-    slot: SWORD
-    stockId: -549660448
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11567,15 +9159,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Furious Fork, Tech Green:
-    bindOnEquip: true
-    nameKey: a.wtg|m.furious_fork
-    rarity: 5
-    slot: SWORD
-    stockId: -1611950515
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11617,15 +9201,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Furious Fork, Tech Red:
-    bindOnEquip: true
-    nameKey: a.wtr|m.furious_fork
-    rarity: 5
-    slot: SWORD
-    stockId: 1808386651
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11667,15 +9243,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Glacius:
-    bindOnEquip: true
-    nameKey: m.glacius
-    rarity: 5
-    slot: SWORD
-    stockId: 716825275
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11717,15 +9285,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Gram:
-    bindOnEquip: true
-    nameKey: m.gram
-    rarity: 5
-    slot: SWORD
-    stockId: -1162268388
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11766,12 +9326,6 @@ items:
       BOMB:
         speed: -0.12
   Weapon/Sword/Gran Faust:
-    bindOnEquip: true
-    nameKey: m.gran_faust
-    rarity: 5
-    slot: SWORD
-    stockId: 1443399192
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11802,15 +9356,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Grand Flourish:
-    bindOnEquip: true
-    nameKey: m.grand_flourish
-    rarity: 4
-    slot: SWORD
-    stockId: 2107218737
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -11852,15 +9398,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Grintovec:
-    bindOnEquip: true
-    nameKey: m.grintovec
-    rarity: 3
-    slot: SWORD
-    stockId: -1918716348
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11891,15 +9429,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Hatchet:
-    bindOnEquip: true
-    nameKey: m.hatchet
-    rarity: 0
-    slot: SWORD
-    stockId: 1306953738
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11930,15 +9460,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Heavy Hatchet:
-    bindOnEquip: true
-    nameKey: m.heavy_hatchet
-    rarity: 1
-    slot: SWORD
-    stockId: -897649327
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -11969,15 +9491,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Honor Blade 1:
-    bindOnEquip: true
-    nameKey: m.honor_blade_1
-    rarity: 2
-    slot: SWORD
-    stockId: -1082135762
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12019,15 +9533,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Honor Blade 2:
-    bindOnEquip: true
-    nameKey: m.honor_blade_2
-    rarity: 3
-    slot: SWORD
-    stockId: -1082135761
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12069,15 +9575,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Honor Blade 3:
-    bindOnEquip: true
-    nameKey: m.honor_blade_3
-    rarity: 4
-    slot: SWORD
-    stockId: -1082135760
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12119,15 +9617,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Honor Blade 4:
-    bindOnEquip: true
-    nameKey: m.honor_blade_4
-    rarity: 5
-    slot: SWORD
-    stockId: -1082135759
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12169,15 +9659,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Hot Edge:
-    bindOnEquip: true
-    nameKey: m.hot_edge
-    rarity: 1
-    slot: SWORD
-    stockId: 1338090005
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12219,15 +9701,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Hunting Blade:
-    bindOnEquip: true
-    nameKey: m.hunting_blade
-    rarity: 4
-    slot: SWORD
-    stockId: 1160891106
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -12283,15 +9757,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ice Axe:
-    bindOnEquip: true
-    nameKey: m.ice_axe
-    rarity: 5
-    slot: SWORD
-    stockId: -2059137292
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -12322,15 +9788,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Iceburst Brandish:
-    bindOnEquip: true
-    nameKey: m.iceburst_brandish
-    rarity: 3
-    slot: SWORD
-    stockId: 206861149
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12372,15 +9830,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 0:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 0
-    slot: SWORD
-    stockId: -560814915
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12422,15 +9872,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 0 (SHD):
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 0
-    slot: SWORD
-    stockId: -302582657
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12472,15 +9914,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 1:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 1
-    slot: SWORD
-    stockId: -560814914
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12522,15 +9956,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 2:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 2
-    slot: SWORD
-    stockId: -560814913
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12572,15 +9998,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 3:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 3
-    slot: SWORD
-    stockId: -560814912
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12622,15 +10040,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 4:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 4
-    slot: SWORD
-    stockId: -560814911
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12672,15 +10082,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Ideal Sword 5:
-    bindOnEquip: true
-    nameKey: m.ideal_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -560814910
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12722,15 +10124,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Jalovec:
-    bindOnEquip: true
-    nameKey: m.jalovec
-    rarity: 4
-    slot: SWORD
-    stockId: -1220023435
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -12761,15 +10155,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Kamarin:
-    bindOnEquip: true
-    nameKey: m.kamarin
-    rarity: 3
-    slot: SWORD
-    stockId: -332017016
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -12800,15 +10186,7 @@ items:
         impulseDurationMs: 200
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Khorovod:
-    bindOnEquip: true
-    nameKey: m.khorovod
-    rarity: 4
-    slot: SWORD
-    stockId: 287846977
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -12839,15 +10217,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Leviathan Blade:
-    bindOnEquip: true
-    nameKey: m.leviathan_blade
-    rarity: 5
-    slot: SWORD
-    stockId: -1004122487
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12889,15 +10259,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Nightblade:
-    bindOnEquip: true
-    nameKey: m.nightblade
-    rarity: 3
-    slot: SWORD
-    stockId: -1872053755
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -12939,15 +10301,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Amethyst:
-    bindOnEquip: true
-    nameKey: a.ame|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 138976203
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -12978,15 +10332,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Aquamarine:
-    bindOnEquip: true
-    nameKey: a.aqa|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 30699580
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13017,15 +10363,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Blue:
-    bindOnEquip: true
-    nameKey: a.blu|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 77211544
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13056,15 +10394,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Citrine:
-    bindOnEquip: true
-    nameKey: a.ctr|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1092178946
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13095,15 +10425,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Curse:
-    bindOnEquip: true
-    nameKey: a.curse|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1900220140
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13134,15 +10456,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Dangerous:
-    bindOnEquip: true
-    nameKey: a.dgr|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1530551860
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13173,15 +10487,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Diamond:
-    bindOnEquip: true
-    nameKey: a.dia|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -222365354
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13212,15 +10518,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Divine:
-    bindOnEquip: true
-    nameKey: a.dvn|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1240374637
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13251,15 +10549,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Emerald:
-    bindOnEquip: true
-    nameKey: a.emd|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 783484454
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13290,15 +10580,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Garnet:
-    bindOnEquip: true
-    nameKey: a.gar|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1318759299
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13329,15 +10611,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Glacial:
-    bindOnEquip: true
-    nameKey: a.frz|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1769238225
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13368,15 +10642,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Gold:
-    bindOnEquip: true
-    nameKey: a.gld|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 77363102
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13407,15 +10673,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Green:
-    bindOnEquip: true
-    nameKey: a.grn|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1896628347
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13446,15 +10704,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Hazardous:
-    bindOnEquip: true
-    nameKey: a.hzd|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1729488253
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13485,15 +10735,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Heavy:
-    bindOnEquip: true
-    nameKey: a.hvy|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1896095415
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13524,15 +10766,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Hunter:
-    bindOnEquip: true
-    nameKey: a.htr|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1365745470
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13563,15 +10797,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Opal:
-    bindOnEquip: true
-    nameKey: a.opl|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 77602058
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13602,15 +10828,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Pearl:
-    bindOnEquip: true
-    nameKey: a.prl|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -1888707384
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13641,15 +10859,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Peridot:
-    bindOnEquip: true
-    nameKey: a.pdt|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1738797791
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13680,15 +10890,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Pink:
-    bindOnEquip: true
-    nameKey: a.pnk|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 77625524
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13719,15 +10921,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Purple:
-    bindOnEquip: true
-    nameKey: a.prp|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1594894202
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13758,15 +10952,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Red:
-    bindOnEquip: true
-    nameKey: a.red|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1387979155
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13797,15 +10983,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Ruby:
-    bindOnEquip: true
-    nameKey: a.rby|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 77696280
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13836,15 +11014,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Sapphire:
-    bindOnEquip: true
-    nameKey: a.sph|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -304107264
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13875,15 +11045,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Shadow:
-    bindOnEquip: true
-    nameKey: a.shd|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 1668258014
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13914,15 +11076,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Turquoise:
-    bindOnEquip: true
-    nameKey: a.trq|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -332563805
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13953,15 +11107,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Node Slime/Node Slime, Volcanic:
-    bindOnEquip: true
-    nameKey: a.vol|m.nodeslime_sword
-    rarity: 5
-    slot: SWORD
-    stockId: 42779701
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -13992,21 +11138,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
-  Weapon/Sword/Node Slime/Parts/Node Slime, Base:
-    bindOnEquip: true
-    nameKey: a.xxx|m.nodeslime_sword
-    rarity: 5
-    stockId: 0
-    type: Sword
   Weapon/Sword/Obsidian Edge:
-    bindOnEquip: true
-    nameKey: m.obsidian_edge
-    rarity: 5
-    slot: SWORD
-    stockId: -84994211
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14048,93 +11180,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
-  Weapon/Sword/Parts/Base (2 Hit Slow):
-    bindOnEquip: true
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (3 Hit):
-    bindOnEquip: true
-    nameKey: Base (3 Hit)
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (3 Hit) (Icon):
-    bindOnEquip: true
-    nameKey: Base (3 Hit)
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (5 Hit):
-    bindOnEquip: true
-    nameKey: Base (5 Hit)
-    rarity: 5
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Ascended Calibur):
-    bindOnEquip: true
-    nameKey: m.ascended_calibur
-    rarity: 4
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Calibur):
-    bindOnEquip: true
-    nameKey: m.calibur
-    rarity: 2
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Furious Fork):
-    bindOnEquip: true
-    nameKey: m.furious_fork
-    rarity: 5
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Leviathan Blade):
-    bindOnEquip: true
-    nameKey: m.leviathan_blade
-    rarity: 5
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Rocket Ham):
-    bindOnEquip: true
-    locked: true
-    permanent: true
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Saber):
-    bindOnEquip: true
-    nameKey: Base (Saber)
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Spur):
-    bindOnEquip: true
-    nameKey: Base (Spur)
-    rarity: 0
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Base (Tempered Calibur):
-    bindOnEquip: true
-    nameKey: m.tempered_calibur
-    rarity: 3
-    stockId: 0
-    type: Sword
-  Weapon/Sword/Parts/Ice Axe, Base:
-    bindOnEquip: true
-    nameKey: m.ice_axe
-    rarity: 5
-    stockId: 0
-    type: Sword
   Weapon/Sword/Proto Blade:
-    bindOnEquip: true
-    nameKey: m.proto_blade
-    rarity: 0
-    slot: SWORD
-    stockId: 1116901723
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -14190,15 +11236,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Proto Sword:
-    bindOnEquip: true
-    nameKey: m.proto_sword
-    rarity: 0
-    slot: SWORD
-    stockId: 1132943168
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14240,15 +11278,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Red Saber:
-    bindOnEquip: true
-    nameKey: m.red_saber
-    rarity: 1
-    slot: SWORD
-    stockId: 380853101
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -14304,15 +11334,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Rigadoon:
-    bindOnEquip: true
-    nameKey: m.rigadoon
-    rarity: 3
-    slot: SWORD
-    stockId: 245053632
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14354,15 +11376,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Robo Wrecker:
-    bindOnEquip: true
-    nameKey: m.robo_wrecker
-    rarity: 0
-    slot: SWORD
-    stockId: -1276853810
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14404,17 +11418,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Rocket Hammer 1:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.rocket_hammer_1
-    permanent: true
-    rarity: 1
-    slot: SWORD
-    stockId: 1594084702
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14456,17 +11460,7 @@ items:
         impulseDurationMs: 150
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Rocket Hammer 2:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.rocket_hammer_2
-    permanent: true
-    rarity: 3
-    slot: SWORD
-    stockId: 1594084703
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14508,17 +11502,7 @@ items:
         impulseDurationMs: 150
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Rocket Hammer 3:
-    bindOnEquip: true
-    locked: true
-    nameKey: m.rocket_hammer_3
-    permanent: true
-    rarity: 5
-    slot: SWORD
-    stockId: 1594084704
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14560,15 +11544,7 @@ items:
         impulseDurationMs: 150
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Rugged Robo Wrecker:
-    bindOnEquip: true
-    nameKey: m.rugged_robo_wrecker
-    rarity: 1
-    slot: SWORD
-    stockId: -1018998814
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14610,15 +11586,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Scissor Blades:
-    bindOnEquip: true
-    nameKey: m.scissor_blades
-    rarity: 5
-    slot: SWORD
-    stockId: 717988036
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14660,15 +11628,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sealed Sword:
-    bindOnEquip: true
-    nameKey: m.sealed_sword
-    rarity: 3
-    slot: SWORD
-    stockId: 1544611294
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -14699,15 +11659,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Searing Edge:
-    bindOnEquip: true
-    nameKey: m.searing_edge
-    rarity: 2
-    slot: SWORD
-    stockId: -59702237
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14749,15 +11701,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Shockburst Brandish:
-    bindOnEquip: true
-    nameKey: m.shockburst_brandish
-    rarity: 3
-    slot: SWORD
-    stockId: 385286260
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14799,15 +11743,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Shocking Edge:
-    bindOnEquip: true
-    nameKey: m.shocking_edge
-    rarity: 2
-    slot: SWORD
-    stockId: -2022195496
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14849,15 +11785,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Silent Nightblade:
-    bindOnEquip: true
-    nameKey: m.silent_nightblade
-    rarity: 4
-    slot: SWORD
-    stockId: -241941210
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14899,15 +11827,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Slime Slasher:
-    bindOnEquip: true
-    nameKey: m.slime_slasher
-    rarity: 0
-    slot: SWORD
-    stockId: 316216397
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14949,15 +11869,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Snarble Barb:
-    bindOnEquip: true
-    nameKey: m.snarble_barb
-    rarity: 2
-    slot: SWORD
-    stockId: -199523323
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -14999,15 +11911,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Spur:
-    bindOnEquip: true
-    nameKey: m.spur
-    rarity: 2
-    slot: SWORD
-    stockId: -1161912193
-    type: Sword
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -15045,15 +11949,7 @@ items:
         landMs: 666
         rearmMs: 799
         clearMs: 1825
-    modifiers: {
-      }
   Weapon/Sword/Squall Caller:
-    bindOnEquip: true
-    nameKey: m.raiders_hammer
-    rarity: 5
-    slot: SWORD
-    stockId: -713482500
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15095,15 +11991,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Static Edge:
-    bindOnEquip: true
-    nameKey: m.static_edge
-    rarity: 1
-    slot: SWORD
-    stockId: 18086378
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15145,15 +12033,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Striker:
-    bindOnEquip: true
-    nameKey: m.striker
-    rarity: 3
-    slot: SWORD
-    stockId: -1273119205
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -15209,15 +12089,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sudaruska:
-    bindOnEquip: true
-    nameKey: m.sudaruska
-    rarity: 5
-    slot: SWORD
-    stockId: -1716270782
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -15248,15 +12120,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Super Slime Slasher:
-    bindOnEquip: true
-    nameKey: m.super_slime_slasher
-    rarity: 1
-    slot: SWORD
-    stockId: -633674744
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15298,15 +12162,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams:
-    bindOnEquip: true
-    nameKey: m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -544144923
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15348,21 +12204,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
-  Weapon/Sword/Sweet Dreams, Tech/Parts/Sweet Dreams, Base Tech:
-    bindOnEquip: true
-    nameKey: a.wtb|m.sweet_dreams
-    rarity: 5
-    stockId: 0
-    type: Sword
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Azure:
-    bindOnEquip: true
-    nameKey: a.wtz|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -1100453127
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15404,15 +12246,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Blue:
-    bindOnEquip: true
-    nameKey: a.wtb|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -866766160
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15454,15 +12288,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Green:
-    bindOnEquip: true
-    nameKey: a.wtg|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -1095166099
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15504,15 +12330,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Orange:
-    bindOnEquip: true
-    nameKey: a.wto|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: 638511876
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15554,15 +12372,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Pink:
-    bindOnEquip: true
-    nameKey: a.wtp|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -866352180
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15604,15 +12414,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Red:
-    bindOnEquip: true
-    nameKey: a.wtr|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: -1136323717
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15654,15 +12456,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Violet:
-    bindOnEquip: true
-    nameKey: a.wtv|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: 831019349
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15704,15 +12498,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Sweet Dreams, Tech/Sweet Dreams, Tech Yellow:
-    bindOnEquip: true
-    nameKey: a.wty|m.sweet_dreams
-    rarity: 5
-    slot: SWORD
-    stockId: 913123658
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15754,15 +12540,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Swift Flourish:
-    bindOnEquip: true
-    nameKey: m.swift_flourish
-    rarity: 3
-    slot: SWORD
-    stockId: -1752377846
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15804,15 +12582,7 @@ items:
         impulseDurationMs: 750
         impulseX: 4
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Tempered Calibur:
-    bindOnEquip: true
-    nameKey: m.tempered_calibur
-    rarity: 3
-    slot: SWORD
-    stockId: 11663657
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -15854,15 +12624,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/The Ban Stick:
-    bindOnEquip: true
-    nameKey: m.the_ban_stick
-    rarity: 5
-    slot: SWORD
-    stockId: 1099959019
-    type: Sword
     combat:
       chargeTimeMs: 1500
       maxChain: 3
@@ -15904,15 +12666,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Thwack Hammer:
-    bindOnEquip: true
-    nameKey: m.thwack_hammer
-    rarity: 1
-    slot: SWORD
-    stockId: 314989051
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -15943,15 +12697,7 @@ items:
         impulseDurationMs: 200
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Triglav:
-    bindOnEquip: true
-    nameKey: m.triglav
-    rarity: 5
-    slot: SWORD
-    stockId: -451244256
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -15982,15 +12728,7 @@ items:
         impulseDurationMs: 200
         impulseX: 3
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Troika:
-    bindOnEquip: true
-    nameKey: m.troika
-    rarity: 2
-    slot: SWORD
-    stockId: 124171699
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 2
@@ -16021,15 +12759,7 @@ items:
         impulseDurationMs: 200
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Turbillion:
-    bindOnEquip: true
-    nameKey: m.turbillion
-    rarity: 5
-    slot: SWORD
-    stockId: 1684527733
-    type: Sword
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -16067,15 +12797,7 @@ items:
         landMs: 800
         rearmMs: 933
         clearMs: 1959
-    modifiers: {
-      }
   Weapon/Sword/Twisted Snarble Barb:
-    bindOnEquip: true
-    nameKey: m.twisted_snarble_barb
-    rarity: 3
-    slot: SWORD
-    stockId: -699836673
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16117,20 +12839,7 @@ items:
         impulseDurationMs: 100
         impulseX: -0.75
         impulseY: 0
-    modifiers: {
-      }
-  Weapon/Sword/Untimely Scythe/Parts/Untimely Scythe, Base (Leviathan Blade):
-    bindOnEquip: true
-    nameKey: m.scythe
-    rarity: 5
-    stockId: 0
-    type: Sword
   Weapon/Sword/Untimely Scythe/Untimely Scythe:
-    bindOnEquip: true
-    nameKey: a.untimely|m.scythe
-    rarity: 5
-    stockId: 1754621718
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16173,12 +12882,6 @@ items:
         impulseX: 1
         impulseY: 0
   Weapon/Sword/Untimely Scythe/Untimely Scythe, Shadow:
-    bindOnEquip: true
-    nameKey: a.shd|m.scythe
-    rarity: 5
-    slot: SWORD
-    stockId: 1428452554
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16220,15 +12923,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Vile Striker:
-    bindOnEquip: true
-    nameKey: m.vile_striker
-    rarity: 4
-    slot: SWORD
-    stockId: 1175186417
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -16284,15 +12979,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Voltedge:
-    bindOnEquip: true
-    nameKey: m.voltedge
-    rarity: 5
-    slot: SWORD
-    stockId: -182873213
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16334,15 +13021,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Wild Hunting Blade:
-    bindOnEquip: true
-    nameKey: m.wild_hunting_blade
-    rarity: 5
-    slot: SWORD
-    stockId: 1211512854
-    type: Sword
     combat:
       chargeTimeMs: 2000
       maxChain: 5
@@ -16398,15 +13077,7 @@ items:
         impulseDurationMs: 100
         impulseX: 2
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Winmillion:
-    bindOnEquip: true
-    nameKey: m.winmillion
-    rarity: 4
-    slot: SWORD
-    stockId: -194063851
-    type: Sword
     combat:
       chargeTimeMs: 2500
       maxChain: 3
@@ -16444,15 +13115,7 @@ items:
         landMs: 800
         rearmMs: 933
         clearMs: 1959
-    modifiers: {
-      }
   Weapon/Sword/Winter's Edge:
-    bindOnEquip: true
-    nameKey: m.raiders_sword
-    rarity: 5
-    slot: SWORD
-    stockId: -2094989113
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16494,15 +13157,7 @@ items:
         impulseDurationMs: 150
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/Wrench Wand:
-    bindOnEquip: true
-    nameKey: m.wrench_wand
-    rarity: 2
-    slot: SWORD
-    stockId: 420056402
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16544,15 +13199,7 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }
   Weapon/Sword/_Frost Sword:
-    bindOnEquip: true
-    nameKey: m.frost_sword
-    rarity: 3
-    slot: SWORD
-    stockId: -1558906553
-    type: Sword
     combat:
       chargeTimeMs: 3000
       maxChain: 3
@@ -16594,5 +13241,3 @@ items:
         impulseDurationMs: 200
         impulseX: 1
         impulseY: 0
-    modifiers: {
-      }

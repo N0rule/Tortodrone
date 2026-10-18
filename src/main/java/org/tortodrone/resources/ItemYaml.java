@@ -17,24 +17,34 @@ public final class ItemYaml {
         Path argumentFile=directory.resolve("../_internal/item-arguments.json").normalize();ContentFiles.regular(argumentFile);if(Files.size(argumentFile)>32_000_000)throw new IOException("Item arguments exceed size limit: "+argumentFile);
         var arguments=map(Json.parseCatalog(Files.readString(argumentFile)),"item arguments");
         var rows=new ArrayList<Object>();var weapons=new ArrayList<WeaponCatalog.Weapon>();var shields=new ArrayList<WeaponCatalog.Shield>();var equipment=new ArrayList<EquipmentCatalog.Entry>();
+        var definitions=new LinkedHashMap<String,Object>();Path base=directory.resolve("../_internal/item-definitions.json").normalize();
+        if(Files.exists(base))definitions.putAll(map(Json.parseCatalog(Files.readString(base)),"native item definitions"));
         var seen=new HashSet<String>();
         for(String category:CATEGORIES) {
             Path file=directory.resolve(category+".yml");var root=Yaml.read(file);fields(root,file.toString(),"items");
             for(var entry:map(root.get("items"),file+": items").entrySet()) {
                 String config=entry.getKey(),where=file+": "+config;
                 if(!seen.add(config.toLowerCase(Locale.ROOT)))throw new IOException(where+": duplicate item config");
-                var row=new LinkedHashMap<>(map(entry.getValue(),where));
-                fields(row,where,"stockId","type","nameKey","rarity","stackable","slot","bindOnEquip","permanent","locked","variant","seed","combat","shield","modifiers");
-                Object combat=row.remove("combat"),shield=row.remove("shield"),modifiers=row.remove("modifiers");
-                if(combat!=null)weapons.add(weapon(config,map(combat,where+" combat")));
-                if(shield!=null)shields.add(shield(config,map(shield,where+" shield")));
-                if(modifiers!=null)equipment.add(equipment(config,row,map(modifiers,where+" modifiers")));
-                row.put("config",config);row.putIfAbsent("nameKey","");row.putIfAbsent("rarity",-1);row.putIfAbsent("stackable",false);
-                row.putIfAbsent("slot",null);row.putIfAbsent("bindOnEquip",false);row.putIfAbsent("permanent",false);row.putIfAbsent("locked",false);
-                row.putIfAbsent("variant","ITEM");row.putIfAbsent("seed",null);row.put("modelArguments",arguments.getOrDefault(config,Map.of()));rows.add(row);
+                var edits=map(entry.getValue(),where);
+                fields(edits,where,"stockId","type","nameKey","rarity","stackable","slot","bindOnEquip","permanent","locked","variant","seed","combat","shield","modifiers");
+                var merged=new LinkedHashMap<>(map(definitions.getOrDefault(config,Map.of()),where));merged.putAll(edits);definitions.put(config,merged);
             }
         }
-        try{return new Definitions(ItemCatalog.fromData(Map.of("format","tortodrone-items","version",2,"items",rows)),new WeaponCatalog(weapons,shields,dodgeCooldown),new EquipmentCatalog(equipment));}
+        for(var entry:definitions.entrySet()) {
+            String config=entry.getKey();var row=new LinkedHashMap<>(map(entry.getValue(),config));
+            Object combat=row.remove("combat"),shield=row.remove("shield"),modifiers=row.remove("modifiers");
+            if(combat!=null)weapons.add(weapon(config,map(combat,config+" combat")));
+            if(shield!=null)shields.add(shield(config,map(shield,config+" shield")));
+            if(modifiers!=null&&!map(modifiers,config+" modifiers").isEmpty())equipment.add(equipment(config,row,map(modifiers,config+" modifiers")));
+            // Empty modifier records carry zero-valued equipment membership too.
+            else if(modifiers!=null)equipment.add(equipment(config,row,Map.of()));
+            row.put("config",config);row.putIfAbsent("nameKey","");row.putIfAbsent("rarity",-1);row.putIfAbsent("stackable",false);
+            row.putIfAbsent("slot",null);row.putIfAbsent("bindOnEquip",false);row.putIfAbsent("permanent",false);row.putIfAbsent("locked",false);
+            row.putIfAbsent("variant","ITEM");row.putIfAbsent("seed",null);row.put("modelArguments",arguments.getOrDefault(config,Map.of()));rows.add(row);
+        }
+        var names=new LinkedHashMap<String,String>();Path nameFile=directory.resolve("../_internal/item-names.json").normalize();
+        if(Files.exists(nameFile))for(var e:map(Json.parseCatalog(Files.readString(nameFile)),"item names").entrySet())names.put(e.getKey(),text(e.getValue(),"item name"));
+        try{return new Definitions(ItemCatalog.fromData(Map.of("format","tortodrone-items","version",2,"items",rows)).withDisplayNames(names),new WeaponCatalog(weapons,shields,dodgeCooldown),new EquipmentCatalog(equipment));}
         catch(IllegalArgumentException bad){throw new IOException(directory+": "+bad.getMessage(),bad);}
     }
     private static WeaponCatalog.Weapon weapon(String config,Map<String,Object> m)throws IOException {

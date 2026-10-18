@@ -242,9 +242,9 @@ final class WorldSession implements AutoCloseable {
             }else{
                 if(!((method==4||method==5)&&a.size()==1||method==6&&a.size()==2&&a.getFirst() instanceof List<?> names&&names.size()<=128&&names.stream().allMatch(v->v instanceof String)))throw new IOException("Unsupported Town depot operation");
                 var offers=new LinkedHashMap<Integer,org.tortodrone.town.TownCatalog.DepotGood>();var rules=scenes.town();
-                var snapshot=characters.depot(rules).snapshot();
-                for(var offer:snapshot.offers()){var good=offer.good();var def=characters.catalog().find(good.item());if(!offer.enabled()||def==null||!def.grantable()||method==5&&!offer.featured()||method==6&&!((List<?>)a.getFirst()).contains(good.item()))continue;
-                    int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();offers.put(offer.id(),new org.tortodrone.town.TownCatalog.DepotGood(new org.tortodrone.town.TownCatalog.Good(good.item(),good.count(),price,good.energy(),good.limit(),good.token(),good.tokenCount()),offer.featured()));
+                var snapshot=characters.depot(rules).catalog();
+                for(var offer:snapshot.offers()){var good=offer.good();var def=characters.catalog().find(good.item());if(!offer.enabled()||def==null||!def.grantable()||method==5&&!offer.featured()&&!offer.sale()||method==6&&!((List<?>)a.getFirst()).contains(good.item()))continue;
+                    int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();offers.put(offer.id(),new org.tortodrone.town.TownCatalog.DepotGood(new org.tortodrone.town.TownCatalog.Good(good.item(),good.count(),price,good.energy(),good.limit(),good.token(),good.tokenCount()),offer.featured(),offer.originalPrice(),offer.sale()));
                     depotOffers.put(offer.id(),new org.tortodrone.storage.DepotStore.Quote(snapshot.revision(),offer));
                 }
                 output.send(()->codec.townResult(oid,listener.requestId(),new org.tortodrone.town.TownCatalog.DepotOffers(offers),profile));

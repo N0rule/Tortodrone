@@ -28,7 +28,7 @@ public final class TownCompatibility {
         var listing=new AuctionState.Listing(5,42,item,100,1000,0,Long.MAX_VALUE,false,false,true,false,10);append(bytes,codec.townResult(1002,(short)6,new AuctionState.Page(1,List.of(listing)),profile));
         var featured=new AuctionState.Listing(6,0,item,100,1000,0,Long.MAX_VALUE,false,false,false,false,0,false,10,9,12345);
         append(bytes,codec.townResult(1002,(short)7,new AuctionState.Page(1,List.of(featured)),profile));
-        append(bytes,codec.townResult(1002,(short)8,new TownCatalog.DepotOffers(Map.of(7,new TownCatalog.DepotGood(new TownCatalog.Good("Weapon/Sword/Calibur",1,500,200,0,"",0),true))),profile));
+        append(bytes,codec.townResult(1002,(short)8,new TownCatalog.DepotOffers(Map.of(7,new TownCatalog.DepotGood(new TownCatalog.Good("Weapon/Sword/Calibur",1,500,200,0,"",0),true,400,true))),profile));
         int callbackEnd=bytes.size();
         var actor=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,0,0,0,0,0,0,1,new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0,org.tortodrone.world.SceneStatus.State.NORMAL,KnightProgress.RECRUIT,sprite,new TownState.Harness(9,"Iron Harness")));
         var changed=new org.tortodrone.world.ActorState(42,1002,"Fixture",256,1,1,0,0,0,0,0,1,actor.config(),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(null,0));
@@ -63,7 +63,7 @@ public final class TownCompatibility {
         if(nativeFeatured.featured==null||nativeFeatured.featured.total!=10||nativeFeatured.featured.remaining!=9||nativeFeatured.myAuction)throw new AssertionError("Featured stock/ownership fields differ");
         var depotReply=(com.threerings.presents.dobj.InvocationResponseEvent)((EventNotification)in.qe()).yj();
         var nativeGood=(com.threerings.projectx.mission.data.RankGood)((Map<?,?>)depotReply.yd()[0]).get(7);
-        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||!nativeGood.special||!nativeGood.TY()||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
+        if(nativeGood==null||!field(nativeGood.good,"_realPrice").equals(500)||!field(nativeGood.good,"_realEnergy").equals(200)||!nativeGood.special||!nativeGood.TY()||!field(nativeGood.good,"_originalPrice").equals(400)||!field(nativeGood.good,"_sale").equals(true)||nativeGood.promoHeader!=null||nativeGood.promoDetail!=null)throw new AssertionError("Depot good price/promotion fields differ");
         if(bytes.size()-in.available()!=callbackEnd)throw new AssertionError("Callback boundary differs by "+(bytes.size()-in.available()-callbackEnd)+" bytes");
         var added=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();var nativeActor=(com.threerings.projectx.data.actor.Knight)added.aej()[0];if(field(nativeActor,"_sprite")==null)throw new AssertionError("Native equipped sprite absent from Knight");
         var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();nativeActor=(com.threerings.projectx.data.actor.Knight)delta.aek()[0].apply(nativeActor);if(field(nativeActor,"_sprite")!=null)throw new AssertionError("Native sprite removal delta failed");

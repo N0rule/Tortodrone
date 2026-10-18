@@ -618,7 +618,7 @@ public final class SessionCodec {
         else if(value instanceof org.tortodrone.town.TownCatalog.DepotOffers offers){
             type(out,"java.util.HashMap");out.writeInt(offers.goods().size());for(var entry:new java.util.TreeMap<>(offers.goods()).entrySet()){
                 value(out,entry.getKey());type(out,"com.threerings.projectx.mission.data.RankGood");var g=entry.getValue().good();
-                type(out,"com.threerings.projectx.shop.config.GoodConfig$Item");out.writeInt(g.price());out.writeInt(g.energy());out.writeInt(0);out.writeBoolean(false);out.writeInt(g.count());out.writeInt(g.limit());value(out,new StarterCatalog.Model(g.item(),Map.of()));
+                type(out,"com.threerings.projectx.shop.config.GoodConfig$Item");out.writeInt(g.price());out.writeInt(g.energy());out.writeInt(entry.getValue().originalPrice());out.writeBoolean(entry.getValue().sale());out.writeInt(g.count());out.writeInt(g.limit());value(out,new StarterCatalog.Model(g.item(),Map.of()));
                 out.writeBoolean(entry.getValue().featured());string(out,null);string(out,null);
             }
         }

@@ -27,7 +27,12 @@ final class UnifiedExport {
         }
         exportItems(registry,content);
         var town=registry.resources().containsKey("town")?map(Json.parse(Files.readString(registry.resources().get("town").path())),"town"):new LinkedHashMap<String,Object>();
-        var handled=new HashSet<String>(Set.of("format"));
+        var handled=new HashSet<String>(Set.of("format","depot"));
+        if(town.containsKey("depot")) {
+            // Legacy import artifact only; never loaded as a runtime catalog.
+            Files.writeString(target.resolve("legacy-depot-import.json"),Json.stringify(Map.of("depot",town.get("depot")))+"\n",StandardOpenOption.CREATE_NEW);
+            report.add("Legacy Depot preserved as legacy-depot-import.json; import explicitly with EconomyUpgrade, not YAML runtime configuration");
+        }
         for(var section:TownYaml.SECTIONS.entrySet()) {var data=new LinkedHashMap<String,Object>();for(String key:section.getValue()){data.put(key,town.getOrDefault(key,List.of()));handled.add(key);}write(content.resolve("town/"+section.getKey()+".yml"),data);}
         if(!handled.containsAll(town.keySet()))throw new IOException("Unconverted Town sections: "+town.keySet().stream().filter(k->!handled.contains(k)).toList());
         var cycles=new LinkedHashMap<String,Object>();var statuses=new LinkedHashMap<String,Object>();var combat=new LinkedHashMap<String,Object>();
@@ -39,6 +44,7 @@ final class UnifiedExport {
         for(var entry:registry.resources().entrySet())if(entry.getKey().startsWith("scene."))exportMap(entry.getValue().path(),content.resolve("maps/"+names.get(PackContent.sceneId(entry.getKey()))),names,cycles,statuses,combat);
         write(content.resolve("shared/combat.yml"),Map.of("properties",group(combat)));
         write(content.resolve("shared/trap-cycles.yml"),Map.of("cycles",groupCycles(cycles)));write(content.resolve("shared/statuses.yml"),Map.of("properties",statuses));
+        ContentPresentation.compact(content);
         var config=new LinkedHashMap<String,Object>();config.put("server-ip",settings.bind());config.put("server-port",settings.port());config.put("max-clients",settings.maxClients());config.put("log-mode",settings.logMode().name().toLowerCase(Locale.ROOT));config.put("log-max-mib",settings.logMaxMiB());config.put("log-retention",settings.logRetention());config.put("startup-map",names.get(registry.scenes().entry().id()));
         write(target.resolve("config/server.yml"),config);write(target.resolve("config/combat.yml"),Map.of("dodgeCooldownMs",registry.weapons().dodgeCooldown()));
         for(var resource:registry.resources().entrySet())report.add("Converted "+resource.getKey()+" from "+resource.getValue().pack()+" / "+resource.getValue().path()+" sha256="+resource.getValue().sha256());
@@ -47,12 +53,14 @@ final class UnifiedExport {
     private void exportItems(ContentRegistry registry,Path content)throws IOException {
         var root=map(Json.parse(Files.readString(registry.resources().get("items").path())),"items");
         var categories=new LinkedHashMap<String,Map<String,Object>>();for(String name:ItemYaml.CATEGORIES)categories.put(name,new LinkedHashMap<>());
+        var discovery=new TreeMap<String,Object>();
         var arguments=new TreeMap<String,Object>();var equipment=new HashMap<String,EquipmentCatalog.Entry>();for(var e:registry.equipment().entries())equipment.put(e.config(),e);
         for(Object raw:list(root.get("items"),"items")) {
             var row=new LinkedHashMap<>(map(raw,"item"));String config=text(row.remove("config"),"config"),type=text(row.get("type"),"type");
             Object args=row.remove("modelArguments");if(args instanceof Map<?,?> m&&!m.isEmpty())arguments.put(config,args);
             // v1 legacy catalogs are normalized through their verified typed definitions.
-            var definition=registry.items().find(config);row.put("locked",definition.locked());row.put("variant",definition.variant().name());row.put("seed",definition.seed());
+            var definition=registry.items().find(config);
+            if(game!=null&&!definition.nameKey().isBlank()) {String name=resolve("item",definition.nameKey());if(!name.equals(definition.nameKey())&&!name.contains("{")&&!name.contains("%")&&!name.isBlank())discovery.put(config,name);}row.put("locked",definition.locked());row.put("variant",definition.variant().name());row.put("seed",definition.seed());
             for(var d:Map.<String,Object>of("nameKey","","rarity",-1,"stackable",false,"bindOnEquip",false,"permanent",false,"locked",false,"variant","ITEM").entrySet())if(d.getValue().equals(row.get(d.getKey())))row.remove(d.getKey());
             row.values().removeIf(Objects::isNull);
             var weapon=registry.weapons().find(config);if(weapon!=null)row.put("combat",weapon(weapon));
@@ -63,6 +71,7 @@ final class UnifiedExport {
             categories.get(category).put(config,row);
         }
         for(var c:categories.entrySet())write(content.resolve("items/"+c.getKey()+".yml"),Map.of("items",c.getValue()));
+        Files.writeString(content.resolve("_internal/item-names.json"),Json.stringify(discovery),StandardOpenOption.CREATE_NEW);
         Files.writeString(content.resolve("_internal/item-arguments.json"),Json.stringify(arguments),StandardOpenOption.CREATE_NEW);
     }
     private static Map<String,Object> weapon(WeaponCatalog.Weapon w) {
@@ -133,7 +142,11 @@ final class UnifiedExport {
             for(int i=0;i<Integer.parseInt(node.get("responses"));i++) {String rp="response."+i+".";String rk=node.get(rp+"text"),rt=resolve(bundle,rk);var r=new LinkedHashMap<String,Object>();r.put("text",rt);String next=node.getOrDefault(rp+"destination","");if(next.isEmpty())r.put("close",true);else r.put("next",next);var action=new LinkedHashMap<String,Object>();for(String field:List.of("station","command"))if(!node.getOrDefault(rp+field,"").isEmpty())action.put(field,node.get(rp+field));if(!action.isEmpty())r.put("action",i);responses.add(r);nativeResponses.add(Map.of("key",rk,"defaultText",rt,"properties",action));}
             nr.put("responses",nativeResponses);nativeNodes.put(name,nr);nodes.put(name,Map.of("text",text,"responses",responses));
         }
-        write(target.resolve("npcs/"+id+".yml"),Map.of("id",id,"dialogue",Map.of("initial",properties.get("initial"),"nodes",nodes)));
+        String file=id;
+        if(game!=null&&fixed.get("name") instanceof String nameKey&&!nameKey.equals("~")) {
+            String name=resolve(bundle,nameKey);if(!name.equals(nameKey)&&!name.isBlank()&&!name.contains("{")){file=slug(name);if(Files.exists(target.resolve("npcs/"+file+".yml")))file+="_"+slug(id);}
+        }
+        write(target.resolve("npcs/"+file+".yml"),Map.of("id",id,"dialogue",Map.of("initial",properties.get("initial"),"nodes",nodes)));
         return Map.of("properties",fixed,"nodes",nativeNodes);
     }
     private static boolean same(Object a,Object b) {

@@ -1,0 +1,47 @@
+package org.tortodrone.resources;
+
+import java.io.*;
+import java.nio.file.*;
+import java.security.*;
+import java.util.*;
+import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.support.ContentFixture;
+import static org.tortodrone.support.TestWire.check;
+
+/** Golden compiled defaults from 0078b50, plus sparse edits and immutable identity failures. */
+public final class SparseContentTest {
+    public static void main(String[] args)throws Exception {
+        Path root=Files.createTempDirectory("tortodrone-sparse-");
+        try {
+            var catalogGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/catalog-baseline.json"))),"catalog baseline");
+            var sceneGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/scene-defaults.json"))),"scene baseline");
+            var baseline=ContentManager.load(Path.of("."));ItemCatalog.write(root.resolve("items.json"),baseline.items().entries());check(ContentFiles.digest(root.resolve("items.json")).equals(catalogGolden.get("items")),"all 9,348 indexed item metadata/arguments remain identical");
+            for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
+                var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"));check(hash(prepared.content()).equals(sceneGolden.get(map.getKey().toString())),"complete inherited scene properties unchanged: "+map.getKey());
+                check(hash(prepared.portals()).equals(catalogGolden.get("portals."+map.getKey())),"portal identity/coordinates/precise headings unchanged: "+map.getKey());
+                check(Yaml.map(Yaml.read(map.getValue().resolve("actors.yml")).get("actors"),"actors").isEmpty(),"actor defaults require no generated YAML repetition");
+            }
+            ContentFixture.copy(Path.of("content"),root.resolve("content"));ContentFixture.copy(Path.of("config"),root.resolve("config"));
+            for(String resource:List.of("town-definitions.json","statuses.json")) {
+                Path nativeResource=root.resolve("content/_internal/"+resource),saved=root.resolve("saved-"+resource);
+                Files.move(nativeResource,saved);refused(()->ContentManager.load(root));Files.move(saved,nativeResource);
+            }
+            Path townDefaults=root.resolve("content/_internal/town-definitions.json");String originalTown=Files.readString(townDefaults);
+            var townData=Yaml.map(Json.parseCatalog(originalTown),"Town defaults");var itemRows=new ArrayList<Object>(Yaml.list(townData.get("items"),"native items"));itemRows.add(itemRows.getFirst());townData.put("items",itemRows);
+            Files.writeString(townDefaults,Json.stringify(townData));refused(()->ContentManager.load(root));Files.writeString(townDefaults,originalTown);
+            Path actorFile=root.resolve("content/maps/advanced_training/actors.yml");var actors=new LinkedHashMap<String,Object>();actors.put("made_up_actor",Map.of("x",1));write(actorFile,Map.of("actors",actors));refused(()->ContentManager.load(root));
+            Path bindingFile=root.resolve("content/maps/advanced_training/native/bindings.json");var bindings=Yaml.map(Json.parseCatalog(Files.readString(bindingFile)),"bindings");var aliases=Yaml.map(bindings.get("actorAliases"),"aliases");var defaults=Yaml.map(bindings.get("actorDefaults"),"defaults");
+            var alias=aliases.entrySet().stream().filter(e->{try{return Yaml.map(defaults.get(e.getValue()),"defaults").containsKey("child.health");}catch(IOException failure){throw new UncheckedIOException(failure);}}).findFirst().orElseThrow();
+            actors.clear();actors.put(alias.getKey(),Map.of("monster",Map.of("health",33,"attackIntervalMs",3099),"position",Map.of("x",-17.5,"y",13.5)));write(actorFile,Map.of("actors",actors));
+            var prepared=MapYaml.prepare(actorFile.getParent(),root.resolve("content/shared"));check(prepared.content().getProperty("entry."+alias.getValue()+".child.health").equals("33")&&prepared.content().getProperty("entry."+alias.getValue()+".child.attack-interval").equals("3099"),"semantic sparse controls retain engine units");
+            actors.put(alias.getValue().toString(),Map.of());write(actorFile,Map.of("actors",actors));refused(()->ContentManager.load(root));
+            write(actorFile,Map.of("actors",Map.of(alias.getKey(),Map.of("config","Forged/Identity"))));refused(()->ContentManager.load(root));
+            check(!baseline.items().search("Silver Key").isEmpty(),"localized item names discover canonical stock IDs");
+            System.out.println("PASS: seven golden scene/portal snapshots, 9348 exact item definitions, sparse aliases/controls, duplicate/native-identity rejection and discovery names");
+        }finally{ContentFixture.delete(root);}
+    }
+    private static String hash(Properties p)throws Exception {var sorted=new TreeMap<String,Object>();p.forEach((k,v)->sorted.put(k.toString(),v.toString()));return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Json.stringify(sorted).getBytes(java.nio.charset.StandardCharsets.UTF_8)));}
+    private static void write(Path path,Map<String,Object> data)throws IOException{Files.delete(path);Yaml.write(path,data);}
+    private interface Work {void run()throws Exception;}
+    private static void refused(Work work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}
+}

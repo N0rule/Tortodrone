@@ -36,8 +36,8 @@ public final class GiftWrappingTest {
             check(restored.level()==2&&restored.heatProgress()==.4f&&restored.variants().size()==1&&opened.items().stream().noneMatch(i->i.id()==box.id()),"unwrapping preserves equipment state and consumes the box");
             refused(()->town.unwrap(b,1,1,box.id()));check(db.worldProfile(b,1,1).equals(opened),"replayed unwrap cannot duplicate contents");
             // Known predecessor upgrade is additive; no player rows or original item state change.
-            db.write(c->{try(var st=c.createStatement()){st.execute("DROP TABLE town_gifts");st.execute("PRAGMA user_version=12");}return null;});
-            check(new Database(home,true).worldProfile(b,1,1).equals(opened),"known schema-12 upgrade preserves inventory");
+            db.write(c->{try(var st=c.createStatement()){org.tortodrone.support.SchemaFixture.depotBefore15(c);st.execute("DROP TABLE town_gifts");st.execute("PRAGMA user_version=12");}return null;});
+            check(org.tortodrone.support.SchemaFixture.upgrade(home).worldProfile(b,1,1).equals(opened),"known schema-12 upgrade preserves inventory");
             System.out.println("PASS: gift ownership/rollback, native pairing, persistence, trade, properties, duplicate unwrap and additive schema upgrade");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }

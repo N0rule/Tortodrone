@@ -15,7 +15,7 @@ public final class BillingSessionTest {
         var socket=new Socket(){@Override public OutputStream getOutputStream(){return bytes;}};
         var codec=new SessionCodec();
         var replies=new ArrayList<Integer>();
-        try(var output=new SessionOutput(socket);var world=new WorldSession(socket,null,output,codec,1001,1,m->{},SceneRegistry.system())){
+        try(var output=new SessionOutput(socket);var world=new WorldSession(socket,new org.tortodrone.character.CharacterStore(1,"Billing-Fixture"),output,codec,1001,1,m->{},SceneRegistry.system())){
             // Decoder explicitly permits a zero-element invocation array.
             var writer=new TestWire.Writer();
             var decoded=new HandshakeCodec().sessionRequest(writer.body(out->{

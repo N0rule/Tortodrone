@@ -1,10 +1,10 @@
 entrances:
   level_start:
     id: 1498
-    facing: -179.999991348578
+    facing: -180
     x: 5.5
     y: -12.5
 portals:
-  '1526':
+  to_haven_1:
     destination: haven
     entrance: from_advanced_training

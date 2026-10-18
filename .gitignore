@@ -17,3 +17,22 @@ __pycache__/
 
 # Local deployment state
 /data/
+
+# Never publish a database, private key, token or local review candidate from any folder.
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.key
+*private*.pem
+**/private.txt
+**/tokens.json
+/content-updates/
+*.db-journal
+*.sqlite-journal
+*.sqlite3
+**/keys/
+*.pk8
+*.hprof

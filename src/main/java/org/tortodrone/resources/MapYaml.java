@@ -58,12 +58,30 @@ public final class MapYaml {
         properties(content,"",map(bindings.get("mechanics"),"native mechanics"));
         var actors=read(folder.resolve("actors.yml"));fields(actors,folder+" actors","actors");
         var nativeActors=map(bindings.get("actors"),"native actors");var editable=map(actors.get("actors"),"actors");
-        if(!editable.keySet().equals(nativeActors.keySet()))throw new IOException(folder+": actor bindings differ from the native scene; reimport required");
+        var defaults=map(bindings.getOrDefault("actorDefaults",Map.of()),"native actor defaults");
+        if(!defaults.isEmpty()&&!defaults.keySet().equals(nativeActors.keySet()))throw new IOException("Native actor defaults are incomplete");
+        var aliases=map(bindings.getOrDefault("actorAliases",Map.of()),"actor aliases");
+        var aliasTargets=new HashSet<String>();
+        for(var alias:aliases.entrySet())if(!alias.getKey().matches("[a-z][a-z0-9_]*")||nativeActors.containsKey(alias.getKey())||!nativeActors.containsKey(text(alias.getValue(),"alias target"))||!aliasTargets.add(text(alias.getValue(),"alias target")))throw new IOException("Invalid or colliding actor alias: "+alias.getKey());
+        var overrides=new LinkedHashMap<String,Map<String,Object>>();
+        for(var edit:editable.entrySet()) {
+            String id=aliases.containsKey(edit.getKey())?text(aliases.get(edit.getKey()),"actor binding"):edit.getKey();
+            if(!nativeActors.containsKey(id)||overrides.putIfAbsent(id,map(edit.getValue(),"actor override"))!=null)throw new IOException("Unknown or duplicate actor binding: "+edit.getKey());
+        }
+        if(defaults.isEmpty()&&!overrides.keySet().equals(nativeActors.keySet()))throw new IOException(folder+": legacy actor defaults missing; retain all actors or prepare an updated candidate");
         var ids=new ArrayList<String>();
-        for(var actor:editable.entrySet()) {
-            String id=actor.getKey();ids.add(id);var fixed=map(nativeActors.get(id),"native actor "+id);var values=map(actor.getValue(),folder+" actor "+id);
+        List<?> order=list(bindings.getOrDefault("actorOrder",new ArrayList<>(overrides.isEmpty()?nativeActors.keySet():overrides.keySet())),"native actor order");
+        if(order.size()!=nativeActors.size()||!new HashSet<>(order).equals(nativeActors.keySet()))throw new IOException("Native actor order is incomplete or duplicated");
+        for(Object rawId:order) {
+            String id=text(rawId,"native actor ID");ids.add(id);var fixed=map(nativeActors.get(id),"native actor "+id);
+            var values=new LinkedHashMap<>(map(defaults.getOrDefault(id,Map.of()),"actor defaults "+id));
+            var edits=new LinkedHashMap<>(overrides.getOrDefault(id,Map.of()));
+            // Only proven engine controls receive semantic names. Technical overrides remain advanced.
+            semantic(edits,"position",Map.of("x","x","y","y"));
+            semantic(edits,"monster",Map.of("health",values.containsKey("child.health")?"child.health":"health","attackIntervalMs",values.containsKey("child.attack-interval")?"child.attack-interval":"attack-interval"));
+            values.putAll(edits);
             var allowed=map(bindings.get("actorFields"),"actor fields");var names=list(allowed.get(id),"actor fields "+id);
-            for(String field:values.keySet())if(!names.contains(field)&&!field.equals("facing"))throw new IOException(folder+": unknown or immutable actor field "+id+"."+field);
+            for(String field:values.keySet())if(!names.contains(field))throw new IOException(folder+": unknown or immutable actor field "+id+"."+field);
             var types=map(map(bindings.get("actorTypes"),"actor types").get(id),"actor types "+id);
             for(var value:values.entrySet()) {
                 String field=value.getKey(),type=text(types.get(field),"actor field type");
@@ -72,13 +90,27 @@ public final class MapYaml {
             }
             properties(content,"entry."+id+".",fixed);properties(content,"entry."+id+".",values);
             if(values.containsKey("facing")){content.remove("entry."+id+".facing");content.setProperty("entry."+id+".rotation",radians(values.get("facing")));}
+            // Retain exact authored radians for inherited/unchanged headings.
+            if(fixed.containsKey("rotation")&&!edits.containsKey("facing"))content.setProperty("entry."+id+".rotation",text(fixed.get("rotation"),"native rotation"));
         }
         content.setProperty("entries",String.join(",",ids));
         for(Object sharedSection:list(bindings.get("shared"),"shared definitions")) {
             String section=text(sharedSection,"shared section");
             if(!Set.of("trap-cycles","statuses","combat").contains(section))throw new IOException("Unknown shared section: "+section);
             var data=read(shared.resolve(section+".yml"));fields(data,section,section.equals("trap-cycles")?"cycles":"properties");
-            properties(content,section.equals("trap-cycles")?"cycle.":"",map(data.values().iterator().next(),section));
+            var sharedValues=map(data.values().iterator().next(),section);
+            Path statusDefaults=shared.getParent().resolve("_internal/statuses.json");
+            if(section.equals("statuses")&&sharedValues.isEmpty()&&!Files.isRegularFile(statusDefaults))throw new IOException("Missing native status defaults: "+statusDefaults);
+            if(section.equals("statuses")&&Files.exists(statusDefaults)) {
+                var nativeValues=map(Json.parseCatalog(Files.readString(statusDefaults)),"native status defaults");
+                var effective=new LinkedHashMap<>(nativeValues);
+                for(var override:sharedValues.entrySet()) {
+                    if(!(nativeValues.get(override.getKey()) instanceof Number))throw new IOException("Unknown or immutable status field: "+override.getKey());
+                    decimal(override.getValue(),"advanced status override");effective.put(override.getKey(),override.getValue());
+                }
+                sharedValues=effective;
+            }
+            properties(content,section.equals("trap-cycles")?"cycle.":"",sharedValues);
         }
         var mechanics=Files.exists(folder.resolve("mechanics.yml"))?read(folder.resolve("mechanics.yml")):Map.<String,Object>of("properties",Map.of());fields(mechanics,folder+" mechanics","properties");
         var local=map(mechanics.get("properties"),"mechanics");var allowedMechanics=list(bindings.get("mechanicFields"),"mechanic fields");
@@ -99,6 +131,12 @@ public final class MapYaml {
         content.setProperty("dialogues",String.join(",",new TreeSet<>(seen)));
         return new Prepared(p,portals,content,nativeDir);
     }
+    private static void semantic(Map<String,Object> edits,String group,Map<String,String> fields)throws IOException {
+        if(!edits.containsKey(group))return;var values=map(edits.remove(group),"actor "+group);
+        for(var value:values.entrySet()) {
+            String target=fields.get(value.getKey());if(target==null||edits.putIfAbsent(target,value.getValue())!=null)throw new IOException("Unknown or duplicate actor field "+group+"."+value.getKey());
+        }
+    }
     private static Properties portals(Path folder,Map<String,Object> bindings,String digest,String defaultSpawn)throws IOException {
         var root=read(folder.resolve("portals.yml"));fields(root,folder+" portals","entrances","portals");
         var p=new Properties();p.setProperty("format","2");p.setProperty("layout-sha256",digest);
@@ -106,13 +144,21 @@ public final class MapYaml {
         for(var entry:entrances.entrySet()) {
             var v=map(entry.getValue(),"entrance");fields(v,"entrance "+entry.getKey(),"id","x","y","facing");
             if(v.containsKey("id"))arrivals.add(entry.getKey());else if(!entry.getKey().equals(defaultSpawn))throw new IOException("Named travel entrance requires a verified native ID: "+entry.getKey());
-            properties(p,"entrance."+entry.getKey()+".",v);p.remove("entrance."+entry.getKey()+".facing");p.setProperty("entrance."+entry.getKey()+".rotation",radians(v.getOrDefault("facing",0)));
+            properties(p,"entrance."+entry.getKey()+".",v);p.remove("entrance."+entry.getKey()+".facing");String rotation=radians(v.getOrDefault("facing",0));
+            var nativeAngles=map(bindings.getOrDefault("entranceAngles",Map.of()),"native entrance angles");
+            if(nativeAngles.containsKey(entry.getKey())) {
+                var angle=map(nativeAngles.get(entry.getKey()),"entrance angle");
+                if(decimal(v.getOrDefault("facing",0),"facing")==decimal(angle.get("displayDegrees"),"display degrees"))rotation=text(angle.get("radians"),"native radians");
+            }
+            p.setProperty("entrance."+entry.getKey()+".rotation",rotation);
         }
         p.setProperty("entrances",String.join(",",arrivals));
-        var portals=map(root.get("portals"),"portals");p.setProperty("triggers",String.join(",",portals.keySet()));
+        var portals=map(root.get("portals"),"portals");var nativeIds=new ArrayList<String>();
+        var aliases=map(bindings.getOrDefault("portalAliases",Map.of()),"portal aliases");
         var geometries=map(bindings.get("portals"),"native portals");
         for(var entry:portals.entrySet()) {
-            String id=entry.getKey(),prefix="trigger."+id+".";var v=map(entry.getValue(),"portal "+id);fields(v,"portal "+id,"destination","entrance");
+            String id=text(aliases.getOrDefault(entry.getKey(),entry.getKey()),"native portal ID"),prefix="trigger."+id+".";
+            if(nativeIds.contains(id))throw new IOException("Duplicate native portal trigger: "+id);nativeIds.add(id);var v=map(entry.getValue(),"portal "+id);fields(v,"portal "+id,"destination","entrance");
             if(!geometries.containsKey(id))throw new IOException(folder+": portal has no verified native trigger: "+id);
             properties(p,prefix,map(geometries.get(id),"portal geometry"));
             Object destination=v.get("destination");int scene;
@@ -121,6 +167,7 @@ public final class MapYaml {
                 scene=integer(read(folder.getParent().resolve(name).resolve("map.yml")).get("id"),"destination ID");}
             p.setProperty(prefix+"scene",Integer.toString(scene));p.setProperty(prefix+"entrance",text(v.get("entrance"),"entrance"));
         }
+        p.setProperty("triggers",String.join(",",nativeIds));
         return p;
     }
     private static void npc(Properties p,String id,Map<String,Object> yaml,Map<String,Object> nativeNpc)throws IOException {
