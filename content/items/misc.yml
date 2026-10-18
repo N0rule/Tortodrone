@@ -1,2 +1,6346 @@
-items: {
-  }
+items:
+  a10:
+    name: Slime Lockbox
+    category: Lockbox
+  a12:
+    name: Slime Lockbox
+    category: Lockbox
+  a14:
+    name: Slime Lockbox
+    category: Lockbox
+  a16:
+    name: Slime Lockbox
+    category: Lockbox
+  a17:
+    name: Slime Lockbox
+    category: Lockbox
+  a18:
+    name: Slime Lockbox
+    category: Lockbox
+  a19:
+    name: Slime Lockbox
+    category: Lockbox
+  a1a:
+    name: Slime Lockbox
+    category: Lockbox
+  a1b:
+    name: Slime Lockbox
+    category: Lockbox
+  a1h:
+    name: Slime Lockbox
+    category: Lockbox
+  a1i:
+    name: Slime Lockbox
+    category: Lockbox
+  a1j:
+    name: Slime Lockbox
+    category: Lockbox
+  acheron_recipe:
+    name: Acheron Recipe
+    category: Recipe
+    rarity: 5
+  advanced:
+    name: Advanced Orb of Alchemy
+    category: Ticket
+    rarity: 3
+    stackable: true
+  advanced_cautery_sword_recipe:
+    name: Advanced Cautery Sword Recipe
+    category: Recipe
+    rarity: 4
+  advanced_evo_catalyst:
+    name: Advanced Evo Catalyst
+    category: Ticket
+    rarity: 4
+    stackable: true
+  aegis_recipe:
+    name: Aegis Recipe
+    category: Recipe
+    rarity: 5
+  aerodynamic_box:
+    name: Aerodynamic Box
+    category: Lockbox
+  aerotech_mk_ii_prize_box:
+    name: AeroTech Mk II Prize Box
+    category: Lockbox
+  aerotech_prize_box:
+    name: AeroTech Prize Box
+    category: Lockbox
+  alchemy:
+    name: Alchemy Room
+    category: Ticket
+    stackable: true
+  almire_furniture_box:
+    name: Almire Furniture Box
+    category: Lockbox
+  almond:
+    name: Almond Eyes
+    category: Eye
+    stackable: true
+  amber:
+    name: Amber
+    category: Color
+    stackable: true
+  amethyst:
+    name: Amethyst
+    category: Lockbox
+  amethyst_prize_box:
+    name: Amethyst Prize Box
+    category: Lockbox
+  amputator_recipe:
+    name: Amputator Recipe
+    category: Recipe
+    rarity: 5
+  ancient_plate_helm_recipe:
+    name: Ancient Plate Helm Recipe
+    category: Recipe
+    rarity: 5
+  ancient_plate_mail_recipe:
+    name: Ancient Plate Mail Recipe
+    category: Recipe
+    rarity: 5
+  ancient_plate_shield_recipe:
+    name: Ancient Plate Shield Recipe
+    category: Recipe
+    rarity: 5
+  ancient_prize_box:
+    name: Ancient Prize Box
+    category: Lockbox
+  ancient_tome:
+    name: Ancient Tome Stand
+    category: Prop
+    stackable: true
+  angelic_helm_recipe:
+    name: Angelic Helm Recipe
+    category: Recipe
+    rarity: 3
+  angelic_raiment_recipe:
+    name: Angelic Raiment Recipe
+    category: Recipe
+    rarity: 3
+  anniversary_base:
+    name: Anniversary Base
+    category: Lockbox
+  anniversary_prize_box:
+    name: Anniversary Prize Box
+    category: Lockbox
+  anniversary_prize_box_2014:
+    name: Anniversary Prize Box 2014
+    category: Lockbox
+  anniversary_prize_box_2015:
+    name: Anniversary Prize Box 2015
+    category: Lockbox
+  anniversary_prize_box_2016:
+    name: Anniversary Prize Box 2016
+    category: Lockbox
+  anniversary_prize_box_2017:
+    name: Anniversary Prize Box 2017
+    category: Lockbox
+  anniversary_prize_box_2018:
+    name: Anniversary Prize Box 2018
+    category: Lockbox
+  anniversary_prize_box_2019:
+    name: Anniversary Prize Box 2019
+    category: Lockbox
+  anniversary_prize_box_complete:
+    name: Anniversary Prize Box, Complete
+    category: Lockbox
+  antique:
+    name: Ancient Bookcase
+    category: Prop
+    stackable: true
+  aquamarine_prize_box:
+    name: Aquamarine Prize Box
+    category: Lockbox
+  aquamarine_s2316828061_c7861c43e6de:
+    name: Aquamarine
+    category: Color
+    stackable: true
+  aquamarine_s3663179769_d55637365871:
+    name: Aquamarine
+    category: Lockbox
+  arc_razor_recipe:
+    name: Arc Razor Recipe
+    category: Recipe
+    rarity: 3
+  arcana_recipe:
+    name: Arcana Recipe
+    category: Recipe
+    rarity: 5
+  argent_peacemaker_recipe:
+    name: Argent Peacemaker Recipe
+    category: Recipe
+    rarity: 5
+  armor:
+    name: Armor
+    category: Recipe
+    rarity: 0
+  armor_of_the_fallen_recipe:
+    name: Armor of the Fallen Recipe
+    category: Recipe
+    rarity: 5
+  ascended_calibur_recipe:
+    name: Ascended Calibur Recipe
+    category: Recipe
+    rarity: 4
+  ash_of_agni_recipe:
+    name: Ash of Agni Recipe
+    category: Recipe
+    rarity: 5
+  ash_tail_cap_recipe:
+    name: Ash Tail Cap Recipe
+    category: Recipe
+    rarity: 4
+  ash_tail_coat_recipe:
+    name: Ash Tail Coat Recipe
+    category: Recipe
+    rarity: 4
+  attack_speed_1:
+    name: Attack Speed 1
+    category: VariantTicket
+    stackable: true
+  attack_speed_2:
+    name: Attack Speed 2
+    category: VariantTicket
+    stackable: true
+  attack_speed_3:
+    name: Attack Speed 3
+    category: VariantTicket
+    stackable: true
+  attack_speed_4:
+    name: Attack Speed 4
+    category: VariantTicket
+    stackable: true
+  auction:
+    name: Auction Room
+    category: Ticket
+    stackable: true
+  autogun_recipe:
+    name: Autogun Recipe
+    category: Recipe
+    rarity: 2
+  autumn_prize_box:
+    name: Autumn Prize Box
+    category: Lockbox
+  avenger_recipe:
+    name: Avenger Recipe
+    category: Recipe
+    rarity: 4
+  azure_guardian_armor_recipe:
+    name: Azure Guardian Armor Recipe
+    category: Recipe
+    rarity: 5
+  azure_guardian_helm_recipe:
+    name: Azure Guardian Helm Recipe
+    category: Recipe
+    rarity: 5
+  b1b:
+    name: Slime Lockbox
+    category: Lockbox
+  barbarous_thorn_blade_recipe:
+    name: Barbarous Thorn Blade Recipe
+    category: Recipe
+    rarity: 5
+  barbarous_thorn_shield_recipe:
+    name: Barbarous Thorn Shield Recipe
+    category: Recipe
+    rarity: 5
+  base_actor:
+    name: Base (Actor)
+    category: Actor
+    stackable: true
+  base_knight_statue:
+    name: Base (Knight statue)
+    category: KnightStatue
+  base_modelprop:
+    name: Base (ModelProp)
+    category: ModelProp
+  base_placeable:
+    name: Base (Placeable)
+    category: Placeable
+    stackable: true
+  base_prop:
+    name: Base (Prop)
+    category: Prop
+    stackable: true
+  base_s0_045eccaf0fa9:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_056159bf0c8d:
+    name: Base
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  base_s0_0a8112aaeed9:
+    name: Base
+    category: Ticket
+    rarity: 0
+    stackable: true
+  base_s0_10e524c9fb2f:
+    name: Slime Lockbox
+    category: Lockbox
+  base_s0_1658f1c87b30:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_19fe979ba735:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_21a46380ed43:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_2567ad01344d:
+    name: Base
+    category: GuildHallGlobalTicket
+    stackable: true
+  base_s0_261268ae13fd:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_293608b0b6f2:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_327f1d5b4576:
+    name: Charred Bench
+    category: Prop
+    stackable: true
+  base_s0_3adef484c6a8:
+    name: Curious Mewkat
+    category: Actor
+    rarity: 5
+    stackable: true
+  base_s0_3ffb0fe97674:
+    name: Wandering Snipe
+    category: Actor
+    stackable: true
+  base_s0_48b0c747149d:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_4a3665f9f414:
+    name: Flying Snipe
+    category: Actor
+    stackable: true
+  base_s0_4c1f0aba8117:
+    name: Base
+    category: Height
+    stackable: true
+  base_s0_5224010f7f99:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_555575083392:
+    name: Base
+    category: Present
+    rarity: 0
+    bindsWhenEquipped: true
+  base_s0_55b108f6d6bd:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_588630e6788c:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_5b319204b8ac:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_748bf63c9493:
+    name: Base
+    category: Ticket
+    stackable: true
+  base_s0_764d61b24405:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_7709cc00b52b:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_7e0c0952770d:
+    name: Base
+    category: Dungeon
+    rarity: 0
+  base_s0_7e2524930b43:
+    name: Base
+    category: Token
+    stackable: true
+    locked: true
+  base_s0_869f22d17ebd:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_8fddcfd3f756:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_9188ba2a662f:
+    name: Base
+    category: Ticket
+    rarity: 0
+    stackable: true
+  base_s0_a6ce566ac2ea:
+    name: Base
+    category: Actor
+    stackable: true
+  base_s0_a72a73b43549:
+    name: Lazy Snipe
+    category: Actor
+    stackable: true
+  base_s0_a7e2745bfdf0:
+    name: Base
+    category: GuildBond
+    stackable: true
+  base_s0_ab745f1d7fe0:
+    name: Companion Prize Box
+    category: Lockbox
+  base_s0_ad83abdd27a9:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_b4fbc0ba3a35:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_bac35bb371fd:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_d2a8307f8c99:
+    name: Base
+    category: GuildHallGlobalTicket
+    stackable: true
+  base_s0_d5da4f9a00a6:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_d6da20835e9d:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_d959c866131e:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_da69b85b4d9b:
+    name: Base
+    category: Ticket
+    rarity: 0
+    stackable: true
+  base_s0_db1c68404321:
+    name: Base
+    category: Ticket
+    stackable: true
+  base_s0_ddc2be581745:
+    name: Base
+    category: Eye
+    stackable: true
+  base_s0_df61f5b2970c:
+    name: Base
+    category: Color
+    stackable: true
+  base_s0_e143ba9c04ca:
+    name: Base
+    category: WrappingPaper
+    stackable: true
+  base_s0_e1dbd374411c:
+    name: Base
+    category: Lockbox
+  base_s0_e6434f65c542:
+    name: Base
+    category: GiftBox
+  base_s0_f40bbd54794f:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_f4cce62ff005:
+    name: Base
+    category: Prop
+    stackable: true
+  base_s0_f979814d708c:
+    name: Base
+    category: Ticket
+    stackable: true
+  base_s0_fa0bfb31e7f8:
+    name: Base
+    category: Ticket
+    stackable: true
+  base_specialprop:
+    name: Base (SpecialProp)
+    category: SpecialProp
+    stackable: true
+  battle_boar_box:
+    name: Battle Boar Box
+    category: Lockbox
+  beast_damage_1:
+    name: Beast Damage 1
+    category: VariantTicket
+    stackable: true
+  beast_damage_2:
+    name: Beast Damage 2
+    category: VariantTicket
+    stackable: true
+  beast_damage_3:
+    name: Beast Damage 3
+    category: VariantTicket
+    stackable: true
+  beast_damage_4:
+    name: Beast Damage 4
+    category: VariantTicket
+    stackable: true
+  bechamel:
+    name: Bechamel's Makeover Studio
+    category: Ticket
+    stackable: true
+  bedroll_01:
+    name: Spiral Bedroll
+    category: Prop
+    stackable: true
+  bee:
+    name: Bee Eyes
+    category: Eye
+    stackable: true
+  bejeweled_stranger_prize_box:
+    name: Bejeweled Stranger Prize Box
+    category: Lockbox
+  bench_charred:
+    name: Charred Bench
+    category: Prop
+    stackable: true
+  bench_restored:
+    name: Restored Bench
+    category: Prop
+    stackable: true
+  big_angry_bomb_recipe:
+    name: Big Angry Bomb Recipe
+    category: Recipe
+    rarity: 5
+  big_beast_basher_recipe:
+    name: Big Beast Basher Recipe
+    category: Recipe
+    rarity: 1
+  biohazard_recipe:
+    name: Biohazard Recipe
+    category: Recipe
+    rarity: 5
+  bishop_black:
+    name: Bishop, Black
+    category: Actor
+    stackable: true
+  bishop_white:
+    name: Bishop, White
+    category: Actor
+    stackable: true
+  bishop_winterfest_red:
+    name: Bishop, Winterfest Red
+    category: Actor
+    stackable: true
+  bishop_winterfest_white:
+    name: Bishop, Winterfest White
+    category: Actor
+    stackable: true
+  black_chaingun_recipe:
+    name: Black Chaingun Recipe
+    category: Recipe
+    rarity: 4
+  black_gobble_snipe_lazy:
+    name: Black Gobble Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_gobble_snipe_plump:
+    name: Black Gobble Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_gobble_snipe_wandering:
+    name: Black Gobble Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_rooster_snipe_lazy:
+    name: Black Rooster Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_rooster_snipe_plump:
+    name: Black Rooster Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_rooster_snipe_wandering:
+    name: Black Rooster Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_snipe_flying:
+    name: Black Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_snipe_lazy:
+    name: Black Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  black_snipe_wandering:
+    name: Black Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  blackhawk_recipe:
+    name: Blackhawk Recipe
+    category: Recipe
+    rarity: 4
+  blast_bomb_recipe:
+    name: Blast Bomb Recipe
+    category: Recipe
+    rarity: 2
+  blaster_recipe:
+    name: Blaster Recipe
+    category: Recipe
+    rarity: 2
+  blazebrand_recipe:
+    name: Blazebrand Recipe
+    category: Recipe
+    rarity: 4
+  blazebreak_armor_recipe:
+    name: Blazebreak Armor Recipe
+    category: Recipe
+    rarity: 3
+  blazebreak_helm_recipe:
+    name: Blazebreak Helm Recipe
+    category: Recipe
+    rarity: 3
+  blazebreak_shield_recipe:
+    name: Blazebreak Shield Recipe
+    category: Recipe
+    rarity: 3
+  blazing_prize_box:
+    name: Blazing Prize Box
+    category: Lockbox
+  blazing_pulsar_recipe:
+    name: Blazing Pulsar Recipe
+    category: Recipe
+    rarity: 4
+  blight_needle_recipe:
+    name: Blight Needle Recipe
+    category: Recipe
+    rarity: 4
+  blitz_needle_recipe:
+    name: Blitz Needle Recipe
+    category: Recipe
+    rarity: 5
+  blizzbrand_recipe:
+    name: Blizzbrand Recipe
+    category: Recipe
+    rarity: 4
+  blizzbreaker_armor_recipe:
+    name: Blizzbreaker Armor Recipe
+    category: Recipe
+    rarity: 3
+  blizzbreaker_helm_recipe:
+    name: Blizzbreaker Helm Recipe
+    category: Recipe
+    rarity: 3
+  blizzbreaker_shield_recipe:
+    name: Blizzbreaker Shield Recipe
+    category: Recipe
+    rarity: 3
+  blooming:
+    name: Blooming Eyes
+    category: Eye
+    stackable: true
+  blooming_prize_box:
+    name: Blooming Prize Box
+    category: Lockbox
+  bloon_bucket:
+    name: Bucket of Bloons
+    category: SpawnActor
+    stackable: true
+  blue:
+    name: Blue
+    category: Color
+    stackable: true
+  blue_flame_s1391481120_9a30ffca46b9:
+    name: Blue Flame
+    category: Prop
+    stackable: true
+  blue_flame_s2395448527_e340b9675ff5:
+    name: Blue Flame
+    category: Prop
+    stackable: true
+  blue_lamp_s1197269104_d71c159f7b6c:
+    name: Blue Lamp
+    category: Prop
+    stackable: true
+  blue_lamp_s2729131511_e65aade2cf5b:
+    name: Blue Lamp
+    category: Prop
+    stackable: true
+  blue_snipe_flying:
+    name: Blue Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  blue_snipe_lazy:
+    name: Blue Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  blue_snipe_wandering:
+    name: Blue Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  boltbrand_recipe:
+    name: Boltbrand Recipe
+    category: Recipe
+    rarity: 4
+  bolted_blade_recipe:
+    name: Bolted Blade Recipe
+    category: Recipe
+    rarity: 1
+  bomb:
+    name: Bomb
+    category: Recipe
+    rarity: 0
+  bombastic_demo_helm_recipe:
+    name: Bombastic Demo Helm Recipe
+    category: Recipe
+    rarity: 5
+  bombastic_demo_suit_recipe:
+    name: Bombastic Demo Suit Recipe
+    category: Recipe
+    rarity: 5
+  bone_pile_skulls:
+    name: Skull Pile
+    category: Prop
+    stackable: true
+  bone_pile_stack:
+    name: Bone Stack
+    category: Prop
+    stackable: true
+  boosted_plate_helm_recipe:
+    name: Boosted Plate Helm Recipe
+    category: Recipe
+    rarity: 3
+  boosted_plate_mail_recipe:
+    name: Boosted Plate Mail Recipe
+    category: Recipe
+    rarity: 3
+  boosted_plate_shield_recipe:
+    name: Boosted Plate Shield Recipe
+    category: Recipe
+    rarity: 3
+  brandish_recipe:
+    name: Brandish Recipe
+    category: Recipe
+    rarity: 2
+  breach_blaster_recipe:
+    name: Breach Blaster Recipe
+    category: Recipe
+    rarity: 4
+  bright:
+    name: Bright Eyes
+    category: Eye
+    stackable: true
+  brittle_candy:
+    name: Brittle Candy
+    category: Token
+    stackable: true
+    locked: true
+  brown_gobble_snipe_lazy:
+    name: Brown Gobble Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  brown_gobble_snipe_plump:
+    name: Brown Gobble Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  brown_gobble_snipe_wandering:
+    name: Brown Gobble Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  brown_rooster_snipe_lazy:
+    name: Brown Rooster Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  brown_rooster_snipe_plump:
+    name: Brown Rooster Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  brown_rooster_snipe_wandering:
+    name: Brown Rooster Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  brute_jelly_helm_recipe:
+    name: Brute Jelly Helm Recipe
+    category: Recipe
+    rarity: 3
+  brute_jelly_mail_recipe:
+    name: Brute Jelly Mail Recipe
+    category: Recipe
+    rarity: 3
+  brute_jelly_shield_recipe:
+    name: Brute Jelly Shield Recipe
+    category: Recipe
+    rarity: 3
+  buccaneer_booty_box:
+    name: Buccaneer Booty Box
+    category: Lockbox
+  budding_prize_box:
+    name: Budding Prize Box
+    category: Lockbox
+  bug:
+    name: Bug Eyes
+    category: Eye
+    stackable: true
+  cake_slice:
+    name: Cake Slice
+    category: Token
+    stackable: true
+    locked: true
+  calibur_recipe:
+    name: Calibur Recipe
+    category: Recipe
+    rarity: 2
+  callahan_recipe:
+    name: Callahan Recipe
+    category: Recipe
+    rarity: 5
+  candle_platter_xmas_green:
+    name: Candle Platter, Xmas Green
+    category: Prop
+    stackable: true
+  candle_platter_xmas_red:
+    name: Candle Platter, Xmas Red
+    category: Prop
+    stackable: true
+  candle_platter_xmas_white:
+    name: Candle Platter, Xmas White
+    category: Prop
+    stackable: true
+  casino_vip_base:
+    name: Golden Slime Casino C.U.B.E. Club Membership
+    category: Artifact
+    locked: true
+  cautery_sword_recipe:
+    name: Cautery Sword Recipe
+    category: Recipe
+    rarity: 3
+  cavalry_prize_box:
+    name: Cavalry Prize Box
+    category: Lockbox
+  center2f:
+    name: 2F Central War Room
+    category: Ticket
+    stackable: true
+  center4f:
+    name: 4F Landing
+    category: Ticket
+    stackable: true
+  chair_charred:
+    name: Charred Chair
+    category: Prop
+    stackable: true
+  chair_green:
+    name: Chair, green
+    category: Prop
+    stackable: true
+  chair_restored:
+    name: Restored Chair
+    category: Prop
+    stackable: true
+  chair_violet:
+    name: Chair, violet
+    category: Prop
+    stackable: true
+  chaos_cloak_recipe:
+    name: Chaos Cloak Recipe
+    category: Recipe
+    rarity: 5
+  chaos_cowl_recipe:
+    name: Chaos Cowl Recipe
+    category: Recipe
+    rarity: 5
+  character:
+    name: Mirrored Lockbox
+    category: Lockbox
+  charge_time_1:
+    name: Charge Time 1
+    category: VariantTicket
+    stackable: true
+  charge_time_2:
+    name: Charge Time 2
+    category: VariantTicket
+    stackable: true
+  charge_time_3:
+    name: Charge Time 3
+    category: VariantTicket
+    stackable: true
+  charge_time_4:
+    name: Charge Time 4
+    category: VariantTicket
+    stackable: true
+  charged_quicksilver_helm_recipe:
+    name: Charged Quicksilver Helm Recipe
+    category: Recipe
+    rarity: 4
+  charged_quicksilver_mail_recipe:
+    name: Charged Quicksilver Mail Recipe
+    category: Recipe
+    rarity: 4
+  chartreuse:
+    name: Chartreuse
+    category: Color
+    stackable: true
+  checker_gift_box_blue:
+    name: Checker Gift Box (Blue)
+    category: GiftBox
+  checker_gift_box_red:
+    name: Checker Gift Box (Red)
+    category: GiftBox
+  checker_gift_box_yellow:
+    name: Checker Gift Box (Yellow)
+    category: GiftBox
+  checker_wrapping_blue:
+    name: Checker Wrapping (Blue)
+    category: WrappingPaper
+    stackable: true
+  checker_wrapping_red:
+    name: Checker Wrapping (Red)
+    category: WrappingPaper
+    stackable: true
+  checker_wrapping_yellow:
+    name: Checker Wrapping (Yellow)
+    category: WrappingPaper
+    stackable: true
+  cheeky:
+    name: Cheeky Eyes
+    category: Eye
+    stackable: true
+  cherry_snipe_flying:
+    name: Cherry Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  cherry_snipe_lazy:
+    name: Cherry Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  cherry_snipe_wandering:
+    name: Cherry Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  chess_mini_prize_box:
+    name: Chess Mini Box
+    category: Lockbox
+  chess_mini_prize_box_winterfest:
+    name: Chess Mini Prize Box, Winterfest
+    category: Lockbox
+  chewy_candy:
+    name: Chewy Candy
+    category: Token
+    stackable: true
+    locked: true
+  chroma_mask_recipe:
+    name: Chroma Mask Recipe
+    category: Recipe
+    rarity: 3
+  chroma_suit_recipe:
+    name: Chroma Suit Recipe
+    category: Recipe
+    rarity: 3
+  chromalisk:
+    name: Scaredy Chromalisk
+    category: Actor
+    rarity: 5
+    stackable: true
+  circuit:
+    name: Circuitry Eyes
+    category: Eye
+    stackable: true
+  circuit_breaker_armor_recipe:
+    name: Circuit Breaker Armor Recipe
+    category: Recipe
+    rarity: 1
+  circuit_breaker_helm_recipe:
+    name: Circuit Breaker Helm Recipe
+    category: Recipe
+    rarity: 1
+  circuit_breaker_shield_recipe:
+    name: Circuit Breaker Shield Recipe
+    category: Recipe
+    rarity: 1
+  citrine:
+    name: Citrine
+    category: Lockbox
+  citrine_prize_box:
+    name: Citrine Prize Box
+    category: Lockbox
+  clockworks_prize_box:
+    name: Clockworks Prize Box
+    category: Lockbox
+  closed:
+    name: Closed Eyes
+    category: Eye
+    stackable: true
+  clover:
+    name: Clover Eyes
+    category: Eye
+    stackable: true
+  club:
+    name: Club Eyes
+    category: Eye
+    stackable: true
+  cobalt:
+    name: Cobalt
+    category: Color
+    stackable: true
+  cobalt_armor_recipe:
+    name: Cobalt Armor Recipe
+    category: Recipe
+    rarity: 2
+  cobalt_helm_recipe:
+    name: Cobalt Helm Recipe
+    category: Recipe
+    rarity: 2
+  coin_bonus:
+    name: Krogmo Coin Booster
+    category: Upgrade
+  cold_iron_carver_recipe:
+    name: Cold Iron Carver Recipe
+    category: Recipe
+    rarity: 4
+  cold_iron_vanquisher_recipe:
+    name: Cold Iron Vanquisher Recipe
+    category: Recipe
+    rarity: 5
+  cold_snap_recipe:
+    name: Cold Snap Recipe
+    category: Recipe
+    rarity: 1
+  coliseum:
+    name: Coliseum Room
+    category: Ticket
+    stackable: true
+  colossal_prize_box:
+    name: Colossal Prize Box
+    category: Lockbox
+  combuster_recipe:
+    name: Combuster Recipe
+    category: Recipe
+    rarity: 5
+  companion_cube:
+    name: Companion Cube
+    category: Actor
+    rarity: 5
+    stackable: true
+  companion_prize_box_1:
+    name: Companion Prize Box
+    category: Lockbox
+  companion_prize_box_2:
+    name: Companion Prize Box
+    category: Lockbox
+  companion_prize_box_3:
+    name: Companion Prize Box
+    category: Lockbox
+  companion_prize_box_4:
+    name: Companion Prize Box
+    category: Lockbox
+  companion_prize_box_5:
+    name: Companion Prize Box
+    category: Lockbox
+  confection_prize_box:
+    name: Confection Prize Box
+    category: Lockbox
+  confetti:
+    name: Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_bubbles:
+    name: Bubbles
+    category: AnimatedAction
+    stackable: true
+  confetti_dark_harvest:
+    name: Trick or Treat Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_equinox:
+    name: Spring Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_fall_equinox:
+    name: Fall Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_flare_popper:
+    name: Party Flare
+    category: AnimatedAction
+    stackable: true
+  confetti_frenzy:
+    name: Frenzy Caller
+    category: AnimatedAction
+    stackable: true
+  confetti_leaf:
+    name: Leaf Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_rage:
+    name: Rage Caller
+    category: AnimatedAction
+    stackable: true
+  confetti_silver:
+    name: Silver Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_slime:
+    name: Slime Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_storm:
+    name: Storm Caller
+    category: AnimatedAction
+    stackable: true
+  confetti_summer:
+    name: Summer Confetti
+    category: AnimatedAction
+    stackable: true
+  confetti_winter:
+    name: Winter Confetti
+    category: AnimatedAction
+    stackable: true
+  construct_damage_1:
+    name: Construct Damage 1
+    category: VariantTicket
+    stackable: true
+  construct_damage_2:
+    name: Construct Damage 2
+    category: VariantTicket
+    stackable: true
+  construct_damage_3:
+    name: Construct Damage 3
+    category: VariantTicket
+    stackable: true
+  construct_damage_4:
+    name: Construct Damage 4
+    category: VariantTicket
+    stackable: true
+  construct_prize_box:
+    name: Construct Prize Box
+    category: Lockbox
+  core_token:
+    name: Core Fragment
+    category: Token
+    stackable: true
+    locked: true
+  corner_base:
+    name: Corner, Base
+    category: Prop
+    rarity: 1
+    stackable: true
+  cozy_prize_box:
+    name: Cozy Prize Box
+    category: Lockbox
+  cozytech_mk_ii_prize_box:
+    name: CozyTech Mk II Prize Box
+    category: Lockbox
+  cozytech_prize_box:
+    name: CozyTech Prize Box
+    category: Lockbox
+  cracked:
+    name: Cracked Fire Crystal
+    category: Ticket
+    rarity: 0
+    stackable: true
+  cracked_forge_prize_box:
+    name: Cracked Forge Prize Box
+    category: Lockbox
+  cracked_recipe:
+    name: Cracked Recipe
+    category: Recipe
+    rarity: 0
+  crest_of_almire_recipe:
+    name: Crest of Almire Recipe
+    category: Recipe
+    rarity: 5
+  crimson:
+    name: Crimson
+    category: Color
+    stackable: true
+  crown_of_the_fallen_recipe:
+    name: Crown of the Fallen Recipe
+    category: Recipe
+    rarity: 5
+  cryo_driver_recipe:
+    name: Cryo Driver Recipe
+    category: Recipe
+    rarity: 4
+  cryotech_alchemer_mk_ii_recipe:
+    name: Cryotech Alchemer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  cryotech_alchemer_recipe:
+    name: Cryotech Alchemer Recipe
+    category: Recipe
+    rarity: 2
+  crystal_bomb_recipe:
+    name: Crystal Bomb Recipe
+    category: Recipe
+    rarity: 2
+  crystal_harness_adv_kit:
+    name: Crystal Harness Adv Kit
+    category: Harness
+  crystal_harness_eli_kit:
+    name: Crystal Harness Eli Kit
+    category: Harness
+  crystal_harness_kit:
+    name: Crystal Harness Kit
+    category: Harness
+  curse_resist_1:
+    name: Curse Resist 1
+    category: VariantTicket
+    stackable: true
+  curse_resist_2:
+    name: Curse Resist 2
+    category: VariantTicket
+    stackable: true
+  curse_resist_3:
+    name: Curse Resist 3
+    category: VariantTicket
+    stackable: true
+  curse_resist_4:
+    name: Curse Resist 4
+    category: VariantTicket
+    stackable: true
+  curse_s1593184055_a07da837537b:
+    name: Curse
+    category: Lockbox
+  cursed_nature_sprite:
+    name: Cursed Nature Sprite
+    category: Actor
+    rarity: 5
+    stackable: true
+  cursed_tome:
+    name: Cursed Tome Stand
+    category: Prop
+    stackable: true
+  cutter_recipe:
+    name: Cutter Recipe
+    category: Recipe
+    rarity: 2
+  cyan:
+    name: Cyan
+    category: Color
+    stackable: true
+  dangerous:
+    name: Dangerous
+    category: Lockbox
+  dangerous_prize_box:
+    name: Dangerous Prize Box
+    category: Lockbox
+  dangerous_prize_box_2016:
+    name: Dangerous Prize Box 2016
+    category: Lockbox
+  daring_rigadoon_recipe:
+    name: Daring Rigadoon Recipe
+    category: Recipe
+    rarity: 4
+  dark_briar_barrage_recipe:
+    name: Dark Briar Barrage Recipe
+    category: Recipe
+    rarity: 5
+  dark_chaingun_recipe:
+    name: Dark Chaingun Recipe
+    category: Recipe
+    rarity: 3
+  dark_harness_adv_kit:
+    name: Dark Harness Adv Kit
+    category: Harness
+  dark_harness_eli_kit:
+    name: Dark Harness Eli Kit
+    category: Harness
+  dark_harness_kit:
+    name: Dark Harness Kit
+    category: Harness
+  dark_harvest_prize_box:
+    name: Dark Harvest Prize Box
+    category: Lockbox
+  dark_harvest_prize_box_2017:
+    name: Dark Harvest Prize Box 2017
+    category: Lockbox
+  dark_harvest_prize_box_complete:
+    name: Dark Harvest Prize Box, Complete
+    category: Lockbox
+  dark_harvest_prize_box_series_3:
+    name: Dark Harvest Prize Box Series 3
+    category: Lockbox
+  dark_matter_bomb_recipe:
+    name: Dark Matter Bomb Recipe
+    category: Recipe
+    rarity: 2
+  dark_thorn_blade_recipe:
+    name: Dark Thorn Blade Recipe
+    category: Recipe
+    rarity: 4
+  dark_thorn_shield_recipe:
+    name: Dark Thorn Shield Recipe
+    category: Recipe
+    rarity: 4
+  dazed_prize_box:
+    name: Dazed Prize Box
+    category: Lockbox
+  deadly_crystal_bomb_recipe:
+    name: Deadly Crystal Bomb Recipe
+    category: Recipe
+    rarity: 5
+  deadly_dark_matter_bomb_recipe:
+    name: Deadly Dark Matter Bomb Recipe
+    category: Recipe
+    rarity: 5
+  deadly_shard_bomb_recipe:
+    name: Deadly Shard Bomb Recipe
+    category: Recipe
+    rarity: 5
+  deadly_splinter_bomb_recipe:
+    name: Deadly Splinter Bomb Recipe
+    category: Recipe
+    rarity: 5
+  deadly_virulisk_mask_recipe:
+    name: Deadly Virulisk Mask Recipe
+    category: Recipe
+    rarity: 5
+  deadly_virulisk_suit_recipe:
+    name: Deadly Virulisk Suit Recipe
+    category: Recipe
+    rarity: 5
+  deadshot_chapeau_recipe:
+    name: Deadshot Chapeau Recipe
+    category: Recipe
+    rarity: 5
+  deadshot_mantle_recipe:
+    name: Deadshot Mantle Recipe
+    category: Recipe
+    rarity: 5
+  deconstructor_recipe:
+    name: Deconstructor Recipe
+    category: Recipe
+    rarity: 3
+  decoration_kit_prize_box:
+    name: Decoration Kit Prize Box
+    category: Lockbox
+  default_s2565020838_40d3f2a82f40:
+    name: Default Environment
+    category: GuildHallGlobalTicket
+    stackable: true
+  default_s3222896412_649fa923bbc1:
+    name: Default Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  default_s3821375632_dbeafa4071de:
+    name: Normal Eyes
+    category: Eye
+    stackable: true
+  defender_recipe:
+    name: Defender Recipe
+    category: Recipe
+    rarity: 2
+  determined:
+    name: Determined Eyes
+    category: Eye
+    stackable: true
+  diamond_prize_box:
+    name: Diamond Prize Box
+    category: Lockbox
+  diamond_s2569607865_91acdc04b350:
+    name: Diamond
+    category: Lockbox
+  diamond_s3931626403_bd9b13dace72:
+    name: Diamond Eyes
+    category: Eye
+    stackable: true
+  dim:
+    name: Dim Fire Crystal
+    category: Ticket
+    rarity: 1
+    stackable: true
+  dim_forge_prize_box:
+    name: Dim Forge Prize Box
+    category: Lockbox
+  dim_recipe:
+    name: Dim Recipe
+    category: Recipe
+    rarity: 1
+  disguise_prize_box:
+    name: Disguise Prize Box
+    category: Lockbox
+  divan_green:
+    name: Divan, green
+    category: Prop
+    stackable: true
+  divan_violet:
+    name: Divan, violet
+    category: Prop
+    stackable: true
+  divine_avenger_recipe:
+    name: Divine Avenger Recipe
+    category: Recipe
+    rarity: 5
+  divine_mantle_recipe:
+    name: Divine Mantle Recipe
+    category: Recipe
+    rarity: 5
+  divine_veil_recipe:
+    name: Divine Veil Recipe
+    category: Recipe
+    rarity: 5
+  dot:
+    name: Dot Eyes
+    category: Eye
+    stackable: true
+  dragon_scale_helm_recipe:
+    name: Dragon Scale Helm Recipe
+    category: Recipe
+    rarity: 5
+  dragon_scale_mail_recipe:
+    name: Dragon Scale Mail Recipe
+    category: Recipe
+    rarity: 5
+  dragon_scale_shield_recipe:
+    name: Dragon Scale Shield Recipe
+    category: Recipe
+    rarity: 5
+  drake_scale_helm_recipe:
+    name: Drake Scale Helm Recipe
+    category: Recipe
+    rarity: 3
+  drake_scale_mail_recipe:
+    name: Drake Scale Mail Recipe
+    category: Recipe
+    rarity: 3
+  drake_scale_shield_recipe:
+    name: Drake Scale Shield Recipe
+    category: Recipe
+    rarity: 3
+  drakon_egg:
+    name: Drakon Egg
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_divine:
+    name: Drakon Egg, Divine
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_grey:
+    name: Drakon Egg, Grey
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_gun_pup:
+    name: Drakon Egg, Gun Pup
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_piggy:
+    name: Drakon Egg, Piggy
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_shadow:
+    name: Drakon Egg, Shadow
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  drakon_egg_spiraltail:
+    name: Drakon Egg, Spiraltail
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  dread_skelly_mask_recipe:
+    name: Dread Skelly Mask Recipe
+    category: Recipe
+    rarity: 5
+  dread_skelly_shield_recipe:
+    name: Dread Skelly Shield Recipe
+    category: Recipe
+    rarity: 5
+  dread_skelly_suit_recipe:
+    name: Dread Skelly Suit Recipe
+    category: Recipe
+    rarity: 5
+  dread_venom_striker_recipe:
+    name: Dread Venom Striker Recipe
+    category: Recipe
+    rarity: 5
+  dusker_cap_recipe:
+    name: Dusker Cap Recipe
+    category: Recipe
+    rarity: 3
+  dusker_coat_recipe:
+    name: Dusker Coat Recipe
+    category: Recipe
+    rarity: 3
+  east1f:
+    name: 1F East Wing
+    category: Ticket
+    stackable: true
+  east2f:
+    name: 2F East Wing
+    category: Ticket
+    stackable: true
+  east3f:
+    name: 3F East Wing
+    category: Ticket
+    stackable: true
+  east4f:
+    name: 4F East Wing
+    category: Ticket
+    stackable: true
+  east5f:
+    name: 5F East Wing
+    category: Ticket
+    stackable: true
+  echo_citadel:
+    name: Echo Citadel
+    category: Artifact
+    permanent: true
+    locked: true
+  echo_ironclaw:
+    name: Echo Ironclaw
+    category: Artifact
+    permanent: true
+    locked: true
+  echo_royal:
+    name: Echo Royal
+    category: Artifact
+    permanent: true
+    locked: true
+  echo_wildwoods:
+    name: Echo Wildwoods
+    category: Artifact
+    permanent: true
+    locked: true
+  eks:
+    name: Exed Eyes
+    category: Eye
+    stackable: true
+  electric_prize_box:
+    name: Electric Prize Box
+    category: Lockbox
+  electron_bomb_recipe:
+    name: Electron Bomb Recipe
+    category: Recipe
+    rarity: 4
+  electron_charge_recipe:
+    name: Electron Charge Recipe
+    category: Recipe
+    rarity: 3
+  electron_vortex_recipe:
+    name: Electron Vortex Recipe
+    category: Recipe
+    rarity: 5
+  elemental_blaster_recipe:
+    name: Elemental Blaster Recipe
+    category: Recipe
+    rarity: 3
+  elemental_cloak_recipe:
+    name: Elemental Cloak Recipe
+    category: Recipe
+    rarity: 3
+  elemental_defense_1:
+    name: Elemental Defense 1
+    category: VariantTicket
+    stackable: true
+  elemental_defense_2:
+    name: Elemental Defense 2
+    category: VariantTicket
+    stackable: true
+  elemental_defense_3:
+    name: Elemental Defense 3
+    category: VariantTicket
+    stackable: true
+  elemental_defense_4:
+    name: Elemental Defense 4
+    category: VariantTicket
+    stackable: true
+  elemental_hood_recipe:
+    name: Elemental Hood Recipe
+    category: Recipe
+    rarity: 3
+  elite:
+    name: Elite Orb of Alchemy
+    category: Ticket
+    rarity: 4
+    stackable: true
+  elite_trinket_box:
+    name: Elite Trinket Box
+    category: Lockbox
+  emberbreak_armor_recipe:
+    name: Emberbreak Armor Recipe
+    category: Recipe
+    rarity: 1
+  emberbreak_helm_recipe:
+    name: Emberbreak Helm Recipe
+    category: Recipe
+    rarity: 1
+  emberbreak_shield_recipe:
+    name: Emberbreak Shield Recipe
+    category: Recipe
+    rarity: 1
+  embers:
+    name: Falling Embers Environment
+    category: GuildHallGlobalTicket
+    stackable: true
+  emerald_prize_box:
+    name: Emerald Prize Box
+    category: Lockbox
+  emerald_s285797_f8bc2b88653e:
+    name: Emerald
+    category: Color
+    stackable: true
+  emerald_s3575457673_92818a0c31ec:
+    name: Emerald
+    category: Lockbox
+  empty:
+    name: Empty Room
+    category: Ticket
+    stackable: true
+  emptycatwalk:
+    name: Empty Industrial Room
+    category: Ticket
+    stackable: true
+  emptycheckerlarge:
+    name: Empty Patchwork Room
+    category: Ticket
+    stackable: true
+  emptycheckersmall:
+    name: Empty Checkerboard Room
+    category: Ticket
+    stackable: true
+  emptychess:
+    name: Empty Chess Room
+    category: Ticket
+    stackable: true
+  equinox_base:
+    name: Equinox Base
+    category: Lockbox
+  equinox_prize_box:
+    name: Equinox Prize Box
+    category: Lockbox
+  equinox_prize_box_complete:
+    name: Equinox Prize Box
+    category: Lockbox
+  escape_pod_shut:
+    name: Crash Pod
+    category: Prop
+    rarity: 4
+    stackable: true
+  eternal:
+    name: Eternal Orb of Alchemy
+    category: Ticket
+    rarity: 5
+    stackable: true
+  event_handgun:
+    name: Event Handgun
+    category: Recipe
+    rarity: 0
+  evo_catalyst:
+    name: Evo Catalyst
+    category: Ticket
+    rarity: 2
+    stackable: true
+  extraordinary_prize_box:
+    name: Extraordinary Prize Box
+    category: Lockbox
+  eyes_amazing:
+    name: Amazing Eye Pack
+    category: Pack
+  eyes_bedazzling:
+    name: Bedazzling Eye Pack
+    category: Pack
+  eyes_shapely:
+    name: Shapely Eye Pack
+    category: Pack
+  eyes_suited:
+    name: Suited Eye Pack
+    category: Pack
+  fall_equinox_prize_box_2014:
+    name: Fall Equinox Prize Box 2014
+    category: Lockbox
+  fall_equinox_prize_box_2015:
+    name: Fall Equinox Prize Box 2015
+    category: Lockbox
+  fall_equinox_prize_box_2016:
+    name: Fall Equinox Prize Box 2016
+    category: Lockbox
+  fall_equinox_prize_box_2017:
+    name: Fall Equinox Prize Box 2017
+    category: Lockbox
+  fall_equinox_prize_box_2018:
+    name: Fall Equinox Prize Box 2018
+    category: Lockbox
+  faust_recipe:
+    name: Faust Recipe
+    category: Recipe
+    rarity: 4
+  fearless_rigadoon_recipe:
+    name: Fearless Rigadoon Recipe
+    category: Recipe
+    rarity: 5
+  field_sensor:
+    name: Field Sensor
+    category: Prop
+    rarity: 1
+    stackable: true
+  fiend_damage_1:
+    name: Fiend Damage 1
+    category: VariantTicket
+    stackable: true
+  fiend_damage_2:
+    name: Fiend Damage 2
+    category: VariantTicket
+    stackable: true
+  fiend_damage_3:
+    name: Fiend Damage 3
+    category: VariantTicket
+    stackable: true
+  fiend_damage_4:
+    name: Fiend Damage 4
+    category: VariantTicket
+    stackable: true
+  fierce_flamberge_recipe:
+    name: Fierce Flamberge Recipe
+    category: Recipe
+    rarity: 4
+  fiery_atomizer_recipe:
+    name: Fiery Atomizer Recipe
+    category: Recipe
+    rarity: 4
+  fiery_pepperbox_recipe:
+    name: Fiery Pepperbox Recipe
+    category: Recipe
+    rarity: 4
+  fiery_rooster_snipe_lazy:
+    name: Fiery Rooster Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  fiery_rooster_snipe_plump:
+    name: Fiery Rooster Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  fiery_rooster_snipe_wandering:
+    name: Fiery Rooster Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  fiery_vaporizer_mk_ii_recipe:
+    name: Fiery Vaporizer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  fiery_vaporizer_recipe:
+    name: Fiery Vaporizer Recipe
+    category: Recipe
+    rarity: 2
+  final_flourish_recipe:
+    name: Final Flourish Recipe
+    category: Recipe
+    rarity: 5
+  fire_default_lighting:
+    name: Fire, Default Lighting
+    category: GuildHallGlobalTicket
+    stackable: true
+  fire_extra:
+    name: Fire, Extra
+    category: GuildHallGlobalTicket
+    stackable: true
+  fire_resist_1:
+    name: Fire Resist 1
+    category: VariantTicket
+    stackable: true
+  fire_resist_2:
+    name: Fire Resist 2
+    category: VariantTicket
+    stackable: true
+  fire_resist_3:
+    name: Fire Resist 3
+    category: VariantTicket
+    stackable: true
+  fire_resist_4:
+    name: Fire Resist 4
+    category: VariantTicket
+    stackable: true
+  fire_standard:
+    name: Blast Furnace Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  firebreak_armor_recipe:
+    name: Firebreak Armor Recipe
+    category: Recipe
+    rarity: 2
+  firebreak_helm_recipe:
+    name: Firebreak Helm Recipe
+    category: Recipe
+    rarity: 2
+  firebreak_shield_recipe:
+    name: Firebreak Shield Recipe
+    category: Recipe
+    rarity: 2
+  fireburst_brandish_recipe:
+    name: Fireburst Brandish Recipe
+    category: Recipe
+    rarity: 3
+  firecracker_recipe:
+    name: Firecracker Recipe
+    category: Recipe
+    rarity: 1
+  firework:
+    name: Firework
+    category: AnimatedAction
+    stackable: true
+  firo_driver_recipe:
+    name: Firo Driver Recipe
+    category: Recipe
+    rarity: 4
+  firotech_alchemer_mk_ii_recipe:
+    name: Firotech Alchemer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  firotech_alchemer_recipe:
+    name: Firotech Alchemer Recipe
+    category: Recipe
+    rarity: 2
+  flamberge_recipe:
+    name: Flamberge Recipe
+    category: Recipe
+    rarity: 3
+  flaming_pulsar_recipe:
+    name: Flaming Pulsar Recipe
+    category: Recipe
+    rarity: 3
+  flawed:
+    name: Flawed Orb of Alchemy
+    category: Ticket
+    rarity: 1
+    stackable: true
+  flawed_snowball:
+    name: Flawed Snowball
+    category: Lift
+    stackable: true
+  flawed_snowball_yellow:
+    name: Grinchlin Snowball
+    category: Lift
+    stackable: true
+  floor_beacon_blue:
+    name: Floor Beacon, Blue
+    category: Prop
+    rarity: 3
+    stackable: true
+  floor_beacon_green:
+    name: Floor Beacon, Green
+    category: Prop
+    rarity: 3
+    stackable: true
+  floor_beacon_red:
+    name: Floor Beacon, Red
+    category: Prop
+    rarity: 3
+    stackable: true
+  floor_beacon_yellow:
+    name: Floor Beacon, Yellow
+    category: Prop
+    rarity: 3
+    stackable: true
+  flourish_recipe:
+    name: Flourish Recipe
+    category: Recipe
+    rarity: 2
+  flower:
+    name: Flower Eyes
+    category: Eye
+    stackable: true
+  flowertech_mk_ii_prize_box:
+    name: FlowerTech Mk II Prize Box
+    category: Lockbox
+  flowertech_prize_box:
+    name: FlowerTech Prize Box
+    category: Lockbox
+  force_buckler_recipe:
+    name: Force Buckler Recipe
+    category: Recipe
+    rarity: 1
+  forge_token:
+    name: Forge Spark
+    category: Token
+    stackable: true
+    locked: true
+  freeze_default_lighting:
+    name: Freeze, Default Lighting
+    category: GuildHallGlobalTicket
+    stackable: true
+  freeze_extra:
+    name: Freeze, Extra
+    category: GuildHallGlobalTicket
+    stackable: true
+  freeze_resist_1:
+    name: Freeze Resist 1
+    category: VariantTicket
+    stackable: true
+  freeze_resist_2:
+    name: Freeze Resist 2
+    category: VariantTicket
+    stackable: true
+  freeze_resist_3:
+    name: Freeze Resist 3
+    category: VariantTicket
+    stackable: true
+  freeze_resist_4:
+    name: Freeze Resist 4
+    category: VariantTicket
+    stackable: true
+  freeze_standard:
+    name: Cooling Chamber Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  freezing_atomizer_recipe:
+    name: Freezing Atomizer Recipe
+    category: Recipe
+    rarity: 4
+  freezing_pulsar_recipe:
+    name: Freezing Pulsar Recipe
+    category: Recipe
+    rarity: 3
+  freezing_vaporizer_mk_ii_recipe:
+    name: Freezing Vaporizer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  freezing_vaporizer_recipe:
+    name: Freezing Vaporizer Recipe
+    category: Recipe
+    rarity: 2
+  frenzy_prize_box:
+    name: Frenzy Prize Box
+    category: Lockbox
+  frost_gun_recipe:
+    name: Frost Gun Recipe
+    category: Recipe
+    rarity: 1
+  frostbreaker_armor_recipe:
+    name: Frostbreaker Armor Recipe
+    category: Recipe
+    rarity: 1
+  frostbreaker_helm_recipe:
+    name: Frostbreaker Helm Recipe
+    category: Recipe
+    rarity: 1
+  frostbreaker_shield_recipe:
+    name: Frostbreaker Shield Recipe
+    category: Recipe
+    rarity: 1
+  frosty_present:
+    name: Frosty Present
+    category: Lockbox
+  frosty_prize_box:
+    name: Frosty Prize Box
+    category: Lockbox
+  frozen_pulsar_recipe:
+    name: Frozen Pulsar Recipe
+    category: Recipe
+    rarity: 4
+  furious_flamberge_recipe:
+    name: Furious Flamberge Recipe
+    category: Recipe
+    rarity: 5
+  furniture_prize_box:
+    name: Furniture Prize Box
+    category: Lockbox
+  fused_demo_helm_recipe:
+    name: Fused Demo Helm Recipe
+    category: Recipe
+    rarity: 3
+  fused_demo_suit_recipe:
+    name: Fused Demo Suit Recipe
+    category: Recipe
+    rarity: 3
+  fusion_blaster_recipe:
+    name: Fusion Blaster Recipe
+    category: Recipe
+    rarity: 4
+  gardensnipes:
+    name: Tranquil Snipe Garden
+    category: Ticket
+    stackable: true
+  garnet:
+    name: Garnet
+    category: Lockbox
+  garnet_prize_box:
+    name: Garnet Prize Box
+    category: Lockbox
+  gear:
+    name: Gear Eyes
+    category: Eye
+    stackable: true
+  gear_base:
+    name: Gear Base
+    category: VariantTicket
+    stackable: true
+  gigawatt_pulsar_recipe:
+    name: Gigawatt Pulsar Recipe
+    category: Recipe
+    rarity: 4
+  gilded_griffin_recipe:
+    name: Gilded Griffin Recipe
+    category: Recipe
+    rarity: 5
+  glacial:
+    name: Glacial
+    category: Lockbox
+  glacial_prize_box:
+    name: Glacial Prize Box
+    category: Lockbox
+  glacial_prize_box_2016:
+    name: Glacial Prize Box 2016
+    category: Lockbox
+  glacial_prize_box_complete:
+    name: Glacial Prize Box, Complete
+    category: Lockbox
+  glacius_recipe:
+    name: Glacius Recipe
+    category: Recipe
+    rarity: 5
+  glowing:
+    name: Glowing Fire Crystal
+    category: Ticket
+    rarity: 3
+    stackable: true
+  glowing_forge_prize_box:
+    name: Glowing Forge Prize Box
+    category: Lockbox
+  glowing_recipe:
+    name: Glowing Recipe
+    category: Recipe
+    rarity: 3
+  gobble_prize_box:
+    name: Gobble Snipe Box
+    category: Lockbox
+  gold_gobble_snipe_lazy:
+    name: Gold Gobble Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  gold_gobble_snipe_plump:
+    name: Gold Gobble Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  gold_gobble_snipe_wandering:
+    name: Gold Gobble Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  gold_rooster_snipe_lazy:
+    name: Gold Rooster Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  gold_rooster_snipe_plump:
+    name: Gold Rooster Snipe, Plump
+    category: Actor
+    rarity: 5
+    stackable: true
+  gold_rooster_snipe_wandering:
+    name: Gold Rooster Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  golden_harness_adv_kit:
+    name: Golden Harness Adv Kit
+    category: Harness
+  golden_harness_eli_kit:
+    name: Golden Harness Eli Kit
+    category: Harness
+  golden_harness_kit:
+    name: Golden Harness Kit
+    category: Harness
+  golden_slime_casino_vip:
+    name: Golden Slime Casino C.U.B.E. Club Membership
+    category: Artifact
+    locked: true
+  golden_slime_casino_vip_comped:
+    name: Golden Slime Casino C.U.B.E. Club Membership
+    category: Artifact
+    locked: true
+  golden_slime_casino_vip_comped_shop:
+    name: Golden Slime Casino C.U.B.E. Club Membership
+    category: Artifact
+    locked: true
+  golden_slime_coin:
+    name: Golden Slime Coin
+    category: Ticket
+    stackable: true
+  gourmet_prize_box:
+    name: Gourmet Prize Box
+    category: Lockbox
+  gran_faust_recipe:
+    name: Gran Faust Recipe
+    category: Recipe
+    rarity: 5
+  grand_flourish_recipe:
+    name: Grand Flourish Recipe
+    category: Recipe
+    rarity: 4
+  graviton_bomb_recipe:
+    name: Graviton Bomb Recipe
+    category: Recipe
+    rarity: 4
+  graviton_charge_recipe:
+    name: Graviton Charge Recipe
+    category: Recipe
+    rarity: 3
+  graviton_vortex_recipe:
+    name: Graviton Vortex Recipe
+    category: Recipe
+    rarity: 5
+  great_defender_recipe:
+    name: Great Defender Recipe
+    category: Recipe
+    rarity: 3
+  green:
+    name: Green
+    category: Color
+    stackable: true
+  green_flame_s1144931523_740fda198540:
+    name: Green Flame
+    category: Prop
+    stackable: true
+  green_flame_s2203150068_480e55c89a78:
+    name: Green Flame
+    category: Prop
+    stackable: true
+  green_lamp_s3889851587_d62b5290d717:
+    name: Green Lamp
+    category: Prop
+    stackable: true
+  green_lamp_s4132945948_cabe329d6d96:
+    name: Green Lamp
+    category: Prop
+    stackable: true
+  green_snipe_flying:
+    name: Green Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  green_snipe_lazy:
+    name: Green Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  green_snipe_wandering:
+    name: Green Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  gremlin_damage_1:
+    name: Gremlin Damage 1
+    category: VariantTicket
+    stackable: true
+  gremlin_damage_2:
+    name: Gremlin Damage 2
+    category: VariantTicket
+    stackable: true
+  gremlin_damage_3:
+    name: Gremlin Damage 3
+    category: VariantTicket
+    stackable: true
+  gremlin_damage_4:
+    name: Gremlin Damage 4
+    category: VariantTicket
+    stackable: true
+  gremlin_prize_box:
+    name: Gremlin Prize Box
+    category: Lockbox
+  grey_feather_cowl_recipe:
+    name: Grey Feather Cowl Recipe
+    category: Recipe
+    rarity: 5
+  grey_feather_mantle_recipe:
+    name: Grey Feather Mantle Recipe
+    category: Recipe
+    rarity: 5
+  grey_mk_ii_prize_box:
+    name: Grey Mk II Prize Box
+    category: Lockbox
+  grey_owlite_recipe:
+    name: Grey Owlite Recipe
+    category: Recipe
+    rarity: 5
+  grey_owlite_shield_recipe:
+    name: Grey Owlite Shield Recipe
+    category: Recipe
+    rarity: 5
+  grey_prize_box:
+    name: Grey Prize Box
+    category: Lockbox
+  grim_repeater_recipe:
+    name: Grim Repeater Recipe
+    category: Recipe
+    rarity: 5
+  grim_token:
+    name: Grim Spark
+    category: Token
+    stackable: true
+    locked: true
+  grintovec_recipe:
+    name: Grintovec Recipe
+    category: Recipe
+    rarity: 3
+  guild_hall_prize_box:
+    name: Guild Hall Prize Box
+    category: Lockbox
+  guildmaster:
+    name: Guild Master Door
+    category: Ticket
+    stackable: true
+  gunslinger_hat_recipe:
+    name: Gunslinger Hat Recipe
+    category: Recipe
+    rarity: 3
+  gunslinger_sash_recipe:
+    name: Gunslinger Sash Recipe
+    category: Recipe
+    rarity: 3
+  hail_driver_recipe:
+    name: Hail Driver Recipe
+    category: Recipe
+    rarity: 5
+  handgun:
+    name: Handgun
+    category: Recipe
+    rarity: 0
+  happy:
+    name: Happy Eyes
+    category: Eye
+    stackable: true
+  hard_candy:
+    name: Hard Candy
+    category: Token
+    stackable: true
+    locked: true
+  hazardous:
+    name: Hazardous
+    category: Lockbox
+  hazardous_prize_box:
+    name: Hazardous Prize Box
+    category: Lockbox
+  hazardous_prize_box_2017:
+    name: Hazardous Prize Box 2017
+    category: Lockbox
+  haze_bomb_mk_ii_recipe:
+    name: Haze Bomb Mk II Recipe
+    category: Recipe
+    rarity: 3
+  haze_bomb_recipe:
+    name: Haze Bomb Recipe
+    category: Recipe
+    rarity: 2
+  haze_burst_recipe:
+    name: Haze Burst Recipe
+    category: Recipe
+    rarity: 4
+  health_01:
+    name: Health +01
+    category: Dungeon
+    rarity: 0
+  health_02:
+    name: Health +02
+    category: Dungeon
+    rarity: 0
+  health_03:
+    name: Health +03
+    category: Dungeon
+    rarity: 1
+  health_04:
+    name: Health +04
+    category: Dungeon
+    rarity: 2
+  health_05:
+    name: Health +05
+    category: Dungeon
+    rarity: 2
+  health_06:
+    name: Health +06
+    category: Dungeon
+    rarity: 3
+  health_07:
+    name: Health +07
+    category: Dungeon
+    rarity: 3
+  health_08:
+    name: Health +08
+    category: Dungeon
+    rarity: 3
+  health_09:
+    name: Health +09
+    category: Dungeon
+    rarity: 4
+  health_10:
+    name: Health +10
+    category: Dungeon
+    rarity: 4
+  health_11:
+    name: Health +11
+    category: Dungeon
+    rarity: 4
+  health_12:
+    name: Health +12
+    category: Dungeon
+    rarity: 5
+  health_13:
+    name: Health +13
+    category: Dungeon
+    rarity: 5
+  health_14:
+    name: Health +14
+    category: Dungeon
+    rarity: 5
+  health_15:
+    name: Health +15
+    category: Dungeon
+    rarity: 5
+  health_16:
+    name: Health +16
+    category: Dungeon
+    rarity: 5
+  health_18:
+    name: Health +18
+    category: Dungeon
+    rarity: 5
+  health_20:
+    name: Health +20
+    category: Dungeon
+    rarity: 5
+  health_21:
+    name: Health +21
+    category: Dungeon
+    rarity: 5
+  health_24:
+    name: Health +24
+    category: Dungeon
+    rarity: 5
+  health_27:
+    name: Health +27
+    category: Dungeon
+    rarity: 5
+  health_28:
+    name: Health +28
+    category: Dungeon
+    rarity: 5
+  health_29:
+    name: Health +29
+    category: Dungeon
+    rarity: 5
+  health_30:
+    name: Health +30
+    category: Dungeon
+    rarity: 5
+  heart:
+    name: Heart Eyes
+    category: Eye
+    stackable: true
+  heart_gift_box_lovely:
+    name: Heart Gift Box (Lovely)
+    category: GiftBox
+  heart_gift_box_pure:
+    name: Heart Gift Box (Pure)
+    category: GiftBox
+  heart_gift_box_sweet:
+    name: Heart Gift Box (Sweet)
+    category: GiftBox
+  heart_wrapping_lovely:
+    name: Heart Wrapping (Lovely)
+    category: WrappingPaper
+    stackable: true
+  heart_wrapping_pure:
+    name: Heart Wrapping (Pure)
+    category: WrappingPaper
+    stackable: true
+  heart_wrapping_sweet:
+    name: Heart Wrapping (Sweet)
+    category: WrappingPaper
+    stackable: true
+  heat_bonus_1_day:
+    name: Heat Amplifier
+    category: Upgrade
+  heat_bonus_30_days:
+    name: Heat Amplifier
+    category: Upgrade
+  heat_bonus_7_days:
+    name: Heat Amplifier
+    category: Upgrade
+  heat_bonus_s0_d4fba5a33e1c:
+    name: Heat Bonus
+    category: Upgrade
+  heat_bonus_s909083618_3f30bba58f51:
+    name: Heat Amplifier
+    category: Upgrade
+  heater_shield_recipe:
+    name: Heater Shield Recipe
+    category: Recipe
+    rarity: 5
+  heavy_crystal_bomb_recipe:
+    name: Heavy Crystal Bomb Recipe
+    category: Recipe
+    rarity: 4
+  heavy_dark_matter_bomb_recipe:
+    name: Heavy Dark Matter Bomb Recipe
+    category: Recipe
+    rarity: 4
+  heavy_deconstructor_recipe:
+    name: Heavy Deconstructor Recipe
+    category: Recipe
+    rarity: 4
+  heavy_demo_helm_recipe:
+    name: Heavy Demo Helm Recipe
+    category: Recipe
+    rarity: 4
+  heavy_demo_suit_recipe:
+    name: Heavy Demo Suit Recipe
+    category: Recipe
+    rarity: 4
+  heavy_hatchet_recipe:
+    name: Heavy Hatchet Recipe
+    category: Recipe
+    rarity: 1
+  heavy_plate_helm_recipe:
+    name: Heavy Plate Helm Recipe
+    category: Recipe
+    rarity: 4
+  heavy_plate_mail_recipe:
+    name: Heavy Plate Mail Recipe
+    category: Recipe
+    rarity: 4
+  heavy_plate_shield_recipe:
+    name: Heavy Plate Shield Recipe
+    category: Recipe
+    rarity: 4
+  heavy_pulsar_recipe:
+    name: Heavy Pulsar Recipe
+    category: Recipe
+    rarity: 3
+  heavy_shard_bomb_recipe:
+    name: Heavy Shard Bomb Recipe
+    category: Recipe
+    rarity: 4
+  heavy_splinter_bomb_recipe:
+    name: Heavy Splinter Bomb Recipe
+    category: Recipe
+    rarity: 4
+  helm:
+    name: Helm
+    category: Recipe
+    rarity: 0
+  hexagon:
+    name: Hexagon Eyes
+    category: Eye
+    stackable: true
+  hive_prize_box:
+    name: Hive Prize Box
+    category: Lockbox
+  holiday_presents_green:
+    name: Holiday Presents, Green
+    category: Prop
+    rarity: 0
+    stackable: true
+  holiday_presents_red:
+    name: Holiday Presents, Red
+    category: Prop
+    rarity: 0
+    stackable: true
+  holiday_presents_white:
+    name: Holiday Presents, White
+    category: Prop
+    rarity: 0
+    stackable: true
+  hololite_prize_box:
+    name: Hololite Prize Box
+    category: Lockbox
+  horde_token:
+    name: Ancient Page
+    category: Token
+    stackable: true
+    locked: true
+  horned_owlite_shield_recipe:
+    name: Horned Owlite Shield Recipe
+    category: Recipe
+    rarity: 3
+  hot_edge_recipe:
+    name: Hot Edge Recipe
+    category: Recipe
+    rarity: 1
+  hunter:
+    name: Hunter
+    category: Lockbox
+  hunter_prize_box:
+    name: Hunter Prize Box
+    category: Lockbox
+  hunter_prize_box_2016:
+    name: Hunter Prize Box 2016
+    category: Lockbox
+  hunterslodge:
+    name: Hunter's Lodge
+    category: Ticket
+    stackable: true
+  hunting_blade_recipe:
+    name: Hunting Blade Recipe
+    category: Recipe
+    rarity: 4
+  ice_block:
+    name: Snow Block
+    category: Prop
+    stackable: true
+  icebreaker_armor_recipe:
+    name: Icebreaker Armor Recipe
+    category: Recipe
+    rarity: 2
+  icebreaker_helm_recipe:
+    name: Icebreaker Helm Recipe
+    category: Recipe
+    rarity: 2
+  icebreaker_shield_recipe:
+    name: Icebreaker Shield Recipe
+    category: Recipe
+    rarity: 2
+  iceburst_brandish_recipe:
+    name: Iceburst Brandish Recipe
+    category: Recipe
+    rarity: 3
+  indigo:
+    name: Indigo
+    category: Color
+    stackable: true
+  industrial_catalyzer_recipe:
+    name: Industrial Catalyzer Recipe
+    category: Recipe
+    rarity: 3
+  ionized_salt_bomb_recipe:
+    name: Ionized Salt Bomb Recipe
+    category: Recipe
+    rarity: 4
+  iron_harness_adv_kit:
+    name: Iron Harness Adv Kit
+    category: Harness
+  iron_harness_eli_kit:
+    name: Iron Harness Eli Kit
+    category: Harness
+  iron_slug_recipe:
+    name: Iron Slug Recipe
+    category: Recipe
+    rarity: 5
+  ironmight_plate_helm_recipe:
+    name: Ironmight Plate Helm Recipe
+    category: Recipe
+    rarity: 5
+  ironmight_plate_mail_recipe:
+    name: Ironmight Plate Mail Recipe
+    category: Recipe
+    rarity: 5
+  ironmight_plate_shield_recipe:
+    name: Ironmight Plate Shield Recipe
+    category: Recipe
+    rarity: 5
+  irontech_bomb_recipe:
+    name: Irontech Bomb Recipe
+    category: Recipe
+    rarity: 4
+  irontech_destroyer_recipe:
+    name: Irontech Destroyer Recipe
+    category: Recipe
+    rarity: 5
+  item_000:
+    name: Slime Lockbox
+    category: Lockbox
+  item_001:
+    name: Slime Lockbox
+    category: Lockbox
+  item_002:
+    name: Slime Lockbox
+    category: Lockbox
+  item_003:
+    name: Slime Lockbox
+    category: Lockbox
+  item_004:
+    name: Slime Lockbox
+    category: Lockbox
+  item_005:
+    name: Slime Lockbox
+    category: Lockbox
+  item_006:
+    name: Slime Lockbox
+    category: Lockbox
+  item_007:
+    name: Slime Lockbox
+    category: Lockbox
+  item_008:
+    name: Slime Lockbox
+    category: Lockbox
+  item_009:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00a:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00b:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00c:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00d:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00e:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00f:
+    name: Slime Lockbox
+    category: Lockbox
+  item_00g:
+    name: Slime Lockbox
+    category: Lockbox
+  item_1000:
+    name: '1000'
+    category: GuildBond
+    stackable: true
+  item_10000:
+    name: '10000'
+    category: GuildBond
+    stackable: true
+  item_1_almirian_seal:
+    name: Almirian Seal
+    category: Prop
+    rarity: 3
+    stackable: true
+  item_1_blueprints:
+    name: Roarmulus Blueprints
+    category: Prop
+    rarity: 3
+    stackable: true
+  item_1_frumious_fang:
+    name: Frumious Fang
+    category: Prop
+    rarity: 3
+    stackable: true
+  item_1_jelly_gem:
+    name: Jelly Gem
+    category: Prop
+    rarity: 3
+    stackable: true
+  item_1unit_base:
+    name: 1unit, Base
+    category: Prop
+    rarity: 1
+    stackable: true
+  item_1unit_stack_a:
+    name: Moldy Tome Stack
+    category: Prop
+    stackable: true
+  item_1unit_stack_b:
+    name: Musty Tome Stack
+    category: Prop
+    stackable: true
+  item_2000:
+    name: '2000'
+    category: GuildBond
+    stackable: true
+  item_20000:
+    name: '20000'
+    category: GuildBond
+    stackable: true
+  item_2014_prize_box:
+    name: 2014 Prize Box
+    category: Lockbox
+  item_2014_prize_box_2:
+    name: 2014 Prize Box 2
+    category: Lockbox
+  item_2014_prize_box_3:
+    name: 2014 Prize Box 3
+    category: Lockbox
+  item_2014_prize_box_4:
+    name: 2014 Prize Box 4
+    category: Lockbox
+  item_2015_prize_box:
+    name: 2015 Prize Box
+    category: Lockbox
+  item_2015_prize_box_2:
+    name: 2015 Prize Box 2
+    category: Lockbox
+  item_2015_prize_box_3:
+    name: 2015 Prize Box 3
+    category: Lockbox
+  item_2015_prize_box_4:
+    name: 2015 Prize Box 4
+    category: Lockbox
+  item_2016_prize_box:
+    name: 2016 Prize Box
+    category: Lockbox
+  item_2016_prize_box_2:
+    name: 2016 Prize Box 2
+    category: Lockbox
+  item_2016_prize_box_3:
+    name: 2016 Prize Box 3
+    category: Lockbox
+  item_2016_prize_box_4:
+    name: 2016 Prize Box 4
+    category: Lockbox
+  item_2017_prize_box:
+    name: 2017 Prize Box
+    category: Lockbox
+  item_2017_prize_box_2:
+    name: 2017 Prize Box 2
+    category: Lockbox
+  item_2017_prize_box_3:
+    name: 2017 Prize Box 3
+    category: Lockbox
+  item_2017_prize_box_4:
+    name: 2017 Prize Box 4
+    category: Lockbox
+  item_2018_prize_box:
+    name: 2018 Prize Box
+    category: Lockbox
+  item_2018_prize_box_2:
+    name: 2018 Prize Box 2
+    category: Lockbox
+  item_2018_prize_box_3:
+    name: 2018 Prize Box 3
+    category: Lockbox
+  item_2018_prize_box_4:
+    name: 2018 Prize Box 4
+    category: Lockbox
+  item_2019_prize_box:
+    name: 2019 Prize Box
+    category: Lockbox
+  item_2019_prize_box_2:
+    name: 2019 Prize Box 2
+    category: Lockbox
+  item_2019_prize_box_3:
+    name: 2019 Prize Box 3
+    category: Lockbox
+  item_2019_prize_box_4:
+    name: 2019 Prize Box 4
+    category: Lockbox
+  item_2_jelly_crown:
+    name: Royal Jelly Crown
+    category: Prop
+    rarity: 4
+    stackable: true
+  item_2_mask_of_vanaduke:
+    name: Lord Vanaduke's Mask
+    category: Prop
+    rarity: 4
+    stackable: true
+  item_2_miniature_snarbolax:
+    name: Replica Natural Snarbolax
+    category: Prop
+    rarity: 4
+    stackable: true
+  item_2_replica_roarmulus_small:
+    name: Small Replica Roarmulus Twin
+    category: Prop
+    rarity: 4
+    stackable: true
+  item_3_replica_roarmulus_large:
+    name: Large Replica Roarmulus Twin
+    category: Prop
+    rarity: 5
+    stackable: true
+  item_3_royal_jelly:
+    name: Replica Royal Jelly
+    category: Prop
+    rarity: 5
+    stackable: true
+  item_3_scepter_of_vanaduke:
+    name: Lord Vanaduke's Finery
+    category: Prop
+    rarity: 5
+    stackable: true
+  item_3_stuffed_snarbolax_invuln:
+    name: Replica Shadowy Snarbolax
+    category: Prop
+    rarity: 5
+    stackable: true
+  item_403:
+    name: Slime Lockbox
+    category: Lockbox
+  item_40g:
+    name: Slime Lockbox
+    category: Lockbox
+  item_40n:
+    name: Slime Lockbox
+    category: Lockbox
+  item_41c:
+    name: Slime Lockbox
+    category: Lockbox
+  item_41d:
+    name: Slime Lockbox
+    category: Lockbox
+  item_5000:
+    name: '5000'
+    category: GuildBond
+    stackable: true
+  item_50000:
+    name: '50000'
+    category: GuildBond
+    stackable: true
+  item_509:
+    name: Slime Lockbox
+    category: Lockbox
+  item_50e:
+    name: Slime Lockbox
+    category: Lockbox
+  jalovec_recipe:
+    name: Jalovec Recipe
+    category: Recipe
+    rarity: 4
+  jar_o_fireflies:
+    name: Jar O' Fireflies
+    category: AnimatedAction
+    stackable: true
+  jelly_helm_recipe:
+    name: Jelly Helm Recipe
+    category: Recipe
+    rarity: 2
+  jelly_mail_recipe:
+    name: Jelly Mail Recipe
+    category: Recipe
+    rarity: 2
+  jelly_shield_recipe:
+    name: Jelly Shield Recipe
+    category: Recipe
+    rarity: 2
+  jelly_token:
+    name: Jelly Gem
+    category: Token
+    stackable: true
+    locked: true
+  jolly:
+    name: Jolly Eyes
+    category: Eye
+    stackable: true
+  joy:
+    name: Joy Eyes
+    category: Eye
+    stackable: true
+  justifier_hat_recipe:
+    name: Justifier Hat Recipe
+    category: Recipe
+    rarity: 5
+  justifier_jacket_recipe:
+    name: Justifier Jacket Recipe
+    category: Recipe
+    rarity: 5
+  kamarin_recipe:
+    name: Kamarin Recipe
+    category: Recipe
+    rarity: 3
+  katastrophe_prize_box:
+    name: Katastrophe Prize Box
+    category: Lockbox
+  katastrophe_prize_box_complete:
+    name: Katastrophe Prize Box, Complete
+    category: Lockbox
+  katastrophe_returns_prize_box:
+    name: Katastrophe Returns Prize Box
+    category: Lockbox
+  khorovod_recipe:
+    name: Khorovod Recipe
+    category: Recipe
+    rarity: 4
+  kilowatt_pulsar_recipe:
+    name: Kilowatt Pulsar Recipe
+    category: Recipe
+    rarity: 3
+  king_black:
+    name: King, Black
+    category: Actor
+    stackable: true
+  king_white:
+    name: King, White
+    category: Actor
+    stackable: true
+  king_winterfest_red:
+    name: King, Winterfest Red
+    category: Actor
+    stackable: true
+  king_winterfest_white:
+    name: King, Winterfest White
+    category: Actor
+    stackable: true
+  knight_black:
+    name: Knight, Black
+    category: Actor
+    stackable: true
+  knight_statue:
+    name: Knight Statue
+    category: KnightStatue
+  knight_statue_large:
+    name: Knight Statue, Large
+    category: KnightStatue
+  knight_statue_medium:
+    name: Knight Statue, Medium
+    category: KnightStatue
+  knight_statue_relaxed:
+    name: Knight Statue - Relaxed
+    category: KnightStatue
+  knight_statue_relaxed_large:
+    name: Knight Statue - Relaxed, Large
+    category: KnightStatue
+  knight_white:
+    name: Knight, White
+    category: Actor
+    stackable: true
+  knight_winterfest_red:
+    name: Knight, Winterfest Red
+    category: Actor
+    stackable: true
+  knight_winterfest_white:
+    name: Knight, Winterfest White
+    category: Actor
+    stackable: true
+  krogmo_coin:
+    name: Krogmo Coin
+    category: Token
+    stackable: true
+    locked: true
+  lake:
+    name: Lake
+    category: Color
+    stackable: true
+  large_fireworks_amber:
+    name: Large Fireworks, Amber
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_aquamarine:
+    name: Large Fireworks, Aquamarine
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_beast:
+    name: Large Fireworks, Beast
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_blue:
+    name: Large Fireworks, Blue
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_chartreuse:
+    name: Large Fireworks, Chartreuse
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_cobalt:
+    name: Large Fireworks, Cobalt
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_crimson:
+    name: Large Fireworks, Crimson
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_cyan:
+    name: Large Fireworks, Cyan
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_emerald:
+    name: Large Fireworks, Emerald
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_green:
+    name: Large Fireworks, Green
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_indigo:
+    name: Large Fireworks, Indigo
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_lake:
+    name: Large Fireworks, Lake
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_lavender:
+    name: Large Fireworks, Lavender
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_lime:
+    name: Large Fireworks, Lime
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_magenta:
+    name: Large Fireworks, Magenta
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_orange:
+    name: Large Fireworks, Orange
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_purple:
+    name: Large Fireworks, Purple
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_red:
+    name: Large Fireworks, Red
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_silver:
+    name: Large Fireworks, Silver
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_sky:
+    name: Large Fireworks, Sky
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_slime:
+    name: Large Fireworks, Slime
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_turquoise:
+    name: Large Fireworks, Turquoise
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_ultramarine:
+    name: Large Fireworks, Ultramarine
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_vermillion:
+    name: Large Fireworks, Vermillion
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_violet:
+    name: Large Fireworks, Violet
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_viridian:
+    name: Large Fireworks, Viridian
+    category: AnimatedAction
+    stackable: true
+  large_fireworks_yellow:
+    name: Large Fireworks, Yellow
+    category: AnimatedAction
+    stackable: true
+  large_present:
+    name: Large Present
+    category: Present
+    rarity: 0
+    bindsWhenEquipped: true
+  lash:
+    name: Delicate Eyes
+    category: Eye
+    stackable: true
+  late_harvest_prize_box:
+    name: Late Harvest Prize Box
+    category: Lockbox
+  lavender:
+    name: Lavender
+    category: Color
+    stackable: true
+  leviathan_blade_recipe:
+    name: Leviathan Blade Recipe
+    category: Recipe
+    rarity: 5
+  lightning_capacitor_recipe:
+    name: Lightning Capacitor Recipe
+    category: Recipe
+    rarity: 3
+  lime:
+    name: Lime
+    category: Color
+    stackable: true
+  lime_snipe_flying:
+    name: Lime Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  lime_snipe_lazy:
+    name: Lime Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  lime_snipe_wandering:
+    name: Lime Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  lockbox:
+    name: Iron Lockbox
+    category: Lockbox
+  lockbox_copper:
+    name: Copper Lockbox
+    category: Lockbox
+  lockbox_gold:
+    name: Gold Lockbox
+    category: Lockbox
+  lockbox_platinum:
+    name: Platinum Lockbox
+    category: Lockbox
+  lockbox_silver:
+    name: Silver Lockbox
+    category: Lockbox
+  lockbox_steel:
+    name: Steel Lockbox
+    category: Lockbox
+  lockbox_titanium:
+    name: Titanium Lockbox
+    category: Lockbox
+  lotus:
+    name: Lotus Eyes
+    category: Eye
+    stackable: true
+  lucky_prize_box:
+    name: Lucky Prize Box
+    category: Lockbox
+  luggage_pile_a:
+    name: Antique Luggage
+    category: Prop
+    stackable: true
+  luggage_pile_b:
+    name: Antique Suitcases
+    category: Prop
+    stackable: true
+  mad_bomber_mask_recipe:
+    name: Mad Bomber Mask Recipe
+    category: Recipe
+    rarity: 5
+  mad_bomber_suit_recipe:
+    name: Mad Bomber Suit Recipe
+    category: Recipe
+    rarity: 5
+  magenta:
+    name: Magenta
+    category: Color
+    stackable: true
+  magic_cloak_recipe:
+    name: Magic Cloak Recipe
+    category: Recipe
+    rarity: 2
+  magic_hood_recipe:
+    name: Magic Hood Recipe
+    category: Recipe
+    rarity: 2
+  magma_driver_recipe:
+    name: Magma Driver Recipe
+    category: Recipe
+    rarity: 5
+  magnus_recipe:
+    name: Magnus Recipe
+    category: Recipe
+    rarity: 3
+  mandolin_recipe:
+    name: Mandolin Recipe
+    category: Recipe
+    rarity: 5
+  maskerraith_egg:
+    name: Maskerraith Egg
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_freeze:
+    name: Maskerraith Egg, Freeze
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_grey:
+    name: Maskerraith Egg, Grey
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_punkin:
+    name: Maskerraith Egg, Punkin
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_snarblepup:
+    name: Maskerraith Egg, Snarblepup
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_spiralhorn:
+    name: Maskerraith Egg, Spiralhorn
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  maskerraith_egg_volcanic:
+    name: Maskerraith Egg, Volcanic
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  master_blast_bomb_recipe:
+    name: Master Blast Bomb Recipe
+    category: Recipe
+    rarity: 4
+  master_blaster_recipe:
+    name: Master Blaster Recipe
+    category: Recipe
+    rarity: 4
+  medal_of_monstrous_merit:
+    name: Medal of Monstrous Merit
+    category: Artifact
+    permanent: true
+    locked: true
+  medium_fireworks_amber:
+    name: Medium Fireworks, Amber
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_aquamarine:
+    name: Medium Fireworks, Aquamarine
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_beast:
+    name: Medium Fireworks, Beast
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_blue:
+    name: Medium Fireworks, Blue
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_chartreuse:
+    name: Medium Fireworks, Chartreuse
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_cobalt:
+    name: Medium Fireworks, Cobalt
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_crimson:
+    name: Medium Fireworks, Crimson
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_cyan:
+    name: Medium Fireworks, Cyan
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_emerald:
+    name: Medium Fireworks, Emerald
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_green:
+    name: Medium Fireworks, Green
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_indigo:
+    name: Medium Fireworks, Indigo
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_lake:
+    name: Medium Fireworks, Lake
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_lavender:
+    name: Medium Fireworks, Lavender
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_lime:
+    name: Medium Fireworks, Lime
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_magenta:
+    name: Medium Fireworks, Magenta
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_orange:
+    name: Medium Fireworks, Orange
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_purple:
+    name: Medium Fireworks, Purple
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_red:
+    name: Medium Fireworks, Red
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_silver:
+    name: Medium Fireworks, Silver
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_sky:
+    name: Medium Fireworks, Sky
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_slime:
+    name: Medium Fireworks, Slime
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_turquoise:
+    name: Medium Fireworks, Turquoise
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_ultramarine:
+    name: Medium Fireworks, Ultramarine
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_vermillion:
+    name: Medium Fireworks, Vermillion
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_violet:
+    name: Medium Fireworks, Violet
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_viridian:
+    name: Medium Fireworks, Viridian
+    category: AnimatedAction
+    stackable: true
+  medium_fireworks_yellow:
+    name: Medium Fireworks, Yellow
+    category: AnimatedAction
+    stackable: true
+  mega_magnus_recipe:
+    name: Mega Magnus Recipe
+    category: Recipe
+    rarity: 4
+  mega_tundrus_recipe:
+    name: Mega Tundrus Recipe
+    category: Recipe
+    rarity: 4
+  member:
+    name: Member Door
+    category: Ticket
+    stackable: true
+  members_100:
+    name: 'Membership Limit: 100'
+    category: Ticket
+    stackable: true
+  members_150:
+    name: 'Membership Limit: 150'
+    category: Ticket
+    stackable: true
+  members_200:
+    name: 'Membership Limit: 200'
+    category: Ticket
+    stackable: true
+  members_250:
+    name: 'Membership Limit: 250'
+    category: Ticket
+    stackable: true
+  members_300:
+    name: 'Membership Limit: 300'
+    category: Ticket
+    stackable: true
+  mercurial_helm_recipe:
+    name: Mercurial Helm Recipe
+    category: Recipe
+    rarity: 5
+  mercurial_mail_recipe:
+    name: Mercurial Mail Recipe
+    category: Recipe
+    rarity: 5
+  mewkat:
+    name: Curious Mewkat
+    category: Actor
+    rarity: 5
+    stackable: true
+  mighty_cobalt_armor_recipe:
+    name: Mighty Cobalt Armor Recipe
+    category: Recipe
+    rarity: 4
+  mighty_cobalt_helm_recipe:
+    name: Mighty Cobalt Helm Recipe
+    category: Recipe
+    rarity: 4
+  mighty_defender_recipe:
+    name: Mighty Defender Recipe
+    category: Recipe
+    rarity: 4
+  mint_snipe_flying:
+    name: Mint Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  mint_snipe_lazy:
+    name: Mint Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  mint_snipe_wandering:
+    name: Mint Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  miracle_cloak_recipe:
+    name: Miracle Cloak Recipe
+    category: Recipe
+    rarity: 4
+  miracle_hood_recipe:
+    name: Miracle Hood Recipe
+    category: Recipe
+    rarity: 4
+  mist_well:
+    name: Energy Well
+    category: Placeable
+    rarity: 2
+    stackable: true
+  monitors_prismatic:
+    name: Floor Monitors, Double
+    category: Actor
+    rarity: 3
+    stackable: true
+  monitors_small_prismatic:
+    name: Floor Monitor
+    category: Actor
+    rarity: 3
+    stackable: true
+  moon:
+    name: Moony Eyes
+    category: Eye
+    stackable: true
+  moorcroft_prize_box:
+    name: Moorcroft Prize Box
+    category: Lockbox
+  mystery:
+    name: Mystery
+    category: Lockbox
+  mystical_tome:
+    name: Mystical Tome Stand
+    category: Prop
+    stackable: true
+  nameless_hat_recipe:
+    name: Nameless Hat Recipe
+    category: Recipe
+    rarity: 5
+  nameless_poncho_recipe:
+    name: Nameless Poncho Recipe
+    category: Recipe
+    rarity: 5
+  nature_sprite:
+    name: Nature Sprite
+    category: Actor
+    rarity: 5
+    stackable: true
+  needle_shot_recipe:
+    name: Needle Shot Recipe
+    category: Recipe
+    rarity: 3
+  nemesis_prize_box:
+    name: Nemesis Prize Box
+    category: Lockbox
+  neutralizer_recipe:
+    name: Neutralizer Recipe
+    category: Recipe
+    rarity: 5
+  nightblade_recipe:
+    name: Nightblade Recipe
+    category: Recipe
+    rarity: 3
+  nitronome_recipe:
+    name: Nitronome Recipe
+    category: Recipe
+    rarity: 5
+  none:
+    name: Open Doorway
+    category: Ticket
+    stackable: true
+  normal:
+    name: Normal
+    category: Height
+    stackable: true
+  normal_defense_1:
+    name: Normal Defense 1
+    category: VariantTicket
+    stackable: true
+  normal_defense_2:
+    name: Normal Defense 2
+    category: VariantTicket
+    stackable: true
+  normal_defense_3:
+    name: Normal Defense 3
+    category: VariantTicket
+    stackable: true
+  normal_defense_4:
+    name: Normal Defense 4
+    category: VariantTicket
+    stackable: true
+  nova_driver_recipe:
+    name: Nova Driver Recipe
+    category: Recipe
+    rarity: 5
+  obsidian_obelisk:
+    name: Obsidian Obelisk
+    category: Prop
+    stackable: true
+  obsidian_obelisk_broken:
+    name: Broken Obsidian Obelisk
+    category: Prop
+    stackable: true
+  obsidian_obelisk_broken_floating:
+    name: Broken Floating Obsidian Obelisk
+    category: Prop
+    stackable: true
+  obsidian_obelisk_floating:
+    name: Floating Obsidian Obelisk
+    category: Prop
+    stackable: true
+  obsidian_prize_box:
+    name: Obsidian Prize Box
+    category: Lockbox
+  officer:
+    name: Officer Door
+    category: Ticket
+    stackable: true
+  omega_shell_recipe:
+    name: Omega Shell Recipe
+    category: Recipe
+    rarity: 5
+  opal:
+    name: Opal
+    category: Lockbox
+  opal_prize_box:
+    name: Opal Prize Box
+    category: Lockbox
+  orange:
+    name: Orange
+    category: Color
+    stackable: true
+  orange_flame_s240422708_164985298dec:
+    name: Orange Flame
+    category: Prop
+    stackable: true
+  orange_flame_s2980426531_4b8fcf0720ec:
+    name: Orange Flame
+    category: Prop
+    stackable: true
+  orange_lamp_s292461212_87089bae1162:
+    name: Orange Lamp
+    category: Prop
+    stackable: true
+  orange_lamp_s3533419107_b8fdc248747c:
+    name: Orange Lamp
+    category: Prop
+    stackable: true
+  orange_snipe_flying:
+    name: Orange Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  orange_snipe_lazy:
+    name: Orange Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  orange_snipe_wandering:
+    name: Orange Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  owlite_archaeology_box:
+    name: Owlite Archaeology Box
+    category: Lockbox
+  owlite_shield_recipe:
+    name: Owlite Shield Recipe
+    category: Recipe
+    rarity: 2
+  padded_armor_recipe:
+    name: Padded Armor Recipe
+    category: Recipe
+    rarity: 1
+  padded_cap_recipe:
+    name: Padded Cap Recipe
+    category: Recipe
+    rarity: 1
+  padded_demo_helm_recipe:
+    name: Padded Demo Helm Recipe
+    category: Recipe
+    rarity: 3
+  padded_demo_suit_recipe:
+    name: Padded Demo Suit Recipe
+    category: Recipe
+    rarity: 3
+  padded_hunting_cap_recipe:
+    name: Padded Hunting Cap Recipe
+    category: Recipe
+    rarity: 3
+  padded_hunting_coat_recipe:
+    name: Padded Hunting Coat Recipe
+    category: Recipe
+    rarity: 3
+  page_token:
+    name: Ancient Page
+    category: Token
+    stackable: true
+    locked: true
+  pale_cool_tone_s1303598135_c5de9e86be18:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_cool_tone_s2552747144_88e9abe6f164:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_cool_tone_s3918165978_7bcc905cc796:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_cool_tone_s3930344531_77110e7f6adc:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_cool_tone_s525763496_ed2b0e83ebfa:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_cool_tone_s541737889_a6ff98917e8b:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_cool_tone_s736121102_94f8195dda27:
+    name: Pale, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_neutral_tone_s2548647578_d62754c66316:
+    name: Pale, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_neutral_tone_s287699841_33c0af71b8bd:
+    name: Pale, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_neutral_tone_s2991424300_ef7b3a11e0a3:
+    name: Pale, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_neutral_tone_s472936678_199b6976efe9:
+    name: Pale, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_neutral_tone_s66781196_e730132d33a1:
+    name: Pale, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_warm_tone_s1895447070_c3fbc415427c:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_warm_tone_s1907625623_50f575e80451:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_warm_tone_s2798011884_c58fd1fd18fe:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_warm_tone_s2813986277_eb9d95603bc7:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_warm_tone_s3008369490_ec9c69304489:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  pale_warm_tone_s3575846523_0f7dfaa62b4a:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pale_warm_tone_s530028236_e17a7a1eda5f:
+    name: Pale, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  pathfinder_armor_recipe:
+    name: Pathfinder Armor Recipe
+    category: Recipe
+    rarity: 2
+  pathfinder_helm_recipe:
+    name: Pathfinder Helm Recipe
+    category: Recipe
+    rarity: 2
+  pawn_black:
+    name: Pawn, Black
+    category: Actor
+    stackable: true
+  pawn_white:
+    name: Pawn, White
+    category: Actor
+    stackable: true
+  pawn_winterfest_red:
+    name: Pawn, Winterfest Red
+    category: Actor
+    stackable: true
+  pawn_winterfest_white:
+    name: Pawn, Winterfest White
+    category: Actor
+    stackable: true
+  pearl:
+    name: Pearl
+    category: Lockbox
+  pearl_prize_box:
+    name: Pearl Prize Box
+    category: Lockbox
+  pepperbox_recipe:
+    name: Pepperbox Recipe
+    category: Recipe
+    rarity: 3
+  peridot:
+    name: Peridot
+    category: Lockbox
+  peridot_prize_box:
+    name: Peridot Prize Box
+    category: Lockbox
+  permafroster_recipe:
+    name: Permafroster Recipe
+    category: Recipe
+    rarity: 5
+  phantamos_recipe:
+    name: Phantamos Recipe
+    category: Recipe
+    rarity: 5
+  pierce_blaster_recipe:
+    name: Pierce Blaster Recipe
+    category: Recipe
+    rarity: 3
+  pierce_defense_1:
+    name: Pierce Defense 1
+    category: VariantTicket
+    stackable: true
+  pierce_defense_2:
+    name: Pierce Defense 2
+    category: VariantTicket
+    stackable: true
+  pierce_defense_3:
+    name: Pierce Defense 3
+    category: VariantTicket
+    stackable: true
+  pierce_defense_4:
+    name: Pierce Defense 4
+    category: VariantTicket
+    stackable: true
+  pile_o_pillows:
+    name: Pile O' Pillows
+    category: SpawnActor
+    stackable: true
+  pill:
+    name: Pill Eyes
+    category: Eye
+    stackable: true
+  plague_needle_recipe:
+    name: Plague Needle Recipe
+    category: Recipe
+    rarity: 5
+  plasma_capacitor_recipe:
+    name: Plasma Capacitor Recipe
+    category: Recipe
+    rarity: 4
+  plate_shield_recipe:
+    name: Plate Shield Recipe
+    category: Recipe
+    rarity: 2
+  plated_pathfinder_armor_falcon_recipe:
+    name: Plated Pathfinder Armor, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_armor_firefly_recipe:
+    name: Plated Pathfinder Armor, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_armor_grizzly_recipe:
+    name: Plated Pathfinder Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_armor_snakebite_recipe:
+    name: Plated Pathfinder Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_helm_falcon_recipe:
+    name: Plated Pathfinder Helm, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_helm_firefly_recipe:
+    name: Plated Pathfinder Helm, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_helm_grizzly_recipe:
+    name: Plated Pathfinder Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_pathfinder_helm_snakebite_recipe:
+    name: Plated Pathfinder Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_armor_falcon_recipe:
+    name: Plated Sentinel Armor, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_armor_firefly_recipe:
+    name: Plated Sentinel Armor, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_armor_grizzly_recipe:
+    name: Plated Sentinel Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_armor_snakebite_recipe:
+    name: Plated Sentinel Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_helm_falcon_recipe:
+    name: Plated Sentinel Helm, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_helm_firefly_recipe:
+    name: Plated Sentinel Helm, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_helm_grizzly_recipe:
+    name: Plated Sentinel Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_sentinel_helm_snakebite_recipe:
+    name: Plated Sentinel Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_armor_falcon_recipe:
+    name: Plated Shade Armor, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_armor_firefly_recipe:
+    name: Plated Shade Armor, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_armor_grizzly_recipe:
+    name: Plated Shade Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_armor_snakebite_recipe:
+    name: Plated Shade Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_helm_falcon_recipe:
+    name: Plated Shade Helm, Falcon Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_helm_firefly_recipe:
+    name: Plated Shade Helm, Firefly Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_helm_grizzly_recipe:
+    name: Plated Shade Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 4
+  plated_shade_helm_snakebite_recipe:
+    name: Plated Shade Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 4
+  plum_snipe_flying:
+    name: Plum Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  plum_snipe_lazy:
+    name: Plum Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  plum_snipe_wandering:
+    name: Plum Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  plunge_prize_box:
+    name: Plunge Prize Box
+    category: Lockbox
+  plus:
+    name: Plus Eyes
+    category: Eye
+    stackable: true
+  poison_default_lighting:
+    name: Poison, Default Lighting
+    category: GuildHallGlobalTicket
+    stackable: true
+  poison_extra:
+    name: Poison, Extra
+    category: GuildHallGlobalTicket
+    stackable: true
+  poison_resist_1:
+    name: Poison Resist 1
+    category: VariantTicket
+    stackable: true
+  poison_resist_2:
+    name: Poison Resist 2
+    category: VariantTicket
+    stackable: true
+  poison_resist_3:
+    name: Poison Resist 3
+    category: VariantTicket
+    stackable: true
+  poison_resist_4:
+    name: Poison Resist 4
+    category: VariantTicket
+    stackable: true
+  poison_standard:
+    name: Wasteworks Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  polar_prize_box:
+    name: Polar Prize Box
+    category: Lockbox
+  polar_prize_box_2014:
+    name: Polar Prize Box 2014
+    category: Lockbox
+  polar_prize_box_2016:
+    name: Polar Prize Box 2016
+    category: Lockbox
+  polaris_recipe:
+    name: Polaris Recipe
+    category: Recipe
+    rarity: 5
+  potted_shrub_blue:
+    name: Potted Shrub, Blue
+    category: Prop
+    rarity: 1
+    stackable: true
+  potted_shrub_green:
+    name: Potted Shrub, Green
+    category: Prop
+    rarity: 1
+    stackable: true
+  potted_shrub_red:
+    name: Potted Shrub, Red
+    category: Prop
+    rarity: 1
+    stackable: true
+  potted_shrub_yellow:
+    name: Potted Shrub, Yellow
+    category: Prop
+    rarity: 1
+    stackable: true
+  preview_event_medal:
+    name: Preview Event Medal
+    category: Artifact
+    permanent: true
+    locked: true
+  primal_token:
+    name: Primal Spark
+    category: Token
+    stackable: true
+    locked: true
+  prisma_driver_recipe:
+    name: Prisma Driver Recipe
+    category: Recipe
+    rarity: 4
+  prismatech_alchemer_mk_ii_recipe:
+    name: Prismatech Alchemer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  prismatech_alchemer_recipe:
+    name: Prismatech Alchemer Recipe
+    category: Recipe
+    rarity: 2
+  propeller:
+    name: Propeller Eyes
+    category: Eye
+    stackable: true
+  pummel_gun_recipe:
+    name: Pummel Gun Recipe
+    category: Recipe
+    rarity: 1
+  punchnvise:
+    name: Punch & Vise's Workshop
+    category: Ticket
+    stackable: true
+  punkin_pie_pan:
+    name: Punkin Pie Pan
+    category: SpawnActor
+    stackable: true
+  purple:
+    name: Purple
+    category: Color
+    stackable: true
+  purple_snipe_flying:
+    name: Purple Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  purple_snipe_lazy:
+    name: Purple Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  purple_snipe_wandering:
+    name: Purple Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  purple_spiral:
+    name: Purple Spiral
+    category: Artifact
+    permanent: true
+    locked: true
+  qqq:
+    name: Slime Lockbox
+    category: Lockbox
+  queen_black:
+    name: Queen, Black
+    category: Actor
+    stackable: true
+  queen_white:
+    name: Queen, White
+    category: Actor
+    stackable: true
+  queen_winterfest_red:
+    name: Queen, Winterfest Red
+    category: Actor
+    stackable: true
+  queen_winterfest_white:
+    name: Queen, Winterfest White
+    category: Actor
+    stackable: true
+  quilted_demo_helm_recipe:
+    name: Quilted Demo Helm Recipe
+    category: Recipe
+    rarity: 4
+  quilted_demo_suit_recipe:
+    name: Quilted Demo Suit Recipe
+    category: Recipe
+    rarity: 4
+  quilted_hunting_cap_recipe:
+    name: Quilted Hunting Cap Recipe
+    category: Recipe
+    rarity: 4
+  quilted_hunting_coat_recipe:
+    name: Quilted Hunting Coat Recipe
+    category: Recipe
+    rarity: 4
+  radiant:
+    name: Radiant Fire Crystal
+    category: Ticket
+    rarity: 5
+    stackable: true
+  radiant_forge_prize_box:
+    name: Radiant Forge Prize Box
+    category: Lockbox
+  radiant_pulsar_recipe:
+    name: Radiant Pulsar Recipe
+    category: Recipe
+    rarity: 4
+  radiant_silvermail_recipe:
+    name: Radiant Silvermail Recipe
+    category: Recipe
+    rarity: 5
+  radiant_sun_shards_recipe:
+    name: Radiant Sun Shards Recipe
+    category: Recipe
+    rarity: 4
+  rage:
+    name: Angry Eyes
+    category: Eye
+    stackable: true
+  rage_prize_box:
+    name: Rage Prize Box
+    category: Lockbox
+  raiders_prize_box:
+    name: Raiders Prize Box
+    category: Lockbox
+  rain_shower:
+    name: Rain Shower Environment
+    category: GuildHallGlobalTicket
+    stackable: true
+  rain_torrent:
+    name: Rain Storm Environment
+    category: GuildHallGlobalTicket
+    stackable: true
+  rainbow:
+    name: Rainbow
+    category: SpecialProp
+    stackable: true
+  rank_1:
+    name: Recruit's Battle Stand
+    category: Prop
+    rarity: 0
+    stackable: true
+  rank_2:
+    name: Knight's Battle Stand
+    category: Prop
+    rarity: 0
+    stackable: true
+  rank_3:
+    name: Champion's Battle Stand
+    category: Prop
+    rarity: 0
+    stackable: true
+  rank_4:
+    name: Vanguard's Battle Stand
+    category: Prop
+    rarity: 0
+    stackable: true
+  raptor_recipe:
+    name: Raptor Recipe
+    category: Recipe
+    rarity: 4
+  rarity:
+    name: Rarity
+    category: Recipe
+    rarity: 0
+  recon_module_base:
+    name: Recon Module Base
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_citadel:
+    name: Recon Module Citadel
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_core_terminal:
+    name: Recon Module Core Terminal
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_gauntlet:
+    name: Recon Module Gauntlet
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_jelly_palace:
+    name: Recon Module Jelly Palace
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_munitions_factory:
+    name: Recon Module Munitions Factory
+    category: Artifact
+    permanent: true
+    locked: true
+  recon_module_wildwoods:
+    name: Recon Module Wildwoods
+    category: Artifact
+    permanent: true
+    locked: true
+  red:
+    name: Red
+    category: Color
+    stackable: true
+  red_snipe_flying:
+    name: Red Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  red_snipe_lazy:
+    name: Red Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  red_snipe_wandering:
+    name: Red Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  rename_guild:
+    name: Guild Name Change Pass
+    category: RenameGuild
+  rename_knight:
+    name: Knight Name Change Pass
+    category: RenameKnight
+  riftlocker_recipe:
+    name: Riftlocker Recipe
+    category: Recipe
+    rarity: 5
+  rigadoon_recipe:
+    name: Rigadoon Recipe
+    category: Recipe
+    rarity: 3
+  roarmulus_token:
+    name: Bark Module
+    category: Token
+    stackable: true
+    locked: true
+  rock_jelly_helm_recipe:
+    name: Rock Jelly Helm Recipe
+    category: Recipe
+    rarity: 4
+  rock_jelly_mail_recipe:
+    name: Rock Jelly Mail Recipe
+    category: Recipe
+    rarity: 4
+  rock_jelly_shield_recipe:
+    name: Rock Jelly Shield Recipe
+    category: Recipe
+    rarity: 4
+  rock_salt_bomb_recipe:
+    name: Rock Salt Bomb Recipe
+    category: Recipe
+    rarity: 3
+  rook_black:
+    name: Rook, Black
+    category: Actor
+    stackable: true
+  rook_white:
+    name: Rook, White
+    category: Actor
+    stackable: true
+  rook_winterfest_red:
+    name: Rook, Winterfest Red
+    category: Actor
+    stackable: true
+  rook_winterfest_white:
+    name: Rook, Winterfest White
+    category: Actor
+    stackable: true
+  rooster_prize_box:
+    name: Rooster Prize Box
+    category: Lockbox
+  rose_regalia_prize_box:
+    name: Rose Regalia Prize Box
+    category: Lockbox
+  rose_regalia_prize_box_complete:
+    name: Rose Regalia Regeneration Prize Box
+    category: Lockbox
+  rose_regalia_returns_again_prize_box:
+    name: Rose Regalia Returns Again Prize Box
+    category: Lockbox
+  rose_regalia_returns_prize_box:
+    name: Rose Regalia Returns Prize Box
+    category: Lockbox
+  rose_regalia_reunion_prize_box:
+    name: Rose Regalia Reunion Prize Box
+    category: Lockbox
+  royal_jelly_crown_recipe:
+    name: Royal Jelly Crown Recipe
+    category: Recipe
+    rarity: 5
+  royal_jelly_mail_recipe:
+    name: Royal Jelly Mail Recipe
+    category: Recipe
+    rarity: 5
+  royal_jelly_shield_recipe:
+    name: Royal Jelly Shield Recipe
+    category: Recipe
+    rarity: 5
+  ruby:
+    name: Ruby
+    category: Lockbox
+  ruby_prize_box:
+    name: Ruby Prize Box
+    category: Lockbox
+  rug_charred:
+    name: Charred Rug
+    category: Prop
+    stackable: true
+  rug_restored:
+    name: Restored Rug
+    category: Prop
+    stackable: true
+  rugged_robo_wrecker_recipe:
+    name: Rugged Robo Wrecker Recipe
+    category: Recipe
+    rarity: 1
+  running_wild_box:
+    name: Running Wild Box
+    category: Lockbox
+  rust_cool_tone_s1011662681_763ea3979496:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_cool_tone_s1902048942_5aa46ed27b02:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_cool_tone_s1918023335_2179837880d4:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_cool_tone_s2112406548_da976acc0438:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_cool_tone_s2679883581_9b83d261b92a:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_cool_tone_s3929032590_4464a6ec24df:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_cool_tone_s999484128_ddc6b6840e92:
+    name: Rust, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_neutral_tone_s1228695366_c133becf0f76:
+    name: Rust, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_neutral_tone_s1449614011_f074266450c2:
+    name: Rust, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_neutral_tone_s1634850848_ad848249b88d:
+    name: Rust, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_neutral_tone_s3710561748_acff08818e03:
+    name: Rust, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_neutral_tone_s4153338470_2b656f7cb689:
+    name: Rust, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_warm_tone_s1906313682_58cccfd87a12:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_warm_tone_s3271732516_7ec659d873d9:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_warm_tone_s3283911069_6cef5e8ad8e7:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_warm_tone_s4174297330_5bd0dd93077b:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_warm_tone_s4190271723_9e201b6e1b9e:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  rust_warm_tone_s657164673_fd78025d4d52:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  rust_warm_tone_s89687640_fe45dad4ed95:
+    name: Rust, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  sacred_ghost_armor_falcon_recipe:
+    name: Sacred Ghost Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_armor_firefly_recipe:
+    name: Sacred Ghost Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_armor_grizzly_recipe:
+    name: Sacred Ghost Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_armor_snakebite_recipe:
+    name: Sacred Ghost Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_helm_falcon_recipe:
+    name: Sacred Ghost Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_helm_firefly_recipe:
+    name: Sacred Ghost Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_helm_grizzly_recipe:
+    name: Sacred Ghost Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_ghost_helm_snakebite_recipe:
+    name: Sacred Ghost Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_armor_falcon_recipe:
+    name: Sacred Guerrilla Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_armor_firefly_recipe:
+    name: Sacred Guerrilla Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_armor_grizzly_recipe:
+    name: Sacred Guerrilla Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_armor_snakebite_recipe:
+    name: Sacred Guerrilla Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_helm_falcon_recipe:
+    name: Sacred Guerrilla Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_helm_firefly_recipe:
+    name: Sacred Guerrilla Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_helm_grizzly_recipe:
+    name: Sacred Guerrilla Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_guerrilla_helm_snakebite_recipe:
+    name: Sacred Guerrilla Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_armor_falcon_recipe:
+    name: Sacred Hazard Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_armor_firefly_recipe:
+    name: Sacred Hazard Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_armor_grizzly_recipe:
+    name: Sacred Hazard Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_armor_snakebite_recipe:
+    name: Sacred Hazard Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_helm_falcon_recipe:
+    name: Sacred Hazard Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_helm_firefly_recipe:
+    name: Sacred Hazard Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_helm_grizzly_recipe:
+    name: Sacred Hazard Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hazard_helm_snakebite_recipe:
+    name: Sacred Hazard Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_armor_falcon_recipe:
+    name: Sacred Hex Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_armor_firefly_recipe:
+    name: Sacred Hex Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_armor_grizzly_recipe:
+    name: Sacred Hex Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_armor_snakebite_recipe:
+    name: Sacred Hex Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_helm_falcon_recipe:
+    name: Sacred Hex Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_helm_firefly_recipe:
+    name: Sacred Hex Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_helm_grizzly_recipe:
+    name: Sacred Hex Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_hex_helm_snakebite_recipe:
+    name: Sacred Hex Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_armor_falcon_recipe:
+    name: Sacred Keeper Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_armor_firefly_recipe:
+    name: Sacred Keeper Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_armor_grizzly_recipe:
+    name: Sacred Keeper Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_armor_snakebite_recipe:
+    name: Sacred Keeper Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_helm_falcon_recipe:
+    name: Sacred Keeper Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_helm_firefly_recipe:
+    name: Sacred Keeper Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_helm_grizzly_recipe:
+    name: Sacred Keeper Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_keeper_helm_snakebite_recipe:
+    name: Sacred Keeper Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_armor_falcon_recipe:
+    name: Sacred Pathfinder Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_armor_firefly_recipe:
+    name: Sacred Pathfinder Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_armor_grizzly_recipe:
+    name: Sacred Pathfinder Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_armor_snakebite_recipe:
+    name: Sacred Pathfinder Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_helm_falcon_recipe:
+    name: Sacred Pathfinder Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_helm_firefly_recipe:
+    name: Sacred Pathfinder Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_helm_grizzly_recipe:
+    name: Sacred Pathfinder Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_pathfinder_helm_snakebite_recipe:
+    name: Sacred Pathfinder Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_armor_falcon_recipe:
+    name: Sacred Sentinel Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_armor_firefly_recipe:
+    name: Sacred Sentinel Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_armor_grizzly_recipe:
+    name: Sacred Sentinel Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_armor_snakebite_recipe:
+    name: Sacred Sentinel Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_helm_falcon_recipe:
+    name: Sacred Sentinel Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_helm_firefly_recipe:
+    name: Sacred Sentinel Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_helm_grizzly_recipe:
+    name: Sacred Sentinel Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_sentinel_helm_snakebite_recipe:
+    name: Sacred Sentinel Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_armor_falcon_recipe:
+    name: Sacred Shade Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_armor_firefly_recipe:
+    name: Sacred Shade Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_armor_grizzly_recipe:
+    name: Sacred Shade Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_armor_snakebite_recipe:
+    name: Sacred Shade Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_helm_falcon_recipe:
+    name: Sacred Shade Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_helm_firefly_recipe:
+    name: Sacred Shade Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_helm_grizzly_recipe:
+    name: Sacred Shade Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_shade_helm_snakebite_recipe:
+    name: Sacred Shade Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_armor_falcon_recipe:
+    name: Sacred Wraith Armor, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_armor_firefly_recipe:
+    name: Sacred Wraith Armor, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_armor_grizzly_recipe:
+    name: Sacred Wraith Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_armor_snakebite_recipe:
+    name: Sacred Wraith Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_helm_falcon_recipe:
+    name: Sacred Wraith Helm, Falcon Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_helm_firefly_recipe:
+    name: Sacred Wraith Helm, Firefly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_helm_grizzly_recipe:
+    name: Sacred Wraith Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 5
+  sacred_wraith_helm_snakebite_recipe:
+    name: Sacred Wraith Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 5
+  sad:
+    name: Sad Eyes
+    category: Eye
+    stackable: true
+  sage_snipe_flying:
+    name: Sage Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  sage_snipe_lazy:
+    name: Sage Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  sage_snipe_wandering:
+    name: Sage Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  salamander_mask_recipe:
+    name: Salamander Mask Recipe
+    category: Recipe
+    rarity: 4
+  salamander_suit_recipe:
+    name: Salamander Suit Recipe
+    category: Recipe
+    rarity: 4
+  sapphire:
+    name: Sapphire
+    category: Lockbox
+  sapphire_prize_box:
+    name: Sapphire Prize Box
+    category: Lockbox
+  scale_shield_recipe:
+    name: Scale Shield Recipe
+    category: Recipe
+    rarity: 1
+  scarlet_shield_recipe:
+    name: Scarlet Shield Recipe
+    category: Recipe
+    rarity: 3
+  scary_skelly_mask_recipe:
+    name: Scary Skelly Mask Recipe
+    category: Recipe
+    rarity: 3
+  scary_skelly_shield_recipe:
+    name: Scary Skelly Shield Recipe
+    category: Recipe
+    rarity: 3
+  scary_skelly_suit_recipe:
+    name: Scary Skelly Suit Recipe
+    category: Recipe
+    rarity: 3
+  scintillating_sun_shards_recipe:
+    name: Scintillating Sun Shards Recipe
+    category: Recipe
+    rarity: 5
+  sea_snipe_flying:
+    name: Sea Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  sea_snipe_lazy:
+    name: Sea Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  sea_snipe_wandering:
+    name: Sea Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  searing_edge_recipe:
+    name: Searing Edge Recipe
+    category: Recipe
+    rarity: 2
+  sentenza_recipe:
+    name: Sentenza Recipe
+    category: Recipe
+    rarity: 5
+  sentinel_armor_recipe:
+    name: Sentinel Armor Recipe
+    category: Recipe
+    rarity: 2
+  sentinel_helm_recipe:
+    name: Sentinel Helm Recipe
+    category: Recipe
+    rarity: 2
+  seraphic_helm_recipe:
+    name: Seraphic Helm Recipe
+    category: Recipe
+    rarity: 4
+  seraphic_mail_recipe:
+    name: Seraphic Mail Recipe
+    category: Recipe
+    rarity: 4
+  seraphynx_egg:
+    name: Seraphynx Egg
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  seraphynx_egg_black:
+    name: Seraphynx Egg, Black
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  seraphynx_egg_grey:
+    name: Seraphynx Egg, Grey
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  seraphynx_egg_grey_gry:
+    name: Seraphynx Egg, Grey (gry)
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  seraphynx_egg_love_puppy:
+    name: Seraphynx Egg, Love Puppy
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  seraphynx_egg_tan:
+    name: Seraphynx Egg, Tan
+    category: SpriteEgg
+    rarity: 0
+    stackable: true
+  shade_armor_recipe:
+    name: Shade Armor Recipe
+    category: Recipe
+    rarity: 2
+  shade_helm_recipe:
+    name: Shade Helm Recipe
+    category: Recipe
+    rarity: 2
+  shadow:
+    name: Shadow
+    category: Lockbox
+  shadow_blaster_recipe:
+    name: Shadow Blaster Recipe
+    category: Recipe
+    rarity: 3
+  shadow_defense_1:
+    name: Shadow Defense 1
+    category: VariantTicket
+    stackable: true
+  shadow_defense_2:
+    name: Shadow Defense 2
+    category: VariantTicket
+    stackable: true
+  shadow_defense_3:
+    name: Shadow Defense 3
+    category: VariantTicket
+    stackable: true
+  shadow_defense_4:
+    name: Shadow Defense 4
+    category: VariantTicket
+    stackable: true
+  shadow_driver_recipe:
+    name: Shadow Driver Recipe
+    category: Recipe
+    rarity: 4
+  shadow_key:
+    name: Shadow Key
+    category: Ticket
+    stackable: true
+  shadowsun_slicker_recipe:
+    name: Shadowsun Slicker Recipe
+    category: Recipe
+    rarity: 5
+  shadowsun_stetson_recipe:
+    name: Shadowsun Stetson Recipe
+    category: Recipe
+    rarity: 5
+  shadowtech_alchemer_mk_ii_recipe:
+    name: Shadowtech Alchemer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  shadowtech_alchemer_recipe:
+    name: Shadowtech Alchemer Recipe
+    category: Recipe
+    rarity: 2
+  shadowtech_prize_box:
+    name: ShadowTech Prize Box
+    category: Lockbox
+  shard_bomb_recipe:
+    name: Shard Bomb Recipe
+    category: Recipe
+    rarity: 2
+  shield:
+    name: Shield
+    category: Recipe
+    rarity: 0
+  shifty:
+    name: Shifty Eyes
+    category: Eye
+    stackable: true
+  shining:
+    name: Shining Fire Crystal
+    category: Ticket
+    rarity: 4
+    stackable: true
+  shining_forge_prize_box:
+    name: Shining Forge Prize Box
+    category: Lockbox
+  shining_recipe:
+    name: Shining Recipe
+    category: Recipe
+    rarity: 4
+  shivermist_buster_recipe:
+    name: Shivermist Buster Recipe
+    category: Recipe
+    rarity: 5
+  shock_default_lighting:
+    name: Shock, Default Lighting
+    category: GuildHallGlobalTicket
+    stackable: true
+  shock_extra:
+    name: Shock, Extra
+    category: GuildHallGlobalTicket
+    stackable: true
+  shock_resist_1:
+    name: Shock Resist 1
+    category: VariantTicket
+    stackable: true
+  shock_resist_2:
+    name: Shock Resist 2
+    category: VariantTicket
+    stackable: true
+  shock_resist_3:
+    name: Shock Resist 3
+    category: VariantTicket
+    stackable: true
+  shock_resist_4:
+    name: Shock Resist 4
+    category: VariantTicket
+    stackable: true
+  shock_standard:
+    name: Power Complex Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  shockburst_brandish_recipe:
+    name: Shockburst Brandish Recipe
+    category: Recipe
+    rarity: 3
+  shocking_edge_recipe:
+    name: Shocking Edge Recipe
+    category: Recipe
+    rarity: 2
+  shocking_salt_bomb_recipe:
+    name: Shocking Salt Bomb Recipe
+    category: Recipe
+    rarity: 5
+  short:
+    name: Short
+    category: Height
+    stackable: true
+  shortest:
+    name: Shortest
+    category: Height
+    stackable: true
+  shut:
+    name: Toughbox
+    category: Prop
+    rarity: 1
+    stackable: true
+  silent_nightblade_recipe:
+    name: Silent Nightblade Recipe
+    category: Recipe
+    rarity: 4
+  silver:
+    name: Silver
+    category: Color
+    stackable: true
+  silver_key:
+    name: Silver Key
+    category: Ticket
+    stackable: true
+  silvermail_recipe:
+    name: Silvermail Recipe
+    category: Recipe
+    rarity: 4
+  silversix_recipe:
+    name: Silversix Recipe
+    category: Recipe
+    rarity: 4
+  simple:
+    name: Simple Orb of Alchemy
+    category: Ticket
+    rarity: 2
+    stackable: true
+  sinister_skelly_mask_recipe:
+    name: Sinister Skelly Mask Recipe
+    category: Recipe
+    rarity: 4
+  sinister_skelly_shield_recipe:
+    name: Sinister Skelly Shield Recipe
+    category: Recipe
+    rarity: 4
+  sinister_skelly_suit_recipe:
+    name: Sinister Skelly Suit Recipe
+    category: Recipe
+    rarity: 4
+  skelly_mask_recipe:
+    name: Skelly Mask Recipe
+    category: Recipe
+    rarity: 2
+  skelly_shield_recipe:
+    name: Skelly Shield Recipe
+    category: Recipe
+    rarity: 2
+  skelly_suit_recipe:
+    name: Skelly Suit Recipe
+    category: Recipe
+    rarity: 2
+  skolver_cap_recipe:
+    name: Skolver Cap Recipe
+    category: Recipe
+    rarity: 5
+  skolver_coat_recipe:
+    name: Skolver Coat Recipe
+    category: Recipe
+    rarity: 5
+  skull:
+    name: Skull Eyes
+    category: Eye
+    stackable: true
+  sky:
+    name: Sky
+    category: Color
+    stackable: true
+  sleep_resist_1:
+    name: Sleep Resist 1
+    category: VariantTicket
+    stackable: true
+  sleep_resist_2:
+    name: Sleep Resist 2
+    category: VariantTicket
+    stackable: true
+  sleep_resist_3:
+    name: Sleep Resist 3
+    category: VariantTicket
+    stackable: true
+  sleep_resist_4:
+    name: Sleep Resist 4
+    category: VariantTicket
+    stackable: true
+  sleepy:
+    name: Sleepy Eyes
+    category: Eye
+    stackable: true
+  slicer_recipe:
+    name: Slicer Recipe
+    category: Recipe
+    rarity: 2
+  slime_damage_1:
+    name: Slime Damage 1
+    category: VariantTicket
+    stackable: true
+  slime_damage_2:
+    name: Slime Damage 2
+    category: VariantTicket
+    stackable: true
+  slime_damage_3:
+    name: Slime Damage 3
+    category: VariantTicket
+    stackable: true
+  slime_damage_4:
+    name: Slime Damage 4
+    category: VariantTicket
+    stackable: true
+  slime_gift_box_pink:
+    name: Golden Slime Commemorative Gift Box
+    category: GiftBox
+  slime_key:
+    name: Slime Key
+    category: Ticket
+    stackable: true
+  slime_prize_box:
+    name: Slime Prize Box
+    category: Lockbox
+  slime_wrapping_pink:
+    name: Slime Wrapping (Pink)
+    category: WrappingPaper
+    stackable: true
+  slumber_prize_box:
+    name: Slumber Prize Box
+    category: Lockbox
+  slumber_smogger_mk_ii_recipe:
+    name: Slumber Smogger Mk II Recipe
+    category: Recipe
+    rarity: 3
+  slumber_smogger_recipe:
+    name: Slumber Smogger Recipe
+    category: Recipe
+    rarity: 2
+  slumber_squall_recipe:
+    name: Slumber Squall Recipe
+    category: Recipe
+    rarity: 4
+  small_fireworks_amber:
+    name: Small Fireworks, Amber
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_aquamarine:
+    name: Small Fireworks, Aquamarine
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_beast:
+    name: Small Fireworks, Beast
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_blue:
+    name: Small Fireworks, Blue
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_chartreuse:
+    name: Small Fireworks, Chartreuse
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_cobalt:
+    name: Small Fireworks, Cobalt
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_crimson:
+    name: Small Fireworks, Crimson
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_cyan:
+    name: Small Fireworks, Cyan
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_emerald:
+    name: Small Fireworks, Emerald
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_green:
+    name: Small Fireworks, Green
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_indigo:
+    name: Small Fireworks, Indigo
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_lake:
+    name: Small Fireworks, Lake
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_lavender:
+    name: Small Fireworks, Lavender
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_lime:
+    name: Small Fireworks, Lime
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_magenta:
+    name: Small Fireworks, Magenta
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_orange:
+    name: Small Fireworks, Orange
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_purple:
+    name: Small Fireworks, Purple
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_red:
+    name: Small Fireworks, Red
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_silver:
+    name: Small Fireworks, Silver
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_sky:
+    name: Small Fireworks, Sky
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_slime:
+    name: Small Fireworks, Slime
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_turquoise:
+    name: Small Fireworks, Turquoise
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_ultramarine:
+    name: Small Fireworks, Ultramarine
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_vermillion:
+    name: Small Fireworks, Vermillion
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_violet:
+    name: Small Fireworks, Violet
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_viridian:
+    name: Small Fireworks, Viridian
+    category: AnimatedAction
+    stackable: true
+  small_fireworks_yellow:
+    name: Small Fireworks, Yellow
+    category: AnimatedAction
+    stackable: true
+  small_present:
+    name: Small Present
+    category: Present
+    rarity: 0
+    bindsWhenEquipped: true
+  snarbolax_token:
+    name: Frumious Fang
+    category: Token
+    stackable: true
+    locked: true
+  snow_bucket:
+    name: Bucket of Flawed Snowballs
+    category: SpawnActor
+    stackable: true
+  snowflake:
+    name: Snowflake Eyes
+    category: Eye
+    stackable: true
+  snowing:
+    name: Snowfall Environment
+    category: GuildHallGlobalTicket
+    stackable: true
+  solid_cobalt_armor_recipe:
+    name: Solid Cobalt Armor Recipe
+    category: Recipe
+    rarity: 3
+  solid_cobalt_helm_recipe:
+    name: Solid Cobalt Helm Recipe
+    category: Recipe
+    rarity: 3
+  solstice_prize_box:
+    name: Solstice Prize Box
+    category: Lockbox
+  solstice_prize_box_2013:
+    name: Solstice Prize Box, 2013
+    category: Lockbox
+  solstice_prize_box_2014:
+    name: Solstice Prize Box, 2014
+    category: Lockbox
+  solstice_prize_box_2015:
+    name: Solstice Prize Box, 2015
+    category: Lockbox
+  solstice_prize_box_complete:
+    name: Solstice Prize Box
+    category: Lockbox
+  solstice_prize_box_summer_2016:
+    name: Solstice Prize Box, Summer 2016
+    category: Lockbox
+  solstice_prize_box_summer_2017:
+    name: Solstice Prize Box, Summer 2017
+    category: Lockbox
+  solstice_prize_box_summer_2018:
+    name: Solstice Prize Box, Summer 2018
+    category: Lockbox
+  solstice_prize_box_winter_2014:
+    name: Solstice Prize Box, Winter 2014
+    category: Lockbox
+  solstice_prize_box_winter_2015:
+    name: Solstice Prize Box, Winter 2015
+    category: Lockbox
+  solstice_prize_box_winter_2016:
+    name: Solstice Prize Box, Winter 2016
+    category: Lockbox
+  solstice_prize_box_winter_2017:
+    name: Solstice Prize Box, Winter 2017
+    category: Lockbox
+  solstice_prize_box_winter_2018:
+    name: Solstice Prize Box, Winter 2018
+    category: Lockbox
+  sour_candy:
+    name: Sour Candy
+    category: Token
+    stackable: true
+    locked: true
+  spade:
+    name: Spade Eyes
+    category: Eye
+    stackable: true
+  spark_of_life:
+    name: Spark of Life
+    category: Ticket
+    stackable: true
+  sparkle:
+    name: Sparkle Eyes
+    category: Eye
+    stackable: true
+  spike_shower_recipe:
+    name: Spike Shower Recipe
+    category: Recipe
+    rarity: 4
+  spiral:
+    name: Spiral Eyes
+    category: Eye
+    stackable: true
+  spiral_demo_helm_recipe:
+    name: Spiral Demo Helm Recipe
+    category: Recipe
+    rarity: 2
+  spiral_demo_suit_recipe:
+    name: Spiral Demo Suit Recipe
+    category: Recipe
+    rarity: 2
+  spiral_order_cool:
+    name: Spiral Order, Cool
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_cool_tone_s1213424748_7765f6f0186f:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_cool_tone_s1371394632_5516a72f2840:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_cool_tone_s1939081200_6d12faddab38:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_cool_tone_s2768153971_d4c275947535:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_cool_tone_s3009059614_531fe8c06569:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_cool_tone_s3143389093_f675ec34b2f2:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_cool_tone_s3680575059_b74d965e8125:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_cool_tone_s4172264665_ff59926449a8:
+    name: Spiral Order, Cool tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_neutral_tone_s2324715247_c840f8c72d31:
+    name: Spiral Order, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_neutral_tone_s2583683457_7ff2c389e672:
+    name: Spiral Order, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_neutral_tone_s3424726230_2531c45485bb:
+    name: Spiral Order, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_neutral_tone_s3495067233_3671be40ca89:
+    name: Spiral Order, Neutral tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_neutral_tone_s375289147_f178f0a2989b:
+    name: Spiral Order, Neutral tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_warm:
+    name: Spiral Order, Warm
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_warm_tone_s1120670185_52b8cde9dd54:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_warm_tone_s1657856151_126cf5b2548f:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_warm_tone_s2149545757_71ad68b3310a:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_warm_tone_s3485673136_6eeb3b67273c:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_order_warm_tone_s745435063_6e3bd06fd819:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 2
+    stackable: true
+  spiral_order_warm_tone_s986340706_b0bc4a5ee52b:
+    name: Spiral Order, Warm tone
+    category: Prop
+    rarity: 1
+    stackable: true
+  spiral_plate_helm_recipe:
+    name: Spiral Plate Helm Recipe
+    category: Recipe
+    rarity: 2
+  spiral_plate_mail_recipe:
+    name: Spiral Plate Mail Recipe
+    category: Recipe
+    rarity: 2
+  spiral_scale_helm_recipe:
+    name: Spiral Scale Helm Recipe
+    category: Recipe
+    rarity: 1
+  spiral_scale_mail_recipe:
+    name: Spiral Scale Mail Recipe
+    category: Recipe
+    rarity: 1
+  spiralhorn_prize_box:
+    name: Spiralhorn Prize Box
+    category: Lockbox
+  spiraltail_prize_box:
+    name: Spiraltail Prize Box
+    category: Lockbox
+  spirit_token:
+    name: Apocrean Sigil
+    category: Token
+    stackable: true
+    locked: true
+  splash_prize_box:
+    name: Splash Prize Box
+    category: Lockbox
+  splinter_bomb_recipe:
+    name: Splinter Bomb Recipe
+    category: Recipe
+    rarity: 2
+  spooky_extra:
+    name: Spooky, Extra
+    category: GuildHallGlobalTicket
+    stackable: true
+  spooky_standard:
+    name: Spooky Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  spring_equinox_prize_box_2015:
+    name: Spring Equinox Prize Box 2015
+    category: Lockbox
+  spring_equinox_prize_box_2016:
+    name: Spring Equinox Prize Box 2016
+    category: Lockbox
+  spring_equinox_prize_box_2017:
+    name: Spring Equinox Prize Box 2017
+    category: Lockbox
+  spring_equinox_prize_box_2018:
+    name: Spring Equinox Prize Box 2018
+    category: Lockbox
+  spring_equinox_prize_box_2019:
+    name: Spring Equinox Prize Box 2019
+    category: Lockbox
+  spritely_prize_box:
+    name: Spritely Prize Box
+    category: Lockbox
+  spur_recipe:
+    name: Spur Recipe
+    category: Recipe
+    rarity: 2
+  square:
+    name: Square Eyes
+    category: Eye
+    stackable: true
+  squint:
+    name: Squinty Eyes
+    category: Eye
+    stackable: true
+  stagger_storm_recipe:
+    name: Stagger Storm Recipe
+    category: Recipe
+    rarity: 5
+  star:
+    name: Starry Eyes
+    category: Eye
+    stackable: true
+  starlit_demo_helm_recipe:
+    name: Starlit Demo Helm Recipe
+    category: Recipe
+    rarity: 5
+  starlit_demo_suit_recipe:
+    name: Starlit Demo Suit Recipe
+    category: Recipe
+    rarity: 5
+  starlit_hunting_cap_recipe:
+    name: Starlit Hunting Cap Recipe
+    category: Recipe
+    rarity: 5
+  starlit_hunting_coat_recipe:
+    name: Starlit Hunting Coat Recipe
+    category: Recipe
+    rarity: 5
+  starter_pack:
+    name: Starter Pack
+    category: Artifact
+    permanent: true
+    locked: true
+  static_edge_recipe:
+    name: Static Edge Recipe
+    category: Recipe
+    rarity: 1
+  sticky_candy:
+    name: Sticky Candy
+    category: Token
+    stackable: true
+    locked: true
+  stone_tortoise_recipe:
+    name: Stone Tortoise Recipe
+    category: Recipe
+    rarity: 4
+  storage:
+    name: Guild Storage
+    category: Ticket
+    stackable: true
+  storm_driver_recipe:
+    name: Storm Driver Recipe
+    category: Recipe
+    rarity: 5
+  stormy_prize_box:
+    name: Stormy Prize Box
+    category: Lockbox
+  stranger_prize_box:
+    name: Stranger Prize Box
+    category: Lockbox
+  strike_needle_recipe:
+    name: Strike Needle Recipe
+    category: Recipe
+    rarity: 4
+  striker_recipe:
+    name: Striker Recipe
+    category: Recipe
+    rarity: 3
+  stun_resist_1:
+    name: Stun Resist 1
+    category: VariantTicket
+    stackable: true
+  stun_resist_2:
+    name: Stun Resist 2
+    category: VariantTicket
+    stackable: true
+  stun_resist_3:
+    name: Stun Resist 3
+    category: VariantTicket
+    stackable: true
+  stun_resist_4:
+    name: Stun Resist 4
+    category: VariantTicket
+    stackable: true
+  sudaruska_recipe:
+    name: Sudaruska Recipe
+    category: Recipe
+    rarity: 5
+  sultry:
+    name: Sultry Eyes
+    category: Eye
+    stackable: true
+  summertech_mk_ii_prize_box:
+    name: SummerTech Mk II Prize Box
+    category: Lockbox
+  summertech_prize_box:
+    name: SummerTech Prize Box
+    category: Lockbox
+  sun:
+    name: Sunny Eyes
+    category: Eye
+    stackable: true
+  sun_shards_recipe:
+    name: Sun Shards Recipe
+    category: Recipe
+    rarity: 3
+  sundries_01:
+    name: Sundries
+    category: Prop
+    rarity: 0
+    stackable: true
+  sunset_duster_recipe:
+    name: Sunset Duster Recipe
+    category: Recipe
+    rarity: 4
+  sunset_stetson_recipe:
+    name: Sunset Stetson Recipe
+    category: Recipe
+    rarity: 4
+  super_blast_bomb_recipe:
+    name: Super Blast Bomb Recipe
+    category: Recipe
+    rarity: 3
+  super_blaster_recipe:
+    name: Super Blaster Recipe
+    category: Recipe
+    rarity: 3
+  super_crystal_bomb_recipe:
+    name: Super Crystal Bomb Recipe
+    category: Recipe
+    rarity: 3
+  super_dark_matter_bomb_recipe:
+    name: Super Dark Matter Bomb Recipe
+    category: Recipe
+    rarity: 3
+  super_shard_bomb_recipe:
+    name: Super Shard Bomb Recipe
+    category: Recipe
+    rarity: 3
+  super_slime_slasher_recipe:
+    name: Super Slime Slasher Recipe
+    category: Recipe
+    rarity: 1
+  super_splinter_bomb_recipe:
+    name: Super Splinter Bomb Recipe
+    category: Recipe
+    rarity: 3
+  super_stun_gun_recipe:
+    name: Super Stun Gun Recipe
+    category: Recipe
+    rarity: 1
+  supernova_recipe:
+    name: Supernova Recipe
+    category: Recipe
+    rarity: 5
+  surge_breaker_armor_recipe:
+    name: Surge Breaker Armor Recipe
+    category: Recipe
+    rarity: 3
+  surge_breaker_helm_recipe:
+    name: Surge Breaker Helm Recipe
+    category: Recipe
+    rarity: 3
+  surge_breaker_shield_recipe:
+    name: Surge Breaker Shield Recipe
+    category: Recipe
+    rarity: 3
+  surge_prize_box:
+    name: Surge Prize Box
+    category: Lockbox
+  sweet_candy:
+    name: Sweet Candy
+    category: Token
+    stackable: true
+    locked: true
+  swift_flourish_recipe:
+    name: Swift Flourish Recipe
+    category: Recipe
+    rarity: 3
+  swiftstrike_buckler_recipe:
+    name: Swiftstrike Buckler Recipe
+    category: Recipe
+    rarity: 3
+  sword:
+    name: Sword
+    category: Recipe
+    rarity: 0
+  sword_gun_base:
+    name: Sword Gun Base
+    category: VariantTicket
+    stackable: true
+  table_charred:
+    name: Charred Table
+    category: Prop
+    stackable: true
+  table_restored:
+    name: Restored Table
+    category: Prop
+    stackable: true
+  tall:
+    name: Tall
+    category: Height
+    stackable: true
+  tallest:
+    name: Tallest
+    category: Height
+    stackable: true
+  tapestry_stand_charred:
+    name: Charred Tapestry
+    category: Prop
+    stackable: true
+  tapestry_stand_restored:
+    name: Restored Tapestry
+    category: Prop
+    stackable: true
+  tempered_calibur_recipe:
+    name: Tempered Calibur Recipe
+    category: Recipe
+    rarity: 3
+  test:
+    name: Test
+    category: Artifact
+    rarity: 0
+    permanent: true
+    locked: true
+  test_2:
+    name: Test 2
+    category: Artifact
+    rarity: 0
+    permanent: true
+    locked: true
+  threepetal:
+    name: Three Petal Eyes
+    category: Eye
+    stackable: true
+  thricer_slicer_recipe:
+    name: Thricer Slicer Recipe
+    category: Recipe
+    rarity: 4
+  thwack_hammer_recipe:
+    name: Thwack Hammer Recipe
+    category: Recipe
+    rarity: 1
+  torpor_tantrum_recipe:
+    name: Torpor Tantrum Recipe
+    category: Recipe
+    rarity: 5
+  toxic_atomizer_recipe:
+    name: Toxic Atomizer Recipe
+    category: Recipe
+    rarity: 4
+  toxic_catalyzer_recipe:
+    name: Toxic Catalyzer Recipe
+    category: Recipe
+    rarity: 3
+  toxic_needle_recipe:
+    name: Toxic Needle Recipe
+    category: Recipe
+    rarity: 3
+  toxic_vaporizer_mk_ii_recipe:
+    name: Toxic Vaporizer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  toxic_vaporizer_recipe:
+    name: Toxic Vaporizer Recipe
+    category: Recipe
+    rarity: 2
+  toyland_prize_box:
+    name: Toyland Prize Box
+    category: Lockbox
+  training:
+    name: Private Training Hall
+    category: Ticket
+    stackable: true
+  triangle:
+    name: Triangle Eyes
+    category: Eye
+    stackable: true
+  triglav_recipe:
+    name: Triglav Recipe
+    category: Recipe
+    rarity: 5
+  trinket_slot:
+    name: Trinket Slot Upgrade
+    category: Upgrade
+  trinket_slot_2_days:
+    name: Trinket Slot Upgrade
+    category: Upgrade
+  troika_recipe:
+    name: Troika Recipe
+    category: Recipe
+    rarity: 2
+  tundrus_recipe:
+    name: Tundrus Recipe
+    category: Recipe
+    rarity: 3
+  turbillion_recipe:
+    name: Turbillion Recipe
+    category: Recipe
+    rarity: 5
+  turquoise_prize_box:
+    name: Turquoise Prize Box
+    category: Lockbox
+  turquoise_s2694106950_c648a1f83cc2:
+    name: Turquoise
+    category: Lockbox
+  turquoise_s2927770914_e1a05e650809:
+    name: Turquoise
+    category: Color
+    stackable: true
+  tutorial_artifact:
+    name: Tutorial Artifact
+    category: Dungeon
+    rarity: 1
+  twicer_slicer_recipe:
+    name: Twicer Slicer Recipe
+    category: Recipe
+    rarity: 3
+  twisted_snarble_barb_recipe:
+    name: Twisted Snarble Barb Recipe
+    category: Recipe
+    rarity: 3
+  twisted_spine_cone_recipe:
+    name: Twisted Spine Cone Recipe
+    category: Recipe
+    rarity: 3
+  twisted_targe_recipe:
+    name: Twisted Targe Recipe
+    category: Recipe
+    rarity: 3
+  ultimate_evo_catalyst:
+    name: Ultimate Evo Catalyst
+    category: Ticket
+    rarity: 5
+    stackable: true
+  ultimate_harness_kit:
+    name: Ultimate Harness Kit
+    category: Harness
+  umbra_driver_recipe:
+    name: Umbra Driver Recipe
+    category: Recipe
+    rarity: 5
+  umbral_blaster_recipe:
+    name: Umbral Blaster Recipe
+    category: Recipe
+    rarity: 4
+  unbind_0:
+    name: Unbind 0 Star Ticket
+    category: Ticket
+    rarity: 0
+    stackable: true
+  unbind_1:
+    name: Unbind 1 Star Ticket
+    category: Ticket
+    rarity: 1
+    stackable: true
+  unbind_2:
+    name: Unbind 2 Star Ticket
+    category: Ticket
+    rarity: 2
+    stackable: true
+  unbind_3:
+    name: Unbind 3 Star Ticket
+    category: Ticket
+    rarity: 3
+    stackable: true
+  unbind_4:
+    name: Unbind 4 Star Ticket
+    category: Ticket
+    rarity: 4
+    stackable: true
+  unbind_5:
+    name: Unbind 5 Star Ticket
+    category: Ticket
+    rarity: 5
+    stackable: true
+  undead_damage_1:
+    name: Undead Damage 1
+    category: VariantTicket
+    stackable: true
+  undead_damage_2:
+    name: Undead Damage 2
+    category: VariantTicket
+    stackable: true
+  undead_damage_3:
+    name: Undead Damage 3
+    category: VariantTicket
+    stackable: true
+  undead_damage_4:
+    name: Undead Damage 4
+    category: VariantTicket
+    stackable: true
+  utramarine:
+    name: Utramarine
+    category: Color
+    stackable: true
+  valiance_recipe:
+    name: Valiance Recipe
+    category: Recipe
+    rarity: 5
+  valkyrie_helm_recipe:
+    name: Valkyrie Helm Recipe
+    category: Recipe
+    rarity: 5
+  valkyrie_mail_recipe:
+    name: Valkyrie Mail Recipe
+    category: Recipe
+    rarity: 5
+  vanaduke_token:
+    name: Almirian Seal
+    category: Token
+    stackable: true
+    locked: true
+  variant_base:
+    name: Variant Base
+    category: Lockbox
+  variants_1:
+    name: 1 Variant Ticket
+    category: Ticket
+    stackable: true
+  variants_2:
+    name: 2 Variant Ticket
+    category: Ticket
+    stackable: true
+  variants_3:
+    name: 3 Variant Ticket
+    category: Ticket
+    stackable: true
+  venom_veiler_recipe:
+    name: Venom Veiler Recipe
+    category: Recipe
+    rarity: 5
+  vermillion:
+    name: Vermillion
+    category: Color
+    stackable: true
+  veteran:
+    name: Veteran Door
+    category: Ticket
+    stackable: true
+  vile_prize_box:
+    name: Vile Prize Box
+    category: Lockbox
+  vile_striker_recipe:
+    name: Vile Striker Recipe
+    category: Recipe
+    rarity: 4
+  violet:
+    name: Violet
+    category: Color
+    stackable: true
+  violet_flame_s2237414597_d8050f51a7a2:
+    name: Violet Flame
+    category: Prop
+    stackable: true
+  violet_flame_s682451124_e1c29e032e7b:
+    name: Violet Flame
+    category: Prop
+    stackable: true
+  violet_lamp_s1242533554_0c6bab0f95d4:
+    name: Violet Lamp
+    category: Prop
+    stackable: true
+  violet_lamp_s2296542955_9490ff80eceb:
+    name: Violet Lamp
+    category: Prop
+    stackable: true
+  viridian:
+    name: Viridian
+    category: Color
+    stackable: true
+  virulent_catalyzer_recipe:
+    name: Virulent Catalyzer Recipe
+    category: Recipe
+    rarity: 4
+  virulisk_mask_recipe:
+    name: Virulisk Mask Recipe
+    category: Recipe
+    rarity: 4
+  virulisk_suit_recipe:
+    name: Virulisk Suit Recipe
+    category: Recipe
+    rarity: 4
+  vitasuit_deluxe_recipe:
+    name: Vitasuit Deluxe Recipe
+    category: Recipe
+    rarity: 4
+  vitasuit_plus_recipe:
+    name: Vitasuit Plus Recipe
+    category: Recipe
+    rarity: 2
+  vog_cub_cap_recipe:
+    name: Vog Cub Cap Recipe
+    category: Recipe
+    rarity: 5
+  vog_cub_coat_recipe:
+    name: Vog Cub Coat Recipe
+    category: Recipe
+    rarity: 5
+  volatile_catalyzer_recipe:
+    name: Volatile Catalyzer Recipe
+    category: Recipe
+    rarity: 4
+  volcanic_demo_helm_recipe:
+    name: Volcanic Demo Helm Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_demo_suit_recipe:
+    name: Volcanic Demo Suit Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_pepperbox_recipe:
+    name: Volcanic Pepperbox Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_plate_helm_recipe:
+    name: Volcanic Plate Helm Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_plate_mail_recipe:
+    name: Volcanic Plate Mail Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_plate_shield_recipe:
+    name: Volcanic Plate Shield Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_prize_box:
+    name: Volcanic Prize Box
+    category: Lockbox
+  volcanic_salamander_mask_recipe:
+    name: Volcanic Salamander Mask Recipe
+    category: Recipe
+    rarity: 5
+  volcanic_salamander_suit_recipe:
+    name: Volcanic Salamander Suit Recipe
+    category: Recipe
+    rarity: 5
+  volt_breaker_armor_recipe:
+    name: Volt Breaker Armor Recipe
+    category: Recipe
+    rarity: 2
+  volt_breaker_helm_recipe:
+    name: Volt Breaker Helm Recipe
+    category: Recipe
+    rarity: 2
+  volt_breaker_shield_recipe:
+    name: Volt Breaker Shield Recipe
+    category: Recipe
+    rarity: 2
+  volt_driver_recipe:
+    name: Volt Driver Recipe
+    category: Recipe
+    rarity: 4
+  voltaic_tempest_recipe:
+    name: Voltaic Tempest Recipe
+    category: Recipe
+    rarity: 5
+  voltech_alchemer_mk_ii_recipe:
+    name: Voltech Alchemer Mk II Recipe
+    category: Recipe
+    rarity: 3
+  voltech_alchemer_recipe:
+    name: Voltech Alchemer Recipe
+    category: Recipe
+    rarity: 2
+  voltedge_recipe:
+    name: Voltedge Recipe
+    category: Recipe
+    rarity: 5
+  warm:
+    name: Warm Fire Crystal
+    category: Ticket
+    rarity: 2
+    stackable: true
+  warm_forge_prize_box:
+    name: Warm Forge Prize Box
+    category: Lockbox
+  warm_recipe:
+    name: Warm Recipe
+    category: Recipe
+    rarity: 2
+  wat:
+    name: Vacant Eyes
+    category: Eye
+    stackable: true
+  weapon_base:
+    name: Weapon Base
+    category: VariantTicket
+    stackable: true
+  weapon_slot:
+    name: Weapon Slot Upgrade
+    category: Upgrade
+  weapons_crate:
+    name: Weapon Crate
+    category: Prop
+    rarity: 1
+    stackable: true
+  west1f:
+    name: 1F West Wing
+    category: Ticket
+    stackable: true
+  west2f:
+    name: 2F West Wing
+    category: Ticket
+    stackable: true
+  west3f:
+    name: 3F West Wing
+    category: Ticket
+    stackable: true
+  west4f:
+    name: 4F West Wing
+    category: Ticket
+    stackable: true
+  west5f:
+    name: 5F West Wing
+    category: Ticket
+    stackable: true
+  wheat_snipe_flying:
+    name: Wheat Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  wheat_snipe_lazy:
+    name: Wheat Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  wheat_snipe_wandering:
+    name: Wheat Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  white_default:
+    name: Divine Theme
+    category: GuildHallGlobalTicket
+    stackable: true
+  white_snipe_flying:
+    name: White Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  white_snipe_lazy:
+    name: White Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  white_snipe_wandering:
+    name: White Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  wicked_prize_box:
+    name: Wicked Prize Box
+    category: Lockbox
+  wicked_prize_box_2016:
+    name: Wicked Prize Box 2016
+    category: Lockbox
+  wicked_prize_box_complete:
+    name: Wicked Prize Box, Complete
+    category: Lockbox
+  wild_hunting_blade_recipe:
+    name: Wild Hunting Blade Recipe
+    category: Recipe
+    rarity: 5
+  wildfire_recipe:
+    name: Wildfire Recipe
+    category: Recipe
+    rarity: 5
+  winmillion_recipe:
+    name: Winmillion Recipe
+    category: Recipe
+    rarity: 4
+  winter_gift_box_green:
+    name: Winter Gift Box (Green)
+    category: GiftBox
+  winter_gift_box_red:
+    name: Winter Gift Box (Red)
+    category: GiftBox
+  winter_gift_box_white:
+    name: Winter Gift Box (White)
+    category: GiftBox
+  winter_grave_recipe:
+    name: Winter Grave Recipe
+    category: Recipe
+    rarity: 5
+  winter_wrapping_green:
+    name: Winter Wrapping (Green)
+    category: WrappingPaper
+    stackable: true
+  winter_wrapping_red:
+    name: Winter Wrapping (Red)
+    category: WrappingPaper
+    stackable: true
+  winter_wrapping_white:
+    name: Winter Wrapping (White)
+    category: WrappingPaper
+    stackable: true
+  winterfest_present:
+    name: Winterfest Present
+    category: Lockbox
+  winterfest_prize_box:
+    name: Winterfest Prize Box
+    category: Lockbox
+  winterfest_table:
+    name: Winterfest Table
+    category: Prop
+    stackable: true
+  winterfest_token:
+    name: Winterfest Token
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_token_blue:
+    name: Blue Winter Wish
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_token_green:
+    name: Green Winter Wish
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_token_red:
+    name: Red Winter Wish
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_token_white:
+    name: White Winter Wish
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_token_wishlist:
+    name: Frozen Winterfest Wishlist
+    category: Token
+    stackable: true
+    locked: true
+  winterfest_tree_green:
+    name: Winterfest Tree, Green
+    category: Prop
+    rarity: 0
+    stackable: true
+  winterfest_tree_red:
+    name: Winterfest Tree, Red
+    category: Prop
+    rarity: 0
+    stackable: true
+  winterfest_tree_white:
+    name: Winterfest Tree, White
+    category: Prop
+    rarity: 0
+    stackable: true
+  wintertech_prize_box:
+    name: WinterTech Prize Box
+    category: Lockbox
+  wise_owlite_shield_recipe:
+    name: Wise Owlite Shield Recipe
+    category: Recipe
+    rarity: 4
+  wizard_prize_box:
+    name: Wizard Prize Box
+    category: Lockbox
+  wolver_cap_recipe:
+    name: Wolver Cap Recipe
+    category: Recipe
+    rarity: 2
+  wolver_coat_recipe:
+    name: Wolver Coat Recipe
+    category: Recipe
+    rarity: 2
+  wood_default:
+    name: Antique Table
+    category: Prop
+    stackable: true
+  woven_pathfinder_armor_falcon_recipe:
+    name: Woven Pathfinder Armor, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_armor_firefly_recipe:
+    name: Woven Pathfinder Armor, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_armor_grizzly_recipe:
+    name: Woven Pathfinder Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_armor_snakebite_recipe:
+    name: Woven Pathfinder Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_helm_falcon_recipe:
+    name: Woven Pathfinder Helm, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_helm_firefly_recipe:
+    name: Woven Pathfinder Helm, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_helm_grizzly_recipe:
+    name: Woven Pathfinder Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_pathfinder_helm_snakebite_recipe:
+    name: Woven Pathfinder Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_armor_falcon_recipe:
+    name: Woven Sentinel Armor, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_armor_firefly_recipe:
+    name: Woven Sentinel Armor, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_armor_grizzly_recipe:
+    name: Woven Sentinel Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_armor_snakebite_recipe:
+    name: Woven Sentinel Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_helm_falcon_recipe:
+    name: Woven Sentinel Helm, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_helm_firefly_recipe:
+    name: Woven Sentinel Helm, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_helm_grizzly_recipe:
+    name: Woven Sentinel Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_sentinel_helm_snakebite_recipe:
+    name: Woven Sentinel Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_armor_falcon_recipe:
+    name: Woven Shade Armor, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_armor_firefly_recipe:
+    name: Woven Shade Armor, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_armor_grizzly_recipe:
+    name: Woven Shade Armor, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_armor_snakebite_recipe:
+    name: Woven Shade Armor, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_helm_falcon_recipe:
+    name: Woven Shade Helm, Falcon Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_helm_firefly_recipe:
+    name: Woven Shade Helm, Firefly Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_helm_grizzly_recipe:
+    name: Woven Shade Helm, Grizzly Recipe
+    category: Recipe
+    rarity: 3
+  woven_shade_helm_snakebite_recipe:
+    name: Woven Shade Helm, Snakebite Recipe
+    category: Recipe
+    rarity: 3
+  wrench_wand_recipe:
+    name: Wrench Wand Recipe
+    category: Recipe
+    rarity: 2
+  wyvern_scale_helm_recipe:
+    name: Wyvern Scale Helm Recipe
+    category: Recipe
+    rarity: 4
+  wyvern_scale_mail_recipe:
+    name: Wyvern Scale Mail Recipe
+    category: Recipe
+    rarity: 4
+  wyvern_scale_shield_recipe:
+    name: Wyvern Scale Shield Recipe
+    category: Recipe
+    rarity: 4
+  yellow:
+    name: Yellow
+    category: Color
+    stackable: true
+  yellow_snipe_flying:
+    name: Yellow Snipe, Flying
+    category: Actor
+    rarity: 5
+    stackable: true
+  yellow_snipe_lazy:
+    name: Yellow Snipe, Lazy
+    category: Actor
+    rarity: 5
+    stackable: true
+  yellow_snipe_wandering:
+    name: Yellow Snipe, Wandering
+    category: Actor
+    rarity: 5
+    stackable: true
+  zapper_recipe:
+    name: Zapper Recipe
+    category: Recipe
+    rarity: 1
+  zombie_bellhop:
+    name: Zombie Bellhop
+    category: Actor
+    rarity: 5
+    stackable: true

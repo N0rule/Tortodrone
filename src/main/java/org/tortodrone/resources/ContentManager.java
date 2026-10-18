@@ -41,9 +41,9 @@ public final class ContentManager {
             var fires=FireCatalog.load(content.resolve("_internal/fires.json"));
             var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json"));
             var news=NewsYaml.load(content.resolve("shared/news"));
-            var townData=TownYaml.data(content.resolve("town"));TownYaml.references(townData,definitions.items());
+            var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.town.TownCatalog.fromData(townData);
-            var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town);
+            var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town,definitions.items());
             var controls=new HashSet<String>();
             for(var weapon:definitions.weapons().weapons()){requireItem(definitions.items(),weapon.config());controls.add(weapon.config().toLowerCase(Locale.ROOT));}
             for(var shield:definitions.weapons().shields()){requireItem(definitions.items(),shield.config());controls.add(shield.config().toLowerCase(Locale.ROOT));}
@@ -55,12 +55,16 @@ public final class ContentManager {
     }
     /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */
     public static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town)throws IOException {
+        var items=Files.exists(maps.getParent().resolve("_internal/item-bindings.json"))?ItemYaml.load(maps.getParent().resolve("items")):null;
+        return loadMaps(maps,start,town,items);
+    }
+    private static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town,org.tortodrone.character.ItemCatalog items)throws IOException {
         try {
             var folders=MapYaml.folders(maps);
             Path startFolder=maps.resolve(start);Integer entry=folders.entrySet().stream().filter(e->e.getValue().equals(startFolder)).map(Map.Entry::getKey).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
             var scenes=new TreeMap<Integer,SceneCatalog.MapScene>();
             for(var folder:folders.entrySet()) {
-                var prepared=MapYaml.prepare(folder.getValue(),maps.getParent().resolve("shared"));var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
+                var prepared=MapYaml.prepare(folder.getValue(),maps.getParent().resolve("shared"),items);var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
                 byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
                 if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
                 var collision=CollisionMap.read(nativeDir.resolve("walkability.gz"));

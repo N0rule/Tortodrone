@@ -1,11 +1,11 @@
 sprites:
 - config: Drakon
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -55,11 +55,11 @@ sprites:
     - 45
 - config: Drakon, Divine
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -109,11 +109,11 @@ sprites:
     - 45
 - config: Drakon, Grey
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -163,11 +163,11 @@ sprites:
     - 45
 - config: Drakon, Gun Puppy
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -217,11 +217,11 @@ sprites:
     - 45
 - config: Drakon, Piggy
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -271,11 +271,11 @@ sprites:
     - 45
 - config: Drakon, Shadow
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -325,11 +325,11 @@ sprites:
     - 45
 - config: Drakon, Spiraltail
   preferredFood:
-  - Food/Power Mote
-  - Food/Power Dust
-  - Food/Power Stone
-  - Food/Power Orb
-  - Food/Power Star
+  - power_mote
+  - power_dust
+  - power_stone
+  - power_orb
+  - power_star
   restrictDamageType: PIERCING
   skills:
   - attacks:
@@ -379,11 +379,11 @@ sprites:
     - 45
 - config: Maskeraith
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -433,11 +433,11 @@ sprites:
     - 45
 - config: Maskeraith, Freeze
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -487,11 +487,11 @@ sprites:
     - 45
 - config: Maskeraith, Grey
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -541,11 +541,11 @@ sprites:
     - 45
 - config: Maskeraith, Punkin
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -595,11 +595,11 @@ sprites:
     - 45
 - config: Maskeraith, Snarblepup
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -649,11 +649,11 @@ sprites:
     - 45
 - config: Maskeraith, Spiralhorn
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -703,11 +703,11 @@ sprites:
     - 45
 - config: Maskeraith, Volcanic
   preferredFood:
-  - Food/Shadow Mote
-  - Food/Shadow Dust
-  - Food/Shadow Stone
-  - Food/Shadow Orb
-  - Food/Shadow Star
+  - shadow_mote
+  - shadow_dust
+  - shadow_stone
+  - shadow_orb
+  - shadow_star
   restrictDamageType: ELEMENTAL
   skills:
   - attacks:
@@ -757,11 +757,11 @@ sprites:
     - 45
 - config: Seraphynx
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:
@@ -811,11 +811,11 @@ sprites:
     - 45
 - config: Seraphynx, Black
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:
@@ -865,11 +865,11 @@ sprites:
     - 45
 - config: Seraphynx, Grey
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:
@@ -919,11 +919,11 @@ sprites:
     - 45
 - config: Seraphynx, Grey (gry)
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:
@@ -973,11 +973,11 @@ sprites:
     - 45
 - config: Seraphynx, Love Puppy
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:
@@ -1027,11 +1027,11 @@ sprites:
     - 45
 - config: Seraphynx, Tan
   preferredFood:
-  - Food/Divine Mote
-  - Food/Divine Dust
-  - Food/Divine Stone
-  - Food/Divine Orb
-  - Food/Divine Star
+  - divine_mote
+  - divine_dust
+  - divine_stone
+  - divine_orb
+  - divine_star
   restrictDamageType: SHADOW
   skills:
   - attacks:

@@ -44,9 +44,17 @@ public final class ItemCatalog {
     private final List<Entry> sorted;
     private final Map<String,String> aliases;
     private final Map<Integer,List<Entry>> ids;
+    public record Labels(String category,String subcategory) { }
+    private final Map<String,Labels> labels;
     private final Map<String,String> displayNames;
+    private final Map<String,String> referenceIds;
+    private final Map<String,String> configsByReference;
     public ItemCatalog(Collection<Entry> entries) {this(entries,Map.of());}
-    private ItemCatalog(Collection<Entry> entries,Map<String,String> displayNames) {
+    private ItemCatalog(Collection<Entry> entries,Map<String,String> displayNames) {this(entries,displayNames,Map.of(),Map.of());}
+    private ItemCatalog(Collection<Entry> entries,Map<String,String> displayNames,Map<String,String> referenceIds,Map<String,Labels> labels) {
+        this.labels=Map.copyOf(labels);
+        this.referenceIds=Map.copyOf(referenceIds);
+        var reverseReferences=new TreeMap<String,String>();referenceIds.forEach((config,id)->reverseReferences.put(id,config));this.configsByReference=Map.copyOf(reverseReferences);
         this.displayNames=Map.copyOf(displayNames);
         var map=new TreeMap<String,Entry>();
         for(var e:entries) if(e.config().isBlank() || map.put(e.config().toLowerCase(Locale.ROOT),e)!=null)
@@ -66,11 +74,38 @@ public final class ItemCatalog {
     /** Administrator discovery only; never serialized as a client display-name override. */
     public String displayName(Entry entry){return displayNames.getOrDefault(entry.config(),entry.displayName());}
     public ItemCatalog withDisplayNames(Map<String,String> names)throws IOException {
-        for(var e:names.entrySet())if(find(e.getKey())==null||e.getValue().isBlank()||e.getValue().length()>512)throw new IOException("Invalid native item discovery name: "+e.getKey());
-        return new ItemCatalog(entries(),names);
+        for(var e:names.entrySet())if(find(e.getKey())==null||!find(e.getKey()).config().equals(e.getKey())||e.getValue().isBlank()||e.getValue().length()>512)throw new IOException("Invalid native item discovery name: "+e.getKey());
+        return new ItemCatalog(entries(),names,referenceIds,labels);
+    }
+    public String category(Entry entry){var value=labels.get(entry.config());return value==null?entry.category():value.category();}
+    public String subcategory(Entry entry){var value=labels.get(entry.config());return value==null?"":value.subcategory();}
+    public boolean hasLabels(Entry entry){return labels.containsKey(entry.config());}
+    public ItemCatalog withLabels(Map<String,Labels> values)throws IOException {
+        for(var e:values.entrySet())if(find(e.getKey())==null||!find(e.getKey()).config().equals(e.getKey())||e.getValue().category()==null||e.getValue().category().isBlank()||e.getValue().category().length()>512||e.getValue().subcategory()==null||e.getValue().subcategory().length()>512)throw new IOException("Invalid item category labels: "+e.getKey());
+        return new ItemCatalog(entries(),displayNames,referenceIds,values);
+    }
+    /** Explicit administrator identities; native paths and existing aliases remain accepted. */
+    public ItemCatalog withReferenceIds(Map<String,String> ids)throws IOException {
+        var reverse=new TreeMap<String,String>();
+        for(var e:ids.entrySet()) {
+            if(find(e.getKey())==null || !find(e.getKey()).config().equals(e.getKey()) || !e.getValue().matches("[a-z][a-z0-9_]{0,159}"))throw new IOException("Invalid item ID binding: "+e);
+            var nativeItem=find(e.getValue());if(nativeItem!=null&&!nativeItem.config().equals(e.getKey()))throw new IOException("Ambiguous item ID/native reference: "+e.getValue());
+            if(reverse.putIfAbsent(e.getValue(),e.getKey())!=null)throw new IOException("Duplicate item ID: "+e.getValue());
+        }
+        return new ItemCatalog(entries(),displayNames,ids,labels);
+    }
+    public String referenceId(Entry entry){return referenceIds.getOrDefault(entry.config(),alias(entry));}
+    /** Static content accepts native paths, explicit IDs and exact historic aliases, never localized labels. */
+    public String resolveConfig(String reference)throws IOException {
+        String key=reference.strip().toLowerCase(Locale.ROOT);
+        var nativeItem=entries.get(key);if(nativeItem!=null)return nativeItem.config();
+        String config=configsByReference.get(key);if(config!=null)return config;
+        var matches=entries().stream().filter(e->alias(e).equals(key)||aliases.get(e.config()).equals(key)).toList();
+        if(matches.size()==1)return matches.getFirst().config();
+        throw new IOException("Unknown or ambiguous item reference: "+reference+"; use an explicit item ID or native config");
     }
     public static ItemCatalog starter() { return new ItemCatalog(StarterCatalog.catalogEntries()); }
-    public String alias(Entry entry) { return aliases.get(entry.config()); }
+    public String alias(Entry entry) { return referenceIds.getOrDefault(entry.config(),aliases.get(entry.config())); }
     private static String aliasBase(Entry entry) { return prefix(entry.category())+":"+slug(entry.displayName()); }
     private static String prefix(String type) {
         return switch(type) {
@@ -95,12 +130,12 @@ public final class ItemCatalog {
         String key=query.toLowerCase(Locale.ROOT);
         return entries().stream().filter(e->Integer.toString(e.stockId()).equals(key) || e.config().toLowerCase(Locale.ROOT).contains(key)
             || displayName(e).toLowerCase(Locale.ROOT).contains(key) || e.nameKey().toLowerCase(Locale.ROOT).contains(key) || e.displayName().toLowerCase(Locale.ROOT).contains(key)
-            || alias(e).contains(key) || e.category().toLowerCase(Locale.ROOT).contains(key)).toList();
+            || referenceId(e).contains(key) || alias(e).contains(key) || e.type().toLowerCase(Locale.ROOT).contains(key) || category(e).toLowerCase(Locale.ROOT).contains(key) || subcategory(e).toLowerCase(Locale.ROOT).contains(key)).toList();
     }
     public record Page(List<Entry> entries,int total,int number,int size) { public Page { entries=List.copyOf(entries); } }
     public Page page(String query,String category,int number,int size) {
         if(number<1 || size<1)throw new IllegalArgumentException("Page and size must be positive");
-        var matches=search(query).stream().filter(e->category==null || e.category().equalsIgnoreCase(category)).toList();
+        var matches=search(query).stream().filter(e->category==null || category(e).equalsIgnoreCase(category) || e.category().equalsIgnoreCase(category)).toList();
         long start=(long)(number-1)*size;
         return new Page(start>=matches.size()?List.of():matches.subList((int)start,(int)Math.min(start+size,matches.size())),matches.size(),number,size);
     }
@@ -108,7 +143,8 @@ public final class ItemCatalog {
     public Entry inspect(String reference)throws IOException {
         String key=reference.strip().toLowerCase(Locale.ROOT);
         var exact=entries.get(key);if(exact!=null)return exact;
-        var matches=entries().stream().filter(e->alias(e).equals(key)).toList();
+        String config=configsByReference.get(key);if(config!=null)return find(config);
+        var matches=entries().stream().filter(e->alias(e).equals(key)||aliases.get(e.config()).equals(key)).toList();
         if(matches.isEmpty() && key.matches("[+-]?\\d+")) {
             int id;try{id=Integer.parseInt(key);}catch(NumberFormatException invalid){throw new IOException("Invalid catalogue ID");}
             matches=ids.getOrDefault(id,List.of());

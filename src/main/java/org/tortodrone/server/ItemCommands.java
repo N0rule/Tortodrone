@@ -54,7 +54,7 @@ public final class ItemCommands {
         return "Granted "+count+" x "+entry.displayName()+" to "+(user==null?"":user+"/")+knight+" (unequipped).";
     }
     private static String describe(ItemCatalog catalog,ItemCatalog.Entry entry) {
-        return entry.displayName()+" ["+entry.category()+"] [id="+entry.stockId()+"] "+catalog.alias(entry)
+        return catalog.displayName(entry)+" ["+catalog.category(entry)+"] [id="+entry.stockId()+"] "+catalog.alias(entry)
             +(entry.grantable()?"":" [index only: "+entry.unavailableReason()+"]");
     }
     private static IOException usage() {

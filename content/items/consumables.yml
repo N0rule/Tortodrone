@@ -1,2 +1,472 @@
-items: {
-  }
+items:
+  arena_autotarget_off:
+    name: Disable autotarget in this arena
+    category: InstantAction
+  artillery_beacon:
+    name: Artillery Strike
+    category: Capsule
+    rarity: 0
+    stackable: true
+  attack_booster:
+    name: Attack Booster
+    category: Capsule
+    rarity: 0
+    stackable: true
+  attack_up:
+    name: Attack Up
+    category: Capsule
+    rarity: 1
+    stackable: true
+  attack_up_super:
+    name: Attack Up, Super
+    category: Capsule
+    rarity: 3
+    stackable: true
+  attack_up_ultra:
+    name: Attack Up, Ultra
+    category: Capsule
+    rarity: 5
+    stackable: true
+  auto_turret_kit:
+    name: Auto Turret Kit
+    category: Capsule
+    rarity: 0
+    stackable: true
+  base_crown_s0_35ae49a4b794:
+    name: Base Crown
+    category: InstantAction
+    rarity: 0
+  base_heart:
+    name: Base Heart
+    category: InstantAction
+    rarity: 0
+  base_s0_58de781ad315:
+    name: Base
+    category: Capsule
+    rarity: 0
+    stackable: true
+  base_s0_8e89f285fb65:
+    name: Base
+    category: Capsule
+    rarity: 0
+    stackable: true
+  base_s0_b891d800c425:
+    name: Base
+    category: Vial
+    rarity: 0
+    stackable: true
+  blazing_speed:
+    name: Blazing Speed
+    category: Capsule
+    rarity: 3
+    stackable: true
+  cloak:
+    name: Cloak
+    category: Capsule
+    rarity: 0
+    stackable: true
+  copper_crown:
+    name: 1 Crown
+    category: InstantAction
+    rarity: 0
+  copper_silver_crown:
+    name: 5 Crowns
+    category: InstantAction
+    rarity: 0
+  curse_base:
+    name: Curse Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  curse_s1478405226_f08f659aa4a7:
+    name: Curse
+    category: Capsule
+    rarity: 0
+    stackable: true
+  curse_vial:
+    name: Curse Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  cursed_idol:
+    name: Cursed Idol
+    category: Capsule
+    rarity: 3
+    stackable: true
+  defense_booster:
+    name: Defense Booster
+    category: Capsule
+    rarity: 0
+    stackable: true
+  defense_up:
+    name: Defense Up
+    category: Capsule
+    rarity: 1
+    stackable: true
+  defense_up_super:
+    name: Defense Up, Super
+    category: Capsule
+    rarity: 3
+    stackable: true
+  defense_up_ultra:
+    name: Defense Up, Ultra
+    category: Capsule
+    rarity: 5
+    stackable: true
+  fire:
+    name: Fire
+    category: Capsule
+    rarity: 0
+    stackable: true
+  fire_barrier:
+    name: Fire Barrier
+    category: Capsule
+    rarity: 0
+    stackable: true
+  fire_barrier_super:
+    name: Super Fire Barrier
+    category: Capsule
+    rarity: 3
+    stackable: true
+  fire_barrier_ultra:
+    name: Ultra Fire Barrier
+    category: Capsule
+    rarity: 5
+    stackable: true
+  fire_base:
+    name: Fire Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  fire_vial:
+    name: Fire Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  freeze:
+    name: Freeze
+    category: Capsule
+    rarity: 0
+    stackable: true
+  freeze_barrier:
+    name: Freeze Barrier
+    category: Capsule
+    rarity: 0
+    stackable: true
+  freeze_barrier_super:
+    name: Super Freeze Barrier
+    category: Capsule
+    rarity: 3
+    stackable: true
+  freeze_barrier_ultra:
+    name: Ultra Freeze Barrier
+    category: Capsule
+    rarity: 5
+    stackable: true
+  freeze_base:
+    name: Freeze Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  freeze_vial:
+    name: Freeze Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  gold_crown:
+    name: 50 Crowns
+    category: InstantAction
+    rarity: 0
+  health_base:
+    name: Health Capsule
+    category: Capsule
+    rarity: 0
+    stackable: true
+  health_capsule:
+    name: Health Capsule
+    category: Capsule
+    rarity: 1
+    stackable: true
+  heart_1:
+    name: Heart
+    category: InstantAction
+    rarity: 0
+  heart_2:
+    name: Heart
+    category: InstantAction
+    rarity: 0
+  heart_3:
+    name: Heart
+    category: InstantAction
+    rarity: 0
+  heart_attack:
+    name: Ultra Stun Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  heart_full:
+    name: Full Health
+    category: InstantAction
+    rarity: 0
+  lethal_damage:
+    name: Whammie!
+    category: InstantAction
+    rarity: 0
+  luck_base:
+    name: Luck Potion
+    category: Capsule
+    rarity: 5
+    stackable: true
+  luck_potion:
+    name: Luck Potion
+    category: Capsule
+    rarity: 5
+    stackable: true
+  luck_potion_2:
+    name: Fortune Fluid
+    category: Capsule
+    rarity: 5
+    stackable: true
+  luck_potion_3:
+    name: Chance-Enhancing Power Smoothie
+    category: Capsule
+    rarity: 5
+    stackable: true
+  mecha_knight_kit:
+    name: Mecha Knight Kit
+    category: Capsule
+    rarity: 0
+    stackable: true
+  ocarina_of_slime:
+    name: Ocarina of Slime
+    category: Capsule
+    rarity: 0
+    stackable: true
+  orbital:
+    name: Orbital
+    category: Capsule
+    rarity: 0
+    stackable: true
+  orbital_line:
+    name: Orbital Line
+    category: Capsule
+    rarity: 0
+    stackable: true
+  poison:
+    name: Poison
+    category: Capsule
+    rarity: 0
+    stackable: true
+  poison_barrier:
+    name: Poison Barrier
+    category: Capsule
+    rarity: 0
+    stackable: true
+  poison_barrier_super:
+    name: Super Poison Barrier
+    category: Capsule
+    rarity: 3
+    stackable: true
+  poison_barrier_ultra:
+    name: Ultra Poison Barrier
+    category: Capsule
+    rarity: 5
+    stackable: true
+  poison_base:
+    name: Poison Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  poison_vial:
+    name: Poison Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  quill:
+    name: Ultra Stun Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ranger_signal_flare:
+    name: Ranger Signal Flare
+    category: Capsule
+    rarity: 5
+    stackable: true
+  remedy_capsule:
+    name: Remedy Capsule
+    category: Capsule
+    rarity: 1
+    stackable: true
+  shadow_espresso:
+    name: Shadow Espresso
+    category: Capsule
+    rarity: 1
+    stackable: true
+  shock_barrier:
+    name: Shock Barrier
+    category: Capsule
+    rarity: 0
+    stackable: true
+  shock_barrier_super:
+    name: Super Shock Barrier
+    category: Capsule
+    rarity: 3
+    stackable: true
+  shock_barrier_ultra:
+    name: Ultra Shock Barrier
+    category: Capsule
+    rarity: 5
+    stackable: true
+  shock_base:
+    name: Shock Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  shock_vial:
+    name: Shock Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  silver_crown:
+    name: 10 Crowns
+    category: InstantAction
+    rarity: 0
+  silver_gold_crown:
+    name: 25 Crowns
+    category: InstantAction
+    rarity: 0
+  sleep:
+    name: Sleep
+    category: Capsule
+    rarity: 0
+    stackable: true
+  sleep_base:
+    name: Sleep Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  sleep_vial:
+    name: Sleep Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  speed_up:
+    name: Speed Up
+    category: Capsule
+    rarity: 1
+    stackable: true
+  speed_up_super:
+    name: Speed Up, Super
+    category: Capsule
+    rarity: 3
+    stackable: true
+  speed_up_ultra:
+    name: Speed Up, Ultra
+    category: Capsule
+    rarity: 5
+    stackable: true
+  status_base:
+    name: Curse Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  stun:
+    name: Stun
+    category: Capsule
+    rarity: 0
+    stackable: true
+  stun_base:
+    name: Stun Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  stun_vial:
+    name: Stun Vial
+    category: Vial
+    rarity: 0
+    stackable: true
+  stunner_vial:
+    name: Ultra Stun Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  super_curse_vial:
+    name: Super Curse Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_fire_vial:
+    name: Super Fire Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_freeze_vial:
+    name: Super Freeze Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_health_capsule:
+    name: Super Health Capsule
+    category: Capsule
+    rarity: 3
+    stackable: true
+  super_poison_vial:
+    name: Super Poison Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_shock_vial:
+    name: Super Shock Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_sleep_vial:
+    name: Super Sleep Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  super_stun_vial:
+    name: Super Stun Vial
+    category: Vial
+    rarity: 2
+    stackable: true
+  ultra_curse_vial:
+    name: Ultra Curse Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_fire_vial:
+    name: Ultra Fire Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_freeze_vial:
+    name: Ultra Freeze Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_health_capsule:
+    name: Ultra Health Capsule
+    category: Capsule
+    rarity: 5
+    stackable: true
+  ultra_poison_vial:
+    name: Ultra Poison Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_shock_vial:
+    name: Ultra Shock Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_sleep_vial:
+    name: Ultra Sleep Vial
+    category: Vial
+    rarity: 4
+    stackable: true
+  ultra_stun_vial:
+    name: Ultra Stun Vial
+    category: Vial
+    rarity: 4
+    stackable: true

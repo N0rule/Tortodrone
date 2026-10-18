@@ -1,6 +1,6 @@
 # Editing server content
 
-Version 0.33 uses one `content/` tree and readable YAML under `config/`. Edit a file,
+Version 0.35 uses one `content/` tree and readable YAML under `config/`. Edit a file,
 validate it, and restart the server. No pack selection, manifests, manual hashes,
 Java compilation or hot reload is involved. Player inventories, identities and
 progression remain in SQLite. Back up a stopped deployment before upgrading.
@@ -24,7 +24,7 @@ content/
     accessories.yml
     materials.yml
     consumables.yml
-    misc.yml                 optional overrides for other indexed items
+    misc.yml                 other indexed item definitions
   town/
     shops.yml                ordinary merchant catalogs only
     recipes.yml
@@ -38,7 +38,7 @@ content/
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
     news/news.yml            Uplink News packs and their images
-  _internal/                 native item/Town defaults, names, fire graphs and provenance
+  _internal/                 item bindings/arguments, Town defaults, fire graphs, provenance
 plugins/README.md            reservation only; no plugin loader
 src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system
 data/                        private runtime state, keys and logs; never in Git
@@ -178,41 +178,248 @@ Shipped defaults contain resolved text and need no installed client. The
 
 ## Items and weapon controls
 
-Each category has an `items` mapping keyed by the exact stock configuration path.
-It contains overrides and supported combat controls. The 9,348 stock definitions,
-IDs, localization keys, types and zero-valued equipment defaults are inherited from
-`_internal/item-definitions.json`; model arguments remain in
-`_internal/item-arguments.json`. An empty category means no overrides, not no items.
-Do not copy these native records into ordinary YAML. Omitted fields inherit their
-native value. Existing full definitions remain readable for upgrade review.
+Each family file contains an `items` mapping keyed by stable administrator IDs.
+All 9,348 indexed entries have a readable `name` and `category`. The filename is a
+broad editing family; `category` and optional `subcategory` are administrative
+labels, independent of the native Java class and equipment slot. For example,
+`aggro_aura` has category `Armor` and subcategory `Aura` while retaining native
+AccessoryTicket serialization. Display labels may repeat. Editing `name` changes
+administrator discovery only: the unchanged client still localizes its native
+item configuration. It does not support an item-name override in this record.
 
-Use the account manager's item picker or `items <search>` to search by name, stock
-ID, localization key or config path. `_internal/item-names.json` adds 1,885 verified
-plain English names from the native item bundle. Templated/unresolved names retain
-the config-path fallback. These are discovery labels, never client name overrides.
+`_internal/item-bindings.json` version 1 maps each ID to the exact original config,
+stock ID, native type, slot, localization key, serialization variant, optional seed
+and equipment membership. `_internal/item-arguments.json` retains typed model
+arguments by native config. Treat both as internal compatibility resources. Never
+renumber them or rename an ID to change a display label. IDs are used only in
+static configuration/discovery; existing SQLite inventories and Depot offers keep
+their exact native configuration paths. No database migration is required for this
+item refactor, and no economy data is rewritten.
 
-A supported weapon's `combat` section exposes `chargeTimeMs`, `chainCooldownMs`,
-`maxChain`, `cycle`, `blended`, `attackMovementSpeed`, `chargeMovementSpeed`, and its
-ordered `attacks` plus supported `incomplete`, `charged` and `cooldown` stages.
-Each stage exposes `landMs`, `rearmMs`, `clearMs`, optional blending and native
-impulse timing/displacement. Speeds are the existing native control values:
-**attackMovementSpeed controls movement while attacking, not attack rate**.
-Equipment `modifiers` are keyed by `NONE`, `SWORD`, `HANDGUN`, `BOMB`; omitted
-classes/values default to zero. `attackSpeed` there is the existing attack-speed
-modifier. Shields expose health, regeneration/break delays, defending movement
-modifier and the existing bash fraction/action.
+Initial IDs use the last component of the **native identity**, never a translated
+label: NFKD normalization, remove combining marks, lowercase, replace non-ASCII
+alphanumeric runs with `_`, trim separators; prepend `item_` for empty/numeric
+starts, and truncate the stem to 110 characters. This is a one-time ID assignment,
+not a runtime assumption about native path structure. Every colliding stem gets
+`_s<unsigned-stock-id>_<first-12-hex-SHA256-of-exact-native-path>`. This distinguishes
+identical names and identical/zero stock IDs. The migrated baseline disambiguates
+374 entries across 102 colliding stems. A remaining collision fails for explicit review. After assignment,
+**the bindings are authoritative**: adding records, changing names, moving rows
+between files or changing sort order does not regenerate existing IDs. Every
+binding must have exactly one YAML row. Unknown IDs, duplicate IDs/native paths,
+and ambiguous references fail validation. No new native item support is inferred.
 
-Edit existing values and validate. Damage, elemental/status effects and staged
-bomb behavior retain their verified fire/action graphs in `_internal/fires.json`.
-No universal damage multiplier is exposed: applying one without family-specific
-semantics could scale unrelated effects. New assets, missing AI, or arbitrary
-new item behaviors are not implemented by adding a YAML row.
+Use `wrench_wand` in ordinary shop goods, recipe outputs/ingredients/options,
+shop tokens, sprite preferred food, gear progression, item-property override keys,
+accessory blocker item keys and `shared/combat.yml` gear keys. For example:
 
-The installed common Item record has no equivalent of BattleSprite's
-server-controlled name field; its visual name resolves through stock configs.
-No unverified `displayName` setting is accepted. Config references and native
-item variants remain compatible; server menu labels are not proof of client item
-renaming support.
+```yaml
+# Within an existing shop's goods:
+- item: wrench_wand
+  price: 100
+```
+
+References normalize centrally into native paths before Town or scene runtime
+objects are constructed. Exact native paths and existing `sw:wrench-wand` style
+aliases remain valid for references; localized labels are not static IDs. Recipe
+catalog identities, native accessory definitions, variant names, sprite actions,
+models and fire graphs have their own namespaces and are not inventory items.
+Their existing references remain intact. Supply Depot configuration stays in
+SQLite; there is no Depot YAML. The account manager and `items <search>` expose
+the stable IDs alongside stock IDs and native paths.
+
+The following is the complete shipped Wrench Wand entry:
+
+```yaml
+items:
+  wrench_wand:
+    name: Wrench Wand
+    category: Sword
+    rarity: 2
+    bindsWhenEquipped: true
+    combat:
+      movement:
+        whileAttacking: 1
+        whileCharging: 1
+      combo:
+        maximumAttacks: 3
+        repeatSequence: true
+        attacks:
+          first_swing:
+            step: 1
+            timing:
+              effectStartsAfterMs: 200
+              nextAttackAfterMs: 433
+              actionEndsAfterMs: 766
+          second_swing:
+            step: 2
+            timing:
+              effectStartsAfterMs: 200
+              nextAttackAfterMs: 433
+              actionEndsAfterMs: 766
+            movement:
+              startsAfterMs: 100
+              durationMs: 150
+              forwardImpulse: 1.25
+          third_swing:
+            step: 3
+            timing:
+              effectStartsAfterMs: 200
+              nextAttackAfterMs: 877
+              actionEndsAfterMs: 877
+            movement:
+              startsAfterMs: 100
+              durationMs: 150
+              forwardImpulse: 2
+      charge:
+        fullChargeAfterMs: 3000
+        fullChargeAction:
+          timing:
+            effectStartsAfterMs: 526
+            nextAttackAfterMs: 1442
+            actionEndsAfterMs: 1442
+          movement:
+            startsAfterMs: 500
+            durationMs: 200
+            forwardImpulse: 1
+        incompleteChargeAction:
+          timing:
+            effectStartsAfterMs: 175
+            nextAttackAfterMs: 408
+            actionEndsAfterMs: 741
+          movement:
+            startsAfterMs: 0
+            durationMs: 175
+            forwardImpulse: 1
+```
+
+Swords use `combo`, guns use `firingSequence` with named shots, and bombs use
+`deploymentSequence` if they have sequence controls. These sections describe only
+the existing attack state machine; they add no reload or projectile mechanics.
+Stage names are administrator labels; `step` is the explicit contiguous position
+starting at one. Map order never determines native attack identity. The stage
+count is the number of named actions; `maximumAttacks` independently limits chain
+actions (zero means unlimited). `repeatSequence` wraps stage selection; otherwise
+the final stage repeats when the chain rules permit another attack.
+
+Timing is relative to the stage's start. `effectStartsAfterMs` activates its fire
+graph; graph-specific delayed actions can occur later. `nextAttackAfterMs` makes
+rearming eligible subject to input/chain/charge rules; it does not automatically
+start another swing. `actionEndsAfterMs` clears the state if uninterrupted.
+`resetAfterEffectMs` sets chain expiry relative to effect activation; zero uses
+action end for ordinary attacks, but a recovery action resets at its effect time.
+A configured `recoveryAction` starts at rearm after the chain limit is reached;
+its rearm cannot be overridden. No recovery section means no cooldown action.
+
+`charge.fullChargeAfterMs` uses existing equipment charge modifiers. Release at or
+after that threshold selects `fullChargeAction`. **Early release uses the next
+normal sequence stage when normal stages exist** (including chain expiry/cycling),
+not `incompleteChargeAction`. That incomplete action is selected on early release
+only for a weapon with no normal attacks, such as the shipped charge-only bombs.
+Both special actions must exist for charging to be available. Retaining the sword's
+incomplete metadata does not make it fire on every early release.
+
+Attack-speed modifiers divide effect/rearm/clear times and impulse start delay,
+with existing integer truncation. They do not divide impulse duration or translation.
+Weapon movement settings are movement multipliers, **not attack-speed settings**.
+Weapon and stage `allowMovementInput` must both be true to permit normal movement
+during a stage; multipliers alone do not enable movement input. Charge/defense,
+rotation rearm, cancellation, interruptions and weapon changes keep existing rules.
+
+Impulse components rotate with facing. Movement integrates the difference in
+`2t - t²` (clamped elapsed fraction) each tick: the translation is in game units
+over the impulse, not velocity. Collision/status/other impulses can limit or alter
+actual displacement. An omitted impulse means native absent timing `-1/-1`;
+an explicit zero start/duration remains explicit. `sidewaysImpulse: 0` is safely
+omitted. Timing zeroes, false flags and empty modifier maps are omitted only where
+the documented parser default is identical; no hidden native fallback changes them.
+
+Shields group pool `health`, `regeneration.fullHealthAfterMs`, `delayAfterHitMs`,
+`delayAfterBreakMs`, `defendingSpeedAdjustment` and `bash.healthCostFraction` /
+`bash.action`. Regeneration time means a full health pool after the delay, not a
+per-point interval. The defending adjustment is additive: -0.5 yields a 0.5 base
+multiplier through existing equipment rules. This field also supplies omitted
+`modifiers.<class>.defendingSpeed` values for that shield, so editing it changes
+actual defending movement with the full equipment catalog. An explicit per-class
+modifier overrides that default (including an explicit zero). Export omits values
+that merely duplicate the shield field. Bash requires full shield health and
+spends its fraction at effect activation. Omitted modifier classes/values are zero;
+classes are `NONE`, `SWORD`, `HANDGUN`, `BOMB`, with existing aggregation and caps.
+The shield defending-speed inheritance above is the sole nonzero modifier default.
+Empty native equipment membership remains in bindings even without YAML modifiers.
+
+The scalar reference below is generated by `ItemFields`, which also supplies
+validation/defaults (`java -cp tortodrone.jar org.tortodrone.resources.ItemFields`).
+`name` and `category` are required nonblank labels of at most 512 characters;
+`subcategory` is optional with the same limits. Object sections accept only the
+fields shown here and in the working example; unknown keys, invalid ranges and
+noncontiguous/duplicate steps report the file → item → stage → field.
+
+| Field | Meaning | Unit | Omitted default | Range | Applies to |
+|---|---|---|---|---|---|
+| `name` | Administrator display label; never changes native client localization | characters | required | 1.0…512.0 | all items |
+| `category` | Administrator category; independent of native item class and slot | characters | required | 1.0…512.0 | all items |
+| `subcategory` | Optional administrator grouping, such as Aura | characters | absent | 1.0…512.0 | all items |
+| `rarity` | Native star rarity; -1 is unranked | stars | -1 | -1.0…10.0 | all items |
+| `bindsWhenEquipped` | Bind on equip using existing inventory rules | boolean | false | 0.0…1.0 | all items |
+| `stackable` | Use existing stack handling; does not add support for unsupported variants | boolean | false | 0.0…1.0 | all items |
+| `permanent` | Permanent items must remain locked | boolean | false | 0.0…1.0 | all items |
+| `locked` | Existing locked-item restriction | boolean | false | 0.0…1.0 | all items |
+| `effectStartsAfterMs` | Effect activation offset; fire graph delays remain additional | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `nextAttackAfterMs` | Earliest rearm threshold, subject to input, charge and sequence rules | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `actionEndsAfterMs` | Attack state clears at this offset if uninterrupted | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `fullChargeAfterMs` | Required held charge duration before equipment charge modifiers | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `resetAfterEffectMs` | Chain resets this long after effect activation; zero uses action end except cooldown uses effect activation | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `startsAfterMs` | Movement impulse start offset; scaled by attack speed | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `durationMs` | Movement impulse duration; not scaled by attack speed | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `delayAfterHitMs` | Shield regeneration delay after a surviving hit or bash | ms | 0 | 0.0…600000.0 | combat / shield action |
+| `delayAfterBreakMs` | Shield regeneration delay after break | ms | 7000 | 0.0…600000.0 | shield.regeneration |
+| `fullHealthAfterMs` | Time to regenerate one full shield health pool after the delay | ms | 1 | 1.0…600000.0 | shield.regeneration |
+| `maximumAttacks` | Chain action limit; zero is unlimited, independent of number of named stages | count | 0 | 0.0…32.0 | combat sequence |
+| `step` | Explicit contiguous stage position starting at one | position | 1 | 1.0…32.0 | sequence attacks |
+| `repeatSequence` | Wrap normal stage selection; otherwise reuse final stage | boolean | false | 0.0…1.0 | combat sequence |
+| `allowMovementInput` | Weapon AND active stage must allow movement input | boolean | false | 0.0…1.0 | combat.movement / attack.movement |
+| `whileAttacking` | Base movement multiplier while an attack state is active | multiplier | 0.0 | 0.0…100.0 | combat.movement |
+| `whileCharging` | Base movement multiplier while charging | multiplier | 0.0 | 0.0…100.0 | combat.movement |
+| `forwardImpulse` | Facing-relative native impulse translation, integrated with 2t-t²; collisions can limit movement | game units | 0.0 | -10000.0…10000.0 | attack.movement |
+| `sidewaysImpulse` | Perpendicular native impulse translation; same integration as forwardImpulse | game units | 0.0 | -10000.0…10000.0 | attack.movement |
+| `health` | Shield health pool | health | 0 | 0.0…100000.0 | shield |
+| `defendingSpeedAdjustment` | Base shield movement adjustment: -0.5 means multiplier 0.5; supplies omitted defendingSpeed modifiers | fraction | 0.0 | -1.0…0.0 | shield |
+| `healthCostFraction` | Fraction of maximum shield health spent at bash effect time; full shield required to bash | fraction | 0.0 | 0.0…1.0 | shield.bash |
+| `chargeTime` | Positive values reduce charge time: base × (1 − sum capped to ±0.48) | fraction | 0.0 | -1000.0…1000.0 | modifiers per weapon class |
+| `speed` | Movement multiplier is 1 + equipment/weapon sum capped to ±0.24 | fraction | 0.0 | -1000.0…1000.0 | modifiers per weapon class |
+| `attackSpeed` | Timing divisor is 1 + equipment/weapon sum capped to ±0.24, then status scaling | fraction | 0.0 | -1000.0…1000.0 | modifiers per weapon class |
+| `defendingSpeed` | Defending movement multiplier is 1 + equipped gear sum; omitted shield values inherit its defendingSpeedAdjustment; selected weapon modifier is excluded | fraction | shield adjustment for shields; 0 otherwise | -1000.0…1000.0 | modifiers per weapon class |
+
+Damage, damage types, status effects, projectile graphs and detonation behavior
+remain internal in `_internal/fires.json`. `FireCatalog` retains typed compound,
+depth-scaled and delayed actions; `SceneWeapons` schedules those graphs, while
+`SceneDamage` resolves their types/scales/statuses. A universal `damage` value
+cannot safely describe those graphs. No decorative damage control or multiplier
+is accepted. Editing timing changes the existing action/effect schedule; it does
+not claim to replace every native animation or implement missing game logic.
+Lockboxes and Prize Boxes retain their current indexed/grant support and opening
+limitations: this refactor adds no opening, loot selection or reward behavior.
+
+For older unified YAML with native-path keys, migrate the **effective customized**
+content offline into a fresh candidate, never regenerate over your deployment:
+
+```sh
+java -cp /new/tortodrone.jar org.tortodrone.resources.ItemMigration /old/deployment /fresh/item-candidate
+```
+
+The tool holds the source deployment lock if present, fingerprints content/config,
+loads legacy defaults plus overrides, preserves their effective values and names,
+converts references, validates the whole candidate and compares every normalized
+item/combat/shield/equipment record and Town table before atomic publication.
+It copies only content/config; it does not open/copy SQLite, keys or runtime data.
+It refuses an occupied/nested destination, running source, source changes,
+ambiguous IDs, unknown fields or semantic differences. Existing readable candidates
+are copied without regeneration, preserving custom names/categories/IDs byte for
+byte. Review `item-migration.txt`, then install the candidate content/config while
+stopped and retain your original data. Old path-keyed item definitions are accepted
+only by the migration reader; mixed layouts fail startup. Legacy pack deployments
+still use `ContentMigration`, whose exporter emits this same readable format.
 
 ## Map identity, actors, portals and traps
 

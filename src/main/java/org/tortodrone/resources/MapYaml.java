@@ -23,10 +23,11 @@ public final class MapYaml {
         }
         return Collections.unmodifiableMap(result);
     }
-    public static Prepared prepare(Path folder,Path shared)throws IOException {
-        try{return prepareChecked(folder,shared);}catch(IOException|IllegalArgumentException invalid){throw new IOException(folder+": "+invalid.getMessage(),invalid);}
+    public static Prepared prepare(Path folder,Path shared)throws IOException {return prepare(folder,shared,null);}
+    public static Prepared prepare(Path folder,Path shared,org.tortodrone.character.ItemCatalog items)throws IOException {
+        try{return prepareChecked(folder,shared,items);}catch(IOException|IllegalArgumentException invalid){throw new IOException(folder+": "+invalid.getMessage(),invalid);}
     }
-    private static Prepared prepareChecked(Path folder,Path shared)throws IOException {
+    private static Prepared prepareChecked(Path folder,Path shared,org.tortodrone.character.ItemCatalog items)throws IOException {
         Path nativeDir=folder.resolve("native");
         var nativeMetadata=ContentFiles.properties(nativeDir.resolve("metadata.properties"));
         for(String key:nativeMetadata.stringPropertyNames())if(key.startsWith("sha256.")) {
@@ -109,6 +110,10 @@ public final class MapYaml {
                     decimal(override.getValue(),"advanced status override");effective.put(override.getKey(),override.getValue());
                 }
                 sharedValues=effective;
+            }
+            if(section.equals("combat")&&sharedValues.containsKey("gear")) {
+                var gear=map(sharedValues.get("gear"),"gear");
+                if(gear.keySet().stream().anyMatch(k->!k.contains("/")))sharedValues.put("gear",ItemReferences.gear(gear,items==null?ItemYaml.load(shared.getParent().resolve("items")):items,false,shared+" → gear"));
             }
             properties(content,section.equals("trap-cycles")?"cycle.":"",sharedValues);
         }

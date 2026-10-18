@@ -43,17 +43,6 @@ final class ContentPresentation {
    String example=aliases.entrySet().stream().filter(a->obj(actors.get(a.getValue())).containsKey("child.health")).map(a->a.getKey()).findFirst().orElse(aliases.isEmpty()?"existing_actor":aliases.keySet().iterator().next());
    Files.writeString(folder.resolve("actors.yml"),"# Overrides only. Native actor identities/defaults: native/bindings.json (actorAliases).\n# Example existing actor alias: "+example+"\n# Position uses game units; facing uses degrees; attackIntervalMs uses milliseconds.\nactors: {}\n");
   }
-  var defaults=new TreeMap<String,Object>();
-  for(String category:ItemYaml.CATEGORIES) {
-   Path path=content.resolve("items/"+category+".yml");var root=Yaml.read(path);var rows=obj(root.get("items"));var edits=new LinkedHashMap<String,Object>();
-   for(var row:rows.entrySet()) {
-    var meta=new LinkedHashMap<>(obj(row.getValue()));var editable=new LinkedHashMap<String,Object>();
-    for(String key:List.of("combat","shield","modifiers"))if(meta.containsKey(key)) {Object value=meta.get(key);if(!(value instanceof Map<?,?> m)||!m.isEmpty())editable.put(key,meta.remove(key));}
-    defaults.put(row.getKey(),meta);if(!editable.isEmpty())edits.put(row.getKey(),editable);
-   }
-   yaml(path,Map.of("items",edits));
-  }
-  Files.writeString(content.resolve("_internal/item-definitions.json"),Json.stringify(defaults)+"\n");
   var nativeTown=new TreeMap<String,Object>();
   for(String name:List.of("shops","recipes","stations","progression","variants")) {
    Path file=content.resolve("town/"+name+".yml");var root=Yaml.read(file);

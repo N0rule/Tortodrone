@@ -2,1274 +2,1274 @@ catalogs:
 - config: Catalog Test
   goods:
   - energy: 5
-    item: Artifact/Preview Event Medal
+    item: preview_event_medal
     limit: 1
 - config: Rescue Camp/General Goods
   goods:
-  - item: Weapon/Sword/Beast Basher
+  - item: beast_basher
     limit: 10
-  - item: Weapon/Sword/Hatchet
+  - item: hatchet
     limit: 10
-  - item: Weapon/Sword/Proto Sword
+  - item: proto_sword
     limit: 10
-  - item: Weapon/Sword/Slime Slasher
+  - item: slime_slasher
     limit: 10
-  - item: Weapon/Handgun/Proto Gun
+  - item: proto_gun
     limit: 10
-  - item: Weapon/Handgun/Punch Gun
+  - item: punch_gun
     limit: 10
-  - item: Weapon/Handgun/Stun Gun
+  - item: stun_gun
     limit: 10
-  - item: Weapon/Bomb/Proto Bomb
+  - item: proto_bomb
     limit: 10
-  - item: Gear/Helm/Cyclops Cap
+  - item: cyclops_cap
     limit: 10
-  - item: Gear/Helm/Mining Hat
+  - item: mining_hat
     limit: 10
-  - item: Gear/Armor/Fencing Jacket
+  - item: fencing_jacket
     limit: 10
-  - item: Gear/Armor/Vitasuit
+  - item: vitasuit
     limit: 10
-  - item: Gear/Shield/Iron Buckler
+  - item: iron_buckler
 - config: Captured/Hall of Heroes/Cobalt
   goods:
-  - item: Recipe/Armor/Cobalt Armor Recipe
+  - item: cobalt_armor_recipe
     price: 1000
-  - item: Recipe/Helm/Cobalt Helm Recipe
+  - item: cobalt_helm_recipe
     price: 1000
-  - item: Recipe/Shield/Defender Recipe
+  - item: defender_recipe
     price: 1000
-  - item: Recipe/Sword/Calibur Recipe
+  - item: calibur_recipe
     price: 1000
-  - item: Recipe/Sword/Brandish Recipe
+  - item: brandish_recipe
     price: 1000
-  - item: Recipe/Handgun/Blaster Recipe
+  - item: blaster_recipe
     price: 1000
-  - item: Recipe/Bomb/Blast Bomb Recipe
+  - item: blast_bomb_recipe
     price: 1000
-  - item: Recipe/Armor/Solid Cobalt Armor Recipe
+  - item: solid_cobalt_armor_recipe
     price: 4000
-  - item: Recipe/Helm/Solid Cobalt Helm Recipe
+  - item: solid_cobalt_helm_recipe
     price: 4000
-  - item: Recipe/Shield/Great Defender Recipe
+  - item: great_defender_recipe
     price: 4000
-  - item: Recipe/Sword/Tempered Calibur Recipe
+  - item: tempered_calibur_recipe
     price: 4000
-  - item: Recipe/Sword/Cautery Sword Recipe
+  - item: cautery_sword_recipe
     price: 4000
-  - item: Recipe/Sword/Nightblade Recipe
+  - item: nightblade_recipe
     price: 4000
-  - item: Recipe/Sword/Fireburst Brandish Recipe
+  - item: fireburst_brandish_recipe
     price: 4000
-  - item: Recipe/Sword/Iceburst Brandish Recipe
+  - item: iceburst_brandish_recipe
     price: 4000
-  - item: Recipe/Handgun/Super Blaster Recipe
+  - item: super_blaster_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Blast Bomb Recipe
+  - item: super_blast_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Deconstructor Recipe
+  - item: deconstructor_recipe
     price: 4000
-  - item: Recipe/Armor/Mighty Cobalt Armor Recipe
+  - item: mighty_cobalt_armor_recipe
     price: 10000
-  - item: Recipe/Armor/Vitasuit Deluxe Recipe
+  - item: vitasuit_deluxe_recipe
     price: 10000
-  - item: Recipe/Helm/Mighty Cobalt Helm Recipe
+  - item: mighty_cobalt_helm_recipe
     price: 10000
-  - item: Recipe/Shield/Mighty Defender Recipe
+  - item: mighty_defender_recipe
     price: 10000
-  - item: Recipe/Sword/Ascended Calibur Recipe
+  - item: ascended_calibur_recipe
     price: 10000
-  - item: Recipe/Sword/Cold Iron Carver Recipe
+  - item: cold_iron_carver_recipe
     price: 10000
-  - item: Recipe/Sword/Advanced Cautery Sword Recipe
+  - item: advanced_cautery_sword_recipe
     price: 10000
-  - item: Recipe/Sword/Silent Nightblade Recipe
+  - item: silent_nightblade_recipe
     price: 10000
-  - item: Recipe/Sword/Blazebrand Recipe
+  - item: blazebrand_recipe
     price: 10000
-  - item: Recipe/Sword/Blizzbrand Recipe
+  - item: blizzbrand_recipe
     price: 10000
-  - item: Recipe/Handgun/Master Blaster Recipe
+  - item: master_blaster_recipe
     price: 10000
-  - item: Recipe/Bomb/Master Blast Bomb Recipe
+  - item: master_blast_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Irontech Bomb Recipe
+  - item: irontech_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Deconstructor Recipe
+  - item: heavy_deconstructor_recipe
     price: 10000
-  - item: Recipe/Armor/Azure Guardian Armor Recipe
+  - item: azure_guardian_armor_recipe
     price: 25000
-  - item: Recipe/Helm/Azure Guardian Helm Recipe
+  - item: azure_guardian_helm_recipe
     price: 25000
-  - item: Recipe/Shield/Aegis Recipe
+  - item: aegis_recipe
     price: 25000
-  - item: Recipe/Shield/Heater Shield Recipe
+  - item: heater_shield_recipe
     price: 25000
-  - item: Recipe/Sword/Leviathan Blade Recipe
+  - item: leviathan_blade_recipe
     price: 25000
-  - item: Recipe/Sword/Cold Iron Vanquisher Recipe
+  - item: cold_iron_vanquisher_recipe
     price: 25000
-  - item: Recipe/Sword/Amputator Recipe
+  - item: amputator_recipe
     price: 25000
-  - item: Recipe/Sword/Acheron Recipe
+  - item: acheron_recipe
     price: 25000
-  - item: Recipe/Sword/Combuster Recipe
+  - item: combuster_recipe
     price: 25000
-  - item: Recipe/Sword/Glacius Recipe
+  - item: glacius_recipe
     price: 25000
-  - item: Recipe/Handgun/Valiance Recipe
+  - item: valiance_recipe
     price: 25000
-  - item: Recipe/Bomb/Nitronome Recipe
+  - item: nitronome_recipe
     price: 25000
-  - item: Recipe/Bomb/Big Angry Bomb Recipe
+  - item: big_angry_bomb_recipe
     price: 25000
-  - item: Recipe/Bomb/Irontech Destroyer Recipe
+  - item: irontech_destroyer_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Bomber
   goods:
-  - item: Recipe/Bomb/Blast Bomb Recipe
+  - item: blast_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Crystal Bomb Recipe
+  - item: crystal_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Dark Matter Bomb Recipe
+  - item: dark_matter_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Fiery Vaporizer Recipe
+  - item: fiery_vaporizer_recipe
     price: 1000
-  - item: Recipe/Bomb/Freezing Vaporizer Recipe
+  - item: freezing_vaporizer_recipe
     price: 1000
-  - item: Recipe/Bomb/Haze Bomb Recipe
+  - item: haze_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Shard Bomb Recipe
+  - item: shard_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Slumber Smogger Recipe
+  - item: slumber_smogger_recipe
     price: 1000
-  - item: Recipe/Helm/Spiral Demo Helm Recipe
+  - item: spiral_demo_helm_recipe
     price: 1000
-  - item: Recipe/Armor/Spiral Demo Suit Recipe
+  - item: spiral_demo_suit_recipe
     price: 1000
-  - item: Recipe/Bomb/Splinter Bomb Recipe
+  - item: splinter_bomb_recipe
     price: 1000
-  - item: Recipe/Bomb/Toxic Vaporizer Recipe
+  - item: toxic_vaporizer_recipe
     price: 1000
-  - item: Recipe/Bomb/Deconstructor Recipe
+  - item: deconstructor_recipe
     price: 4000
-  - item: Recipe/Bomb/Fiery Vaporizer Mk II Recipe
+  - item: fiery_vaporizer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Bomb/Freezing Vaporizer Mk II Recipe
+  - item: freezing_vaporizer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Helm/Fused Demo Helm Recipe
+  - item: fused_demo_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Fused Demo Suit Recipe
+  - item: fused_demo_suit_recipe
     price: 4000
-  - item: Recipe/Helm/Padded Demo Helm Recipe
+  - item: padded_demo_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Padded Demo Suit Recipe
+  - item: padded_demo_suit_recipe
     price: 4000
-  - item: Recipe/Bomb/Rock Salt Bomb Recipe
+  - item: rock_salt_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Slumber Smogger Mk II Recipe
+  - item: slumber_smogger_mk_ii_recipe
     price: 4000
-  - item: Recipe/Bomb/Sun Shards Recipe
+  - item: sun_shards_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Blast Bomb Recipe
+  - item: super_blast_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Crystal Bomb Recipe
+  - item: super_crystal_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Dark Matter Bomb Recipe
+  - item: super_dark_matter_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Shard Bomb Recipe
+  - item: super_shard_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Super Splinter Bomb Recipe
+  - item: super_splinter_bomb_recipe
     price: 4000
-  - item: Recipe/Bomb/Toxic Vaporizer Mk II Recipe
+  - item: toxic_vaporizer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Bomb/Fiery Atomizer Recipe
+  - item: fiery_atomizer_recipe
     price: 10000
-  - item: Recipe/Bomb/Freezing Atomizer Recipe
+  - item: freezing_atomizer_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Crystal Bomb Recipe
+  - item: heavy_crystal_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Dark Matter Bomb Recipe
+  - item: heavy_dark_matter_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Deconstructor Recipe
+  - item: heavy_deconstructor_recipe
     price: 10000
-  - item: Recipe/Helm/Heavy Demo Helm Recipe
+  - item: heavy_demo_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Heavy Demo Suit Recipe
+  - item: heavy_demo_suit_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Shard Bomb Recipe
+  - item: heavy_shard_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Heavy Splinter Bomb Recipe
+  - item: heavy_splinter_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Ionized Salt Bomb Recipe
+  - item: ionized_salt_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Irontech Bomb Recipe
+  - item: irontech_bomb_recipe
     price: 10000
-  - item: Recipe/Bomb/Master Blast Bomb Recipe
+  - item: master_blast_bomb_recipe
     price: 10000
-  - item: Recipe/Helm/Quilted Demo Helm Recipe
+  - item: quilted_demo_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Quilted Demo Suit Recipe
+  - item: quilted_demo_suit_recipe
     price: 10000
-  - item: Recipe/Bomb/Radiant Sun Shards Recipe
+  - item: radiant_sun_shards_recipe
     price: 10000
-  - item: Recipe/Bomb/Slumber Squall Recipe
+  - item: slumber_squall_recipe
     price: 10000
-  - item: Recipe/Bomb/Toxic Atomizer Recipe
+  - item: toxic_atomizer_recipe
     price: 10000
-  - item: Recipe/Bomb/Ash of Agni Recipe
+  - item: ash_of_agni_recipe
     price: 25000
-  - item: Recipe/Bomb/Big Angry Bomb Recipe
+  - item: big_angry_bomb_recipe
     price: 25000
-  - item: Recipe/Helm/Bombastic Demo Helm Recipe
+  - item: bombastic_demo_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Bombastic Demo Suit Recipe
+  - item: bombastic_demo_suit_recipe
     price: 25000
-  - item: Recipe/Bomb/Deadly Crystal Bomb Recipe
+  - item: deadly_crystal_bomb_recipe
     price: 25000
-  - item: Recipe/Bomb/Deadly Dark Matter Bomb Recipe
+  - item: deadly_dark_matter_bomb_recipe
     price: 25000
-  - item: Recipe/Bomb/Deadly Shard Bomb Recipe
+  - item: deadly_shard_bomb_recipe
     price: 25000
-  - item: Recipe/Bomb/Deadly Splinter Bomb Recipe
+  - item: deadly_splinter_bomb_recipe
     price: 25000
-  - item: Recipe/Bomb/Irontech Destroyer Recipe
+  - item: irontech_destroyer_recipe
     price: 25000
-  - item: Recipe/Helm/Mad Bomber Mask Recipe
+  - item: mad_bomber_mask_recipe
     price: 25000
-  - item: Recipe/Armor/Mad Bomber Suit Recipe
+  - item: mad_bomber_suit_recipe
     price: 25000
-  - item: Recipe/Bomb/Nitronome Recipe
+  - item: nitronome_recipe
     price: 25000
-  - item: Recipe/Bomb/Scintillating Sun Shards Recipe
+  - item: scintillating_sun_shards_recipe
     price: 25000
-  - item: Recipe/Bomb/Shivermist Buster Recipe
+  - item: shivermist_buster_recipe
     price: 25000
-  - item: Recipe/Bomb/Shocking Salt Bomb Recipe
+  - item: shocking_salt_bomb_recipe
     price: 25000
-  - item: Recipe/Helm/Starlit Demo Helm Recipe
+  - item: starlit_demo_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Starlit Demo Suit Recipe
+  - item: starlit_demo_suit_recipe
     price: 25000
-  - item: Recipe/Bomb/Torpor Tantrum Recipe
+  - item: torpor_tantrum_recipe
     price: 25000
-  - item: Recipe/Bomb/Venom Veiler Recipe
+  - item: venom_veiler_recipe
     price: 25000
-  - item: Recipe/Helm/Volcanic Demo Helm Recipe
+  - item: volcanic_demo_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Volcanic Demo Suit Recipe
+  - item: volcanic_demo_suit_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Elemental Def
   goods:
-  - item: Recipe/Armor/Magic Cloak Recipe
+  - item: magic_cloak_recipe
     price: 1000
-  - item: Recipe/Helm/Magic Hood Recipe
+  - item: magic_hood_recipe
     price: 1000
-  - item: Recipe/Shield/Owlite Shield Recipe
+  - item: owlite_shield_recipe
     price: 1000
-  - item: Recipe/Armor/Elemental Cloak Recipe
+  - item: elemental_cloak_recipe
     price: 4000
-  - item: Recipe/Helm/Elemental Hood Recipe
+  - item: elemental_hood_recipe
     price: 4000
-  - item: Recipe/Shield/Horned Owlite Shield Recipe
+  - item: horned_owlite_shield_recipe
     price: 4000
-  - item: Recipe/Armor/Miracle Cloak Recipe
+  - item: miracle_cloak_recipe
     price: 10000
-  - item: Recipe/Helm/Miracle Hood Recipe
+  - item: miracle_hood_recipe
     price: 10000
-  - item: Recipe/Shield/Wise Owlite Shield Recipe
+  - item: wise_owlite_shield_recipe
     price: 10000
-  - item: Recipe/Armor/Chaos Cloak Recipe
+  - item: chaos_cloak_recipe
     price: 25000
-  - item: Recipe/Helm/Chaos Cowl Recipe
+  - item: chaos_cowl_recipe
     price: 25000
-  - item: Recipe/Armor/Divine Mantle Recipe
+  - item: divine_mantle_recipe
     price: 25000
-  - item: Recipe/Helm/Divine Veil Recipe
+  - item: divine_veil_recipe
     price: 25000
-  - item: Recipe/Helm/Grey Feather Cowl Recipe
+  - item: grey_feather_cowl_recipe
     price: 25000
-  - item: Recipe/Armor/Grey Feather Mantle Recipe
+  - item: grey_feather_mantle_recipe
     price: 25000
-  - item: Recipe/Shield/Grey Owlite Shield Recipe
+  - item: grey_owlite_shield_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Gunner
   goods:
-  - item: Recipe/Handgun/Autogun Recipe
+  - item: autogun_recipe
     price: 1000
-  - item: Recipe/Handgun/Blaster Recipe
+  - item: blaster_recipe
     price: 1000
-  - item: Recipe/Handgun/Cryotech Alchemer Recipe
+  - item: cryotech_alchemer_recipe
     price: 1000
-  - item: Recipe/Handgun/Firotech Alchemer Recipe
+  - item: firotech_alchemer_recipe
     price: 1000
-  - item: Recipe/Handgun/Prismatech Alchemer Recipe
+  - item: prismatech_alchemer_recipe
     price: 1000
-  - item: Recipe/Handgun/Shadowtech Alchemer Recipe
+  - item: shadowtech_alchemer_recipe
     price: 1000
-  - item: Recipe/Handgun/Voltech Alchemer Recipe
+  - item: voltech_alchemer_recipe
     price: 1000
-  - item: Recipe/Handgun/Cryotech Alchemer Mk II Recipe
+  - item: cryotech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Handgun/Firotech Alchemer Mk II Recipe
+  - item: firotech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Helm/Gunslinger Hat Recipe
+  - item: gunslinger_hat_recipe
     price: 4000
-  - item: Recipe/Armor/Gunslinger Sash Recipe
+  - item: gunslinger_sash_recipe
     price: 4000
-  - item: Recipe/Handgun/Magnus Recipe
+  - item: magnus_recipe
     price: 4000
-  - item: Recipe/Handgun/Needle Shot Recipe
+  - item: needle_shot_recipe
     price: 4000
-  - item: Recipe/Handgun/Pepperbox Recipe
+  - item: pepperbox_recipe
     price: 4000
-  - item: Recipe/Handgun/Prismatech Alchemer Mk II Recipe
+  - item: prismatech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Handgun/Shadowtech Alchemer Mk II Recipe
+  - item: shadowtech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Handgun/Super Blaster Recipe
+  - item: super_blaster_recipe
     price: 4000
-  - item: Recipe/Handgun/Voltech Alchemer Mk II Recipe
+  - item: voltech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Recipe/Handgun/Cryo Driver Recipe
+  - item: cryo_driver_recipe
     price: 10000
-  - item: Recipe/Handgun/Fiery Pepperbox Recipe
+  - item: fiery_pepperbox_recipe
     price: 10000
-  - item: Recipe/Handgun/Firo Driver Recipe
+  - item: firo_driver_recipe
     price: 10000
-  - item: Recipe/Handgun/Master Blaster Recipe
+  - item: master_blaster_recipe
     price: 10000
-  - item: Recipe/Handgun/Mega Magnus Recipe
+  - item: mega_magnus_recipe
     price: 10000
-  - item: Recipe/Handgun/Prisma Driver Recipe
+  - item: prisma_driver_recipe
     price: 10000
-  - item: Recipe/Handgun/Shadow Driver Recipe
+  - item: shadow_driver_recipe
     price: 10000
-  - item: Recipe/Handgun/Strike Needle Recipe
+  - item: strike_needle_recipe
     price: 10000
-  - item: Recipe/Armor/Sunset Duster Recipe
+  - item: sunset_duster_recipe
     price: 10000
-  - item: Recipe/Helm/Sunset Stetson Recipe
+  - item: sunset_stetson_recipe
     price: 10000
-  - item: Recipe/Handgun/Volt Driver Recipe
+  - item: volt_driver_recipe
     price: 10000
-  - item: Recipe/Handgun/Blitz Needle Recipe
+  - item: blitz_needle_recipe
     price: 25000
-  - item: Recipe/Handgun/Callahan Recipe
+  - item: callahan_recipe
     price: 25000
-  - item: Recipe/Helm/Deadshot Chapeau Recipe
+  - item: deadshot_chapeau_recipe
     price: 25000
-  - item: Recipe/Armor/Deadshot Mantle Recipe
+  - item: deadshot_mantle_recipe
     price: 25000
-  - item: Recipe/Handgun/Hail Driver Recipe
+  - item: hail_driver_recipe
     price: 25000
-  - item: Recipe/Handgun/Iron Slug Recipe
+  - item: iron_slug_recipe
     price: 25000
-  - item: Recipe/Helm/Justifier Hat Recipe
+  - item: justifier_hat_recipe
     price: 25000
-  - item: Recipe/Armor/Justifier Jacket Recipe
+  - item: justifier_jacket_recipe
     price: 25000
-  - item: Recipe/Handgun/Magma Driver Recipe
+  - item: magma_driver_recipe
     price: 25000
-  - item: Recipe/Helm/Nameless Hat Recipe
+  - item: nameless_hat_recipe
     price: 25000
-  - item: Recipe/Armor/Nameless Poncho Recipe
+  - item: nameless_poncho_recipe
     price: 25000
-  - item: Recipe/Handgun/Nova Driver Recipe
+  - item: nova_driver_recipe
     price: 25000
-  - item: Recipe/Armor/Shadowsun Slicker Recipe
+  - item: shadowsun_slicker_recipe
     price: 25000
-  - item: Recipe/Helm/Shadowsun Stetson Recipe
+  - item: shadowsun_stetson_recipe
     price: 25000
-  - item: Recipe/Handgun/Storm Driver Recipe
+  - item: storm_driver_recipe
     price: 25000
-  - item: Recipe/Handgun/Umbra Driver Recipe
+  - item: umbra_driver_recipe
     price: 25000
-  - item: Recipe/Handgun/Valiance Recipe
+  - item: valiance_recipe
     price: 25000
-  - item: Recipe/Handgun/Volcanic Pepperbox Recipe
+  - item: volcanic_pepperbox_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Heavy
   goods:
-  - item: Recipe/Shield/Plate Shield Recipe
+  - item: plate_shield_recipe
     price: 1000
-  - item: Recipe/Helm/Spiral Plate Helm Recipe
+  - item: spiral_plate_helm_recipe
     price: 1000
-  - item: Recipe/Armor/Spiral Plate Mail Recipe
+  - item: spiral_plate_mail_recipe
     price: 1000
-  - item: Recipe/Sword/Troika Recipe
+  - item: troika_recipe
     price: 1000
-  - item: Recipe/Helm/Boosted Plate Helm Recipe
+  - item: boosted_plate_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Boosted Plate Mail Recipe
+  - item: boosted_plate_mail_recipe
     price: 4000
-  - item: Recipe/Shield/Boosted Plate Shield Recipe
+  - item: boosted_plate_shield_recipe
     price: 4000
-  - item: Recipe/Sword/Kamarin Recipe
+  - item: kamarin_recipe
     price: 4000
-  - item: Recipe/Handgun/Magnus Recipe
+  - item: magnus_recipe
     price: 4000
-  - item: Recipe/Helm/Heavy Plate Helm Recipe
+  - item: heavy_plate_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Heavy Plate Mail Recipe
+  - item: heavy_plate_mail_recipe
     price: 10000
-  - item: Recipe/Shield/Heavy Plate Shield Recipe
+  - item: heavy_plate_shield_recipe
     price: 10000
-  - item: Recipe/Sword/Khorovod Recipe
+  - item: khorovod_recipe
     price: 10000
-  - item: Recipe/Handgun/Mega Magnus Recipe
+  - item: mega_magnus_recipe
     price: 10000
-  - item: Recipe/Handgun/Callahan Recipe
+  - item: callahan_recipe
     price: 25000
-  - item: Recipe/Handgun/Iron Slug Recipe
+  - item: iron_slug_recipe
     price: 25000
-  - item: Recipe/Helm/Ironmight Plate Helm Recipe
+  - item: ironmight_plate_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Ironmight Plate Mail Recipe
+  - item: ironmight_plate_mail_recipe
     price: 25000
-  - item: Recipe/Shield/Ironmight Plate Shield Recipe
+  - item: ironmight_plate_shield_recipe
     price: 25000
-  - item: Recipe/Sword/Sudaruska Recipe
+  - item: sudaruska_recipe
     price: 25000
-  - item: Recipe/Helm/Volcanic Plate Helm Recipe
+  - item: volcanic_plate_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Volcanic Plate Mail Recipe
+  - item: volcanic_plate_mail_recipe
     price: 25000
-  - item: Recipe/Shield/Volcanic Plate Shield Recipe
+  - item: volcanic_plate_shield_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Piercing Def
   goods:
-  - item: Recipe/Helm/Jelly Helm Recipe
+  - item: jelly_helm_recipe
     price: 1000
-  - item: Recipe/Armor/Jelly Mail Recipe
+  - item: jelly_mail_recipe
     price: 1000
-  - item: Recipe/Shield/Jelly Shield Recipe
+  - item: jelly_shield_recipe
     price: 1000
-  - item: Recipe/Helm/Brute Jelly Helm Recipe
+  - item: brute_jelly_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Brute Jelly Mail Recipe
+  - item: brute_jelly_mail_recipe
     price: 4000
-  - item: Recipe/Shield/Brute Jelly Shield Recipe
+  - item: brute_jelly_shield_recipe
     price: 4000
-  - item: Recipe/Helm/Rock Jelly Helm Recipe
+  - item: rock_jelly_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Rock Jelly Mail Recipe
+  - item: rock_jelly_mail_recipe
     price: 10000
-  - item: Recipe/Shield/Rock Jelly Shield Recipe
+  - item: rock_jelly_shield_recipe
     price: 10000
-  - item: Recipe/Helm/Royal Jelly Crown Recipe
+  - item: royal_jelly_crown_recipe
     price: 25000
-  - item: Recipe/Armor/Royal Jelly Mail Recipe
+  - item: royal_jelly_mail_recipe
     price: 25000
-  - item: Recipe/Shield/Royal Jelly Shield Recipe
+  - item: royal_jelly_shield_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Shadow Def
   goods:
-  - item: Recipe/Helm/Skelly Mask Recipe
+  - item: skelly_mask_recipe
     price: 1000
-  - item: Recipe/Shield/Skelly Shield Recipe
+  - item: skelly_shield_recipe
     price: 1000
-  - item: Recipe/Armor/Skelly Suit Recipe
+  - item: skelly_suit_recipe
     price: 1000
-  - item: Recipe/Helm/Scary Skelly Mask Recipe
+  - item: scary_skelly_mask_recipe
     price: 4000
-  - item: Recipe/Shield/Scary Skelly Shield Recipe
+  - item: scary_skelly_shield_recipe
     price: 4000
-  - item: Recipe/Armor/Scary Skelly Suit Recipe
+  - item: scary_skelly_suit_recipe
     price: 4000
-  - item: Recipe/Helm/Sinister Skelly Mask Recipe
+  - item: sinister_skelly_mask_recipe
     price: 10000
-  - item: Recipe/Shield/Sinister Skelly Shield Recipe
+  - item: sinister_skelly_shield_recipe
     price: 10000
-  - item: Recipe/Armor/Sinister Skelly Suit Recipe
+  - item: sinister_skelly_suit_recipe
     price: 10000
-  - item: Recipe/Helm/Dread Skelly Mask Recipe
+  - item: dread_skelly_mask_recipe
     price: 25000
-  - item: Recipe/Shield/Dread Skelly Shield Recipe
+  - item: dread_skelly_shield_recipe
     price: 25000
-  - item: Recipe/Armor/Dread Skelly Suit Recipe
+  - item: dread_skelly_suit_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Specialist
   goods:
-  - item: Recipe/Rarity/Fire Crystal/Dim Recipe
+  - item: dim_recipe
     price: 250
-  - item: Recipe/Rarity/Fire Crystal/Warm Recipe
+  - item: warm_recipe
     price: 1000
-  - item: Recipe/Helm/Angelic Helm Recipe
+  - item: angelic_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Angelic Raiment Recipe
+  - item: angelic_raiment_recipe
     price: 4000
-  - item: Recipe/Helm/Chroma Mask Recipe
+  - item: chroma_mask_recipe
     price: 4000
-  - item: Recipe/Armor/Chroma Suit Recipe
+  - item: chroma_suit_recipe
     price: 4000
-  - item: Recipe/Helm/Drake Scale Helm Recipe
+  - item: drake_scale_helm_recipe
     price: 4000
-  - item: Recipe/Armor/Drake Scale Mail Recipe
+  - item: drake_scale_mail_recipe
     price: 4000
-  - item: Recipe/Shield/Drake Scale Shield Recipe
+  - item: drake_scale_shield_recipe
     price: 4000
-  - item: Recipe/Rarity/Fire Crystal/Glowing Recipe
+  - item: glowing_recipe
     price: 4000
-  - item: Recipe/Helm/Salamander Mask Recipe
+  - item: salamander_mask_recipe
     price: 10000
-  - item: Recipe/Armor/Salamander Suit Recipe
+  - item: salamander_suit_recipe
     price: 10000
-  - item: Recipe/Helm/Seraphic Helm Recipe
+  - item: seraphic_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Seraphic Mail Recipe
+  - item: seraphic_mail_recipe
     price: 10000
-  - item: Recipe/Rarity/Fire Crystal/Shining Recipe
+  - item: shining_recipe
     price: 10000
-  - item: Recipe/Armor/Silvermail Recipe
+  - item: silvermail_recipe
     price: 10000
-  - item: Recipe/Shield/Stone Tortoise Recipe
+  - item: stone_tortoise_recipe
     price: 10000
-  - item: Recipe/Helm/Virulisk Mask Recipe
+  - item: virulisk_mask_recipe
     price: 10000
-  - item: Recipe/Armor/Virulisk Suit Recipe
+  - item: virulisk_suit_recipe
     price: 10000
-  - item: Recipe/Helm/Wyvern Scale Helm Recipe
+  - item: wyvern_scale_helm_recipe
     price: 10000
-  - item: Recipe/Armor/Wyvern Scale Mail Recipe
+  - item: wyvern_scale_mail_recipe
     price: 10000
-  - item: Recipe/Shield/Wyvern Scale Shield Recipe
+  - item: wyvern_scale_shield_recipe
     price: 10000
-  - item: Recipe/Armor/Armor of the Fallen Recipe
+  - item: armor_of_the_fallen_recipe
     price: 25000
-  - item: Recipe/Helm/Crown of the Fallen Recipe
+  - item: crown_of_the_fallen_recipe
     price: 25000
-  - item: Recipe/Helm/Deadly Virulisk Mask Recipe
+  - item: deadly_virulisk_mask_recipe
     price: 25000
-  - item: Recipe/Armor/Deadly Virulisk Suit Recipe
+  - item: deadly_virulisk_suit_recipe
     price: 25000
-  - item: Recipe/Helm/Dragon Scale Helm Recipe
+  - item: dragon_scale_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Dragon Scale Mail Recipe
+  - item: dragon_scale_mail_recipe
     price: 25000
-  - item: Recipe/Shield/Dragon Scale Shield Recipe
+  - item: dragon_scale_shield_recipe
     price: 25000
-  - item: Recipe/Shield/Omega Shell Recipe
+  - item: omega_shell_recipe
     price: 25000
-  - item: Recipe/Armor/Radiant Silvermail Recipe
+  - item: radiant_silvermail_recipe
     price: 25000
-  - item: Recipe/Helm/Valkyrie Helm Recipe
+  - item: valkyrie_helm_recipe
     price: 25000
-  - item: Recipe/Armor/Valkyrie Mail Recipe
+  - item: valkyrie_mail_recipe
     price: 25000
-  - item: Recipe/Helm/Volcanic Salamander Mask Recipe
+  - item: volcanic_salamander_mask_recipe
     price: 25000
-  - item: Recipe/Armor/Volcanic Salamander Suit Recipe
+  - item: volcanic_salamander_suit_recipe
     price: 25000
 - config: Captured/Hall of Heroes/Striker
   goods:
-  - item: Recipe/Sword/Brandish Recipe
+  - item: brandish_recipe
     price: 1000
-  - item: Recipe/Sword/Cutter Recipe
+  - item: cutter_recipe
     price: 1000
-  - item: Recipe/Sword/Flourish Recipe
+  - item: flourish_recipe
     price: 1000
-  - item: Recipe/Sword/Spur Recipe
+  - item: spur_recipe
     price: 1000
-  - item: Recipe/Helm/Wolver Cap Recipe
+  - item: wolver_cap_recipe
     price: 1000
-  - item: Recipe/Armor/Wolver Coat Recipe
+  - item: wolver_coat_recipe
     price: 1000
-  - item: Recipe/Sword/Arc Razor Recipe
+  - item: arc_razor_recipe
     price: 4000
-  - item: Recipe/Sword/Cautery Sword Recipe
+  - item: cautery_sword_recipe
     price: 4000
-  - item: Recipe/Helm/Dusker Cap Recipe
+  - item: dusker_cap_recipe
     price: 4000
-  - item: Recipe/Armor/Dusker Coat Recipe
+  - item: dusker_coat_recipe
     price: 4000
-  - item: Recipe/Sword/Fireburst Brandish Recipe
+  - item: fireburst_brandish_recipe
     price: 4000
-  - item: Recipe/Sword/Flamberge Recipe
+  - item: flamberge_recipe
     price: 4000
-  - item: Recipe/Sword/Iceburst Brandish Recipe
+  - item: iceburst_brandish_recipe
     price: 4000
-  - item: Recipe/Sword/Nightblade Recipe
+  - item: nightblade_recipe
     price: 4000
-  - item: Recipe/Helm/Padded Hunting Cap Recipe
+  - item: padded_hunting_cap_recipe
     price: 4000
-  - item: Recipe/Armor/Padded Hunting Coat Recipe
+  - item: padded_hunting_coat_recipe
     price: 4000
-  - item: Recipe/Sword/Rigadoon Recipe
+  - item: rigadoon_recipe
     price: 4000
-  - item: Recipe/Sword/Striker Recipe
+  - item: striker_recipe
     price: 4000
-  - item: Recipe/Sword/Swift Flourish Recipe
+  - item: swift_flourish_recipe
     price: 4000
-  - item: Recipe/Shield/Swiftstrike Buckler Recipe
+  - item: swiftstrike_buckler_recipe
     price: 4000
-  - item: Recipe/Sword/Advanced Cautery Sword Recipe
+  - item: advanced_cautery_sword_recipe
     price: 10000
-  - item: Recipe/Helm/Ash Tail Cap Recipe
+  - item: ash_tail_cap_recipe
     price: 10000
-  - item: Recipe/Armor/Ash Tail Coat Recipe
+  - item: ash_tail_coat_recipe
     price: 10000
-  - item: Recipe/Sword/Blazebrand Recipe
+  - item: blazebrand_recipe
     price: 10000
-  - item: Recipe/Sword/Blizzbrand Recipe
+  - item: blizzbrand_recipe
     price: 10000
-  - item: Recipe/Sword/Daring Rigadoon Recipe
+  - item: daring_rigadoon_recipe
     price: 10000
-  - item: Recipe/Sword/Fierce Flamberge Recipe
+  - item: fierce_flamberge_recipe
     price: 10000
-  - item: Recipe/Sword/Grand Flourish Recipe
+  - item: grand_flourish_recipe
     price: 10000
-  - item: Recipe/Sword/Hunting Blade Recipe
+  - item: hunting_blade_recipe
     price: 10000
-  - item: Recipe/Helm/Quilted Hunting Cap Recipe
+  - item: quilted_hunting_cap_recipe
     price: 10000
-  - item: Recipe/Armor/Quilted Hunting Coat Recipe
+  - item: quilted_hunting_coat_recipe
     price: 10000
-  - item: Recipe/Sword/Silent Nightblade Recipe
+  - item: silent_nightblade_recipe
     price: 10000
-  - item: Recipe/Sword/Vile Striker Recipe
+  - item: vile_striker_recipe
     price: 10000
-  - item: Recipe/Sword/Winmillion Recipe
+  - item: winmillion_recipe
     price: 10000
-  - item: Recipe/Sword/Acheron Recipe
+  - item: acheron_recipe
     price: 25000
-  - item: Recipe/Sword/Amputator Recipe
+  - item: amputator_recipe
     price: 25000
-  - item: Recipe/Sword/Combuster Recipe
+  - item: combuster_recipe
     price: 25000
-  - item: Recipe/Sword/Dread Venom Striker Recipe
+  - item: dread_venom_striker_recipe
     price: 25000
-  - item: Recipe/Sword/Fearless Rigadoon Recipe
+  - item: fearless_rigadoon_recipe
     price: 25000
-  - item: Recipe/Sword/Final Flourish Recipe
+  - item: final_flourish_recipe
     price: 25000
-  - item: Recipe/Sword/Furious Flamberge Recipe
+  - item: furious_flamberge_recipe
     price: 25000
-  - item: Recipe/Sword/Glacius Recipe
+  - item: glacius_recipe
     price: 25000
-  - item: Recipe/Helm/Skolver Cap Recipe
+  - item: skolver_cap_recipe
     price: 25000
-  - item: Recipe/Armor/Skolver Coat Recipe
+  - item: skolver_coat_recipe
     price: 25000
-  - item: Recipe/Helm/Starlit Hunting Cap Recipe
+  - item: starlit_hunting_cap_recipe
     price: 25000
-  - item: Recipe/Armor/Starlit Hunting Coat Recipe
+  - item: starlit_hunting_coat_recipe
     price: 25000
-  - item: Recipe/Sword/Turbillion Recipe
+  - item: turbillion_recipe
     price: 25000
-  - item: Recipe/Helm/Vog Cub Cap Recipe
+  - item: vog_cub_cap_recipe
     price: 25000
-  - item: Recipe/Armor/Vog Cub Coat Recipe
+  - item: vog_cub_coat_recipe
     price: 25000
-  - item: Recipe/Sword/Wild Hunting Blade Recipe
+  - item: wild_hunting_blade_recipe
     price: 25000
 - config: Captured/OCH/Basil T1
   goods:
-  - item: Recipe/Handgun/Shadowtech Alchemer Recipe
+  - item: shadowtech_alchemer_recipe
     price: 1000
-  - item: Pickup/Capsule/Health Capsule
+  - item: health_capsule
     price: 100
-  - item: Pickup/Capsule/Remedy Capsule
+  - item: remedy_capsule
     price: 100
-  - item: Pickup/Vial/Fire Vial
+  - item: fire_vial
     price: 50
-  - item: Pickup/Vial/Freeze Vial
+  - item: freeze_vial
     price: 50
-  - item: Pickup/Vial/Poison Vial
+  - item: poison_vial
     price: 50
-  - item: Pickup/Vial/Shock Vial
+  - item: shock_vial
     price: 50
-  - item: Gear/Dungeon/Vitapod/Health +02
+  - item: health_02
     price: 400
-  - item: Gear/Dungeon/Vitapod/Health +03
+  - item: health_03
     price: 600
 - config: Captured/Mission/Basil Items 2
   goods:
-  - item: Pickup/Capsule/Health Capsule
+  - item: health_capsule
     price: 100
-  - item: Pickup/Capsule/Remedy Capsule
+  - item: remedy_capsule
     price: 100
-  - item: Pickup/Vial/Super Fire Vial
+  - item: super_fire_vial
     price: 150
-  - item: Pickup/Vial/Super Shock Vial
+  - item: super_shock_vial
     price: 150
-  - item: Pickup/Vial/Super Freeze Vial
+  - item: super_freeze_vial
     price: 150
-  - item: Pickup/Vial/Super Poison Vial
+  - item: super_poison_vial
     price: 150
-  - item: Gear/Dungeon/Vitapod/Health +04
+  - item: health_04
     price: 800
-  - item: Recipe/Helm/Skelly Mask Recipe
+  - item: skelly_mask_recipe
     price: 1000
-  - item: Recipe/Armor/Skelly Suit Recipe
+  - item: skelly_suit_recipe
     price: 1000
-  - item: Recipe/Shield/Skelly Shield Recipe
+  - item: skelly_shield_recipe
     price: 1000
-  - item: Recipe/Sword/Fireburst Brandish Recipe
+  - item: fireburst_brandish_recipe
     price: 4000
-  - item: Recipe/Handgun/Firotech Alchemer Recipe
+  - item: firotech_alchemer_recipe
     price: 1000
-  - item: Recipe/Bomb/Fiery Vaporizer Recipe
+  - item: fiery_vaporizer_recipe
     price: 1000
-  - item: Recipe/Bomb/Crystal Bomb Recipe
+  - item: crystal_bomb_recipe
     price: 1000
 - config: Captured/OCH/Basil T2
   goods:
-  - item: Recipe/Bomb/Toxic Vaporizer Recipe
+  - item: toxic_vaporizer_recipe
     price: 1000
-  - item: Recipe/Armor/Elemental Cloak Recipe
+  - item: elemental_cloak_recipe
     price: 4000
-  - item: Recipe/Helm/Elemental Hood Recipe
+  - item: elemental_hood_recipe
     price: 4000
-  - item: Recipe/Bomb/Graviton Charge Recipe
+  - item: graviton_charge_recipe
     price: 4000
-  - item: Recipe/Shield/Horned Owlite Shield Recipe
+  - item: horned_owlite_shield_recipe
     price: 4000
-  - item: Recipe/Sword/Iceburst Brandish Recipe
+  - item: iceburst_brandish_recipe
     price: 4000
-  - item: Recipe/Sword/Nightblade Recipe
+  - item: nightblade_recipe
     price: 4000
-  - item: Recipe/Handgun/Shadowtech Alchemer Mk II Recipe
+  - item: shadowtech_alchemer_mk_ii_recipe
     price: 4000
-  - item: Pickup/Capsule/Super Health Capsule
+  - item: super_health_capsule
     price: 200
-  - item: Pickup/Vial/Super Fire Vial
+  - item: super_fire_vial
     price: 150
-  - item: Pickup/Vial/Super Freeze Vial
+  - item: super_freeze_vial
     price: 150
-  - item: Pickup/Vial/Super Poison Vial
+  - item: super_poison_vial
     price: 150
-  - item: Pickup/Vial/Super Shock Vial
+  - item: super_shock_vial
     price: 150
-  - item: Gear/Dungeon/Vitapod/Health +06
+  - item: health_06
     price: 1200
 - config: Captured/OCH/Basil T3
   goods:
-  - item: Recipe/Sword/Acheron Recipe
+  - item: acheron_recipe
     price: 25000
-  - item: Recipe/Sword/Glacius Recipe
+  - item: glacius_recipe
     price: 25000
-  - item: Recipe/Bomb/Graviton Vortex Recipe
+  - item: graviton_vortex_recipe
     price: 25000
-  - item: Recipe/Helm/Grey Feather Cowl Recipe
+  - item: grey_feather_cowl_recipe
     price: 25000
-  - item: Recipe/Armor/Grey Feather Mantle Recipe
+  - item: grey_feather_mantle_recipe
     price: 25000
-  - item: Recipe/Shield/Grey Owlite Shield Recipe
+  - item: grey_owlite_shield_recipe
     price: 25000
-  - item: Recipe/Handgun/Umbra Driver Recipe
+  - item: umbra_driver_recipe
     price: 25000
-  - item: Recipe/Bomb/Venom Veiler Recipe
+  - item: venom_veiler_recipe
     price: 25000
-  - item: Pickup/Capsule/Remedy Capsule
+  - item: remedy_capsule
     price: 100
-  - item: Pickup/Capsule/Ultra Health Capsule
+  - item: ultra_health_capsule
     price: 500
-  - item: Pickup/Vial/Ultra Fire Vial
+  - item: ultra_fire_vial
     price: 250
-  - item: Pickup/Vial/Ultra Freeze Vial
+  - item: ultra_freeze_vial
     price: 250
-  - item: Pickup/Vial/Ultra Poison Vial
+  - item: ultra_poison_vial
     price: 250
-  - item: Pickup/Vial/Ultra Shock Vial
+  - item: ultra_shock_vial
     price: 250
-  - item: Gear/Dungeon/Vitapod/Health +12
+  - item: health_12
     price: 3000
 - config: Documented/Haven/Brinks
   goods:
-  - item: Gear/Shield/Bristling Buckler
-    token: Token/Snarbolax Token
+  - item: bristling_buckler
+    token: snarbolax_token
     tokenCount: 10
-  - item: Weapon/Sword/Snarble Barb
-    token: Token/Snarbolax Token
+  - item: snarble_barb
+    token: snarbolax_token
     tokenCount: 10
-  - item: Weapon/Bomb/Spine Cone
-    token: Token/Snarbolax Token
+  - item: spine_cone
+    token: snarbolax_token
     tokenCount: 10
-  - item: Material/Snarbostuffing
-    token: Token/Snarbolax Token
+  - item: snarbostuffing
+    token: snarbolax_token
     tokenCount: 12
-  - item: Material/Rock Salt
-    token: Token/Jelly Token
+  - item: rock_salt
+    token: jelly_token
     tokenCount: 2
-  - item: Material/Rock Salt
-    token: Token/Primal Token
+  - item: rock_salt
+    token: primal_token
     tokenCount: 5
-  - item: Gear/Helm/Brute Jelly Helm
-    token: Token/Jelly Token
+  - item: brute_jelly_helm
+    token: jelly_token
     tokenCount: 15
-  - item: Gear/Armor/Brute Jelly Mail
-    token: Token/Jelly Token
+  - item: brute_jelly_mail
+    token: jelly_token
     tokenCount: 15
-  - item: Gear/Shield/Brute Jelly Shield
-    token: Token/Jelly Token
+  - item: brute_jelly_shield
+    token: jelly_token
     tokenCount: 15
-  - item: Material/Jelly Glue
-    token: Token/Jelly Token
+  - item: jelly_glue
+    token: jelly_token
     tokenCount: 15
-  - item: Weapon/Handgun/Antigua
-    token: Token/Jelly Token
+  - item: antigua
+    token: jelly_token
     tokenCount: 20
-  - item: Weapon/Sword/Sealed Sword
-    token: Token/Jelly Token
+  - item: sealed_sword
+    token: jelly_token
     tokenCount: 20
-  - item: Weapon/Handgun/Catalyzer
-    token: Token/Roarmulus Token
+  - item: catalyzer
+    token: roarmulus_token
     tokenCount: 15
-  - item: Weapon/Handgun/Pulsar
-    token: Token/Roarmulus Token
+  - item: pulsar
+    token: roarmulus_token
     tokenCount: 15
-  - item: Weapon/Bomb/Static Capacitor
-    token: Token/Roarmulus Token
+  - item: static_capacitor
+    token: roarmulus_token
     tokenCount: 15
-  - item: Material/Schemer Scrap
-    token: Token/Roarmulus Token
+  - item: schemer_scrap
+    token: roarmulus_token
     tokenCount: 18
-  - item: Gear/Helm/Quicksilver Helm
-    token: Token/Roarmulus Token
+  - item: quicksilver_helm
+    token: roarmulus_token
     tokenCount: 20
-  - item: Gear/Armor/Quicksilver Mail
-    token: Token/Roarmulus Token
+  - item: quicksilver_mail
+    token: roarmulus_token
     tokenCount: 20
-  - item: Material/Dark Ember
-    token: Token/Vanaduke Token
+  - item: dark_ember
+    token: vanaduke_token
     tokenCount: 25
-  - item: Gear/Helm/Ancient Plate Helm
-    token: Token/Vanaduke Token
+  - item: ancient_plate_helm
+    token: vanaduke_token
     tokenCount: 30
-  - item: Gear/Armor/Ancient Plate Mail
-    token: Token/Vanaduke Token
+  - item: ancient_plate_mail
+    token: vanaduke_token
     tokenCount: 30
-  - item: Gear/Shield/Ancient Plate Shield
-    token: Token/Vanaduke Token
+  - item: ancient_plate_shield
+    token: vanaduke_token
     tokenCount: 30
-  - item: Gear/Shield/Blackened Crest
-    token: Token/Vanaduke Token
+  - item: blackened_crest
+    token: vanaduke_token
     tokenCount: 30
-  - item: Weapon/Sword/Fang of Vog
-    token: Token/Vanaduke Token
+  - item: fang_of_vog
+    token: vanaduke_token
     tokenCount: 40
-  - item: Material/Cooling Cell
-    token: Token/Primal Token
+  - item: cooling_cell
+    token: primal_token
     tokenCount: 2
-  - item: Material/Critter Carapace
-    token: Token/Primal Token
+  - item: critter_carapace
+    token: primal_token
     tokenCount: 2
-  - item: Material/Driftwood
-    token: Token/Primal Token
+  - item: driftwood
+    token: primal_token
     tokenCount: 2
-  - item: Material/Frost Gel
-    token: Token/Primal Token
+  - item: frost_gel
+    token: primal_token
     tokenCount: 2
-  - item: Material/Gel Core
-    token: Token/Primal Token
+  - item: gel_core
+    token: primal_token
     tokenCount: 2
-  - item: Material/Monster Bone
-    token: Token/Primal Token
+  - item: monster_bone
+    token: primal_token
     tokenCount: 2
-  - item: Material/Brute Core
-    token: Token/Primal Token
+  - item: brute_core
+    token: primal_token
     tokenCount: 5
-  - item: Material/Bushy Tail
-    token: Token/Primal Token
+  - item: bushy_tail
+    token: primal_token
     tokenCount: 5
-  - item: Material/Drake Scale
-    token: Token/Primal Token
+  - item: drake_scale
+    token: primal_token
     tokenCount: 5
-  - item: Material/Hailstone
-    token: Token/Primal Token
+  - item: hailstone
+    token: primal_token
     tokenCount: 5
-  - item: Gear/Trinket/Hearthstone Pendant
-    token: Token/Primal Token
+  - item: hearthstone_pendant
+    token: primal_token
     tokenCount: 5
-  - item: Gear/Trinket/Jelly Band
-    token: Token/Primal Token
+  - item: jelly_band
+    token: primal_token
     tokenCount: 5
-  - item: Gear/Trinket/Katnip Pouch
-    token: Token/Primal Token
+  - item: katnip_pouch
+    token: primal_token
     tokenCount: 5
-  - item: Material/Redwood
-    token: Token/Primal Token
+  - item: redwood
+    token: primal_token
     tokenCount: 5
-  - item: Material/Chroma Tear
-    token: Token/Primal Token
+  - item: chroma_tear
+    token: primal_token
     tokenCount: 10
-  - item: Material/Ironwood
-    token: Token/Primal Token
+  - item: ironwood
+    token: primal_token
     tokenCount: 10
-  - item: Material/Perfect Snowball
-    token: Token/Primal Token
+  - item: perfect_snowball
+    token: primal_token
     tokenCount: 10
-  - item: Material/Rocky Core
-    token: Token/Primal Token
+  - item: rocky_core
+    token: primal_token
     tokenCount: 10
-  - item: Material/Warp Dust
-    token: Token/Primal Token
+  - item: warp_dust
+    token: primal_token
     tokenCount: 10
-  - item: Gear/Trinket/Brute Jelly Band
-    token: Token/Primal Token
+  - item: brute_jelly_band
+    token: primal_token
     tokenCount: 20
-  - item: Gear/Trinket/Choice Katnip Pouch
-    token: Token/Primal Token
+  - item: choice_katnip_pouch
+    token: primal_token
     tokenCount: 20
-  - item: Material/Dragon Scale
-    token: Token/Primal Token
+  - item: dragon_scale
+    token: primal_token
     tokenCount: 20
-  - item: Material/Everfrost
-    token: Token/Primal Token
+  - item: everfrost
+    token: primal_token
     tokenCount: 20
-  - item: Material/Primal Ore
-    token: Token/Primal Token
+  - item: primal_ore
+    token: primal_token
     tokenCount: 20
-  - item: Material/Royal Core
-    token: Token/Primal Token
+  - item: royal_core
+    token: primal_token
     tokenCount: 20
-  - item: Material/Royal Skewer
-    token: Token/Primal Token
+  - item: royal_skewer
+    token: primal_token
     tokenCount: 20
-  - item: Gear/Trinket/Warm Hearthstone Pendant
-    token: Token/Primal Token
+  - item: warm_hearthstone_pendant
+    token: primal_token
     tokenCount: 20
-  - item: Gear/Trinket/Hi-Grade Katnip Pouch
-    token: Token/Primal Token
+  - item: hi_grade_katnip_pouch
+    token: primal_token
     tokenCount: 50
-  - item: Gear/Trinket/Rock Jelly Band
-    token: Token/Primal Token
+  - item: rock_jelly_band
+    token: primal_token
     tokenCount: 50
-  - item: Gear/Trinket/Toasty Hearthstone Pendant
-    token: Token/Primal Token
+  - item: toasty_hearthstone_pendant
+    token: primal_token
     tokenCount: 50
-  - item: Gear/Trinket/Purrfect Katnip Pouch
-    token: Token/Primal Token
+  - item: purrfect_katnip_pouch
+    token: primal_token
     tokenCount: 100
-  - item: Gear/Trinket/Royal Jelly Band
-    token: Token/Primal Token
+  - item: royal_jelly_band
+    token: primal_token
     tokenCount: 100
-  - item: Gear/Trinket/Sizzling Hearthstone Pendant
-    token: Token/Primal Token
+  - item: sizzling_hearthstone_pendant
+    token: primal_token
     tokenCount: 100
-  - item: Material/Forbidden Fruit
-    token: Token/Grim Token
+  - item: forbidden_fruit
+    token: grim_token
     tokenCount: 2
-  - item: Material/Grave Soil
-    token: Token/Grim Token
+  - item: grave_soil
+    token: grim_token
     tokenCount: 2
-  - item: Material/Nightshade
-    token: Token/Grim Token
+  - item: nightshade
+    token: grim_token
     tokenCount: 2
-  - item: Material/Owlite Feather
-    token: Token/Grim Token
+  - item: owlite_feather
+    token: grim_token
     tokenCount: 2
-  - item: Material/Sinful Brew
-    token: Token/Grim Token
+  - item: sinful_brew
+    token: grim_token
     tokenCount: 2
-  - item: Material/Waste Module
-    token: Token/Grim Token
+  - item: waste_module
+    token: grim_token
     tokenCount: 2
-  - item: Material/Dead Gold
-    token: Token/Grim Token
+  - item: dead_gold
+    token: grim_token
     tokenCount: 5
-  - item: Material/Phial of Phear
-    token: Token/Grim Token
+  - item: phial_of_phear
+    token: grim_token
     tokenCount: 5
-  - item: Gear/Trinket/Silver Amulet
-    token: Token/Grim Token
+  - item: silver_amulet
+    token: grim_token
     tokenCount: 5
-  - item: Gear/Trinket/Skelly Charm
-    token: Token/Grim Token
+  - item: skelly_charm
+    token: grim_token
     tokenCount: 5
-  - item: Material/Soul Dust
-    token: Token/Grim Token
+  - item: soul_dust
+    token: grim_token
     tokenCount: 5
-  - item: Material/Toxic Core
-    token: Token/Grim Token
+  - item: toxic_core
+    token: grim_token
     tokenCount: 5
-  - item: Gear/Trinket/White Laurel
-    token: Token/Grim Token
+  - item: white_laurel
+    token: grim_token
     tokenCount: 5
-  - item: Material/Wicked idol
-    token: Token/Grim Token
+  - item: wicked_idol
+    token: grim_token
     tokenCount: 5
-  - item: Material/Blighted Bone
-    token: Token/Grim Token
+  - item: blighted_bone
+    token: grim_token
     tokenCount: 10
-  - item: Material/Corrosive Acid
-    token: Token/Grim Token
+  - item: corrosive_acid
+    token: grim_token
     tokenCount: 10
-  - item: Material/Ghost Bell
-    token: Token/Grim Token
+  - item: ghost_bell
+    token: grim_token
     tokenCount: 10
-  - item: Material/Mug of Misery
-    token: Token/Grim Token
+  - item: mug_of_misery
+    token: grim_token
     tokenCount: 10
-  - item: Material/Trojan Horseshoe
-    token: Token/Grim Token
+  - item: trojan_horseshoe
+    token: grim_token
     tokenCount: 10
-  - item: Gear/Trinket/Blessed Silver Amulet
-    token: Token/Grim Token
+  - item: blessed_silver_amulet
+    token: grim_token
     tokenCount: 20
-  - item: Gear/Trinket/Bright White Laurel
-    token: Token/Grim Token
+  - item: bright_white_laurel
+    token: grim_token
     tokenCount: 20
-  - item: Material/Crest of Ur
-    token: Token/Grim Token
+  - item: crest_of_ur
+    token: grim_token
     tokenCount: 20
-  - item: Material/Philoso Feather
-    token: Token/Grim Token
+  - item: philoso_feather
+    token: grim_token
     tokenCount: 20
-  - item: Material/Plague Essence
-    token: Token/Grim Token
+  - item: plague_essence
+    token: grim_token
     tokenCount: 20
-  - item: Material/Reaper Rib
-    token: Token/Grim Token
+  - item: reaper_rib
+    token: grim_token
     tokenCount: 20
-  - item: Gear/Trinket/Scary Skelly Charm
-    token: Token/Grim Token
+  - item: scary_skelly_charm
+    token: grim_token
     tokenCount: 20
-  - item: Material/Shadow Steel
-    token: Token/Grim Token
+  - item: shadow_steel
+    token: grim_token
     tokenCount: 20
-  - item: Gear/Trinket/Sacred Silver Amulet
-    token: Token/Grim Token
+  - item: sacred_silver_amulet
+    token: grim_token
     tokenCount: 50
-  - item: Gear/Trinket/Sinister Skelly Charm
-    token: Token/Grim Token
+  - item: sinister_skelly_charm
+    token: grim_token
     tokenCount: 50
-  - item: Gear/Trinket/Snowy White Laurel
-    token: Token/Grim Token
+  - item: snowy_white_laurel
+    token: grim_token
     tokenCount: 50
-  - item: Gear/Trinket/Dread Skelly Charm
-    token: Token/Grim Token
+  - item: dread_skelly_charm
+    token: grim_token
     tokenCount: 100
-  - item: Gear/Trinket/Pure White Laurel
-    token: Token/Grim Token
+  - item: pure_white_laurel
+    token: grim_token
     tokenCount: 100
-  - item: Gear/Trinket/Saintly Silver Amulet
-    token: Token/Grim Token
+  - item: saintly_silver_amulet
+    token: grim_token
     tokenCount: 100
-  - item: Material/Blast Powder
-    token: Token/Forge Token
+  - item: blast_powder
+    token: forge_token
     tokenCount: 2
-  - item: Material/Frayed Fabric
-    token: Token/Forge Token
+  - item: frayed_fabric
+    token: forge_token
     tokenCount: 2
-  - item: Material/Fuel Canister
-    token: Token/Forge Token
+  - item: fuel_canister
+    token: forge_token
     tokenCount: 2
-  - item: Material/Gremlin Gizmo
-    token: Token/Forge Token
+  - item: gremlin_gizmo
+    token: forge_token
     tokenCount: 2
-  - item: Material/Iron Gear
-    token: Token/Forge Token
+  - item: iron_gear
+    token: forge_token
     tokenCount: 2
-  - item: Material/Power Cell
-    token: Token/Forge Token
+  - item: power_cell
+    token: forge_token
     tokenCount: 2
-  - item: Material/Static Clinger
-    token: Token/Forge Token
+  - item: static_clinger
+    token: forge_token
     tokenCount: 2
-  - item: Material/Swordstone
-    token: Token/Forge Token
+  - item: swordstone
+    token: forge_token
     tokenCount: 2
-  - item: Gear/Trinket/Crystal Pin
-    token: Token/Forge Token
+  - item: crystal_pin
+    token: forge_token
     tokenCount: 5
-  - item: Gear/Trinket/Driftwood Bracelet
-    token: Token/Forge Token
+  - item: driftwood_bracelet
+    token: forge_token
     tokenCount: 5
-  - item: Material/Fine Fabric
-    token: Token/Forge Token
+  - item: fine_fabric
+    token: forge_token
     tokenCount: 5
-  - item: Material/Force Dynamo
-    token: Token/Forge Token
+  - item: force_dynamo
+    token: forge_token
     tokenCount: 5
-  - item: Material/Rocket Sprocket
-    token: Token/Forge Token
+  - item: rocket_sprocket
+    token: forge_token
     tokenCount: 5
-  - item: Material/Torchstone
-    token: Token/Forge Token
+  - item: torchstone
+    token: forge_token
     tokenCount: 5
-  - item: Material/Unstable Core
-    token: Token/Forge Token
+  - item: unstable_core
+    token: forge_token
     tokenCount: 5
-  - item: Material/Volt Oil
-    token: Token/Forge Token
+  - item: volt_oil
+    token: forge_token
     tokenCount: 5
-  - item: Gear/Trinket/Wetstone Pendant
-    token: Token/Forge Token
+  - item: wetstone_pendant
+    token: forge_token
     tokenCount: 5
-  - item: Material/Blaze Pepper
-    token: Token/Forge Token
+  - item: blaze_pepper
+    token: forge_token
     tokenCount: 10
-  - item: Material/Heavy Gear
-    token: Token/Forge Token
+  - item: heavy_gear
+    token: forge_token
     tokenCount: 10
-  - item: Material/Meteor Mote
-    token: Token/Forge Token
+  - item: meteor_mote
+    token: forge_token
     tokenCount: 10
-  - item: Material/Miracloth
-    token: Token/Forge Token
+  - item: miracloth
+    token: forge_token
     tokenCount: 10
-  - item: Material/Silver Coil
-    token: Token/Forge Token
+  - item: silver_coil
+    token: forge_token
     tokenCount: 10
-  - item: Material/Thunderball
-    token: Token/Forge Token
+  - item: thunderball
+    token: forge_token
     tokenCount: 10
-  - item: Gear/Trinket/Dewy Wetstone Pendant
-    token: Token/Forge Token
+  - item: dewy_wetstone_pendant
+    token: forge_token
     tokenCount: 20
-  - item: Material/Flame Soul
-    token: Token/Forge Token
+  - item: flame_soul
+    token: forge_token
     tokenCount: 20
-  - item: Gear/Trinket/Glowing Crystal Pin
-    token: Token/Forge Token
+  - item: glowing_crystal_pin
+    token: forge_token
     tokenCount: 20
-  - item: Material/Plasma Cell
-    token: Token/Forge Token
+  - item: plasma_cell
+    token: forge_token
     tokenCount: 20
-  - item: Gear/Trinket/Redwood Bracelet
-    token: Token/Forge Token
+  - item: redwood_bracelet
+    token: forge_token
     tokenCount: 20
-  - item: Material/Silverweave
-    token: Token/Forge Token
+  - item: silverweave
+    token: forge_token
     tokenCount: 20
-  - item: Material/Storm Chaser
-    token: Token/Forge Token
+  - item: storm_chaser
+    token: forge_token
     tokenCount: 20
-  - item: Material/Sun Silver
-    token: Token/Forge Token
+  - item: sun_silver
+    token: forge_token
     tokenCount: 20
-  - item: Material/Volcanic Iron
-    token: Token/Forge Token
+  - item: volcanic_iron
+    token: forge_token
     tokenCount: 20
-  - item: Gear/Trinket/Glimmering Crystal Pin
-    token: Token/Forge Token
+  - item: glimmering_crystal_pin
+    token: forge_token
     tokenCount: 50
-  - item: Gear/Trinket/Ironwood Bracelet
-    token: Token/Forge Token
+  - item: ironwood_bracelet
+    token: forge_token
     tokenCount: 50
-  - item: Gear/Trinket/Slippery Wetstone Pendant
-    token: Token/Forge Token
+  - item: slippery_wetstone_pendant
+    token: forge_token
     tokenCount: 50
-  - item: Gear/Trinket/Radiant Crystal Pin
-    token: Token/Forge Token
+  - item: radiant_crystal_pin
+    token: forge_token
     tokenCount: 100
-  - item: Gear/Trinket/Soaking Wetstone Pendant
-    token: Token/Forge Token
+  - item: soaking_wetstone_pendant
+    token: forge_token
     tokenCount: 100
-  - item: Gear/Trinket/Wyrmwood Bracelet
-    token: Token/Forge Token
+  - item: wyrmwood_bracelet
+    token: forge_token
     tokenCount: 100
   min: 0
   max: 0
   chance: 1
 - config: Documented/Haven/Greave
   goods:
-  - item: Gear/Armor/Circuit Breaker Armor
+  - item: circuit_breaker_armor
     price: 3000
-  - item: Gear/Armor/Emberbreak Armor
+  - item: emberbreak_armor
     price: 3000
-  - item: Gear/Armor/Frostbreaker Armor
+  - item: frostbreaker_armor
     price: 3000
-  - item: Gear/Armor/Spiral Scale Mail
+  - item: spiral_scale_mail
     price: 3000
-  - item: Gear/Armor/Ignition Armor
+  - item: ignition_armor
     price: 3000
-  - item: Gear/Armor/Padded Armor
+  - item: padded_armor
     price: 3000
-  - item: Gear/Armor/Fencing Jacket
+  - item: fencing_jacket
     price: 150
-  - item: Gear/Armor/Vitasuit
+  - item: vitasuit
     price: 150
-  - item: Gear/Helm/Circuit Breaker Helm
+  - item: circuit_breaker_helm
     price: 3000
-  - item: Gear/Helm/Emberbreak Helm
+  - item: emberbreak_helm
     price: 3000
-  - item: Gear/Helm/Frostbreaker Helm
+  - item: frostbreaker_helm
     price: 3000
-  - item: Gear/Helm/Spiral Scale Helm
+  - item: spiral_scale_helm
     price: 3000
-  - item: Gear/Helm/Ignition Helm
+  - item: ignition_helm
     price: 3000
-  - item: Gear/Helm/Padded Cap
+  - item: padded_cap
     price: 3000
-  - item: Gear/Helm/Cyclops Cap
+  - item: cyclops_cap
     price: 150
-  - item: Gear/Helm/Mining Hat
+  - item: mining_hat
     price: 150
   min: 0
   max: 0
   chance: 1
 - config: Documented/Haven/Kragen
   goods:
-  - item: Gear/Shield/Circuit Breaker Shield
+  - item: circuit_breaker_shield
     price: 3000
-  - item: Gear/Shield/Emberbreak Shield
+  - item: emberbreak_shield
     price: 3000
-  - item: Gear/Shield/Frostbreaker Shield
+  - item: frostbreaker_shield
     price: 3000
-  - item: Gear/Shield/Force Buckler
+  - item: force_buckler
     price: 3000
-  - item: Gear/Shield/Scale Shield
+  - item: scale_shield
     price: 3000
-  - item: Gear/Shield/Iron Buckler
+  - item: iron_buckler
     price: 150
-  - item: Gear/Shield/Proto Shield
+  - item: proto_shield
     price: 150
   min: 0
   max: 0
   chance: 1
 - config: Documented/Haven/Quillion
   goods:
-  - item: Weapon/Sword/Big Beast Basher
+  - item: big_beast_basher
     price: 3000
-  - item: Weapon/Sword/Bolted Blade
+  - item: bolted_blade
     price: 3000
-  - item: Weapon/Sword/Heavy Hatchet
+  - item: heavy_hatchet
     price: 3000
-  - item: Weapon/Sword/Hot Edge
+  - item: hot_edge
     price: 3000
-  - item: Weapon/Sword/Static Edge
+  - item: static_edge
     price: 3000
-  - item: Weapon/Sword/Super Slime Slasher
+  - item: super_slime_slasher
     price: 3000
-  - item: Weapon/Sword/Rugged Robo Wrecker
+  - item: rugged_robo_wrecker
     price: 3000
-  - item: Weapon/Sword/Beast Basher
+  - item: beast_basher
     price: 150
-  - item: Weapon/Sword/Hatchet
+  - item: hatchet
     price: 150
-  - item: Weapon/Sword/Proto Sword
+  - item: proto_sword
     price: 150
-  - item: Weapon/Sword/Slime Slasher
+  - item: slime_slasher
     price: 150
-  - item: Weapon/Sword/Robo Wrecker
+  - item: robo_wrecker
     price: 150
   min: 0
   max: 0
   chance: 1
 - config: Documented/Haven/Ricasso
   goods:
-  - item: Weapon/Handgun/Frost Gun
+  - item: frost_gun
     price: 3000
-  - item: Weapon/Handgun/Pummel Gun
+  - item: pummel_gun
     price: 3000
-  - item: Weapon/Handgun/Super Stun Gun
+  - item: super_stun_gun
     price: 3000
-  - item: Weapon/Handgun/Zapper
+  - item: zapper
     price: 3000
-  - item: Weapon/Handgun/Spitfire
+  - item: spitfire
     price: 3000
-  - item: Weapon/Handgun/Punch Gun
+  - item: punch_gun
     price: 150
-  - item: Weapon/Handgun/Stun Gun
+  - item: stun_gun
     price: 150
-  - item: Weapon/Bomb/Cold Snap
+  - item: cold_snap
     price: 3000
-  - item: Weapon/Bomb/Firecracker
+  - item: firecracker
     price: 3000
-  - item: Weapon/Bomb/Proto Bomb
+  - item: proto_bomb
     price: 150
   min: 0
   max: 0

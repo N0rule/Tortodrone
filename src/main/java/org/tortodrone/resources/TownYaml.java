@@ -23,10 +23,14 @@ public final class TownYaml {
         Map.entry("sprites","config preferredFood restrictDamageType skills"),Map.entry("stations","actor catalog cycle description group kind level model name perKnight preparer recipes title type"),
         Map.entry("variantTables","config root"));
     private TownYaml() { }
-    public static Map<String,Object> data(Path directory)throws IOException {return data(directory,false);}
+    public static Map<String,Object> data(Path directory)throws IOException {return data(directory,false,referenceItems(directory));}
     /** Offline upgrade only; the runtime parser rejects depot YAML. */
-    public static Map<String,Object> migrationData(Path directory)throws IOException {return data(directory,true);}
-    private static Map<String,Object> data(Path directory,boolean migration)throws IOException {
+    public static Map<String,Object> migrationData(Path directory)throws IOException {return data(directory,true,referenceItems(directory));}
+    private static ItemCatalog referenceItems(Path directory)throws IOException {
+        return Files.exists(directory.resolve("../_internal/item-bindings.json"))?ItemYaml.load(directory.resolve("../items").normalize()):null;
+    }
+    public static Map<String,Object> data(Path directory,ItemCatalog items)throws IOException {return data(directory,false,items);}
+    private static Map<String,Object> data(Path directory,boolean migration,ItemCatalog items)throws IOException {
         var result=new LinkedHashMap<String,Object>();result.put("format",1);
         Path nativeFile=directory.resolve("../_internal/town-definitions.json").normalize();
         var nativeData=Files.exists(nativeFile)?map(Json.parseCatalog(Files.readString(nativeFile)),"native Town definitions"):Map.<String,Object>of();
@@ -38,6 +42,7 @@ public final class TownYaml {
             for(String field:section.getValue()) {
                 if(Set.of("items","variantTables").contains(field)&&!yaml.containsKey(field)&&!nativeData.containsKey(field))throw new IOException("Missing native Town defaults for "+field+": "+nativeFile);
                 var values=list(yaml.getOrDefault(field,List.of()),path+": "+field);var ids=new HashSet<Object>();
+                if(items!=null)ItemReferences.town(field,values,items,false,path+" → "+field);
                 if(nativeData.containsKey(field)) {
                     var merged=new LinkedHashMap<String,Object>();for(Object raw:list(nativeData.get(field),"native "+field)){var row=map(raw,field);if(merged.putIfAbsent(text(row.get("config"),"config"),new LinkedHashMap<>(row))!=null)throw new IOException("Duplicate native "+field+" ID "+row.get("config"));}
                     var edits=new HashSet<String>();for(Object raw:values){var row=map(raw,field);String id=text(row.get("config"),"config");if(!edits.add(id))throw new IOException("Duplicate "+field+" ID "+id);var target=new LinkedHashMap<>(map(merged.getOrDefault(id,Map.of()),field));target.putAll(row);merged.put(id,target);}values=new ArrayList<>(merged.values());
@@ -88,6 +93,8 @@ public final class TownYaml {
         if(!depot&&integer(row.get("tokenCount"),where+" tokenCount")<0)throw new IOException(where+": tokenCount must be nonnegative");
     }
     public static void references(Map<String,Object> data,ItemCatalog items)throws IOException {
+        // Internal item-property inheritance also includes non-inventory definitions; only YAML edits resolve those keys.
+        for(var e:data.entrySet())if(!e.getKey().equals("items")&&e.getValue() instanceof List<?> rows)ItemReferences.town(e.getKey(),rows,items,false,"Town → "+e.getKey());
         var catalogs=new HashSet<String>();for(Object raw:list(data.get("catalogs"),"catalogs"))catalogs.add(text(map(raw,"catalog").get("config"),"catalog config"));
         var recipes=new HashSet<String>();for(Object raw:list(data.get("recipes"),"recipes"))recipes.add(text(map(raw,"recipe").get("config"),"recipe config"));
         for(Object raw:list(data.get("stations"),"stations")) {

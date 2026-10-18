@@ -1,2 +1,910 @@
-items: {
-  }
+items:
+  ancient_shell:
+    name: Ancient Shell
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  base_s0_eb56b63a41f6:
+    name: Base
+    category: Material
+    rarity: 0
+    stackable: true
+  beast_scale:
+    name: Beast Scale
+    category: Material
+    rarity: 1
+    stackable: true
+  binding_essence:
+    name: Binding Essence
+    category: Material
+    rarity: 4
+    stackable: true
+    locked: true
+  blast_powder:
+    name: Blast Powder
+    category: Material
+    rarity: 2
+    stackable: true
+  blaze_pepper:
+    name: Blaze Pepper
+    category: Material
+    rarity: 4
+    stackable: true
+  blighted_bone:
+    name: Blighted Bone
+    category: Material
+    rarity: 4
+    stackable: true
+  blue_shard:
+    name: Blue Shard
+    category: Material
+    rarity: 0
+    stackable: true
+  book_of_dark_rituals:
+    name: Book of Dark Rituals
+    category: Material
+    rarity: 5
+    stackable: true
+  bottomless_stocking:
+    name: Bottomless Stocking
+    category: Material
+    rarity: 4
+    stackable: true
+    locked: true
+  brimstone:
+    name: Brimstone
+    category: Material
+    rarity: 1
+    stackable: true
+  bronze_bolt:
+    name: Bronze Bolt
+    category: Material
+    rarity: 1
+    stackable: true
+  brute_core:
+    name: Brute Core
+    category: Material
+    rarity: 3
+    stackable: true
+  bushy_tail:
+    name: Bushy Tail
+    category: Material
+    rarity: 3
+    stackable: true
+  celestial_ore:
+    name: Celestial Ore
+    category: Material
+    rarity: 5
+    stackable: true
+  chroma_tear:
+    name: Chroma Tear
+    category: Material
+    rarity: 4
+    stackable: true
+  cooling_cell:
+    name: Cooling Cell
+    category: Material
+    rarity: 2
+    stackable: true
+  corrosive_acid:
+    name: Corrosive Acid
+    category: Material
+    rarity: 4
+    stackable: true
+  cosmic_dust:
+    name: Cosmic Dust
+    category: Material
+    rarity: 2
+    stackable: true
+  cosmic_mote:
+    name: Cosmic Mote
+    category: Material
+    rarity: 1
+    stackable: true
+  cosmic_orb:
+    name: Cosmic Orb
+    category: Material
+    rarity: 4
+    stackable: true
+  cosmic_star:
+    name: Cosmic Star
+    category: Material
+    rarity: 5
+    stackable: true
+  cosmic_stone:
+    name: Cosmic Stone
+    category: Material
+    rarity: 3
+    stackable: true
+  crest_of_ur:
+    name: Crest of Ur
+    category: Material
+    rarity: 5
+    stackable: true
+  crimsonite:
+    name: Crimsonite
+    category: Mineral
+    rarity: 0
+    stackable: true
+    locked: true
+  crimsonite_deposit:
+    name: Small Crimsonite Deposit
+    category: MetaMineral
+    rarity: 1
+  crimsonite_deposit_1:
+    name: Small Crimsonite Deposit
+    category: MetaMineral
+    rarity: 1
+  crimsonite_deposit_2:
+    name: Medium Crimsonite Deposit
+    category: MetaMineral
+    rarity: 2
+  crimsonite_deposit_3:
+    name: Large Crimsonite Deposit
+    category: MetaMineral
+    rarity: 3
+  crimsonite_deposit_4:
+    name: Shiny Crimsonite Deposit
+    category: MetaMineral
+    rarity: 4
+  critter_carapace:
+    name: Critter Carapace
+    category: Material
+    rarity: 2
+    stackable: true
+  dark_ember:
+    name: Dark Ember
+    category: Material
+    rarity: 5
+    stackable: true
+  dark_matter:
+    name: Dark Matter
+    category: Mineral
+    rarity: 0
+    stackable: true
+    locked: true
+  dark_matter_deposit:
+    name: Small Dark Matter Deposit
+    category: MetaMineral
+    rarity: 1
+  dark_matter_deposit_1:
+    name: Small Dark Matter Deposit
+    category: MetaMineral
+    rarity: 1
+  dark_matter_deposit_2:
+    name: Medium Dark Matter Deposit
+    category: MetaMineral
+    rarity: 2
+  dark_matter_deposit_3:
+    name: Large Dark Matter Deposit
+    category: MetaMineral
+    rarity: 3
+  dark_matter_deposit_4:
+    name: Shiny Dark Matter Deposit
+    category: MetaMineral
+    rarity: 4
+  dark_shard:
+    name: Dark Shard
+    category: Material
+    rarity: 0
+    stackable: true
+  dead_gold:
+    name: Dead Gold
+    category: Material
+    rarity: 3
+    stackable: true
+  divine_dust:
+    name: Divine Dust
+    category: Material
+    rarity: 2
+    stackable: true
+  divine_mote:
+    name: Divine Mote
+    category: Material
+    rarity: 1
+    stackable: true
+  divine_orb:
+    name: Divine Orb
+    category: Material
+    rarity: 4
+    stackable: true
+  divine_star:
+    name: Divine Star
+    category: Material
+    rarity: 5
+    stackable: true
+  divine_stone:
+    name: Divine Stone
+    category: Material
+    rarity: 3
+    stackable: true
+  dragon_scale:
+    name: Dragon Scale
+    category: Material
+    rarity: 5
+    stackable: true
+  drake_scale:
+    name: Drake Scale
+    category: Material
+    rarity: 3
+    stackable: true
+  driftwood:
+    name: Driftwood
+    category: Material
+    rarity: 2
+    stackable: true
+  ecto_drop:
+    name: Ecto Drop
+    category: Material
+    rarity: 1
+    stackable: true
+  enamorock:
+    name: Enamorock
+    category: Material
+    rarity: 1
+    stackable: true
+  everfrost:
+    name: Everfrost
+    category: Material
+    rarity: 5
+    stackable: true
+  fiend_glyph_a:
+    name: Fiendish Amu Glyph
+    category: Material
+    rarity: 3
+    stackable: true
+  fiend_glyph_b:
+    name: Fiendish Ur Glyph
+    category: Material
+    rarity: 3
+    stackable: true
+  fiend_glyph_c:
+    name: Fiendish Tor Glyph
+    category: Material
+    rarity: 3
+    stackable: true
+  fiend_glyph_d:
+    name: Fiendish Nok Glyph
+    category: Material
+    rarity: 3
+    stackable: true
+  fiend_glyph_e:
+    name: Fiendish Sol Glyph
+    category: Material
+    rarity: 3
+    stackable: true
+  fiend_portal_key:
+    name: Fiendish ID Card
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  fine_fabric:
+    name: Fine Fabric
+    category: Material
+    rarity: 3
+    stackable: true
+  flame_soul:
+    name: Flame Soul
+    category: Material
+    rarity: 5
+    stackable: true
+  forbidden_fruit:
+    name: Forbidden Fruit
+    category: Material
+    rarity: 2
+    stackable: true
+  force_dynamo:
+    name: Force Dynamo
+    category: Material
+    rarity: 3
+    stackable: true
+  frayed_fabric:
+    name: Frayed Fabric
+    category: Material
+    rarity: 2
+    stackable: true
+  frost_gel:
+    name: Frost Gel
+    category: Material
+    rarity: 2
+    stackable: true
+  fuel_canister:
+    name: Fuel Canister
+    category: Material
+    rarity: 2
+    stackable: true
+  gel_core:
+    name: Gel Core
+    category: Material
+    rarity: 2
+    stackable: true
+  gel_drop:
+    name: Gel Drop
+    category: Material
+    rarity: 1
+    stackable: true
+  ghost_bell:
+    name: Ghost Bell
+    category: Material
+    rarity: 4
+    stackable: true
+  grave_soil:
+    name: Grave Soil
+    category: Material
+    rarity: 2
+    stackable: true
+  green_shard:
+    name: Green Shard
+    category: Material
+    rarity: 0
+    stackable: true
+  gremlin_gizmo:
+    name: Gremlin Gizmo
+    category: Material
+    rarity: 2
+    stackable: true
+  gremlonium:
+    name: Gremlonium
+    category: Material
+    rarity: 5
+    stackable: true
+  hailstone:
+    name: Hailstone
+    category: Material
+    rarity: 3
+    stackable: true
+  heavy_gear:
+    name: Heavy Gear
+    category: Material
+    rarity: 4
+    stackable: true
+  indestructible_giftwrap:
+    name: Indestructible Giftwrap
+    category: Material
+    rarity: 5
+    stackable: true
+    locked: true
+  iron_gear:
+    name: Iron Gear
+    category: Material
+    rarity: 2
+    stackable: true
+  ironwood:
+    name: Ironwood
+    category: Material
+    rarity: 4
+    stackable: true
+  jelly_glue:
+    name: Jelly Glue
+    category: Material
+    rarity: 5
+    stackable: true
+  kat_tribe_fetish:
+    name: Kat Tribe Fetish
+    category: Material
+    rarity: 4
+    stackable: true
+  light_shard:
+    name: Light Shard
+    category: Material
+    rarity: 0
+    stackable: true
+  luminite:
+    name: Luminite
+    category: Mineral
+    rarity: 0
+    stackable: true
+    locked: true
+  luminite_deposit:
+    name: Small Luminite Deposit
+    category: MetaMineral
+    rarity: 1
+  luminite_deposit_1:
+    name: Small Luminite Deposit
+    category: MetaMineral
+    rarity: 1
+  luminite_deposit_2:
+    name: Medium Luminite Deposit
+    category: MetaMineral
+    rarity: 2
+  luminite_deposit_3:
+    name: Large Luminite Deposit
+    category: MetaMineral
+    rarity: 3
+  luminite_deposit_4:
+    name: Shiny Luminite Deposit
+    category: MetaMineral
+    rarity: 4
+  lump_of_coal:
+    name: Lump of Coal
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  maiden_s_tear:
+    name: Maiden's Tear
+    category: Material
+    rarity: 5
+    stackable: true
+  meteor_mote:
+    name: Meteor Mote
+    category: Material
+    rarity: 4
+    stackable: true
+  miracloth:
+    name: Miracloth
+    category: Material
+    rarity: 4
+    stackable: true
+  mod_calibrator:
+    name: Mod Calibrator
+    category: Material
+    rarity: 4
+    stackable: true
+  monster_bone:
+    name: Monster Bone
+    category: Material
+    rarity: 2
+    stackable: true
+  monster_spike_0:
+    name: Monster Spike 0
+    category: Material
+    rarity: 0
+    stackable: true
+  monster_spike_1:
+    name: Monster Spike 1
+    category: Material
+    rarity: 1
+    stackable: true
+  monster_spike_2:
+    name: Monster Spike 2
+    category: Material
+    rarity: 2
+    stackable: true
+  monster_spike_3:
+    name: Monster Spike 3
+    category: Material
+    rarity: 3
+    stackable: true
+  monster_spike_4:
+    name: Monster Spike 4
+    category: Material
+    rarity: 4
+    stackable: true
+  monster_spike_5:
+    name: Monster Spike 5
+    category: Material
+    rarity: 5
+    stackable: true
+  moonstone:
+    name: Moonstone
+    category: Mineral
+    rarity: 0
+    stackable: true
+    locked: true
+  moonstone_deposit:
+    name: Small Moonstone Deposit
+    category: MetaMineral
+    rarity: 1
+  moonstone_deposit_1:
+    name: Small Moonstone Deposit
+    category: MetaMineral
+    rarity: 1
+  moonstone_deposit_2:
+    name: Medium Moonstone Deposit
+    category: MetaMineral
+    rarity: 2
+  moonstone_deposit_3:
+    name: Large Moonstone Deposit
+    category: MetaMineral
+    rarity: 3
+  moonstone_deposit_4:
+    name: Shiny Moonstone Deposit
+    category: MetaMineral
+    rarity: 4
+  mug_of_misery:
+    name: Mug of Misery
+    category: Material
+    rarity: 4
+    stackable: true
+  nightmare_mane:
+    name: Nightmare Mane
+    category: Material
+    rarity: 5
+    stackable: true
+  nightshade:
+    name: Nightshade
+    category: Material
+    rarity: 2
+    stackable: true
+  obsidian_shard:
+    name: Obsidian Shard
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  owlite_feather:
+    name: Owlite Feather
+    category: Material
+    rarity: 2
+    stackable: true
+  perfect_snowball:
+    name: Perfect Snowball
+    category: Material
+    rarity: 4
+    stackable: true
+  perplexing_element:
+    name: Perplexing Element
+    category: Material
+    rarity: 5
+    stackable: true
+    locked: true
+  phial_of_phear:
+    name: Phial of Phear
+    category: Material
+    rarity: 3
+    stackable: true
+  philoso_feather:
+    name: Philoso Feather
+    category: Material
+    rarity: 5
+    stackable: true
+  plague_essence:
+    name: Plague Essence
+    category: Material
+    rarity: 5
+    stackable: true
+  plasma_cell:
+    name: Plasma Cell
+    category: Material
+    rarity: 5
+    stackable: true
+  power_cell:
+    name: Power Cell
+    category: Material
+    rarity: 2
+    stackable: true
+  power_dust:
+    name: Power Dust
+    category: Material
+    rarity: 2
+    stackable: true
+  power_mote:
+    name: Power Mote
+    category: Material
+    rarity: 1
+    stackable: true
+  power_orb:
+    name: Power Orb
+    category: Material
+    rarity: 4
+    stackable: true
+  power_star:
+    name: Power Star
+    category: Material
+    rarity: 5
+    stackable: true
+  power_stone:
+    name: Power Stone
+    category: Material
+    rarity: 3
+    stackable: true
+  primal_ore:
+    name: Primal Ore
+    category: Material
+    rarity: 5
+    stackable: true
+  punkin_sprout:
+    name: Punkin Sprout
+    category: Material
+    rarity: 4
+    stackable: true
+  razor_ribbon:
+    name: Razor Ribbon
+    category: Material
+    rarity: 4
+    stackable: true
+    locked: true
+  reaper_rib:
+    name: Reaper Rib
+    category: Material
+    rarity: 5
+    stackable: true
+  red_shard:
+    name: Red Shard
+    category: Material
+    rarity: 0
+    stackable: true
+  redwood:
+    name: Redwood
+    category: Material
+    rarity: 3
+    stackable: true
+  reset_star:
+    name: Reset Star
+    category: Material
+    rarity: 5
+    stackable: true
+  rock_salt:
+    name: Rock Salt
+    category: Material
+    rarity: 3
+    stackable: true
+  rocket_sprocket:
+    name: Rocket Sprocket
+    category: Material
+    rarity: 3
+    stackable: true
+  rocky_core:
+    name: Rocky Core
+    category: Material
+    rarity: 4
+    stackable: true
+  royal_core:
+    name: Royal Core
+    category: Material
+    rarity: 5
+    stackable: true
+  royal_skewer:
+    name: Royal Skewer
+    category: Material
+    rarity: 5
+    stackable: true
+  schemer_scrap:
+    name: Schemer Scrap
+    category: Material
+    rarity: 5
+    stackable: true
+  scrap_metal:
+    name: Scrap Metal
+    category: Material
+    rarity: 1
+    stackable: true
+  seerus_fragment_1:
+    name: Fractured Seerus Mask Fragment
+    category: Material
+    rarity: 1
+    stackable: true
+    locked: true
+  seerus_fragment_2:
+    name: Flawed Seerus Mask Fragment
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  seerus_fragment_3:
+    name: Perfect Seerus Mask Fragment
+    category: Material
+    rarity: 5
+    stackable: true
+    locked: true
+  shadow_dust:
+    name: Shadow Dust
+    category: Material
+    rarity: 2
+    stackable: true
+  shadow_mote:
+    name: Shadow Mote
+    category: Material
+    rarity: 1
+    stackable: true
+  shadow_orb:
+    name: Shadow Orb
+    category: Material
+    rarity: 4
+    stackable: true
+  shadow_star:
+    name: Shadow Star
+    category: Material
+    rarity: 5
+    stackable: true
+  shadow_steel:
+    name: Shadow Steel
+    category: Material
+    rarity: 5
+    stackable: true
+  shadow_stone:
+    name: Shadow Stone
+    category: Material
+    rarity: 3
+    stackable: true
+  sharp_fang:
+    name: Sharp Fang
+    category: Material
+    rarity: 1
+    stackable: true
+  silver_coil:
+    name: Silver Coil
+    category: Material
+    rarity: 4
+    stackable: true
+  silverweave:
+    name: Silverweave
+    category: Material
+    rarity: 5
+    stackable: true
+  sinful_brew:
+    name: Sinful Brew
+    category: Material
+    rarity: 2
+    stackable: true
+  snarbostuffing:
+    name: Snarbostuffing
+    category: Material
+    rarity: 5
+    stackable: true
+  soul_dust:
+    name: Soul Dust
+    category: Material
+    rarity: 3
+    stackable: true
+  spark_plug:
+    name: Spark Plug
+    category: Material
+    rarity: 1
+    stackable: true
+  spoiled_treat:
+    name: Spoiled Treat
+    category: Material
+    rarity: 3
+    stackable: true
+    locked: true
+  static_clinger:
+    name: Static Clinger
+    category: Material
+    rarity: 2
+    stackable: true
+  storm_chaser:
+    name: Storm Chaser
+    category: Material
+    rarity: 5
+    stackable: true
+  sun_silver:
+    name: Sun Silver
+    category: Material
+    rarity: 5
+    stackable: true
+  super_food:
+    name: Super Food
+    category: Material
+    rarity: 5
+    stackable: true
+  supply_pack_compact:
+    name: Compact Supply Pack
+    category: Material
+    rarity: 1
+    stackable: true
+  supply_pack_deluxe:
+    name: Deluxe Supply Pack
+    category: Material
+    rarity: 5
+    stackable: true
+  supply_pack_standard:
+    name: Standard Supply Pack
+    category: Material
+    rarity: 3
+    stackable: true
+  swordstone:
+    name: Swordstone
+    category: Material
+    rarity: 2
+    stackable: true
+  thunderball:
+    name: Thunderball
+    category: Material
+    rarity: 4
+    stackable: true
+  torchstone:
+    name: Torchstone
+    category: Material
+    rarity: 3
+    stackable: true
+  toxic_core:
+    name: Toxic Core
+    category: Material
+    rarity: 3
+    stackable: true
+  trojan_horseshoe:
+    name: Trojan Horseshoe
+    category: Material
+    rarity: 4
+    stackable: true
+  unstable_core:
+    name: Unstable Core
+    category: Material
+    rarity: 3
+    stackable: true
+  valestone:
+    name: Valestone
+    category: Mineral
+    rarity: 0
+    stackable: true
+    locked: true
+  valestone_deposit:
+    name: Small Valestone Deposit
+    category: MetaMineral
+    rarity: 1
+  valestone_deposit_1:
+    name: Small Valestone Deposit
+    category: MetaMineral
+    rarity: 1
+  valestone_deposit_2:
+    name: Medium Valestone Deposit
+    category: MetaMineral
+    rarity: 2
+  valestone_deposit_3:
+    name: Large Valestone Deposit
+    category: MetaMineral
+    rarity: 3
+  valestone_deposit_4:
+    name: Shiny Valestone Deposit
+    category: MetaMineral
+    rarity: 4
+  vile_seal:
+    name: Vile Seal
+    category: Material
+    rarity: 1
+    stackable: true
+  volcanic_iron:
+    name: Volcanic Iron
+    category: Material
+    rarity: 5
+    stackable: true
+  volt_oil:
+    name: Volt Oil
+    category: Material
+    rarity: 3
+    stackable: true
+  warp_dust:
+    name: Warp Dust
+    category: Material
+    rarity: 4
+    stackable: true
+  waste_module:
+    name: Waste Module
+    category: Material
+    rarity: 2
+    stackable: true
+  wicked_idol:
+    name: Wicked Idol
+    category: Material
+    rarity: 3
+    stackable: true
+  wicked_whisker:
+    name: Wicked Whisker
+    category: Material
+    rarity: 5
+    stackable: true
+    locked: true
+  wild_dust:
+    name: Wild Dust
+    category: Material
+    rarity: 2
+    stackable: true
+  wild_mote:
+    name: Wild Mote
+    category: Material
+    rarity: 1
+    stackable: true
+  wild_orb:
+    name: Wild Orb
+    category: Material
+    rarity: 4
+    stackable: true
+  wild_star:
+    name: Wild Star
+    category: Material
+    rarity: 5
+    stackable: true
+  wild_stone:
+    name: Wild Stone
+    category: Material
+    rarity: 3
+    stackable: true
+  zee_core:
+    name: Zee Core
+    category: Material
+    rarity: 3
+    stackable: true

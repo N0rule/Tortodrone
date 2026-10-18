@@ -45,40 +45,22 @@ final class UnifiedExport {
         write(content.resolve("shared/combat.yml"),Map.of("properties",group(combat)));
         write(content.resolve("shared/trap-cycles.yml"),Map.of("cycles",groupCycles(cycles)));write(content.resolve("shared/statuses.yml"),Map.of("properties",statuses));
         ContentPresentation.compact(content);
+        var exportedItems=ItemYaml.load(content.resolve("items"));
+        ItemReferences.exportTown(content.resolve("town"),exportedItems);
+        ItemReferences.exportGear(content,exportedItems);
         var config=new LinkedHashMap<String,Object>();config.put("server-ip",settings.bind());config.put("server-port",settings.port());config.put("max-clients",settings.maxClients());config.put("log-mode",settings.logMode().name().toLowerCase(Locale.ROOT));config.put("log-max-mib",settings.logMaxMiB());config.put("log-retention",settings.logRetention());config.put("startup-map",names.get(registry.scenes().entry().id()));
         write(target.resolve("config/server.yml"),config);write(target.resolve("config/combat.yml"),Map.of("dodgeCooldownMs",registry.weapons().dodgeCooldown()));
         for(var resource:registry.resources().entrySet())report.add("Converted "+resource.getKey()+" from "+resource.getValue().pack()+" / "+resource.getValue().path()+" sha256="+resource.getValue().sha256());
         Files.writeString(target.resolve("migration-report.txt"),"Validated source snapshot; original files and player data remain unchanged.\n"+String.join("\n",report)+"\n",StandardOpenOption.CREATE_NEW);
     }
     private void exportItems(ContentRegistry registry,Path content)throws IOException {
-        var root=map(Json.parse(Files.readString(registry.resources().get("items").path())),"items");
-        var categories=new LinkedHashMap<String,Map<String,Object>>();for(String name:ItemYaml.CATEGORIES)categories.put(name,new LinkedHashMap<>());
-        var discovery=new TreeMap<String,Object>();
-        var arguments=new TreeMap<String,Object>();var equipment=new HashMap<String,EquipmentCatalog.Entry>();for(var e:registry.equipment().entries())equipment.put(e.config(),e);
-        for(Object raw:list(root.get("items"),"items")) {
-            var row=new LinkedHashMap<>(map(raw,"item"));String config=text(row.remove("config"),"config"),type=text(row.get("type"),"type");
-            Object args=row.remove("modelArguments");if(args instanceof Map<?,?> m&&!m.isEmpty())arguments.put(config,args);
-            // v1 legacy catalogs are normalized through their verified typed definitions.
-            var definition=registry.items().find(config);
-            if(game!=null&&!definition.nameKey().isBlank()) {String name=resolve("item",definition.nameKey());if(!name.equals(definition.nameKey())&&!name.contains("{")&&!name.contains("%")&&!name.isBlank())discovery.put(config,name);}row.put("locked",definition.locked());row.put("variant",definition.variant().name());row.put("seed",definition.seed());
-            for(var d:Map.<String,Object>of("nameKey","","rarity",-1,"stackable",false,"bindOnEquip",false,"permanent",false,"locked",false,"variant","ITEM").entrySet())if(d.getValue().equals(row.get(d.getKey())))row.remove(d.getKey());
-            row.values().removeIf(Objects::isNull);
-            var weapon=registry.weapons().find(config);if(weapon!=null)row.put("combat",weapon(weapon));
-            var shield=registry.weapons().findShield(config);if(shield!=null) {var s=new LinkedHashMap<String,Object>();s.put("health",shield.health());s.put("regenTimeMs",shield.regenTime());s.put("regenDelayMs",shield.regenDelay());s.put("defendingSpeedModifier",shield.defendingSpeed());s.put("bashHealthFraction",shield.bashHealthPct());s.put("breakDelayMs",shield.breakDelay());if(shield.bash()!=null)s.put("bash",attack(shield.bash()));row.put("shield",s);}
-            var gear=equipment.get(config);
-            if(gear!=null) {var mods=new LinkedHashMap<String,Object>();for(var e:gear.byWeaponClass().entrySet()) {var v=e.getValue();var fields=new LinkedHashMap<String,Object>();if(v.chargeTime()!=0)fields.put("chargeTime",v.chargeTime());if(v.speed()!=0)fields.put("speed",v.speed());if(v.attackSpeed()!=0)fields.put("attackSpeed",v.attackSpeed());if(v.defendingSpeed()!=0)fields.put("defendingSpeed",v.defendingSpeed());if(!fields.isEmpty())mods.put(e.getKey().name(),fields);}row.put("modifiers",mods);}
-            String category=weapon!=null||Set.of("Sword","Gun","Handgun","SwingingHandgun","Bomb","BlastNetworkBomb").contains(type)?"weapons":type.contains("Costume")?"costumes":type.contains("Accessory")||config.startsWith("Accessory/")?"accessories":Set.of("Helm","Armor","Shield","Trinket").contains(type)?"gear":Set.of("Material","Craft").contains(type)?"materials":Set.of("Consumable","Usable","Capsule","Health","Energy").contains(type)?"consumables":"misc";
-            categories.get(category).put(config,row);
+        var names=new TreeMap<String,String>();
+        for(var e:registry.items().entries()) {
+            String name=registry.items().displayName(e);
+            if(game!=null&&!e.nameKey().isBlank()) {String resolved=resolve("item",e.nameKey());if(!resolved.equals(e.nameKey())&&!resolved.contains("{")&&!resolved.contains("%")&&!resolved.isBlank())name=resolved;}
+            names.put(e.config(),name);
         }
-        for(var c:categories.entrySet())write(content.resolve("items/"+c.getKey()+".yml"),Map.of("items",c.getValue()));
-        Files.writeString(content.resolve("_internal/item-names.json"),Json.stringify(discovery),StandardOpenOption.CREATE_NEW);
-        Files.writeString(content.resolve("_internal/item-arguments.json"),Json.stringify(arguments),StandardOpenOption.CREATE_NEW);
-    }
-    private static Map<String,Object> weapon(WeaponCatalog.Weapon w) {
-        var out=new LinkedHashMap<String,Object>();out.put("chargeTimeMs",w.chargeTime());out.put("maxChain",w.maxChain());out.put("chainCooldownMs",w.chainCooldown());if(w.cycle())out.put("cycle",true);if(w.blended())out.put("blended",true);out.put("attackMovementSpeed",w.attackingSpeed());out.put("chargeMovementSpeed",w.chargingSpeed());out.put("attacks",w.attacks().stream().map(UnifiedExport::attack).toList());if(w.incomplete()!=null)out.put("incomplete",attack(w.incomplete()));if(w.charged()!=null)out.put("charged",attack(w.charged()));if(w.cooldown()!=null)out.put("cooldown",attack(w.cooldown()));return out;
-    }
-    private static Map<String,Object> attack(WeaponCatalog.Attack a) {
-        var out=new LinkedHashMap<String,Object>();out.put("landMs",a.land());out.put("rearmMs",a.rearm());out.put("clearMs",a.clear());if(a.blended())out.put("blended",true);if(a.impulseDelay()!=-1){out.put("impulseDelayMs",a.impulseDelay());out.put("impulseDurationMs",a.impulseDuration());out.put("impulseX",a.impulseX());out.put("impulseY",a.impulseY());}return out;
+        ReadableItemExport.write(new ItemYaml.Definitions(registry.items().withDisplayNames(names),registry.weapons(),registry.equipment()),content);
     }
     public void exportMap(Path source,Path target,Map<Integer,String> names,Map<String,Object> cycles,Map<String,Object> statuses,Map<String,Object> combat)throws IOException {
         var supported=Set.of("scene.dat","walkability.gz","static-collision.properties","map.properties","content.properties","portals.properties","import-source-report.txt");

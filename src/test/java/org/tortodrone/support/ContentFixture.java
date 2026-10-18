@@ -25,11 +25,11 @@ public final class ContentFixture {
         WeaponCatalog.write(target.resolve("combat/weapons.tsv"),snapshot.weapons().weapons(),snapshot.weapons().shields(),snapshot.weapons().dodgeCooldown());
         EquipmentCatalog.write(target.resolve("combat/equipment.tsv"),snapshot.equipment().entries());
         Files.copy(Path.of("content/_internal/fires.json"),target.resolve("combat/fires.json"));Files.copy(Path.of("content/_internal/pet-fires.json"),target.resolve("town/pet-fires.json"));
-        Files.createDirectories(target.resolve("town"));Files.writeString(target.resolve("town/catalog.json"),Json.stringify(TownYaml.data(Path.of("content/town"))));
+        Files.createDirectories(target.resolve("town"));Files.writeString(target.resolve("town/catalog.json"),Json.stringify(TownYaml.data(Path.of("content/town"),snapshot.items())));
         var resources=new TreeMap<String,String>();resources.put("entry","maps/catalog.properties");resources.put("items","items/catalog.json");resources.put("weapons","combat/weapons.tsv");resources.put("equipment","combat/equipment.tsv");resources.put("fires","combat/fires.json");resources.put("pet-fires","town/pet-fires.json");resources.put("town","town/catalog.json");
         for(var folder:MapYaml.folders(Path.of("content/maps")).entrySet()) {
             String name=folder.getValue().getFileName().toString();Path out=target.resolve("maps/"+name);Files.createDirectories(out);
-            var prepared=MapYaml.prepare(folder.getValue(),Path.of("content/shared"));
+            var prepared=MapYaml.prepare(folder.getValue(),Path.of("content/shared"),snapshot.items());
             for(String file:List.of("scene.dat","walkability.gz","static-collision.properties"))if(Files.exists(prepared.nativeDirectory().resolve(file)))Files.copy(prepared.nativeDirectory().resolve(file),out.resolve(file));
             store(out.resolve("content.properties"),prepared.content());store(out.resolve("portals.properties"),prepared.portals());
             var descriptor=prepared.descriptor();descriptor.setProperty("content-sha256",ContentFiles.digest(out.resolve("content.properties")));store(out.resolve("map.properties"),descriptor);resources.put("scene."+folder.getKey(),"maps/"+name);

@@ -29661,2860 +29661,2860 @@ accessories:
   location: ARMOR_AURA
   remove: false
 blockers:
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Blue
+- config: captain_coat_booched_blue
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Divine
+- config: captain_coat_booched_divine
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Gold
+- config: captain_coat_booched_gold
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Green
+- config: captain_coat_booched_green
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Heavy
+- config: captain_coat_booched_heavy
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Pink
+- config: captain_coat_booched_pink
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Purple
+- config: captain_coat_booched_purple
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Red
+- config: captain_coat_booched_red
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Shadow
+- config: captain_coat_booched_shadow
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Booched, Volcanic
+- config: captain_coat_booched_volcanic
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Blue
+- config: captain_coat_pegleg_blue
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Divine
+- config: captain_coat_pegleg_divine
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Gold
+- config: captain_coat_pegleg_gold
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Green
+- config: captain_coat_pegleg_green
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Heavy
+- config: captain_coat_pegleg_heavy
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Pink
+- config: captain_coat_pegleg_pink
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Purple
+- config: captain_coat_pegleg_purple
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Red
+- config: captain_coat_pegleg_red
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Shadow
+- config: captain_coat_pegleg_shadow
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Captain Coat Pegleg, Volcanic
+- config: captain_coat_pegleg_volcanic
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Parts/Captain Coat Booched, Base
+- config: captain_coat_booched_base
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Captain Coat/Parts/Captain Coat Pegleg, Base
+- config: captain_coat_pegleg_base
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Frenzy Plate Mail
+- config: frenzy_plate_mail
   slots:
   - ARMOR_FRONT
-- config: Costume/Armor/Kat Suit/Kat Suit, Dark
+- config: kat_suit_dark
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Kat Suit/Kat Suit, Red
+- config: kat_suit_red
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Kat Suit/Kat Suit, Tan
+- config: kat_suit_tan
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Kat Suit/Kat Suit, White
+- config: kat_suit_white
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Blue
+- config: mechaknight_suit_blue
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Divine
+- config: mechaknight_suit_divine
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Glacial
+- config: mechaknight_suit_glacial
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Gold
+- config: mechaknight_suit_gold
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Green
+- config: mechaknight_suit_green
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Heavy
+- config: mechaknight_suit_heavy
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Pink
+- config: mechaknight_suit_pink
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Purple
+- config: mechaknight_suit_purple
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Red
+- config: mechaknight_suit_red
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Shadow
+- config: mechaknight_suit_shadow
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Mechaknight Suit, Volcanic
+- config: mechaknight_suit_volcanic
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/MechaKnight Suit/Parts/MechaKnight Suit, Base
+- config: mechaknight_suit_base
   slots:
   - ARMOR_ANKLE
-- config: Costume/Armor/Plasmatech Demo Suit
+- config: plasmatech_demo_suit
   slots:
   - ARMOR_BACK
-- config: Costume/Armor/Rageous Plate Mail
+- config: rageous_plate_mail
   slots:
   - ARMOR_FRONT
-- config: Costume/Armor/Stellar Sentinel Suit
+- config: stellar_sentinel_suit
   slots:
   - ARMOR_BACK
-- config: Costume/Armor/Thunderous Plate Mail
+- config: thunderous_plate_mail
   slots:
   - ARMOR_FRONT
-- config: Costume/Armor/Wizard/Magister Robe, Cool
+- config: magister_robe_cool
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Divine
+- config: magister_robe_divine
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Dusky
+- config: magister_robe_dusky
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Fancy
+- config: magister_robe_fancy
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Heavy
+- config: magister_robe_heavy
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Military
+- config: magister_robe_military
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Prismatic
+- config: magister_robe_prismatic
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Regal
+- config: magister_robe_regal
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Shadow
+- config: magister_robe_shadow
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Toasty
+- config: magister_robe_toasty
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Magister Robe, Volcanic
+- config: magister_robe_volcanic
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Parts/Magister Robe, Base
+- config: magister_robe_base
   slots:
   - ARMOR_REAR
-- config: Costume/Armor/Wizard/Parts/Magister Robe, Recolor
+- config: magister_robe_recolor
   slots:
   - ARMOR_REAR
-- config: Costume/Helm/Aero Helm/Aero Helm, Blue
+- config: aero_helm_blue
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Divine
+- config: aero_helm_divine
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Gold
+- config: aero_helm_gold
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Green
+- config: aero_helm_green
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Heavy
+- config: aero_helm_heavy
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Pink
+- config: aero_helm_pink
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Purple
+- config: aero_helm_purple
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Red
+- config: aero_helm_red
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Shadow
+- config: aero_helm_shadow
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, ShadowTech Blue
+- config: aero_helm_shadowtech_blue
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, ShadowTech Green
+- config: aero_helm_shadowtech_green
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, ShadowTech Orange
+- config: aero_helm_shadowtech_orange
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, ShadowTech Pink
+- config: aero_helm_shadowtech_pink
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Azure
+- config: aero_helm_tech_azure
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Blue
+- config: aero_helm_tech_blue
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Green
+- config: aero_helm_tech_green
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Orange
+- config: aero_helm_tech_orange
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Pink
+- config: aero_helm_tech_pink
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Red
+- config: aero_helm_tech_red
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Violet
+- config: aero_helm_tech_violet
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Tech Yellow
+- config: aero_helm_tech_yellow
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Aero Helm, Volcanic
+- config: aero_helm_volcanic
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Parts/Aero Helm, Base
+- config: aero_helm_base
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Aero Helm/Parts/Aero Helm, ShadowBase
+- config: aero_helm_shadowbase
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Blue
+- config: angelic_helmet_blue
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Divine
+- config: angelic_helmet_divine
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Gold
+- config: angelic_helmet_gold
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Green
+- config: angelic_helmet_green
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Heavy
+- config: angelic_helmet_heavy
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Pink
+- config: angelic_helmet_pink
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Purple
+- config: angelic_helmet_purple
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Red
+- config: angelic_helmet_red
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Restored
+- config: angelic_helmet_restored
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Shadow
+- config: angelic_helmet_shadow
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Angelic Helmet, Volcanic
+- config: angelic_helmet_volcanic
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Angelic Helmet/Parts/Angelic Helmet, Base
+- config: angelic_helmet_base
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Animal Slime/Bat Slime, Autumn
+- config: bat_slime_autumn
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Cool
+- config: bat_slime_cool
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Divine
+- config: bat_slime_divine
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Dusky
+- config: bat_slime_dusky
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Fancy
+- config: bat_slime_fancy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Frosty
+- config: bat_slime_frosty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Heavy
+- config: bat_slime_heavy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Late Harvest
+- config: bat_slime_late_harvest
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Military
+- config: bat_slime_military
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Prismatic
+- config: bat_slime_prismatic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Regal
+- config: bat_slime_regal
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Shadow
+- config: bat_slime_shadow
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Toasty
+- config: bat_slime_toasty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Bat Slime, Volcanic
+- config: bat_slime_volcanic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Autumn
+- config: crow_slime_autumn
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Cool
+- config: crow_slime_cool
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Divine
+- config: crow_slime_divine
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Dusky
+- config: crow_slime_dusky
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Fancy
+- config: crow_slime_fancy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Frosty
+- config: crow_slime_frosty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Heavy
+- config: crow_slime_heavy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Late Harvest
+- config: crow_slime_late_harvest
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Military
+- config: crow_slime_military
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Prismatic
+- config: crow_slime_prismatic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Regal
+- config: crow_slime_regal
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Shadow
+- config: crow_slime_shadow
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Toasty
+- config: crow_slime_toasty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Crow Slime, Volcanic
+- config: crow_slime_volcanic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Autumn
+- config: fox_slime_autumn
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Cool
+- config: fox_slime_cool
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Divine
+- config: fox_slime_divine
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Dusky
+- config: fox_slime_dusky
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Fancy
+- config: fox_slime_fancy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Frosty
+- config: fox_slime_frosty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Heavy
+- config: fox_slime_heavy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Late Harvest
+- config: fox_slime_late_harvest
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Military
+- config: fox_slime_military
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Prismatic
+- config: fox_slime_prismatic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Regal
+- config: fox_slime_regal
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Shadow
+- config: fox_slime_shadow
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Toasty
+- config: fox_slime_toasty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Fox Slime, Volcanic
+- config: fox_slime_volcanic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Bat Slime, Base
+- config: bat_slime_base
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Bat Slime, Recolor
+- config: bat_slime_recolor
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Crow Slime, Base
+- config: crow_slime_base
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Crow Slime, Recolor
+- config: crow_slime_recolor
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Fox Slime, Base
+- config: fox_slime_base
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Fox Slime, Recolor
+- config: fox_slime_recolor
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Rabbit Slime, Base
+- config: rabbit_slime_base
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Parts/Rabbit Slime, Recolor
+- config: rabbit_slime_recolor
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Autumn
+- config: rabbit_slime_autumn
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Cool
+- config: rabbit_slime_cool
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Divine
+- config: rabbit_slime_divine
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Dusky
+- config: rabbit_slime_dusky
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Fancy
+- config: rabbit_slime_fancy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Frosty
+- config: rabbit_slime_frosty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Grey
+- config: rabbit_slime_grey
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Heavy
+- config: rabbit_slime_heavy
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Hunter
+- config: rabbit_slime_hunter
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Late Harvest
+- config: rabbit_slime_late_harvest
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Military
+- config: rabbit_slime_military
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Prismatic
+- config: rabbit_slime_prismatic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Regal
+- config: rabbit_slime_regal
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Shadow
+- config: rabbit_slime_shadow
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Toasty
+- config: rabbit_slime_toasty
   slots:
   - HELM_TOP
-- config: Costume/Helm/Animal Slime/Rabbit Slime, Volcanic
+- config: rabbit_slime_volcanic
   slots:
   - HELM_TOP
-- config: Costume/Helm/Authentic Frankenzom Mask
+- config: authentic_frankenzom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Authentic Gourdling Mask
+- config: authentic_gourdling_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Authentic Howlitzer Mask
+- config: authentic_howlitzer_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Authentic Phantom Mask
+- config: authentic_phantom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Authentic Scarab Mask
+- config: authentic_scarab_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Authentic Spookat Mask
+- config: authentic_spookat_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Azure Bombhead Mask
+- config: azure_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet
+- config: battle_boar_helmet
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Blue
+- config: battle_boar_helmet_blue
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Divine
+- config: battle_boar_helmet_divine
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Glacial
+- config: battle_boar_helmet_glacial
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Gold
+- config: battle_boar_helmet_gold
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Green
+- config: battle_boar_helmet_green
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Grey
+- config: battle_boar_helmet_grey
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Heavy
+- config: battle_boar_helmet_heavy
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Pink
+- config: battle_boar_helmet_pink
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Purple
+- config: battle_boar_helmet_purple
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Red
+- config: battle_boar_helmet_red
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Shadow
+- config: battle_boar_helmet_shadow
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Battle Boar Helmet, Volcanic
+- config: battle_boar_helmet_volcanic
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Battle Boar Helmet/Parts/Battle Boar Helmet, Base
+- config: battle_boar_helmet_base
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Blue
+- config: buccaneer_bicorne_blue
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Curse
+- config: buccaneer_bicorne_curse
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Divine
+- config: buccaneer_bicorne_divine
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Gold
+- config: buccaneer_bicorne_gold
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Green
+- config: buccaneer_bicorne_green
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Grey
+- config: buccaneer_bicorne_grey
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Heavy
+- config: buccaneer_bicorne_heavy
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Pink
+- config: buccaneer_bicorne_pink
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Purple
+- config: buccaneer_bicorne_purple
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Red
+- config: buccaneer_bicorne_red
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Shadow
+- config: buccaneer_bicorne_shadow
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Azure
+- config: buccaneer_bicorne_shadowtech_azure
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Blue
+- config: buccaneer_bicorne_shadowtech_blue
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Green
+- config: buccaneer_bicorne_shadowtech_green
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Orange
+- config: buccaneer_bicorne_shadowtech_orange
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Pink
+- config: buccaneer_bicorne_shadowtech_pink
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Red
+- config: buccaneer_bicorne_shadowtech_red
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Violet
+- config: buccaneer_bicorne_shadowtech_violet
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, ShadowTech Yellow
+- config: buccaneer_bicorne_shadowtech_yellow
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Buccaneer Bicorne, Volcanic
+- config: buccaneer_bicorne_volcanic
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Parts/Buccaneer Bicorne, Base
+- config: buccaneer_bicorne_base
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Parts/Buccaneer Bicorne, ShadowBase
+- config: buccaneer_bicorne_shadowbase
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Parts/Sniped Buccaneer Bicorne, Base
+- config: sniped_buccaneer_bicorne_base
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Blue
+- config: sniped_buccaneer_bicorne_blue
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Divine
+- config: sniped_buccaneer_bicorne_divine
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Gold
+- config: sniped_buccaneer_bicorne_gold
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Green
+- config: sniped_buccaneer_bicorne_green
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Heavy
+- config: sniped_buccaneer_bicorne_heavy
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Pink
+- config: sniped_buccaneer_bicorne_pink
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Purple
+- config: sniped_buccaneer_bicorne_purple
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Red
+- config: sniped_buccaneer_bicorne_red
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Shadow
+- config: sniped_buccaneer_bicorne_shadow
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Buccaneer Bicorne/Sniped Buccaneer Bicorne, Volcanic
+- config: sniped_buccaneer_bicorne_volcanic
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Celestial Nav Helm
+- config: celestial_nav_helm
   slots:
   - HELM_SIDE
-- config: Costume/Helm/Chapeau of the Black Rose
+- config: chapeau_of_the_black_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Blue Rose
+- config: chapeau_of_the_blue_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Coral Rose
+- config: chapeau_of_the_coral_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Curse Rose
+- config: chapeau_of_the_curse_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Fire Rose
+- config: chapeau_of_the_fire_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Freeze Rose
+- config: chapeau_of_the_freeze_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Gold Rose
+- config: chapeau_of_the_gold_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Green Rose
+- config: chapeau_of_the_green_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Poison Rose
+- config: chapeau_of_the_poison_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Prismatic Rose
+- config: chapeau_of_the_prismatic_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Red Rose
+- config: chapeau_of_the_red_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Shock Rose
+- config: chapeau_of_the_shock_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Sleep Rose
+- config: chapeau_of_the_sleep_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Stun Rose
+- config: chapeau_of_the_stun_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the Violet Rose
+- config: chapeau_of_the_violet_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Chapeau of the White Rose
+- config: chapeau_of_the_white_rose
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_BACK
-- config: Costume/Helm/Checkered Bombhead Mask
+- config: checkered_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Chef Hat, Black
+- config: chef_hat_black
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, Blue
+- config: chef_hat_blue
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, Pink
+- config: chef_hat_pink
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, Purple
+- config: chef_hat_purple
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, Red
+- config: chef_hat_red
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, White
+- config: chef_hat_white
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Chef Hat, Yellow
+- config: chef_hat_yellow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Clockworks
+- config: grate_plate_helm_clockworks
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Cool
+- config: grate_plate_helm_cool
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Divine
+- config: grate_plate_helm_divine
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Dusky
+- config: grate_plate_helm_dusky
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Fancy
+- config: grate_plate_helm_fancy
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Heavy
+- config: grate_plate_helm_heavy
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Military
+- config: grate_plate_helm_military
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Prismatic
+- config: grate_plate_helm_prismatic
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Regal
+- config: grate_plate_helm_regal
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Shadow
+- config: grate_plate_helm_shadow
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Toasty
+- config: grate_plate_helm_toasty
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Grate Plate Helm, Volcanic
+- config: grate_plate_helm_volcanic
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Parts/Grate Plate Helm, Base
+- config: grate_plate_helm_base
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Parts/Grate Plate Helm, Recolor
+- config: grate_plate_helm_recolor
   slots:
   - HELM_BROW
-- config: Costume/Helm/Clockworks/Parts/Tick Tock Top, Base
+- config: tick_tock_top_base
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Parts/Tick Tock Top, Recolor
+- config: tick_tock_top_recolor
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Clockworks
+- config: tick_tock_top_clockworks
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Cool
+- config: tick_tock_top_cool
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Divine
+- config: tick_tock_top_divine
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Dusky
+- config: tick_tock_top_dusky
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Fancy
+- config: tick_tock_top_fancy
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Heavy
+- config: tick_tock_top_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Military
+- config: tick_tock_top_military
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Prismatic
+- config: tick_tock_top_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Regal
+- config: tick_tock_top_regal
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Shadow
+- config: tick_tock_top_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Toasty
+- config: tick_tock_top_toasty
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Clockworks/Tick Tock Top, Volcanic
+- config: tick_tock_top_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
   - HELM_SIDE
-- config: Costume/Helm/Cursed Bombhead Mask
+- config: cursed_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Dangerous Diablo Helm
+- config: dangerous_diablo_helm
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Dangerous Diablo Helm, Red
+- config: dangerous_diablo_helm_red
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Dangerous Grim Mask
+- config: dangerous_grim_mask
   slots:
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Dangerous Grim Mask, Red
+- config: dangerous_grim_mask_red
   slots:
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Dangerous Oni Helm
+- config: dangerous_oni_helm
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Dangerous Oni Helm, Red
+- config: dangerous_oni_helm_red
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Emerald Bombhead Mask
+- config: emerald_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Fiery Bombhead Mask
+- config: fiery_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Foiled Frosted Helm
+- config: foiled_frosted_helm
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Forever Love Puppy Mask
+- config: forever_love_puppy_mask
   slots:
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Frenzy Avenger Helm
+- config: frenzy_avenger_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Frenzy Champion Helm
+- config: frenzy_champion_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Frenzy Warrior Helm
+- config: frenzy_warrior_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Frosted Helm
+- config: frosted_helm
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Frosty Bombhead Mask
+- config: frosty_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Golden Bombhead Mask
+- config: golden_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Gremlin Disguise
+- config: gremlin_disguise
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Blue
+- config: gremlin_helm_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Divine
+- config: gremlin_helm_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Glacial
+- config: gremlin_helm_glacial
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Gold
+- config: gremlin_helm_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Green
+- config: gremlin_helm_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Heavy
+- config: gremlin_helm_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Pink
+- config: gremlin_helm_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Purple
+- config: gremlin_helm_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Red
+- config: gremlin_helm_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gremlin Helm, Volcanic
+- config: gremlin_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gun Puppy Disguise
+- config: gun_puppy_disguise
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Blue
+- config: gunpuppy_helm_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Divine
+- config: gunpuppy_helm_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Gold
+- config: gunpuppy_helm_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Green
+- config: gunpuppy_helm_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Heavy
+- config: gunpuppy_helm_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Pink
+- config: gunpuppy_helm_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Purple
+- config: gunpuppy_helm_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Red
+- config: gunpuppy_helm_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Gunpuppy Helm, Volcanic
+- config: gunpuppy_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Pith Helm
+- config: holiday_pith_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Pith Helm, Epic
+- config: holiday_pith_helm_epic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Round Helm
+- config: holiday_round_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Round Helm, Epic
+- config: holiday_round_helm_epic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Sallet
+- config: holiday_sallet
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Sallet, Epic
+- config: holiday_sallet_epic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Tailed Helm
+- config: holiday_tailed_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Holiday Tailed Helm, Epic
+- config: holiday_tailed_helm_epic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Humbug Hat
+- config: humbug_hat
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Imperial Tricorne
+- config: imperial_tricorne
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Impostoclaus Hat
+- config: impostoclaus_hat
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Iron Bombhead Mask
+- config: iron_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Iron Gold Wolf Hood
+- config: iron_gold_wolf_hood
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Iron Wolf Hood
+- config: iron_wolf_hood
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Lite/Hololite Helm, Cool
+- config: hololite_helm_cool
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Divine
+- config: hololite_helm_divine
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Dusky
+- config: hololite_helm_dusky
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Fancy
+- config: hololite_helm_fancy
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Heavy
+- config: hololite_helm_heavy
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Military
+- config: hololite_helm_military
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Prismatic
+- config: hololite_helm_prismatic
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Regal
+- config: hololite_helm_regal
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Shadow
+- config: hololite_helm_shadow
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Toasty
+- config: hololite_helm_toasty
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Hololite Helm, Volcanic
+- config: hololite_helm_volcanic
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Parts/Hololite Helm, Base
+- config: hololite_helm_base
   slots:
   - HELM_BROW
-- config: Costume/Helm/Lite/Parts/Hololite Helm, Recolor
+- config: hololite_helm_recolor
   slots:
   - HELM_BROW
-- config: Costume/Helm/Love Puppy Disguise
+- config: love_puppy_disguise
   slots:
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Lovely Bombhead Mask
+- config: lovely_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Magic Bombhead Mask
+- config: magic_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Magmatic Fanatic Mask
+- config: magmatic_fanatic_mask
   slots:
   - HELM_FRONT
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Blue
+- config: mechaknight_helm_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Divine
+- config: mechaknight_helm_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Glacial
+- config: mechaknight_helm_glacial
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Gold
+- config: mechaknight_helm_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Green
+- config: mechaknight_helm_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Heavy
+- config: mechaknight_helm_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Pink
+- config: mechaknight_helm_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Purple
+- config: mechaknight_helm_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Red
+- config: mechaknight_helm_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Shadow
+- config: mechaknight_helm_shadow
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Mechaknight Helm, Volcanic
+- config: mechaknight_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/MechaKnight Helm/Parts/Mechaknight Helm, Base
+- config: mechaknight_helm_base
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Mechaknight Disguise
+- config: mechaknight_disguise
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Medieval War Helm
+- config: medieval_war_helm
   slots:
   - HELM_TOP
-- config: Costume/Helm/Metal Sonic Mask
+- config: metal_sonic_mask
   slots:
   - HELM_SIDE
-- config: Costume/Helm/Night Cap, Pith
+- config: night_cap_pith
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Costume/Helm/Night Cap, Round
+- config: night_cap_round
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Costume/Helm/Night Cap, Sallet
+- config: night_cap_sallet
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Costume/Helm/Night Cap, Tailed
+- config: night_cap_tailed
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Costume/Helm/Onyx Bombhead Mask
+- config: onyx_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Paper Frankenzom Mask
+- config: paper_frankenzom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Paper Gourdling Mask
+- config: paper_gourdling_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Paper Howlitzer Mask
+- config: paper_howlitzer_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Paper Phantom Mask
+- config: paper_phantom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Paper Scarab Mask
+- config: paper_scarab_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Paper Spookat Mask
+- config: paper_spookat_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Base (Bomb Mask)
+- config: base_bomb_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Parts/Base (Halloween Mask)
+- config: base_halloween_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Base (Holiday Mask)
+- config: base_holiday_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Base (Monster Mask)
+- config: base_monster_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Chef Hat
+- config: chef_hat_s0_08c34deef885
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Parts/Monster Masks/Gremlin Helm
+- config: gremlin_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Monster Masks/Gunpuppy Helm
+- config: gunpuppy_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Monster Masks/Stranger Helm
+- config: stranger_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Monster Masks/Trojan Helm
+- config: trojan_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Parts/Torto Skull, Base
+- config: torto_skull_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Plasmatech Bombhead Mask
+- config: plasmatech_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Plated Pathfinder Helm, Volcanic
+- config: plated_pathfinder_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Polar Warden Hood
+- config: polar_warden_hood
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Polar Warden Hood, Black
+- config: polar_warden_hood_black
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Polar Warden Hood, White
+- config: polar_warden_hood_white
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Polar Wolf Hood
+- config: polar_wolf_hood
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Polar Wolf Hood, Black
+- config: polar_wolf_hood_black
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Polar Wolf Hood, White
+- config: polar_wolf_hood_white
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Prime Bombhead Mask
+- config: prime_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Prismatic Frosted Helm
+- config: prismatic_frosted_helm
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Pumpkin Bombhead Mask
+- config: pumpkin_bombhead_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Raging Avenger Helm
+- config: raging_avenger_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Raging Champion Helm
+- config: raging_champion_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Raging Warrior Helm
+- config: raging_warrior_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Replica Frankenzom Mask
+- config: replica_frankenzom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Replica Gourdling Mask
+- config: replica_gourdling_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Replica Howlitzer Mask
+- config: replica_howlitzer_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Replica Phantom Mask
+- config: replica_phantom_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Replica Scarab Mask
+- config: replica_scarab_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Replica Spookat Mask
+- config: replica_spookat_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Parts/Ronin Gasa, Base
+- config: ronin_gasa_base
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Blue
+- config: ronin_gasa_blue
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Divine
+- config: ronin_gasa_divine
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Gold
+- config: ronin_gasa_gold
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Green
+- config: ronin_gasa_green
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Heavy
+- config: ronin_gasa_heavy
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Pink
+- config: ronin_gasa_pink
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Purple
+- config: ronin_gasa_purple
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Red
+- config: ronin_gasa_red
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Restored
+- config: ronin_gasa_restored
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Shadow
+- config: ronin_gasa_shadow
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ronin Gasa/Ronin Gasa, Volcanic
+- config: ronin_gasa_volcanic
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Ruby Bombhead Mask
+- config: ruby_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Scary Bombhead Mask
+- config: scary_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Shocking Bombhead Mask
+- config: shocking_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Shogun Helmet
+- config: shogun_helmet
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Parts/Shroom Cap, Base
+- config: shroom_cap_base
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Blue
+- config: shroom_cap_blue
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Divine
+- config: shroom_cap_divine
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Gold
+- config: shroom_cap_gold
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Green
+- config: shroom_cap_green
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Heavy
+- config: shroom_cap_heavy
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Pink
+- config: shroom_cap_pink
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Purple
+- config: shroom_cap_purple
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Red
+- config: shroom_cap_red
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Restored
+- config: shroom_cap_restored
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Shadow
+- config: shroom_cap_shadow
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Shroom Cap/Shroom Cap, Volcanic
+- config: shroom_cap_volcanic
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Silver Bombhead Mask
+- config: silver_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Spiral Bombhead Mask
+- config: spiral_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Starry Bombhead Mask
+- config: starry_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Steamvalve Mask
+- config: steamvalve_mask
   slots:
   - HELM_BACK
   - HELM_FRONT
-- config: Costume/Helm/Storm Avenger Helm
+- config: storm_avenger_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Storm Champion Helm
+- config: storm_champion_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Storm Warrior Helm
+- config: storm_warrior_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Parts/Stranger Cap, Base
+- config: stranger_cap_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Amethyst
+- config: stranger_cap_amethyst
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Aquamarine
+- config: stranger_cap_aquamarine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Blue
+- config: stranger_cap_blue
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Citrine
+- config: stranger_cap_citrine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Diamond
+- config: stranger_cap_diamond
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Divine
+- config: stranger_cap_divine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Emerald
+- config: stranger_cap_emerald
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Garnet
+- config: stranger_cap_garnet
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Gold
+- config: stranger_cap_gold
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Green
+- config: stranger_cap_green
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Heavy
+- config: stranger_cap_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Opal
+- config: stranger_cap_opal
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Pearl
+- config: stranger_cap_pearl
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Peridot
+- config: stranger_cap_peridot
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Pink
+- config: stranger_cap_pink
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Prismatic
+- config: stranger_cap_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Purple
+- config: stranger_cap_purple
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Red
+- config: stranger_cap_red
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Ruby
+- config: stranger_cap_ruby
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Sapphire
+- config: stranger_cap_sapphire
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Shadow
+- config: stranger_cap_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Turquoise
+- config: stranger_cap_turquoise
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Cap/Stranger Cap, Volcanic
+- config: stranger_cap_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Blue
+- config: stranger_helm_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Divine
+- config: stranger_helm_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Glacial
+- config: stranger_helm_glacial
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Gold
+- config: stranger_helm_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Green
+- config: stranger_helm_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Heavy
+- config: stranger_helm_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Pink
+- config: stranger_helm_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Prismatic
+- config: stranger_helm_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Purple
+- config: stranger_helm_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Red
+- config: stranger_helm_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Stranger Helm, Volcanic
+- config: stranger_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Super Brawl Crown
+- config: super_brawl_crown
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Torto Skull, Ancient
+- config: torto_skull_ancient
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Torto Skull, Autumn
+- config: torto_skull_autumn
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toxic Bombhead Mask
+- config: toxic_bombhead_mask
   slots:
   - HELM_FRONT
   - HELM_TOP
-- config: Costume/Helm/Toy/Parts/Toy Soldier Cap, Base
+- config: toy_soldier_cap_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Parts/Toy Soldier Cap, Recolor
+- config: toy_soldier_cap_recolor
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Parts/Toy Soldier Crown, Base
+- config: toy_soldier_crown_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Parts/Toy Soldier Crown, Recolor
+- config: toy_soldier_crown_recolor
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Blue Coat
+- config: toy_soldier_cap_blue_coat
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Cool
+- config: toy_soldier_cap_cool
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Divine
+- config: toy_soldier_cap_divine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Dusky
+- config: toy_soldier_cap_dusky
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Fancy
+- config: toy_soldier_cap_fancy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Heavy
+- config: toy_soldier_cap_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Military
+- config: toy_soldier_cap_military
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Red Coat
+- config: toy_soldier_cap_red_coat
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Regal
+- config: toy_soldier_cap_regal
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Shadow
+- config: toy_soldier_cap_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Toasty
+- config: toy_soldier_cap_toasty
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Cap, Volcanic
+- config: toy_soldier_cap_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Blue Coat
+- config: toy_soldier_crown_blue_coat
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Cool
+- config: toy_soldier_crown_cool
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Divine
+- config: toy_soldier_crown_divine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Dusky
+- config: toy_soldier_crown_dusky
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Fancy
+- config: toy_soldier_crown_fancy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Heavy
+- config: toy_soldier_crown_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Military
+- config: toy_soldier_crown_military
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Prismatic
+- config: toy_soldier_crown_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Red Coat
+- config: toy_soldier_crown_red_coat
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Regal
+- config: toy_soldier_crown_regal
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Shadow
+- config: toy_soldier_crown_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Toasty
+- config: toy_soldier_crown_toasty
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Toy/Toy Soldier Crown, Volcanic
+- config: toy_soldier_crown_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Trojan Disguise
+- config: trojan_disguise
   slots:
   - HELM_BACK
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Blazing
+- config: trojan_helm_blazing
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Blue
+- config: trojan_helm_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Curse
+- config: trojan_helm_curse
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Dazed
+- config: trojan_helm_dazed
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Divine
+- config: trojan_helm_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Electric
+- config: trojan_helm_electric
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Fiery
+- config: trojan_helm_fiery
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Freeze
+- config: trojan_helm_freeze
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Glacial
+- config: trojan_helm_glacial
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Gold
+- config: trojan_helm_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Green
+- config: trojan_helm_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Heavy
+- config: trojan_helm_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Lovely
+- config: trojan_helm_lovely
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Pink
+- config: trojan_helm_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Purple
+- config: trojan_helm_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Red
+- config: trojan_helm_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Slumber
+- config: trojan_helm_slumber
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Vile
+- config: trojan_helm_vile
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Trojan Helm, Volcanic
+- config: trojan_helm_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Venom Fiend Mask
+- config: venom_fiend_mask
   slots:
   - HELM_FRONT
-- config: Costume/Helm/Voltaic Radical Mask
+- config: voltaic_radical_mask
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Cool
+- config: casting_cone_cool
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Divine
+- config: casting_cone_divine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Dusky
+- config: casting_cone_dusky
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Fancy
+- config: casting_cone_fancy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Heavy
+- config: casting_cone_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Military
+- config: casting_cone_military
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Prismatic
+- config: casting_cone_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Regal
+- config: casting_cone_regal
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Shadow
+- config: casting_cone_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Toasty
+- config: casting_cone_toasty
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Casting Cone, Volcanic
+- config: casting_cone_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Cool
+- config: charming_cap_cool
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Divine
+- config: charming_cap_divine
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Dusky
+- config: charming_cap_dusky
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Fancy
+- config: charming_cap_fancy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Heavy
+- config: charming_cap_heavy
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Military
+- config: charming_cap_military
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Prismatic
+- config: charming_cap_prismatic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Regal
+- config: charming_cap_regal
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Shadow
+- config: charming_cap_shadow
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Toasty
+- config: charming_cap_toasty
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Charming Cap, Volcanic
+- config: charming_cap_volcanic
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Parts/Casting Cone, Base
+- config: casting_cone_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Parts/Casting Cone, Recolor
+- config: casting_cone_recolor
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Parts/Charming Cap, Base
+- config: charming_cap_base
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wizard/Parts/Charming Cap, Recolor
+- config: charming_cap_recolor
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Costume/Helm/Wolver Mask/Parts/Wolver Mask, Base
+- config: wolver_mask_base
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Blue
+- config: wolver_mask_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Curse
+- config: wolver_mask_curse
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Divine
+- config: wolver_mask_divine
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Gold
+- config: wolver_mask_gold
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Green
+- config: wolver_mask_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Grey
+- config: wolver_mask_grey
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Heavy
+- config: wolver_mask_heavy
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Pink
+- config: wolver_mask_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Purple
+- config: wolver_mask_purple
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Red
+- config: wolver_mask_red
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, ShadowTech Blue
+- config: wolver_mask_shadowtech_blue
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, ShadowTech Green
+- config: wolver_mask_shadowtech_green
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, ShadowTech Orange
+- config: wolver_mask_shadowtech_orange
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, ShadowTech Pink
+- config: wolver_mask_shadowtech_pink
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Tawny
+- config: wolver_mask_tawny
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Costume/Helm/Wolver Mask/Wolver Mask, Volcanic
+- config: wolver_mask_volcanic
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BACK
   - HELM_SIDE
-- config: Gear/Armor/Bombastic Demo Suit
+- config: bombastic_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Brute Jelly Mail
+- config: brute_jelly_mail
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Charged Quicksilver Mail
+- config: charged_quicksilver_mail
   slots:
   - ARMOR_BACK
   - ARMOR_AURA
-- config: Gear/Armor/Chroma Suit
+- config: chroma_suit
   slots:
   - ARMOR_REAR
-- config: Gear/Armor/Deadly Virulisk Suit
+- config: deadly_virulisk_suit
   slots:
   - ARMOR_REAR
-- config: Gear/Armor/Deadshot Mantle
+- config: deadshot_mantle
   slots:
   - ARMOR_ARMS
-- config: Gear/Armor/Fused Demo Suit
+- config: fused_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Heavy Demo Suit
+- config: heavy_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Ice Queen Mail
+- config: ice_queen_mail
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Jelly Mail
+- config: jelly_mail
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Justifier Jacket
+- config: justifier_jacket
   slots:
   - ARMOR_ARMS
-- config: Gear/Armor/Mad Bomber Suit
+- config: mad_bomber_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Mercurial Demo Suit
+- config: mercurial_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Mercurial Mail
+- config: mercurial_mail
   slots:
   - ARMOR_BACK
   - ARMOR_AURA
-- config: Gear/Armor/Padded Demo Suit
+- config: padded_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Quicksilver Mail
+- config: quicksilver_mail
   slots:
   - ARMOR_BACK
   - ARMOR_AURA
-- config: Gear/Armor/Quilted Demo Suit
+- config: quilted_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Rock Jelly Mail
+- config: rock_jelly_mail
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Royal Jelly Mail
+- config: royal_jelly_mail
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Salamander Suit
+- config: salamander_suit
   slots:
   - ARMOR_REAR
-- config: Gear/Armor/Shadowsun Slicker
+- config: shadowsun_slicker
   slots:
   - ARMOR_ARMS
-- config: Gear/Armor/Spiral Demo Suit
+- config: spiral_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Starlit Demo Suit
+- config: starlit_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Volcanic Demo Suit
+- config: volcanic_demo_suit
   slots:
   - ARMOR_BACK
-- config: Gear/Armor/Volcanic Salamander Suit
+- config: volcanic_salamander_suit
   slots:
   - ARMOR_REAR
-- config: Gear/Helm/Ancient Plate Helm
+- config: ancient_plate_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_SIDE
   - HELM_BROW
-- config: Gear/Helm/Angelic Helm
+- config: angelic_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Gear/Helm/Arcane Salamander Mask
+- config: arcane_salamander_mask
   slots:
   - HELM_FRONT
   - HELM_SIDE
-- config: Gear/Helm/Ash Tail Cap
+- config: ash_tail_cap
   slots:
   - HELM_FRONT
-- config: Gear/Helm/Azure Guardian Helm
+- config: azure_guardian_helm
   slots:
   - HELM_FRONT
   - ARMOR_BACK
-- config: Gear/Helm/Black Kat Cowl
+- config: black_kat_cowl
   slots:
   - HELM_SIDE
-- config: Gear/Helm/Black Kat Hat
+- config: black_kat_hat
   slots:
   - HELM_SIDE
-- config: Gear/Helm/Black Kat Hood
+- config: black_kat_hood
   slots:
   - HELM_SIDE
-- config: Gear/Helm/Black Kat Mask
+- config: black_kat_mask
   slots:
   - HELM_SIDE
-- config: Gear/Helm/Boosted Plate Helm
+- config: boosted_plate_helm
   slots:
   - HELM_TOP
   - HELM_FRONT
   - HELM_BROW
-- config: Gear/Helm/Chaos Cowl
+- config: chaos_cowl
   slots:
   - HELM_BACK
-- config: Gear/Helm/Chroma Mask
+- config: chroma_mask
   slots:
   - HELM_SIDE
   - HELM_FRONT
-- config: Gear/Helm/Cobalt Helm
+- config: cobalt_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Gear/Helm/Crown of the Fallen
+- config: crown_of_the_fallen
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Gear/Helm/Deadly Virulisk Mask
+- config: deadly_virulisk_mask
   slots:
   - HELM_FRONT
   - HELM_SIDE
-- config: Gear/Helm/Deadshot Chapeau
-  slots:
-  - HELM_TOP
-  - HELM_BACK
-  - HELM_BROW
-- config: Gear/Helm/Divine Veil
-  slots:
-  - HELM_TOP
-  - HELM_BACK
-- config: Gear/Helm/Dread Skelly Mask
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Dusker Cap
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Elemental Hood
-  slots:
-  - HELM_BACK
-- config: Gear/Helm/Feral Kat Hood
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Firefighter Helmet
-  slots:
-  - HELM_BACK
-- config: Gear/Helm/Grey Feather Cowl
-  slots:
-  - HELM_FRONT
-  - HELM_BACK
-- config: Gear/Helm/Gunslinger Hat
+- config: deadshot_chapeau
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Gear/Helm/Heavenly Iron Helm
+- config: divine_veil
   slots:
+  - HELM_TOP
   - HELM_BACK
-  - HELM_SIDE
-- config: Gear/Helm/Heavy Plate Helm
+- config: dread_skelly_mask
   slots:
-  - HELM_TOP
-  - HELM_BROW
-- config: Gear/Helm/Ironmight Plate Helm
-  slots:
-  - HELM_TOP
   - HELM_FRONT
-  - HELM_BROW
-- config: Gear/Helm/Justifier Hat
+- config: dusker_cap
   slots:
-  - HELM_TOP
-  - HELM_BACK
-  - HELM_BROW
-- config: Gear/Helm/Kat Claw Cowl
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Claw Hood
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Claw Mask
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Eye Cowl
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Eye Hood
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Eye Mask
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Hiss Cowl
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Hiss Hood
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Kat Hiss Mask
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Mad Bomber Mask
-  slots:
-  - HELM_TOP
-- config: Gear/Helm/Magic Hood
+  - HELM_FRONT
+- config: elemental_hood
   slots:
   - HELM_BACK
-- config: Gear/Helm/Magikat Hat
+- config: feral_kat_hood
   slots:
   - HELM_SIDE
-- config: Gear/Helm/Mercurial Demo Helm
-  slots:
-  - HELM_TOP
-  - HELM_BROW
-- config: Gear/Helm/Mighty Cobalt Helm
-  slots:
-  - HELM_TOP
-  - HELM_BROW
-  - HELM_BACK
-- config: Gear/Helm/Mining Hat
-  slots:
-  - HELM_TOP
-  - HELM_BROW
-- config: Gear/Helm/Miracle Hood
+- config: firefighter_helmet
   slots:
   - HELM_BACK
-- config: Gear/Helm/Mirakat Hat
+- config: grey_feather_cowl
   slots:
-  - HELM_SIDE
-- config: Gear/Helm/Nameless Hat
+  - HELM_FRONT
+  - HELM_BACK
+- config: gunslinger_hat
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Gear/Helm/Padded Hunting Cap
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Purring Cap
-  slots:
-  - HELM_SIDE
-- config: Gear/Helm/Quilted Hunting Cap
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Ronin Gasa
-  slots:
-  - HELM_TOP
-  - HELM_SIDE
-  - HELM_BROW
-- config: Gear/Helm/Royal Jelly Crown
-  slots:
-  - HELM_TOP
-  - HELM_BROW
-- config: Gear/Helm/Salamander Mask
-  slots:
-  - HELM_SIDE
-  - HELM_FRONT
-- config: Gear/Helm/Scary Skelly Mask
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Seraphic Helm
+- config: heavenly_iron_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Gear/Helm/Shadowsun Stetson
+- config: heavy_plate_helm
+  slots:
+  - HELM_TOP
+  - HELM_BROW
+- config: ironmight_plate_helm
+  slots:
+  - HELM_TOP
+  - HELM_FRONT
+  - HELM_BROW
+- config: justifier_hat
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Gear/Helm/Shroom Cap
+- config: kat_claw_cowl
+  slots:
+  - HELM_SIDE
+- config: kat_claw_hood
+  slots:
+  - HELM_SIDE
+- config: kat_claw_mask
+  slots:
+  - HELM_SIDE
+- config: kat_eye_cowl
+  slots:
+  - HELM_SIDE
+- config: kat_eye_hood
+  slots:
+  - HELM_SIDE
+- config: kat_eye_mask
+  slots:
+  - HELM_SIDE
+- config: kat_hiss_cowl
+  slots:
+  - HELM_SIDE
+- config: kat_hiss_hood
+  slots:
+  - HELM_SIDE
+- config: kat_hiss_mask
+  slots:
+  - HELM_SIDE
+- config: mad_bomber_mask
+  slots:
+  - HELM_TOP
+- config: magic_hood
+  slots:
+  - HELM_BACK
+- config: magikat_hat
+  slots:
+  - HELM_SIDE
+- config: mercurial_demo_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Gear/Helm/Sinister Skelly Mask
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Skelly Mask
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Skolver Cap
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Snarbolax Cap
-  slots:
-  - HELM_FRONT
-- config: Gear/Helm/Solid Cobalt Helm
+- config: mighty_cobalt_helm
   slots:
   - HELM_TOP
   - HELM_BROW
-- config: Gear/Helm/Spiral Plate Helm
+  - HELM_BACK
+- config: mining_hat
   slots:
   - HELM_TOP
-  - HELM_FRONT
   - HELM_BROW
-- config: Gear/Helm/Starlit Hunting Cap
+- config: miracle_hood
   slots:
-  - HELM_FRONT
-- config: Gear/Helm/Sunset Stetson
+  - HELM_BACK
+- config: mirakat_hat
+  slots:
+  - HELM_SIDE
+- config: nameless_hat
   slots:
   - HELM_TOP
   - HELM_BACK
   - HELM_BROW
-- config: Gear/Helm/Tri-Guard Helm
+- config: padded_hunting_cap
   slots:
-  - HELM_BACK
   - HELM_FRONT
-- config: Gear/Helm/Valkyrie Helm
+- config: purring_cap
+  slots:
+  - HELM_SIDE
+- config: quilted_hunting_cap
+  slots:
+  - HELM_FRONT
+- config: ronin_gasa
+  slots:
+  - HELM_TOP
+  - HELM_SIDE
+  - HELM_BROW
+- config: royal_jelly_crown
+  slots:
+  - HELM_TOP
+  - HELM_BROW
+- config: salamander_mask
+  slots:
+  - HELM_SIDE
+  - HELM_FRONT
+- config: scary_skelly_mask
+  slots:
+  - HELM_FRONT
+- config: seraphic_helm
   slots:
   - HELM_BACK
   - HELM_SIDE
-- config: Gear/Helm/Virulisk Mask
+- config: shadowsun_stetson
+  slots:
+  - HELM_TOP
+  - HELM_BACK
+  - HELM_BROW
+- config: shroom_cap
+  slots:
+  - HELM_TOP
+  - HELM_BROW
+- config: sinister_skelly_mask
+  slots:
+  - HELM_FRONT
+- config: skelly_mask
+  slots:
+  - HELM_FRONT
+- config: skolver_cap
+  slots:
+  - HELM_FRONT
+- config: snarbolax_cap
+  slots:
+  - HELM_FRONT
+- config: solid_cobalt_helm
+  slots:
+  - HELM_TOP
+  - HELM_BROW
+- config: spiral_plate_helm
+  slots:
+  - HELM_TOP
+  - HELM_FRONT
+  - HELM_BROW
+- config: starlit_hunting_cap
+  slots:
+  - HELM_FRONT
+- config: sunset_stetson
+  slots:
+  - HELM_TOP
+  - HELM_BACK
+  - HELM_BROW
+- config: tri_guard_helm
+  slots:
+  - HELM_BACK
+  - HELM_FRONT
+- config: valkyrie_helm
+  slots:
+  - HELM_BACK
+  - HELM_SIDE
+- config: virulisk_mask
   slots:
   - HELM_SIDE
   - HELM_FRONT
-- config: Gear/Helm/Vog Cub Cap
+- config: vog_cub_cap
   slots:
   - HELM_FRONT
-- config: Gear/Helm/Volcanic Plate Helm
+- config: volcanic_plate_helm
   slots:
   - HELM_TOP
   - HELM_SIDE
   - HELM_FRONT
   - HELM_BROW
-- config: Gear/Helm/Volcanic Salamander Mask
+- config: volcanic_salamander_mask
   slots:
   - HELM_FRONT
   - HELM_SIDE
-- config: Gear/Helm/Warmaster Helm 2
+- config: warmaster_helm_2
   slots:
   - HELM_BACK
   - HELM_FRONT
-- config: Gear/Helm/Warmaster Helm 3
+- config: warmaster_helm_3
   slots:
   - HELM_BACK
   - HELM_FRONT
-- config: Gear/Helm/Wolver Cap
+- config: wolver_cap
   slots:
   - HELM_FRONT
