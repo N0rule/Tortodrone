@@ -704,261 +704,261 @@ Upgrade/Height/Short,Height,unusable,no item-use handler for Height
 Upgrade/Height/Shortest,Height,unusable,no item-use handler for Height
 Upgrade/Height/Tall,Height,unusable,no item-use handler for Height
 Upgrade/Height/Tallest,Height,unusable,no item-use handler for Height
-Upgrade/Lockbox,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Copper",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Gold",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Platinum",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Silver",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Steel",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Lockbox, Titanium",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Character,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Mystery,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/000,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/001,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/002,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/003,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/004,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/005,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/006,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/007,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/008,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/009,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00A,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00B,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00C,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00D,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00E,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00F,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/00G,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/403,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/40G,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/40N,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/41C,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/41D,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/509,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/50E,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A10,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A12,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A14,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A16,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A17,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A18,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A19,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A1A,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A1B,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A1H,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A1I,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/A1J,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Amethyst,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Aquamarine,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/B1B,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Citrine,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Curse,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Dangerous,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Diamond,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Emerald,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Garnet,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Glacial,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Hazardous,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Hunter,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Opal,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Parts/Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Parts/Variant Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Pearl,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Peridot,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/QQQ,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Ruby,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Sapphire,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Shadow,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Lockboxes/Slime/Turquoise,Lockbox,unusable,no item-use handler for Lockbox
+Upgrade/Lockbox,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Copper",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Gold",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Platinum",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Silver",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Steel",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Lockbox, Titanium",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Character,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Mystery,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/000,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/001,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/002,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/003,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/004,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/005,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/006,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/007,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/008,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/009,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00A,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00C,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00D,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00E,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00F,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/00G,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/403,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/40G,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/40N,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/41C,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/41D,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/509,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/50E,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A10,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A12,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A14,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A16,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A17,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A18,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A19,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A1A,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A1B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A1H,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A1I,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/A1J,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Amethyst,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Aquamarine,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/B1B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Citrine,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Curse,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Dangerous,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Diamond,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Emerald,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Garnet,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Glacial,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Hazardous,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Hunter,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Opal,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Parts/Variant Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Pearl,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Peridot,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/QQQ,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Ruby,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Sapphire,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Shadow,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Turquoise,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 "Upgrade/Pack/Eyes, Amazing",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Bedazzling",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Shapely",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Suited",Pack,unusable,no item-use handler for Pack
 Upgrade/Parts/Heat Bonus,Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/AeroTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Aerodynamic Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Almire Furniture Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Amethyst Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Ancient Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2014/Parts/Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2014,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2015,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2017,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2018,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Anniversary Prize Box 2019,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Anniversary Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Aquamarine Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Autumn Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Battle Boar Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Bejeweled Stranger Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Blazing Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Blooming Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Buccaneer Booty Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Budding Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Cavalry Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Chess Mini Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Chess Mini Prize Box, Winterfest",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Citrine Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Clockworks Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Colossal Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 1,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 2,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 3,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 4,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 5,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Companion Prize Box/Parts/Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Confection Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Construct Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Cozy Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/CozyTech Mk II Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/CozyTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Cracked Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dangerous Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dangerous Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dark Harvest Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dark Harvest Prize Box 2017,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dark Harvest Prize Box Series 3,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dazed Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Decoration Kit Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Diamond Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Dim Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Disguise Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Electric Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Elite Trinket Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Emerald Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Equinox Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Equinox Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Extraordinary Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Fall Equinox Prize Box 2014,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Fall Equinox Prize Box 2015,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Fall Equinox Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Fall Equinox Prize Box 2017,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Fall Equinox Prize Box 2018,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/FlowerTech Mk II Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/FlowerTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Frenzy Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Frosty Present,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Frosty Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Furniture Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Garnet Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Glacial Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Glacial Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Glacial Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Glowing Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Gobble Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Gourmet Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Gremlin Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Grey Mk II Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Grey Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Guild Hall Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hazardous Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hazardous Prize Box 2017,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hive Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hololite Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hunter Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Hunter Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Katastrophe Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Katastrophe Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Katastrophe Returns Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Late Harvest Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Lucky Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Moorcroft Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Nemesis Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Obsidian Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Opal Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Owlite Archaeology Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Parts/Anniversary Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Parts/Equinox Base,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Pearl Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Peridot Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Plunge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Polar Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Polar Prize Box, 2014",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Polar Prize Box, 2016",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Radiant Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rage Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Raiders Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rooster Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rose Regalia Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Rose Regalia Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rose Regalia Returns Again Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rose Regalia Returns Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Rose Regalia Reunion Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Ruby Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Running Wild Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Sapphire Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/ShadowTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Shining Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Slime Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Slumber Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Solstice Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, 2013",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, 2014",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, 2015",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2016",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2017",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2018",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2014",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2015",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2016",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2017",Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2018",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spiralhorn Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spiraltail Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Splash Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spring Equinox Prize Box 2015,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spring Equinox Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spring Equinox Prize Box 2017,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spring Equinox Prize Box 2018,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spring Equinox Prize Box 2019,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Spritely Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Stormy Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Stranger Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/SummerTech Mk II Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/SummerTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Surge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Toyland Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Turquoise Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Vile Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Volcanic Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Warm Forge Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Wicked Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Wicked Prize Box 2016,Lockbox,unusable,no item-use handler for Lockbox
-"Upgrade/Prize Box/Wicked Prize Box, Complete",Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/WinterTech Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Winterfest Present,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Winterfest Prize Box,Lockbox,unusable,no item-use handler for Lockbox
-Upgrade/Prize Box/Wizard Prize Box,Lockbox,unusable,no item-use handler for Lockbox
+Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/AeroTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Aerodynamic Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Almire Furniture Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Amethyst Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Ancient Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2014/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2014,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary Prize Box 2019,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Anniversary Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Aquamarine Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Autumn Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Battle Boar Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Bejeweled Stranger Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Blazing Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Blooming Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Buccaneer Booty Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Budding Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Cavalry Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Chess Mini Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Chess Mini Prize Box, Winterfest",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Citrine Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Clockworks Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Colossal Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 1,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 5,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Companion Prize Box/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Confection Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Construct Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Cozy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/CozyTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/CozyTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Cracked Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dangerous Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dangerous Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dark Harvest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dark Harvest Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dark Harvest Prize Box Series 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dazed Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Decoration Kit Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Diamond Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Dim Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Disguise Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Electric Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Elite Trinket Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Emerald Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Equinox Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Equinox Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Extraordinary Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Fall Equinox Prize Box 2014,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Fall Equinox Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Fall Equinox Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Fall Equinox Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Fall Equinox Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/FlowerTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/FlowerTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Frenzy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Frosty Present,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Frosty Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Furniture Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Garnet Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Glacial Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Glacial Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Glacial Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Glowing Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Gobble Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Gourmet Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Gremlin Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Grey Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Grey Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Guild Hall Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hazardous Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hazardous Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hive Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hololite Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hunter Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Hunter Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Katastrophe Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Katastrophe Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Katastrophe Returns Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Late Harvest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Lucky Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Moorcroft Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Nemesis Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Obsidian Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Opal Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Owlite Archaeology Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Parts/Anniversary Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Parts/Equinox Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Pearl Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Peridot Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Plunge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Polar Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Polar Prize Box, 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Polar Prize Box, 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Radiant Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rage Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Raiders Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rooster Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rose Regalia Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Rose Regalia Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rose Regalia Returns Again Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rose Regalia Returns Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Rose Regalia Reunion Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Ruby Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Running Wild Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Sapphire Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/ShadowTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Shining Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Slime Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Slumber Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Solstice Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, 2013",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, 2015",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2017",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2018",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2015",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2017",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2018",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spiralhorn Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spiraltail Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Splash Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spring Equinox Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spring Equinox Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spring Equinox Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spring Equinox Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spring Equinox Prize Box 2019,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Spritely Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Stormy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Stranger Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/SummerTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/SummerTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Surge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Toyland Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Turquoise Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Vile Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Volcanic Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Warm Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Wicked Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Wicked Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Wicked Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/WinterTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Winterfest Present,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Winterfest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Wizard Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Rename Guild,RenameGuild,unusable,no item-use handler for RenameGuild
 Upgrade/Rename Knight,RenameKnight,unusable,no item-use handler for RenameKnight
 Upgrade/Trinket Slot,Upgrade,unusable,no item-use handler for Upgrade

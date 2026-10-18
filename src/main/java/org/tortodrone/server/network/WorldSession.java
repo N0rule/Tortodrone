@@ -291,7 +291,44 @@ final class WorldSession implements AutoCloseable {
         return true;
     }
 
+    private record BoxRequest(int world,short request) { }
+    private record BoxReply(long box,int option,Object rewards,String failure) { }
+    // Stock listener IDs wrap. Keep only recent requests on this connection, never persist a client ID.
+    private final java.util.LinkedHashMap<BoxRequest,BoxReply> boxReplies=new java.util.LinkedHashMap<>();
+    private boolean boxInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=9||request.method()!=12)return false;
+        var args=request.arguments();
+        if(args.size()!=3||!(args.get(0) instanceof Long id)||!(args.get(1) instanceof Integer option)
+                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid box opening request");
+        BoxRequest token=null;
+        try {
+            if(closed||!selected()||!entered||!subscribed)throw new IOException("m.internal_error");
+            var current=characters.worldProfile(knight.name(),authRevision,profile);
+            if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+            token=new BoxRequest(current.worldId(),listener.requestId());var prior=boxReplies.get(token);
+            if(prior!=null) {
+                if(prior.box()!=id||prior.option()!=option||prior.failure()!=null)throw new IOException(prior.failure()==null?"m.internal_error":prior.failure());
+                Object rewards=prior.rewards();output.send(()->codec.townResult(oid,listener.requestId(),rewards,profile));return true;
+            }
+            var result=characters.boxes(scenes.boxes()).open(characters.accountId(),knight.id(),authRevision,current.revision(),id,option);
+            // Retain the receipt before publication: a queued-output failure must never cause a second write.
+            rememberBox(token,new BoxReply(id,option,result.result(),null));
+            townChanged(result,false);
+            output.send(()->codec.townResult(oid,listener.requestId(),result.result(),result.profile()));
+        }catch(CharacterStore.Refused|IOException failure) {
+            if(token!=null&&!boxReplies.containsKey(token))rememberBox(token,new BoxReply(id,option,null,failure.getMessage()));
+            output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
+        }
+        return true;
+    }
+    private void rememberBox(BoxRequest request,BoxReply result) {
+        boxReplies.put(request,result);if(boxReplies.size()>256)boxReplies.remove(boxReplies.keySet().iterator().next());
+    }
+
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(boxInvocation(request))return true;
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
         if(billingInvocation(request))return true;

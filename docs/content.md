@@ -643,3 +643,236 @@ customized removed/renamed paths produce `conflicts.txt` and stop preparation
 before runtime content changes. Prepare a fresh candidate and transfer the edits
 manually. Validate the whole candidate, including native resources/descriptors,
 before installation. Runtime `data/` is never copied as default content or packaged.
+
+## Lockboxes and Prize Boxes
+
+Version 0.35.1 implements the shared native opening protocol, authenticated SQLite
+transaction, reward selector and inventory delivery. **No shipped official reward
+pool is enabled.** Complete distributions could not be verified; enabling a list
+of possible prizes with equal weights would invent official odds. The
+[box support matrix](box-support.csv) audits all 250 indexed stock `Lockbox`
+definitions individually, including internal base definitions. Being indexed or
+having a verified key configuration does not establish a playable official pool.
+
+### Player interaction and current parity
+
+Open Arsenal → Usable, select a box, and use its native Open/Unlock With action.
+The client presents the original confirmation and animated reward window. For a
+box with an enabled, validated definition, exactly one owned box is consumed and
+all selected rewards are delivered to persistent Arsenal inventory. Missing,
+incomplete and unsupported definitions return a failure without consuming items.
+This deliberately means the shipped ordinary, Slime and Prize boxes cannot yet
+be opened for official prizes. Administrators can author explicitly `custom`
+pools; those are a different distribution, not an official-parity claim.
+
+| Box/mechanic | Stock evidence | Tortodrone coverage |
+| --- | --- | --- |
+| Iron, Mirrored, Copper, Silver, Gold, Steel, Platinum, Titanium | Native Silver Key option; community lists lack official odds | Protocol/transaction implemented; distributions disabled |
+| Each numbered/colored Slime Lockbox | Native Slime Key **or** Silver Key menu options | Both selections implemented; distinct identities retained; distributions disabled |
+| Seasonal/promotional/Anniversary Prize Boxes | Native `NONE` key classification | Keyless protocol implemented; individual pools not yet researched |
+| Lucky Prize Box | March 2024 announcement: keyless, unbound; category probabilities | Disabled: unspecified choices within categories and unsupported furniture |
+| Forge Prize Boxes | Native keyless; community pool/quantity/odds research incomplete | Disabled; binding and distributions need complete evidence |
+| Surprise Boxes | Historical announcements describe another box, Confetti and independent Stately Cap chance | Historical prize selection/quantity details incomplete; no invented standalone catalog identity |
+| Gift Box | Existing player-wrapped contents, separate native method 13 | Existing wrapping/unwrapping preserved |
+| Shadow Key | Native `SHADOW_KEY`, distinct from `LOCKBOX_KEY` and `SLIME_KEY` | Never accepted as an opening key |
+
+Silver and Slime Keys are ordinary authoritative inventory items, regardless of
+whether they came from Depot, a merchant, trade, auction or administrator grant.
+Opening has no dependency on a store offer, price or acquisition route. The native
+client selects a **key type option**, not a specific inventory key instance. The
+server consumes one from the lowest-ID eligible owned stack of that selected type.
+It never changes the selected type to another available key. Keyless boxes require
+option `-1` and do not consume either key even when both are present.
+
+### Native protocol and evidence
+
+The installed client uses `ItemMarshaller.b(long, int, A.c)`, method **12**, on the
+existing Item service **9**, invocation object **3**. Arguments are
+`[Long boxInstanceId, Integer keyOption, ResultMarshaller listener]`:
+
+- Standard Lockbox: option `0` is Silver Key (`Ticket/Keys/Silver Key`).
+- Slime Lockbox: option `0` is Slime Key (`Ticket/Keys/Slime Key`), option `1` is Silver Key.
+- Keyless Prize Box: option `-1`.
+
+`ItemConfig.Lockbox.KeyType` supplies those menu options. Without a required key,
+the native menu shows a missing-key label instead of the corresponding unlock
+action. Cancel completes locally, without sending an opening invocation. Forged
+options and foreign, stale or absent inventory instances fail server validation.
+Method 14 remains ordinary item Use and recipe/harness dispatch; method 13 remains
+Gift Box unwrap. No new packet or custom reward window was introduced.
+
+After commit, existing `EntryRemovedEvent`, `EntryUpdatedEvent` and
+`EntryAddedEvent` notifications update the native inventory DSet. The result
+callback is native method `1`, one argument: `HashMultiset<Long>` of **actual
+reward inventory instance IDs** and awarded quantities. Updated stack IDs remain
+stable and the multiset reports only the awarded delta. Each non-stackable reward
+has its own ID. Stock `item.client.H` passes that multiset to the animated
+`item.client.Y` window, which resolves it from the already-published inventory.
+Failure uses native method `0` and a reason string; the stock window exits its
+waiting state. There is no client-supplied reward or random seed.
+
+Read-only class/config inspection and `scripts/compat/BoxCompatibility.java`
+verify method/argument/listener/result layouts, the three key identities and all
+250 indexed key classifications against the installed build. Its hashes are in
+`content/_internal/provenance/boxes.tsv`; this newer inspection does not replace
+older item-export provenance. `SessionDecoder` and `SessionCodec` already support
+the required primitive arguments, listeners, multiset and inventory events.
+
+One isolated graphical `--boxes-only` scenario exercised the unchanged Arsenal
+panel/menu, cancel/confirm, a Silver Key Lockbox, both Slime key choices, keyless
+Prize Box opening with both key types retained, and native animated success
+windows. These tests use **synthetic Calibur rewards only in the disposable
+copied deployment**. Screenshots were reviewed. This proves the interaction and
+presentation, not any official distribution. Exact official full-inventory UI,
+mail overflow delivery and historical reward windows remain unverified. Tortodrone
+safely refuses delivery when the complete selected bundle cannot fit.
+
+### Readable loot definitions
+
+Definitions live in `content/loot/boxes/**/*.yml`. Each file has a `boxes` mapping
+keyed by an existing readable item ID. Native bindings remain internal; ordinary
+loot YAML contains no native paths, stock numbers or serialization metadata.
+`coverage.yml` is an audit of disabled definitions, not a collection of guessed
+loot tables. Edit or move an existing definition when supplying a pool; duplicate
+IDs across files are rejected. Key options must exactly match
+`_internal/box-bindings.json`, including their order.
+
+The following is an **illustrative custom test distribution, not an official Iron
+Lockbox pool**. It must never be labeled `verified` on the strength of this example.
+
+```yaml
+boxes:
+  lockbox:
+    kind: keyed
+    acceptedKeys: [silver_key]
+    status: custom
+    evidence: "Administrator-authored example; not official Spiral Knights odds"
+    guaranteed:
+      - {item: brimstone, quantity: 2, binding: bound}
+    groups:
+      main:
+        chance: "100%"
+        rolls: 1
+        entries:
+          - weight: 3
+            rewards:
+              - {item: calibur, quantity: 1, binding: unbound}
+          - weight: 1
+            rewards:
+              - {group: materials}
+      materials:
+        chance: "100%"
+        rolls: 1
+        entries:
+          - weight: 1
+            rewards:
+              - {item: brimstone, quantity: {min: 3, max: 5}, binding: bound}
+      bonus_sparks:
+        chance: "2%"
+        rolls: 1
+        entries:
+          - weight: 1
+            rewards:
+              - {item: spark_of_life, quantity: 1, binding: unbound}
+```
+
+`main` and every `bonus_` group are root rolls. Other named groups execute only
+when referenced. Do not reference a root group from another group: that would
+explicitly roll it again. `chance` is required, uses a percent string with up to
+four decimal places, and gates the whole group once; if successful, `rolls`
+independent weighted choices follow. Entries require positive integer weights;
+probability is `weight / sum(weights)` **within that group only**. A selected entry
+delivers every reward in its `rewards` bundle. The example therefore has 75%/25%
+main alternatives and a separate 2% bonus; the bonus never dilutes the main pool.
+Quantity ranges are inclusive and uniform; use them only when that quantity rule
+is evidenced. Model arguments, variants and cosmetic colors come from the selected
+item's existing hidden binding, never arbitrary loot fields.
+
+`binding` is explicit: `bound`, `unbound`, or `catalog`. `catalog` retains native
+locked/bind-on-equip defaults. `unbound` is rejected for native locked items; it
+does not clear a normal item's future bind-on-equip flag. Reward grantability is
+checked for the entire definition at startup. Accessories, costumes, equipment,
+keys/tickets and other boxes use ordinary persisted item records where the item
+catalog supports them. Furniture, unsupported upgrade/seed representations and
+Gift Boxes without wrapped contents are rejected. Personal appearance modifier
+items being grantable does not prove their separate Use workflow is implemented.
+Nested prize boxes remain in inventory for later manual opening. Recursive box or
+group cycles, missing groups, empty main outcomes and excessive expansion fail
+validation; nothing is silently dropped or replaced.
+
+Statuses are `verified` (complete sourced distribution), `custom` (explicit local
+rules), `incomplete`, `unsupported`, and `unresearched`. Only the first two enable
+opening, and both require a complete validated main pool. A citation does not
+supply missing weights automatically. Startup validates all IDs, key identities,
+key order, quantities, bindings, weights, chances and group/box dependencies
+before publishing the immutable content snapshot.
+
+### Transactions, persistence and verification
+
+The opening service uses the existing schema-15 SQLite database with **no schema
+change or new inventory**. One `BEGIN IMMEDIATE` transaction rechecks account,
+knight, authentication revision and expected inventory revision, resolves the
+owned box and chosen key, selects and validates rewards, projects capacity after
+consumption and compatible stack merging, consumes one box/key, grants all
+rewards, audits grants and increments the world revision. Any exception rolls
+back the whole transaction, including already-updated stacks. Publication occurs
+after commit and outside the storage lock. A disconnect cannot undo or partially
+repeat a committed grant; normal reconnect/restart loads the saved inventory.
+
+Recent native listener tokens (256 per connection/knight) cache success/failure
+receipts. A repeated token cannot spend again or select another box. A fresh
+listener may legitimately open the next item from a stack; expected inventory
+revisions reject simultaneous stale intent. Native short listener IDs are not
+durable operation IDs: reconnects and token reuse after cache eviction are new
+intents, which must still consume owned items transactionally. There is no promise
+of cross-connection request deduplication that the native protocol cannot express.
+Trade sessions are rejected; items removed to auction escrow or transferred to
+another owner are absent from the transaction's authoritative inventory.
+
+Focused checks include `BoxCatalogTest`, `BoxOpeningTest`,
+`BoxOpeningSessionTest`, `GiftWrappingTest`, `TownServicesSessionTest`,
+`ContentManagerTest`, `DepotStoreTest` and `AuctionParityTest`. They cover weighted
+boundaries, independent bonuses, quantities, binding, key selection, ownership,
+authentication, full inventory, stack capacity, failed grants, races, replay,
+persistence, recipe/Gift preservation and economy identity compatibility.
+
+From a separate read-only installation, with a freshly built server JAR:
+
+```sh
+java --enable-native-access=ALL-UNNAMED \
+  -cp 'build/tortodrone.jar:/path/to/Spiral Knights/code/*' \
+  scripts/compat/BoxCompatibility.java '/path/to/Spiral Knights'
+java --enable-native-access=ALL-UNNAMED \
+  -Dtortodrone.deployment=/tmp/tortodrone-check \
+  -cp /tmp/tortodrone-check/tortodrone.jar \
+  scripts/compat/CheckCombatRendering.java '/path/to/Spiral Knights' \
+  /tmp/tortodrone-box-graphics-fresh --boxes-only
+python3 scripts/content/index_box_support.py
+```
+
+### Reward source confidence
+
+- **Official announcement:** [Lucky promotion, March 2024](https://wiki.spiralknights.com/Lucky_Prize_Box_Promotion_March_2024)
+  establishes keyless opening, unbound delivery and seven category weights
+  (40/30/5/8/8/7/2). It does not specify all choices within those categories;
+  the furniture category is also ungrantable. None of these weights were expanded
+  into invented per-item odds.
+- **Official announcement:** [Golden Slime Casino Returns, June 2016](https://store.steampowered.com/news/app/99900/view/2882822940992219027)
+  allows Silver or Slime Keys and says contents may change. It does not provide
+  complete numbered-box distributions. The installed config verifies the option
+  order independently.
+- **Community documentation:** [Lockbox](https://wiki.spiralknights.com/Lockbox),
+  [Slime Lockbox](https://wiki.spiralknights.com/Slime_Lockbox) and
+  [Forge Prize Box](https://spiralknights.fandom.com/wiki/Forge_Prize_Box)
+  describe candidate contents and gaps; they are not official per-item odds.
+  Numbered Slime pools cannot be collapsed. Forge binding is documented as bound,
+  but that alone cannot complete its distribution.
+- **Historical official announcement:** [April 2014 Steam announcement archive](https://store.steampowered.com/news/posts/?appids=99900&enddate=1396561916)
+  describes Surprise Boxes containing a past prize box, Confetti and an independent
+  2% Stately Cap chance. Exact main-box weights and Confetti quantities remain
+  insufficiently evidenced.
+
+Some requested Fandom pages returned HTTP 402 during research; accessible stock
+configs, official announcements and the community wiki above were used instead.
+No private captures, original client assets, guessed percentages, pity counters,
+merchant NPCs or acquisition mechanics are included in this change.

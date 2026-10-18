@@ -1,0 +1,946 @@
+{
+  "format": "tortodrone-box-bindings",
+  "version": 1,
+  "boxes": {
+    "a10": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a12": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a14": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a16": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a17": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a18": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a19": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a1a": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a1b": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a1h": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a1i": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "a1j": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "aerodynamic_box": {
+      "keyOptions": []
+    },
+    "aerotech_mk_ii_prize_box": {
+      "keyOptions": []
+    },
+    "aerotech_prize_box": {
+      "keyOptions": []
+    },
+    "almire_furniture_box": {
+      "keyOptions": []
+    },
+    "amethyst": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "amethyst_prize_box": {
+      "keyOptions": []
+    },
+    "ancient_prize_box": {
+      "keyOptions": []
+    },
+    "anniversary_base": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2014": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2015": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2016": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2017": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2018": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_2019": {
+      "keyOptions": []
+    },
+    "anniversary_prize_box_complete": {
+      "keyOptions": []
+    },
+    "aquamarine_prize_box": {
+      "keyOptions": []
+    },
+    "aquamarine_s3663179769_d55637365871": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "autumn_prize_box": {
+      "keyOptions": []
+    },
+    "b1b": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "base_s0_10e524c9fb2f": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "base_s0_ab745f1d7fe0": {
+      "keyOptions": []
+    },
+    "base_s0_e1dbd374411c": {
+      "keyOptions": []
+    },
+    "battle_boar_box": {
+      "keyOptions": []
+    },
+    "bejeweled_stranger_prize_box": {
+      "keyOptions": []
+    },
+    "blazing_prize_box": {
+      "keyOptions": []
+    },
+    "blooming_prize_box": {
+      "keyOptions": []
+    },
+    "buccaneer_booty_box": {
+      "keyOptions": []
+    },
+    "budding_prize_box": {
+      "keyOptions": []
+    },
+    "cavalry_prize_box": {
+      "keyOptions": []
+    },
+    "character": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "chess_mini_prize_box": {
+      "keyOptions": []
+    },
+    "chess_mini_prize_box_winterfest": {
+      "keyOptions": []
+    },
+    "citrine": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "citrine_prize_box": {
+      "keyOptions": []
+    },
+    "clockworks_prize_box": {
+      "keyOptions": []
+    },
+    "colossal_prize_box": {
+      "keyOptions": []
+    },
+    "companion_prize_box_1": {
+      "keyOptions": []
+    },
+    "companion_prize_box_2": {
+      "keyOptions": []
+    },
+    "companion_prize_box_3": {
+      "keyOptions": []
+    },
+    "companion_prize_box_4": {
+      "keyOptions": []
+    },
+    "companion_prize_box_5": {
+      "keyOptions": []
+    },
+    "confection_prize_box": {
+      "keyOptions": []
+    },
+    "construct_prize_box": {
+      "keyOptions": []
+    },
+    "cozy_prize_box": {
+      "keyOptions": []
+    },
+    "cozytech_mk_ii_prize_box": {
+      "keyOptions": []
+    },
+    "cozytech_prize_box": {
+      "keyOptions": []
+    },
+    "cracked_forge_prize_box": {
+      "keyOptions": []
+    },
+    "curse_s1593184055_a07da837537b": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "dangerous": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "dangerous_prize_box": {
+      "keyOptions": []
+    },
+    "dangerous_prize_box_2016": {
+      "keyOptions": []
+    },
+    "dark_harvest_prize_box": {
+      "keyOptions": []
+    },
+    "dark_harvest_prize_box_2017": {
+      "keyOptions": []
+    },
+    "dark_harvest_prize_box_complete": {
+      "keyOptions": []
+    },
+    "dark_harvest_prize_box_series_3": {
+      "keyOptions": []
+    },
+    "dazed_prize_box": {
+      "keyOptions": []
+    },
+    "decoration_kit_prize_box": {
+      "keyOptions": []
+    },
+    "diamond_prize_box": {
+      "keyOptions": []
+    },
+    "diamond_s2569607865_91acdc04b350": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "dim_forge_prize_box": {
+      "keyOptions": []
+    },
+    "disguise_prize_box": {
+      "keyOptions": []
+    },
+    "electric_prize_box": {
+      "keyOptions": []
+    },
+    "elite_trinket_box": {
+      "keyOptions": []
+    },
+    "emerald_prize_box": {
+      "keyOptions": []
+    },
+    "emerald_s3575457673_92818a0c31ec": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "equinox_base": {
+      "keyOptions": []
+    },
+    "equinox_prize_box": {
+      "keyOptions": []
+    },
+    "equinox_prize_box_complete": {
+      "keyOptions": []
+    },
+    "extraordinary_prize_box": {
+      "keyOptions": []
+    },
+    "fall_equinox_prize_box_2014": {
+      "keyOptions": []
+    },
+    "fall_equinox_prize_box_2015": {
+      "keyOptions": []
+    },
+    "fall_equinox_prize_box_2016": {
+      "keyOptions": []
+    },
+    "fall_equinox_prize_box_2017": {
+      "keyOptions": []
+    },
+    "fall_equinox_prize_box_2018": {
+      "keyOptions": []
+    },
+    "flowertech_mk_ii_prize_box": {
+      "keyOptions": []
+    },
+    "flowertech_prize_box": {
+      "keyOptions": []
+    },
+    "frenzy_prize_box": {
+      "keyOptions": []
+    },
+    "frosty_present": {
+      "keyOptions": []
+    },
+    "frosty_prize_box": {
+      "keyOptions": []
+    },
+    "furniture_prize_box": {
+      "keyOptions": []
+    },
+    "garnet": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "garnet_prize_box": {
+      "keyOptions": []
+    },
+    "glacial": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "glacial_prize_box": {
+      "keyOptions": []
+    },
+    "glacial_prize_box_2016": {
+      "keyOptions": []
+    },
+    "glacial_prize_box_complete": {
+      "keyOptions": []
+    },
+    "glowing_forge_prize_box": {
+      "keyOptions": []
+    },
+    "gobble_prize_box": {
+      "keyOptions": []
+    },
+    "gourmet_prize_box": {
+      "keyOptions": []
+    },
+    "gremlin_prize_box": {
+      "keyOptions": []
+    },
+    "grey_mk_ii_prize_box": {
+      "keyOptions": []
+    },
+    "grey_prize_box": {
+      "keyOptions": []
+    },
+    "guild_hall_prize_box": {
+      "keyOptions": []
+    },
+    "hazardous": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "hazardous_prize_box": {
+      "keyOptions": []
+    },
+    "hazardous_prize_box_2017": {
+      "keyOptions": []
+    },
+    "hive_prize_box": {
+      "keyOptions": []
+    },
+    "hololite_prize_box": {
+      "keyOptions": []
+    },
+    "hunter": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "hunter_prize_box": {
+      "keyOptions": []
+    },
+    "hunter_prize_box_2016": {
+      "keyOptions": []
+    },
+    "item_000": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_001": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_002": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_003": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_004": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_005": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_006": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_007": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_008": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_009": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00a": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00b": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00c": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00d": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00e": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00f": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_00g": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_2014_prize_box": {
+      "keyOptions": []
+    },
+    "item_2014_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2014_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2014_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_2015_prize_box": {
+      "keyOptions": []
+    },
+    "item_2015_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2015_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2015_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_2016_prize_box": {
+      "keyOptions": []
+    },
+    "item_2016_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2016_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2016_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_2017_prize_box": {
+      "keyOptions": []
+    },
+    "item_2017_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2017_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2017_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_2018_prize_box": {
+      "keyOptions": []
+    },
+    "item_2018_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2018_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2018_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_2019_prize_box": {
+      "keyOptions": []
+    },
+    "item_2019_prize_box_2": {
+      "keyOptions": []
+    },
+    "item_2019_prize_box_3": {
+      "keyOptions": []
+    },
+    "item_2019_prize_box_4": {
+      "keyOptions": []
+    },
+    "item_403": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_40g": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_40n": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_41c": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_41d": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_509": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "item_50e": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "katastrophe_prize_box": {
+      "keyOptions": []
+    },
+    "katastrophe_prize_box_complete": {
+      "keyOptions": []
+    },
+    "katastrophe_returns_prize_box": {
+      "keyOptions": []
+    },
+    "late_harvest_prize_box": {
+      "keyOptions": []
+    },
+    "lockbox": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_copper": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_gold": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_platinum": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_silver": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_steel": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lockbox_titanium": {
+      "keyOptions": [
+        "silver_key"
+      ]
+    },
+    "lucky_prize_box": {
+      "keyOptions": []
+    },
+    "moorcroft_prize_box": {
+      "keyOptions": []
+    },
+    "mystery": {
+      "keyOptions": []
+    },
+    "nemesis_prize_box": {
+      "keyOptions": []
+    },
+    "obsidian_prize_box": {
+      "keyOptions": []
+    },
+    "opal": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "opal_prize_box": {
+      "keyOptions": []
+    },
+    "owlite_archaeology_box": {
+      "keyOptions": []
+    },
+    "pearl": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "pearl_prize_box": {
+      "keyOptions": []
+    },
+    "peridot": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "peridot_prize_box": {
+      "keyOptions": []
+    },
+    "plunge_prize_box": {
+      "keyOptions": []
+    },
+    "polar_prize_box": {
+      "keyOptions": []
+    },
+    "polar_prize_box_2014": {
+      "keyOptions": []
+    },
+    "polar_prize_box_2016": {
+      "keyOptions": []
+    },
+    "qqq": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "radiant_forge_prize_box": {
+      "keyOptions": []
+    },
+    "rage_prize_box": {
+      "keyOptions": []
+    },
+    "raiders_prize_box": {
+      "keyOptions": []
+    },
+    "rooster_prize_box": {
+      "keyOptions": []
+    },
+    "rose_regalia_prize_box": {
+      "keyOptions": []
+    },
+    "rose_regalia_prize_box_complete": {
+      "keyOptions": []
+    },
+    "rose_regalia_returns_again_prize_box": {
+      "keyOptions": []
+    },
+    "rose_regalia_returns_prize_box": {
+      "keyOptions": []
+    },
+    "rose_regalia_reunion_prize_box": {
+      "keyOptions": []
+    },
+    "ruby": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "ruby_prize_box": {
+      "keyOptions": []
+    },
+    "running_wild_box": {
+      "keyOptions": []
+    },
+    "sapphire": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "sapphire_prize_box": {
+      "keyOptions": []
+    },
+    "shadow": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "shadowtech_prize_box": {
+      "keyOptions": []
+    },
+    "shining_forge_prize_box": {
+      "keyOptions": []
+    },
+    "slime_prize_box": {
+      "keyOptions": []
+    },
+    "slumber_prize_box": {
+      "keyOptions": []
+    },
+    "solstice_prize_box": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_2013": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_2014": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_2015": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_complete": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_summer_2016": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_summer_2017": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_summer_2018": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_winter_2014": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_winter_2015": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_winter_2016": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_winter_2017": {
+      "keyOptions": []
+    },
+    "solstice_prize_box_winter_2018": {
+      "keyOptions": []
+    },
+    "spiralhorn_prize_box": {
+      "keyOptions": []
+    },
+    "spiraltail_prize_box": {
+      "keyOptions": []
+    },
+    "splash_prize_box": {
+      "keyOptions": []
+    },
+    "spring_equinox_prize_box_2015": {
+      "keyOptions": []
+    },
+    "spring_equinox_prize_box_2016": {
+      "keyOptions": []
+    },
+    "spring_equinox_prize_box_2017": {
+      "keyOptions": []
+    },
+    "spring_equinox_prize_box_2018": {
+      "keyOptions": []
+    },
+    "spring_equinox_prize_box_2019": {
+      "keyOptions": []
+    },
+    "spritely_prize_box": {
+      "keyOptions": []
+    },
+    "stormy_prize_box": {
+      "keyOptions": []
+    },
+    "stranger_prize_box": {
+      "keyOptions": []
+    },
+    "summertech_mk_ii_prize_box": {
+      "keyOptions": []
+    },
+    "summertech_prize_box": {
+      "keyOptions": []
+    },
+    "surge_prize_box": {
+      "keyOptions": []
+    },
+    "toyland_prize_box": {
+      "keyOptions": []
+    },
+    "turquoise_prize_box": {
+      "keyOptions": []
+    },
+    "turquoise_s2694106950_c648a1f83cc2": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "variant_base": {
+      "keyOptions": [
+        "slime_key",
+        "silver_key"
+      ]
+    },
+    "vile_prize_box": {
+      "keyOptions": []
+    },
+    "volcanic_prize_box": {
+      "keyOptions": []
+    },
+    "warm_forge_prize_box": {
+      "keyOptions": []
+    },
+    "wicked_prize_box": {
+      "keyOptions": []
+    },
+    "wicked_prize_box_2016": {
+      "keyOptions": []
+    },
+    "wicked_prize_box_complete": {
+      "keyOptions": []
+    },
+    "winterfest_present": {
+      "keyOptions": []
+    },
+    "winterfest_prize_box": {
+      "keyOptions": []
+    },
+    "wintertech_prize_box": {
+      "keyOptions": []
+    },
+    "wizard_prize_box": {
+      "keyOptions": []
+    }
+  }
+}

@@ -52,7 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
-    private boolean depotOnly;
+    private boolean depotOnly,boxesOnly;
     private boolean hazardsOnly;
     private boolean healthOnly;
     private boolean movementOnly;
@@ -97,8 +97,9 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&(args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
+            if(args[0].equals("--seed-boxes"))seedBoxes(Path.of(args[1]));
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
@@ -110,7 +111,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -126,6 +127,7 @@ public final class CombatRenderingCheck {
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
+        probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
@@ -154,6 +156,77 @@ public final class CombatRenderingCheck {
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
+    private static void seedBoxes(Path data)throws Exception {
+        // ONLY this copied disposable deployment receives synthetic loot; production pools stay disabled.
+        Path file=data.getParent().resolve("content/loot/boxes/coverage.yml");
+        var rows=new LinkedHashMap<String,Object>();
+        for(var entry:Map.of("lockbox",List.of("silver_key"),"item_000",List.of("slime_key","silver_key"),"lucky_prize_box",List.<String>of()).entrySet()) {
+            var reward=Map.of("item","calibur","quantity",1,"binding","unbound");
+            var group=Map.of("chance","100%","rolls",1,"entries",List.of(Map.of("weight",1,"rewards",List.of(reward))));
+            rows.put(entry.getKey(),Map.of("kind",entry.getValue().isEmpty()?"keyless":"keyed","acceptedKeys",entry.getValue(),"status","custom",
+                "evidence","Synthetic graphical acceptance fixture, not official rewards","groups",Map.of("main",group)));
+        }
+        Files.delete(file);org.tortodrone.resources.Yaml.write(file,Map.of("boxes",rows));
+        try(var store=new AccountStore(data)) {
+            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Lucky Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
+                store.grantItems("LanPlayer","Town-Knight",item,item.equals("Ticket/Keys/Silver Key")?3:2,-1,-1);
+        }
+    }
+    private int boxIndex,boxBefore,silverBefore,slimeBefore,rewardBefore;
+    private boolean boxCancelled;
+    private com.threerings.opengl.gui.aD boxArsenal;
+    private com.threerings.projectx.item.client.F boxMenu;
+    private com.threerings.projectx.item.client.Y boxWindow;
+    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Lucky Prize Box"};
+    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open"};
+    private void boxesTick(long now)throws Exception {
+        if(stage==0) {
+            var arsenal=new com.threerings.projectx.item.client.ArsenalPanel(app);
+            boxArsenal=new com.threerings.opengl.gui.aD(app,null);
+            // Retail contains a class and a package both named gui.d; resolve its layout by name.
+            boxArsenal.getClass().getMethod("setLayoutManager",Class.forName("com.threerings.opengl.gui.d.g")).invoke(boxArsenal,Class.forName("com.threerings.opengl.gui.d.c").getConstructor().newInstance());boxArsenal.add(arsenal,Class.forName("com.threerings.opengl.gui.d.c").getField("CENTER").get(null));
+            app.GG().addWindow(boxArsenal,false);boxArsenal.pack();boxArsenal.center();
+            arsenal.e(com.threerings.projectx.item.data.ItemCodes.Group.UPGRADE);started=now;stage=70;return;
+        }
+        String config=BOX_ITEMS[boxIndex];
+        if(stage==70&&now-started>1_000_000_000L) {
+            Item item=null;for(var candidate:app.CT().items)if(candidate.Vx().getName().equals(config)){item=candidate;break;}
+            if(item==null)throw new AssertionError("Missing fixture box: "+config);
+            boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");rewardBefore=itemCount(SWORD);
+            boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
+            capture("box-"+boxIndex+"-arsenal-menu");boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
+        }
+        if(stage==71&&now-started>1_000_000_000L) {
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.client.ui.k confirm) {
+                capture("box-"+boxIndex+"-confirmation");
+                if(boxIndex==0&&!boxCancelled) {
+                    ((com.threerings.opengl.gui.e)field(confirm,"awp").get(confirm)).doClick();boxCancelled=true;started=now;stage=74;return;
+                }
+                ((com.threerings.opengl.gui.e)field(confirm,"aCW").get(confirm)).doClick();started=now;stage=72;return;
+            }
+            // A native preference may suppress subsequent confirmations in this disposable process.
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y){started=now;stage=72;return;}
+        }
+        if(stage==74&&now-started>1_000_000_000L) {
+            if(itemCount(config)!=boxBefore||itemCount("Ticket/Keys/Silver Key")!=silverBefore||itemCount(SWORD)!=rewardBefore)throw new AssertionError("Cancelled opening changed inventory");
+            boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
+        }
+        if(stage==72) {
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y window)boxWindow=window;
+            if(boxWindow==null||now-started<10_000_000_000L)return;
+            var prizes=(List<?>)field(boxWindow,"bvi").get(boxWindow);
+            if(prizes==null||prizes.size()!=1)throw new AssertionError("Native opening result did not resolve awarded IDs");
+            int silverSpent=boxIndex==0||boxIndex==2?1:0,slimeSpent=boxIndex==1?1:0;
+            if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||itemCount(SWORD)!=rewardBefore+1)
+                throw new AssertionError("Opening consumed or rewarded the wrong items");
+            capture("box-"+boxIndex+"-native-reward");boxWindow.dismiss();boxWindow=null;boxMenu.dismiss();
+            if(++boxIndex==BOX_ITEMS.length) {
+                boxArsenal.dismiss();finishImages();passed=done=true;
+                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows (synthetic loot)");app.shutdown();return;
+            }
+            started=now;stage=70;
+        }
+    }
     private void tick(){
         if(done)return;
         try{
@@ -177,6 +250,7 @@ public final class CombatRenderingCheck {
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(peer){peerTick(view);return;}
             if(townDialogsOnly){townDialogsTick(view,now);return;}
+            if(boxesOnly){boxesTick(now);return;}
             if(depotOnly){depotTick(view,now);return;}
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)

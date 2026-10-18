@@ -19,6 +19,10 @@ public final class CharacterStore {
     public org.tortodrone.storage.DepotStore depot(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,rules);}
     public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
     public org.tortodrone.storage.TownStore town(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
+    public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.loot.BoxCatalog boxes)throws IOException {
+        if(database==null)throw new IOException("Box opening requires SQLite storage");
+        return new org.tortodrone.storage.BoxOpeningService(database,catalog,boxes);
+    }
     private List<Knight> knights = List.of();
     private int nextId = 1;
     private long storageRevision;
