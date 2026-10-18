@@ -12,17 +12,30 @@ public final class NewsYaml {
         Path file=directory.resolve("news.yml");
         if(Files.notExists(file,LinkOption.NOFOLLOW_LINKS))return NewsCatalog.disabled();
         var yaml=Yaml.read(file);
-        Yaml.fields(yaml,file.toString(),"enabled","featured","spotlights");
+        Yaml.fields(yaml,file.toString(),"enabled","packs");
         boolean enabled=yaml.containsKey("enabled")&&Yaml.flag(yaml.get("enabled"),file+": enabled");
-        var featured=banner(yaml.get("featured"),directory,file,"featured");
-        NewsCatalog.Banner left=null,right=null;
-        if(yaml.containsKey("spotlights")) {
-            var spotlights=Yaml.map(yaml.get("spotlights"),file+": spotlights");
-            Yaml.fields(spotlights,file+": spotlights","left","right");
-            left=banner(spotlights.get("left"),directory,file,"spotlights.left");
-            right=banner(spotlights.get("right"),directory,file,"spotlights.right");
+        var packs=new ArrayList<NewsCatalog.Pack>();
+        if(yaml.containsKey("packs")) {
+            var rows=Yaml.list(yaml.get("packs"),file+": packs");
+            for(int index=0;index<rows.size();index++)packs.add(pack(rows.get(index),directory,file,"packs["+index+"]"));
         }
-        return new NewsCatalog(enabled,featured,left,right);
+        // An enabled file with no pack would silently show nothing; refuse it instead of failing silently.
+        if(enabled&&packs.isEmpty())throw new IOException(file+": enabled Uplink News requires at least one pack");
+        return new NewsCatalog(enabled,packs);
+    }
+    private static NewsCatalog.Pack pack(Object raw,Path directory,Path file,String where)throws IOException {
+        var pack=Yaml.map(raw,file+": "+where);
+        Yaml.fields(pack,file+": "+where,"featured","spotlights");
+        if(!pack.containsKey("featured"))throw new IOException(file+": "+where+" requires a featured banner");
+        var featured=banner(pack.get("featured"),directory,file,where+".featured");
+        NewsCatalog.Banner left=null,right=null;
+        if(pack.containsKey("spotlights")) {
+            var spotlights=Yaml.map(pack.get("spotlights"),file+": "+where+".spotlights");
+            Yaml.fields(spotlights,file+": "+where+".spotlights","left","right");
+            left=banner(spotlights.get("left"),directory,file,where+".spotlights.left");
+            right=banner(spotlights.get("right"),directory,file,where+".spotlights.right");
+        }
+        return new NewsCatalog.Pack(featured,left,right);
     }
     private static NewsCatalog.Banner banner(Object raw,Path directory,Path file,String where)throws IOException {
         if(raw==null)return null;

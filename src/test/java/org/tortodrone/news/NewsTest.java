@@ -11,64 +11,80 @@ import org.tortodrone.server.NewsServer;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
 
-/** Uplink News YAML validation, native result serialization and HTTP image serving. */
+/** Uplink News YAML validation, random pack selection, native result serialization and HTTP image serving. */
 public final class NewsTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-news-");
         try {
             Path news=home.resolve("content/shared/news");Files.createDirectories(news);
             byte[] featured="FEATURED-IMAGE".getBytes(StandardCharsets.US_ASCII);
-            Files.write(news.resolve("featured.png"),featured);Files.write(news.resolve("left.png"),new byte[]{5});Files.write(news.resolve("right.jpg"),new byte[]{6});
+            Files.write(news.resolve("featured.png"),featured);Files.write(news.resolve("left.png"),new byte[]{5});
+            Files.write(news.resolve("right.jpg"),new byte[]{6});Files.write(news.resolve("second.png"),new byte[]{7});
             Files.createDirectories(home.resolve("content/shared"));Files.write(home.resolve("content/shared/secret.png"),"TOP-SECRET".getBytes(StandardCharsets.US_ASCII));
 
             write(news,"""
                 enabled: true
-                featured:
-                  image: featured.png
-                  tooltip: Featured
-                  url: https://example.invalid/featured
-                spotlights:
-                  left:
-                    image: left.png
-                  right:
-                    image: right.jpg
+                packs:
+                  - featured:
+                      image: featured.png
+                      tooltip: Featured
+                      url: https://example.invalid/featured
+                    spotlights:
+                      left:
+                        image: left.png
+                      right:
+                        image: right.jpg
+                  - featured:
+                      image: second.png
                 """);
             var catalog=NewsYaml.load(news);
-            check(catalog.enabled(),"news enabled");
-            check(catalog.propertyList().equals(List.of(
+            check(catalog.enabled()&&catalog.size()==2,"two news packs enabled");
+            check(catalog.propertyList(0).equals(List.of(
                 "top.image","news/featured.png","top.tip","Featured","top.url","https://example.invalid/featured",
-                "left.image","news/left.png","right.image","news/right.jpg")),"native property pairs use the news/ image prefix");
+                "left.image","news/left.png","right.image","news/right.jpg")),"first pack property pairs use the news/ image prefix");
+            check(catalog.propertyList(1).equals(List.of("top.image","news/second.png")),"spotlights stay optional");
+
+            // Every response is one randomly chosen pack; with two packs both must appear.
+            var seen=new HashSet<List<String>>();
+            for(int i=0;i<200&&seen.size()<2;i++)seen.add(catalog.propertyList());
+            check(seen.size()==2&&seen.contains(catalog.propertyList(0))&&seen.contains(catalog.propertyList(1)),"each request shows one random pack");
 
             Files.delete(news.resolve("news.yml"));
-            check(!NewsYaml.load(news).enabled()&&NewsYaml.load(news).propertyList().isEmpty(),"an absent news.yml keeps Uplink News disabled");
+            check(!NewsYaml.load(news).enabled()&&NewsYaml.load(news).size()==0&&NewsYaml.load(news).propertyList().isEmpty(),"an absent news.yml keeps Uplink News disabled");
 
-            write(news,"enabled: false\nfeatured:\n  image: featured.png\n");
-            check(NewsYaml.load(news).propertyList().isEmpty(),"disabled news answers with no properties");
-            write(news,"enabled: true\nfeatured:\n  image: featured.png\n");
-            check(NewsYaml.load(news).propertyList().equals(List.of("top.image","news/featured.png")),"tooltip and url stay optional");
+            write(news,"enabled: false\npacks:\n  - featured:\n      image: featured.png\n");
+            var off=NewsYaml.load(news);
+            check(off.size()==1&&off.propertyList().isEmpty()&&off.propertyList(0).isEmpty(),"disabled news answers with no properties");
+            write(news,"enabled: false\n");
+            check(NewsYaml.load(news).propertyList().isEmpty(),"disabled news needs no packs");
 
             // Strict startup validation; each malformed file must be refused, not silently ignored.
             String[][] invalid={
                 {"enabled: true\nunknown: 1\n","unknown field"},
                 {"enabled: 1\n","expected true or false"},
-                {"enabled: true\nfeatured: nope\n","expected a mapping"},
-                {"enabled: true\nfeatured:\n  tooltip: x\n","requires an image"},
-                {"enabled: true\nfeatured:\n  image: ../secret.png\n","escapes"},
-                {"enabled: true\nfeatured:\n  image: featured.txt\n","PNG or JPEG"},
-                {"enabled: true\nfeatured:\n  image: absent.png\n","image is missing"},
-                {"enabled: true\nfeatured:\n  image: featured.png\n  action: x\n","unknown field"},
-                {"enabled: true\nspotlights:\n  middle:\n    image: left.png\n","unknown field"},
+                {"enabled: true\npacks: []\n","at least one pack"},
+                {"enabled: true\npacks: nope\n","expected a list"},
+                {"enabled: true\npacks:\n  - nope\n","expected a mapping"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n    extra: 1\n","unknown field"},
+                {"enabled: true\npacks:\n  - spotlights:\n      left:\n        image: left.png\n","requires a featured banner"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n    spotlights:\n      middle:\n        image: left.png\n","unknown field"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: x\n","unknown field"},
+                {"enabled: true\npacks:\n  - featured:\n      tooltip: x\n","requires an image"},
+                {"enabled: true\npacks:\n  - featured:\n      image: ../secret.png\n","escapes"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.txt\n","PNG or JPEG"},
+                {"enabled: true\npacks:\n  - featured:\n      image: absent.png\n","image is missing"},
             };
             for(String[] bad:invalid) {
                 write(news,bad[0]);
                 failure(()->NewsYaml.load(news),bad[1]);
             }
-            write(news,"enabled: true\nfeatured:\n  image: featured.png\n");
 
-            // The shipped default must enable all three banners for the unmodified client.
+            // The shipped default is one pack with the featured tooltip and link.
             var shipped=NewsYaml.load(Path.of("content/shared/news"));
-            check(shipped.enabled()&&shipped.propertyList().equals(List.of(
-                "top.image","news/featured.png","left.image","news/left.png","right.image","news/right.png")),"shipped default enables all three banners");
+            check(shipped.enabled()&&shipped.size()==1,"shipped default enables one news pack");
+            check(shipped.propertyList(0).equals(List.of(
+                "top.image","news/featured.png","top.tip","Tortodrone Server","top.url","https://github.com/N0rule/Tortodrone",
+                "left.image","news/left.png","right.image","news/right.png")),"shipped pack carries the featured tooltip and link");
 
             // Native result: one List<String> of alternating names and values on the result listener.
             byte[] frame=new SessionCodec().listResult(42,(short)7,List.of("top.image","news/featured.png"));
@@ -97,7 +113,7 @@ public final class NewsTest {
                 var head=request(server.port(),"HEAD","/news/featured.png");
                 check(head.status()==200&&head.body().length==0,"HEAD reports the image without a body");
             }
-            System.out.println("PASS: Uplink News YAML, native property list, result serialization and HTTP image serving");
+            System.out.println("PASS: Uplink News packs, random selection, native property list, result serialization and HTTP image serving");
         }finally{delete(home);}
     }
     private static void write(Path news,String yaml)throws IOException {Files.writeString(news.resolve("news.yml"),yaml);}

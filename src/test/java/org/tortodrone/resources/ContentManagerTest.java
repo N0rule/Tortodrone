@@ -19,7 +19,7 @@ public final class ContentManagerTest {
         check(konway.initial().equals("part 1a")&&konway.nodes().get("part 1a").message().equals("m.atg_greeter_1a"),"default dialogue retains localized wire keys and jumps");
         check(baseline.town().stations().size()==99&&baseline.town().recipes().size()==668,"Town service and recipe catalogs retained");
         check(training.content().cycles().get("A").number("up",0)==4&&training.content().cycles().get("A").text("inverse","").equals("B2"),"shared trap timing and inversion retained");
-        check(baseline.news().enabled()&&baseline.news().propertyList().contains("news/featured.png"),"Uplink News banners compile into the published snapshot");
+        check(baseline.news().enabled()&&baseline.news().size()==1&&baseline.news().propertyList(0).contains("news/featured.png"),"Uplink News packs compile into the published snapshot");
         Path home=Files.createTempDirectory("tortodrone-unified-test-");
         try {
             ContentFixture.copy(Path.of("content"),home.resolve("content"));ContentFixture.copy(Path.of("config"),home.resolve("config"));

@@ -37,7 +37,7 @@ content/
     trap-cycles.yml
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
-    news/news.yml            Uplink News banners and their images
+    news/news.yml            Uplink News packs and their images
   _internal/                 fire graphs, native item arguments and provenance
 plugins/README.md            reservation only; no plugin loader
 src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system
@@ -98,32 +98,35 @@ content file scans.
 
 ## Uplink News
 
-After a knight logs in the unmodified client requests Uplink News and shows the
-banners it receives. `content/shared/news/news.yml` names up to three images; the
-client fetches each one as `content_url + news/<file>`, so the launcher's
-`content_url` must point at this server's `news-port`.
+After a knight logs in the unmodified client requests Uplink News and shows one
+pack of banners. `content/shared/news/news.yml` holds one or more packs, and each
+request shows one at random; the client fetches every image as
+`content_url + news/<file>`, so the launcher's `content_url` must point at this
+server's `news-port`.
 
 ```yaml
 enabled: true
-featured:
-  image: featured.png
-  tooltip: Server news
-  url: https://example.invalid/news
-spotlights:
-  left:
-    image: left.png
-  right:
-    image: right.png
+packs:
+  - featured:
+      image: featured.png
+      tooltip: Tortodrone Server
+      url: https://github.com/N0rule/Tortodrone
+    spotlights:
+      left:
+        image: left.png
+      right:
+        image: right.png
 ```
 
-`featured` is the top banner; `spotlights.left` and `spotlights.right` are optional
-side banners. Every banner needs a PNG or JPEG `image` stored directly in this
-folder. The optional `tooltip` shows only when the same banner also sets a `url`;
-the optional `url` opens in the player's browser. Images may not escape the folder,
-and a missing, non-image or escaping file stops startup. An absent `news.yml`, or
-`enabled: false`, answers the client with no News. The server serves this folder over
-HTTP on `server-ip:news-port` and refuses traversal, non-image paths and unknown
-files, so keep the launcher's `news-port` aligned with `config/server.yml`.
+Every pack needs a `featured` banner; `spotlights.left` and `spotlights.right` are
+optional side banners. Each banner needs a PNG or JPEG `image` stored directly in
+this folder. The optional `tooltip` shows only when the same banner also sets a
+`url`, which opens in the player's browser. Images may not escape the folder, and a
+missing, non-image or escaping file stops startup, as does `enabled: true` with no
+packs. An absent `news.yml`, or `enabled: false`, answers the client with no News.
+The server serves this folder over HTTP on `server-ip:news-port` and refuses
+traversal, non-image paths and unknown files, so keep the launcher's `news-port`
+aligned with `config/server.yml`.
 
 ## NPC dialogue
 
