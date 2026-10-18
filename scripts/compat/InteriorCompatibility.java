@@ -69,7 +69,7 @@ public final class InteriorCompatibility {
     private static void verify(String kind, ConfigManager manager) throws Exception {
         var registry = new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
         SceneRegistry.install(registry);
-        var base = registry.entry().map();
+        var base = registry.catalog().scene(kind.equals("training")?294:318);
         var map = new SceneCatalog.MapScene(base.id(), base.zone(), base.zoneName(), base.name(), base.image(), kind,
             base.version(), base.spawnX(), base.spawnY(), base.spawnRotation(), base.instances(), base.collision(), base.layout(), base.portals());
         var scene = new SceneRegistry.Instance(SCENE_OID, 0, map);
@@ -92,7 +92,7 @@ public final class InteriorCompatibility {
         append(bytes, HandshakeCodec.authenticationResponse((short) 2, true, "fixture", "InteriorUser"));
         append(bytes, codec.player((short) 10, PLAYER_OID, 1, "InteriorUser"));
         append(bytes, codec.server((short) 11, true));
-        append(bytes, codec.interiorInputThrottle());
+        append(bytes, codec.inputThrottle());
         append(bytes, codec.interiorParty((short) 3, PARTY_OID, PLAYER_OID, knight, profile, scene));
         append(bytes, codec.sceneMove(PLAYER_OID, (short) 4, false, scene, registry.catalog()));
         append(bytes, codec.scene((short) 5, scene, List.of(initial)));
@@ -108,7 +108,7 @@ public final class InteriorCompatibility {
         var server = (ServerObject) ((ObjectResponse<?>) input.qe()).yk();
         checkServer(server);
         var throttle=(com.threerings.presents.net.UpdateThrottleMessage)input.qe();
-        if(throttle.messagesPerSec!=SessionCodec.INTERIOR_TCP_MESSAGES_PER_SECOND)
+        if(throttle.messagesPerSec!=SessionCodec.TCP_MESSAGES_PER_SECOND)
             throw new AssertionError("Native TCP fallback throttle did not decode");
         var party = (DungeonPartyObject) ((ObjectResponse<?>) input.qe()).yk();
         checkParty(party, knight, profile, kind);
@@ -117,8 +117,7 @@ public final class InteriorCompatibility {
         var move = (InvocationResponseEvent) moveNotification.yj();
         boolean configSeen = false, modelSeen = false;
         for (Object argument : move.yd()) {
-            if (kind.equals("training") && argument instanceof com.threerings.projectx.dungeon.data.TrainingSceneConfig) configSeen = true;
-            if (kind.equals("level") && argument instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig) configSeen = true;
+            if (argument instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig) configSeen = true;
             if (argument instanceof com.threerings.tudey.data.TudeySceneModel) modelSeen = true;
         }
         if (!configSeen || !modelSeen) throw new AssertionError("Interior sceneMove response has wrong config/model for " + kind);
@@ -169,24 +168,20 @@ public final class InteriorCompatibility {
             throw new AssertionError("Native peaceful status entry must be keyed to the owner with null conditions and an emergency revive");
         if (profile.items().size() != 5) throw new AssertionError("Invalid party fixture profile");
         if (party.spawn != null) throw new AssertionError("Native party spawn must remain unset");
-        if (kind.equals("training")) {
-            if (party.getClass() != DungeonPartyObject.class || party.memberLimit != 8 || party.gateId != 0 || party.depth != 0)
-                throw new AssertionError("Native Training party metadata mismatch");
-            return;
-        }
-        checkLevelParty((LevelPartyObject)party);
+        if(party.getClass()!=LevelPartyObject.class)throw new AssertionError("Current Training and levels use the native LevelPartyObject");
+        checkLevelParty((LevelPartyObject)party,kind);
     }
 
-    private static void checkLevelParty(LevelPartyObject party) {
+    private static void checkLevelParty(LevelPartyObject party,String kind) {
         if (party.levelPartyService != null) throw new AssertionError("Unsupported level party service advertised");
-        if (party.memberLimit != 1 || party.gateId != 0 || party.depth != 0 || party.floor != 0)
+        if (party.memberLimit != (kind.equals("training")?8:1) || party.gateId != 0 || party.depth != 0 || party.floor != 0)
             throw new AssertionError("LevelPartyObject initial party metadata mismatch");
         if (party.pendingFloorName != null || party.pendingFloorDepth != 0 || party.actualGateId != 0 ||
             party.actualFloor != 0 || party.returnFloor != 0 || !Arrays.equals(new int[]{0}, party.wedgeIndices))
             throw new AssertionError("Peaceful interior party floor/gate state mismatch: pendingName=" + party.pendingFloorName +
                 " pendingDepth=" + party.pendingFloorDepth + " actualGate=" + party.actualGateId + " actualFloor=" + party.actualFloor +
                 " returnFloor=" + party.returnFloor + " wedges=" + Arrays.toString(party.wedgeIndices));
-        if (!"EASY".equals(party.difficulty.name()) || !"SUBTOWN".equals(party.levelType.name()) ||
+        if (!"EASY".equals(party.difficulty.name()) || !(kind.equals("training")?"SUBTOWN":"LEVEL").equals(party.levelType.name()) ||
             !"NO_DEPTH".equals(party.floorType.name()) || !"NO_DEPTH".equals(party.pendingFloorType.name()) ||
             !party.inviteOnly || party.allowFriends || party.allowGuild || !party.restricted || party.hasPickups || party.dismissStamp != 0)
             throw new AssertionError("LevelPartyObject enum/default flags mismatch: difficulty="+party.difficulty+" level="+party.levelType+

@@ -27,7 +27,7 @@ public final class MapPreparationIntegrationTest {
         }finally{ContentFixture.delete(home);}
     }
     private static void run(String command,Path output,boolean success)throws Exception {
-        var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"scripts/BuildTools.java",command,output.toString()).redirectErrorStream(true).start();
+        var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-cp",System.getProperty("java.class.path"),"BuildTools",command,output.toString()).redirectErrorStream(true).start();
         String result=new String(process.getInputStream().readAllBytes());check(process.waitFor()==(success?0:1),"preparation outcome: "+result);
     }
 }

@@ -51,7 +51,7 @@ public final class SessionCodec {
         // construction; the stock exchange window throws and wedges without it.
         "com.threerings.projectx.billing.data.BillingMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
-    public static final int INTERIOR_TCP_MESSAGES_PER_SECOND = 100;
+    public static final int TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
     private final Map<String, Integer> classes = new HashMap<>();
     private final Map<String, Integer> interns = new HashMap<>();
@@ -246,10 +246,10 @@ public final class SessionCodec {
     }
 
     /** Native unreliable input falls back to the reliable FIFO when no UDP is advertised. */
-    public byte[] interiorInputThrottle() throws IOException {
+    public byte[] inputThrottle() throws IOException {
         return frame(out -> {
             type(out, PREFIX + "UpdateThrottleMessage");out.writeShort(-1);
-            out.writeInt(INTERIOR_TCP_MESSAGES_PER_SECOND);
+            out.writeInt(TCP_MESSAGES_PER_SECOND);
         });
     }
 

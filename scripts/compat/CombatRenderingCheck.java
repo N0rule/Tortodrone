@@ -51,6 +51,7 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean dialogueOnly;
+    private boolean townDialogsOnly;
     private boolean depotOnly;
     private boolean hazardsOnly;
     private boolean healthOnly;
@@ -106,7 +107,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -123,6 +124,7 @@ public final class CombatRenderingCheck {
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
+        probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
@@ -171,6 +173,7 @@ public final class CombatRenderingCheck {
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(peer){peerTick(view);return;}
+            if(townDialogsOnly){townDialogsTick(view,now);return;}
             if(depotOnly){depotTick(view,now);return;}
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
@@ -695,6 +698,47 @@ public final class CombatRenderingCheck {
     private boolean depotUsesEnergy;
     private Confirm depotBuy,depotBilling;
     private Result depotInfo;
+    private int townDialogCycles;
+    private long townDialogMaximum;
+    private void townDialogsTick(View view,long now)throws Exception {
+        Object place=field(app.Gu(),"bJl").get(app.Gu());
+        if(!(place instanceof com.threerings.projectx.town.data.TownSceneObject scene)||view.sceneId()!=1)return;
+        if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;stage=80;return;}
+        if(stage==80){
+            if(now-started<3_000_000_000L)return;
+            equip=new Confirm();scene.townSceneService.m(equip);started=now;stage=81;return;
+        }
+        if(stage==81){
+            if(equip.reason!=null)throw new AssertionError("Native crafter refused: "+equip.reason);
+            if(!equip.done||!(app.CT().sceneDialog instanceof com.threerings.projectx.craft.data.CrafterDialogInfo)){
+                if(now-started>20_000_000_000L)throw new AssertionError("Native crafter open queued for over 20 seconds");return;
+            }
+            long elapsed=now-started;townDialogMaximum=Math.max(townDialogMaximum,elapsed);
+            System.out.printf(Locale.ROOT,"DIALOG: cycle=%d open=%.1fms%n",townDialogCycles,elapsed/1e6);
+            started=now;stage=82;return;
+        }
+        if(stage==82){
+            if(now-started<(townDialogCycles==0?600_000_000L:100_000_000L))return;
+            if(townDialogCycles==0){
+                boolean visible=false;for(int i=0;i<app.getRoot().getWindowCount();i++)visible|=Class.forName("com.threerings.projectx.craft.a.o").isInstance(app.getRoot().getWindow(i));
+                if(!visible)throw new AssertionError("Crafter data arrived without a native window");
+                capture("haven-crafter-open");
+            }
+            scene.projectXSceneService.R(app.CT().sceneDialogCreated);started=now;stage=83;return;
+        }
+        if(stage==83){
+            if(app.CT().sceneDialog!=null){if(now-started>20_000_000_000L)throw new AssertionError("Native crafter close queued for over 20 seconds");return;}
+            long elapsed=now-started;townDialogMaximum=Math.max(townDialogMaximum,elapsed);
+            System.out.printf(Locale.ROOT,"DIALOG: cycle=%d close=%.1fms%n",townDialogCycles,elapsed/1e6);
+            if(++townDialogCycles<12){equip=new Confirm();scene.townSceneService.m(equip);started=now;stage=81;return;}
+            started=now;stage=84;return;
+        }
+        if(stage==84&&now-started>600_000_000L){
+            for(int i=0;i<app.getRoot().getWindowCount();i++)if(Class.forName("com.threerings.projectx.craft.a.o").isInstance(app.getRoot().getWindow(i)))throw new AssertionError("Crafter window remained after native close");
+            capture("haven-crafter-closed");finishImages();passed=done=true;
+            System.out.printf(Locale.ROOT,"PASS: 12 rapid stock Haven crafter open/close cycles; maximum round trip %.1fms%n",townDialogMaximum/1e6);app.shutdown();
+        }
+    }
     private void depotTick(View view,long now)throws Exception {
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(stage==0){

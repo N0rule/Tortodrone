@@ -7,10 +7,10 @@ Start with [AGENTS.md](../AGENTS.md), then the files relevant to your task. Sour
 Choose the **least expensive check that proves the requested change**. Do not run the full test suite or launch the stock graphical client after every edit.
 
 1. Check the specific source and add/update a focused regression for behavior changes.
-2. For code changes run `./gradlew buildWithoutTests`, then only directly relevant standalone test classes (below). For docs-only changes, review links and diffs instead.
+2. For code changes use `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` to compile/package and run only directly relevant programs. Use `buildWithoutTests` when checking compilation/packaging alone. For docs-only changes, review links and diffs instead.
 3. Escalate to focused integration for auth, storage, trades, protocol, cross-client synchronization and other high-risk paths. Include negative cases, ownership and rollback.
 4. Run one isolated stock-client/graphical acceptance scenario only when the change affects behavior that cannot be verified otherwise (rendering, animations, HUD, live scene transitions). Do **not** start repeated graphical sessions for backend-only changes. If graphical acceptance is necessary but unavailable, report it as **not verified**, not passed.
-5. Reserve a complete `./gradlew build` for significant cross-cutting changes, release readiness or a requested full regression, **once at the final checkpoint**. Benchmarks and other expensive checks are opt-in.
+5. Reserve a complete `./gradlew build` for significant cross-cutting changes, explicit release readiness or a requested full regression, **once at the final checkpoint**. A routine patch `VERSION` bump alone does not trigger the full suite. Benchmarks and other expensive checks are opt-in.
 
 Stop when the task's acceptance criteria pass. Avoid repeated successful suites, unrelated test coverage, speculative bug hunts and `clean` unless rebuilding from scratch is necessary.
 
@@ -20,6 +20,7 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ./gradlew buildWithoutTests      # DEFAULT: compile/package main, tests and tools; execute no tests
 ./gradlew buildServer buildAdmin # package both apps and unified content
 ./gradlew testUnit               # all standalone unit tests (not a focused filter)
+./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest # focused compile/package + tests
 ./gradlew testIntegration        # all packaged integration tests
 ./gradlew build                  # full suite; milestone/release verification
 ./gradlew testProcessCleanup     # focused cleanup integration task
@@ -30,7 +31,13 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 ### Running just the affected tests
 
-Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. The bundled `StandaloneTestSuite` accepts fully-qualified test classes as arguments. From the repository root (Linux/macOS):
+Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. Prefer `-PunitTests=SceneSimulationTest,MovementCollisionTest`; fully qualified names also work. Unknown, empty or ambiguous names fail instead of silently running zero tests. Without the property, `testUnit` still runs every unit program. Programs run sequentially, report elapsed time and list the five slowest programs; authentication, storage and rollback coverage is retained.
+
+Unit/server checks build only the server JAR; admin integration and `buildWithoutTests` also package the admin app. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
+
+To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. Both JARs and prepared configuration/content go there, while Gradle compilation stays in `.build/`. A legacy `build/content/packs` deployment must still be migrated explicitly; test output redirection does not upgrade it.
+
+The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
 ```sh
 ./gradlew buildWithoutTests
@@ -104,9 +111,22 @@ Choose a fresh/nonexistent output directory under `/tmp`. The fixture starts onl
 ```sh
 ./gradlew benchmark --args="--session-only --clients 50,100,200,300"
 ./gradlew benchmark --args="--instances 4 --clients 300"
+./gradlew benchmarkScenes --args=5000 # CPU/allocation comparison: Haven, Hall of Heroes, Training
 ```
 
 Benchmarks copy packaged resources into disposable deployments, simulate clients/inputs and report connection/readiness, ping percentiles, memory/CPU and network traffic. Run on an otherwise idle host. Short local simulations do not establish WAN experience, long-term stability, rendering or full combat parity.
+
+`benchmarkScenes` creates no accounts or sockets. It warms interaction, collision, entity advancement and snapshot paths, then prints microseconds and allocated bytes per operation. Compare the same iteration count/JVM/host; these figures do not measure graphical FPS or complete request latency. Decoded immutable actor references are shared, while collision poses and simulation state remain owned by each scene instance.
+
+For a reported Haven dialog backlog, the focused stock scenario is:
+
+```sh
+java --enable-native-access=ALL-UNNAMED -Dtortodrone.deployment=/tmp/tortodrone-check \
+  -cp /tmp/tortodrone-check/tortodrone.jar scripts/compat/CheckCombatRendering.java \
+  "/path/to/Spiral Knights" /tmp/tortodrone-dialog-check --town-dialogs-only
+```
+
+This uses disposable accounts/preferences and performs twelve rapid native crafter open/close cycles, reporting each round trip and capturing the opened/closed window. The original client defaults to ten TCP messages/second; input and service calls share its FIFO. Previously the server sent the existing 100-message throttle update only when entering an interior. A fresh Town subscription now sends it before its scene snapshot, once per connection, so movement input does not accumulate ahead of NPC/crafting requests. `TownServicesSessionTest` guards initial publication and dialog ownership; `InteriorCompatibility` checks the throttle's native wire layout. Socket TCP_NODELAY also avoids delayed-ACK stalls for small responses.
 
 ## Editing, packaging and release hygiene
 

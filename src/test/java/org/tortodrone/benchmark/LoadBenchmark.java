@@ -49,7 +49,7 @@ public final class LoadBenchmark {
         System.out.println("Isolated benchmark: "+home+"; workload="+(town?"town movement":"authenticated sessions")+"; seconds="+seconds);
         Thread hook=new Thread(LoadBenchmark::stop,"BenchmarkCleanup");Runtime.getRuntime().addShutdownHook(hook);
         try {
-            TestDeployment.copyServer(Path.of("build/tortodrone.jar"),home.resolve("tortodrone.jar"));
+            TestDeployment.copyServer(Path.of(System.getProperty("tortodrone.serverJar","build/tortodrone.jar")),home.resolve("tortodrone.jar"));
             Path manifest=home.resolve("content/maps/haven/map.yml");
             var settings=org.tortodrone.resources.Yaml.read(manifest);settings.put("instances",instances);Files.delete(manifest);org.tortodrone.resources.Yaml.write(manifest,settings);
             Path data=home.resolve("data");int maximum=Arrays.stream(sizes).max().orElseThrow();
@@ -194,7 +194,12 @@ public final class LoadBenchmark {
             if(i==9)throw new IOException("No selection confirmation");
         }
         writer.send(socket.getOutputStream(),out->{writer.message(out,"SubscribeRequest",23);out.writeInt(reader.scene);});
-        var response=frame(socket);if(!(TestWire.NET+"ObjectResponse").equals(reader.type(response))||response.readShort()!=23)throw new IOException("Missing scene subscription");
+        var response=frame(socket);String responseType=reader.type(response);
+        if((TestWire.NET+"UpdateThrottleMessage").equals(responseType)){
+            if(response.readShort()!=-1||response.readInt()!=org.tortodrone.protocol.SessionCodec.TCP_MESSAGES_PER_SECOND)throw new IOException("Invalid TCP throttle");
+            response=frame(socket);responseType=reader.type(response);
+        }
+        if(!(TestWire.NET+"ObjectResponse").equals(responseType)||response.readShort()!=23)throw new IOException("Missing scene subscription");
         writer.send(socket.getOutputStream(),out->{writer.message(out,"ForwardEventRequest",24);writer.type(out,TestWire.DOB+"InvocationRequestEvent");out.writeInt(reader.scene);out.writeInt(10);out.writeByte(1);out.writeBoolean(false);});
         long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(10);
         while(System.nanoTime()<deadline) {

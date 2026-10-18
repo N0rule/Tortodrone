@@ -208,6 +208,8 @@ public final class Server {
         log.info("Connected | session="+id+" | endpoint="+client.getRemoteSocketAddress());
         log.debug("Client connected from " + client.getRemoteSocketAddress());
         try (client) {
+            // Small movement/acknowledgement frames must not wait for a delayed TCP ACK.
+            client.setTcpNoDelay(true);
             client.setSoTimeout(15000);
             SessionLog sessionLog = sessions.observe(id,new SessionLog() {
                 @Override public void debug(String message) { log.debug(message+" | session="+id); }

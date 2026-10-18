@@ -168,6 +168,7 @@ public final class SceneStatus {
         return value;
     }
     public State state(){
+        if(active.isEmpty())return State.NORMAL;
         float speed=1,attackSpeed=1,attackDamage=1,defense=1,heal=1,relativeDamage=1;boolean move=true,rotate=true,attack=true,asleep=false,shocked=false,defend=true,targeted=true;
         var cursed=new HashSet<Long>();
         var refs=new ArrayList<StarterCatalog.Model>();var expires=new ArrayList<Integer>();
@@ -198,6 +199,7 @@ public final class SceneStatus {
     }
     public float used(long item){var curse=active.get("Curse");return curse!=null&&(monster&&Math.random()<curse.strength||curse.cursedItems.contains(item))?lerp(scale(curse,"damageStart"),scale(curse,"damageEnd"),curse.strength):0;}
     public void advance(int stamp,int elapsed,boolean moving,java.util.function.DoubleConsumer damage,java.util.function.DoubleConsumer heal){
+        if(active.isEmpty())return;
         var finished=new ArrayList<StarterCatalog.Model>();
         for(var iterator=active.entrySet().iterator();iterator.hasNext();){var entry=iterator.next();var a=entry.getValue();
             if(entry.getKey().equals("Fire")&&moving)a.expires-=(int)(elapsed*.25f);

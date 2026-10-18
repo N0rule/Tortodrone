@@ -26,9 +26,23 @@ public final class TownServicesSessionTest {
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
             scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
-            var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
+            var frames=new java.util.concurrent.LinkedBlockingQueue<byte[]>();
+            var socket=new Socket(){public OutputStream getOutputStream(){return new OutputStream(){
+                public void write(int value){throw new AssertionError("Expected complete downstream frames");}
+                public void write(byte[] frame){frames.add(frame);}
+            };}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
-                world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();
+                world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));drain(output,frames);
+                world.subscribe((short)1);
+                var firstFrame=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(firstFrame!=null,"initial Town subscription publishes before readiness");
+                try(var in=new DataInputStream(new ByteArrayInputStream(firstFrame))){
+                    in.readInt();check(in.readShort()<0&&in.readUTF().equals("com.threerings.presents.net.UpdateThrottleMessage"),"fresh Haven configures the shared native TCP queue before its scene snapshot");
+                    check(in.readShort()==-1&&in.readInt()==SessionCodec.TCP_MESSAGES_PER_SECOND&&in.read()==-1,"bounded native TCP throttle payload");
+                }
+                drain(output,frames);world.unsubscribe();world.subscribe((short)2);
+                var repeated=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(repeated!=null,"resubscription publishes a scene");
+                check(!new String(repeated,java.nio.charset.StandardCharsets.ISO_8859_1).contains("UpdateThrottleMessage"),"resubscription retains the connection throttle");
+                world.entered();
                 long id=db.worldProfile(account,knight.id(),1).items().stream().filter(i->i.config().equals(recipe)).findFirst().orElseThrow().id();
                 var confirm=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)7);
                 check(world.townInvocation(new SessionDecoder.Invocation(3,9,1,List.of(id,confirm))),"stock Trash dispatches to the deletion handler");
@@ -74,5 +88,9 @@ public final class TownServicesSessionTest {
             }
             System.out.println("PASS: native recipe Use, duplicate rollback, rename dispatch and Depot dialog ownership/close lifecycle");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
+    }
+    private static void drain(SessionOutput output,java.util.concurrent.BlockingQueue<byte[]> frames)throws Exception {
+        byte[] marker=new byte[]{0};output.send(()->marker);
+        for(;;){byte[] frame=frames.poll(3,java.util.concurrent.TimeUnit.SECONDS);check(frame!=null,"queued output drains");if(frame==marker)return;}
     }
 }

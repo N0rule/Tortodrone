@@ -36,6 +36,7 @@ public final class SceneSimulation {
         private final int timestamp;
         private final Object identity=new Object(), predecessor;
         private final List<ActorState> actors;
+        private final List<ActorState> players;
         private final List<SceneEffect> effects;
         private final List<SceneCombatEvent> combatEvents;
         private final Map<Integer,ActorState> byId;
@@ -46,6 +47,7 @@ public final class SceneSimulation {
         private final Delta common, initial;
         private Snapshot(int stamp, List<ActorState> actors, List<SceneEffect> effects,List<SceneCombatEvent> combatEvents, Map<Integer,ScenePortals.Trigger> portals, Map<Integer,SceneHealth.State> health,Snapshot previous) {
             timestamp=stamp;this.actors=List.copyOf(actors);this.effects=List.copyOf(effects);
+            players=this.actors.stream().filter(ActorState::player).toList();
             this.portals=Map.copyOf(portals);
             this.health=Map.copyOf(health);
             this.combatEvents=List.copyOf(combatEvents);
@@ -58,7 +60,7 @@ public final class SceneSimulation {
         }
         public int timestamp(){return timestamp;}
         public List<ActorState> actors(){return actors;}
-        public List<ActorState> players(){return actors.stream().filter(ActorState::player).toList();}
+        public List<ActorState> players(){return players;}
         public SceneHealth.State health(int actor){return health.get(actor);}
         public List<SceneEffect> effectsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.effects.stream().mapToLong(SceneEffect::sequence).max().orElse(0);return effects.stream().filter(e->e.sequence()>last).toList();}
         public List<SceneCombatEvent> combatEventsSince(Snapshot previous){long last=previous==null?Long.MAX_VALUE:previous.combatEvents.stream().mapToLong(SceneCombatEvent::sequence).max().orElse(0);return combatEvents.stream().filter(e->e.sequence()>last).toList();}
@@ -143,7 +145,7 @@ public final class SceneSimulation {
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
-        public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&instance.map().content().entries().stream().anyMatch(e->e.spec().flag("arsenal-zone",false)&&e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
+        public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
         public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
         public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){check();health.inventory(profile);}}
         public SceneStatus.State status(){synchronized(SceneSimulation.this){check();return health.status();}}
@@ -242,7 +244,9 @@ public final class SceneSimulation {
     private ScheduledExecutorService timer;
     private Snapshot previous;
     private long tickCount;
+    private final List<SceneContent.Entry> arsenalZones;
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
+        arsenalZones=instance.map().content().entries().stream().filter(e->e.spec().flag("arsenal-zone",false)).toList();
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
         entities.feedback(this::feedback);

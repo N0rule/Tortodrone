@@ -19,7 +19,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final SceneStatus status;
         final Object shape;
         final int collisionFlags;
-        final boolean circularPawnBounds,compoundPawnBounds;
+        final boolean circularPawnBounds,compoundPawnBounds,interactive;
+        final float maximumHealth;
         final float pawnRadius,pawnMinX,pawnMinY,pawnMaxX,pawnMaxY;
         final SceneCollision.PawnShape pawnShape;
         SceneCollision.PawnShape posedPawnShape;
@@ -30,7 +31,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
+            interactive=content.conversations().containsKey(spec.text("dialogue",config.name()))||spec.fields().containsKey("town-station")||spec.fields().containsKey("town-kind");
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
+            maximumHealth=health;
             activityStarted=stateEntered=stamp;
             status=new SceneStatus(content,true);
             var preparedShape=spec.model("source-shape");shape=preparedShape==null?null:preparedShape.arguments().get("value");
@@ -57,8 +60,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             return posedPawnShape.penetration(px,py,ScenePortals.PAWN_RADIUS);
         }
         ActorState snapshot(){return new ActorState(id,0,"",0,created,x,y,rotation,direction,flags,activity,activityStarted,config,false,null,null,
-            new SceneEntityState(kind,destroyed,speed,spec.number("radius",0),
-                spec.number("health",0)>0?health/spec.number("health",0):-1,state,stateEntered,count,hitTime,binding.key(),
+            new SceneEntityState(kind,destroyed,speed,pawnRadius,
+                maximumHealth>0?health/maximumHealth:-1,state,stateEntered,count,hitTime,binding.key(),
                 kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime));}
     }
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
@@ -208,7 +211,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",670);}
     public InteractionState interaction(float x,float y,float rotation){
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((content.conversations().containsKey(e.spec.text("dialogue",e.config.name()))||e.spec.fields().containsKey("town-station")||e.spec.fields().containsKey("town-kind")||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        for(var e:entities.values())if((e.interactive||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
@@ -501,10 +504,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             &&e.carrier==ignore&&e.destroyed==Integer.MAX_VALUE);
         var result=SceneCollision.Penetration.NONE;
         for(var e:entities.values()){
-            if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2
-                    ||!e.containsPawn(x,y))continue;
+            if(e.id==ignore||e.destroyed!=Integer.MAX_VALUE||e.carrier!=0||e.kind.equals("Door")&&(e.flags&6)==2)continue;
             if((e.collisionFlags&pawnCollisionMask)==0&&!(carrying&&e.kind.equals("Door")
                     &&(e.collisionFlags&LIFT_COLLISION)!=0))continue;
+            if(!e.containsPawn(x,y))continue;
             result=result.deepest(e.penetration(x,y));
         }
         return result;

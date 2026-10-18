@@ -12,6 +12,16 @@ public final class CollisionCacheTest {
         fields.put("native-type","Monster");fields.put("config","Fixture");fields.put("health","100");fields.put("damage-mask","2");fields.put("collision-flags","8");
         fields.put("width","2");fields.put("height",".5");fields.put("speed","1");fields.put("acquire-distance","10");
         fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",rectangle))));
+        var cached=new SceneContent.Spec(fields);var uncached=new SceneContent.Spec(fields);
+        var reference=cached.model("source-shape");
+        try(var workers=java.util.concurrent.Executors.newFixedThreadPool(4)){
+            var reads=new ArrayList<java.util.concurrent.Callable<StarterCatalog.Model>>();
+            for(int i=0;i<16;i++)reads.add(()->cached.model("source-shape"));
+            for(var result:workers.invokeAll(reads))check(result.get()==reference,"shared immutable references decode once across instance threads");
+        }
+        check(cached.equals(uncached)&&cached.hashCode()==uncached.hashCode(),"definition value equality excludes derived caches");
+        check(cached.model("absent")==null,"missing optional references remain absent");
+        fields.put("health","101");check(cached.number("health",0)==100,"cached definitions retain their immutable source fields");fields.put("health","100");
         var content=new SceneContent(List.of(new SceneContent.Entry("mob",0,0,0,new SceneContent.Spec(fields))),Map.of());
         var terrain=SceneWeaponsTest.openTerrain();var moving=new SceneEntities(content,terrain);var isolated=new SceneEntities(content,terrain);
         var initial=moving.actors().getFirst();var before=moving.penetration(1.2f,0,219);
@@ -29,7 +39,7 @@ public final class CollisionCacheTest {
         var lethal=new FireCatalog.DataValue("Damage$Normal",Map.of("flags",2,"amount",1000f));
         moving.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",lethal)),turned.x(),turned.y(),0,stamp+201,219);
         check(moving.actor(initial.id())==null&&!moving.penetration(turned.x(),turned.y()+1.2f,219).present(),"destroyed actors stop colliding despite a populated cache");
-        System.out.println("PASS: cached collision translation/rotation refresh, instance isolation, ignored ownership and destruction");
+        System.out.println("PASS: concurrent immutable reference reuse, definition equality, collision translation/rotation refresh, instance isolation, ownership and destruction");
     }
     private static ActorState player(int stamp,float x,float y){return new ActorState(219,1001,"Fixture",0,stamp,x,y,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));}
 }

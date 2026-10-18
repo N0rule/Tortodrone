@@ -39,7 +39,8 @@ tasks.withType<AbstractArchiveTask>().configureEach {
 }
 tasks.jar { enabled = false }
 
-val publicOutput = layout.projectDirectory.dir("build")
+// Allow disposable builds beside an existing deployment, without modifying its runtime state.
+val publicOutput = layout.projectDirectory.dir(providers.gradleProperty("deploymentOutput").getOrElse("build"))
 fun ShadowJar.executableJar(filename: String, entryPoint: String) {
     archiveFileName.set(filename)
     destinationDirectory.set(publicOutput)
@@ -158,12 +159,12 @@ val regressionExecution = gradle.sharedServices.registerIfAbsent("regressionExec
     maxParallelUsages.set(1)
 }
 
-// The test suite consists of standalone main programs, each in a fresh JVM.
+// Integration programs use separate JVMs; unit programs share one sequential runner.
 // Use packaged code rather than main output so tests exercise the shipped resources/driver.
 fun standalone(name: String, entryPoint: String, arguments: List<String> = emptyList()) =
     tasks.register<JavaExec>(name) {
         usesService(regressionExecution)
-        dependsOn(buildServer, buildAdmin, tasks.testClasses)
+        dependsOn(buildServer, tasks.testClasses)
         javaLauncher.set(launcher25)
         classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
         mainClass.set(entryPoint)
@@ -178,17 +179,25 @@ val unitProgramNames = fileTree("src/test/java") {
     source.relativeTo(file("src/test/java")).invariantSeparatorsPath
         .removeSuffix(".java").replace('/', '.')
 }
+val requestedUnitTests = providers.gradleProperty("unitTests").orNull
+val selectedUnitPrograms = requestedUnitTests?.split(',')?.map { requested ->
+    val name = requested.trim()
+    val matches = unitProgramNames.filter { it == name || it.substringAfterLast('.') == name }
+    if (name.isEmpty() || matches.size != 1)
+        throw GradleException("Unknown or ambiguous unit test '$name'; use a test class name, separated by commas")
+    matches.single()
+}?.distinct() ?: unitProgramNames
 val runUnitSuite = tasks.register<JavaExec>("runUnitSuite") {
     group = "verification"
-    description = "Run all standalone unit programs in one JVM."
+    description = "Run standalone unit programs; optionally select classes with -PunitTests=A,B."
     usesService(regressionExecution)
-    dependsOn(buildServer, buildAdmin, tasks.testClasses)
+    dependsOn(buildServer, tasks.testClasses)
     javaLauncher.set(launcher25)
     classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
     mainClass.set("org.tortodrone.support.StandaloneTestSuite")
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
-    args(unitProgramNames)
+    args(selectedUnitPrograms)
 }
 val testUnit = tasks.register("testUnit") {
     group = "verification"
@@ -199,9 +208,12 @@ val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val adminPath = publicOutput.file("tortodrone-admin.jar").asFile.absolutePath
 val integrationPrograms = listOf(
     standalone("integrationServer", "org.tortodrone.integration.ServerIntegrationTest", listOf(serverPath)),
-    standalone("integrationAdmin", "org.tortodrone.integration.AdminIntegrationTest", listOf(serverPath, adminPath)),
+    standalone("integrationAdmin", "org.tortodrone.integration.AdminIntegrationTest", listOf(serverPath, adminPath)).apply { configure { dependsOn(buildAdmin) } },
     standalone("integrationConsole", "org.tortodrone.integration.ConsoleIntegrationTest", listOf(serverPath)),
-    standalone("integrationMaps", "org.tortodrone.integration.MapPreparationIntegrationTest")
+    standalone("integrationMaps", "org.tortodrone.integration.MapPreparationIntegrationTest").apply { configure {
+        dependsOn(tasks.named("buildToolsClasses"))
+        classpath += buildTools.output
+    } }
 )
 val testBuildTools = tasks.register<JavaExec>("testBuildTools") {
     usesService(regressionExecution)
@@ -235,7 +247,17 @@ tasks.register<JavaExec>("benchmark") {
     javaLauncher.set(launcher25)
     classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
     mainClass.set("org.tortodrone.benchmark.LoadBenchmark")
+    systemProperty("tortodrone.serverJar", serverPath)
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    workingDir = projectDir
+}
+tasks.register<JavaExec>("benchmarkScenes") {
+    group = "benchmark"
+    description = "Compare scene hot-path CPU/allocation without sockets; optional --args=10000 iterations."
+    dependsOn(buildServer, tasks.testClasses)
+    javaLauncher.set(launcher25)
+    classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
+    mainClass.set("org.tortodrone.benchmark.SceneBenchmark")
     workingDir = projectDir
 }
 

@@ -42,7 +42,7 @@ final class WorldSession implements AutoCloseable {
     private int acknowledge, created, reference, lastStamp, sceneGeneration;
     private short ping;
     private WorldStatePoller.Registration persistence;
-    private boolean subscribed, entered, closed, interiorThrottleSent;
+    private boolean subscribed, entered, closed, inputThrottleSent;
     private Short forcedReceiver;
     private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
     private PortalMove portalMove;
@@ -756,11 +756,6 @@ final class WorldSession implements AutoCloseable {
                 created=SceneClock.now();attach();
                 monitorScene();
             }
-            if(!scene.map().town()&&!interiorThrottleSent) {
-                // Keep native level inputs from accumulating ahead of travel/keepalive
-                // requests in the client's ten-message TCP fallback queue.
-                output.send(codec::interiorInputThrottle);interiorThrottleSent=true;
-            }
             int party=partyOid();
             // The stock PartyDirector resubscribes on every partyOid event,
             // even when its value is unchanged. Existing HUD listeners retain
@@ -893,6 +888,11 @@ final class WorldSession implements AutoCloseable {
         synchronized (this) {
             if(scene!=place||closed)throw new IOException("Scene changed during subscription");
             if(portalMove!=null)throw new IOException("Scene is departing through a portal");
+            if(!inputThrottleSent){
+                // The native default is only ten TCP messages per second. Town movement
+                // uses the same FIFO as NPC/crafting requests, so configure it before entry.
+                output.send(codec::inputThrottle);inputThrottleSent=true;
+            }
             output.send(() -> codec.scene(message, scene, snapshot.players()));
             leaveChat();
             lastSnapshot = null;
