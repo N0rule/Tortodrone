@@ -11,7 +11,7 @@ final class SessionOutput implements AutoCloseable {
     private final Socket socket;
     private final ArrayBlockingQueue<byte[]> pending = new ArrayBlockingQueue<>(MAX_PENDING);
     private final Thread writer;
-    private volatile boolean failed;
+    private volatile Throwable failure;
     private boolean closed;
 
     SessionOutput(Socket socket) {
@@ -24,14 +24,14 @@ final class SessionOutput implements AutoCloseable {
     @FunctionalInterface interface Encoder { byte[] frame() throws IOException; }
 
     synchronized void send(Encoder encoder) throws IOException {
-        if (closed || failed || socket.isClosed()) throw new IOException("Downstream connection closed");
+        if (closed || failure != null || socket.isClosed()) throw new IOException("Downstream connection closed", failure);
         try {
             byte[] frame = encoder.frame();
             if (frame.length > org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME) throw new IOException("Downstream frame exceeds size limit");
             if (!pending.offer(frame)) throw new IOException("Downstream queue full");
         } catch (IOException | RuntimeException error) {
             // An unsent frame may have introduced codec mappings. Never reuse that stream.
-            failed = true; closeSocket();
+            fail(error);
             if (error instanceof IOException io) throw io;
             throw new IOException("Downstream encoding failed", error);
         }
@@ -46,8 +46,7 @@ final class SessionOutput implements AutoCloseable {
                 socket.getOutputStream().flush();
             }
         } catch (IOException | InterruptedException e) {
-            failed = true;
-            closeSocket();
+            fail(e);
             if (e instanceof InterruptedException) Thread.currentThread().interrupt();
         }
     }
@@ -80,6 +79,11 @@ final class SessionOutput implements AutoCloseable {
         } catch (InterruptedException e) {
             closeSocket(); writer.interrupt(); Thread.currentThread().interrupt();
         }
+    }
+
+    private void fail(Throwable error) {
+        synchronized(this){if(failure==null)failure=error;}
+        closeSocket();
     }
 
     private void closeSocket() { try { socket.close(); } catch (IOException ignored) { } }

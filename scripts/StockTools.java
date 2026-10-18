@@ -41,6 +41,11 @@ public final class StockTools {
                 fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/PetCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
             }
+            case "fragmentation-fires" -> {
+                if(args.length!=4)throw new IllegalArgumentException("fragmentation-fires expects game-directory existing-catalogue fresh-output-directory");
+                fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));
+                fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
             case "fires" -> {
                 if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
                 fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java")); fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

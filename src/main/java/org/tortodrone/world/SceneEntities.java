@@ -6,7 +6,7 @@ import org.tortodrone.character.StarterCatalog;
 /** Instance-owned native actors, pad regeneration, movement and damage targets. */
 public final class SceneEntities implements SceneWeapons.Targets {
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot) { }
-    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","Block","Block$Stateful","Pickup","Trap","DungeonLift");
+    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift");
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -346,36 +346,36 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var prepared=e.spec.model("source-shape");
         if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
         damage(new StarterCatalog.Model("DamageRegionFromPoint",args),e.x,e.y,e.rotation,stamp,e.id,null);
-        if(pot.hazardConfig()!=null)ignite(pot,e.x,e.y,stamp);
+        if(pot.hazardConfig()!=null)ignite(pot,e.x,e.y,stamp,e.owner);
     }
-    /** Extra Action ground hazard: a trap-shaped patch whose hazard applies native status
+    /** Extra Action ground hazard: a native Bomb patch whose hazard applies native status
      *  damage on the Floor trap cadence (hazard-refractory 500), expiring at its Lifetime. */
-    private void ignite(Pot pot,float x,float y,int stamp){
+    private void ignite(Pot pot,float x,float y,int stamp,int owner){
         if(pot.hazardDamage()==null){
             // Oil Pot: nine slick patches at the landing point (the served Extra Action
-            // spawns them without scatter offsets); inert until a fire source ignites them.
-            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),Map.of(),x,y,stamp);
+            // spawns them without scatter offsets); their stripped signal handler does not establish an ignition trigger.
+            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),Map.of(),x,y,stamp).owner=owner;
             return;
         }
         // The Fire Pot spawns its torch with served arguments: the Lifetime argument selects
         // the "4 Seconds" choice, whose Creation Life renders the client flame for 4 seconds.
         hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),
-            Map.of("config.argument.(Lifetime)","string|4 Seconds","hazard-active-lifetime","4000"),x,y,stamp);
+            Map.of("config.argument.Lifetime","string|4 Seconds","hazard-active-lifetime","4000"),x,y,stamp).owner=owner;
     }
-    private void hazard(String config,Object hazard,float radius,int lifetime,Map<String,String> arguments,float x,float y,int stamp){
+    private Entity hazard(String config,Object hazard,float radius,int lifetime,Map<String,String> arguments,float x,float y,int stamp){
         var fields=new TreeMap<String,String>();
         fields.put("config",config);
-        fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Trap");
+        fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Bomb");
         fields.put("shape","Circle");
         fields.put("radius",Float.toString(radius));
-        fields.put("collision-flags","16");
+        fields.put("collision-flags",hazard==null?"16":"0");
         fields.put("hazard-lifetime",Integer.toString(lifetime));
         fields.putAll(arguments);
         var spec=new SceneContent.Spec(fields);
         var binding=new SceneContent.Entry("hazard:"+nextId,x,y,0,spec);
         var entity=new Entity(nextId++,stamp,binding,spec,null,content);
         entity.hazardStatus=hazard;
-        entities.put(entity.id,entity);
+        entities.put(entity.id,entity);return entity;
     }
 
     private void collect(Entity e,float elapsed,List<ActorState> players){
@@ -551,7 +551,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
                 boolean hit=defined instanceof FireCatalog.DataValue?SceneShape.intersects(defined,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+expansion;
-                int sourceId=source==null?owner:source.kind.equals("Monster")?owner:source.kind.equals("DungeonLift")?source.owner:0;
+                int sourceId=source==null?owner:source.kind.equals("Monster")?owner:(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:0;
                 if(hit&&(hitOnce==null||hitOnce.add(player.id()))){
                     // One trap action can cover several occupants. Record each
                     // hit here so the next sensor cannot damage them again on
@@ -592,7 +592,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
                     applyImpulse(e,region,x,y,rotation,stamp);
                     if(e.health==0)e.status.clear();
-                    int sourceId=source!=null&&source.kind.equals("DungeonLift")?source.owner:owner;
+                    int sourceId=source!=null&&(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:owner;
                     float fraction=dealt/e.spec.number("health",1);
                     feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,fraction>.4f?"NORMAL_LARGE":fraction>.2f?"NORMAL_MEDIUM":"NORMAL_SMALL"));
                 }

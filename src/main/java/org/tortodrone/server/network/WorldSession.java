@@ -1090,9 +1090,18 @@ final class WorldSession implements AutoCloseable {
             }
         }catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
         catch(IOException|RuntimeException failure) {
-            log.debug("Town session closed; "+failure.getClass().getSimpleName());close();
+            log.warn("Scene delivery closed; "+deliveryFailure(failure));close();
             try{socket.close();}catch(IOException ignored){}
         }
+    }
+    /** Keep the encoder/writer cause when a downstream stream has become unusable. */
+    private static String deliveryFailure(Throwable failure) {
+        var message=new StringBuilder();var seen=Collections.newSetFromMap(new IdentityHashMap<Throwable,Boolean>());
+        for(int depth=0;failure!=null&&depth<8&&seen.add(failure);depth++,failure=failure.getCause()){
+            if(depth>0)message.append(" caused by ");message.append(failure.getClass().getSimpleName());
+            if(failure.getMessage()!=null){String detail=failure.getMessage().replaceAll("[\\r\\n\\t]"," ");message.append(": ").append(detail,0,Math.min(256,detail.length()));}
+        }
+        return message.toString();
     }
     private synchronized void publish(Publication publication)throws IOException {
         var current=publication.snapshot();int stamp=current.timestamp();
@@ -1198,7 +1207,7 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized void refreshFailed(WorldStatePoller.Registration registration,Exception failure) {
         if(persistence!=registration||closed)return;
-        log.debug("Town session closed; "+failure.getClass().getSimpleName());close();
+        log.warn("World state refresh closed; "+deliveryFailure(failure));close();
         try{socket.close();}catch(IOException ignored){}
     }
     private void attach() {

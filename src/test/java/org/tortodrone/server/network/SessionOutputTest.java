@@ -42,6 +42,21 @@ public final class SessionOutputTest {
             rejected(() -> output.send(() -> new byte[] {1}));
             check(failed.closed, "failed encoding cannot reuse unsent class mappings");
         }
+        var writerFailure=new IOException("fixture writer failure",new IllegalStateException("fixture root cause"));
+        var broken=new Socket(){
+            volatile boolean closed;
+            @Override public boolean isClosed(){return closed;}
+            @Override public void close(){closed=true;}
+            @Override public OutputStream getOutputStream()throws IOException{throw writerFailure;}
+        };
+        try(var output=new SessionOutput(broken)){
+            output.send(()->new byte[]{1});
+            long deadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(2);
+            while(!broken.isClosed()&&System.nanoTime()<deadline)Thread.onSpinWait();
+            check(broken.isClosed(),"writer failure closes the stream");
+            try{output.send(()->new byte[]{2});throw new AssertionError("failed writer accepted a frame");}
+            catch(IOException expected){check(expected.getCause()==writerFailure&&expected.getCause().getCause() instanceof IllegalStateException,"original writer failure and nested cause retained");}
+        }
         RecordingSocket large = new RecordingSocket(false);
         try (SessionOutput output = new SessionOutput(large)) {
             rejected(() -> output.send(() -> new byte[org.tortodrone.protocol.SessionCodec.MAX_DOWNSTREAM_FRAME + 1]));

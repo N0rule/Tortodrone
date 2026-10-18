@@ -12,12 +12,13 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 3) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only|--movement-only|--depot-only]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only|--movement-only|--depot-only|--hazards-only]");
         }
+        boolean hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
-        boolean trainingOnly=depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -51,6 +52,7 @@ public final class CheckCombatRendering {
             Path maps = scratch.resolve("content/packs/vanilla");
             requireMaps(maps);
             if(healthOnly)healthFixture(maps);
+            if(hazardsOnly)hazardFixture(maps);
             Files.createDirectories(scratch.resolve("data"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("home/system-prefs"));
@@ -91,7 +93,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
-            Path peerLog=output.resolve("peer-client.log");Process peer=depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -99,7 +101,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
@@ -139,6 +141,23 @@ public final class CheckCombatRendering {
             if (!Files.isDirectory(maps.resolve("maps").resolve(name)))
                 throw new IOException("Missing prepared scene map " + maps.resolve("maps").resolve(name));
         }
+    }
+
+    /** Original pots, relocated only in this disposable scene to keep the smoke check short. */
+    private static void hazardFixture(Path pack)throws Exception {
+        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
+        Properties map=properties(descriptor),actors=properties(content);
+        int pot=0;
+        for(String id:actors.getProperty("entries").split(",")){
+            String prefix="entry."+id+".",config=actors.getProperty(prefix+"child.config","");
+            if(!config.equals("Dynamic/Lift Objects/Fire Pot")&&!config.equals("Dynamic/Lift Objects/Oil Pot"))continue;
+            actors.setProperty(prefix+"x",Float.toString(Float.parseFloat(map.getProperty("spawn-x"))+(pot++==0?-.8f:.8f)));
+            actors.setProperty(prefix+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+1));
+        }
+        if(pot!=2)throw new IOException("Expected original Fire and Oil Pot pads");
+        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
+        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
+        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
     }
 
     /** Move the original floor traps and one heal pad into a disposable entrance corridor. */

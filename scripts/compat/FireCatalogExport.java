@@ -21,7 +21,7 @@ public final class FireCatalogExport {
     private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
-        if (args.length != 2) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory");
+        if (args.length < 2 || args.length > 3) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-fragmentation-catalogue]");
         Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
         if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
@@ -32,19 +32,77 @@ public final class FireCatalogExport {
         manager.init();
 
         var entries = new ArrayList<AttackFire>();
+        var previous=args.length==3?FireCatalog.load(Path.of(args[2])):null;
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
             damageRarity=item.rarity;
+            if(previous!=null){
+                if(item instanceof ItemConfig.Weapon weapon){
+                    var charged=previous.find(config.getName(),290);
+                    if(charged!=null&&charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action())))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
+                }
+                continue;
+            }
             if (item instanceof ItemConfig.Weapon weapon) addWeapon(manager, config.getName(), weapon, entries);
             else if (item instanceof ItemConfig.Shield shield) addShield(manager, config.getName(), shield, entries);
         }
+        var repaired=new HashSet<String>();
+        if(previous!=null){
+            entries.forEach(entry->repaired.add(entry.weaponConfig()));
+            var replacements=new HashMap<String,AttackFire>();for(var entry:entries){
+                var old=previous.find(entry.weaponConfig(),entry.activity());
+                var refs=new ArrayList<FireRef>();
+                for(int i=0;i<entry.fireRefs().size();i++){
+                    var ref=entry.fireRefs().get(i);var oldRef=old.fireRefs().get(i);
+                    refs.add(new FireRef(ref.config(),ref.delay(),ref.refractory(),ref.advance(),ref.maxLoop(),ref.successIncrement(),ref.incrementReduction(),preserveHeadings(ref.action(),oldRef.action()),ref.endAction()));
+                }
+                replacements.put(entry.weaponConfig(),new AttackFire(entry.weaponConfig(),entry.activity(),entry.attack(),entry.fireSpeed(),refs));
+            }
+            entries=new ArrayList<>(previous.entries().stream().map(entry->entry.activity()==290?replacements.getOrDefault(entry.weaponConfig(),entry):entry).toList());
+            UNSUPPORTED.putAll(previous.unsupportedTypes());
+        }
         Files.createDirectories(out);
         FireCatalog.write(out.resolve("fires.json"), entries, UNSUPPORTED);
+        if(previous!=null){
+            // Preserve raw rows outside this repair, including their original numeric precision.
+            @SuppressWarnings("unchecked") var document=(Map<String,Object>)org.tortodrone.resources.Json.parse(Files.readString(Path.of(args[2])),128);
+            @SuppressWarnings("unchecked") var generated=(Map<String,Object>)org.tortodrone.resources.Json.parse(Files.readString(out.resolve("fires.json")),128);
+            @SuppressWarnings("unchecked") var generatedRows=(List<Map<String,Object>>)generated.get("entries");
+            var rows=new HashMap<String,Map<String,Object>>();for(var row:generatedRows)if(((Number)row.get("activity")).intValue()==290&&repaired.contains(row.get("weapon")))rows.put((String)row.get("weapon"),row);
+            @SuppressWarnings("unchecked") var existingRows=(List<Map<String,Object>>)document.get("entries");
+            document.put("entries",existingRows.stream().map(row->((Number)row.get("activity")).intValue()==290?rows.getOrDefault(row.get("weapon"),row):row).toList());
+            @SuppressWarnings("unchecked") var unsupported=(Map<String,Object>)document.get("unsupported");
+            var actual=new TreeMap<String,Integer>();countUnsupported(document.get("entries"),actual);
+            unsupported.keySet().removeIf(type->type.startsWith("com.")&&!actual.containsKey(type));unsupported.putAll(actual);
+            Files.writeString(out.resolve("fires.json"),org.tortodrone.resources.Json.stringify(document,128)+"\n");
+        }
         var loaded = FireCatalog.load(out.resolve("fires.json"));
         System.out.printf("PASS: exported %d weapon/shield attack entries; %d fire refs; %d projectile actor emissions; %d unsupported action types%n",
-            loaded.entries().size(), loaded.entries().stream().mapToInt(e -> e.fireRefs().size()).sum(), projectileCount, UNSUPPORTED.size());
-        UNSUPPORTED.forEach((type,count) -> System.out.println("UNSUPPORTED\t" + type + "\t" + count));
+            loaded.entries().size(), loaded.entries().stream().mapToInt(e -> e.fireRefs().size()).sum(), projectileCount, loaded.unsupportedTypes().size());
+        loaded.unsupportedTypes().forEach((type,count) -> System.out.println("UNSUPPORTED\t" + type + "\t" + count));
+    }
+
+    private static void countUnsupported(Object value,Map<String,Integer> counts){
+        if(value instanceof Map<?,?> map){
+            if("UNSUPPORTED".equals(map.get("kind")))counts.merge((String)map.get("unsupportedType"),1,Integer::sum);
+            map.values().forEach(child->countUnsupported(child,counts));
+        }else if(value instanceof List<?> list)list.forEach(child->countUnsupported(child,counts));
+    }
+
+    /** Retain previously prepared headings; the retail export strips these server fields. */
+    private static Action preserveHeadings(Action fresh,Action old){
+        if(fresh==null||old==null||old.kind()==Kind.UNSUPPORTED||fresh.kind()!=old.kind())return fresh;
+        var children=new ArrayList<Action>();for(int i=0;i<fresh.children().size();i++)children.add(preserveHeadings(fresh.children().get(i),i<old.children().size()?old.children().get(i):null));
+        var actor=fresh.actor();if(actor!=null&&old.actor()!=null){
+            var timers=new ArrayList<ActorTimer>();for(int i=0;i<actor.timers().size();i++){var t=actor.timers().get(i);timers.add(new ActorTimer(t.delay(),t.interval(),t.limit(),preserveHeadings(t.action(),i<old.actor().timers().size()?old.actor().timers().get(i).action():null),t.endAction()));}
+            actor=new ActorSpec(actor.nativeType(),actor.config(),actor.fuse(),actor.speed(),actor.maxStep(),actor.flags(),actor.offsetX(),actor.offsetY(),actor.height(),actor.detonation(),actor.orbit(),actor.collisionMask(),actor.collisionShape(),timers,actor.shutdown());
+        }
+        return new Action(fresh.kind(),fresh.config(),actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),old.rotation(),old.rotationVariance(),old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
+    }
+
+    private static boolean fragmentation(Action action){
+        return action!=null&&(action.actor()!=null&&action.actor().config().name().startsWith("Bomb/Parts/Shard/Bomb (Timer)")||action.children().stream().anyMatch(FireCatalogExport::fragmentation));
     }
 
     private static void addWeapon(ConfigManager manager, String name, ItemConfig.Weapon weapon, List<AttackFire> entries) throws Exception {
@@ -369,6 +427,12 @@ public final class FireCatalogExport {
         else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
+        // The distance checker retains its planting action, but its server-only guard is
+        // an empty Tagged placeholder in retail. Keep the retained payload on termination;
+        // exact retail collision/planting gating still requires an official capture.
+        if(refName.equals("Bomb/Parts/Shard/Shard Base (Distance Check)")&&actor instanceof DungeonActorConfig.Bullet bullet
+            &&bullet.detonationAction instanceof ActionConfig.Conditional gate&&gate.condition instanceof ConditionConfig.Tagged tag
+            &&tag.tag.isEmpty()&&gate.elseAction==null)detonation=readAction(manager,gate.action);
         com.threerings.tudey.data.actor.Actor nativeActor=actor.a(reference,0,0,new Vector2f(),0f);
         nativeActor.init(manager);
         int flags=intField(nativeActor,"_flags");
@@ -438,7 +502,24 @@ public final class FireCatalogExport {
                 }
             }
         }
-        if(!refName.startsWith("Bullet/Pet/"))for(var handler:actor.handlers){
+        boolean shardBomb=refName.startsWith("Bomb/Parts/Shard/Bomb (Timer)");
+        if(shardBomb){
+            // An explosive's retained graph is a single detonation, not a repeating pulse.
+            // The client bomb wrapper retains its fuse even though Timer fields are stripped.
+            Object visualFuse=actor.sprite.model==null?null:actor.sprite.model.kW().get("Fuse");
+            if(!(visualFuse instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard bomb has no visual fuse");
+            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer)
+                timers.add(new ActorTimer((int)(seconds*1000),0,1,readAction(manager,bindShardBranches(timer.action,reference)),destroySource()));
+        }
+        if(refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")){
+            // Its signal trigger/timer is stripped. End the retained visual and damage
+            // together at the authored model lifespan rather than leave an invisible bomb.
+            Object lifespan=actor.sprite.model==null?null:actor.sprite.model.kW().get("Lifespan");
+            if(!(lifespan instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard has no visual lifespan");
+            for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Signal signal)
+                timers.add(new ActorTimer((int)(seconds*1000),0,1,readAction(manager,signal.action),destroySource()));
+        }
+        if(!shardBomb&&!refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")&&!refName.startsWith("Bullet/Pet/"))for(var handler:actor.handlers){
             // Piercing charged bullets exclude monsters from their blocking mask.
             // Their intersection handler, rather than detonation, deals the hits.
             if(handler instanceof HandlerConfig.BaseIntersection intersection){
@@ -470,6 +551,20 @@ public final class FireCatalogExport {
         return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
             shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""));
     }
+    /** Retail's Shard Damage path has an extra closing bracket on one branch. Bind
+     *  the surviving shared arguments to every retained child instead of default damage. */
+    private static ActionConfig bindShardBranches(ActionConfig raw,ConfigReference<ActorConfig> source){
+        if(raw instanceof ActionConfig.Compound compound){var copy=(ActionConfig.Compound)compound.clone();copy.actions=Arrays.stream(compound.actions).map(a->bindShardBranches(a,source)).toArray(ActionConfig[]::new);return copy;}
+        if(raw instanceof ActionConfig.Delayed delayed){var copy=(ActionConfig.Delayed)delayed.clone();copy.action=bindShardBranches(delayed.action,source);return copy;}
+        if(raw instanceof ActionConfig.SpawnActor spawn&&spawn.actor!=null&&spawn.actor.getName().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")){
+            var copy=(ActionConfig.SpawnActor)spawn.clone();copy.actor=spawn.actor.kX();
+            if(source.kW().containsKey("Shard Damage"))copy.actor.kW().put("Damage",source.kW().get("Shard Damage"));
+            if(source.kW().containsKey("Shard Color"))copy.actor.kW().put("Color",source.kW().get("Shard Color"));
+            return copy;
+        }
+        return raw;
+    }
+
     private static Action destroySource(){return new Action(Kind.DESTROY_SOURCE,null,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");}
     private static boolean containsDamage(Action action){return action.kind()==Kind.DAMAGE_REGION||action.children().stream().anyMatch(FireCatalogExport::containsDamage);}
     private static Action intersectionDamage(Action action){

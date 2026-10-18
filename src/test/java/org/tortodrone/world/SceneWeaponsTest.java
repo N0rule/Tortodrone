@@ -128,13 +128,16 @@ public final class SceneWeaponsTest {
             public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){splats.add(region);pops.add(x);}});
         var bomber=new ActorState(10,1001,"Fixture",0,1,0,0,0,0,0,290,2500,model);
         scene.attack(10,new KnightCombat.AttackStart("Weapon/Bomb/Rock Salt Bomb",290,2500,0,2000));
-        scene.advance(2501,List.of(bomber));scene.advance(3501,List.of(bomber));
+        int burst=2500+catalog.find("Weapon/Bomb/Rock Salt Bomb",290).fireRefs().getFirst().action().actor().timers().getFirst().delay();
+        scene.advance(2501,List.of(bomber));scene.advance(burst+1,List.of(bomber));
         var spread=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).toList();
         check(spread.size()==6&&spread.stream().map(a->Math.round(a.rotation()*100)).distinct().count()==6,"Rock Salt Bomb fans all six native delayed shard branches");
-        for(int stamp=3526;stamp<3900;stamp+=25)scene.advance(stamp,List.of(bomber));
+        for(int stamp=burst+26;stamp<burst+400;stamp+=25)scene.advance(stamp,List.of(bomber));
         var seeds=scene.actors().stream().filter(a->a.config().name().equals("Bomb/Parts/Shard/Shard Base (Timer)")).toList();
         check(seeds.size()==6&&seeds.stream().map(a->Math.round(a.x()*16)*31+Math.round(a.y()*16)).distinct().count()==6,"each shard plants its seed at its own landing point");
-        check(splats.size()>=7&&splats.stream().allMatch(r->r.name().equals("DamageRegionFromPoint")),"planted shards pop their own shard damage");
+        check(splats.size()==1,"planted shards wait for their visible lifetime before secondary damage");
+        scene.advance(burst+3000,List.of(bomber));scene.advance(burst+13000,List.of(bomber));
+        check(splats.size()==7&&splats.stream().allMatch(r->r.name().equals("DamageRegionFromPoint")),"each planted shard pops once and the chain terminates");
     }
     static CollisionMap openTerrain()throws Exception {
         Path file=Files.createTempFile("tortodrone-weapon-open-",".gz");

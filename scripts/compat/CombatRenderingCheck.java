@@ -51,6 +51,7 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean depotOnly;
+    private boolean hazardsOnly;
     private boolean healthOnly;
     private boolean movementOnly;
     private List<Action> actions=ACTIONS;
@@ -103,7 +104,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -118,6 +119,7 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
+        probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
@@ -166,6 +168,7 @@ public final class CombatRenderingCheck {
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(peer){peerTick(view);return;}
             if(depotOnly){depotTick(view,now);return;}
+            if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
             if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
@@ -575,6 +578,56 @@ public final class CombatRenderingCheck {
             finishImages();passed=done=true;System.out.println("PASS: graphical peer renders shared Town Square and the other knight's movement");app.shutdown();
         }
     }
+    private int potId,hazardRound;
+    private final Set<Integer> hazardIds=new HashSet<>();
+    private boolean hazardRendered;
+    private long hazardSince;
+    private void hazardsTick(View view,long now)throws Exception {
+        if(stage==0){GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
+        if(view.sceneId()!=294)return;
+        var own=authoritative.get(app.CT().pawnId);if(!(own instanceof Dungeoneer knight))return;
+        String potConfig="Dynamic/Lift Objects/"+(hazardRound%2==0?"Fire Pot":"Oil Pot");
+        String hazardConfig="Bomb/Monster/"+(hazardRound%2==0?"ScorcherTorch":"Oil Slick");
+        if(stage==70){
+            var pot=authoritative.values().stream().filter(a->a.Mv().getName().equals(potConfig)&&!a.bR(2)&&!a.bR(4)).findFirst().orElse(null);
+            if(pot==null){if(now-started>15_000_000_000L)throw new AssertionError("Pot did not respawn: "+potConfig);return;}
+            potId=pot.vw();float dx=pot.tz().x-own.tz().x,dy=pot.tz().y-own.tz().y;
+            moveToward(view,dx,dy,Math.hypot(dx,dy)>1.1);
+            Object prompt=field(own,"_actionEntity").get(own);
+            if(prompt instanceof com.threerings.tudey.data.EntityKey.Actor key&&key.vw()==potId){flags(view,4);stage=71;started=now;}
+            return;
+        }
+        if(stage==71){
+            flags(view,0);
+            if(field(knight,"_lift").getInt(knight)==potId&&now-started>1_000_000_000L){moveToward(view,1,0,false);flags(view,4);stage=72;started=now;}
+            else if(now-started>8_000_000_000L)throw new AssertionError("Pot was not lifted");return;
+        }
+        if(stage==72){
+            flags(view,0);
+            for(var actor:authoritative.values())if(actor.Mv().getName().equals(hazardConfig)){
+                if(!(actor instanceof com.threerings.projectx.dungeon.data.actor.Bomb))throw new AssertionError("Hazard is not a native Bomb");
+                hazardIds.add(actor.vw());
+                var sprite=view.gk(actor.vw());
+                if(sprite!=null&&sprite.acL().isVisible()&&sprite.acL().getConfig()!=null)hazardRendered=true;
+            }
+            int expected=hazardRound%2==0?1:9;
+            if(hazardIds.size()==expected&&hazardRendered){
+                if(hazardSince==0)hazardSince=now;
+                if(now-hazardSince>600_000_000L){capture("pot-"+hazardRound+"-"+hazardConfig.substring(13));stage=73;started=now;}
+            }else if(now-started>8_000_000_000L)throw new AssertionError("Hazard did not render: "+hazardConfig+" count="+hazardIds.size());return;
+        }
+        if(stage==73){
+            if(hazardIds.stream().anyMatch(authoritative::containsKey)){
+                if(now-started>17_000_000_000L)throw new AssertionError("Hazard was not removed");return;
+            }
+            if(!app.zr().isLoggedOn())throw new AssertionError("Client disconnected after pot throw");
+            System.out.println("CHECK: "+potConfig+" native Bomb sprites rendered and expired, connection alive");
+            hazardIds.clear();hazardRendered=false;hazardSince=0;
+            if(++hazardRound<4){stage=70;started=now;return;}
+            finishImages();passed=done=true;System.out.println("PASS: repeated native Fire/Oil Pot pickup, throw, Bomb hazard rendering, expiry and session survival");app.shutdown();
+        }
+    }
+
     private com.threerings.projectx.exchange.client.e depotWindow;
     private String depotItem;
     private int depotCount,depotQuantity,depotPrice,depotCrowns,depotEnergy,depotOfferId;
