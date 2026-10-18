@@ -297,13 +297,24 @@ public final class SessionCodec {
         });
     }
 
-    /** News and social feed are empty on this server; Result listeners receive one list. */
+    /** The social feed is empty on this server; its Result listener receives one empty list. */
     public byte[] emptyListResult(int oid, short requestId) throws IOException {
         return frame(out -> {
             eventHeader(out, "InvocationResponseEvent", oid);
             out.writeShort(requestId); out.writeByte(1);
             out.writeBoolean(true); out.writeInt(1);
             type(out, "com.threerings.util.StreamableArrayList"); out.writeInt(0);
+        });
+    }
+
+    /** Uplink News returns alternating property name/value strings that the client reads as a Properties. */
+    public byte[] listResult(int oid, short requestId, List<String> values) throws IOException {
+        return frame(out -> {
+            eventHeader(out, "InvocationResponseEvent", oid);
+            out.writeShort(requestId); out.writeByte(1);
+            out.writeBoolean(true); out.writeInt(1);
+            type(out, "com.threerings.util.StreamableArrayList"); out.writeInt(values.size());
+            for (String value : values) { type(out, "java.lang.String"); out.writeUTF(value); }
         });
     }
 

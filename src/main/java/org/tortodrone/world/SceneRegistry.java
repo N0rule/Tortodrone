@@ -25,6 +25,9 @@ public final class SceneRegistry {
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
     public org.tortodrone.town.TownCatalog town(){return town;}
     public void town(org.tortodrone.town.TownCatalog catalog){town=Objects.requireNonNull(catalog);equipment.town(town);for(var copies:instances.values())for(var instance:copies)instance.simulation().town(town);}
+    private org.tortodrone.news.NewsCatalog news=org.tortodrone.news.NewsCatalog.disabled();
+    public org.tortodrone.news.NewsCatalog news(){return news;}
+    public void news(org.tortodrone.news.NewsCatalog catalog){news=Objects.requireNonNull(catalog);}
     private WeaponCatalog weapons=WeaponCatalog.empty();
     private EquipmentCatalog equipment=EquipmentCatalog.empty();
     public EquipmentCatalog equipment(){return equipment;}

@@ -16,6 +16,7 @@ Edit `config/server.yml` while stopped:
 ```yaml
 server-ip: 0.0.0.0
 server-port: 47624
+news-port: 8080
 max-clients: 16
 log-mode: normal
 log-max-mib: 10

@@ -1,0 +1,29 @@
+# Uplink News banners shown after knight login. Each request shows one pack at
+# random; a pack is a featured banner (recommended 570x300, the client's top slot)
+# with optional left/right spotlights (recommended 280x190, the client's side
+# slots). The stock client fetches each image as content_url + news/<file>, so the
+# launcher's content_url must point at this server's news-port.
+enabled: true
+packs:
+  - featured:
+      image: featured.png
+      tooltip: Tortodrone Server
+      url: https://github.com/N0rule/Tortodrone
+    spotlights:
+      left:
+        image: left.png
+        tooltip: left image
+      right:
+        image: right.png
+        tooltip: right image
+# Add another pack to rotate through; every pack needs a featured banner and any
+# images it references must live in this folder.
+#  - featured:
+#      image: featured-2.png
+#      tooltip: Patch notes
+#      url: https://github.com/N0rule/Tortodrone/releases
+#    spotlights:
+#      left:
+#        image: left-2.png
+#      right:
+#        image: right-2.png

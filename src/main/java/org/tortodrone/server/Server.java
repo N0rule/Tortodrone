@@ -106,6 +106,12 @@ public final class Server {
         log.info("Unified content: "+content.scenes().scenes().size()+" maps, "+content.items().entries().size()+" items");
         content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
         InetAddress address = InetAddress.getByName(settings.bind());
+        // Uplink News images are outside the game protocol; an unavailable port never blocks hosting.
+        NewsServer news=null;
+        try {
+            news=NewsServer.start(address,settings.newsPort(),dataDirectory.getParent().resolve("content/shared/news"),log::debug);
+            log.info("Uplink News images: http://"+address.getHostAddress()+":"+news.port()+"/news/");
+        } catch(IOException unavailable){log.warn("Uplink News server unavailable on port "+settings.newsPort()+": "+unavailable.getMessage());}
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");
             boolean generate=!Files.exists(keys.resolve("private.pk8"));
@@ -128,6 +134,8 @@ public final class Server {
                 control.resources(scenes,catalog.entries().size());
                 accept(listener,key,log,accounts,settings.maxClients(),control,desktop,startup);
             }
+        } finally {
+            if(news!=null)news.close();
         }
     }
 

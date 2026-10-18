@@ -8,8 +8,10 @@ import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
 /** Listener, logging and initial map settings; legacy selection is migration-only. */
-public record ServerSettings(String bind, int port, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap) {
-    public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy){this(bind,port,mode,clients,maxMiB,retention,packs,legacy,"haven");}
+public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap) {
+    /** Default Uplink News image port; the launcher points content_url at the same host. */
+    public static final int DEFAULT_NEWS_PORT=8080;
+    public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy){this(bind,port,DEFAULT_NEWS_PORT,mode,clients,maxMiB,retention,packs,legacy,"haven");}
     public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention) { this(bind,port,mode,clients,maxMiB,retention,"vanilla","auto"); }
     public ServerSettings(String bind,int port,LogMode mode,int clients) { this(bind,port,mode,clients,10,5); }
     public enum LogMode { NORMAL, DEBUG }
@@ -66,6 +68,7 @@ public record ServerSettings(String bind, int port, LogMode logMode, int maxClie
             throw new IOException("server-port must be an integer from 0 to 65535");
         }
         if (port < 0 || port > 65535) throw new IOException("server-port must be from 0 to 65535");
+        int newsPort=number(settings,"news-port",0,65535);
         LogMode logMode = switch (value(settings, "log-mode")) {
             case "normal" -> LogMode.NORMAL;
             case "debug" -> LogMode.DEBUG;
@@ -78,7 +81,7 @@ public record ServerSettings(String bind, int port, LogMode logMode, int maxClie
         String packs=value(settings,"content-packs"),legacy=value(settings,"legacy-content");
         if(packs.isEmpty())throw new IOException("content-packs must list at least one pack");
         if(!java.util.Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        return new ServerSettings(bind, port, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings));
+        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings));
     }
 
     public static String startupMap(Path file)throws IOException {

@@ -37,6 +37,7 @@ content/
     trap-cycles.yml
     statuses.yml
     combat.yml               shared numeric balance and sparse gear defenses
+    news/news.yml            Uplink News packs and their images
   _internal/                 native item/Town defaults, names, fire graphs and provenance
 plugins/README.md            reservation only; no plugin loader
 src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system
@@ -63,6 +64,7 @@ random vendor stock and many original actions remain incomplete.
 ```yaml
 server-ip: 0.0.0.0
 server-port: 47624
+news-port: 8080
 max-clients: 16
 log-mode: normal
 log-max-mib: 10
@@ -93,6 +95,40 @@ the file or definition. Startup fingerprints inputs automatically, checks them
 again after validation, and publishes one complete snapshot. Existing snapshots
 remain usable if a subsequent load fails. Gameplay performs no YAML parsing or
 content file scans.
+
+## Uplink News
+
+After a knight logs in the unmodified client requests Uplink News and shows one
+pack of banners. `content/shared/news/news.yml` holds one or more packs, and each
+request shows one at random; the client fetches every image as
+`content_url + news/<file>`, so the launcher's `content_url` must point at this
+server's `news-port`.
+
+```yaml
+enabled: true
+packs:
+  - featured:
+      image: featured.png
+      tooltip: Tortodrone Server
+      url: https://github.com/N0rule/Tortodrone
+    spotlights:
+      left:
+        image: left.png
+      right:
+        image: right.png
+```
+
+Every pack needs a `featured` banner; `spotlights.left` and `spotlights.right` are
+optional side banners. Each banner needs a PNG or JPEG `image` stored directly in
+this folder, sized for the client's news window: 570x300 for `featured` and 280x190
+for the spotlights, the same sizes as the window's shipped parts. The optional
+`tooltip` shows only when the same banner also sets a `url`, which opens in the
+player's browser. Images may not escape the folder, and a missing, non-image or
+escaping file stops startup, as does `enabled: true` with no packs. An absent
+`news.yml`, or `enabled: false`, answers the client with no News.
+The server serves this folder over HTTP on `server-ip:news-port` and refuses
+traversal, non-image paths and unknown files, so point the launcher's `content_url` at the host and `news-port` configured
+in `config/server.yml`.
 
 ## NPC dialogue
 

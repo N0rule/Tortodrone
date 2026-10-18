@@ -40,6 +40,7 @@ public final class ContentManager {
             var definitions=ItemYaml.read(content.resolve("items"),dodge);
             var fires=FireCatalog.load(content.resolve("_internal/fires.json"));
             var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json"));
+            var news=NewsYaml.load(content.resolve("shared/news"));
             var townData=TownYaml.data(content.resolve("town"));TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.town.TownCatalog.fromData(townData);
             var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town);
@@ -49,7 +50,7 @@ public final class ContentManager {
             for(var item:definitions.equipment().entries())requireItem(definitions.items(),item.config());
             for(var fire:fires.entries())if(!controls.contains(fire.weaponConfig().toLowerCase(Locale.ROOT)))throw new IOException("Fire graph has no weapon/shield controls: "+fire.weaponConfig());
             if(!before.equals(inputs(root)))throw new IOException("Content changed during startup loading; restart with stable input files");
-            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet);
+            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet,news);
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid unified content: "+invalid.getMessage(),invalid);}
     }
     /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */
