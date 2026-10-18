@@ -84,7 +84,8 @@ public final class NewsTest {
             check(shipped.enabled()&&shipped.size()==1,"shipped default enables one news pack");
             check(shipped.propertyList(0).equals(List.of(
                 "top.image","news/featured.png","top.tip","Tortodrone Server","top.url","https://github.com/N0rule/Tortodrone",
-                "left.image","news/left.png","right.image","news/right.png")),"shipped pack carries the featured tooltip and link");
+                "left.image","news/left.png","left.tip","left image",
+                "right.image","news/right.png","right.tip","right image")),"shipped pack carries its banner tooltips and link");
 
             // Native result: one List<String> of alternating names and values on the result listener.
             byte[] frame=new SessionCodec().listResult(42,(short)7,List.of("top.image","news/featured.png"));
