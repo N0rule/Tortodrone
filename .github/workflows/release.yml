@@ -95,7 +95,7 @@ jobs:
           Edit config/server.yml before starting.
           Persistent data/ is created beside the JARs and is NEVER included in
           release archives. Back up data/ (including keys and database), and
-          preserve your existing config/, content/ and data/ when upgrading; review the documented migration candidate workflow.
+          preserve your existing config/, content/ and data/.
           See README.md for configuration and client connection instructions.
           EOF
           (

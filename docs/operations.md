@@ -60,7 +60,7 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 ## Data safety, updates and release builds
 
 1. Stop both server and account manager before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `config/` and the complete `content/` tree.
-2. On update replace the JARs and shipped vanilla content as appropriate; **retain your current `data/`**. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than implicitly migrated.
+2. On update replace the JARs and shipped vanilla content as appropriate; **retain your current `data/`**. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than altered automatically.
 3. Check `VERSION` and full build/test results. The GitHub Actions release workflow builds on Java 25 and publishes a ZIP and tar.gz **only for version tags** matching `v<VERSION>` (or explicit retry of that existing tag). Packages include JARs, the vanilla content pack and a start note, not JRE, database or game assets. See `.github/workflows/release.yml`.
 
 The server does not download missing content packs at startup. Ship the complete selected packs and configuration, especially on offline hosts.
@@ -80,7 +80,7 @@ When the unchanged client sends its existing hardware report, one `Client hardwa
 | Login refused | Account exists; verify/reset through local manager |
 | Knight/world load refused | Selected pack paths, hashes and scene catalog; see [Content](content.md) |
 | Changed maps not appearing | Stop/restart, enabled pack selection and manifest hashes |
-| Startup rejects settings/schema | Restore supported settings or backup; do not guess a migration |
+| Startup rejects settings/schema | Restore supported settings or backup; do not hand-edit saved state to force startup |
 | Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
 
 CLI and GUI are local trusted surfaces. Do not expose them as an unauthenticated web admin interface.

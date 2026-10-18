@@ -51,8 +51,9 @@ Tortodrone/
 
 The build prepares `build/{config,content,plugins}/` beside both JARs. Deploy these
 complete directories. Release archives include defaults and omit private `data/`.
-For existing installations, follow the non-destructive [content migration
-procedure](docs/content.md#upgrade-from-packs-or-older-defaults) before upgrading.
+Tortodrone has no public releases before 1.0.0, so there are no earlier published
+versions to upgrade from and no migration procedure is provided; deploy the current
+defaults directly.
 
 ## Client connection
 
@@ -89,8 +90,8 @@ Open `content/maps/advanced_training/npcs/konway.yml` to edit Konway's readable
 stock dialogue selections (literal text is restricted by the unchanged client),
 `content/items/weapons.yml` for weapon controls, or `content/town/shops.yml`
 for catalog goods. Save, validate and restart; no manifests or manual hashes.
-See [Content](docs/content.md) for schemas, imports, migration and native limits.
-Back up the whole stopped `data/`, `config/` and `content/` before upgrading.
+See [Content](docs/content.md) for schemas, imports and native limits.
+Back up the whole stopped `data/`, `config/` and `content/` before changing the deployment.
 
 ## Documentation
 

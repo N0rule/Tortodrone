@@ -13,7 +13,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Transactions, persisted identity, items and trades | `storage/{Database,WorldProfiles,TradeTransfer}` |
 | Scene templates, instances, movement and tick | `world/{SceneCatalog,SceneRegistry,SceneSimulation,TownMovement,CollisionMap,SceneContent,SceneEntities,SceneCollision}` |
 | Player combat / effects | `world/{KnightCombat,SceneWeapons,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
-| Atomic unified YAML resolution and account-manager GUI | `resources/{ContentManager,ContentRegistry,ContentMigration}`, `admin/` |
+| Atomic unified YAML resolution and account-manager GUI | `resources/{ContentManager,ContentRegistry}`, `admin/` |
 
 Both executable JARs are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
 
@@ -113,4 +113,4 @@ The versioned content registry keeps supported scene/catalog definitions outside
 
 Use focused regression tests before broad stock-client checks. Avoid expanding this document with one-off milestone reports; Git history retains past investigations.
 
-Content compilation resolves map-local YAML and pinned native bindings into the existing catalog types before publication. Town and pet graphs are retained in that snapshot; scene creation and account-store initialization do not reopen catalog files. Pack dependency resolution exists only at the explicit migration boundary. See [Content](content.md) for the administration and upgrade contract.
+Content compilation resolves map-local YAML and pinned native bindings into the existing catalog types before publication. Town and pet graphs are retained in that snapshot; scene creation and account-store initialization do not reopen catalog files. Pack dependency resolution is confined to the explicit import boundary. See [Content](content.md) for the administration contract.

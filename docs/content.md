@@ -74,7 +74,6 @@ startup-map: haven
 town; Ready Room/progression onboarding is not implemented. `--config path.yml`
 changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
-Pack selection settings are used only by the explicit legacy migration reader.
 `config/combat.yml` holds the verified global dodge cooldown in milliseconds.
 Economy rules already have concrete owners in Town files; no empty economy file
 is shipped.
@@ -136,7 +135,7 @@ Arbitrary sentence authoring remains blocked by that unchanged-client API. No
 client patch, invented packet, renamed player or replacement dialog is used.
 Existing localization keys/placeholders and graph/service behavior are preserved.
 
-Migration/import without a stock installation retains unresolved original keys
+Import without a stock installation retains unresolved original keys
 as safe defaults and reports the exact missing bundle/key. It invents no text.
 Shipped defaults contain resolved text and need no installed client. The
 `_internal/localization-report.txt` records source conversion diagnostics.
@@ -263,31 +262,12 @@ loadable; the importer does not guess a replacement for that missing reference. 
 are reported or rejected, never fabricated. Test imported layouts with an isolated
 stock client. No proprietary assets/captures belong in Git.
 
-## Upgrade from packs or older defaults
+## Upgrading
 
-Keep the old deployment intact. Stop both server and manager, back up its complete
-`data/`, configuration and content, then run the **new** JAR against the old tree:
-
-```sh
-java -cp /new/tortodrone.jar org.tortodrone.resources.ContentMigration \
-  /old/deployment /fresh/review-candidate /optional/read-only-game
-```
-
-Omit the final argument when unavailable. The tool reads legacy settings,
-resolves and verifies the selected old packs/whole-resource overrides (or legacy
-`defaults`/top-level resources), and exports a complete separate `config/` and
-`content/`. Town and pet graphs are retained. It validates before atomic candidate
-publication and produces `migration-report.txt`. Original files, keys, SQLite and
-player progression are never changed or copied by the tool. Unselected custom
-packs, ambiguous shared/native bindings, unsupported sections and occupied
-candidates refuse migration for explicit review. There is no runtime legacy-pack
-fallback, implicit migration or competing override format.
-
-Review the candidate and report, place the two new JARs beside its directories,
-and install it while keeping the original `data/` directory in the final
-deployment. Move old packs/defaults out of that final tree after backing them up;
-mixed layouts fail clearly. Do not copy release defaults over administrator edits.
-Preparation fills missing files, upgrades only recognized unchanged defaults and
-preserves edited/unknown files. The internal source/ownership provenance replaces
-old build manifests; administrators never maintain it. Unknown SQLite schemas
-retain the existing refusal policy; this content overhaul changes no DB schema.
+Tortodrone has no public releases before 1.0.0: there are no earlier published
+deployments, so no migration procedure exists or is needed. Keep the existing
+`data/` directory with its SQLite state and keys. Back up the stopped `data/`,
+configuration and content, then place the current JARs beside the prepared
+`config/` and `content/` directories. Preparation fills missing files and
+preserves edited/unknown files; it never overwrites administrator edits. Unknown
+SQLite schemas are refused rather than modified.

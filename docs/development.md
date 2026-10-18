@@ -35,7 +35,7 @@ Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradle
 
 Unit/server checks build only the server JAR; admin integration and `buildWithoutTests` also package the admin app. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
-To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. Both JARs and prepared configuration/content go there, while Gradle compilation stays in `.build/`. A legacy `build/content/packs` deployment must still be migrated explicitly; test output redirection does not upgrade it.
+To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. Both JARs and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
 
 The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
@@ -138,4 +138,4 @@ This uses disposable accounts/preferences and performs twelve rapid native craft
 
 Recent scene and Training Hall validation details are retained in [Modern captures](modern-captures.md) and [Training Hall](training-hall.md). Detailed prior investigations and their original commands stay accessible via Git history (for example `git show <commit>:docs/protocol-audit.md`); [Research](research.md) points to the relevant sources and caveats.
 
-Unified content regressions are `resources.ContentManagerTest` and `resources.ContentMigrationTest`; `resources.PackContentTest` exercises only the migration reader. Legacy parser fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, captures both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
+Unified content regressions are `resources.ContentManagerTest` and `resources.PackContentTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, captures both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
