@@ -276,7 +276,7 @@ public final class ServerIntegrationTest {
         String password = "billing-test-password";
         accountCommand(jar, directory, "--create-account", "Billing", password + "\n" + password + "\n", true, "Account created.");
         Path config = data.resolve("server.properties");
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready();
             try (Socket peer = new Socket("127.0.0.1", port)) {
