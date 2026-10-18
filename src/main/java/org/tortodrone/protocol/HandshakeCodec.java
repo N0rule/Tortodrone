@@ -14,7 +14,8 @@ public final class HandshakeCodec {
     public record Request(short messageId, byte[] encryptedSecret, byte[] salt,
                           String version, String timezone) { }
     public record Authentication(short messageId, String version, int groupCount, byte[] encryptedCredentials) { }
-    public record Credentials(String username, char[] passwordHash, boolean normalLogin) implements AutoCloseable {
+    public record Credentials(String username, char[] passwordHash, boolean normalLogin, String language, String region) implements AutoCloseable {
+        public Credentials(String username,char[] passwordHash,boolean normalLogin){this(username,passwordHash,normalLogin,null,null);}
         @Override public void close() { java.util.Arrays.fill(passwordHash, '\0'); }
         @Override public String toString() { return "Credentials[redacted]"; }
     }
@@ -90,7 +91,7 @@ public final class HandshakeCodec {
         String username = string(in);
         String passwordHash = string(in);
         nullableString(in); // installation ident; deliberately neither retained nor logged
-        nullableString(in); // language
+        String language=nullableString(in);
         String session = nullableString(in);
         // Only normal username/password authentication is supported.
         require(in.readUnsignedByte() == 0, "Platform ticket not supported");
@@ -98,10 +99,10 @@ public final class HandshakeCodec {
         boolean steam = in.readBoolean();
         int site = in.readInt();
         String invite = nullableString(in);
-        nullableString(in); // region
+        String region=nullableString(in);
         require(in.available() == 0, "Unexpected credential fields");
         return new Credentials(username, passwordHash.toCharArray(),
-            session == null && !sega && !steam && site == 0 && invite == null);
+            session == null && !sega && !steam && site == 0 && invite == null,language,region);
     }
 
     public String nextMessageType(byte[] body) throws IOException {

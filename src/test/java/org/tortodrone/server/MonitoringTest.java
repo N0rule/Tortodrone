@@ -8,6 +8,7 @@ import static org.tortodrone.support.TestWire.check;
 public final class MonitoringTest {
     public static void main(String[] args) throws Exception {
         var registry=new SessionRegistry();registry.connected(1,new InetSocketAddress("127.0.0.1",1234));
+        check(!registry.observe(1,new SessionLog(){public boolean debugEnabled(){return false;}public void debug(String message){}}).debugEnabled(),"session observation preserves the production debug switch");
         check(registry.find(1).accountId()==null&&registry.find(1).knightId()==null,"TCP connection has no verified identity");
         var initial=registry.snapshots();SessionLog events=registry.observe(1,message->{});
         events.authenticating("fixture-build");events.authenticated(7,"Alice");events.selected(2,42,"Jane");events.scene(1,10,"Haven");events.activity();

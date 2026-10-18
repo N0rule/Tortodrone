@@ -209,8 +209,7 @@ final class ClientSession {
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             if(world.invocation(invocation))return;
-            // Initial hardware statistics are advisory and are deliberately not retained.
-            if (invocation.service() == 1 && invocation.method() == 10 && invocation.arguments().size() == 9) return;
+            if (invocation.service() == 1 && invocation.method() == 10) { world.hardware(invocation.arguments());return; }
             if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
                 characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision,world,receivers);
                 return;

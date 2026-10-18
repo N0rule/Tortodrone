@@ -8,6 +8,7 @@ public final class NormalCredentialsTest {
     public static void main(String[] args) throws Exception {
         var decoded = HandshakeCodec.credentials(payload(null, false, false, 0, null));
         check(decoded.normalLogin() && decoded.username().equals("Alice"), "normal username/password envelope");
+        check(decoded.language().equals("en")&&decoded.region().equals("fixture-region"),"verified non-secret locale fields retained for debug diagnostics");
         char[] secret = decoded.passwordHash();
         check(!decoded.toString().contains("Alice") && !decoded.toString().contains("012345"), "credential diagnostics are redacted");
         decoded.close(); check(Arrays.equals(secret, new char[32]), "decoded transform cleared");
@@ -29,7 +30,7 @@ public final class NormalCredentialsTest {
         out.writeShort(-2); out.writeUTF("com.threerings.util.Name"); string(out, "Alice");
         string(out, "0123456789abcdef0123456789abcdef"); string(out, null); string(out, "en"); string(out, session);
         out.writeBoolean(false); out.writeBoolean(sega); out.writeBoolean(steam); out.writeInt(site);
-        string(out, invite); string(out, ""); return bytes.toByteArray();
+        string(out, invite); string(out, "fixture-region"); return bytes.toByteArray();
     }
     private static void string(DataOutputStream out, String value) throws IOException {
         out.writeBoolean(value != null); if (value != null) out.writeUTF(value);

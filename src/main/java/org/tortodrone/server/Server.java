@@ -212,6 +212,7 @@ public final class Server {
             client.setTcpNoDelay(true);
             client.setSoTimeout(15000);
             SessionLog sessionLog = sessions.observe(id,new SessionLog() {
+                @Override public boolean debugEnabled() { return log.debugEnabled(); }
                 @Override public void debug(String message) { log.debug(message+" | session="+id); }
                 @Override public void info(String message) { log.info(message+" | session="+id); }
                 @Override public void warn(String message) { log.warn(message+" | session="+id); }

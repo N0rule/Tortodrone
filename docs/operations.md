@@ -69,6 +69,10 @@ The server does not download missing content packs at startup. Ship the complete
 
 Set `log-mode=debug` while stopped to inspect resource paths, protocol/scene checks and startup warnings. Logs deliberately do not contain passwords/private keys but can contain usernames, IPs, paths and item references; treat them as private.
 
+After an account authenticates and obtains its session, debug mode prints `Client joined` with session/account IDs, username, GM role at login, remote IP/port, client build, timezone, language, client-reported region, transport and login duration. Region is a preference supplied by the client; it is **not verified country information**. Country is shown as `unavailable`; no GeoIP database, DNS query or external lookup is used.
+
+When the unchanged client sends its existing hardware report, one `Client hardware (client-reported)` line adds OS/name/version, CPU identifier, Java version, architecture, desktop/window resolution, fullscreen mode and UI scale. Fields are bounded and escaped, tied to the authenticated account, and advisory only. The native client does not send GPU or RAM specifications here; those are shown as unavailable, and missing CPU/property values as unknown. The summary may arrive after login; clients that do not send it produce no hardware line. Normal mode emits neither summary. Passwords/transforms, installation identifiers, tickets, session tokens and raw authentication payloads remain excluded.
+
 | Symptom | First check |
 | --- | --- |
 | No TCP connection | Listener, `game.endpoint`/port, firewall |

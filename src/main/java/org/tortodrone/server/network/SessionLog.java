@@ -4,6 +4,7 @@ package org.tortodrone.server.network;
 @FunctionalInterface
 public interface SessionLog {
     void debug(String message);
+    default boolean debugEnabled() { return true; }
 
     default void info(String message) { debug(message); }
     default void warn(String message) { debug(message); }

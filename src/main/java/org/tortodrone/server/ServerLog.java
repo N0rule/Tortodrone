@@ -50,6 +50,7 @@ public final class ServerLog implements AutoCloseable {
         }
     }
     synchronized void setDebugEnabled(boolean enabled) { debugEnabled=enabled; }
+    public synchronized boolean debugEnabled() { return debugEnabled; }
     void info(String message) { write("INFO",message); }
     void warn(String message) { write("WARN",message); }
     void error(String message) { write("ERROR",message); }

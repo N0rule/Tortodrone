@@ -22,6 +22,7 @@ public final class SessionRegistry {
     public void disconnected(long id) { sessions.remove(id); }
     public SessionLog observe(long id, SessionLog delegate) {
         return new SessionLog() {
+            public boolean debugEnabled() { return delegate.debugEnabled(); }
             public void debug(String message) { delegate.debug(message); }
             public void info(String message) { delegate.info(message); }
             public void warn(String message) { delegate.warn(message); }

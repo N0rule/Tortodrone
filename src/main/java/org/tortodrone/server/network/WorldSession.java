@@ -10,6 +10,8 @@ import org.tortodrone.world.*;
 
 /** Selected character protocol/controller; authoritative entities live in their scene instance. */
 final class WorldSession implements AutoCloseable {
+    private final ClientDiagnostics diagnostics;
+    void hardware(List<Object> args)throws IOException { diagnostics.hardware(args); }
     private static final Map<Integer, WorldSession> ACTIVE = new HashMap<>();
     private static final SceneChat CHAT=new SceneChat();
     private final SceneChat.RateLimit chatRate=new SceneChat.RateLimit();
@@ -478,6 +480,7 @@ final class WorldSession implements AutoCloseable {
         this.oid = oid;
         authRevision = revision;
         this.log = log;
+        diagnostics=new ClientDiagnostics(log,oid,characters.accountId(),characters.username());
         this.scenes = scenes;
         this.weapons=scenes.weapons();
         this.roles=roles;

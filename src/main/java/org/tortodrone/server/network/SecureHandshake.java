@@ -35,6 +35,7 @@ public final class SecureHandshake {
 
     public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
             int connectionId, String host, int port, AccountStore accounts) throws Exception {
+        long started=System.nanoTime();
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
         if (body == null) return;
@@ -74,10 +75,12 @@ public final class SecureHandshake {
                 new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());
             AccountStore.Account account;
+            String language=null,region=null;
             String loginResult="m.invalid_password";
             try (var decoded = HandshakeCodec.credentials(credentials)) {
                 account=null;
                 if(decoded.normalLogin()) {
+                    language=decoded.language();region=decoded.region();
                     var result=accounts.login(decoded.username(),decoded.passwordHash());
                     account=result.account();
                     loginResult=account!=null ? "success" : result.failure()==AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
@@ -103,6 +106,7 @@ public final class SecureHandshake {
             Arrays.fill(plain, (byte) 0);
             Arrays.fill(secret, (byte) 0);
             try (var session = accounts.attach(account,socket)) {
+                ClientDiagnostics.joined(log,socket,connectionId,account,request,language,region,(System.nanoTime()-started)/1_000_000);
                 ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision(),session);
             }
         } finally {
