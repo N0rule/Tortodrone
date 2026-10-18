@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Hello {0}, I am Sylvin, a knight who utilizes gear that offers high shadow damage defense.  The recipes I have for you produce armor and shields that protect you from the shadow attacks of fiends and the undead. \n\nShadow defense can be harnessed from the shadows themselves.  The armor and shields I specialize in are derived from the very fiendish and undead creatures that seek to use the power of the shadows against you.  Plus, it looks incredibly scary and cool."
+  initial: part_1a
+id: mannequin10

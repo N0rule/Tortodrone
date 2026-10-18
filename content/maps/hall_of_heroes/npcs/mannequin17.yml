@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Greetings {0}, I'm Archilus, a knight who utilizes gear that offers high elemental damage defense.  The recipes I have for you produce armor and shields that protect you from the elemental attacks of constructs and gremlins. \n\nElemental resistant armor and shields are adapted from Owlite technology.  Though the Owlites themselves no longer exist, their amazing elemental mastery lives on in this gear."
+  initial: part_1a
+id: mannequin17

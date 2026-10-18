@@ -1,0 +1,42 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: What is the Forge?
+        next: part 2a
+      text: Cradle is a dangerous world and it's important to make sure you have powerful gear in your arsenal in order to survive.  To do that, you will need to use the Forge.
+    part 2a:
+      responses:
+      - text: Continue
+        next: part 3a
+      text: The Forge uses the heat stored in your gear and combines it with the power of Fire Crystals to unlock its new potential.
+    part 3a:
+      responses:
+      - text: Continue
+        next: part 4a
+      text: In town, you can access the Forge at any time.  In the Clockworks, you can access it by using an Arsenal Station.
+    part 4a:
+      responses:
+      - text: Continue
+        next: part 5a
+      text: When using the Forge, you will see a list of any items that are ready to level up. Selecting an item will show you how it can be enhanced.
+    part 5a:
+      responses:
+      - text: How do Fire Crystals work?
+        next: part 6a
+      text: Each item will require a specific type of Fire Crystal.  Fire Crystals can be obtained from the Supply Depot, earned by completing certain missions, and found in treasure blocks in the Clockworks!
+    part 6a:
+      responses:
+      - text: Sounds great!
+        next: part 7a
+      text: "Fire Crystals are somewhat unstable, the amount needed for a successful forge varies. \nAdditionally, we've discovered that adding more Fire Crystals results in chances at special bonuses that will be applied to the item! \n"
+    part 7a:
+      responses:
+      - text: Sure! (Open the Forge)
+        close: true
+        action: 0
+      - text: I'll look at it later. (End conversation)
+        close: true
+      text: Now that you know about the Forge, would you like to give it a look?
+  initial: part 1a
+id: scene.1.placed.6820

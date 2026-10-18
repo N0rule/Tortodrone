@@ -4,24 +4,23 @@ This is the operator reference for the **current implementation**, not a promise
 
 ## Deployment and lifecycle
 
-Install Java 25. Run `java -jar tortodrone-admin.jar` to create accounts, then `java -jar tortodrone.jar` to host; deploy both JARs beside `content/packs/vanilla/` and any selected `content/custom/packs/`. Server settings are generated as `data/server.properties` on first startup. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/content/packs/vanilla/`.
+Install Java 25. Run `java -jar tortodrone-admin.jar` to create accounts, then `java -jar tortodrone.jar` to host; deploy both JARs beside `config/`, `content/` and `plugins/`. Server settings live in `config/server.yml`. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/{config,content,plugins}/`.
 
 - `--nogui`: terminal hosting; `--gui`: require desktop; otherwise GUI when available, terminal fallback. Stop via the GUI or `stop` / Ctrl+C in terminal mode.
-- `--config path/to/server.properties`: select a config file; **does not move `data/`**. Settings are read at process startup; stop/restart to apply changes.
+- `--config path/to/server.yml`: select a config file; **does not move `data/`**. Settings are read at process startup; stop/restart to apply changes.
 - Server GUI: Start/Stop/Restart, sessions, scene templates and instances, performance and logs. Command field shares local terminal commands; commands requiring password/confirmation prompts belong in the account manager.
 - Account manager: `java -jar tortodrone-admin.jar`; if separate from the deployed server, add `--data /path/to/server/data`. It has GUI/CLI, uses the same SQLite data and does not open a remote admin port.
 
-Edit `data/server.properties` while stopped:
+Edit `config/server.yml` while stopped:
 
-```properties
-server-ip=0.0.0.0
-server-port=47624
-max-clients=16
-log-mode=normal
-log-max-mib=10
-log-retention=5
-content-packs=vanilla
-legacy-content=auto
+```yaml
+server-ip: 0.0.0.0
+server-port: 47624
+max-clients: 16
+log-mode: normal
+log-max-mib: 10
+log-retention: 5
+startup-map: haven
 ```
 
 `max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files. Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
@@ -60,7 +59,7 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 
 ## Data safety, updates and release builds
 
-1. Stop both server and account manager before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `data/server.properties` and any custom packs.
+1. Stop both server and account manager before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `config/` and the complete `content/` tree.
 2. On update replace the JARs and shipped vanilla content as appropriate; **retain your current `data/`**. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than implicitly migrated.
 3. Check `VERSION` and full build/test results. The GitHub Actions release workflow builds on Java 25 and publishes a ZIP and tar.gz **only for version tags** matching `v<VERSION>` (or explicit retry of that existing tag). Packages include JARs, the vanilla content pack and a start note, not JRE, database or game assets. See `.github/workflows/release.yml`.
 

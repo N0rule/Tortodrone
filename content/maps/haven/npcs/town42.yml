@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Thanks for the information, I'm off to explore!
+        close: true
+      text: Greetings and welcome to Haven!  If you head north, you'll reach the Arcade where you can get up to speed on the details of our mission.  If you head west, you'll reach the Bazaar, where the Strangers have a selection of gear and weapons for sale.  Be sure to check their stock daily, it changes!
+  initial: part 1a
+id: town42

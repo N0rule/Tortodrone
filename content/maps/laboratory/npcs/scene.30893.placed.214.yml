@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: We salvaged what we could from the Skylark and cobbled together the rest with help from the Strangers.
+  initial: part 1a
+id: scene.30893.placed.214

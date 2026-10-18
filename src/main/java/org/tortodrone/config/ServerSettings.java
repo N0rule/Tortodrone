@@ -7,14 +7,16 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
-/** Editable listener, logging and content-selection settings. */
-public record ServerSettings(String bind, int port, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent) {
+/** Listener, logging and initial map settings; legacy selection is migration-only. */
+public record ServerSettings(String bind, int port, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap) {
+    public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy){this(bind,port,mode,clients,maxMiB,retention,packs,legacy,"haven");}
     public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention) { this(bind,port,mode,clients,maxMiB,retention,"vanilla","auto"); }
     public ServerSettings(String bind,int port,LogMode mode,int clients) { this(bind,port,mode,clients,10,5); }
     public enum LogMode { NORMAL, DEBUG }
-    /** All operator settings default to data/server.properties beside the deployed JAR. */
+    /** Unified config/server.yml; preserve an existing properties-only deployment until migration. */
     public static Path defaultPath(Path deployment) throws IOException {
-        Path file=deployment.resolve("data/server.properties");
+        Path yaml=deployment.resolve("config/server.yml"),old=deployment.resolve("data/server.properties");
+        Path file=Files.exists(yaml)||!Files.exists(old)?yaml:old;
         org.tortodrone.resources.ContentFiles.safe(file);
         return file;
     }
@@ -23,7 +25,7 @@ public record ServerSettings(String bind, int port, LogMode logMode, int maxClie
         org.tortodrone.resources.ContentFiles.safe(file);
         if (!Files.exists(file)) {
             Files.createDirectories(file.getParent());
-            try (InputStream source=ServerSettings.class.getResourceAsStream("/server.properties")) {
+            try (InputStream source=ServerSettings.class.getResourceAsStream(file.toString().endsWith(".yml")?"/server.yml":"/server.properties")) {
                 if(source==null)throw new IOException("Missing bundled server.properties");
                 Files.write(file,source.readAllBytes(),StandardOpenOption.CREATE_NEW);
             }
@@ -39,7 +41,16 @@ public record ServerSettings(String bind, int port, LogMode logMode, int maxClie
         }
         Properties settings=new Properties();settings.putAll(defaults);
         org.tortodrone.resources.ContentFiles.safe(file);
-        if(Files.exists(file))try(InputStream source=Files.newInputStream(file)){settings.load(source);}
+        if(Files.exists(file)) {
+            if(file.toString().endsWith(".yml")) {
+                for(var e:org.tortodrone.resources.Yaml.read(file).entrySet()) {
+                    if(java.util.Set.of("content-packs","legacy-content").contains(e.getKey()))throw new IOException(file+": pack settings are migration-only; use unified content directories");
+                    if(!defaults.containsKey(e.getKey()))throw new IOException(file+": unknown server setting "+e.getKey());
+                    if(!(e.getValue() instanceof String||e.getValue() instanceof Number))throw new IOException(file+": expected scalar setting "+e.getKey());
+                    settings.setProperty(e.getKey(),e.getValue().toString());
+                }
+            } else settings.putAll(org.tortodrone.resources.ContentFiles.properties(file));
+        }
         for(String name:settings.stringPropertyNames())
             if(!defaults.containsKey(name))throw new IOException("Unknown server property: "+name);
         return settings;
@@ -67,7 +78,15 @@ public record ServerSettings(String bind, int port, LogMode logMode, int maxClie
         String packs=value(settings,"content-packs"),legacy=value(settings,"legacy-content");
         if(packs.isEmpty())throw new IOException("content-packs must list at least one pack");
         if(!java.util.Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        return new ServerSettings(bind, port, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy);
+        return new ServerSettings(bind, port, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings));
+    }
+
+    public static String startupMap(Path file)throws IOException {
+        return startupMap(properties(file));
+    }
+    private static String startupMap(Properties settings)throws IOException {
+        String map=value(settings,"startup-map");
+        if(!map.matches("[a-z][a-z0-9_]{0,63}"))throw new IOException("startup-map must name a content/maps folder");return map;
     }
 
     private static int number(Properties settings,String key,int min,int max) throws IOException {

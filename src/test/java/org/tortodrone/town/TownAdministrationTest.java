@@ -14,7 +14,7 @@ public final class TownAdministrationTest {
     public static void main(String[] args)throws Exception{
         Path root=Files.createTempDirectory("tortodrone-town-admin-");
         try{
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             try(var accounts=new AccountStore(root,false,items,rules)){
                 accounts.create("Alice","alice-password".toCharArray());accounts.create("Bob","bob-password".toCharArray());
                 var db=new Database(root,false);new CharacterStore(db,1,"Alice",items).create(knight("Alice-Knight"));new CharacterStore(db,2,"Bob",items).create(knight("Bob-Knight"));

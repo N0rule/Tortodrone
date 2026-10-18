@@ -6,7 +6,7 @@ A **Java 25 clean-room Spiral Knights server emulator** and local account manage
 
 The currently implemented subset includes local login/accounts and GM roles, knight creation/selection/editing/deletion, persistent inventory and currencies, equipment/costumes, item grants, character preview, trading, inspection/privacy, chat/tells/emotes/sitting, and four connected Haven towns (Town Square, Bazaar, Arcade and Garrison). Three additional solo interiors (Advanced Training Hall, Laboratory, Hall of Heroes) have movement and limited stock-derived weapon/defense/projectile systems. Training Hall now also supports prepared scene actors and bounded interactions (test cubes, switches/doors, traps, pickups, blocks and conversation). The seven bundled scenes use verified modern stock-capture layouts, including Laboratory scene 30893 and Hall of Heroes scene 318. Scenes use external validated layouts/collision and server-authoritative movement.
 
-**Not full vanilla parity:** general dungeon/gate gameplay, broadly reusable monster AI and NPC services, missions, shops, crafting, full party/guild/social systems, world-position persistence and much of combat are not implemented. The intro is bypassed without granting fictional mission progress. Actual supported scope is determined by source/tests, not by how much data exists in content packs.
+**Not full vanilla parity:** general dungeon/gate gameplay, broadly reusable monster AI and NPC services, missions, complete shop/crafting coverage, full party/guild/social systems, world-position persistence and much of combat are not implemented. The intro is bypassed without granting fictional mission progress. Actual supported scope is determined by source/tests, not by how much data exists in content definitions. Supported Town services include merchant purchases, recipe learning/crafting, sprite progression, auctions and the Energy Exchange; available stock catalogs and behaviors remain incomplete.
 
 ## Quick start
 
@@ -26,7 +26,7 @@ Useful tasks (same Windows wrapper substitution):
 
 ```sh
 ./gradlew buildWithoutTests   # compile main, tests and build tools; package both JARs; run no tests
-./gradlew buildServer         # server JAR + selected content pack
+./gradlew buildServer         # server JAR + unified content
 ./gradlew buildAdmin          # account-manager JAR
 ./gradlew testUnit
 ./gradlew testIntegration
@@ -43,13 +43,16 @@ For portable deployments place these **beside one another**:
 Tortodrone/
   tortodrone.jar
   tortodrone-admin.jar
-  content/packs/vanilla/
-  content/custom/packs/  # optional selected packs
-  data/                 # keep across updates
-    server.properties
+  config/                # server.yml and combat.yml
+  content/               # maps/, items/, town/, shared/, _internal/
+  plugins/README.md      # future API placeholder
+  data/                  # keep across updates
 ```
 
-The build prepares `build/content/packs/vanilla/` and generates `build/data/server.properties` when missing. Deploy the complete content beside the JARs. A versioned release archive packages the JARs and vanilla content without private `data/`; the server generates settings on first startup. **Do not deploy only the two JARs** and rely on startup downloads.
+The build prepares `build/{config,content,plugins}/` beside both JARs. Deploy these
+complete directories. Release archives include defaults and omit private `data/`.
+For existing installations, follow the non-destructive [content migration
+procedure](docs/content.md#upgrade-from-packs-or-older-defaults) before upgrading.
 
 ## Client connection
 
@@ -65,22 +68,29 @@ For a local build, the key is at `build/data/keys/public.txt` once the server ha
 
 ## Configuration and safety
 
-Stop the server before editing `data/server.properties`:
+Stop the server before editing `config/server.yml`:
 
-```properties
-server-ip=0.0.0.0
-server-port=47624
-max-clients=16
-log-mode=normal
-log-max-mib=10
-log-retention=5
-content-packs=vanilla
-legacy-content=auto
+```yaml
+server-ip: 0.0.0.0
+server-port: 47624
+max-clients: 16
+log-mode: normal
+log-max-mib: 10
+log-retention: 5
+startup-map: haven
 ```
 
-`--config path/to/server.properties` changes the settings file **only**, not the adjacent `data/` path. Type `help` in the server terminal/window for local commands; `stop` shuts down terminal hosting. Logs are under `data/logs/`. Local admin tools have no exposed admin network listener.
+`--config path/to/server.yml` changes only the settings file. Existing explicitly
+selected `.properties` listener settings remain compatible. `data/` stays beside
+the JAR. Type `help` in the server terminal/window for commands; `stop` shuts down
+terminal hosting. Logs are under `data/logs/`.
 
-**Back up the entire `data/` directory** while the server and manager are stopped (database/WAL, keys and accounts), along with any custom packs and content selection, before upgrading. No automatic migration from unsupported database schemas is provided.
+Open `content/maps/advanced_training/npcs/konway.yml` to edit Konway's readable
+stock dialogue selections (literal text is restricted by the unchanged client),
+`content/items/weapons.yml` for weapon controls, or `content/town/shops.yml`
+for catalog goods. Save, validate and restart; no manifests or manual hashes.
+See [Content](docs/content.md) for schemas, imports, migration and native limits.
+Back up the whole stopped `data/`, `config/` and `content/` before upgrading.
 
 ## Documentation
 

@@ -9,7 +9,7 @@ public final class ServerSettingsTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-settings-");Path file=home.resolve("server.properties");
         try {
-            check(ServerSettings.defaultPath(home).equals(home.resolve("data/server.properties")),"settings default to the data directory");
+            check(ServerSettings.defaultPath(home).equals(home.resolve("config/server.yml")),"settings default to config/server.yml");
             check(ServerSettings.read(home.resolve("data/server.properties")).contentPacks().equals("vanilla")&&!Files.exists(home.resolve("data")),"reading content defaults creates no data or config directory");
             check(ServerSettings.load(file).maxClients()==16,"existing connection limit remains the default");
             check(Files.readString(file).contains("content-packs=vanilla")&&Files.readString(file).contains("legacy-content=auto"),"new settings include content selection defaults");

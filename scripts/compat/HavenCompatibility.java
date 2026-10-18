@@ -19,8 +19,8 @@ public final class HavenCompatibility {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 2) throw new IllegalArgumentException(
-            "Usage: HavenCompatibility installed-game [content/packs/vanilla/maps]");
-        Path game=Path.of(args[0]), maps=args.length==2?Path.of(args[1]):Path.of("content/packs/vanilla/maps");
+            "Usage: HavenCompatibility installed-game [content/maps]");
+        Path game=Path.of(args[0]), maps=args.length==2?Path.of(args[1]):Path.of("content/maps");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),
@@ -30,10 +30,12 @@ public final class HavenCompatibility {
         int[] ids={1,2,3,445,294,30893,318}; int totalTriggers=0,totalEntrances=0;
         for(int id:ids) {
             Path folder=maps.resolve(switch(id){case 1->"haven";case 2->"bazaar";case 3->"arcade";case 445->"garrison";case 294->"advanced_training";case 30893->"laboratory";default->"hall_of_heroes";});
-            var props=properties(folder.resolve("map.properties"));
+            var prepared=Files.exists(folder.resolve("map.yml"))?org.tortodrone.resources.MapYaml.prepare(folder,maps.getParent().resolve("shared")):null;
+            var props=prepared==null?properties(folder.resolve("map.properties")):prepared.descriptor();
+            Path nativeFolder=prepared==null?folder:prepared.nativeDirectory();
             if(!"%town:m.haven".equals(props.getProperty("zone-name")))
                 throw new AssertionError("Haven zone name differs from the captured qualified Name");
-            byte[] bytes=Files.readAllBytes(folder.resolve("scene.dat"));
+            byte[] bytes=Files.readAllBytes(nativeFolder.resolve("scene.dat"));
             var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes); scene.init(manager);
             if(scene.sceneId!=id||scene.version!=Integer.parseInt(props.getProperty("version"))
                 ||!Objects.equals(scene.name,props.getProperty("name"))
@@ -41,10 +43,10 @@ public final class HavenCompatibility {
                 throw new AssertionError("Stock scene identity/config mismatch for id "+id);
             String digest=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
             if(!digest.equals(props.getProperty("scene-sha256")))throw new AssertionError("Scene digest mismatch for "+id);
-            var pp=properties(folder.resolve("portals.properties"));
+            var pp=prepared==null?properties(folder.resolve("portals.properties")):prepared.portals();
             if(!digest.equals(pp.getProperty("layout-sha256"))||!"2".equals(pp.getProperty("format")))
                 throw new AssertionError("Portal metadata layout/format mismatch for "+id);
-            var server=ScenePortals.load(folder,digest,CollisionMap.read(folder.resolve("walkability.gz")));
+            var server=ScenePortals.load(pp,digest,CollisionMap.read(nativeFolder.resolve("walkability.gz")));
             var archived=new HashMap<Integer,Portal>();
             var destinationEntrances=new HashMap<String,TudeySceneModel.PlaceableEntry>();
             var defaultEntrances=new HashMap<Integer,TudeySceneModel.PlaceableEntry>();

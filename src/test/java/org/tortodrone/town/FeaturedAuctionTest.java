@@ -19,7 +19,7 @@ public final class FeaturedAuctionTest {
         try{
             var db=new Database(home,true);var protection=new Passwords.Protection(new byte[16],new byte[32]);
             int alice=db.create("Alice",protection,false),bob=db.create("Bob",protection,false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             new CharacterStore(db,alice,"Alice",items).create(choices("Alice-Knight"));new CharacterStore(db,bob,"Bob",items).create(choices("Bob-Knight"));
             db.currency("Alice","Alice-Knight",alice,-1,Currency.CROWNS,10000);db.currency("Bob","Bob-Knight",bob,-1,Currency.CROWNS,10000);
             var house=new AuctionHouse(db,items,rules);

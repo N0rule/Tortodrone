@@ -1,0 +1,43 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Clearly I really should know all about this, tell me more!
+        next: part 2a
+      - text: No thanks, I'm content not knowing about such an amazing thing.
+        close: true
+      text: Do you know what the most important resource on Cradle is? ENERGY! That's right my friend, something so special it's worth shouting about! Want to know about this super important stuff? I happen to be an expert on the subject!
+    part 2a:
+      responses:
+      - text: What is energy?
+        next: part 3a
+      - text: How is energy used?
+        next: part 3b
+      - text: How do I obtain more energy?
+        next: part 3c
+      - text: Your lessons have energized me! I'm off to adventure, bye!
+        close: true
+      text: 'Awesome! I''ll break it down for you in three easy lessons: what it is, how it''s used, and how you can get more.'
+    part 3a:
+      responses:
+      - text: I have another question for you.
+        next: part 2a
+      - text: Your lessons have energized me! I'm off to adventure, bye!
+        close: true
+      text: Energy is a very special power that is constantly emanating from the core of this world. It is totally stable and will never be lost unless traded or spent. (You can see how much energy you have on the energy module in your arsenal.)
+    part 3b:
+      responses:
+      - text: I have another question for you.
+        next: part 2a
+      - text: Your lessons have energized me! I'm off to adventure, bye!
+        close: true
+      text: "Energy is used for all sorts of things! It's the primary currency for buying goods from the Supply Depot, it allows you to purchase upgrades for yourself, revive yourself in the Clockworks when you run out of Sparks of Life, and it's required to form a guild. \n\nYou'll also find all sorts of devices in the world that are powered up by using energy. Just look for the blue energy symbol on the device."
+    part 3c:
+      responses:
+      - text: I have another question for you.
+        next: part 2a
+      - text: Your lessons have energized me! I'm off to adventure, bye!
+        close: true
+      text: Energy can only be obtained by purchase with a real money transaction or for trade via the Exchange. To purchase or trade for energy, simply open the Supply Depot and click the 'Get Energy' button.
+  initial: part 1a
+id: town11

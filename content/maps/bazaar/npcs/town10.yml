@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: I got a great deal on this broken mecha knight. If I can just figure out how to get it working properly I'll have myself a personal bodyguard for my expeditions into the Clockworks.
+  initial: part 1a
+id: town10

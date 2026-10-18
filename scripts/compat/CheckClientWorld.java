@@ -1,4 +1,5 @@
 import java.io.*;
+import org.tortodrone.resources.Yaml;
 import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -22,13 +23,14 @@ public final class CheckClientWorld {
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
             for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
-            Path maps=project.resolve("build/content/packs/vanilla");
+            Path maps=project.resolve("build/content");
             try(var paths=Files.walk(maps)) {
                 for(var path:paths.toList()) {
-                    Path target=scratch.resolve("content/packs/vanilla").resolve(maps.relativize(path));
+                    Path target=scratch.resolve("content").resolve(maps.relativize(path));
                     if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
                 }
             }
+            copyTree(project.resolve("build/config"),scratch.resolve("config"));Files.deleteIfExists(scratch.resolve("config/server.yml"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
@@ -117,30 +119,28 @@ public final class CheckClientWorld {
             catch(Exception failure){System.err.println(tail(serverLog));throw failure;}
             server.destroy();
             if (!server.waitFor(5, TimeUnit.SECONDS)) throw new IOException("Temporary server did not stop");
-            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/content/packs/vanilla/maps");
+            Path prepared=args.length==2?Path.of(args[1]).toAbsolutePath():project.resolve("build/content/maps");
             if(args.length==2||Files.isDirectory(prepared.resolve("advanced_training"))
                     &&Files.isDirectory(prepared.resolve("laboratory"))&&Files.isDirectory(prepared.resolve("hall_of_heroes"))) {
-                copyTree(prepared,scratch.resolve("maps"));
+                if(args.length==2) {
+                    Path current=scratch.resolve("content/maps");try(var paths=Files.walk(current)){for(Path p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}
+                    copyTree(prepared,current);
+                }
                 Path interiorLog=scratch.resolve("interior-server.log");
                 Process interiorServer=start(List.of(executable("java"),"-jar",scratch.resolve("tortodrone.jar").toString(),"--nogui"),interiorLog);
                 interiorServer.getOutputStream().close();
                 String interiorPort=ready(interiorServer,interiorLog);
                 var interiorCheck=new ArrayList<>(base);
-                interiorCheck.addAll(List.of("InteriorConnectionCheck",interiorPort,scratch.resolve("data/keys/public.txt").toString(),"127.0.0.1",scratch.resolve("maps").toString()));
+                interiorCheck.addAll(List.of("InteriorConnectionCheck",interiorPort,scratch.resolve("data/keys/public.txt").toString(),"127.0.0.1",scratch.resolve("content/maps").toString()));
                 try{run(interiorCheck,"interior-links","",180);}
                 catch(Exception failure){System.err.println(tail(interiorLog));throw failure;}
                 interiorServer.destroy();if(!interiorServer.waitFor(5,TimeUnit.SECONDS))throw new IOException("Temporary interior server did not stop");
-                try(var paths=Files.walk(scratch.resolve("maps"))){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
             }
             List<String> seed = new ArrayList<>(base);
             seed.addAll(List.of("AccountConnectionCheck", "seed", scratch.resolve("data").toString()));
             run(seed,"seed-reconnect","",15);
-            Path descriptor = scratch.resolve("content/packs/vanilla/maps/haven/map.properties");
-            var properties = new Properties();
-            try (var in = Files.newInputStream(descriptor)) { properties.load(in); }
-            properties.setProperty("instances", "2");
-            try (var out = Files.newOutputStream(descriptor)) { properties.store(out, "Disposable instance check"); }
-            refreshSceneFingerprint(descriptor.getParent(),"scene.1");
+            Path descriptor = scratch.resolve("content/maps/haven/map.yml");
+            var properties=Yaml.read(descriptor);properties.put("instances",2);Files.delete(descriptor);Yaml.write(descriptor,properties);
             Path isolatedLog = scratch.resolve("isolated-server.log");
             Process isolated = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), isolatedLog);
             isolated.getOutputStream().close();
@@ -158,9 +158,7 @@ public final class CheckClientWorld {
             // Trade deliberately changes persistent inventories and balances;
             // finish the five-starter reconnect checks before its separate fixture.
             isolated.destroy();if(!isolated.waitFor(5,TimeUnit.SECONDS))throw new IOException("Temporary instance server did not stop");
-            properties.setProperty("instances","1");
-            try(var out=Files.newOutputStream(descriptor)){properties.store(out,"Disposable trade check");}
-            refreshSceneFingerprint(descriptor.getParent(),"scene.1");
+            properties.put("instances",1);Files.delete(descriptor);Yaml.write(descriptor,properties);
             var tradeSeed=new ArrayList<>(base);
             tradeSeed.addAll(List.of("TradeConnectionCheck","--seed",scratch.resolve("data").toString(),scratch.resolve("trade.properties").toString()));
             run(tradeSeed,"seed-trade","",15);
@@ -186,14 +184,6 @@ public final class CheckClientWorld {
             Path target=destination.resolve(source.relativize(path));
             if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
         }}
-    }
-    private static void refreshSceneFingerprint(Path folder,String key)throws Exception {
-        run(List.of(executable("java"),"-cp",scratch.resolve("tortodrone.jar").toString(),
-            "org.tortodrone.resources.ContentFiles",folder.toString()),"fingerprint","",15);
-        Path file=scratch.resolve("content/packs/vanilla/pack.properties");var manifest=new Properties();
-        try(var input=Files.newInputStream(file)){manifest.load(input);}
-        manifest.setProperty("sha256."+key,Files.readString(scratch.resolve("fingerprint.log")).trim());
-        try(var output=Files.newOutputStream(file)){manifest.store(output,"Disposable scene configuration");}
     }
     private static String ready(Process server,Path log)throws Exception {
         long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(15);

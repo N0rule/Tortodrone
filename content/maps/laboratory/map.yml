@@ -1,0 +1,6 @@
+id: 30893
+name: The Lab
+type: level
+zone: haven
+defaultSpawn: level_start
+instances: 1

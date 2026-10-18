@@ -1,0 +1,6 @@
+id: 3
+name: Haven|Arcade
+type: town
+zone: haven
+defaultSpawn: from_town_square_north
+instances: 1

@@ -1,4 +1,4 @@
-# Server state and legacy research; vanilla preparation reads content/packs/vanilla.
+# Server state and local research; preparation reads config/ and content/.
 /local/
 
 # Captures and logs
@@ -15,7 +15,5 @@ build/
 __pycache__/
 *.pyc
 
-# Local deployment state and enabled operator packs
+# Local deployment state
 /data/
-/content/custom/packs/*
-!/content/custom/packs/.gitkeep

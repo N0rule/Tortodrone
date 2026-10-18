@@ -1,0 +1,16 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Sure, where should I start?
+        next: part 2a
+      - text: No thanks, I'll explore the place myself.
+        close: true
+      text: "Welcome to our advanced training hall. Here you will find useful survival tips to help you on your journey through the Clockworks. \n\nWould you like some directions?"
+    part 2a:
+      responses:
+      - text: Thanks! I'm off to explore now.
+        close: true
+      text: To the West, you will learn about useful items found in the Clockworks. To the North, you will learn about a variety of block types and doors. To the East, you will find an array of traps and hazards as well as a combat room to practice defense against training cubes.  Don't worry, we have taken precautions to make sure the cubes are perfectly harmless!
+  initial: part 1a
+id: konway

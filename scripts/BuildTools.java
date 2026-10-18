@@ -32,7 +32,7 @@ public final class BuildTools {
             case "maps", "defaults", "content" -> {
                 if (args.length > 2) throw new IllegalArgumentException("Expected at most one map output directory");
                 String command=args[0];
-                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(command.equals("maps")?"build/content/packs/vanilla/maps":"build/content/packs/vanilla");
+                Path output = args.length == 2 ? Path.of(args[1]) : project.resolve(command.equals("maps")?"build/content/maps":"build/content");
                 prepare(project, output.toAbsolutePath().normalize(), command);
             }
             default -> throw new IllegalArgumentException("Unknown build input command");
@@ -43,45 +43,24 @@ public final class BuildTools {
         try (var input = Files.newInputStream(file)) { values.load(input); }
         return values;
     }
-    private static void verifyMaps(Path maps) throws Exception {
-        if (Files.notExists(maps, LinkOption.NOFOLLOW_LINKS)) {
-            System.out.println("Optional map source is absent: " + maps + "; continuing without maps");
-            return;
-        }
-        try(var folders=Files.list(maps)) {
-            for(Path pack:folders.filter(Files::isDirectory).toList()) {
-                var descriptor = properties(pack.resolve("map.properties"));
-                verify(pack.resolve("scene.dat"), descriptor.getProperty("scene-sha256"));
-                verify(pack.resolve("walkability.gz"), descriptor.getProperty("collision-sha256"));
-            }
-        }
-    }
     private record Copy(Path source, Path target, boolean replace) { }
     /** Map provenance manifest checked in beside the packs it pins. */
     private static final String MAP_MANIFEST = "scene-source.properties";
     private static void prepare(Path project, Path output, String command) throws Exception {
         boolean mapsOnly=command.equals("maps");
-        // One checked-in source for every machine: no local export directory can change a build.
-        Path vanillaSource=project.resolve("content/packs/vanilla");
-        Path mapSource=vanillaSource.resolve("maps");
-        Path mapOutput=mapsOnly?output:output.resolve("maps");
-        if(!mapsOnly&&!Files.isDirectory(vanillaSource,LinkOption.NOFOLLOW_LINKS))
-            throw new IOException("Required vanilla content source is absent: "+vanillaSource);
-        if(!mapsOnly&&!Files.isDirectory(mapSource,LinkOption.NOFOLLOW_LINKS))
-            throw new IOException("Required vanilla map source is absent: "+mapSource);
-        verifyMaps(mapSource);
+        Path contentSource=project.resolve("content"),mapSource=contentSource.resolve("maps");
+        if(!Files.isDirectory(mapSource,LinkOption.NOFOLLOW_LINKS))throw new IOException("Required unified map source is absent: "+mapSource);
+        Path deploymentRoot=inferDeploymentRoot(output);
+        if(Files.exists(deploymentRoot.resolve("content/packs"))||Files.exists(deploymentRoot.resolve("defaults")))
+            throw new IOException("Legacy deployment requires an explicit ContentMigration candidate; no files copied");
         var copies=new ArrayList<Copy>();
-        Properties ownership=sourceOwnership(mapSource,MAP_MANIFEST);
-        plan(mapSource,mapOutput,copies,null,ownership);
-        Path deploymentRoot;
-        deploymentRoot=inferDeploymentRoot(output);
-        if(!mapsOnly) {
-            plan(vanillaSource,output,copies,Path.of("maps"),sourceOwnership(vanillaSource,"default-source.properties"));
-            // Operator packs are not build inputs. Copy only the shipped empty directory marker.
-            // Arbitrary staging pack outputs receive no config files outside the requested tree.
-            if(output.endsWith(Path.of("content/packs/vanilla"))||output.endsWith(Path.of("defaults"))) {
-                plan(project.resolve("src/main/resources"),deploymentRoot.resolve("data"),copies,null,null,"server.properties");
-                plan(project.resolve("content/custom/packs"),deploymentRoot.resolve("content/custom/packs"),copies,null,null,".gitkeep");
+        var ownership=sourceOwnership(contentSource,"_internal/default-source.properties");
+        if(mapsOnly)plan(mapSource,output,copies,null,null);
+        else {
+            plan(contentSource,output,copies,null,ownership);
+            if(output.endsWith(Path.of("content"))) {
+                plan(project.resolve("config"),deploymentRoot.resolve("config"),copies,null,null);
+                plan(project.resolve("plugins"),deploymentRoot.resolve("plugins"),copies,null,null);
             }
         }
         // Refuse all planned content changes while the target deployment is locked.
@@ -101,10 +80,12 @@ public final class BuildTools {
                 } else copyMissing(copy.source,copy.target);
             }
         }
-        System.out.println("Prepared "+(mapsOnly?"maps":"content")+": " + (mapsOnly?mapSource:vanillaSource) + " -> " + (mapsOnly?mapOutput:output));
+        System.out.println("Prepared "+(mapsOnly?"maps":"content")+": " + (mapsOnly?mapSource:contentSource) + " -> " + output);
     }
     static Path inferDeploymentRoot(Path output) {
         Path normalized=output.toAbsolutePath().normalize();
+        if(normalized.endsWith(Path.of("content/maps")))return normalized.getParent().getParent();
+        if(normalized.endsWith(Path.of("content")))return normalized.getParent();
         if(normalized.endsWith(Path.of("content/packs/vanilla/maps")))return normalized.getParent().getParent().getParent().getParent();
         if(normalized.endsWith(Path.of("content/packs/vanilla")))return normalized.getParent().getParent().getParent();
         if(normalized.endsWith(Path.of("defaults")))return normalized.getParent();

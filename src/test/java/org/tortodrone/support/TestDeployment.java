@@ -8,8 +8,8 @@ public final class TestDeployment {
     private TestDeployment() { }
     public static void copyServer(Path source,Path target)throws IOException {
         Files.copy(source,target);
-        Path maps=source.toAbsolutePath().getParent().resolve("content/packs/vanilla");
-        Path destination=target.toAbsolutePath().getParent().resolve("content/packs/vanilla");
+        Path maps=source.toAbsolutePath().getParent().resolve("content");
+        Path destination=target.toAbsolutePath().getParent().resolve("content");
         if(!Files.isDirectory(maps))throw new IOException("Build maps before packaged deployment tests");
         try(var paths=Files.walk(maps)) {
             for(var path:paths.toList()) {
@@ -18,5 +18,7 @@ public final class TestDeployment {
                 else Files.copy(path,copy);
             }
         }
+        Path config=target.toAbsolutePath().getParent().resolve("config");Files.createDirectories(config);
+        Files.copy(source.toAbsolutePath().getParent().resolve("config/combat.yml"),config.resolve("combat.yml"));
     }
 }

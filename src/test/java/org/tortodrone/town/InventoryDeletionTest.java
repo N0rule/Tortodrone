@@ -14,8 +14,8 @@ public final class InventoryDeletionTest {
     public static void main(String[] args)throws Exception{
         Path home=Files.createTempDirectory("tortodrone-trash-");
         try{
-            var db=new Database(home,false);var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
-            var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));var store=new TownStore(db,items,rules);
+            var db=new Database(home,false);var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
+            var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));var store=new TownStore(db,items,rules);
             var password=new Passwords.Protection(new byte[16],new byte[32]);int a=db.create("Alice",password,false),b=db.create("Bob",password,false);
             new CharacterStore(db,a,"Alice",items).create(knight("Alice-Knight"));new CharacterStore(db,b,"Bob",items).create(knight("Bob-Knight"));
             var initial=db.worldProfile(a,1,1);

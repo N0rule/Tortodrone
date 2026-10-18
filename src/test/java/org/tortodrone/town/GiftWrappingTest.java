@@ -14,7 +14,7 @@ public final class GiftWrappingTest {
         Path home=Files.createTempDirectory("tortodrone-gifts-");
         try{
             var db=new Database(home,true);var protection=new Passwords.Protection(new byte[16],new byte[32]);int a=db.create("Alice",protection,false),b=db.create("Bob",protection,false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             var alice=new CharacterStore(db,a,"Alice",items);var bob=new CharacterStore(db,b,"Bob",items);alice.create(knight("Gift-Alice"));bob.create(knight("Gift-Bob"));
             String paper="Upgrade/Wrapping Paper/Checker Wrapping (Blue)";
             db.grantItems("Alice","Gift-Alice",-1,-1,items.require(paper),2,-1,-1);db.grantItems("Alice","Gift-Alice",-1,-1,items.require("Weapon/Sword/Calibur"),1,-1,-1);

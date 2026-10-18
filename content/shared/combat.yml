@@ -1,0 +1,4379 @@
+# Global stock-derived numeric rules. Missing gear modifiers default to zero.
+properties:
+  gear:
+    Gear/Armor/(Dev) ModelTester:
+      defense:
+        elemental: 12
+        normal: 12
+        piercing: 12
+        shadow: 12
+      health-bonus: 40
+    Gear/Armor/Almirian Crusader Armor:
+      defense:
+        normal: 12
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '32': 20
+        '4': -20
+    Gear/Armor/Ancient Plate Mail:
+      defense:
+        normal: 162
+      health-bonus: 160
+      status-resist:
+        '1': 40
+    Gear/Armor/Angelic Raiment:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '32': 20
+        '4': -20
+    Gear/Armor/Arcane Salamander Suit:
+      defense:
+        elemental: 11
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Armor/Armor of the Fallen:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '32': -40
+        '4': 40
+    Gear/Armor/Ash Tail Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 30
+    Gear/Armor/Azure Guardian Armor:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Black Kat Cloak:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 20
+    Gear/Armor/Black Kat Mail:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 30
+    Gear/Armor/Black Kat Raiment:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 40
+    Gear/Armor/Blazebreak Armor:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 30
+        '8': -10
+    Gear/Armor/Blizzbreaker Armor:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 30
+    Gear/Armor/Bombastic Demo Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Armor/Boosted Plate Mail:
+      defense:
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 20
+    Gear/Armor/Brute Jelly Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 20
+    Gear/Armor/Chaos Cloak:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -20
+        '4': -20
+        '8': -20
+    Gear/Armor/Charged Quicksilver Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 30
+    Gear/Armor/Chroma Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 10
+        '4': 10
+    Gear/Armor/Circuit Breaker Armor:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': 10
+        '4': -10
+        '8': -10
+    Gear/Armor/Cobalt Armor:
+      defense:
+        normal: 11
+        piercing: 8
+    Gear/Armor/Deadly Virulisk Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+    Gear/Armor/Deadshot Mantle:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '32': 40
+    Gear/Armor/Deep Sea Cuirass:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -40
+        '4': 40
+        '8': 40
+    Gear/Armor/Divine Mantle:
+      defense:
+        elemental: 11
+        shadow: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '32': 40
+        '4': 40
+    Gear/Armor/Dragon Scale Mail:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': 40
+    Gear/Armor/Drake Scale Mail:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': 20
+    Gear/Armor/Dread Skelly Suit:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '8': 40
+    Gear/Armor/Dusker Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 20
+    Gear/Armor/Elemental Cloak:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '4': 20
+    Gear/Armor/Emberbreak Armor:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': -10
+        '4': 10
+        '8': -10
+    Gear/Armor/Fencing Jacket:
+      defense:
+        normal: 5
+    Gear/Armor/Firebreak Armor:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': -10
+        '4': 20
+        '8': -10
+    Gear/Armor/Frostbreaker Armor:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 10
+    Gear/Armor/Fused Demo Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+    Gear/Armor/Grey Feather Mantle:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '4': 40
+    Gear/Armor/Groundbreaker Armor:
+      defense:
+        normal: 15
+    Gear/Armor/Gunslinger Sash:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Heavenly Iron Armor:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -40
+        '32': 40
+    Gear/Armor/Heavy Demo Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+    Gear/Armor/Heavy Plate Mail:
+      defense:
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 30
+    Gear/Armor/Ice Queen Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 40
+        '8': 40
+    Gear/Armor/Icebreaker Armor:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 20
+    Gear/Armor/Ignition Armor:
+      defense:
+        normal: 10
+        piercing: 7
+      status-resist:
+        '4': 20
+    Gear/Armor/Ironmight Plate Mail:
+      defense:
+        normal: 62
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Armor/Jelly Mail:
+      defense:
+        normal: 8
+        piercing: 11
+      status-resist:
+        '1': 10
+    Gear/Armor/Justifier Jacket:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Armor/Kat Claw Cloak:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Armor/Kat Claw Mail:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Armor/Kat Claw Raiment:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Armor/Kat Eye Cloak:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Armor/Kat Eye Mail:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Armor/Kat Eye Raiment:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Armor/Kat Hiss Cloak:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Armor/Kat Hiss Mail:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Armor/Kat Hiss Raiment:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Armor/Mad Bomber Suit:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '4': -20
+        '8': -20
+    Gear/Armor/Magic Cloak:
+      defense:
+        elemental: 11
+        normal: 8
+      status-resist:
+        '16': 10
+        '4': 10
+    Gear/Armor/Mercurial Demo Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+    Gear/Armor/Mercurial Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 40
+    Gear/Armor/Mighty Cobalt Armor:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Miracle Cloak:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '4': 30
+    Gear/Armor/Nameless Poncho:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Armor/Padded Armor:
+      defense:
+        normal: 10
+    Gear/Armor/Padded Demo Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -20
+    Gear/Armor/Padded Hunting Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -20
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 1):
+      defense:
+        normal: 10
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 2):
+      defense:
+        normal: 10
+        piercing: 8
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 3):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 4):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 5) (Alt):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Parts/Handgun Armors/Handgun Armor (Rarity 5):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Parts/Proto (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Brigandine (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Cloak (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Cuirass (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Culet (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Draped Armor (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Parts/Spiral Flak Jacket  (Base):
+      defense:
+        normal: 5
+    Gear/Armor/Pathfinder/Pathfinder Armor:
+      defense:
+        normal: 10
+        piercing: 8
+    Gear/Armor/Pathfinder/Plated Pathfinder Armor, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Armor/Pathfinder/Plated Pathfinder Armor, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Armor/Pathfinder/Plated Pathfinder Armor, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Armor/Pathfinder/Plated Pathfinder Armor, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Armor/Pathfinder/Sacred Guerrilla Armor, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Pathfinder/Sacred Guerrilla Armor, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Pathfinder/Sacred Guerrilla Armor, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Pathfinder/Sacred Guerrilla Armor, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Pathfinder/Sacred Hazard Armor, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Pathfinder/Sacred Hazard Armor, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Pathfinder/Sacred Hazard Armor, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Pathfinder/Sacred Hazard Armor, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Pathfinder/Sacred Pathfinder Armor, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Pathfinder/Sacred Pathfinder Armor, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Pathfinder/Sacred Pathfinder Armor, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Pathfinder/Sacred Pathfinder Armor, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Pathfinder/Woven Pathfinder Armor, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Armor/Pathfinder/Woven Pathfinder Armor, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Armor/Pathfinder/Woven Pathfinder Armor, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Armor/Pathfinder/Woven Pathfinder Armor, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Armor/Quicksilver Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 20
+    Gear/Armor/Quilted Demo Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -30
+    Gear/Armor/Quilted Hunting Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -30
+    Gear/Armor/Radiant Silvermail:
+      defense:
+        piercing: 11
+        shadow: 11
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '32': 40
+    Gear/Armor/Rock Jelly Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 30
+    Gear/Armor/Royal Jelly Mail:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Armor/Salamander Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 30
+    Gear/Armor/Scary Skelly Suit:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '8': 20
+    Gear/Armor/Sentinel/Plated Sentinel Armor, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Armor/Sentinel/Plated Sentinel Armor, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Armor/Sentinel/Plated Sentinel Armor, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Armor/Sentinel/Plated Sentinel Armor, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Armor/Sentinel/Sacred Keeper Armor, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Sentinel/Sacred Keeper Armor, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Sentinel/Sacred Keeper Armor, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Sentinel/Sacred Keeper Armor, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Sentinel/Sacred Sentinel Armor, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Sentinel/Sacred Sentinel Armor, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Sentinel/Sacred Sentinel Armor, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Sentinel/Sacred Sentinel Armor, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Sentinel/Sacred Wraith Armor, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Sentinel/Sacred Wraith Armor, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Sentinel/Sacred Wraith Armor, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Sentinel/Sacred Wraith Armor, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Sentinel/Sentinel Armor:
+      defense:
+        elemental: 8
+        normal: 10
+    Gear/Armor/Sentinel/Woven Sentinel Armor, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Armor/Sentinel/Woven Sentinel Armor, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Armor/Sentinel/Woven Sentinel Armor, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Armor/Sentinel/Woven Sentinel Armor, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Armor/Seraphic Mail:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '32': 30
+        '4': -30
+    Gear/Armor/Shade/Plated Shade Armor, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Armor/Shade/Plated Shade Armor, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Armor/Shade/Plated Shade Armor, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Armor/Shade/Plated Shade Armor, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Armor/Shade/Sacred Ghost Armor, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Shade/Sacred Ghost Armor, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Shade/Sacred Ghost Armor, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Shade/Sacred Ghost Armor, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Shade/Sacred Hex Armor, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Shade/Sacred Hex Armor, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Shade/Sacred Hex Armor, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Shade/Sacred Hex Armor, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Shade/Sacred Shade Armor, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Armor/Shade/Sacred Shade Armor, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Armor/Shade/Sacred Shade Armor, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Armor/Shade/Sacred Shade Armor, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Armor/Shade/Shade Armor:
+      defense:
+        normal: 10
+        shadow: 8
+    Gear/Armor/Shade/Woven Shade Armor, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Armor/Shade/Woven Shade Armor, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Armor/Shade/Woven Shade Armor, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Armor/Shade/Woven Shade Armor, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Armor/Shadowsun Slicker:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+    Gear/Armor/Silvermail:
+      defense:
+        piercing: 11
+        shadow: 11
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '32': 30
+    Gear/Armor/Sinister Skelly Suit:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '8': 30
+    Gear/Armor/Skelly Suit:
+      defense:
+        normal: 8
+        shadow: 11
+      status-resist:
+        '2': 10
+        '8': 10
+    Gear/Armor/Skolver Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Armor/Snarbolax Coat:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '8': 30
+    Gear/Armor/Solid Cobalt Armor:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Spiral Brigandine (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Brigandine (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cloak (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Cuirass (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Culet (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Demo Suit:
+      defense:
+        elemental: 8
+        normal: 10
+    Gear/Armor/Spiral Draped Armor (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Draped Armor (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Blue):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Gold):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Green):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Heavy):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Pink):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Purple):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Flak Jacket (Red):
+      defense:
+        normal: 5
+    Gear/Armor/Spiral Plate Mail:
+      defense:
+        normal: 61
+      status-resist:
+        '1': 10
+    Gear/Armor/Spiral Scale Mail:
+      defense:
+        normal: 10
+        piercing: 7
+    Gear/Armor/Starlit Demo Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -40
+    Gear/Armor/Starlit Hunting Coat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -40
+    Gear/Armor/Sunset Duster:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+    Gear/Armor/Surge Breaker Armor:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '4': -10
+        '8': -10
+    Gear/Armor/Tri-Guard Armor:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': 10
+        '4': 10
+        '8': 10
+    Gear/Armor/Valkyrie Mail:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '32': 40
+        '4': -40
+    Gear/Armor/Virulisk Suit:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+    Gear/Armor/Vitasuit Deluxe:
+      defense:
+        normal: 12
+      health-bonus: 160
+    Gear/Armor/Vitasuit Plus:
+      defense:
+        normal: 11
+      health-bonus: 80
+    Gear/Armor/Vitasuit:
+      defense:
+        normal: 5
+      health-bonus: 40
+    Gear/Armor/Vog Cub Coat:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Armor/Volcanic Demo Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Armor/Volcanic Plate Mail:
+      defense:
+        elemental: 9
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 40
+        '4': 40
+    Gear/Armor/Volcanic Salamander Suit:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Armor/Volt Breaker Armor:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': 20
+        '4': -10
+        '8': -10
+    Gear/Armor/Wolver Coat:
+      defense:
+        normal: 10
+        piercing: 8
+      status-resist:
+        '8': 10
+    Gear/Armor/Wyvern Scale Mail:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': 30
+    Gear/Dungeon/Vitapod/Health +01:
+      health-bonus: 40
+    Gear/Dungeon/Vitapod/Health +02:
+      health-bonus: 80
+    Gear/Dungeon/Vitapod/Health +03:
+      health-bonus: 120
+    Gear/Dungeon/Vitapod/Health +04:
+      health-bonus: 160
+    Gear/Dungeon/Vitapod/Health +05:
+      health-bonus: 200
+    Gear/Dungeon/Vitapod/Health +06:
+      health-bonus: 240
+    Gear/Dungeon/Vitapod/Health +07:
+      health-bonus: 280
+    Gear/Dungeon/Vitapod/Health +08:
+      health-bonus: 320
+    Gear/Dungeon/Vitapod/Health +09:
+      health-bonus: 360
+    Gear/Dungeon/Vitapod/Health +10:
+      health-bonus: 400
+    Gear/Dungeon/Vitapod/Health +11:
+      health-bonus: 440
+    Gear/Dungeon/Vitapod/Health +12:
+      health-bonus: 480
+    Gear/Dungeon/Vitapod/Health +13:
+      health-bonus: 520
+    Gear/Dungeon/Vitapod/Health +14:
+      health-bonus: 560
+    Gear/Dungeon/Vitapod/Health +15:
+      health-bonus: 600
+    Gear/Dungeon/Vitapod/Health +16:
+      health-bonus: 640
+    Gear/Dungeon/Vitapod/Health +18:
+      health-bonus: 720
+    Gear/Dungeon/Vitapod/Health +20:
+      health-bonus: 800
+    Gear/Dungeon/Vitapod/Health +21:
+      health-bonus: 840
+    Gear/Dungeon/Vitapod/Health +24:
+      health-bonus: 960
+    Gear/Dungeon/Vitapod/Health +27:
+      health-bonus: 1080
+    Gear/Dungeon/Vitapod/Health +28:
+      health-bonus: 1120
+    Gear/Dungeon/Vitapod/Health +29:
+      health-bonus: 1160
+    Gear/Dungeon/Vitapod/Health +30:
+      health-bonus: 1200
+    Gear/Dungeon/Vitapod/Parts/Base:
+      health-bonus: 80
+    Gear/Helm/(Dev) ModelTester:
+      defense:
+        elemental: 12
+        normal: 12
+        piercing: 12
+        shadow: 12
+      health-bonus: 40
+    Gear/Helm/Almirian Crusader Helm:
+      defense:
+        normal: 12
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '32': 20
+        '4': -20
+    Gear/Helm/Ancient Plate Helm:
+      defense:
+        normal: 162
+      health-bonus: 160
+      status-resist:
+        '1': 40
+    Gear/Helm/Angelic Helm:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '32': 20
+        '4': -20
+    Gear/Helm/Arcane Salamander Mask:
+      defense:
+        elemental: 11
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Helm/Ash Tail Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 30
+    Gear/Helm/Azure Guardian Helm:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Black Kat Cowl:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 40
+    Gear/Helm/Black Kat Hat:
+      defense:
+        elemental: 12
+        normal: 12
+        piercing: 12
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '1': -50
+        '16': -50
+        '2': -50
+        '32': -100
+        '4': -50
+        '8': -50
+    Gear/Helm/Black Kat Hood:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 20
+    Gear/Helm/Black Kat Mask:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -40
+        '4': -20
+        '8': 30
+    Gear/Helm/Blazebreak Helm:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 30
+        '8': -10
+    Gear/Helm/Blizzbreaker Helm:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 30
+    Gear/Helm/Bombastic Demo Helm:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Helm/Boosted Plate Helm:
+      defense:
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 20
+    Gear/Helm/Brute Jelly Helm:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 20
+    Gear/Helm/Chaos Cowl:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '32': -20
+        '4': -20
+        '8': -20
+    Gear/Helm/Charged Quicksilver Helm:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 30
+    Gear/Helm/Chroma Mask:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 10
+        '4': 10
+    Gear/Helm/Circuit Breaker Helm:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': 10
+        '4': -10
+        '8': -10
+    Gear/Helm/Cobalt Helm:
+      defense:
+        normal: 11
+        piercing: 8
+    Gear/Helm/Crown of the Fallen:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '32': -40
+        '4': 40
+    Gear/Helm/Cyclops Cap:
+      defense:
+        normal: 5
+    Gear/Helm/Deadly Virulisk Mask:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+    Gear/Helm/Deadshot Chapeau:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '32': 40
+    Gear/Helm/Divine Veil:
+      defense:
+        elemental: 11
+        shadow: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '32': 40
+        '4': 40
+    Gear/Helm/Dragon Scale Helm:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': 40
+    Gear/Helm/Drake Scale Helm:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': 20
+    Gear/Helm/Dread Skelly Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '8': 40
+    Gear/Helm/Dusker Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 20
+    Gear/Helm/Elemental Hood:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '4': 20
+    Gear/Helm/Emberbreak Helm:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': -10
+        '4': 10
+        '8': -10
+    Gear/Helm/Feral Kat Hood:
+      defense:
+        elemental: 12
+        normal: 12
+        piercing: 12
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -30
+        '8': 30
+    Gear/Helm/Firebreak Helm:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': -10
+        '4': 20
+        '8': -10
+    Gear/Helm/Firefighter Helmet:
+      defense:
+        elemental: 11
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '1': 40
+        '4': 40
+    Gear/Helm/Frostbreaker Helm:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 10
+    Gear/Helm/Fused Demo Helm:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+    Gear/Helm/Grey Feather Cowl:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '4': 40
+    Gear/Helm/Groundbreaker Helm:
+      defense:
+        normal: 15
+    Gear/Helm/Gunslinger Hat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Heavenly Iron Helm:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -40
+        '32': 40
+    Gear/Helm/Heavy Demo Helm:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+    Gear/Helm/Heavy Plate Helm:
+      defense:
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 30
+    Gear/Helm/Ice Queen Crown:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 40
+        '8': 40
+    Gear/Helm/Icebreaker Helm:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': -10
+        '4': -10
+        '8': 20
+    Gear/Helm/Ignition Helm:
+      defense:
+        normal: 10
+        piercing: 7
+      status-resist:
+        '4': 20
+    Gear/Helm/Ironmight Plate Helm:
+      defense:
+        normal: 62
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Helm/Jaws of Megalodon:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -40
+        '4': 40
+        '8': 40
+    Gear/Helm/Jelly Helm:
+      defense:
+        normal: 8
+        piercing: 11
+      status-resist:
+        '1': 10
+    Gear/Helm/Justifier Hat:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Helm/Kat Claw Cowl:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Helm/Kat Claw Hood:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Helm/Kat Claw Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Helm/Kat Eye Cowl:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Helm/Kat Eye Hood:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Helm/Kat Eye Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Helm/Kat Hiss Cowl:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 40
+    Gear/Helm/Kat Hiss Hood:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 20
+    Gear/Helm/Kat Hiss Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '32': -10
+        '8': 30
+    Gear/Helm/Mad Bomber Mask:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '2': -20
+        '4': -20
+        '8': -20
+    Gear/Helm/Magic Hood:
+      defense:
+        elemental: 11
+        normal: 8
+      status-resist:
+        '16': 10
+        '4': 10
+    Gear/Helm/Magikat Hat:
+      defense:
+        elemental: 24
+        normal: 12
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': -15
+        '2': 16
+        '32': 16
+    Gear/Helm/Mercurial Demo Helm:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+    Gear/Helm/Mercurial Helm:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 40
+    Gear/Helm/Mighty Cobalt Helm:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Mining Hat:
+      defense:
+        normal: 15
+    Gear/Helm/Miracle Hood:
+      defense:
+        elemental: 12
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '4': 30
+    Gear/Helm/Mirakat Hat:
+      defense:
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '1': -15
+        '2': 20
+        '32': 20
+    Gear/Helm/Nameless Hat:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Helm/Padded Cap:
+      defense:
+        normal: 10
+    Gear/Helm/Padded Demo Helm:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -20
+    Gear/Helm/Padded Hunting Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -20
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Base):
+      defense:
+        normal: 5
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 1):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 2):
+      defense:
+        normal: 10
+        piercing: 8
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 3):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 4):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 5) (Alt):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Parts/Handgun Helms/Handgun Helm (Rarity 5):
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Parts/Proto (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Crescent Helm (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Hood (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Pith Helm (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Round Helm (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Sallet (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Parts/Spiral Tailed Helm (Base):
+      defense:
+        normal: 10
+    Gear/Helm/Pathfinder/Pathfinder Helm:
+      defense:
+        normal: 10
+        piercing: 8
+    Gear/Helm/Pathfinder/Plated Pathfinder Helm, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Helm/Pathfinder/Plated Pathfinder Helm, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Helm/Pathfinder/Plated Pathfinder Helm, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Helm/Pathfinder/Plated Pathfinder Helm, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Helm/Pathfinder/Sacred Guerrilla Helm, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Pathfinder/Sacred Guerrilla Helm, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Pathfinder/Sacred Guerrilla Helm, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Pathfinder/Sacred Guerrilla Helm, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Pathfinder/Sacred Hazard Helm, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Pathfinder/Sacred Hazard Helm, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Pathfinder/Sacred Hazard Helm, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Pathfinder/Sacred Hazard Helm, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Pathfinder/Sacred Pathfinder Helm, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Pathfinder/Sacred Pathfinder Helm, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Pathfinder/Sacred Pathfinder Helm, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Pathfinder/Sacred Pathfinder Helm, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Pathfinder/Woven Pathfinder Helm, Falcon:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Helm/Pathfinder/Woven Pathfinder Helm, Firefly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Helm/Pathfinder/Woven Pathfinder Helm, Grizzly:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Helm/Pathfinder/Woven Pathfinder Helm, Snakebite:
+      defense:
+        normal: 9
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Helm/Purring Cap:
+      defense:
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '1': 20
+        '16': 20
+        '2': 20
+        '32': 20
+        '4': 20
+        '8': 20
+    Gear/Helm/Quicksilver Helm:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '16': 20
+    Gear/Helm/Quilted Demo Helm:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -30
+    Gear/Helm/Quilted Hunting Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -30
+    Gear/Helm/Rock Jelly Helm:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 30
+    Gear/Helm/Ronin Gasa:
+      defense:
+        normal: 12
+      health-bonus: 40
+    Gear/Helm/Rooster Helm:
+      defense:
+        normal: 12
+      health-bonus: 40
+    Gear/Helm/Rooster King Helm:
+      defense:
+        normal: 12
+      health-bonus: 40
+    Gear/Helm/Royal Jelly Crown:
+      defense:
+        normal: 9
+        piercing: 12
+      health-bonus: 40
+      status-resist:
+        '1': 40
+    Gear/Helm/Salamander Mask:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 30
+    Gear/Helm/Scary Skelly Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '8': 20
+    Gear/Helm/Sentinel/Plated Sentinel Helm, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Helm/Sentinel/Plated Sentinel Helm, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Helm/Sentinel/Plated Sentinel Helm, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Helm/Sentinel/Plated Sentinel Helm, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Helm/Sentinel/Sacred Keeper Helm, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Sentinel/Sacred Keeper Helm, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Sentinel/Sacred Keeper Helm, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Sentinel/Sacred Keeper Helm, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Sentinel/Sacred Sentinel Helm, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Sentinel/Sacred Sentinel Helm, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Sentinel/Sacred Sentinel Helm, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Sentinel/Sacred Sentinel Helm, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Sentinel/Sacred Wraith Helm, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Sentinel/Sacred Wraith Helm, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Sentinel/Sacred Wraith Helm, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Sentinel/Sacred Wraith Helm, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Sentinel/Sentinel Helm:
+      defense:
+        elemental: 8
+        normal: 10
+    Gear/Helm/Sentinel/Woven Sentinel Helm, Falcon:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Helm/Sentinel/Woven Sentinel Helm, Firefly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Helm/Sentinel/Woven Sentinel Helm, Grizzly:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Helm/Sentinel/Woven Sentinel Helm, Snakebite:
+      defense:
+        elemental: 9
+        normal: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Helm/Seraphic Helm:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '32': 30
+        '4': -30
+    Gear/Helm/Shade/Plated Shade Helm, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '8': -20
+    Gear/Helm/Shade/Plated Shade Helm, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -20
+        '4': 30
+    Gear/Helm/Shade/Plated Shade Helm, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -20
+        '8': 30
+    Gear/Helm/Shade/Plated Shade Helm, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': -20
+    Gear/Helm/Shade/Sacred Ghost Helm, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Shade/Sacred Ghost Helm, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Shade/Sacred Ghost Helm, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Shade/Sacred Ghost Helm, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Shade/Sacred Hex Helm, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Shade/Sacred Hex Helm, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Shade/Sacred Hex Helm, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Shade/Sacred Hex Helm, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Shade/Sacred Shade Helm, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '8': -30
+    Gear/Helm/Shade/Sacred Shade Helm, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -30
+        '4': 40
+    Gear/Helm/Shade/Sacred Shade Helm, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -30
+        '8': 40
+    Gear/Helm/Shade/Sacred Shade Helm, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '4': -30
+    Gear/Helm/Shade/Shade Helm:
+      defense:
+        normal: 10
+        shadow: 8
+    Gear/Helm/Shade/Woven Shade Helm, Falcon:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': 20
+        '8': -10
+    Gear/Helm/Shade/Woven Shade Helm, Firefly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '16': -10
+        '4': 20
+    Gear/Helm/Shade/Woven Shade Helm, Grizzly:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': -10
+        '8': 20
+    Gear/Helm/Shade/Woven Shade Helm, Snakebite:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 20
+        '4': -10
+    Gear/Helm/Shadowsun Stetson:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+    Gear/Helm/Shroom Cap:
+      defense:
+        normal: 11
+        shadow: 11
+      health-bonus: 40
+      status-resist:
+        '2': 40
+    Gear/Helm/Sinister Skelly Mask:
+      defense:
+        normal: 9
+        shadow: 12
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '8': 30
+    Gear/Helm/Skelly Mask:
+      defense:
+        normal: 8
+        shadow: 11
+      status-resist:
+        '2': 10
+        '8': 10
+    Gear/Helm/Skolver Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '8': 40
+    Gear/Helm/Snarbolax Cap:
+      defense:
+        normal: 11
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '8': 30
+    Gear/Helm/Solid Cobalt Helm:
+      defense:
+        normal: 12
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Spiral Crescent Helm (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Crescent Helm (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Demo Helm:
+      defense:
+        elemental: 8
+        normal: 10
+    Gear/Helm/Spiral Hood (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Hood (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Pith Helm (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Plate Helm:
+      defense:
+        normal: 61
+      status-resist:
+        '1': 10
+    Gear/Helm/Spiral Round Helm (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Round Helm (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Sallet (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Scale Helm:
+      defense:
+        normal: 10
+        piercing: 7
+    Gear/Helm/Spiral Tailed Helm (Blue):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Gold):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Green):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Heavy):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Pink):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Purple):
+      defense:
+        normal: 10
+    Gear/Helm/Spiral Tailed Helm (Red):
+      defense:
+        normal: 10
+    Gear/Helm/Starlit Demo Helm:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -40
+    Gear/Helm/Starlit Hunting Cap:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '1': -40
+    Gear/Helm/Sunset Stetson:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+    Gear/Helm/Surge Breaker Helm:
+      defense:
+        elemental: 9
+        normal: 12
+      health-bonus: 40
+      status-resist:
+        '16': 30
+        '4': -10
+        '8': -10
+    Gear/Helm/Test/Def 100:
+      defense:
+        normal: 100
+    Gear/Helm/Test/Def 150:
+      defense:
+        normal: 150
+    Gear/Helm/Test/Def 50:
+      defense:
+        normal: 50
+    Gear/Helm/Tri-Guard Helm:
+      defense:
+        elemental: 7
+        normal: 10
+      status-resist:
+        '16': 10
+        '4': 10
+        '8': 10
+    Gear/Helm/Valkyrie Helm:
+      defense:
+        normal: 9
+        shadow: 9
+      health-bonus: 40
+      status-resist:
+        '2': 40
+        '32': 40
+        '4': -40
+    Gear/Helm/Virulisk Mask:
+      defense:
+        normal: 11
+        piercing: 9
+      health-bonus: 40
+      status-resist:
+        '2': 30
+    Gear/Helm/Vog Cub Cap:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Helm/Volcanic Demo Helm:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Helm/Volcanic Plate Helm:
+      defense:
+        elemental: 9
+        normal: 62
+      health-bonus: 40
+      status-resist:
+        '1': 40
+        '4': 40
+    Gear/Helm/Volcanic Salamander Mask:
+      defense:
+        elemental: 9
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '4': 40
+    Gear/Helm/Volt Breaker Helm:
+      defense:
+        elemental: 8
+        normal: 11
+      status-resist:
+        '16': 20
+        '4': -10
+        '8': -10
+    Gear/Helm/Warmaster Helm 1:
+      defense:
+        elemental: 9
+        normal: 9
+      status-resist:
+        '16': 40
+        '2': -20
+        '4': 40
+        '8': -20
+    Gear/Helm/Warmaster Helm 2:
+      defense:
+        elemental: 11
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '2': -20
+        '4': 40
+        '8': -20
+    Gear/Helm/Warmaster Helm 3:
+      defense:
+        elemental: 11
+        normal: 11
+      health-bonus: 40
+      status-resist:
+        '16': 40
+        '2': -20
+        '4': 40
+        '8': -20
+    Gear/Helm/Wolver Cap:
+      defense:
+        normal: 10
+        piercing: 8
+      status-resist:
+        '8': 10
+    Gear/Helm/Wyvern Scale Helm:
+      defense:
+        elemental: 11
+        piercing: 11
+      health-bonus: 40
+      status-resist:
+        '2': 30
+        '4': 30
+    Gear/PvP/Lockdown/Guardian:
+      defense:
+        elemental: 30
+        normal: 30
+        piercing: 30
+        shadow: 30
+    Gear/PvP/Lockdown/Striker:
+      health-bonus: -120
+    Gear/Shield/(Dev) Deadzone:
+      defense:
+        elemental: 20
+        normal: 20
+        piercing: 20
+        shadow: 20
+    Gear/Shield/(Dev) ModelTester:
+      defense:
+        elemental: 24
+        normal: 24
+        piercing: 24
+        shadow: 24
+    Gear/Shield/(Dev) Nuke-Pave:
+      defense:
+        elemental: 20
+        normal: 20
+        piercing: 20
+        shadow: 20
+    Gear/Shield/(Dev) OOO Crest:
+      defense:
+        elemental: 18
+        normal: 18
+        piercing: 18
+        shadow: 18
+      status-resist:
+        '1': 150
+        '16': 150
+        '2': 150
+        '32': 150
+        '4': 150
+        '8': 150
+    Gear/Shield/(Dev) Shield Bracelet:
+      defense:
+        elemental: 18
+        normal: 18
+        piercing: 18
+        shadow: 18
+      status-resist:
+        '1': 100
+        '16': 100
+        '2': 100
+        '32': 100
+        '4': 100
+        '8': 100
+    Gear/Shield/(TEST) Shield Bash/Aegis, Shield Bash:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/(TEST) Shield Bash/Defender, Shield Bash:
+      defense:
+        normal: 22
+        piercing: 20
+    Gear/Shield/(TEST) Shield Bash/Great Defender, Shield Bash:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/(TEST) Shield Bash/Mighty Defender, Shield Bash:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/(TEST) Shield Bash/Proto Shield, Shield Bash:
+      defense:
+        normal: 10
+    Gear/Shield/Aegis:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Airbraker Shield:
+      defense:
+        normal: 18
+    Gear/Shield/Ancient Plate Shield:
+      defense:
+        normal: 324
+      status-resist:
+        '1': 200
+    Gear/Shield/Barbarous Thorn Shield:
+      defense:
+        normal: 22
+        piercing: 18
+    Gear/Shield/Barrier Shell:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '4': 200
+        '8': 200
+    Gear/Shield/Blackened Crest:
+      defense:
+        normal: 18
+        shadow: 18
+    Gear/Shield/Blazebreak Shield:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '4': 200
+    Gear/Shield/Blizzbreaker Shield:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '8': 200
+    Gear/Shield/Boosted Plate Shield:
+      defense:
+        normal: 124
+      status-resist:
+        '1': 200
+    Gear/Shield/Bristling Buckler:
+      defense:
+        normal: 20
+        piercing: 17
+    Gear/Shield/Brute Jelly Shield:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '1': 200
+    Gear/Shield/Celestial Shield:
+      defense:
+        piercing: 22
+        shadow: 22
+    Gear/Shield/Circuit Breaker Shield:
+      defense:
+        elemental: 15
+        normal: 20
+      status-resist:
+        '16': 200
+    Gear/Shield/Crest of Almire:
+      defense:
+        normal: 22
+        shadow: 22
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Crystalline Defender:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '4': 200
+    Gear/Shield/Dark Thorn Shield:
+      defense:
+        normal: 22
+        piercing: 18
+    Gear/Shield/Defender:
+      defense:
+        normal: 22
+        piercing: 20
+    Gear/Shield/Dragon Scale Shield:
+      defense:
+        elemental: 22
+        piercing: 22
+      status-resist:
+        '2': 200
+        '4': 200
+    Gear/Shield/Drake Scale Shield:
+      defense:
+        elemental: 22
+        piercing: 22
+      status-resist:
+        '2': 200
+        '4': 200
+    Gear/Shield/Dread Skelly Shield:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '2': 200
+        '8': 200
+    Gear/Shield/Emberbreak Shield:
+      defense:
+        elemental: 15
+        normal: 20
+      status-resist:
+        '4': 200
+    Gear/Shield/Feral Shell:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '16': 200
+        '2': 200
+    Gear/Shield/Firebreak Shield:
+      defense:
+        elemental: 17
+        normal: 20
+      status-resist:
+        '4': 200
+    Gear/Shield/Force Buckler:
+      defense:
+        normal: 40
+      status-resist:
+        '1': 200
+    Gear/Shield/Frostbreaker Shield:
+      defense:
+        elemental: 15
+        normal: 20
+      status-resist:
+        '8': 200
+    Gear/Shield/Gorgomega:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Grand Tortoise:
+      defense:
+        normal: 124
+      status-resist:
+        '1': 200
+    Gear/Shield/Great Defender:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Green Ward:
+      defense:
+        normal: 20
+        piercing: 15
+      status-resist:
+        '2': 200
+    Gear/Shield/Grey Owlite Shield:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Grim Shell:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Heater Shield:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '8': 200
+    Gear/Shield/Heavy Plate Shield:
+      defense:
+        normal: 124
+      status-resist:
+        '1': 200
+    Gear/Shield/Honor Shield 1:
+      defense:
+        normal: 22
+        piercing: 20
+    Gear/Shield/Honor Shield 2:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Honor Shield 3:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Honor Shield 4:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Horned Owlite Shield:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Icebreaker Shield:
+      defense:
+        elemental: 17
+        normal: 20
+      status-resist:
+        '8': 200
+    Gear/Shield/Iron Buckler:
+      defense:
+        normal: 30
+    Gear/Shield/Ironmight Plate Shield:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Jelly Shield:
+      defense:
+        normal: 17
+        piercing: 22
+      status-resist:
+        '1': 200
+    Gear/Shield/Mighty Defender:
+      defense:
+        normal: 24
+        piercing: 22
+    Gear/Shield/Mighty Shell:
+      defense:
+        normal: 124
+      status-resist:
+        '1': 200
+    Gear/Shield/Nether Shell:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Node Slime/Node Slime, Amethyst:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Aquamarine:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Blue:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Citrine:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Curse:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Dangerous:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Diamond:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Divine:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Emerald:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Garnet:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Glacial:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Gold:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Green:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Hazardous:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Heavy:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Hunter:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Opal:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Pearl:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Peridot:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Pink:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Purple:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Red:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Ruby:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Sapphire:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Shadow:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Turquoise:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Node Slime, Volcanic:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Node Slime/Parts/Node Slime, Base:
+      defense:
+        normal: 124
+        piercing: 18
+      status-resist:
+        '1': 200
+    Gear/Shield/Omega Shell:
+      defense:
+        normal: 24
+    Gear/Shield/Omegaward:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '4': 200
+        '8': 200
+    Gear/Shield/Owlite Shield:
+      defense:
+        elemental: 22
+        normal: 17
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Plate Shield:
+      defense:
+        normal: 122
+      status-resist:
+        '1': 200
+    Gear/Shield/Power Mitt:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '4': 200
+    Gear/Shield/Primal Shell:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '4': 200
+        '8': 200
+    Gear/Shield/Proto Shield:
+      defense:
+        normal: 10
+    Gear/Shield/Raider Buckler:
+      defense:
+        normal: 18
+    Gear/Shield/Rock Jelly Shield:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '1': 200
+    Gear/Shield/Royal Jelly Shield:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '1': 200
+    Gear/Shield/Savage Tortoise:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '16': 200
+        '2': 200
+    Gear/Shield/Scale Shield:
+      defense:
+        normal: 20
+        piercing: 15
+    Gear/Shield/Scarlet Shield:
+      defense:
+        elemental: 18
+        normal: 22
+      health-bonus: 80
+    Gear/Shield/Scary Skelly Shield:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '2': 200
+        '8': 200
+    Gear/Shield/Shining Ward:
+      defense:
+        piercing: 22
+        shadow: 22
+      status-resist:
+        '2': 200
+        '32': 200
+    Gear/Shield/Ship Wheel:
+      defense:
+        normal: 18
+    Gear/Shield/Sinister Skelly Shield:
+      defense:
+        normal: 18
+        shadow: 24
+      status-resist:
+        '2': 200
+        '8': 200
+    Gear/Shield/Skelly Shield:
+      defense:
+        normal: 17
+        shadow: 22
+      status-resist:
+        '2': 200
+        '8': 200
+    Gear/Shield/Stoic Shell:
+      defense:
+        normal: 124
+      status-resist:
+        '1': 200
+    Gear/Shield/Stone Tortoise:
+      defense:
+        normal: 24
+    Gear/Shield/Stop Sign:
+      defense:
+        elemental: 35
+        normal: 30
+        piercing: 30
+        shadow: 30
+      status-resist:
+        '1': 25
+        '16': 25
+        '2': 25
+        '4': 25
+        '8': 25
+    Gear/Shield/Surge Breaker Shield:
+      defense:
+        elemental: 18
+        normal: 22
+      status-resist:
+        '16': 200
+    Gear/Shield/Swiftstrike Buckler:
+      defense:
+        normal: 18
+    Gear/Shield/Teddy Bear Buckler, Tech/Parts/Teddy Bear Buckler, Base Tech:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Azure:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Blue:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Green:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Orange:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Pink:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Red:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Violet:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler, Tech/Teddy Bear Buckler, Tech Yellow:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/Teddy Bear Buckler:
+      defense:
+        normal: 22
+        shadow: 18
+      status-resist:
+        '1': 200
+        '8': 200
+    Gear/Shield/The Bitter End, Red:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/The Bitter End:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Thwacker Shield:
+      defense:
+        elemental: 22
+        normal: 22
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Twisted Targe:
+      defense:
+        normal: 22
+        piercing: 18
+    Gear/Shield/Volcanic Plate Shield:
+      defense:
+        normal: 142
+      status-resist:
+        '1': 200
+        '4': 200
+    Gear/Shield/Volt Breaker Shield:
+      defense:
+        elemental: 17
+        normal: 20
+      status-resist:
+        '16': 200
+    Gear/Shield/Wild Shell:
+      defense:
+        normal: 18
+        piercing: 24
+      status-resist:
+        '16': 200
+        '2': 200
+    Gear/Shield/Wise Owlite Shield:
+      defense:
+        elemental: 24
+        normal: 18
+      status-resist:
+        '16': 200
+        '4': 200
+    Gear/Shield/Wyvern Scale Shield:
+      defense:
+        elemental: 22
+        piercing: 22
+      status-resist:
+        '2': 200
+        '4': 200
+    Gear/Trinket/(Dev) EasyMode:
+      defense:
+        elemental: 4000
+        normal: 4000
+        piercing: 4000
+        shadow: 4000
+      health-bonus: 600
+    Gear/Trinket/Blessed Silver Amulet:
+      status-resist:
+        '32': 10
+    Gear/Trinket/Bright White Laurel:
+      status-resist:
+        '2': 10
+    Gear/Trinket/Brute Jelly Band:
+      defense:
+        piercing: 3
+    Gear/Trinket/Crystal Pin:
+      defense:
+        elemental: 2
+    Gear/Trinket/Dawn Bracelet:
+      health-bonus: 40
+    Gear/Trinket/Daybreaker Band:
+      health-bonus: 40
+    Gear/Trinket/Dewy Wetstone Pendant:
+      status-resist:
+        '4': 10
+    Gear/Trinket/Dread Skelly Charm:
+      defense:
+        shadow: 3
+    Gear/Trinket/Driftwood Bracelet:
+      status-resist:
+        '16': 10
+    Gear/Trinket/Dual Heart Pendant:
+      health-bonus: 80
+    Gear/Trinket/Early Riser Ring:
+      health-bonus: 40
+    Gear/Trinket/Gift of Autumn:
+      health-bonus: 160
+      status-resist:
+        '8': 10
+    Gear/Trinket/Glimmering Crystal Pin:
+      defense:
+        elemental: 3
+    Gear/Trinket/Glowing Crystal Pin:
+      defense:
+        elemental: 3
+    Gear/Trinket/Golden Solstice Ring:
+      health-bonus: 40
+      status-resist:
+        '4': 10
+        '8': 5
+    Gear/Trinket/Grand Solstice Ring:
+      health-bonus: 160
+      status-resist:
+        '4': 10
+        '8': 10
+    Gear/Trinket/Heart Pendant:
+      health-bonus: 40
+    Gear/Trinket/Hearthstone Pendant:
+      status-resist:
+        '8': 5
+    Gear/Trinket/Ironwood Bracelet:
+      status-resist:
+        '16': 15
+    Gear/Trinket/Jelly Band:
+      defense:
+        piercing: 2
+    Gear/Trinket/Misplaced Promissory Note:
+      defense:
+        normal: 3
+    Gear/Trinket/Penta-Heart Pendant:
+      health-bonus: 200
+    Gear/Trinket/Pure White Laurel:
+      status-resist:
+        '2': 20
+    Gear/Trinket/Radiant Crystal Pin:
+      defense:
+        elemental: 3
+    Gear/Trinket/Redwood Bracelet:
+      status-resist:
+        '16': 10
+    Gear/Trinket/Rock Jelly Band:
+      defense:
+        piercing: 3
+    Gear/Trinket/Royal Jelly Band:
+      defense:
+        piercing: 3
+    Gear/Trinket/Sacred Silver Amulet:
+      status-resist:
+        '32': 15
+    Gear/Trinket/Saintly Silver Amulet:
+      status-resist:
+        '32': 20
+    Gear/Trinket/Scary Skelly Charm:
+      defense:
+        shadow: 3
+    Gear/Trinket/Silver Amulet:
+      status-resist:
+        '32': 5
+    Gear/Trinket/Silver Solstice Ring:
+      health-bonus: 40
+      status-resist:
+        '4': 5
+        '8': 10
+    Gear/Trinket/Sinister Skelly Charm:
+      defense:
+        shadow: 3
+    Gear/Trinket/Sizzling Hearthstone Pendant:
+      status-resist:
+        '8': 20
+    Gear/Trinket/Skelly Charm:
+      defense:
+        shadow: 2
+    Gear/Trinket/Slippery Wetstone Pendant:
+      status-resist:
+        '4': 15
+    Gear/Trinket/Snowy White Laurel:
+      status-resist:
+        '2': 15
+    Gear/Trinket/Soaking Wetstone Pendant:
+      status-resist:
+        '4': 20
+    Gear/Trinket/Tetra-Heart Pendant:
+      health-bonus: 160
+    Gear/Trinket/Toasty Hearthstone Pendant:
+      status-resist:
+        '8': 15
+    Gear/Trinket/Tri-Heart Pendant:
+      health-bonus: 120
+    Gear/Trinket/True Love Locket:
+      health-bonus: 240
+    Gear/Trinket/Warm Hearthstone Pendant:
+      status-resist:
+        '8': 10
+    Gear/Trinket/Wetstone Pendant:
+      status-resist:
+        '4': 5
+    Gear/Trinket/White Laurel:
+      status-resist:
+        '2': 5
+    Gear/Trinket/Wyrmwood Bracelet:
+      status-resist:
+        '16': 20
+    Gear/Trinket/_Ancient Armor Ward:
+      defense:
+        normal: 13
+    Gear/Trinket/_Armor Ward:
+      defense:
+        normal: 2
+    Gear/Trinket/_Boosted Armor Ward:
+      defense:
+        normal: 3
+    Gear/Trinket/_Chroma Tear Earring:
+      status-resist:
+        '2': 10
+        '4': 10
+    Gear/Trinket/_Dark Thorn Choker:
+      health-bonus: -160
+      status-resist:
+        '2': 15
+    Gear/Trinket/_Heavy Armor Ward:
+      defense:
+        normal: 3
+    Gear/Trinket/_Heavy Impact Band:
+      status-resist:
+        '1': 15
+    Gear/Trinket/_Impact Band:
+      status-resist:
+        '1': 5
+    Gear/Trinket/_Ironmight Armor Ward:
+      defense:
+        normal: 3
+    Gear/Trinket/_Massive Impact Band:
+      status-resist:
+        '1': 20
+    Gear/Trinket/_Shadow Thorn Choker:
+      health-bonus: -200
+      status-resist:
+        '2': 20
+    Gear/Trinket/_Silver Wing Pendant:
+      status-resist:
+        '16': -15
+        '32': 15
+        '4': -15
+    Gear/Trinket/_Soldier's Charm:
+      defense:
+        normal: 2
+    Gear/Trinket/_Solid Impact Band:
+      status-resist:
+        '1': 10
+    Gear/Trinket/_Sterling Wing Pendant:
+      status-resist:
+        '16': -20
+        '32': 20
+        '4': -20
+    Gear/Trinket/_Thorn Choker:
+      health-bonus: -120
+      status-resist:
+        '2': 10
+    Gear/Trinket/_Volcanic Armor Ward:
+      status-resist:
+        '4': 10
+    Gear/Trinket/_Wing Pendant:
+      status-resist:
+        '16': -10
+        '32': 10
+        '4': -10
+    variant.Gear/Curse Resist 1:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 10
+    variant.Gear/Curse Resist 2:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 20
+    variant.Gear/Curse Resist 3:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 30
+    variant.Gear/Curse Resist 4:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 40
+    variant.Gear/Fire Resist 1:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 10
+    variant.Gear/Fire Resist 2:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 20
+    variant.Gear/Fire Resist 3:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 30
+    variant.Gear/Fire Resist 4:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 40
+    variant.Gear/Freeze Resist 1:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 10
+    variant.Gear/Freeze Resist 2:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 20
+    variant.Gear/Freeze Resist 3:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 30
+    variant.Gear/Freeze Resist 4:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 40
+    variant.Gear/Poison Resist 1:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 10
+    variant.Gear/Poison Resist 2:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 20
+    variant.Gear/Poison Resist 3:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 30
+    variant.Gear/Poison Resist 4:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 40
+    variant.Gear/Shock Resist 1:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 10
+    variant.Gear/Shock Resist 2:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 20
+    variant.Gear/Shock Resist 3:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 30
+    variant.Gear/Shock Resist 4:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 40
+    variant.Gear/Sleep Resist 1:
+      status-resist:
+        mask: 256
+        relative: 1
+        value: 10
+    variant.Gear/Sleep Resist 2:
+      status-resist:
+        mask: 256
+        relative: 1
+        value: 20
+    variant.Gear/Sleep Resist 3:
+      status-resist:
+        mask: 256
+        relative: 1
+        value: 30
+    variant.Gear/Sleep Resist 4:
+      status-resist:
+        mask: 256
+        relative: 1
+        value: 40
+    variant.Gear/Stun Resist 1:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 10
+    variant.Gear/Stun Resist 2:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 20
+    variant.Gear/Stun Resist 3:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 30
+    variant.Gear/Stun Resist 4:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 40
+    variant.Sprite/Res Curse High:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 30
+    variant.Sprite/Res Curse Low:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 10
+    variant.Sprite/Res Curse Med:
+      status-resist:
+        mask: 32
+        relative: 1
+        value: 20
+    variant.Sprite/Res Fire High:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 30
+    variant.Sprite/Res Fire Low:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 10
+    variant.Sprite/Res Fire Med:
+      status-resist:
+        mask: 4
+        relative: 1
+        value: 20
+    variant.Sprite/Res Freeze High:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 30
+    variant.Sprite/Res Freeze Low:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 10
+    variant.Sprite/Res Freeze Med:
+      status-resist:
+        mask: 8
+        relative: 1
+        value: 20
+    variant.Sprite/Res Poison High:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 30
+    variant.Sprite/Res Poison Low:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 10
+    variant.Sprite/Res Poison Med:
+      status-resist:
+        mask: 2
+        relative: 1
+        value: 20
+    variant.Sprite/Res Shock High:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 30
+    variant.Sprite/Res Shock Low:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 10
+    variant.Sprite/Res Shock Med:
+      status-resist:
+        mask: 16
+        relative: 1
+        value: 20
+    variant.Sprite/Res Stun High:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 30
+    variant.Sprite/Res Stun Low:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 10
+    variant.Sprite/Res Stun Med:
+      status-resist:
+        mask: 1
+        relative: 1
+        value: 20
+  player:
+    base-health: 200
+    collision-mask: 43
+    damage-mask: 13
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    lift-height: 1
+  scale:
+    Base/Adder: 0
+    Base/Constant: 0
+    Base/Damage Multiplier: 0
+    Base/Depth Cap: 0
+    Base/Multiplier: 0
+    Base/Rarity Capper: 0
+    Base/Tier Segmented: 20
+    Base/Tier Segmented, T4: 20
+    Dev/Gear/Dev Shield Health: 10000
+    Dev/Monster/Normal Defense: 20
+    Dev/Monster/Normal Health: 40
+    Dev/PC/Sword: 20
+    Dev/PC/Sword 0: 20
+    Dev/PC/Sword 1: 25
+    Dev/PC/Sword 2: 30
+    Dev/PC/Sword 3: 33
+    Dev/PC/Sword 4: 36
+    Dev/PC/Sword 5: 39
+    Dev/PC/Sword Ideal: 20
+    Dev/PC/Sword Ideal Good: 30
+    Dev/PC/Sword Ideal High: 40
+    Hazard/Hazard Base: 20
+    Hazard/Hazard Base -10: 12.5
+    Hazard/Hazard Base -20: 5
+    Monster/Damage/Attack Base: 20
+    Monster/Damage/Attack Base (Ranger): 2.5
+    Monster/Damage/Attack Base +05: 25
+    Monster/Damage/Attack Base +10: 30
+    Monster/Damage/Attack Base -05: 17.5
+    Monster/Damage/Attack Base -10: 13.75
+    Monster/Damage/Base: 20
+    Monster/Damage/Difficulty Base: 30
+    Monster/Defense/Defense Base: 20
+    Monster/Defense/Defense Base +05: 70
+    Monster/Defense/Defense Base +10: 120
+    Monster/Defense/Defense Base +25: 1420
+    Monster/Defense/Defense Base -05: 14
+    Monster/Defense/Defense Base -10: 10
+    Monster/Heal/Heal Base: 10
+    Monster/Heal/Heal Base +05: 15
+    Monster/Heal/Heal Base +10: 20
+    Monster/Heal/Heal Base +20: 30
+    Monster/Heal/Heal Base -05: 7.5
+    Monster/Heal/Heal Base -10: 5
+    Monster/Heal/Heal Base -15: 3.5
+    Monster/Heal/Heal Base -30: 0.5
+    Monster/Health/Health Base: 40
+    Monster/Health/Health Base +05: 60
+    Monster/Health/Health Base +10: 80
+    Monster/Health/Health Base +100: 440
+    Monster/Health/Health Base +130: 560
+    Monster/Health/Health Base +20: 120
+    Monster/Health/Health Base +30: 160
+    Monster/Health/Health Base +40: 200
+    Monster/Health/Health Base +50: 240
+    Monster/Health/Health Base +60: 280
+    Monster/Health/Health Base +70: 320
+    Monster/Health/Health Base +80: 360
+    Monster/Health/Health Base +90: 400
+    Monster/Health/Health Base -05: 30
+    Monster/Health/Health Base -10: 20
+    Monster/Health/Health Base -15: 10
+    Monster/Health/Health Base -20: 4
+    Monster/Health/Health Base -99: 1
+    Monster/Health/Health Base-T4: 40
+    Monster/Split/Split - Full: 0.75
+    Monster/Split/Split - Half: 0.75
+    Monster/Split/Tier Base: 1
+    PC/Damage/Base/Charged: 0
+    PC/Damage/Base/Charged (Handgun): 0
+    PC/Damage/Base/Default: 20
+    PC/Damage/Base/Default [DEV GT]: 20
+    PC/Damage/Base/Last Chain: 0
+    PC/Damage/Base/Star 0: 20
+    PC/Damage/Base/Star 1: 22
+    PC/Damage/Base/Star 2: 40
+    PC/Damage/Base/Star 3: 43
+    PC/Damage/Base/Star 4: 46
+    PC/Damage/Base/Star 5: 49
+    PC/Damage/Bomb/Bomb Base: 21.5
+    PC/Damage/Bomb/Bomb Base (old): 20
+    PC/Damage/Bomb/Bomb Base +05: 23.1125
+    PC/Damage/Bomb/Bomb Base +07: 23.91875
+    PC/Damage/Bomb/Bomb Base +10: 24.724998
+    PC/Damage/Bomb/Bomb Base -05: 18.8125
+    PC/Damage/Bomb/Bomb Base -05 Uncapped 0 Star: 18.8125
+    PC/Damage/Bomb/Bomb Base -07: 17.46875
+    PC/Damage/Bomb/Bomb Base -10: 16.125
+    PC/Damage/Bomb/Bomb Base -15: 12.09375
+    PC/Damage/Bomb/Bomb Base -18: 10.75
+    PC/Damage/Bomb/Bomb Base -20: 10.75
+    PC/Damage/Bomb/Bomb Base -22: 8.0625
+    PC/Damage/Bomb/Bomb Base -25: 5.375
+    PC/Damage/Bomb/Bomb Base Uncapped 0 Star: 21.5
+    PC/Damage/Handgun/Handgun Base: 12.5
+    PC/Damage/Handgun/Handgun Base (Charged): 21.25
+    PC/Damage/Handgun/Handgun Base +05: 13.4375
+    PC/Damage/Handgun/Handgun Base +05 (Charged): 22.84375
+    PC/Damage/Handgun/Handgun Base +10: 14.375
+    PC/Damage/Handgun/Handgun Base +10 (Charged): 24.4375
+    PC/Damage/Handgun/Handgun Base +15: 15.3125
+    PC/Damage/Handgun/Handgun Base +15 (Charged): 26.03125
+    PC/Damage/Handgun/Handgun Base -05: 10.9375
+    PC/Damage/Handgun/Handgun Base -05 (Charged): 18.59375
+    PC/Damage/Handgun/Handgun Base -10: 9.375
+    PC/Damage/Handgun/Handgun Base -10 (Charged): 15.9375
+    PC/Damage/Handgun/Handgun Base -15: 7.8125
+    PC/Damage/Handgun/Handgun Base -15 (Charged): 13.28125
+    PC/Damage/Handgun/Handgun Base -17: 7.8125
+    PC/Damage/Handgun/Handgun Base -17 (Charged): 13.28125
+    PC/Damage/Handgun/Handgun Base -20: 6.25
+    PC/Damage/Handgun/Handgun Base -20 (Charged): 10.625
+    PC/Damage/Sword/Sword Base: 20
+    PC/Damage/Sword/Sword Base (Charged): 30
+    PC/Damage/Sword/Sword Base (Last Chain): 23
+    PC/Damage/Sword/Sword Base +05: 21.5
+    PC/Damage/Sword/Sword Base +05 (Charged): 32.25
+    PC/Damage/Sword/Sword Base +05 (Last Chain): 24.724998
+    PC/Damage/Sword/Sword Base +10: 23
+    PC/Damage/Sword/Sword Base +10 (Charged): 34.5
+    PC/Damage/Sword/Sword Base +10 (Last Chain): 26.45
+    PC/Damage/Sword/Sword Base +15: 24.5
+    PC/Damage/Sword/Sword Base +15 (Charged): 36.75
+    PC/Damage/Sword/Sword Base +15 (Last Chain): 28.175
+    PC/Damage/Sword/Sword Base +20: 26
+    PC/Damage/Sword/Sword Base +20 (Charged): 39
+    PC/Damage/Sword/Sword Base +20 (Last Chain): 29.9
+    PC/Damage/Sword/Sword Base +25: 27.5
+    PC/Damage/Sword/Sword Base +25 (Charged): 41.25
+    PC/Damage/Sword/Sword Base +25 (Last Chain): 31.625
+    PC/Damage/Sword/Sword Base -05: 17.5
+    PC/Damage/Sword/Sword Base -05 (Charged): 26.25
+    PC/Damage/Sword/Sword Base -05 (Last Chain): 20.125
+    PC/Damage/Sword/Sword Base -10: 15
+    PC/Damage/Sword/Sword Base -10 (Charged): 22.5
+    PC/Damage/Sword/Sword Base -10 (Last Chain): 17.25
+    PC/Damage/Sword/Sword Base -15: 12.5
+    PC/Damage/Sword/Sword Base -15 (Charged): 18.75
+    PC/Damage/Sword/Sword Base -15 (Last Chain): 14.375
+    PC/Damage/Sword/Sword Base -20: 10
+    PC/Damage/Sword/Sword Base -20 (Charged): 15
+    PC/Damage/Sword/Sword Base -20 (Last Chain): 11.5
+    PC/Damage/Thrown Spike: 60
+    PC/Defense/Armor/Armor (windowed)/Armor Base: 5
+    PC/Defense/Armor/Armor (windowed)/Armor Base +05: 15
+    PC/Defense/Armor/Armor (windowed)/Armor Base +10: 25
+    PC/Defense/Armor/Armor (windowed)/Armor Base -05: 1
+    PC/Defense/Armor/Armor (windowed)/Armor Base -10: 1
+    PC/Defense/Armor/Armor (windowed)/Armor Base -15: 1
+    PC/Defense/Armor/Armor (windowed)/Armor Base -20: 1
+    PC/Defense/Armor/Armor (windowed)/Armor Base -25: 1
+    PC/Defense/Armor/Armor Base: 5
+    PC/Defense/Armor/Armor Base +01: 15
+    PC/Defense/Armor/Armor Base +05: 55
+    PC/Defense/Armor/Armor Base +10: 155
+    PC/Defense/Armor/Armor Base +15: 155
+    PC/Defense/Armor/Armor Base -05: 4.65
+    PC/Defense/Armor/Armor Base -10: 3.95
+    PC/Defense/Armor/Armor Base -15: 3.95
+    PC/Defense/Armor/Armor Base -20: 3.6000001
+    PC/Defense/Armor/Armor Base -25: 3.25
+    PC/Defense/Base/Default: 5
+    PC/Defense/Base/Star 0: 5
+    PC/Defense/Base/Star 1: 10
+    PC/Defense/Base/Star 2: 11
+    PC/Defense/Base/Star 3: 12
+    PC/Defense/Base/Star 4: 12
+    PC/Defense/Base/Star 5: 12
+    PC/Defense/Helm/Helm Base: 5
+    PC/Defense/Helm/Helm Base +01: 15
+    PC/Defense/Helm/Helm Base +05: 55
+    PC/Defense/Helm/Helm Base +10: 155
+    PC/Defense/Helm/Helm Base +15: 155
+    PC/Defense/Helm/Helm Base -05: 4.65
+    PC/Defense/Helm/Helm Base -10: 3.95
+    PC/Defense/Helm/Helm Base -15: 3.95
+    PC/Defense/Helm/Helm Base -20: 3.6000001
+    PC/Defense/Helm/Helm Base -25: 3.25
+    PC/Defense/Shield/Health/Health Base: 50
+    PC/Defense/Shield/Health/Health Base +05: 62.5
+    PC/Defense/Shield/Health/Health Base +10: 75
+    PC/Defense/Shield/Health/Health Base +15: 87.5
+    PC/Defense/Shield/Health/Health Base +20: 100
+    PC/Defense/Shield/Health/Health Base +25: 112.5
+    PC/Defense/Shield/Shield Base: 10
+    PC/Defense/Shield/Shield Base +01: 30
+    PC/Defense/Shield/Shield Base +05: 110
+    PC/Defense/Shield/Shield Base +10: 310
+    PC/Defense/Shield/Shield Base +15: 310
+    PC/Defense/Shield/Shield Base -05: 9.3
+    PC/Defense/Shield/Shield Base -10: 7.9
+    PC/Defense/Shield/Shield Base -15: 7.9
+    PC/Defense/Shield/Shield Base -20: 7.2000003
+    PC/Defense/Shield/Shield Base -25: 6.5
+    PC/Defense/Trinket/Trinket Base: 1.25
+    PC/Defense/Trinket/Trinket Base +05: 6.25
+    PC/Defense/Trinket/Trinket Base +10: 11.25
+    PC/Defense/Trinket/Trinket Base -05: 0.1875
+    PC/Defense/Trinket/Trinket Base -10: 0.0625
+    PC/Defense/Variant/Variant Base: 0.5
+    PC/Defense/Variant/Variant Base +05: 1
+    PC/Defense/Variant/Variant Base +10: 1.5
+    PC/Defense/Variant/Variant Base +15: 2
+    PvP/Lockdown/Guardian Defense: 30
+    PvP/Lockdown/Guardian Heal: 10
+    PvP/Lockdown/Guardian Health: 52.499996
+    PvP/Lockdown/Recon Health: 30000
+    PvP/Lockdown/Striker Health: 3500
+    Status Condition/Base/Damage: 10
+    Status Condition/Base/Health: 60
+    Status Condition/Damage Cap Multiplier: 10
+    Status Condition/Health Cap Multiplier: 60
+  status-chance:
+    CUSTOM: 0
+    HIGH: 0.25
+    LOW: 0.05
+    MAXIMUM: 0.9
+    MEDIUM: 0.1
+    ULTRA: 0.65
+    VERY_HIGH: 0.5
+  status-power:
+    CUSTOM: 0
+    DEADLY: 80
+    MINOR: 20
+    MODERATE: 40
+    STRONG: 60
+    ULTIMATE: 100

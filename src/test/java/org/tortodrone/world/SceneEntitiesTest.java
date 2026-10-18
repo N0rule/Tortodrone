@@ -8,8 +8,8 @@ import static org.tortodrone.support.TestWire.check;
 /** Deterministic hitbox and thrown-lift regressions, without accounts or a ticking server. */
 public final class SceneEntitiesTest {
     public static void main(String[] args)throws Exception {
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
-        var haven=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(1);
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var haven=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(1);
         var townEntities=new SceneEntities(haven.content(),haven.collision());
         var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();
         var prompt=townEntities.interaction(clock.x()-1.9f,clock.y(),0);
@@ -17,7 +17,7 @@ public final class SceneEntitiesTest {
         check(townEntities.interaction(clock.x()-1.9f,clock.y(),(float)Math.PI)==null,"NPC interaction respects the knight's facing and range");
         var auction=townEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Misc/Interact Node/Base")).findFirst().orElseThrow();
         check(townEntities.interaction(auction.x()-.9f,auction.y(),0)!=null,"auction interaction node is eligible in Haven");
-        var hall=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+        var hall=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
         check(hall.content().conversations().size()==9,"all captured Hall of Heroes vendors have authored conversations");
         for(var dialogue:hall.content().conversations().values()){
             String station=dialogue.nodes().get(dialogue.initial()).responses().getFirst().station();var service=rules.station(station);

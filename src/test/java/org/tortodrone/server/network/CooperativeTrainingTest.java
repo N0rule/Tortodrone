@@ -20,10 +20,10 @@ public class CooperativeTrainingTest {
         Path home=Files.createTempDirectory("tortodrone-coop-");
         try{
             var db=new Database(home,true);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
-            var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));
-            scenes.weapons(WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv")));
-            scenes.fires(FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json")));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
+            var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
+            scenes.weapons(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")));
+            scenes.fires(FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json")));
             try(var a=new Player(db,items,scenes,"Alice",1001);var b=new Player(db,items,scenes,"Bob",1002);var c=new Player(db,items,scenes,"Carol",1003)){
                 int party=a.party().oid();b.socket.frames.clear();a.operation(2,b.name);b.socket.await("Notification$PartyInvite");
                 b.world.partyInvocation(new SessionDecoder.Invocation(3,12,5,List.of("PARTY_INV:"+party,1,listener())));

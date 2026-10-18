@@ -1,0 +1,1661 @@
+stations:
+- actor: Character/NPC/Haven/Services/Punch and Vice/Parts/Base
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenVariantMaker
+  level: 10
+  model: character/npc/smith/model.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Character/NPC/Winterfest/Claus's Lil Helper
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/devilite/model_helper.dat
+  name: m.winterfest_vendor
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.winterfest_vendor
+  type: TOKEN
+- actor: Shop/Anniversary Event/Cake Trader
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model_event-anniversary.dat
+  name: m.token_trader_cake
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_cake
+  type: TOKEN
+- actor: Shop/Anniversary Event/Cake Vendor
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model_event-anniversary.dat
+  name: m.cake_vendor
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.cake_vendor
+  type: CROWN
+- actor: Shop/Dark Harvest Festival/Candy Trader
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model_event-oct.dat
+  name: m.token_trader_candy
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_candy
+  type: TOKEN
+- actor: Shop/Dark Harvest Festival/Candy Vendor
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model_event-oct.dat
+  name: m.candy_vendor
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.candy_vendor
+  type: CROWN
+- actor: Shop/Emberlight/General Goods
+  catalog: ''
+  cycle: DAY
+  description: Shop/Emberlight/General Goods
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/pc/model.dat
+  name: n.em_general
+  perKnight: false
+  preparer: GREMLIN
+  recipes: [
+    ]
+  title: t.em_general
+  type: ''
+- actor: Shop/Haven/Alchemy
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Alchemy, Battle Sprites
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: SPRITE
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_sprite-alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Sprite/Food/Divine Dust
+  - Sprite/Food/Divine Mote
+  - Sprite/Food/Divine Orb
+  - Sprite/Food/Divine Star
+  - Sprite/Food/Divine Stone
+  - Sprite/Food/Power Dust
+  - Sprite/Food/Power Mote
+  - Sprite/Food/Power Orb
+  - Sprite/Food/Power Star
+  - Sprite/Food/Power Stone
+  - Sprite/Food/Shadow Dust
+  - Sprite/Food/Shadow Mote
+  - Sprite/Food/Shadow Orb
+  - Sprite/Food/Shadow Star
+  - Sprite/Food/Shadow Stone
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Alchemy, Event
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine, Event
+  group: NORMAL
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_event_alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Bomb/Obsidian Crusher
+  - Handgun/Obsidian Carbine
+  - Sword/Obsidian Edge
+  - Sword/Deadly Candy Poker
+  - Handgun/Nog Blaster
+  - Bomb/Jack Froster
+  - Bomb/Scalding Hot Cocoa
+  - Bomb/Humbug Hazer
+  - Handgun/Peppermint Repeater
+  - Helm/Kat Claw Cowl
+  - Helm/Kat Claw Mask
+  - Helm/Kat Eye Cowl
+  - Helm/Kat Eye Mask
+  - Helm/Kat Hiss Cowl
+  - Helm/Kat Hiss Mask
+  - Trinket/Grand Solstice Ring
+  - Material/Fiend Portal Key
+  - Shield/Stoic Shell
+  - Shield/Mighty Shell
+  - Shield/Grand Tortoise
+  - Shield/Primal Shell
+  - Shield/Barrier Shell
+  - Shield/Omegaward
+  - Shield/Wild Shell
+  - Shield/Feral Shell
+  - Shield/Savage Tortoise
+  - Shield/Grim Shell
+  - Shield/Nether Shell
+  - Shield/Gorgomega
+  - Sprite/Seraphynx (Black Kat)
+  - Handgun/Stoic Buster
+  - Handgun/Mighty Cannon
+  - Handgun/Grand Tortofist
+  - Handgun/Primal Buster
+  - Handgun/Barrier Cannon
+  - Handgun/Omega Tortofist
+  - Handgun/Wild Buster
+  - Handgun/Feral Cannon
+  - Handgun/Savage Tortofist
+  - Handgun/Grim Buster
+  - Handgun/Nether Cannon
+  - Handgun/Gorgofist
+  - Helm/Black Kat Mask
+  - Armor/Black Kat Cloak
+  - Armor/Black Kat Mail
+  - Armor/Black Kat Raiment
+  - Armor/Kat Claw Cloak
+  - Armor/Kat Claw Mail
+  - Armor/Kat Claw Raiment
+  - Armor/Kat Eye Cloak
+  - Armor/Kat Eye Mail
+  - Armor/Kat Eye Raiment
+  - Armor/Kat Hiss Cloak
+  - Armor/Kat Hiss Mail
+  - Armor/Kat Hiss Raiment
+  - Sprite/Maskeraith (Punkin)
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Alchemy, Harvester
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Shroud of Apocrea Event/Alchemy Obelisk
+  group: NORMAL
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/prop/generic/obsidian_obelisk/obelisk_alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Sword/Obsidian Edge
+  - Bomb/Obsidian Crusher
+  - Handgun/Obsidian Carbine
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Alchemy, Hunter's Lodge
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Guild Hall/Hunter Alchemy Machine
+  group: NORMAL
+  kind: OpenGuildCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_hunter-alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Furni/Boss Trophy/Roarmulus 1
+  - Furni/Boss Trophy/Roarmulus 2
+  - Furni/Boss Trophy/Roarmulus 3
+  - Furni/Boss Trophy/Royal Jelly 1
+  - Furni/Boss Trophy/Royal Jelly 2
+  - Furni/Boss Trophy/Royal Jelly 3
+  - Furni/Boss Trophy/Snarbolax Trophy 1
+  - Furni/Boss Trophy/Snarbolax Trophy 2
+  - Furni/Boss Trophy/Snarbolax Trophy 3
+  - Furni/Boss Trophy/Vanaduke 1
+  - Furni/Boss Trophy/Vanaduke 2
+  - Furni/Boss Trophy/Vanaduke 3
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Armor and Helms
+  catalog: Documented/Haven/Greave
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_1n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_1t
+  type: CROWN
+- actor: Shop/Haven/Guild 1
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_guild
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.haven_guild
+  type: CROWN
+- actor: Shop/Haven/Guns and Bombs
+  catalog: Documented/Haven/Ricasso
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_weapon_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_weapon_2t
+  type: CROWN
+- actor: Shop/Haven/Harness Installer
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenHarnessInstaller
+  level: 10
+  model: ''
+  name: m.harness_vendor
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.harness_vendor
+  type: ''
+- actor: Shop/Haven/Parts/Accessorizer, Chair
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenAccessorizer
+  level: 10
+  model: character/npc/crew/model_armorstylist.dat
+  name: m.accessory
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.accessory
+  type: ''
+- actor: Shop/Haven/Parts/Accessorizer, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Accessorizer
+  group: NORMAL
+  kind: OpenAccessorizer
+  level: 10
+  model: character/npc/crew/model_armorstylist.dat
+  name: m.accessory
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.accessory
+  type: ''
+- actor: Shop/Haven/Parts/Catalog Crafter, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenCatalogCrafter
+  level: 10
+  model: model/viewer/sounder.dat
+  name: m.haven_craft_2n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_craft_2t
+  type: ''
+- actor: Shop/Haven/Parts/Crafter, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: model/viewer/sounder.dat
+  name: m.haven_craft_2n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_craft_2t
+  type: ''
+- actor: Shop/Haven/Parts/Harness Installer, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenHarnessInstaller
+  level: 10
+  model: ''
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Parts/Open Shop, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_1t
+  type: ''
+- actor: Shop/Haven/Parts/Open Shop, Idle (Model)
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_1t
+  type: ''
+- actor: Shop/Haven/Parts/Unbinder, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenUnbinder
+  level: 10
+  model: character/npc/stranger/model.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Parts/Variants, Idle
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenVariantMaker
+  level: 10
+  model: character/npc/stranger/model.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Haven/Recipes
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_craft_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_craft_2t
+  type: CROWN
+- actor: Shop/Haven/Shields and Trinkets
+  catalog: Documented/Haven/Kragen
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_2t
+  type: CROWN
+- actor: Shop/Haven/Swords
+  catalog: Documented/Haven/Quillion
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_weapon_1n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_weapon_1t
+  type: CROWN
+- actor: Shop/Haven/Token Trader
+  catalog: Documented/Haven/Brinks
+  cycle: CONSTANT
+  description: Shop/Haven/Token Trader
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model_tokenmaster.dat
+  name: m.token_trader
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader
+  type: TOKEN
+- actor: Shop/Haven/Token Trader, PvP
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Token Trader, PvP
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/devilite/model_manager-krog.dat
+  name: m.token_trader_pvp
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_pvp
+  type: TOKEN
+- actor: Shop/Haven/Token Trader, Sigil
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Shroud of Apocrea Event/Apocrean Sigil Vendor Soul
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/drone/lostsoul/model.dat
+  name: m.token_trader_sigil
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_sigil
+  type: TOKEN
+- actor: Shop/Mission/Items 0-1
+  catalog: Captured/OCH/Basil T1
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Mission/Items 2
+  catalog: Captured/Mission/Basil Items 2
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Mission/Items 3
+  catalog: Captured/OCH/Basil T2
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Mission/Items 4
+  catalog: Captured/OCH/Basil T1
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Mission/Items 5
+  catalog: Captured/OCH/Basil T3
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Monster Boost/Slicer Recipe Trader
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Slicer Recipe Trader
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model_gearhead.dat
+  name: m.slicer_recipe_trader
+  perKnight: false
+  preparer: LOCKED
+  recipes: [
+    ]
+  title: t.slicer_recipe_trader
+  type: TOKEN
+- actor: Shop/Monster Boost/Spike Trader
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Spike Trader
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model.dat
+  name: m.token_trader_spike
+  perKnight: false
+  preparer: LOCKED
+  recipes: [
+    ]
+  title: t.token_trader_spike
+  type: TOKEN
+- actor: Shop/Moorcroft Manor/Ancient Page Trader
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/spookat/clerk/model.dat
+  name: m.token_trader_pages
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_pages
+  type: TOKEN
+- actor: Shop/Moorcroft Manor/Armor 1
+  catalog: ''
+  cycle: DAY
+  description: Shop/Moorcroft Manor/Armor 1
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/reaper/model.dat
+  name: m.moorcroft_armor_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.moorcroft_armor_1t
+  type: ''
+- actor: Shop/Moorcroft Manor/Armor 2
+  catalog: ''
+  cycle: DAY
+  description: Shop/Moorcroft Manor/Armor 2
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/reaper/model.dat
+  name: m.moorcroft_armor_2n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.moorcroft_armor_2t
+  type: ''
+- actor: Shop/Rescue Camp/General Goods
+  catalog: Rescue Camp/General Goods
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.rc_general
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.rc_general
+  type: CROWN
+- actor: Shop/Test/Catalog Crafter
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenCatalogCrafter
+  level: 10
+  model: model/viewer/sounder.dat
+  name: m.haven_craft_2n
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Armor/Ancient Plate Mail
+  - Bomb/Ash of Agni
+  - Handgun/Antigua
+  - Helm/Ancient Plate Helm
+  - Shield/Aegis
+  - Sword/Acheron
+  title: m.haven_craft_2t
+  type: ''
+- actor: Shop/Test/Free Items
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/pc/model.dat
+  name: m.upgrader_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.upgrader_1t
+  type: ''
+- actor: Shop/Test/Free Loot
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.free_loot1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.free_loot2
+  type: ''
+- actor: Shop/Test/Limit
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/pc/model.dat
+  name: m.upgrader_1n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.upgrader_1t
+  type: ''
+- actor: Shop/Test/Terminal
+  catalog: ''
+  cycle: INSTANCE
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_1t
+  type: ''
+- actor: Shop/Test/Unbinder
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenUnbinder
+  level: 10
+  model: character/npc/stranger/model.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Test/Variants
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenVariantMaker
+  level: 10
+  model: character/npc/stranger/model.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: Shop/Tortodrone Event/Torto Trader
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model_event-torto.dat
+  name: m.token_trader_torto
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_torto
+  type: TOKEN
+- actor: Shop/Traveler/Parts/Traveler (Base)
+  catalog: ''
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Traveler/Terminal Tier 1
+  catalog: ''
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Traveler/Terminal Tier 2
+  catalog: ''
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Traveler/Terminal Tier 3
+  catalog: ''
+  cycle: INSTANCE
+  description: Shop/Mission/Items 0-5
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.traveler_1
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.traveler_1
+  type: ''
+- actor: Shop/Haven/Upgrades
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_upgrade
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.haven_upgrade
+  type: ENERGY
+- actor: Shop/Rescue Camp/Upgrades
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model.dat
+  name: n.rc_upgrade
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.rc_upgrade
+  type: ENERGY
+- actor: Shop/Test/Upgrader
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/pc/model.dat
+  name: m.upgrader_1n
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.upgrader_1t
+  type: ''
+- actor: Shop/Monster Boost/Spike Trader (2)
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Spiral Quartermaster
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model_geo.dat
+  name: m.token_trader
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.token_trader
+  type: TOKEN
+- actor: Shop/Monster Boost/Spike Trader - Old
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model_geo.dat
+  name: m.token_trader
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.token_trader
+  type: TOKEN
+- actor: scene.3.1578.5
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.3.2272.11
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.3.2597.16
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine, Event
+  group: NORMAL
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_event_alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Bomb/Obsidian Crusher
+  - Handgun/Obsidian Carbine
+  - Sword/Obsidian Edge
+  - Sword/Deadly Candy Poker
+  - Handgun/Nog Blaster
+  - Bomb/Jack Froster
+  - Bomb/Scalding Hot Cocoa
+  - Bomb/Humbug Hazer
+  - Handgun/Peppermint Repeater
+  - Helm/Kat Claw Cowl
+  - Helm/Kat Claw Mask
+  - Helm/Kat Eye Cowl
+  - Helm/Kat Eye Mask
+  - Helm/Kat Hiss Cowl
+  - Helm/Kat Hiss Mask
+  - Trinket/Grand Solstice Ring
+  - Material/Fiend Portal Key
+  - Shield/Stoic Shell
+  - Shield/Mighty Shell
+  - Shield/Grand Tortoise
+  - Shield/Primal Shell
+  - Shield/Barrier Shell
+  - Shield/Omegaward
+  - Shield/Wild Shell
+  - Shield/Feral Shell
+  - Shield/Savage Tortoise
+  - Shield/Grim Shell
+  - Shield/Nether Shell
+  - Shield/Gorgomega
+  - Sprite/Seraphynx (Black Kat)
+  - Handgun/Stoic Buster
+  - Handgun/Mighty Cannon
+  - Handgun/Grand Tortofist
+  - Handgun/Primal Buster
+  - Handgun/Barrier Cannon
+  - Handgun/Omega Tortofist
+  - Handgun/Wild Buster
+  - Handgun/Feral Cannon
+  - Handgun/Savage Tortofist
+  - Handgun/Grim Buster
+  - Handgun/Nether Cannon
+  - Handgun/Gorgofist
+  - Helm/Black Kat Mask
+  - Armor/Black Kat Cloak
+  - Armor/Black Kat Mail
+  - Armor/Black Kat Raiment
+  - Armor/Kat Claw Cloak
+  - Armor/Kat Claw Mail
+  - Armor/Kat Claw Raiment
+  - Armor/Kat Eye Cloak
+  - Armor/Kat Eye Mail
+  - Armor/Kat Eye Raiment
+  - Armor/Kat Hiss Cloak
+  - Armor/Kat Hiss Mail
+  - Armor/Kat Hiss Raiment
+  - Sprite/Maskeraith (Punkin)
+  title: '~'
+  type: ''
+- actor: scene.2.1530.9
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.2.1893.13
+  catalog: Documented/Haven/Ricasso
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_weapon_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_weapon_2t
+  type: CROWN
+- actor: scene.2.1898.14
+  catalog: Documented/Haven/Quillion
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_weapon_1n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_weapon_1t
+  type: CROWN
+- actor: scene.2.1899.15
+  catalog: Documented/Haven/Kragen
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_2t
+  type: CROWN
+- actor: scene.2.2046.19
+  catalog: ''
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_craft_2n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_craft_2t
+  type: CROWN
+- actor: scene.2.2274.20
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.2.2354.21
+  catalog: Documented/Haven/Brinks
+  cycle: CONSTANT
+  description: Shop/Haven/Token Trader
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model_tokenmaster.dat
+  name: m.token_trader
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader
+  type: TOKEN
+- actor: scene.2.2468.22
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Accessorizer
+  group: NORMAL
+  kind: OpenAccessorizer
+  level: 10
+  model: character/npc/crew/model_armorstylist.dat
+  name: m.accessory
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.accessory
+  type: ''
+- actor: scene.2.2851.24
+  catalog: Documented/Haven/Greave
+  cycle: DAY
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/stranger/model.dat
+  name: m.haven_armor_1n
+  perKnight: true
+  preparer: BASIC
+  recipes: [
+    ]
+  title: m.haven_armor_1t
+  type: CROWN
+- actor: scene.2.5175.32
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Token Trader, PvP
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/monster/devilite/model_manager-krog.dat
+  name: m.token_trader_pvp
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.token_trader_pvp
+  type: TOKEN
+- actor: scene.2.5393.41
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Spike Trader
+  group: NORMAL
+  kind: OpenShop
+  level: 0
+  model: character/npc/crew/model.dat
+  name: m.token_trader_spike
+  perKnight: false
+  preparer: LOCKED
+  recipes: [
+    ]
+  title: t.token_trader_spike
+  type: TOKEN
+- actor: scene.445.3774.10
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.445.3794.11
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.1.6800.36
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.1.6836.38
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.1.6837.39
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: SPRITE
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_sprite-alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Sprite/Food/Divine Dust
+  - Sprite/Food/Divine Mote
+  - Sprite/Food/Divine Orb
+  - Sprite/Food/Divine Star
+  - Sprite/Food/Divine Stone
+  - Sprite/Food/Power Dust
+  - Sprite/Food/Power Mote
+  - Sprite/Food/Power Orb
+  - Sprite/Food/Power Star
+  - Sprite/Food/Power Stone
+  - Sprite/Food/Shadow Dust
+  - Sprite/Food/Shadow Mote
+  - Sprite/Food/Shadow Orb
+  - Sprite/Food/Shadow Star
+  - Sprite/Food/Shadow Stone
+  title: '~'
+  type: ''
+- actor: scene.1.auction.4023
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenAuction
+  level: 10
+  model: ''
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.1.auction.4024
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenAuction
+  level: 10
+  model: ''
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.30893.1338.0
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: NORMAL
+  kind: OpenCrafter
+  level: 10
+  model: world/dynamic/energy/model_alchemystation.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: ''
+- actor: scene.30893.1820.3
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenHarnessInstaller
+  level: 10
+  model: ''
+  name: m.harness_vendor
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.harness_vendor
+  type: ''
+- actor: scene.30893.207.4
+  catalog: ''
+  cycle: CONSTANT
+  description: Shop/Haven/Alchemy Machine
+  group: SPRITE
+  kind: OpenCatalogCrafter
+  level: 10
+  model: world/dynamic/energy/model_sprite-alchemy.dat
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes:
+  - Sprite/Food/Divine Dust
+  - Sprite/Food/Divine Mote
+  - Sprite/Food/Divine Orb
+  - Sprite/Food/Divine Star
+  - Sprite/Food/Divine Stone
+  - Sprite/Food/Power Dust
+  - Sprite/Food/Power Mote
+  - Sprite/Food/Power Orb
+  - Sprite/Food/Power Star
+  - Sprite/Food/Power Stone
+  - Sprite/Food/Shadow Dust
+  - Sprite/Food/Shadow Mote
+  - Sprite/Food/Shadow Orb
+  - Sprite/Food/Shadow Star
+  - Sprite/Food/Shadow Stone
+  title: '~'
+  type: ''
+- actor: Character/NPC/Haven/Services/Punch and Vice/Vice
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenUnbinder
+  level: 10
+  model: character/npc/smith/model.dat
+  name: m.haven_vice
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.haven_vice
+  type: ''
+- actor: Character/NPC/Haven/Services/Punch and Vice/Punch
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenVariantMaker
+  level: 10
+  model: character/npc/smith/model.dat
+  name: m.haven_punch
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: t.haven_punch
+  type: ''
+- actor: Shop/Haven/Exchange
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenDepot
+  level: 10
+  model: ''
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: purchase
+- actor: Shop/Haven/Spiral Quartermaster
+  catalog: ''
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenDepot
+  level: 10
+  model: ''
+  name: '~'
+  perKnight: false
+  preparer: BASIC
+  recipes: [
+    ]
+  title: '~'
+  type: SPECIALS
+- actor: Character/NPC/Hall of Heroes/Mannequins/Bomber 5 Star/shop
+  catalog: Captured/Hall of Heroes/Bomber
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_bomber_5.dat
+  name: n.hoh_bomber
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_bomber
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Shadow Def 5 Star/shop
+  catalog: Captured/Hall of Heroes/Shadow Def
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_shadow_def_5.dat
+  name: n.hoh_shadow
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_shadow
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Specialist 5 Star/shop
+  catalog: Captured/Hall of Heroes/Specialist
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_specialist_5.dat
+  name: n.hoh_specialist
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_specialist
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Piercing Def 5 Star/shop
+  catalog: Captured/Hall of Heroes/Piercing Def
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_pierce_def_5.dat
+  name: n.hoh_piercing
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_piercing
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Elemental Def 5 Star/shop
+  catalog: Captured/Hall of Heroes/Elemental Def
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_elemental_def_5.dat
+  name: n.hoh_elemental
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_elemental
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Striker 5 Star/shop
+  catalog: Captured/Hall of Heroes/Striker
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_striker_5.dat
+  name: n.hoh_striker
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_striker
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Gunner 5 Star/shop
+  catalog: Captured/Hall of Heroes/Gunner
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_gunner_5.dat
+  name: n.hoh_gunner
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_gunner
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Heavy 5 Star/shop
+  catalog: Captured/Hall of Heroes/Heavy
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_heavy_5.dat
+  name: n.hoh_heavy
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_heavy
+  type: CROWN
+- actor: Character/NPC/Hall of Heroes/Mannequins/Cobalt 5 Star/shop
+  catalog: Captured/Hall of Heroes/Cobalt
+  cycle: CONSTANT
+  description: ''
+  group: NORMAL
+  kind: OpenShop
+  level: 10
+  model: character/npc/crew/halls_of_heroes/model_cobalt_5.dat
+  name: n.hoh_cobalt
+  perKnight: false
+  preparer: LOCK_NON_STACKABLE
+  recipes: [
+    ]
+  title: t.hoh_cobalt
+  type: CROWN
+- actor: scene.294.placed.1955
+  kind: OpenArsenal
+  type: ''
+  group: NORMAL
+  name: '~'
+  title: '~'
+  model: ''
+  description: ''
+  recipes: [
+    ]
+- actor: scene.2.placed.5184
+  kind: OpenCatalogCrafter
+  type: ''
+  group: NORMAL
+  name: m.haven_craft_2n
+  title: m.haven_craft_2t
+  model: ''
+  description: ''
+  recipes:
+  - Trinket/Bomb Focus Module
+  - Trinket/Elite Bomb Focus Module
+  - Trinket/Handgun Focus Module
+  - Trinket/Elite Handgun Focus Module
+  - Trinket/Sword Focus Module
+  - Trinket/Elite Sword Focus Module
+  - Trinket/Boom Module
+  - Trinket/Elite Boom Module
+  - Trinket/Trueshot Module
+  - Trinket/Elite Trueshot Module
+  - Trinket/Slash Module
+  - Trinket/Elite Slash Module
+  - Trinket/Quick Draw Module
+  - Trinket/Elite Quick Draw Module
+  - Trinket/Quick Strike Module
+  - Trinket/Elite Quick Strike Module
+  - Trinket/Heart Pendant
+  - Trinket/Dual Heart Pendant
+  - Trinket/Tri-Heart Pendant
+  - Trinket/Tetra-Heart Pendant
+  - Trinket/Penta-Heart Pendant
+- actor: scene.1.placed.3733
+  kind: OpenAuction
+  type: ''
+  group: NORMAL
+  name: '~'
+  title: '~'
+  model: ''
+  description: ''
+  recipes: [
+    ]

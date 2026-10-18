@@ -1,4 +1,5 @@
 import java.io.*;
+import org.tortodrone.resources.*;
 import java.nio.file.*;
 import java.time.Duration;
 import java.util.*;
@@ -14,12 +15,13 @@ public final class CheckCombatRendering {
         if (args.length < 1 || args.length > 3) {
             throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only]");
         }
+        boolean dialogueOnly=Arrays.asList(args).contains("--dialogue-only");
         boolean vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
         boolean hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
-        boolean trainingOnly=vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -29,7 +31,7 @@ public final class CheckCombatRendering {
         }
         Path jar = project.resolve("build/tortodrone.jar");
         if (!Files.isRegularFile(jar)) throw new IOException("Build first with ./gradlew build");
-        Path defaults = project.resolve("build/content/packs/vanilla");
+        Path defaults = project.resolve("build/content");
         requireMaps(defaults);
 
         Path output;
@@ -49,8 +51,11 @@ public final class CheckCombatRendering {
             Path app = scratch.resolve("app");
             Files.createDirectories(app);
             Files.copy(jar, scratch.resolve("tortodrone.jar"));
-            copyTree(defaults, scratch.resolve("content/packs/vanilla"));
-            Path maps = scratch.resolve("content/packs/vanilla");
+            copyTree(defaults, scratch.resolve("content"));
+            copyTree(project.resolve("build/config"),scratch.resolve("config"));
+            Files.deleteIfExists(scratch.resolve("config/server.yml"));
+            Path maps = scratch.resolve("content");
+            if(dialogueOnly){Path npc=maps.resolve("maps/advanced_training/npcs/konway.yml");var yaml=Yaml.read(npc);var dialogue=Yaml.map(yaml.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,yaml);}
             requireMaps(maps);
             if(healthOnly)healthFixture(maps);
             if(hazardsOnly)hazardFixture(maps);
@@ -95,7 +100,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
-            Path peerLog=output.resolve("peer-client.log");Process peer=vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -103,7 +108,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
@@ -145,61 +150,45 @@ public final class CheckCombatRendering {
         }
     }
 
-    /** Original pots, relocated only in this disposable scene to keep the smoke check short. */
-    private static void hazardFixture(Path pack)throws Exception {
-        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
-        Properties map=properties(descriptor),actors=properties(content);
-        int pot=0;
-        for(String id:actors.getProperty("entries").split(",")){
-            String prefix="entry."+id+".",config=actors.getProperty(prefix+"child.config","");
-            if(!config.equals("Dynamic/Lift Objects/Fire Pot")&&!config.equals("Dynamic/Lift Objects/Oil Pot"))continue;
-            actors.setProperty(prefix+"x",Float.toString(Float.parseFloat(map.getProperty("spawn-x"))+(pot++==0?-.8f:.8f)));
-            actors.setProperty(prefix+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+1));
+    /** Fixture placements are edited through the same map-local YAML as administrator content. */
+    private static void hazardFixture(Path content)throws Exception { relocate(content,"hazards"); }
+    private static void healthFixture(Path content)throws Exception { relocate(content,"health"); }
+    private static void relocate(Path content,String kind)throws Exception {
+        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");
+        var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
+        float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));int pot=0;boolean pad=false;
+        var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");var nativeActors=Yaml.map(bindings.get("actors"),"actors");
+        for(var actor:actors.entrySet()) {
+            var fixed=Yaml.map(nativeActors.get(actor.getKey()),"binding");var value=Yaml.map(actor.getValue(),"actor");String config=(String)fixed.get("config");
+            if(kind.equals("hazards")&&(fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Fire Pot")||fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Oil Pot"))){value.put("x",x+(pot++==0?-.8f:.8f));value.put("y",y+1);}
+            if(kind.equals("health")&&(config.endsWith("/Floor/Fire")||config.endsWith("/Floor/Shock"))){value.put("x",x);value.put("y",y+3);}
+            else if(kind.equals("health")&&!pad&&config.endsWith("/Heal Pad")){value.put("x",x);value.put("y",y+1);pad=true;}
         }
-        if(pot!=2)throw new IOException("Expected original Fire and Oil Pot pads");
-        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
-        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
-        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
+        if(kind.equals("hazards")&&pot!=2)throw new IOException("Expected original Fire and Oil Pot pads");
+        Files.delete(file);Yaml.write(file,yaml);
     }
-
-    /** Move the original floor traps and one heal pad into a disposable entrance corridor. */
-    private static void healthFixture(Path pack)throws Exception {
-        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
-        Properties map=properties(descriptor),actors=properties(content);
-        boolean pad=false;
-        for(String id:actors.getProperty("entries").split(",")){
-            String prefix="entry."+id+".",config=actors.getProperty(prefix+"config","");
-            if(config.endsWith("/Floor/Fire")||config.endsWith("/Floor/Shock")){
-                actors.setProperty(prefix+"x",map.getProperty("spawn-x"));
-                actors.setProperty(prefix+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+3));
-            }else if(!pad&&config.endsWith("/Heal Pad")){
-                actors.setProperty(prefix+"x",map.getProperty("spawn-x"));
-                actors.setProperty(prefix+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+1));pad=true;
+    private static void vortexShieldFixture(Path content)throws Exception {
+        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml"),bindingFile=map.resolve("native/bindings.json");
+        var prepared=MapYaml.prepare(map,content.resolve("shared"));var props=prepared.content();
+        String prefix=Arrays.stream(props.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
+            .filter(key->props.getProperty(key+"kind","").equals("Monster")).findFirst().orElseThrow();
+        var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");var bindings=Yaml.map(Json.parseCatalog(Files.readString(bindingFile)),"bindings");
+        var fixedActors=Yaml.map(bindings.get("actors"),"actors");var fields=Yaml.map(bindings.get("actorFields"),"actor fields");var types=Yaml.map(bindings.get("actorTypes"),"actor types");
+        float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"))+3;
+        for(int i=0;i<2;i++) {
+            String id="vortex_shield_"+i;var fixed=new LinkedHashMap<String,Object>();var editable=new LinkedHashMap<String,Object>();var schema=new LinkedHashMap<String,Object>();
+            for(String key:props.stringPropertyNames())if(key.startsWith(prefix)) {
+                String name=key.substring(prefix.length()),value=props.getProperty(key);
+                if(name.equals("config")||name.equals("kind")||name.equals("native-type")||name.startsWith("config.")||value.startsWith("{")||value.startsWith("["))fixed.put(name,value);
+                else if(name.equals("rotation"))editable.put("facing",Math.toDegrees(Float.parseFloat(value)));
+                else {Object scalar=value;if(value.equals("true")||value.equals("false"))scalar=Boolean.parseBoolean(value);else try{scalar=new java.math.BigDecimal(value);}catch(NumberFormatException text){ }editable.put(name,scalar);}
             }
+            fixed.put("source-key","vortex-shield-"+i);editable.put("x",x);editable.put("y",y+(i==0?-1.2f:2.3f));editable.put("facing",0);editable.put("health",10000);editable.put("acquire-distance",0);
+            editable.forEach((key,value)->schema.put(key,value instanceof Number?"number":value instanceof Boolean?"boolean":"text"));fixedActors.put(id,fixed);actors.put(id,editable);fields.put(id,new ArrayList<>(editable.keySet()));types.put(id,schema);
         }
-        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
-        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
-        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
-    }
-    /** Duplicate original cube definitions only in the disposable scene. */
-    private static void vortexShieldFixture(Path pack)throws Exception {
-        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
-        Properties map=properties(descriptor),actors=properties(content);
-        String source=Arrays.stream(actors.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
-            .filter(prefix->actors.getProperty(prefix+"kind","").equals("Monster")).findFirst().orElseThrow();
-        float x=Float.parseFloat(map.getProperty("spawn-x")),y=Float.parseFloat(map.getProperty("spawn-y"))+3;
-        map.setProperty("spawn-y",Float.toString(y));
-        for(int i=0;i<2;i++){
-            String id=Integer.toString(10000+i),prefix="entry."+id+".";
-            for(String key:List.copyOf(actors.stringPropertyNames()))if(key.startsWith(source))actors.setProperty(prefix+key.substring(source.length()),actors.getProperty(key));
-            actors.setProperty(prefix+"x",Float.toString(x));actors.setProperty(prefix+"y",Float.toString(y+(i==0?-1.2f:2.3f)));actors.setProperty(prefix+"rotation","0");
-            actors.setProperty(prefix+"source-key","vortex-shield-"+i);
-            actors.setProperty(prefix+"health","10000");actors.setProperty(prefix+"acquire-distance","0");
-            actors.setProperty("entries",actors.getProperty("entries")+","+id);
-        }
-        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
-        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
-        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
+        Files.delete(file);Yaml.write(file,yaml);Files.writeString(bindingFile,Json.stringify(bindings));
+        Path metadata=map.resolve("native/metadata.properties");var descriptor=new Properties();descriptor.putAll(properties(metadata));descriptor.setProperty("sha256.bindings.json",ContentFiles.digest(bindingFile));save(metadata,descriptor);
+        Path portals=map.resolve("portals.yml");var p=Yaml.read(portals);String spawn=Yaml.text(Yaml.read(map.resolve("map.yml")).get("defaultSpawn"),"default spawn");Yaml.map(Yaml.map(p.get("entrances"),"entrances").get(spawn),"entrance").put("y",y);Files.delete(portals);Yaml.write(portals,p);
     }
     private static Properties properties(Path file)throws IOException {var values=new Properties();try(var in=Files.newInputStream(file)){values.load(in);}return values;}
     private static void save(Path file,Properties values)throws IOException {try(var out=Files.newOutputStream(file)){values.store(out,"Disposable health HUD fixture");}}

@@ -50,6 +50,7 @@ public final class CombatRenderingCheck {
     private final Path output;
     private final boolean peer;
     private final boolean trainingOnly;
+    private boolean dialogueOnly;
     private boolean depotOnly;
     private boolean hazardsOnly;
     private boolean healthOnly;
@@ -105,7 +106,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -119,7 +120,7 @@ public final class CombatRenderingCheck {
         com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
-        var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);
+        var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
@@ -174,7 +175,7 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
             if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
             if(vortexShieldOnly&&view.sceneId()==294&&stage>=2){vortexShieldTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
@@ -237,7 +238,7 @@ public final class CombatRenderingCheck {
                     .filter(a->a.Mv().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
                     .filter(a->Math.hypot(a.tz().x-5.818864,a.tz().y-2.6403537)<.05).findFirst()
                     .orElseThrow(()->new AssertionError("Authored Konway actor is missing from its verified Training Hall position"));
-                konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+                konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("content/maps")).scene(294);
                 konwayRoute=routeTo(trainingMap,server.tz().x,server.tz().y,stranger.tz().x,stranger.tz().y);
                 konwayRouteIndex=0;konwayStarted=now;stage=20;return;
             }
@@ -265,6 +266,7 @@ public final class CombatRenderingCheck {
                     flags(view,0);
                     if(!"n.atg_greeter".equals(info.name)||info.responses==null||info.responses.length!=2)
                         throw new AssertionError("Unexpected native Konway opening dialog: "+info.name+" responses="+Arrays.toString(info.responses));
+                    if(dialogueOnly&&!info.message.equals("r.atg_greeter_2a"))throw new AssertionError("Edited YAML sentence did not reach the stock client");
                     initialConversationMessage=info.message;started=now;stage=24;return;
                 }
                 if(now-started>8_000_000_000L)throw new AssertionError("Native interaction did not open Konway's ConversationDialogInfo");
@@ -294,6 +296,7 @@ public final class CombatRenderingCheck {
                 if(app.CT().sceneDialog!=null&&now-started>5_000_000_000L)throw new AssertionError("Native scene service did not close Konway dialog");
                 if(app.CT().sceneDialog==null&&now-started>250_000_000L){
                     System.out.println("CHECK: native Konway approach, interaction, first response, part 2a and scene-service close");
+                    if(dialogueOnly){passed=done=true;System.out.println("PASS: stock graphical YAML dialogue edit, Konway interaction, response transition and native close");app.shutdown();return;}
                     var own=authoritative.get(app.CT().pawnId);
                     konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,moveX,moveY+3);konwayRouteIndex=0;konwayStarted=now;stage=26;
                 }
@@ -569,7 +572,7 @@ public final class CombatRenderingCheck {
             System.out.println("HEALTH HUD: panel="+panel.getClass().getName()+" bound="+(bound==party)+" party="+party+" fields="+field(panel,"aTs").get(panel)+","+field(panel,"aTt").get(panel));
             if(bound!=party)throw new AssertionError("Native health panel was not bound to the subscribed party");
             healthMaximum=party.health.iterator().next().maximum;
-            trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+            trainingMap=SceneCatalog.load(Path.of("content/maps")).scene(294);
             var own=authoritative.get(app.CT().pawnId);
             var hazard=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Trap")).min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
             hazardX=hazard.tz().x;hazardY=hazard.tz().y;konwayRoute=new ArrayList<>(routeTo(trainingMap,own.tz().x,own.tz().y,hazardX,hazardY));konwayRoute.add(new float[]{hazardX,hazardY});konwayRouteIndex=0;started=now;stage=40;return;
@@ -696,7 +699,7 @@ public final class CombatRenderingCheck {
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(stage==0){
             GLFW.glfwFocusWindow(app.getWindow());
-            trainingMap=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(1);
+            trainingMap=SceneCatalog.load(Path.of("content/maps")).scene(1);
             var entry=trainingMap.content().entries().stream().filter(e->e.spec().text("config","").equals("Shop/Haven/Spiral Quartermaster")).findFirst().orElseThrow();
             var npc=authoritative.values().stream().filter(a->Math.hypot(a.tz().x-entry.x(),a.tz().y-entry.y())<.1).findFirst().orElseThrow();
             konwayActor=npc.vw();konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,npc.tz().x,npc.tz().y);konwayRouteIndex=0;started=now;stage=60;return;
@@ -840,7 +843,7 @@ public final class CombatRenderingCheck {
     }
     private Actor viewPawn(){return authoritative.get(app.CT().pawnId);}
     private void loadNeedleHeadings()throws Exception{
-        for(var attack:FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
+        for(var attack:FireCatalog.load(Path.of("content/_internal/fires.json")).entries())if(attack.weaponConfig().equals(NEEDLE)){
             var headings=new ArrayList<Heading>();for(var fire:attack.fireRefs())collectNeedleHeadings(fire.action(),headings);
             needleHeadings.put(attack.activity(),List.copyOf(headings));
         }

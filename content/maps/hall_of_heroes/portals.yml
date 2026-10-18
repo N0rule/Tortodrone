@@ -1,0 +1,10 @@
+entrances:
+  level_start:
+    id: 2816
+    facing: -179.9999230466863
+    x: 0.5
+    y: -7.5
+portals:
+  '2812':
+    destination: garrison
+    entrance: from_hoh

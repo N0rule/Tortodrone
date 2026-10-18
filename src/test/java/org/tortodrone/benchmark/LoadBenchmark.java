@@ -50,15 +50,9 @@ public final class LoadBenchmark {
         Thread hook=new Thread(LoadBenchmark::stop,"BenchmarkCleanup");Runtime.getRuntime().addShutdownHook(hook);
         try {
             TestDeployment.copyServer(Path.of("build/tortodrone.jar"),home.resolve("tortodrone.jar"));
-            Path manifest=home.resolve("content/packs/vanilla/maps/haven/map.properties");
-            var settings=new Properties();try(var in=Files.newInputStream(manifest)){settings.load(in);}
-            settings.setProperty("instances",Integer.toString(instances));try(var out=Files.newOutputStream(manifest)){settings.store(out,"isolated benchmark");}
-            Path data=home.resolve("data");
-            int maximum=Arrays.stream(sizes).max().orElseThrow();
-            Path packManifest=home.resolve("content/packs/vanilla/pack.properties");var pins=new Properties();
-            try(var input=Files.newInputStream(packManifest)){pins.load(input);}
-            pins.setProperty("sha256.scene.1",org.tortodrone.resources.ContentFiles.digest(manifest.getParent()));
-            try(var output=Files.newOutputStream(packManifest)){pins.store(output,"Disposable benchmark configuration");}
+            Path manifest=home.resolve("content/maps/haven/map.yml");
+            var settings=org.tortodrone.resources.Yaml.read(manifest);settings.put("instances",instances);Files.delete(manifest);org.tortodrone.resources.Yaml.write(manifest,settings);
+            Path data=home.resolve("data");int maximum=Arrays.stream(sizes).max().orElseThrow();
             try(var accounts=new AccountStore(data)) {
                 var database=new Database(data,false);
                 // Disposable accounts share one synthetic password verifier. Real network

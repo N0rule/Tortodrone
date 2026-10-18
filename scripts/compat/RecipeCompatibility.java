@@ -21,10 +21,10 @@ public final class RecipeCompatibility {
         Path home=Files.createTempDirectory("tortodrone-native-recipe-");
         try{
             var db=new Database(home,false);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var characters=new CharacterStore(db,account,"Alice",items);
+            var items=org.tortodrone.resources.ContentManager.load(Path.of(".")).items();var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Recipe-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             String recipe="Recipe/Armor/Padded Armor Recipe";db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),2,-1,-1);
-            var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));scenes.town(TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
+            var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));scenes.town(org.tortodrone.resources.ContentManager.load(Path.of(".")).town());
             var bytes=new ByteArrayOutputStream();bytes.write(HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));bytes.write(HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
             var socket=new Socket(){@Override public OutputStream getOutputStream(){return bytes;}};var codec=new SessionCodec(items);
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,codec,1001,1,m->{},scenes)){

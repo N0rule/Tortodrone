@@ -19,10 +19,10 @@ public final class RenameDrainTest {
         Path home=Files.createTempDirectory("tortodrone-rename-drain-");
         try{
             var db=new Database(home,false);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var characters=new CharacterStore(db,account,"Alice",items);
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Drain-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);
-            var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));scenes.town(TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
+            var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             var socket=new SlowSocket();var codec=new SessionCodec(items);
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,codec,1001,1,m->{},scenes);var worker=Executors.newSingleThreadExecutor()){
                 try{

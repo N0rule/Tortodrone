@@ -32,6 +32,7 @@ import com.threerings.tudey.data.TudeySceneModel;
 /** Exports numeric and config-reference content for a captured native scene. */
 public final class SceneContentExport {
     private static Properties rules;
+    private static final List<String> importReport=new ArrayList<>();
     private SceneContentExport() { }
 
     /** Writes deterministic content metadata next to an already-staged scene.dat. */
@@ -46,9 +47,10 @@ public final class SceneContentExport {
         Path target = output.resolve("content.properties");
         if (Files.exists(target)) throw new IOException("Refusing to replace content.properties");
 
+        importReport.clear();
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
-        try(var in=Files.newInputStream(Path.of("content/packs/vanilla/combat/actor-rules.properties"))){rules.load(in);}
+        try(var in=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(in);}
         if(!"1".equals(rules.getProperty("format")))throw new IOException("Unsupported authored actor rules");
         values.put("format", "1");
         values.put("layout-sha256", sha256(layout));
@@ -75,9 +77,11 @@ public final class SceneContentExport {
             writeActor(cm, values, prefix, binding.actorReference());
         }
         values.put("entries", String.join(",", indexes));
-        writeDialogues(cm,values);
+        writeDialogues(cm,values,bindings);
         Files.writeString(target, propertiesText(values), StandardCharsets.UTF_8,
             java.nio.file.StandardOpenOption.CREATE_NEW);
+        importReport.add(0,"Supported extracted actor bindings: "+bindings.size());
+        Files.writeString(output.resolve("import-source-report.txt"),String.join("\n",importReport)+"\n",StandardCharsets.UTF_8,java.nio.file.StandardOpenOption.CREATE_NEW);
     }
 
     private static List<Binding> collectBindings(ConfigManager cm, TudeySceneModel scene)
@@ -124,7 +128,7 @@ public final class SceneContentExport {
             if (handlers == null) continue;
             for (int hi = 0; hi < handlers.length; hi++) {
                 HandlerConfig handler = handlers[hi];
-                if (!(handler instanceof HandlerConfig.Startup startup)) continue;
+                if (!(handler instanceof HandlerConfig.Startup startup)) {importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
                 collectStartup(cm, result, sourceKey, hi, x, y, rotation, startup.action,sourceArgs,state,0);
             }
         }
@@ -155,7 +159,7 @@ public final class SceneContentExport {
             for (int i = 0; i < compound.actions.length; i++)
                 collectStartup(cm, result, sourceKey + "/startup." + handlerIndex + ".action." + i,
                     handlerIndex, x, y, rotation, compound.actions[i],sourceArgs,state,depth + 1);
-        }
+        } else importReport.add("Unsupported startup action at "+sourceKey+" / "+handlerIndex+": "+action.getClass().getName());
     }
 
     private static ConfigReference<ActorConfig> bindArguments(ConfigReference<ActorConfig> actor,Map<String,Object> source){
@@ -375,14 +379,17 @@ public final class SceneContentExport {
             putFloat(out,prefix+"bounds-max-x",bounds.tu().x);putFloat(out,prefix+"bounds-max-y",bounds.tu().y);
         }
     }
-    private static void writeDialogues(ConfigManager cm,Map<String,String> out)throws Exception {
-        String ids=rules.getProperty("dialogues","");put(out,"dialogues",ids);
+    private static void writeDialogues(ConfigManager cm,Map<String,String> out,List<Binding> bindings)throws Exception {
+        String ids=rules.getProperty("dialogues","");var selected=new ArrayList<String>();
         for(String id:ids.split(",")){
             if(id.isBlank())continue;String prefix="dialogue."+id+".";
+            String actorName=rules.getProperty(prefix+"actor");
+            if(bindings.stream().noneMatch(b->b.actorReference().getName().equals(actorName)))continue;
+            selected.add(id);
             String reference=rules.getProperty(prefix+"reference");
             var conversation=cm.d(com.threerings.projectx.config.ConversationConfig.class,reference);
             if(conversation==null)throw new IOException("Unresolved authored conversation binding");
-            String actorName=rules.getProperty(prefix+"actor");var actor=cm.d(ActorConfig.class,actorName).ai(cm);
+            var actor=cm.d(ActorConfig.class,actorName).ai(cm);
             Object model=field(actor.sprite,"model");
             put(out,prefix+"actor",actorName);put(out,prefix+"name",rules.getProperty(prefix+"name"));
             put(out,prefix+"initial",rules.getProperty(prefix+"initial"));put(out,prefix+"bundle",conversation.bundle);
@@ -403,6 +410,12 @@ public final class SceneContentExport {
                 }
             }
             put(out,prefix+"nodes",String.join(",",nodes));
+        }
+        put(out,"dialogues",String.join(",",selected));
+        for(int i=0;i<bindings.size();i++)if("Stranger".equals(out.get("entry."+i+".kind"))) {
+            String actor=bindings.get(i).actorReference().getName();
+            if(selected.stream().noneMatch(id->actor.equals(rules.getProperty("dialogue."+id+".actor"))))
+                importReport.add("Unresolved conversation for placed NPC "+bindings.get(i).sourceKey()+": "+actor);
         }
     }
 

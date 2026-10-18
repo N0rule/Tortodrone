@@ -1,0 +1,128 @@
+# All durations and offsets are seconds. Inverse names must reference another preset.
+cycles:
+  A:
+    down: 3
+    inverse: B2
+    offset: 0
+    up: 4
+    warn: 1
+  A2:
+    down: 3
+    inverse: B
+    offset: 2
+    up: 4
+    warn: 1
+  A2_SLOW:
+    down: 7
+    inverse: B_SLOW
+    offset: 4
+    up: 8
+    warn: 1
+  A_SLOW:
+    down: 7
+    inverse: B2_SLOW
+    offset: 0
+    up: 8
+    warn: 1
+  B:
+    down: 3
+    inverse: A2
+    offset: 4
+    up: 4
+    warn: 1
+  B2:
+    down: 3
+    inverse: A
+    offset: 6
+    up: 4
+    warn: 1
+  B2_SLOW:
+    down: 7
+    inverse: A_SLOW
+    offset: 12
+    up: 8
+    warn: 1
+  B_SLOW:
+    down: 7
+    inverse: A2_SLOW
+    offset: 8
+    up: 8
+    warn: 1
+  CROSS_A1:
+    down: 2
+    inverse: CROSS_A5
+    offset: 0
+    up: 9
+    warn: 1
+  CROSS_A2:
+    down: 2
+    inverse: CROSS_A4
+    offset: 1.5
+    up: 9
+    warn: 1
+  CROSS_A4:
+    down: 2
+    inverse: CROSS_A2
+    offset: 4.5
+    up: 9
+    warn: 1
+  CROSS_A5:
+    down: 2
+    inverse: CROSS_A1
+    offset: 6
+    up: 9
+    warn: 1
+  CROSS_B1:
+    down: 2
+    inverse: CROSS_B5
+    offset: 6
+    up: 9
+    warn: 1
+  CROSS_B2:
+    down: 2
+    inverse: CROSS_B4
+    offset: 7.5
+    up: 9
+    warn: 1
+  CROSS_B4:
+    down: 2
+    inverse: CROSS_B2
+    offset: 10.5
+    up: 9
+    warn: 1
+  CROSS_B5:
+    down: 2
+    inverse: CROSS_B1
+    offset: 0
+    up: 9
+    warn: 1
+  CROSS_MID3:
+    down: 2
+    inverse: CROSS_MID3
+    offset: 3
+    up: 3
+    warn: 1
+  DOWN:
+    down: 0
+    inverse: UP
+    offset: 0
+    up: 0
+    warn: 0
+  QUICK:
+    down: 1
+    inverse: SLOW
+    offset: 0
+    up: 2
+    warn: 1
+  SLOW:
+    down: 7
+    inverse: QUICK
+    offset: 0
+    up: 8
+    warn: 1
+  UP:
+    down: 0
+    inverse: DOWN
+    offset: 0
+    up: 0
+    warn: 0

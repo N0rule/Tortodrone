@@ -12,7 +12,11 @@ public final class Json {
     }
     public static Object parse(String text,int maxDepth) throws IOException {
         if(maxDepth<1||maxDepth>128)throw new IllegalArgumentException("Invalid JSON depth limit");
-        var parser = new Parser(text,maxDepth);
+        return parse(text,maxDepth,128);
+    }
+    public static Object parseCatalog(String text)throws IOException {return parse(text,32,50_000);}
+    private static Object parse(String text,int maxDepth,int maxFields)throws IOException {
+        var parser = new Parser(text,maxDepth,maxFields);
         Object value = parser.value(0);
         parser.space();
         if (parser.at != text.length()) throw new IOException("Trailing JSON data");
@@ -43,6 +47,7 @@ public final class Json {
             out.append('"');
         } else if (value instanceof Boolean || value instanceof Integer || value instanceof Long || value instanceof BigDecimal) out.append(value);
         else if (value instanceof Float number && Float.isFinite(number)) out.append(number);
+        else if (value instanceof Double number && Double.isFinite(number)) out.append(number);
         else if (value instanceof Map<?,?> map) {
             out.append('{'); boolean comma = false;
             var sorted = new TreeMap<String,Object>();
@@ -62,8 +67,8 @@ public final class Json {
         } else throw new IOException("Unsupported JSON value");
     }
     private static final class Parser {
-        private final String text; private final int maxDepth; private int at, nodes;
-        Parser(String text,int maxDepth) { this.text = text;this.maxDepth=maxDepth; }
+        private final String text; private final int maxDepth,maxFields; private int at, nodes;
+        Parser(String text,int maxDepth,int maxFields) { this.text = text;this.maxDepth=maxDepth;this.maxFields=maxFields; }
         void space() { while (at < text.length() && " \r\n\t".indexOf(text.charAt(at)) >= 0) at++; }
         IOException invalid() { return new IOException("Invalid JSON at offset " + at); }
         Object value(int depth) throws IOException {
@@ -77,7 +82,7 @@ public final class Json {
                 do {
                     space(); if (at == text.length() || text.charAt(at) != '"') throw invalid();
                     String key = string(); space(); if (!take(':') || result.containsKey(key)) throw invalid();
-                    result.put(key, value(depth+1)); if (result.size() > 128) throw invalid(); space();
+                    result.put(key, value(depth+1)); if (result.size() > maxFields) throw invalid(); space();
                     if (take('}')) return result;
                 } while (take(','));
                 throw invalid();

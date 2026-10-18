@@ -54,7 +54,7 @@ public final class AdminServiceTest {
             Socket staffSocket = new RecordingSocket();
             var staffFrames = new Frames();
             var scenes=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneRegistry.system().catalog());
-            scenes.town(org.tortodrone.town.TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
+            scenes.town(org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             try (var out = new SessionOutput(staffSocket);
                  var world = new WorldSession(staffSocket, staff, out, new SessionCodec(), 1002, 1, message -> {},
                      scenes, () -> true)) {
@@ -116,7 +116,7 @@ public final class AdminServiceTest {
         check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==2&&i.heatProgress()==0),"native /level resets progress at the selected item level");
         world.admin(spriteInvoke(42,(short)52,6,0));response(frames,socket,(short)52,(byte)1,null);
         world.admin(spriteInvoke(41,(short)53,6,1f));response(frames,socket,(short)53,(byte)1,null);
-        var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
+        var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
         database.grantItems("Master",knight.name(),2,-1,items.require("Rarity/Fire Crystal/Cracked"),1,-1,-1);
         var result=new SessionDecoder.Listener(TestWire.INV+"ResultMarshaller",(short)54);
         check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,9,8,List.of(gear.id(),1,0,result))),"stock forge request reaches the Town item handler");

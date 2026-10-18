@@ -1,0 +1,16 @@
+dialogue:
+  nodes:
+    part1:
+      responses:
+      - text: Thanks, I'll keep that in mind.
+        close: true
+      - text: Wait, what alleyway? Wasn't there a building here before?
+        close: true
+      text: Greetings! Your Krogmo representative is now located right down this alleyway.
+    part2:
+      responses:
+      - text: Thanks, I'll keep that in mind.
+        close: true
+      text: Yes, but there's no easement dispute that a little Undercorp litigative magic can't solve! Be sure to visit, this corner of Haven is on the up and up!
+  initial: part1
+id: completed33

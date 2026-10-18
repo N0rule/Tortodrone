@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Hi there {0}, I'm Zebulon, a knight who utilizes specialty gear that is suited for specific scenarios.  The recipes I have for you produce weapons that target specific monster families and gear that has mixed defense types. \n\nSometimes what you really need is a sword that smites the undead or armor that raises your slime smashing proficiency.  The gear I specialize in is often built for a specific task, but is also great to mix and match with other sets.  Experiment!"
+  initial: part_1a
+id: mannequin13

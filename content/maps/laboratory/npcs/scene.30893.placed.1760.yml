@@ -1,0 +1,37 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Continue
+        close: true
+      text: Gremlins of Emberlight thank you for stopping this threat.
+    part 2a:
+      responses:
+      - text: Thanks for the warning, Pakrat.
+        close: true
+      text: But I come to warn you!  Crimson Order not stop with Roarmulus Project.  Crimson Order desperate to destroy all enemies. Tall ones, little ones, and outcasts.  All enemies to Crimson Order!
+    part 3a:
+      responses:
+      - text: Tell me about Emberlight.
+        close: true
+      - text: Why is King Tinkinzar trying to destroy Haven?
+        close: true
+      - text: I have enough info, thanks. (End conversation)
+        close: true
+      text: Help you with something?
+    part 4a:
+      responses:
+      - text: One more question, Pakrat.
+        close: true
+      - text: End conversation
+        close: true
+      text: 'Emberlight founded by gremlin outcasts from Great Colony. Gremlins of Emberlight not obey the Iron Law, so flee or die. We start over with Emberlight. New colony home to few of us: most ex-schemers, some merchants, some fighters, all traitors in eyes of Great Colony gremlins.'
+    part 4b:
+      responses:
+      - text: One more question, Pakrat.
+        close: true
+      - text: End conversation
+        close: true
+      text: None know for sure. Tinkinzar not seen for many many years. Crimson Order carries out Tinkinzar's plans for Cradle. Emberlight was blight on master plan because built by outcasts. Haven probably the same, founded by non-gremlins. Not part of plan!
+  initial: part 1a
+id: scene.30893.placed.1760

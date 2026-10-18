@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: Welcome to Haven, little one. Please join your friends in procuring shinies from the Clockworks. Shinies are always appreciated by the Strangers.
+  initial: part 1a
+id: town27

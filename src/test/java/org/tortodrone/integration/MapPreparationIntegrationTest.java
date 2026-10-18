@@ -1,237 +1,33 @@
 package org.tortodrone.integration;
 
+import java.io.*;
+import java.nio.channels.*;
 import java.nio.file.*;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.file.StandardOpenOption;
-import java.security.MessageDigest;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
-import org.tortodrone.world.SceneCatalog;
+import org.tortodrone.resources.*;
+import org.tortodrone.support.ContentFixture;
 import static org.tortodrone.support.TestWire.check;
 
-/** Map preparation works without downloads, caches, game files or release archives. */
+/** Offline preparation must preserve edits and refuse live or legacy targets. */
 public final class MapPreparationIntegrationTest {
-    public static void main(String[] args) throws Exception {
-        Path home = Files.createTempDirectory("tortodrone-offline-maps-test-");
+    public static void main(String[] args)throws Exception {
+        Path home=Files.createTempDirectory("tortodrone-prepare-");
         try {
-            offlinePreparation(home);
-            checkedInSourcePreparation(home);
-            System.out.println("PASS: offline map and content preparation, published-pack upgrades, edited-pack preservation, deployment locks, added packs, missing-source handling, owner symlinks and corrupt-source refusal");
-        } finally {
-            try (var paths = Files.walk(home)) {
-                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.delete(path);
-            }
-        }
+            Path output=home.resolve("deployment/content");run("content",output,true);run("content",output,true);
+            check(Files.exists(output.resolve("maps/advanced_training/npcs/konway.yml"))&&Files.exists(output.getParent().resolve("config/server.yml"))&&Files.exists(output.getParent().resolve("plugins/README.md")),"deployment mirrors unified source layout");
+            check(!Files.exists(output.resolve("packs"))&&!Files.exists(output.getParent().resolve("data")),"preparation creates no packs or player data");
+            ContentManager.load(output.getParent());
+            Path npc=output.resolve("maps/advanced_training/npcs/konway.yml");Files.writeString(npc,Files.readString(npc)+"# owner edit\n");byte[] edited=Files.readAllBytes(npc);run("content",output,true);check(Arrays.equals(edited,Files.readAllBytes(npc)),"administrator edits survive repeated preparation");
+            Path missing=output.resolve("items/misc.yml");Files.delete(missing);Path lockFile=output.getParent().resolve("data/server.lock");Files.createDirectories(lockFile.getParent());Files.writeString(lockFile,"");
+            try(var channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);var lock=channel.lock()){run("content",output,false);check(!Files.exists(missing),"held deployment lock blocks all planned copies");}
+            run("content",output,true);
+            Path old=home.resolve("old/content");Files.createDirectories(old.resolve("packs/vanilla"));run("content",old,false);check(!Files.exists(old.resolve("maps")),"legacy deployment needs explicit migration");
+            Path maps=home.resolve("maps-only");run("maps",maps,true);check(Files.exists(maps.resolve("haven/map.yml"))&&!Files.exists(maps.resolve("items")),"maps-only preparation copies map-local content");
+            System.out.println("PASS: offline unified deployment, configuration/plugins, owner edits, lock refusal, legacy upgrade refusal and maps-only output");
+        }finally{ContentFixture.delete(home);}
     }
-    private static void offlinePreparation(Path home) throws Exception {
-        Path project = home.resolve("source without cache");
-        Path source = project.resolve("content/packs/vanilla/maps");
-        try (var paths = Files.walk(Path.of("content/packs/vanilla/maps"))) {
-            for (Path path : paths.toList()) {
-                Path out = source.resolve(Path.of("content/packs/vanilla/maps").relativize(path));
-                if (Files.isDirectory(path)) Files.createDirectories(out); else Files.copy(path, out);
-            }
-        }
-        Path tool = project.resolve("BuildTools.java");
-        Files.copy(Path.of("scripts/BuildTools.java"), tool);
-        check(runMaps(project, tool, "prepared maps") == 0, "maps prepare without dependency cache or provenance URLs");
-        SceneCatalog.load(project.resolve("prepared maps"));
-        Path edited = project.resolve("prepared maps/haven/map.properties");
-        Files.writeString(edited, Files.readString(edited).replace("instances=1", "instances=2"));
-        byte[] preserved = Files.readAllBytes(edited);
-        check(runMaps(project, tool, "prepared maps") == 0 && Arrays.equals(preserved, Files.readAllBytes(edited)), "edited deployment pack preserved");
-        // Optional packs can be omitted from a source distribution without blocking preparation.
-        Path saved = project.resolve("saved maps");
-        Files.move(source, saved);
-        check(runMaps(project, tool, "missing maps") == 0 && !Files.exists(project.resolve("missing maps")),
-            "absent optional map source warns and succeeds without inventing resources");
-        Files.writeString(source, "invalid source directory");
-        check(runMaps(project, tool, "invalid maps") != 0 && !Files.exists(project.resolve("invalid maps")),
-            "present malformed map source is refused rather than treated as optional absence");
-        Files.delete(source);
-        Files.move(saved, source);
-        // Preserve a dangling owner-file symlink rather than following or replacing it.
-        Path outside = project.resolve("owner file that does not exist");
-        Path linked = project.resolve("prepared maps/haven/scene.dat");
-        Files.delete(linked);
-        boolean symlinks = false;
-        try { Files.createSymbolicLink(linked, outside); symlinks = true; }
-        catch (UnsupportedOperationException | java.io.IOException unavailable) {
-            System.out.println("SKIP: owner-file symlink test (symlinks unavailable)");
-        }
-        if (symlinks) {
-            check(runMaps(project, tool, "prepared maps") == 0 && Files.isSymbolicLink(linked)
-                && !Files.exists(outside), "dangling owner-file symlink preserved without writing its target");
-        }
-        Files.write(source.resolve("haven/scene.dat"), new byte[]{1, 2, 3});
-        check(runMaps(project, tool, "damaged maps") != 0 && !Files.exists(project.resolve("damaged maps")),
-            "damaged source rejected before producing a partial deployment");
-        check(!Files.exists(project.resolve("build/deps")), "offline preparation creates no download cache");
-    }
-
-    private static void checkedInSourcePreparation(Path home) throws Exception {
-        Path project=home.resolve("checked-in map source project");
-        Path maps=project.resolve("content/packs/vanilla/maps");
-        copyTree(Path.of("content/packs/vanilla"),project.resolve("content/packs/vanilla"));
-        Files.createDirectories(project.resolve("src/main/resources"));
-        Files.copy(Path.of("src/main/resources/server.properties"),project.resolve("src/main/resources/server.properties"));
-        if(Files.isDirectory(Path.of("content/custom/packs")))copyTree(Path.of("content/custom/packs"),project.resolve("content/custom/packs"));
-        Path tool=project.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tool);
-        Path mapsOutput=project.resolve("deployment/defaults/maps");
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"maps prepare from the checked-in source alone");
-        var catalog=SceneCatalog.load(mapsOutput);
-        check(catalog.scenes().size()==7,"the checked-in source prepares all seven Haven scenes");
-        check(runTool(project,tool,"maps",mapsOutput.toString())==0,"checked-in source preparation is repeatable");
-
-        Path vanillaOutput=project.resolve("deployment/content/packs/vanilla");
-        check(runTool(project,tool,"content",vanillaOutput.toString())==0
-            &&SceneCatalog.load(vanillaOutput.resolve("maps")).scenes().size()==7
-            &&Files.isRegularFile(vanillaOutput.resolve("items/catalog.json")),
-            "full content preparation includes maps, item definitions and combat data");
-        Path settings=project.resolve("deployment/data/server.properties");
-        check(Files.readString(settings).contains("content-packs=vanilla")
-            &&Files.exists(project.resolve("deployment/content/custom/packs/.gitkeep"))
-            &&!Files.exists(project.resolve("deployment/config"))&&!Files.exists(project.resolve("deployment/cache")),
-            "preparation uses one server settings file and content-local custom packs without config/cache directories");
-        Files.writeString(settings,"server-port=47699\n");
-        check(runTool(project,tool,"content",vanillaOutput.toString())==0&&Files.readString(settings).equals("server-port=47699\n"),
-            "preparation preserves existing operator settings");
-        Path absent=home.resolve("absent vanilla source project");
-        Files.createDirectories(absent);
-        Path absentTool=absent.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),absentTool);
-        Path absentOutput=absent.resolve("content/packs/vanilla");
-        check(runTool(absent,absentTool,"content",absentOutput.toString())!=0&&!Files.exists(absentOutput),
-            "full content preparation refuses a missing canonical vanilla source");
-        Path locked=project.resolve("locked deployment");
-        Path lockFile=locked.resolve("data/server.lock");Files.createDirectories(lockFile.getParent());
-        Files.createFile(lockFile);
-        Path lockedVanilla=locked.resolve("content/packs/vanilla");
-        try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
-            check(runTool(project,tool,"content",lockedVanilla.toString())!=0
-                &&!Files.exists(lockedVanilla),
-                "active deployment lock refuses all canonical content changes before writing");
-        }
-        check(runTool(project,tool,"content",lockedVanilla.toString())==0,
-            "canonical content preparation proceeds after deployment unlocks");
-        try(FileChannel channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);FileLock lock=channel.lock()) {
-            check(runTool(project,tool,"maps",locked.resolve("maps").toString())!=0
-                &&!Files.exists(locked.resolve("maps")),
-                "active deployment lock refuses map updates before changing any map");
-        }
-        check(runTool(project,tool,"maps",locked.resolve("maps").toString())==0,"preparation proceeds once the deployment unlocks");
-
-        // Packs this source published earlier are upgraded; edited packs keep their bytes.
-        Path upgraded=project.resolve("previous generation");
-        check(runTool(project,tool,"maps",upgraded.toString())==0,"previous generation prepares from the checked-in source");
-        Path upgradedPortals=upgraded.resolve("haven/portals.properties");
-        byte[] published=Files.readAllBytes(upgradedPortals);
-        byte[] earlier=("# previous generation\n"+new String(published,java.nio.charset.StandardCharsets.UTF_8))
-            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        Files.write(upgradedPortals,earlier);
-        var manifest=properties(maps.resolve("scene-source.properties"));
-        manifest.setProperty("owned.haven/portals.properties",manifest.getProperty("owned.haven/portals.properties")
-            +","+HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(earlier)));
-        try(var out=Files.newOutputStream(maps.resolve("scene-source.properties"))) {manifest.store(out,"ownership covers an earlier generation");}
-        check(runTool(project,tool,"maps",upgraded.toString())==0
-            &&Arrays.equals(published,Files.readAllBytes(upgradedPortals)),
-            "a pack this source published earlier is upgraded on preparation");
-        byte[] custom=("# owner edit\n"+new String(published,java.nio.charset.StandardCharsets.UTF_8))
-            .getBytes(java.nio.charset.StandardCharsets.UTF_8);
-        Files.write(upgradedPortals,custom);
-        Path descriptor=upgraded.resolve("haven/map.properties");
-        Files.writeString(descriptor,Files.readString(descriptor).replace("instances=1","instances=4"));
-        byte[] customDescriptor=Files.readAllBytes(descriptor);
-        check(runTool(project,tool,"maps",upgraded.toString())==0
-            &&Arrays.equals(custom,Files.readAllBytes(upgradedPortals))
-            &&Arrays.equals(customDescriptor,Files.readAllBytes(descriptor)),
-            "edited packs and descriptors are preserved instead of replaced or refused");
-
-        makeSyntheticPack(maps,"training_yard",905);
-        Path discovered=project.resolve("discovered pack");
-        check(runTool(project,tool,"maps",discovered.toString())==0
-            &&SceneCatalog.load(discovered).scene(905).id()==905,
-            "an added source pack is discovered without a name list to edit");
-
-        Path damaged=home.resolve("corrupt map source project");
-        copyTree(Path.of("content/packs/vanilla/maps"),damaged.resolve("content/packs/vanilla/maps"));
-        Files.write(damaged.resolve("content/packs/vanilla/maps/arcade/scene.dat"),new byte[]{1,2,3});
-        Path damagedTool=damaged.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),damagedTool);
-        Path damagedOutput=damaged.resolve("output maps");
-        check(runTool(damaged,damagedTool,"maps",damagedOutput.toString())!=0&&!Files.exists(damagedOutput),
-            "damaged source is rejected before creating output");
-
-        Path tampered=home.resolve("tampered map source project");
-        copyTree(Path.of("content/packs/vanilla/maps"),tampered.resolve("content/packs/vanilla/maps"));
-        Files.writeString(tampered.resolve("content/packs/vanilla/maps/laboratory/portals.properties"),
-            Files.readString(tampered.resolve("content/packs/vanilla/maps/laboratory/portals.properties"))+"# stray edit\n");
-        Path tamperedTool=tampered.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),tamperedTool);
-        Path tamperedOutput=tampered.resolve("output maps");
-        check(runTool(tampered,tamperedTool,"maps",tamperedOutput.toString())!=0&&!Files.exists(tamperedOutput),
-            "a source pack that no longer matches its checksum manifest is rejected before creating output");
-
-        Path missingPack=home.resolve("missing map source project");
-        copyTree(Path.of("content/packs/vanilla/maps"),missingPack.resolve("content/packs/vanilla/maps"));
-        deleteTree(missingPack.resolve("content/packs/vanilla/maps/hall_of_heroes"));
-        Path missingTool=missingPack.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),missingTool);
-        Path missingOutput=missingPack.resolve("output maps");
-        check(runTool(missingPack,missingTool,"maps",missingOutput.toString())!=0&&!Files.exists(missingOutput),
-            "source missing a pinned scene pack is rejected before creating output");
-
-        Path linked=home.resolve("symlinked map source project");
-        copyTree(Path.of("content/packs/vanilla/maps"),linked.resolve("content/packs/vanilla/maps"));
-        boolean sourceSymlink=false;
-        try {Files.createSymbolicLink(linked.resolve("content/packs/vanilla/maps/source-link"),linked.resolve("content/packs/vanilla/maps/haven/map.properties"));sourceSymlink=true;}
-        catch(UnsupportedOperationException|java.io.IOException unavailable) {
-            System.out.println("SKIP: source symlink test (symlinks unavailable)");
-        }
-        if(sourceSymlink) {
-            Path linkedTool=linked.resolve("BuildTools.java");Files.copy(Path.of("scripts/BuildTools.java"),linkedTool);
-            Path linkedOutput=linked.resolve("output maps");
-            check(runTool(linked,linkedTool,"maps",linkedOutput.toString())!=0&&!Files.exists(linkedOutput),
-                "source symlink is rejected before creating output");
-        }
-    }
-    private static void copyTree(Path source,Path target)throws Exception {
-        try(var paths=Files.walk(source)) {
-            for(Path path:paths.toList()) {
-                Path destination=target.resolve(source.relativize(path));
-                if(Files.isDirectory(path))Files.createDirectories(destination);
-                else {Files.createDirectories(destination.getParent());Files.copy(path,destination);}
-            }
-        }
-    }
-    private static void makeSyntheticPack(Path maps,String name,int sceneId)throws Exception {
-        Path pack=maps.resolve(name);
-        copyTree(maps.resolve("bazaar"),pack);
-        Path descriptor=pack.resolve("map.properties");
-        Files.writeString(descriptor,Files.readString(descriptor).replace("scene-id=2", "scene-id="+sceneId));
-        Properties portals=new Properties();
-        portals.setProperty("format","2");
-        portals.setProperty("layout-sha256",properties(descriptor).getProperty("scene-sha256"));
-        portals.setProperty("entrances","");portals.setProperty("triggers","");
-        try(var out=Files.newOutputStream(pack.resolve("portals.properties"))) {portals.store(out,"Synthetic isolated test pack");}
-    }
-    private static Properties properties(Path file)throws Exception {
-        Properties values=new Properties();try(var in=Files.newInputStream(file)){values.load(in);}return values;
-    }
-    private static void deleteTree(Path root)throws Exception {
-        try(var paths=Files.walk(root)) {for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}
-    }
-    private static int runTool(Path project,Path tool,String command,String output)throws Exception {
-        Process process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),
-            tool.toString(),command,output).directory(project.toFile()).redirectErrorStream(true)
-            .redirectOutput(project.resolve("tool-output.txt").toFile()).start();
-        try {check(process.waitFor(30,TimeUnit.SECONDS),"map preparation finishes");return process.exitValue();}
-        finally {process.destroyForcibly();process.waitFor();}
-    }
-    private static int runMaps(Path project, Path tool, String output) throws Exception {
-        Process process = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin/java").toString(),
-            tool.toString(), "maps", output).directory(project.toFile()).redirectErrorStream(true)
-            .redirectOutput(project.resolve("tool-output.txt").toFile()).start();
-        try {
-            check(process.waitFor(30, TimeUnit.SECONDS), "offline map preparation finishes");
-            return process.exitValue();
-        } finally { process.destroyForcibly(); process.waitFor(); }
+    private static void run(String command,Path output,boolean success)throws Exception {
+        var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"scripts/BuildTools.java",command,output.toString()).redirectErrorStream(true).start();
+        String result=new String(process.getInputStream().readAllBytes());check(process.waitFor()==(success?0:1),"preparation outcome: "+result);
     }
 }

@@ -1,0 +1,4 @@
+English NPC dialogue resolved from the read-only stock code/projectx-config.jar.
+Retained npc keys were resolved through conversation.properties.
+No unresolved shipped default dialogue lines.
+Arbitrary literal ConversationDialog text is unsupported; see docs/content.md.

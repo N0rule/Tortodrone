@@ -12,7 +12,7 @@ public final class SceneWeaponsTest {
         authoredHeavyAttacks();
         reportedWeaponRegressions();
         chargeTargetDamage();
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).entry();
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).entry();
         var model=new StarterCatalog.Model("Fixture",Map.of());
         var effect=new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,model,null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
         var bullet=new FireCatalog.ActorSpec("BULLET",model,200,2,.1f,0,0,0,1,null);
@@ -93,7 +93,7 @@ public final class SceneWeaponsTest {
         System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
     }
     private static void reportedWeaponRegressions()throws Exception {
-        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
         var model=new StarterCatalog.Model("Fixture",Map.of());var hits=new ArrayList<StarterCatalog.Model>();
         var scene=new SceneWeapons(openTerrain());scene.catalog(catalog);
         scene.targets(new SceneWeapons.Targets(){public boolean contact(float x,float y,int owner){return x>.3f;}public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){hits.add(region);}});
@@ -151,8 +151,8 @@ public final class SceneWeaponsTest {
         }finally{Files.delete(file);}
     }
     private static void chargeTargetDamage()throws Exception {
-        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
-        var timings=WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv"));
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        var timings=WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv"));
         var terrain=openTerrain();var model=new StarterCatalog.Model("Fixture",Map.of());
         var circle=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f));
         var fields=new HashMap<>(Map.of("native-type","Monster","config","Monster/Fixture","health","10000","radius",".4","damage-mask","2","collision-flags","8"));
@@ -177,7 +177,7 @@ public final class SceneWeaponsTest {
         check(target.actors().getFirst().entity().health()<1,"Driver impact reduces real target HP");
     }
     private static void authoredHeavyAttacks()throws Exception {
-        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
         var charge=catalog.find("Weapon/Sword/Combuster",290);
         var carrier=charge.fireRefs().getLast().action().actor();
         var trail=carrier.timers().getFirst().action().actor();

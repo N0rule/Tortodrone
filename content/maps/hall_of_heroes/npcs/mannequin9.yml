@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Well met, {0}.  I'm Jorin, a knight who has mastered the standard issue Spiral Knight gear.  The recipes I have for you produce very reliable weapons and gear. \n\nJust because your weapons don't output fancy special damage types or your armor defends from status conditions doesn't mean you can't shake it in the Clockworks.  The gear I specialize in is good for just about any situation.  It will keep you alive and packs a punch on almost any monster that comes your way."
+  initial: part_1a
+id: mannequin9

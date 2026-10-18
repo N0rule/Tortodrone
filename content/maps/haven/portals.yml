@@ -1,0 +1,39 @@
+# Coordinate-only default_spawn is not a native travel entrance.
+entrances:
+  from_advanced_training:
+    id: 3930
+    facing: 0
+    x: -23
+    y: 5.75
+  from_arcade_central:
+    id: 3573
+    facing: 6.830186320235756e-06
+    x: 1.019044
+    y: 32.01587
+  from_bazaar_east:
+    id: 3874
+    facing: 89.99998201391065
+    x: -30.5
+    y: 0.5
+  from_garrison_west:
+    id: 6558
+    facing: -90.00002982523485
+    x: 31.5
+    y: -5.500003
+  default_spawn:
+    facing: -179.99997768819966
+    y: -30.5
+    x: 1
+portals:
+  '6071':
+    destination: bazaar
+    entrance: from_town_square_west
+  '6514':
+    destination: garrison
+    entrance: from_town_square_east
+  '3540':
+    destination: arcade
+    entrance: from_town_square_north
+  '3922':
+    destination: advanced_training
+    entrance: level_start

@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Hello {0}, I'm Remi, a knight who specializes in bombs and explosives.  The recipes I have for you are pretty straightforward- producing weapons and gear that focus on blowing up your enemies to smithereens! \n\nUsing bombs isn't a fire and forget kind of affair though.  Bombs require an understanding of timing, both before and after you drop one, in order to get the most bang for your buck.  The gear I specialize in will make you a knight that your squad sends in to take down many enemies at once.  Bombs are great for clearing out a mob of beasties in one swift KA-BOOM!"
+  initial: part_1a
+id: mannequin0

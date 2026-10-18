@@ -84,12 +84,12 @@ public final class TownCompatibility {
         System.out.println("PASS: stock reader accepts recipes, sprites, harnesses, stations, auction listings and attachment mail");
     }
     private static void serviceMessages()throws Exception {
-        var codec=new SessionCodec(ItemCatalog.load(java.nio.file.Path.of("content/packs/vanilla/items/catalog.json")));var bytes=new ByteArrayOutputStream();
+        var codec=new SessionCodec(org.tortodrone.resources.ContentManager.load(java.nio.file.Path.of(".")).items());var bytes=new ByteArrayOutputStream();
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"fixture","Fixture"));
         append(bytes,codec.controllerAction(1002,"forge",null));
         append(bytes,codec.controllerAction(1002,"show_arsenal_station",null));
-        var registry=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.load(java.nio.file.Path.of("content/packs/vanilla/maps")));
+        var registry=new org.tortodrone.world.SceneRegistry(org.tortodrone.world.SceneCatalog.load(java.nio.file.Path.of("content/maps")));
         append(bytes,codec.scene((short)3,registry.entry(),List.of()));
         append(bytes,codec.equipPolicy(1002,true));
         var giftContent=new WorldProfile.Item(0,WorldProfile.Slot.SWORD,"Weapon/Sword/Calibur",null,0,null,false,true,false,1,false,2,.4f,List.of(new StarterCatalog.Model("Weapon/Damage 1",Map.of())));

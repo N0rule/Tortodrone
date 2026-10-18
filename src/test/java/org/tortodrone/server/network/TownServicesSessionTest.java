@@ -18,14 +18,14 @@ public final class TownServicesSessionTest {
         Path home=Files.createTempDirectory("tortodrone-town-services-");
         try{
             var db=new Database(home,true);int account=db.create("Alice",new Passwords.Protection(new byte[16],new byte[32]),false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Service-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             String recipe="Recipe/Armor/Padded Armor Recipe";
             db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),2,-1,-1);
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);
-            var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));
-            scenes.town(TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
+            var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
+            scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             var socket=new Socket(){public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}};
             try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(items),1001,1,m->{},scenes)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();

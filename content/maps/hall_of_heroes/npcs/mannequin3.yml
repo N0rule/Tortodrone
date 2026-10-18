@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Greetings {0}, I'm Echo, a knight who utilizes gear fit for a squad striker.  The recipes I have for you produce weapons and gear that focus on rapid, close-quarters combat. \n\nThe arsenal of a striker focuses on speed.  You want to get in close with your enemy, hit them hard and get out.  The gear I specialize in will make you a knight that leaps into battle ahead of your squad, striking first before they can even fire off a shot."
+  initial: part_1a
+id: mannequin3

@@ -21,6 +21,7 @@ tasks.withType<JavaCompile>().configureEach {
 val launcher25 = javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(25)) }
 
 dependencies {
+    implementation("org.yaml:snakeyaml:2.5")
     // JLine's aggregate classifier already contains its providers/native libraries.
     implementation("org.jline:jline:4.4.7:jdk11") { isTransitive = false }
     implementation("com.formdev:flatlaf:3.7.2")
@@ -68,17 +69,20 @@ val buildTools = sourceSets.create("buildTools") {
         "compat/CheckClientWorld.java", "compat/CheckCombatRendering.java")
     resources.setSrcDirs(emptyList<String>())
 }
+buildTools.compileClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
+buildTools.runtimeClasspath += sourceSets.main.get().output + configurations.runtimeClasspath.get()
+
 fun preparation(name: String, command: String) = tasks.register<JavaExec>(name) {
     group = "build setup"
-    description = "Prepare checked-in versioned content packs; preserve custom files."
+    description = "Prepare unified content and configuration; preserve administrator edits."
     classpath = buildTools.runtimeClasspath
     javaLauncher.set(launcher25)
     mainClass.set("BuildTools")
     workingDir = projectDir
     val output = if (command == "maps") providers.gradleProperty("mapsOutput").orElse(
-        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content/packs/vanilla/maps").asFile.absolutePath)
+        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content/maps").asFile.absolutePath)
     else providers.gradleProperty("contentOutput").orElse(
-        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content/packs/vanilla").asFile.absolutePath)
+        providers.gradleProperty("defaultsOutput")).getOrElse(publicOutput.dir("content").asFile.absolutePath)
     args(command, output)
     // Always recheck source integrity and fill missing files; never claim ownership of defaults.
 }
@@ -117,7 +121,7 @@ val prepareHaven = tasks.register<Exec>("prepareHaven") {
 }
 val buildServer = tasks.register("buildServer") {
     group = "build"
-    description = "Build the executable server JAR and prepare versioned content."
+    description = "Build the executable server JAR and prepare unified content."
     dependsOn(serverJar, prepareContent)
 }
 val buildAdmin = tasks.register("buildAdmin") {

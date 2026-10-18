@@ -1,0 +1,14 @@
+dialogue:
+  nodes:
+    part 1:
+      responses:
+      - text: What did you find?
+        next: part 2
+      text: Spiral HQ has us investigating reports that pieces of fallen tortodrones and clusters of dark matter are appearing all over the Clockworks. Kora believes the Fiends are up to something. There is evidence they played a hand in the disappearance of the tortodrones.
+    part 2:
+      responses:
+      - text: Thanks for the tip! I'll track down those glyphs.
+        close: true
+      text: Tucked away inside a mysterious garden we found a strange portal that HQ is calling a Grim Gate. From what we were able to decode you will need a key of sorts to open it. Spiral HQ thinks the glyphs we spotted the Fiends carrying might have something to do with opening the gate.
+  initial: part 1
+id: scene.1.placed.7898

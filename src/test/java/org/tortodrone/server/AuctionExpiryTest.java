@@ -13,7 +13,7 @@ public final class AuctionExpiryTest {
     public static void main(String[] args)throws Exception{
         Path home=Files.createTempDirectory("tortodrone-idle-auctions-");
         try(var log=new ServerLog(home.resolve("logs"))){
-            var db=new Database(home,true);var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
+            var db=new Database(home,true);var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var house=new AuctionHouse(db,items,TownCatalog.empty());var listing=house.createFeatured("Weapon/Sword/Calibur",1,100,0,0,1);
             db.write(c->{try(var s=c.prepareStatement("UPDATE town_auctions SET expires=0 WHERE id=?")){s.setLong(1,listing.id());s.executeUpdate();}return null;});
             var committed=new CountDownLatch(1);db.observe((operation,millis,failed)->{if(operation.equals("write")&&!failed)committed.countDown();});

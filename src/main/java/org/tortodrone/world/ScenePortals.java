@@ -61,6 +61,9 @@ public record ScenePortals(Map<String,Entrance> entrances,List<Trigger> triggers
         if(!Files.isRegularFile(file)||!file.toRealPath().getParent().equals(folder.toRealPath())||Files.size(file)>16384)
             throw new IOException("Invalid portal metadata file");
         var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}
+        return load(p,layoutDigest,terrain);
+    }
+    public static ScenePortals load(Properties p,String layoutDigest,CollisionMap terrain)throws IOException {
         String format=required(p,"format");
         if(!(format.equals("1")||format.equals("2"))||!layoutDigest.equalsIgnoreCase(required(p,"layout-sha256")))
             throw new IOException("Portal metadata does not match its scene layout");

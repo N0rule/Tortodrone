@@ -1,141 +1,86 @@
 package org.tortodrone.resources;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-import org.tortodrone.character.ItemCatalog;
 import org.tortodrone.world.*;
 
-/** Offline startup resolution. No downloads, data writes, implicit custom packs or partial publication. */
+/** Atomic startup compilation. No pack selection, runtime downloads or content writes. */
 public final class ContentManager {
-    private static final Set<String> CATALOGS=Set.of("entry","items","weapons","equipment","fires");
-    private record Manifest(ContentRegistry.Pack pack,Map<String,ContentRegistry.Resource> resources,
-            Map<String,String> requires,Map<String,String> overrides) { }
     private ContentManager() { }
-    public static void main(String[] args) throws IOException {
-        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp tortodrone.jar org.tortodrone.resources.ContentManager /deployment");
-        var content=load(Path.of(args[0]));
-        System.out.println("PASS: content packs "+content.packs()+"; "+content.scenes().scenes().size()+" scenes, "+content.items().entries().size()+" items, "+content.weapons().weapons().size()+" weapons, "+content.fires().entries().size()+" fire graphs");
+    public static void main(String[] args)throws IOException {
+        if(args.length!=1)throw new IllegalArgumentException("Usage: ContentManager /deployment");
+        var c=load(Path.of(args[0]));System.out.println("PASS: unified content; "+c.scenes().scenes().size()+" maps, "+c.items().entries().size()+" items, "+c.weapons().weapons().size()+" weapons");
     }
-    public static ContentRegistry load(Path deployment) throws IOException {
-        return load(deployment, org.tortodrone.config.ServerSettings.read(
-            org.tortodrone.config.ServerSettings.defaultPath(deployment)));
+    public static ContentRegistry load(Path deployment)throws IOException {
+        return load(deployment,org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)));
     }
-    public static ContentRegistry load(Path deployment,org.tortodrone.config.ServerSettings settings) throws IOException {
-        deployment=deployment.toAbsolutePath().normalize();ContentFiles.safe(deployment);
-        var declarations=new LinkedHashMap<Path,String>();
-        String legacy=settings.legacyContent();
-        if(!Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        List<String> enabled=names(settings.contentPacks());
-        if(enabled.isEmpty()||enabled.size()>32)throw new IOException("Enable between 1 and 32 content packs");
-        var warnings=new ArrayList<String>();
-        Map<String,ContentRegistry.Resource> resources=new TreeMap<>();
-        var packs=new ArrayList<ContentRegistry.Pack>();
-        if(legacy.equals("auto")&&LegacyContent.present(deployment)) {
-            if(!enabled.equals(List.of("vanilla")))throw new IOException("Legacy resources cannot be mixed with versioned custom packs; migrate them or set legacy-content=disabled");
-            resources.putAll(LegacyContent.resolve(deployment,warnings));
-            packs.add(new ContentRegistry.Pack("legacy","unversioned"));
-        } else {
-            var manifests=new LinkedHashMap<String,Manifest>();
-            for(String id:enabled) {
-                Path root=deployment.resolve(id.equals("vanilla")?"content/packs/vanilla":"content/custom/packs/"+id);
-                declarations.put(root.resolve("pack.properties"),ContentFiles.digest(root.resolve("pack.properties")));
-                Manifest manifest=manifest(root);
-                if(!manifest.pack().id().equals(id))throw new IOException("Content pack folder/ID mismatch: "+id);
-                manifests.put(id,manifest);
-            }
-            var ordered=new ArrayList<Manifest>();var visiting=new HashSet<String>();var visited=new HashSet<String>();
-            for(String id:enabled)order(id,manifests,visiting,visited,ordered);
-            for(Manifest m:ordered) {
-                for(var entry:m.resources().entrySet()) {
-                    String key=entry.getKey();var previous=resources.get(key);String expected=m.overrides().get(key);
-                    if(previous!=null) {
-                        if(!previous.pack().equals(expected)||!m.requires().containsKey(previous.pack()))
-                            throw new IOException("Undeclared content override: "+m.pack().id()+" / "+key+" (owned by "+previous.pack()+")");
-                    } else if(expected!=null)throw new IOException("Override target is missing: "+key);
-                    resources.put(key,entry.getValue());
-                }
-                packs.add(m.pack());
-            }
-        }
+    public static ContentRegistry load(Path deployment,org.tortodrone.config.ServerSettings settings)throws IOException {
+        Path root=deployment.toAbsolutePath().normalize(),content=root.resolve("content");ContentFiles.safe(content);
+        if(!Files.isDirectory(content.resolve("maps")))throw new IOException("Unified content/maps is missing. Use ContentMigration /old-deployment /new-candidate; legacy packs are migration-only.");
+        if(!settings.contentPacks().equals("vanilla"))throw new IOException("content-packs selection requires explicit ContentMigration; unified startup never ignores custom selection");
+        if(Files.exists(content.resolve("packs"))||Files.exists(content.resolve("custom/packs"))||LegacyContent.present(root))throw new IOException("Mixed unified and legacy content layouts; prepare and review a separate ContentMigration candidate");
+        // Fingerprint every input automatically, then recheck after all parsers/validators complete.
+        var before=inputs(root);var warnings=new ArrayList<String>();
         try {
-            var result=validate(packs,resources,warnings);
-            for(var declaration:declarations.entrySet())if(!ContentFiles.digest(declaration.getKey()).equals(declaration.getValue()))
-                throw new IOException("Content declaration changed during loading: "+declaration.getKey());
-            return result;
+            int dodge=0;Path combat=root.resolve("config/combat.yml");
+            if(Files.exists(combat)){var c=Yaml.read(combat);Yaml.fields(c,combat.toString(),"dodgeCooldownMs");dodge=Yaml.integer(c.get("dodgeCooldownMs"),"dodgeCooldownMs");}
+            var definitions=ItemYaml.read(content.resolve("items"),dodge);
+            var fires=FireCatalog.load(content.resolve("_internal/fires.json"));
+            var pet=FireCatalog.load(content.resolve("_internal/pet-fires.json"));
+            var townData=TownYaml.data(content.resolve("town"));TownYaml.references(townData,definitions.items());
+            var town=org.tortodrone.town.TownCatalog.fromData(townData);
+            var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town);
+            var controls=new HashSet<String>();
+            for(var weapon:definitions.weapons().weapons()){requireItem(definitions.items(),weapon.config());controls.add(weapon.config().toLowerCase(Locale.ROOT));}
+            for(var shield:definitions.weapons().shields()){requireItem(definitions.items(),shield.config());controls.add(shield.config().toLowerCase(Locale.ROOT));}
+            for(var item:definitions.equipment().entries())requireItem(definitions.items(),item.config());
+            for(var fire:fires.entries())if(!controls.contains(fire.weaponConfig().toLowerCase(Locale.ROOT)))throw new IOException("Fire graph has no weapon/shield controls: "+fire.weaponConfig());
+            if(!before.equals(inputs(root)))throw new IOException("Content changed during startup loading; restart with stable input files");
+            return new ContentRegistry(List.of(),Map.of(),catalog,definitions.items(),definitions.weapons(),definitions.equipment(),fires,warnings,town,pet);
+        }catch(IllegalArgumentException invalid){throw new IOException("Invalid unified content: "+invalid.getMessage(),invalid);}
+    }
+    /** Map-only preparation for import/native compatibility tools; runtime uses the full snapshot. */
+    public static SceneCatalog loadMaps(Path maps,String start,org.tortodrone.town.TownCatalog town)throws IOException {
+        try {
+            var folders=MapYaml.folders(maps);
+            Path startFolder=maps.resolve(start);Integer entry=folders.entrySet().stream().filter(e->e.getValue().equals(startFolder)).map(Map.Entry::getKey).findFirst().orElseThrow(()->new IOException("startup-map is missing: "+start));
+            var scenes=new TreeMap<Integer,SceneCatalog.MapScene>();
+            for(var folder:folders.entrySet()) {
+                var prepared=MapYaml.prepare(folder.getValue(),maps.getParent().resolve("shared"));var p=prepared.descriptor();Path nativeDir=prepared.nativeDirectory();
+                byte[] layout=Files.readAllBytes(nativeDir.resolve("scene.dat"));
+                if(layout.length<16||layout.length>900_000||layout[0]!=(byte)0xfa||layout[1]!=(byte)0xce||layout[2]!=(byte)0xaf||layout[3]!=0x0e)throw new IOException(nativeDir+": invalid native scene header/size");
+                var collision=CollisionMap.read(nativeDir.resolve("walkability.gz"));
+                float x=Float.parseFloat(p.getProperty("spawn-x")),y=Float.parseFloat(p.getProperty("spawn-y"));if(!collision.walkable(x,y))throw new IOException(folder.getValue()+": defaultSpawn is not walkable");
+                int instances=Integer.parseInt(p.getProperty("instances"));if(instances<1||instances>16)throw new IOException("instances must be from 1 to 16");
+                String digest=p.getProperty("scene-sha256");
+                var actors=SceneContent.load(prepared.content(),digest);
+                for(var cycle:actors.cycles().entrySet()) {
+                    var spec=cycle.getValue();for(String field:List.of("up","down","warn","offset")){float v=spec.number(field,0);if(!Float.isFinite(v)||v<0||v>600_000)throw new IOException("Invalid trap cycle "+cycle.getKey()+"."+field);}
+                    if(!actors.cycles().containsKey(spec.text("inverse",cycle.getKey())))throw new IOException("Missing inverse trap cycle: "+cycle.getKey());
+                }
+                for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
+                for(var conversation:actors.conversations().values())if(actors.entries().stream().filter(a->a.spec().text("dialogue",a.spec().text("config","")).equals(conversation.actor())).count()!=1)throw new IOException("Missing or ambiguous NPC actor binding: "+conversation.actor());
+                for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
+                scenes.put(folder.getKey(),new SceneCatalog.MapScene(folder.getKey(),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,ScenePortals.load(prepared.portals(),digest,collision),actors,SceneCollision.load(nativeDir,digest)));
+            }
+            return SceneCatalog.of(scenes,entry);
+        }catch(IllegalArgumentException invalid){throw new IOException(maps+": "+invalid.getMessage(),invalid);}
+    }
+    private static void requireItem(org.tortodrone.character.ItemCatalog items,String config)throws IOException{if(items.find(config)==null)throw new IOException("Combat references missing item: "+config);}
+    static Map<String,String> inputs(Path root)throws IOException {
+        var result=new TreeMap<String,String>();long size=0;int count=0;
+        for(String directory:List.of("content","config")) {
+            Path base=root.resolve(directory);ContentFiles.safe(base);if(!Files.exists(base))continue;
+            try(var paths=Files.walk(base,16)) {
+                for(var it=paths.iterator();it.hasNext();) {
+                    Path file=it.next();ContentFiles.safe(file);if(++count>8192)throw new IOException("Content exceeds entry limit");
+                    if(Files.isDirectory(file))continue;ContentFiles.regular(file);
+                    if((size+=Files.size(file))>256L*1024*1024)throw new IOException("Content exceeds 256 MiB");
+                    result.put(root.relativize(file).toString(),ContentFiles.digest(file));
+                }
+            }
         }
-        catch(IllegalArgumentException invalid){throw new IOException("Invalid resolved content: "+invalid.getMessage(),invalid);}
-    }
-    private static Manifest manifest(Path root) throws IOException {
-        var p=ContentFiles.properties(root.resolve("pack.properties"));
-        if(!"1".equals(p.getProperty("format"))||!"1".equals(p.getProperty("engine-format")))throw new IOException("Unsupported content pack/engine format: "+root);
-        String id=p.getProperty("id","");name(id);
-        String version=p.getProperty("version","");version(version);
-        var requires=new TreeMap<String,String>();var overrides=new TreeMap<String,String>();
-        var resources=new TreeMap<String,ContentRegistry.Resource>();
-        for(String property:p.stringPropertyNames()) {
-            if(Set.of("format","engine-format","id","version").contains(property))continue;
-            String value=p.getProperty(property).trim();
-            if(property.startsWith("require.")) {String dependency=property.substring(8);name(dependency);version(value);if(dependency.equals(id))throw new IOException("Self dependency: "+id);requires.put(dependency,value);}
-            else if(property.startsWith("override.")) {String key=property.substring(9);resourceKey(key);name(value);overrides.put(key,value);}
-            else if(property.startsWith("resource.")) {
-                String key=property.substring(9);resourceKey(key);Path path=ContentFiles.relative(root,value);
-                String expected=p.getProperty("sha256."+key,"");
-                if(!expected.matches("[0-9a-f]{64}")||!ContentFiles.digest(path).equals(expected))throw new IOException("Content checksum mismatch: "+id+" / "+key);
-                if(key.startsWith("scene.")!=Files.isDirectory(path,LinkOption.NOFOLLOW_LINKS))throw new IOException("Invalid content resource type: "+key);
-                resources.put(key,new ContentRegistry.Resource(id,path,expected));
-            } else if(!property.startsWith("sha256."))throw new IOException("Unknown pack property: "+property);
-        }
-        if(resources.isEmpty()||resources.size()>512)throw new IOException("Invalid content resource count: "+id);
-        for(String key:overrides.keySet())if(!resources.containsKey(key))throw new IOException("Override has no resource: "+key);
-        for(String key:p.stringPropertyNames())if(key.startsWith("sha256.")&&!resources.containsKey(key.substring(7)))throw new IOException("Checksum has no resource: "+key);
-        return new Manifest(new ContentRegistry.Pack(id,version),resources,requires,overrides);
-    }
-    private static void order(String id,Map<String,Manifest> all,Set<String> visiting,Set<String> visited,List<Manifest> ordered) throws IOException {
-        if(visited.contains(id))return;
-        if(!visiting.add(id))throw new IOException("Content dependency cycle: "+id);
-        Manifest m=all.get(id);
-        for(var requirement:m.requires().entrySet()) {
-            Manifest dependency=all.get(requirement.getKey());
-            if(dependency==null||!dependency.pack().version().equals(requirement.getValue()))throw new IOException("Missing or incompatible content dependency: "+id+" requires "+requirement.getKey()+"@"+requirement.getValue());
-            order(requirement.getKey(),all,visiting,visited,ordered);
-        }
-        visiting.remove(id);visited.add(id);ordered.add(m);
-    }
-    static ContentRegistry validate(List<ContentRegistry.Pack> packs,Map<String,ContentRegistry.Resource> resources,List<String> warnings) throws IOException {
-        for(String key:CATALOGS)if(!resources.containsKey(key))throw new IOException("Required content resource is missing: "+key);
-        var folders=new TreeMap<Integer,Path>();
-        for(var resource:resources.entrySet())if(resource.getKey().startsWith("scene."))folders.put(sceneId(resource.getKey()),resource.getValue().path());
-        var entry=ContentFiles.properties(resources.get("entry").path());
-        int entryId;
-        try {entryId=Integer.parseInt(entry.getProperty("entry-scene",""));}catch(NumberFormatException invalid){throw new IOException("Invalid entry-scene",invalid);}
-        var scenes=SceneCatalog.load(folders,entryId);
-        var items=ItemCatalog.load(resources.get("items").path());
-        var weapons=WeaponCatalog.load(resources.get("weapons").path());
-        var equipment=EquipmentCatalog.load(resources.get("equipment").path());
-        var fires=FireCatalog.load(resources.get("fires").path());
-        if(resources.containsKey("pet-fires"))FireCatalog.load(resources.get("pet-fires").path());
-        if(resources.containsKey("town"))org.tortodrone.town.TownCatalog.load(resources.get("town").path());
-        for(var weapon:weapons.weapons())requireItem(items,weapon.config());
-        for(var shield:weapons.shields())requireItem(items,shield.config());
-        for(var item:equipment.entries())requireItem(items,item.config());
-        var controls=new HashSet<String>();weapons.weapons().forEach(w->controls.add(w.config().toLowerCase(Locale.ROOT)));weapons.shields().forEach(s->controls.add(s.config().toLowerCase(Locale.ROOT)));
-        for(var fire:fires.entries())if(!controls.contains(fire.weaponConfig().toLowerCase(Locale.ROOT)))throw new IOException("Fire graph has no weapon/shield controls: "+fire.weaponConfig());
-        // Recheck fingerprints after parsing, so changing inputs cannot publish a mixed startup snapshot.
-        for(var resource:resources.values())if(!ContentFiles.digest(resource.path()).equals(resource.sha256()))throw new IOException("Content changed during loading: "+resource.path());
-        return new ContentRegistry(packs,resources,scenes,items,weapons,equipment,fires,warnings);
-    }
-    private static void requireItem(ItemCatalog items,String config) throws IOException {if(items.find(config)==null)throw new IOException("Combat reference has no item definition: "+config);}
-    static int sceneId(String key) throws IOException {
-        try {int id=Integer.parseInt(key.substring(6));if(id>0&&key.equals("scene."+id))return id;}catch(NumberFormatException ignored){ }
-        throw new IOException("Invalid content scene ID: "+key);
-    }
-    private static void resourceKey(String key) throws IOException {if(key.startsWith("scene."))sceneId(key);else if(!CATALOGS.contains(key)&&!key.equals("town")&&!key.equals("pet-fires"))throw new IOException("Unsupported content resource: "+key);}
-    private static void name(String name) throws IOException {if(!name.matches("[a-z][a-z0-9-]{0,63}"))throw new IOException("Invalid content pack ID: "+name);}
-    private static void version(String version) throws IOException {if(!version.matches("[0-9]{1,6}\\.[0-9]{1,6}\\.[0-9]{1,6}(?:-[a-zA-Z0-9.-]{1,64})?"))throw new IOException("Invalid content pack version: "+version);}
-    private static List<String> names(String text) throws IOException {
-        var result=new ArrayList<String>();
-        for(String name:text.split(",",-1)){name=name.trim();name(name);if(result.contains(name))throw new IOException("Duplicate enabled pack: "+name);result.add(name);}
-        return List.copyOf(result);
+        return result;
     }
 }

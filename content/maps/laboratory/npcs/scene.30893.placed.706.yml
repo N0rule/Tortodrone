@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: Recon teams have recovered some strange and remarkable things from within the Clockworks.
+  initial: part 1a
+id: scene.30893.placed.706

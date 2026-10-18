@@ -14,7 +14,7 @@ public final class GearProgressionTest {
         Path home=Files.createTempDirectory("tortodrone-gear-");
         try{
             var db=new Database(home,true);var password=new Passwords.Protection(new byte[16],new byte[32]);int staff=db.create("Master",password,true),other=db.create("Other",password,false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             new CharacterStore(db,staff,"Master",items).create(knight("Master-Knight"));new CharacterStore(db,other,"Other",items).create(knight("Other-Knight"));
             var town=new TownStore(db,items,rules);var profile=db.worldProfile(staff,1,1);var sword=profile.items().stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).findFirst().orElseThrow();
             refused(()->town.adminGear(other,1,1,41,List.of(6,1f)));refused(()->town.adminGear(staff,1,999,41,List.of(6,1f)));

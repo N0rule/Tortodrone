@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Howdy {0}, the name's Daxen. I'm a knight who specializes in gunslinging.  The recipes I have for you produce weapons and gear that focus on ranged combat... you know, shootin' stuff. \n\nHandguns allow you to hit your enemies from a safe distance, but don't offer you many options once they close in on ya.  You've got to think and shoot fast to be a good gunslinger.  The gear I specialize in will make you a dead shot, not a dead knight."
+  initial: part_1a
+id: mannequin4

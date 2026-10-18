@@ -1,0 +1,1410 @@
+sprites:
+- config: Drakon
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Divine
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Grey
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Gun Puppy
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Piggy
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Shadow
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Drakon, Spiraltail
+  preferredFood:
+  - Food/Power Mote
+  - Food/Power Dust
+  - Food/Power Stone
+  - Food/Power Orb
+  - Food/Power Star
+  restrictDamageType: PIERCING
+  skills:
+  - attacks:
+    - Sprite/Drakon/Firebolt
+    - Sprite/Drakon/Firebolt, Ultimate A
+    - Sprite/Drakon/Firebolt, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 20
+    - 18
+    - 16
+    - 14
+  - attacks:
+    - Sprite/Drakon/Flame Barrier
+    - Sprite/Drakon/Flame Barrier, Ultimate A
+    - Sprite/Drakon/Flame Barrier, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 45
+    - 42
+    - 39
+    - 36
+  - attacks:
+    - Sprite/Drakon/Firestorm
+    - Sprite/Drakon/Firestorm, Ultimate A
+    - Sprite/Drakon/Firestorm, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Freeze
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Grey
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Punkin
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Snarblepup
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Spiralhorn
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Maskeraith, Volcanic
+  preferredFood:
+  - Food/Shadow Mote
+  - Food/Shadow Dust
+  - Food/Shadow Stone
+  - Food/Shadow Orb
+  - Food/Shadow Star
+  restrictDamageType: ELEMENTAL
+  skills:
+  - attacks:
+    - Sprite/Maskeraith/Caustic Quills
+    - Sprite/Maskeraith/Caustic Quills, Ultimate A
+    - Sprite/Maskeraith/Caustic Quills, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Maskeraith/Shadow Cloak
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate A
+    - Sprite/Maskeraith/Shadow Cloak, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Maskeraith/Hexing Haze
+    - Sprite/Maskeraith/Hexing Haze, Ultimate A
+    - Sprite/Maskeraith/Hexing Haze, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx, Black
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx, Grey
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx, Grey (gry)
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx, Love Puppy
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+- config: Seraphynx, Tan
+  preferredFood:
+  - Food/Divine Mote
+  - Food/Divine Dust
+  - Food/Divine Stone
+  - Food/Divine Orb
+  - Food/Divine Star
+  restrictDamageType: SHADOW
+  skills:
+  - attacks:
+    - Sprite/Seraphynx/Ray of Light
+    - Sprite/Seraphynx/Ray of Light, Ultimate A
+    - Sprite/Seraphynx/Ray of Light, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 24
+    - 22
+    - 20
+    - 18
+  - attacks:
+    - Sprite/Seraphynx/Heart Attack
+    - Sprite/Seraphynx/Heart Attack, Ultimate A
+    - Sprite/Seraphynx/Heart Attack, Ultimate B
+    follow: false
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+  - attacks:
+    - Sprite/Seraphynx/Angelic Aura
+    - Sprite/Seraphynx/Angelic Aura, Ultimate A
+    - Sprite/Seraphynx/Angelic Aura, Ultimate B
+    follow: true
+    minimum:
+    - 0
+    - 0
+    - 0
+    - 0
+    recharge:
+    - 60
+    - 55
+    - 50
+    - 45
+perks:
+- name: HEALTH_1
+  previous: ''
+  tier: 0
+  variant: Health +1
+- name: HEALTH_2
+  previous: HEALTH_1
+  tier: 1
+  variant: Health +2
+- name: HEALTH_3
+  previous: HEALTH_2
+  tier: 2
+  variant: Health +3
+- name: HEALTH_4
+  previous: HEALTH_3
+  tier: 3
+  variant: Health +4
+- name: HEALTH_5
+  previous: HEALTH_4
+  tier: 4
+  variant: Health +5
+- name: HEALTH_6
+  previous: HEALTH_5
+  tier: 5
+  variant: Health +6
+- name: DEF_NORMAL_LOW
+  previous: ''
+  tier: 0
+  variant: Def Normal Low
+- name: DEF_NORMAL_MED
+  previous: DEF_NORMAL_LOW
+  tier: 3
+  variant: Def Normal Med
+- name: DEF_NORMAL_HIGH
+  previous: DEF_NORMAL_MED
+  tier: 5
+  variant: Def Normal High
+- name: DEF_ELEMENTAL_LOW
+  previous: ''
+  tier: 1
+  variant: Def Elemental Low
+- name: DEF_ELEMENTAL_MED
+  previous: DEF_ELEMENTAL_LOW
+  tier: 3
+  variant: Def Elemental Med
+- name: DEF_ELEMENTAL_HIGH
+  previous: DEF_ELEMENTAL_MED
+  tier: 5
+  variant: Def Elemental High
+- name: DEF_PIERCING_LOW
+  previous: ''
+  tier: 1
+  variant: Def Piercing Low
+- name: DEF_PIERCING_MED
+  previous: DEF_PIERCING_LOW
+  tier: 3
+  variant: Def Piercing Med
+- name: DEF_PIERCING_HIGH
+  previous: DEF_PIERCING_MED
+  tier: 5
+  variant: Def Piercing High
+- name: DEF_SHADOW_LOW
+  previous: ''
+  tier: 1
+  variant: Def Shadow Low
+- name: DEF_SHADOW_MED
+  previous: DEF_SHADOW_LOW
+  tier: 3
+  variant: Def Shadow Med
+- name: DEF_SHADOW_HIGH
+  previous: DEF_SHADOW_MED
+  tier: 5
+  variant: Def Shadow High
+- name: RES_FIRE_LOW
+  previous: ''
+  tier: 1
+  variant: Res Fire Low
+- name: RES_FIRE_MED
+  previous: RES_FIRE_LOW
+  tier: 2
+  variant: Res Fire Med
+- name: RES_FIRE_HIGH
+  previous: RES_FIRE_MED
+  tier: 4
+  variant: Res Fire High
+- name: RES_FREEZE_LOW
+  previous: ''
+  tier: 1
+  variant: Res Freeze Low
+- name: RES_FREEZE_MED
+  previous: RES_FREEZE_LOW
+  tier: 2
+  variant: Res Freeze Med
+- name: RES_FREEZE_HIGH
+  previous: RES_FREEZE_MED
+  tier: 4
+  variant: Res Freeze High
+- name: RES_SHOCK_LOW
+  previous: ''
+  tier: 1
+  variant: Res Shock Low
+- name: RES_SHOCK_MED
+  previous: RES_SHOCK_LOW
+  tier: 2
+  variant: Res Shock Med
+- name: RES_SHOCK_HIGH
+  previous: RES_SHOCK_MED
+  tier: 4
+  variant: Res Shock High
+- name: RES_POISON_LOW
+  previous: ''
+  tier: 1
+  variant: Res Poison Low
+- name: RES_POISON_MED
+  previous: RES_POISON_LOW
+  tier: 2
+  variant: Res Poison Med
+- name: RES_POISON_HIGH
+  previous: RES_POISON_MED
+  tier: 4
+  variant: Res Poison High
+- name: RES_STUN_LOW
+  previous: ''
+  tier: 1
+  variant: Res Stun Low
+- name: RES_STUN_MED
+  previous: RES_STUN_LOW
+  tier: 2
+  variant: Res Stun Med
+- name: RES_STUN_HIGH
+  previous: RES_STUN_MED
+  tier: 4
+  variant: Res Stun High
+- name: RES_CURSE_LOW
+  previous: ''
+  tier: 2
+  variant: Res Curse Low
+- name: RES_CURSE_MED
+  previous: RES_CURSE_LOW
+  tier: 3
+  variant: Res Curse Med
+- name: RES_CURSE_HIGH
+  previous: RES_CURSE_MED
+  tier: 5
+  variant: Res Curse High
+- name: SWORD_SPEED_LOW
+  previous: ''
+  tier: 3
+  variant: Sword Speed Low
+- name: SWORD_SPEED_MED
+  previous: SWORD_SPEED_LOW
+  tier: 5
+  variant: Sword Speed Med
+- name: SWORD_CHARGE_LOW
+  previous: ''
+  tier: 3
+  variant: Sword Charge Low
+- name: SWORD_CHARGE_MED
+  previous: SWORD_CHARGE_LOW
+  tier: 5
+  variant: Sword Charge Med
+- name: SWORD_DAMAGE_LOW
+  previous: ''
+  tier: 3
+  variant: Sword Damage Low
+- name: SWORD_DAMAGE_MED
+  previous: SWORD_DAMAGE_LOW
+  tier: 5
+  variant: Sword Damage Med
+- name: HANDGUN_SPEED_LOW
+  previous: ''
+  tier: 3
+  variant: Handgun Speed Low
+- name: HANDGUN_SPEED_MED
+  previous: HANDGUN_SPEED_LOW
+  tier: 5
+  variant: Handgun Speed Med
+- name: HANDGUN_CHARGE_LOW
+  previous: ''
+  tier: 3
+  variant: Handgun Charge Low
+- name: HANDGUN_CHARGE_MED
+  previous: HANDGUN_CHARGE_LOW
+  tier: 5
+  variant: Handgun Charge Med
+- name: HANDGUN_DAMAGE_LOW
+  previous: ''
+  tier: 3
+  variant: Handgun Damage Low
+- name: HANDGUN_DAMAGE_MED
+  previous: HANDGUN_DAMAGE_LOW
+  tier: 5
+  variant: Handgun Damage Med
+- name: BOMB_CHARGE_LOW
+  previous: ''
+  tier: 3
+  variant: Bomb Charge Low
+- name: BOMB_CHARGE_MED
+  previous: BOMB_CHARGE_LOW
+  tier: 5
+  variant: Bomb Charge Med
+- name: BOMB_DAMAGE_LOW
+  previous: ''
+  tier: 3
+  variant: Bomb Damage Low
+- name: BOMB_DAMAGE_MED
+  previous: BOMB_DAMAGE_LOW
+  tier: 5
+  variant: Bomb Damage Med
+- name: MOVE_SPEED_LOW
+  previous: ''
+  tier: 3
+  variant: Move Speed Low
+- name: MOVE_SPEED_MED
+  previous: MOVE_SPEED_LOW
+  tier: 5
+  variant: Move Speed Med
+- name: DMG_SLIME_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Slime Low
+- name: DMG_SLIME_MED
+  previous: DMG_SLIME_LOW
+  tier: 2
+  variant: Dmg Slime Med
+- name: DMG_SLIME_HIGH
+  previous: DMG_SLIME_MED
+  tier: 4
+  variant: Dmg Slime High
+- name: DMG_GREMLIN_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Gremlin Low
+- name: DMG_GREMLIN_MED
+  previous: DMG_GREMLIN_LOW
+  tier: 2
+  variant: Dmg Gremlin Med
+- name: DMG_GREMLIN_HIGH
+  previous: DMG_GREMLIN_MED
+  tier: 4
+  variant: Dmg Gremlin High
+- name: DMG_UNDEAD_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Undead Low
+- name: DMG_UNDEAD_MED
+  previous: DMG_UNDEAD_LOW
+  tier: 2
+  variant: Dmg Undead Med
+- name: DMG_UNDEAD_HIGH
+  previous: DMG_UNDEAD_MED
+  tier: 4
+  variant: Dmg Undead High
+- name: DMG_FIEND_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Fiend Low
+- name: DMG_FIEND_MED
+  previous: DMG_FIEND_LOW
+  tier: 2
+  variant: Dmg Fiend Med
+- name: DMG_FIEND_HIGH
+  previous: DMG_FIEND_MED
+  tier: 4
+  variant: Dmg Fiend High
+- name: DMG_BEAST_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Beast Low
+- name: DMG_BEAST_MED
+  previous: DMG_BEAST_LOW
+  tier: 2
+  variant: Dmg Beast Med
+- name: DMG_BEAST_HIGH
+  previous: DMG_BEAST_MED
+  tier: 4
+  variant: Dmg Beast High
+- name: DMG_CONSTRUCT_LOW
+  previous: ''
+  tier: 0
+  variant: Dmg Construct Low
+- name: DMG_CONSTRUCT_MED
+  previous: DMG_CONSTRUCT_LOW
+  tier: 2
+  variant: Dmg Construct Med
+- name: DMG_CONSTRUCT_HIGH
+  previous: DMG_CONSTRUCT_MED
+  tier: 4
+  variant: Dmg Construct High
+harnesses:
+- config: Crystal Harness
+  damageType: ELEMENTAL
+  rechargeModifier: 1
+- config: Crystal Harness Adv
+  damageType: ELEMENTAL
+  rechargeModifier: 0.95
+- config: Crystal Harness Eli
+  damageType: ELEMENTAL
+  rechargeModifier: 0.9
+- config: Dark Harness
+  damageType: SHADOW
+  rechargeModifier: 1
+- config: Dark Harness Adv
+  damageType: SHADOW
+  rechargeModifier: 0.95
+- config: Dark Harness Eli
+  damageType: SHADOW
+  rechargeModifier: 0.9
+- config: Dev/Ultimate Harness
+  damageType: NORMAL
+  rechargeModifier: 0.2
+- config: Golden Harness
+  damageType: PIERCING
+  rechargeModifier: 1
+- config: Golden Harness Adv
+  damageType: PIERCING
+  rechargeModifier: 0.95
+- config: Golden Harness Eli
+  damageType: PIERCING
+  rechargeModifier: 0.9
+- config: Iron Harness
+  damageType: NORMAL
+  rechargeModifier: 1
+- config: Iron Harness Adv
+  damageType: NORMAL
+  rechargeModifier: 0.95
+- config: Iron Harness Eli
+  damageType: NORMAL
+  rechargeModifier: 0.9

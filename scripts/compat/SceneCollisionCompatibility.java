@@ -13,12 +13,13 @@ public final class SceneCollisionCompatibility {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
-        var scene=(TudeySceneModel)com.threerings.export.util.b.e(Files.readAllBytes(pack.resolve("scene.dat")));scene.init(cm);
-        var collision=SceneCollision.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
+        Path nativePack=Files.exists(pack.resolve("map.yml"))?pack.resolve("native"):pack;
+        var scene=(TudeySceneModel)com.threerings.export.util.b.e(Files.readAllBytes(nativePack.resolve("scene.dat")));scene.init(cm);
+        var collision=SceneCollision.load(nativePack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
         var pc=cm.d(ActorConfig.class,"Character/PC/Default").ai(cm);
         var pawn=new com.threerings.projectx.dungeon.data.actor.Dungeoneer(new ConfigReference<ActorConfig>("Character/PC/Default"),219,100,new Vector2f(),0);pawn.init(cm);
         Object playerShape=FireCatalogExport.argumentValue(pc.shape);int checked=0,different=0;
-        var walk=CollisionMap.read(Path.of("content/packs/vanilla/maps/advanced_training/walkability.gz"));
+        var walk=CollisionMap.read(Path.of("content/maps/advanced_training/native/walkability.gz"));
         // The stock default pawn and two independently exported projectile profiles.
         var profiles=new ArrayList<FireCatalog.ActorSpec>();
         var fires=FireCatalog.load(Path.of(args[2]));
@@ -47,7 +48,7 @@ public final class SceneCollisionCompatibility {
         }
         if(different==0)throw new AssertionError("No player-blocked/projectile-clear position checked");
         System.out.println("PASS: "+checked+" stock mask/shape/floor comparisons; "+different+" floor positions pass projectiles while the old pawn grid blocks them");
-        var content=SceneContent.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
+        var content=Files.exists(pack.resolve("map.yml"))?SceneCatalog.load(Path.of("content/maps")).scene(294).content():SceneContent.load(pack,"bbf967c39b3883e438fd8165fba74c3be45cfcbecdec9c585f1edaa21d1cc144");
         var specs=new ArrayList<SceneContent.Spec>();
         for(var binding:content.entries()){specs.add(binding.spec());if(!binding.spec().child().fields().isEmpty())specs.add(binding.spec().child());}
         var disc=new com.threerings.tudey.shape.config.ShapeConfig.Circle();disc.radius=ScenePortals.PAWN_RADIUS;

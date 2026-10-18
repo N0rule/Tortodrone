@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: '{0}, have you seen these minerals in your travels yet?  They''re fascinating! You should ask Chief Geo Knight Wegner about them.  I hear he''s the expert on minerals!'
+  initial: part 1a
+id: scene.30893.placed.707

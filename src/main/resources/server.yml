@@ -1,0 +1,9 @@
+# Restart the server after editing. Port 0 selects an ephemeral port for isolated tests.
+server-ip: 0.0.0.0
+server-port: 47624
+max-clients: 16
+log-mode: normal
+log-max-mib: 10
+log-retention: 5
+# Folder name under content/maps; the existing startup flow requires a town.
+startup-map: haven

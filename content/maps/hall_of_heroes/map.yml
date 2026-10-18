@@ -1,0 +1,6 @@
+id: 318
+name: The Champions
+type: level
+zone: haven
+defaultSpawn: level_start
+instances: 1

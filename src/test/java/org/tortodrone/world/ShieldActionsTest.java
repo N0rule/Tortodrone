@@ -8,9 +8,9 @@ import static org.tortodrone.support.TestWire.check;
 /** Basic scene-only checks against the shipped native-derived shield graphs. */
 public final class ShieldActionsTest {
     public static void main(String[] args)throws Exception{
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
-        var fires=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
-        var weapons=WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv"));
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var fires=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        var weapons=WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv"));
         var shield=weapons.shields().stream().filter(s->s.health()>0&&s.bash()!=null&&!s.config().contains("(Dev)")&&fires.find(s.config(),284)!=null&&
             ((Number)fires.find(s.config(),284).attack().arguments().get("rarity")).intValue()>=2).findFirst().orElseThrow();
         var spec=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture","kind","Monster","health","10000","damage-mask","2","radius",".2","collision-flags","8"));

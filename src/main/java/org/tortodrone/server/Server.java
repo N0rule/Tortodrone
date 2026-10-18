@@ -27,7 +27,7 @@ public final class Server {
         int exitCode = 0;
         try {
             if (args.length == 1 && args[0].equals("--help")) {
-                System.out.println("Usage: java -jar tortodrone.jar [--gui | --nogui] [--config path/to/server.properties] | --version | --help");
+                System.out.println("Usage: java -jar tortodrone.jar [--gui | --nogui] [--config path/to/server.yml] | --version | --help");
                 System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for desktop account management.");
                 return;
             }
@@ -103,7 +103,7 @@ public final class Server {
         org.tortodrone.world.SceneRegistry.install(scenes);
         var catalog=content.items();
         for(String warning:content.warnings())log.warn(warning);
-        log.info("Content packs: "+content.packs());
+        log.info("Unified content: "+content.scenes().scenes().size()+" maps, "+content.items().entries().size()+" items");
         content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
         InetAddress address = InetAddress.getByName(settings.bind());
         try (ServerSocket listener = new ServerSocket()) {

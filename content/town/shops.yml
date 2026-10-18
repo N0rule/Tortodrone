@@ -1,0 +1,5952 @@
+catalogs:
+- chance: 0
+  config: Catalog Test
+  goods:
+  - count: 1
+    energy: 5
+    item: Artifact/Preview Event Medal
+    limit: 1
+    price: -1
+    token: ''
+    tokenCount: 0
+  includes:
+  - ''
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Rescue Camp/General Goods
+  goods:
+  - count: 1
+    energy: 0
+    item: Weapon/Sword/Beast Basher
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Sword/Hatchet
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Sword/Proto Sword
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Sword/Slime Slasher
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Handgun/Proto Gun
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Handgun/Punch Gun
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Handgun/Stun Gun
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Weapon/Bomb/Proto Bomb
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Helm/Cyclops Cap
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Helm/Mining Hat
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Armor/Fencing Jacket
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Armor/Vitasuit
+    limit: 10
+    price: -1
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Shield/Iron Buckler
+    limit: 0
+    price: -1
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Cobalt
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Cobalt Armor Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Cobalt Helm Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Defender Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Calibur Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Brandish Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Blaster Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Blast Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Solid Cobalt Armor Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Solid Cobalt Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Great Defender Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Tempered Calibur Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Cautery Sword Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Nightblade Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Fireburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Iceburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Super Blaster Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Blast Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deconstructor Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Mighty Cobalt Armor Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Vitasuit Deluxe Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Mighty Cobalt Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Mighty Defender Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Ascended Calibur Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Cold Iron Carver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Advanced Cautery Sword Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Silent Nightblade Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Blazebrand Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Blizzbrand Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Master Blaster Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Master Blast Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Irontech Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Deconstructor Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Azure Guardian Armor Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Azure Guardian Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Aegis Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Heater Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Leviathan Blade Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Cold Iron Vanquisher Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Amputator Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Acheron Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Combuster Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Glacius Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Valiance Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Nitronome Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Big Angry Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Irontech Destroyer Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Bomber
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Blast Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Crystal Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Dark Matter Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Fiery Vaporizer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Freezing Vaporizer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Haze Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Shard Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Slumber Smogger Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Spiral Demo Helm Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Spiral Demo Suit Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Splinter Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Toxic Vaporizer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deconstructor Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Fiery Vaporizer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Freezing Vaporizer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Fused Demo Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Fused Demo Suit Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Padded Demo Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Padded Demo Suit Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Rock Salt Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Slumber Smogger Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Sun Shards Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Blast Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Crystal Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Dark Matter Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Shard Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Super Splinter Bomb Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Toxic Vaporizer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Fiery Atomizer Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Freezing Atomizer Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Crystal Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Dark Matter Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Deconstructor Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Heavy Demo Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Heavy Demo Suit Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Shard Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Heavy Splinter Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Ionized Salt Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Irontech Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Master Blast Bomb Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Quilted Demo Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Quilted Demo Suit Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Radiant Sun Shards Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Slumber Squall Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Toxic Atomizer Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Ash of Agni Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Big Angry Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Bombastic Demo Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Bombastic Demo Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deadly Crystal Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deadly Dark Matter Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deadly Shard Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Deadly Splinter Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Irontech Destroyer Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Mad Bomber Mask Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Mad Bomber Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Nitronome Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Scintillating Sun Shards Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Shivermist Buster Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Shocking Salt Bomb Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Starlit Demo Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Starlit Demo Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Torpor Tantrum Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Venom Veiler Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Volcanic Demo Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Volcanic Demo Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Elemental Def
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Magic Cloak Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Magic Hood Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Owlite Shield Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Elemental Cloak Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Elemental Hood Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Horned Owlite Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Miracle Cloak Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Miracle Hood Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Wise Owlite Shield Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Chaos Cloak Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Chaos Cowl Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Divine Mantle Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Divine Veil Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Grey Feather Cowl Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Grey Feather Mantle Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Grey Owlite Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Gunner
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Autogun Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Blaster Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Cryotech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Firotech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Prismatech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Shadowtech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Voltech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Cryotech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Firotech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Gunslinger Hat Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Gunslinger Sash Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Magnus Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Needle Shot Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Pepperbox Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Prismatech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Shadowtech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Super Blaster Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Voltech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Cryo Driver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Fiery Pepperbox Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Firo Driver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Master Blaster Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Mega Magnus Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Prisma Driver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Shadow Driver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Strike Needle Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Sunset Duster Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Sunset Stetson Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Volt Driver Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Blitz Needle Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Callahan Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Deadshot Chapeau Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Deadshot Mantle Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Hail Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Iron Slug Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Justifier Hat Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Justifier Jacket Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Magma Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Nameless Hat Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Nameless Poncho Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Nova Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Shadowsun Slicker Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Shadowsun Stetson Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Storm Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Umbra Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Valiance Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Volcanic Pepperbox Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Heavy
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Plate Shield Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Spiral Plate Helm Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Spiral Plate Mail Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Troika Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Boosted Plate Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Boosted Plate Mail Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Boosted Plate Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Kamarin Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Magnus Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Heavy Plate Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Heavy Plate Mail Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Heavy Plate Shield Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Khorovod Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Mega Magnus Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Callahan Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Iron Slug Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Ironmight Plate Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Ironmight Plate Mail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Ironmight Plate Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Sudaruska Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Volcanic Plate Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Volcanic Plate Mail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Volcanic Plate Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Piercing Def
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Jelly Helm Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Jelly Mail Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Jelly Shield Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Brute Jelly Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Brute Jelly Mail Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Brute Jelly Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Rock Jelly Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Rock Jelly Mail Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Rock Jelly Shield Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Royal Jelly Crown Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Royal Jelly Mail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Royal Jelly Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Shadow Def
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Skelly Mask Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Skelly Shield Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Skelly Suit Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Scary Skelly Mask Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Scary Skelly Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Scary Skelly Suit Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Sinister Skelly Mask Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Sinister Skelly Shield Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Sinister Skelly Suit Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Dread Skelly Mask Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Dread Skelly Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Dread Skelly Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Specialist
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Rarity/Fire Crystal/Dim Recipe
+    limit: 0
+    price: 250
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Rarity/Fire Crystal/Warm Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Angelic Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Angelic Raiment Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Chroma Mask Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Chroma Suit Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Drake Scale Helm Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Drake Scale Mail Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Drake Scale Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Rarity/Fire Crystal/Glowing Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Salamander Mask Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Salamander Suit Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Seraphic Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Seraphic Mail Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Rarity/Fire Crystal/Shining Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Silvermail Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Stone Tortoise Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Virulisk Mask Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Virulisk Suit Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Wyvern Scale Helm Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Wyvern Scale Mail Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Wyvern Scale Shield Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Armor of the Fallen Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Crown of the Fallen Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Deadly Virulisk Mask Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Deadly Virulisk Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Dragon Scale Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Dragon Scale Mail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Dragon Scale Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Omega Shell Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Radiant Silvermail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Valkyrie Helm Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Valkyrie Mail Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Volcanic Salamander Mask Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Volcanic Salamander Suit Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Hall of Heroes/Striker
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Brandish Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Cutter Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Flourish Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Spur Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Wolver Cap Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Wolver Coat Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Arc Razor Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Cautery Sword Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Dusker Cap Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Dusker Coat Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Fireburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Flamberge Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Iceburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Nightblade Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Padded Hunting Cap Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Padded Hunting Coat Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Rigadoon Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Striker Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Swift Flourish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Swiftstrike Buckler Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Advanced Cautery Sword Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Ash Tail Cap Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Ash Tail Coat Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Blazebrand Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Blizzbrand Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Daring Rigadoon Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Fierce Flamberge Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Grand Flourish Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Hunting Blade Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Quilted Hunting Cap Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Quilted Hunting Coat Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Silent Nightblade Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Vile Striker Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Winmillion Recipe
+    limit: 0
+    price: 10000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Acheron Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Amputator Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Combuster Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Dread Venom Striker Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Fearless Rigadoon Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Final Flourish Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Furious Flamberge Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Glacius Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Skolver Cap Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Skolver Coat Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Starlit Hunting Cap Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Starlit Hunting Coat Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Turbillion Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Vog Cub Cap Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Vog Cub Coat Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Wild Hunting Blade Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/OCH/Basil T1
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Shadowtech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Health Capsule
+    limit: 0
+    price: 100
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Remedy Capsule
+    limit: 0
+    price: 100
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Fire Vial
+    limit: 0
+    price: 50
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Freeze Vial
+    limit: 0
+    price: 50
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Poison Vial
+    limit: 0
+    price: 50
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Shock Vial
+    limit: 0
+    price: 50
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Dungeon/Vitapod/Health +02
+    limit: 0
+    price: 400
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Dungeon/Vitapod/Health +03
+    limit: 0
+    price: 600
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/Mission/Basil Items 2
+  goods:
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Health Capsule
+    limit: 0
+    price: 100
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Remedy Capsule
+    limit: 0
+    price: 100
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Fire Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Shock Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Freeze Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Poison Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Dungeon/Vitapod/Health +04
+    limit: 0
+    price: 800
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Skelly Mask Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Skelly Suit Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Skelly Shield Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Fireburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Firotech Alchemer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Fiery Vaporizer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Crystal Bomb Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/OCH/Basil T2
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Toxic Vaporizer Recipe
+    limit: 0
+    price: 1000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Elemental Cloak Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Elemental Hood Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Graviton Charge Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Horned Owlite Shield Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Iceburst Brandish Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Nightblade Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Shadowtech Alchemer Mk II Recipe
+    limit: 0
+    price: 4000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Super Health Capsule
+    limit: 0
+    price: 200
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Fire Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Freeze Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Poison Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Super Shock Vial
+    limit: 0
+    price: 150
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Dungeon/Vitapod/Health +06
+    limit: 0
+    price: 1200
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- chance: 0
+  config: Captured/OCH/Basil T3
+  goods:
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Acheron Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Sword/Glacius Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Graviton Vortex Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Helm/Grey Feather Cowl Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Armor/Grey Feather Mantle Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Shield/Grey Owlite Shield Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Handgun/Umbra Driver Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Recipe/Bomb/Venom Veiler Recipe
+    limit: 0
+    price: 25000
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Remedy Capsule
+    limit: 0
+    price: 100
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Capsule/Ultra Health Capsule
+    limit: 0
+    price: 500
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Ultra Fire Vial
+    limit: 0
+    price: 250
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Ultra Freeze Vial
+    limit: 0
+    price: 250
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Ultra Poison Vial
+    limit: 0
+    price: 250
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Pickup/Vial/Ultra Shock Vial
+    limit: 0
+    price: 250
+    token: ''
+    tokenCount: 0
+  - count: 1
+    energy: 0
+    item: Gear/Dungeon/Vitapod/Health +12
+    limit: 0
+    price: 3000
+    token: ''
+    tokenCount: 0
+  includes: [
+    ]
+  kind: Original
+  max: 1
+  min: 1
+- config: Documented/Haven/Brinks
+  kind: Original
+  includes: [
+    ]
+  goods:
+  - item: Gear/Shield/Bristling Buckler
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Snarbolax Token
+    tokenCount: 10
+  - item: Weapon/Sword/Snarble Barb
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Snarbolax Token
+    tokenCount: 10
+  - item: Weapon/Bomb/Spine Cone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Snarbolax Token
+    tokenCount: 10
+  - item: Material/Snarbostuffing
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Snarbolax Token
+    tokenCount: 12
+  - item: Material/Rock Salt
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 2
+  - item: Material/Rock Salt
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Gear/Helm/Brute Jelly Helm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 15
+  - item: Gear/Armor/Brute Jelly Mail
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 15
+  - item: Gear/Shield/Brute Jelly Shield
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 15
+  - item: Material/Jelly Glue
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 15
+  - item: Weapon/Handgun/Antigua
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 20
+  - item: Weapon/Sword/Sealed Sword
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Jelly Token
+    tokenCount: 20
+  - item: Weapon/Handgun/Catalyzer
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 15
+  - item: Weapon/Handgun/Pulsar
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 15
+  - item: Weapon/Bomb/Static Capacitor
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 15
+  - item: Material/Schemer Scrap
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 18
+  - item: Gear/Helm/Quicksilver Helm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 20
+  - item: Gear/Armor/Quicksilver Mail
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Roarmulus Token
+    tokenCount: 20
+  - item: Material/Dark Ember
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 25
+  - item: Gear/Helm/Ancient Plate Helm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 30
+  - item: Gear/Armor/Ancient Plate Mail
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 30
+  - item: Gear/Shield/Ancient Plate Shield
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 30
+  - item: Gear/Shield/Blackened Crest
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 30
+  - item: Weapon/Sword/Fang of Vog
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Vanaduke Token
+    tokenCount: 40
+  - item: Material/Cooling Cell
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Critter Carapace
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Driftwood
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Frost Gel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Gel Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Monster Bone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 2
+  - item: Material/Brute Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Material/Bushy Tail
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Material/Drake Scale
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Material/Hailstone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Gear/Trinket/Hearthstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Gear/Trinket/Jelly Band
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Gear/Trinket/Katnip Pouch
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Material/Redwood
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 5
+  - item: Material/Chroma Tear
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 10
+  - item: Material/Ironwood
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 10
+  - item: Material/Perfect Snowball
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 10
+  - item: Material/Rocky Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 10
+  - item: Material/Warp Dust
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 10
+  - item: Gear/Trinket/Brute Jelly Band
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Gear/Trinket/Choice Katnip Pouch
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Material/Dragon Scale
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Material/Everfrost
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Material/Primal Ore
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Material/Royal Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Material/Royal Skewer
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Gear/Trinket/Warm Hearthstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 20
+  - item: Gear/Trinket/Hi-Grade Katnip Pouch
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 50
+  - item: Gear/Trinket/Rock Jelly Band
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 50
+  - item: Gear/Trinket/Toasty Hearthstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 50
+  - item: Gear/Trinket/Purrfect Katnip Pouch
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 100
+  - item: Gear/Trinket/Royal Jelly Band
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 100
+  - item: Gear/Trinket/Sizzling Hearthstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Primal Token
+    tokenCount: 100
+  - item: Material/Forbidden Fruit
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Grave Soil
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Nightshade
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Owlite Feather
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Sinful Brew
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Waste Module
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 2
+  - item: Material/Dead Gold
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Material/Phial of Phear
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Gear/Trinket/Silver Amulet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Gear/Trinket/Skelly Charm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Material/Soul Dust
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Material/Toxic Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Gear/Trinket/White Laurel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Material/Wicked idol
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 5
+  - item: Material/Blighted Bone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 10
+  - item: Material/Corrosive Acid
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 10
+  - item: Material/Ghost Bell
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 10
+  - item: Material/Mug of Misery
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 10
+  - item: Material/Trojan Horseshoe
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 10
+  - item: Gear/Trinket/Blessed Silver Amulet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Gear/Trinket/Bright White Laurel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Material/Crest of Ur
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Material/Philoso Feather
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Material/Plague Essence
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Material/Reaper Rib
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Gear/Trinket/Scary Skelly Charm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Material/Shadow Steel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 20
+  - item: Gear/Trinket/Sacred Silver Amulet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 50
+  - item: Gear/Trinket/Sinister Skelly Charm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 50
+  - item: Gear/Trinket/Snowy White Laurel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 50
+  - item: Gear/Trinket/Dread Skelly Charm
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 100
+  - item: Gear/Trinket/Pure White Laurel
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 100
+  - item: Gear/Trinket/Saintly Silver Amulet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Grim Token
+    tokenCount: 100
+  - item: Material/Blast Powder
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Frayed Fabric
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Fuel Canister
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Gremlin Gizmo
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Iron Gear
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Power Cell
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Static Clinger
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Material/Swordstone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 2
+  - item: Gear/Trinket/Crystal Pin
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Gear/Trinket/Driftwood Bracelet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Fine Fabric
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Force Dynamo
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Rocket Sprocket
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Torchstone
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Unstable Core
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Volt Oil
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Gear/Trinket/Wetstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 5
+  - item: Material/Blaze Pepper
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Material/Heavy Gear
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Material/Meteor Mote
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Material/Miracloth
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Material/Silver Coil
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Material/Thunderball
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 10
+  - item: Gear/Trinket/Dewy Wetstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Flame Soul
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Gear/Trinket/Glowing Crystal Pin
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Plasma Cell
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Gear/Trinket/Redwood Bracelet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Silverweave
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Storm Chaser
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Sun Silver
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Material/Volcanic Iron
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 20
+  - item: Gear/Trinket/Glimmering Crystal Pin
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 50
+  - item: Gear/Trinket/Ironwood Bracelet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 50
+  - item: Gear/Trinket/Slippery Wetstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 50
+  - item: Gear/Trinket/Radiant Crystal Pin
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 100
+  - item: Gear/Trinket/Soaking Wetstone Pendant
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 100
+  - item: Gear/Trinket/Wyrmwood Bracelet
+    count: 1
+    price: -1
+    energy: 0
+    limit: 0
+    token: Token/Forge Token
+    tokenCount: 100
+  min: 0
+  max: 0
+  chance: 1
+- config: Documented/Haven/Greave
+  kind: Original
+  includes: [
+    ]
+  goods:
+  - item: Gear/Armor/Circuit Breaker Armor
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Emberbreak Armor
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Frostbreaker Armor
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Spiral Scale Mail
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Ignition Armor
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Padded Armor
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Fencing Jacket
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Armor/Vitasuit
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Circuit Breaker Helm
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Emberbreak Helm
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Frostbreaker Helm
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Spiral Scale Helm
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Ignition Helm
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Padded Cap
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Cyclops Cap
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Helm/Mining Hat
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  min: 0
+  max: 0
+  chance: 1
+- config: Documented/Haven/Kragen
+  kind: Original
+  includes: [
+    ]
+  goods:
+  - item: Gear/Shield/Circuit Breaker Shield
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Emberbreak Shield
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Frostbreaker Shield
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Force Buckler
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Scale Shield
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Iron Buckler
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Gear/Shield/Proto Shield
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  min: 0
+  max: 0
+  chance: 1
+- config: Documented/Haven/Quillion
+  kind: Original
+  includes: [
+    ]
+  goods:
+  - item: Weapon/Sword/Big Beast Basher
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Bolted Blade
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Heavy Hatchet
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Hot Edge
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Static Edge
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Super Slime Slasher
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Rugged Robo Wrecker
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Beast Basher
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Hatchet
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Proto Sword
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Slime Slasher
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Sword/Robo Wrecker
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  min: 0
+  max: 0
+  chance: 1
+- config: Documented/Haven/Ricasso
+  kind: Original
+  includes: [
+    ]
+  goods:
+  - item: Weapon/Handgun/Frost Gun
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Pummel Gun
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Super Stun Gun
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Zapper
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Spitfire
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Punch Gun
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Handgun/Stun Gun
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Bomb/Cold Snap
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Bomb/Firecracker
+    count: 1
+    price: 3000
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  - item: Weapon/Bomb/Proto Bomb
+    count: 1
+    price: 150
+    energy: 0
+    limit: 0
+    token: ''
+    tokenCount: 0
+  min: 0
+  max: 0
+  chance: 1
+depot:
+- count: 1
+  energy: 1600
+  featured: true
+  item: Upgrade/Heat Bonus (7 days)
+  limit: 0
+  price: -1
+- count: 1
+  energy: 5000
+  featured: true
+  item: Upgrade/Heat Bonus (30 days)
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: true
+  item: Upgrade/Trinket Slot
+  limit: 0
+  price: -1
+- count: 1
+  energy: 750
+  featured: true
+  item: Ticket/Keys/Silver Key
+  limit: 0
+  price: -1
+- count: 1
+  energy: 300
+  featured: true
+  item: Upgrade/Coin Bonus
+  limit: 0
+  price: -1
+- count: 1
+  energy: 8000
+  featured: false
+  item: Accessory/Recover/Armor Ankle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 5000
+  featured: false
+  item: Accessory/Recover/Armor Arms
+  limit: 0
+  price: -1
+- count: 1
+  energy: 8000
+  featured: false
+  item: Accessory/Recover/Armor Back
+  limit: 0
+  price: -1
+- count: 1
+  energy: 5000
+  featured: false
+  item: Accessory/Recover/Armor Front
+  limit: 0
+  price: -1
+- count: 1
+  energy: 8000
+  featured: false
+  item: Accessory/Recover/Armor Rear
+  limit: 0
+  price: -1
+- count: 1
+  energy: 10000
+  featured: false
+  item: Accessory/Recover/Aura
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Accessory/Recover/Helm Back
+  limit: 0
+  price: -1
+- count: 1
+  energy: 5000
+  featured: false
+  item: Accessory/Recover/Helm Brow
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Accessory/Recover/Helm Front
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Accessory/Recover/Helm Side
+  limit: 0
+  price: -1
+- count: 1
+  energy: 5000
+  featured: false
+  item: Accessory/Recover/Helm Top
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Heavy Plate Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 250
+  featured: false
+  item: Rarity/Evo Catalyst/Advanced Evo Catalyst
+  limit: 0
+  price: -1
+- count: 1
+  energy: 525
+  featured: false
+  item: Rarity/Evo Catalyst/Ultimate Evo Catalyst
+  limit: 0
+  price: -1
+- count: 50
+  energy: 700
+  featured: false
+  item: Rarity/Fire Crystal/Radiant
+  limit: 0
+  price: -1
+- count: 50
+  energy: 350
+  featured: false
+  item: Rarity/Fire Crystal/Shining
+  limit: 0
+  price: -1
+- count: 1
+  energy: 225
+  featured: false
+  item: Upgrade/Wrapping Paper/Checker Wrapping (Blue)
+  limit: 0
+  price: -1
+- count: 1
+  energy: 350
+  featured: false
+  item: Upgrade/Wrapping Paper/Checker Wrapping (Red)
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Upgrade/Wrapping Paper/Checker Wrapping (Yellow)
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Blast Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 2000
+  featured: false
+  item: Food/Special/Reset Star
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Angelic Raiment
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Armor of the Fallen
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Ash Tail Coat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Azure Guardian Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Blazebreak Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Blizzbreaker Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Bombastic Demo Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Boosted Plate Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Brute Jelly Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Chaos Cloak
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Charged Quicksilver Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Chroma Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Cobalt Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Deadly Virulisk Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Deadshot Mantle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Divine Mantle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Dragon Scale Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Drake Scale Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Dread Skelly Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Dusker Coat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Elemental Cloak
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Fused Demo Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Grey Feather Mantle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Gunslinger Sash
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Heavy Demo Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Ironmight Plate Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Jelly Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Justifier Jacket
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Mad Bomber Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Magic Cloak
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Mighty Cobalt Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Miracle Cloak
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Nameless Poncho
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Radiant Silvermail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Rock Jelly Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Royal Jelly Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Salamander Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Scary Skelly Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Seraphic Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Shadowsun Slicker
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Silvermail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Sinister Skelly Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Skelly Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Skolver Coat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Solid Cobalt Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Spiral Demo Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Spiral Plate Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Gear/Armor/Spiral Scale Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Sunset Duster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Armor/Surge Breaker Armor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Valkyrie Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Virulisk Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Vitasuit Deluxe
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Vog Cub Coat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Volcanic Demo Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Volcanic Plate Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Armor/Volcanic Salamander Suit
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Armor/Wolver Coat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Armor/Wyvern Scale Mail
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Angelic Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Ash Tail Cap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Azure Guardian Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Blazebreak Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Blizzbreaker Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Bombastic Demo Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Boosted Plate Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Brute Jelly Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Chaos Cowl
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Charged Quicksilver Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Chroma Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Cobalt Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Crown of the Fallen
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Deadly Virulisk Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Deadshot Chapeau
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Divine Veil
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Dragon Scale Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Drake Scale Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Dread Skelly Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Dusker Cap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Elemental Hood
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Fused Demo Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Grey Feather Cowl
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Gunslinger Hat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Heavy Demo Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Heavy Plate Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Ironmight Plate Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Jelly Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Justifier Hat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Mad Bomber Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Magic Hood
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Mighty Cobalt Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Miracle Hood
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Nameless Hat
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Rock Jelly Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Royal Jelly Crown
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Salamander Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Scary Skelly Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Seraphic Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Shadowsun Stetson
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Sinister Skelly Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Skelly Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Skolver Cap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Solid Cobalt Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Spiral Demo Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Spiral Plate Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Gear/Helm/Spiral Scale Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Sunset Stetson
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Helm/Surge Breaker Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Valkyrie Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Virulisk Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Vog Cub Cap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Volcanic Demo Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Volcanic Plate Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Helm/Volcanic Salamander Mask
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Helm/Wolver Cap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Helm/Wyvern Scale Helm
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Aegis
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Blazebreak Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Blizzbreaker Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Boosted Plate Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Brute Jelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Shield/Defender
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Dragon Scale Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Drake Scale Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Dread Skelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Gear/Shield/Force Buckler
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Great Defender
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Grey Owlite Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Heater Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Heavy Plate Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Horned Owlite Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Ironmight Plate Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Shield/Jelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Mighty Defender
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Omega Shell
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Shield/Owlite Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Shield/Plate Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Rock Jelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Royal Jelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Scary Skelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Sinister Skelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Gear/Shield/Skelly Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Stone Tortoise
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Surge Breaker Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Gear/Shield/Swiftstrike Buckler
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Gear/Shield/Volcanic Plate Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Wise Owlite Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Gear/Shield/Wyvern Scale Shield
+  limit: 0
+  price: -1
+- count: 1
+  energy: 125
+  featured: false
+  item: Rarity/Evo Catalyst/Evo Catalyst
+  limit: 0
+  price: -1
+- count: 50
+  energy: 175
+  featured: false
+  item: Rarity/Fire Crystal/Glowing
+  limit: 0
+  price: -1
+- count: 50
+  energy: 85
+  featured: false
+  item: Rarity/Fire Crystal/Warm
+  limit: 0
+  price: -1
+- count: 3
+  energy: 200
+  featured: false
+  item: Rarity/Orb of Alchemy/Advanced
+  limit: 0
+  price: -1
+- count: 3
+  energy: 400
+  featured: false
+  item: Rarity/Orb of Alchemy/Elite
+  limit: 0
+  price: -1
+- count: 3
+  energy: 800
+  featured: false
+  item: Rarity/Orb of Alchemy/Eternal
+  limit: 0
+  price: -1
+- count: 3
+  energy: 10
+  featured: false
+  item: Rarity/Orb of Alchemy/Flawed
+  limit: 0
+  price: -1
+- count: 3
+  energy: 50
+  featured: false
+  item: Rarity/Orb of Alchemy/Simple
+  limit: 0
+  price: -1
+- count: 10
+  energy: 200
+  featured: false
+  item: Rarity/Spark of Life
+  limit: 0
+  price: -1
+- count: 1
+  energy: 2100
+  featured: false
+  item: Sprite/Drakon Egg
+  limit: 0
+  price: -1
+- count: 1
+  energy: 2100
+  featured: false
+  item: Sprite/Maskerraith Egg
+  limit: 0
+  price: -1
+- count: 1
+  energy: 2100
+  featured: false
+  item: Sprite/Seraphynx Egg
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1800
+  featured: false
+  item: Ticket/Keys/Shadow Key
+  limit: 0
+  price: -1
+- count: 1
+  energy: 100
+  featured: false
+  item: Ticket/Unbind/Unbind 1
+  limit: 0
+  price: -1
+- count: 1
+  energy: 200
+  featured: false
+  item: Ticket/Unbind/Unbind 2
+  limit: 0
+  price: -1
+- count: 1
+  energy: 600
+  featured: false
+  item: Ticket/Unbind/Unbind 3
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1800
+  featured: false
+  item: Ticket/Unbind/Unbind 4
+  limit: 0
+  price: -1
+- count: 1
+  energy: 4000
+  featured: false
+  item: Ticket/Unbind/Unbind 5
+  limit: 0
+  price: -1
+- count: 1
+  energy: 800
+  featured: false
+  item: Upgrade/Heat Bonus
+  limit: 0
+  price: -1
+- count: 1
+  energy: 11995
+  featured: false
+  item: Upgrade/Pack/Eyes, Suited
+  limit: 0
+  price: -1
+- count: 1
+  energy: 7000
+  featured: false
+  item: Upgrade/Rename Guild
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Upgrade/Rename Knight
+  limit: 0
+  price: -1
+- count: 1
+  energy: 250
+  featured: false
+  item: Upgrade/Weapon Slot
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Ash of Agni
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Big Angry Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Bomb/Cold Snap
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Crystal Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Dark Matter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Deadly Crystal Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Deadly Dark Matter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Deadly Shard Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Deadly Splinter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Deconstructor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Fiery Atomizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Fiery Vaporizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Fiery Vaporizer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Bomb/Firecracker
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Freezing Atomizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Freezing Vaporizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Freezing Vaporizer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Graviton Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Graviton Charge
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Graviton Vortex
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Haze Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Heavy Crystal Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Heavy Dark Matter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Heavy Deconstructor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Heavy Shard Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Heavy Splinter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Ionized Salt Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Irontech Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Irontech Destroyer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Master Blast Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Nitronome
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Radiant Sun Shards
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Rock Salt Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Scintillating Sun Shards
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Shard Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Shivermist Buster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Shocking Salt Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Splinter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Sun Shards
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Super Blast Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Super Crystal Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Super Dark Matter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Super Shard Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Super Splinter Bomb
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Bomb/Toxic Atomizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Bomb/Toxic Vaporizer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Bomb/Toxic Vaporizer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Bomb/Venom Veiler
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Autogun
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Blaster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Blitz Needle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Callahan
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Cryo Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Cryotech Alchemer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Cryotech Alchemer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Fiery Pepperbox
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Firo Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Firotech Alchemer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Firotech Alchemer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Handgun/Frost Gun
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Hail Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Iron Slug
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Magma Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Magnus
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Master Blaster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Mega Magnus
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Needle Shot
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Nova Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Pepperbox
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Prisma Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Prismatech Alchemer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Prismatech Alchemer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Handgun/Pummel Gun
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Shadow Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Shadowtech Alchemer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Shadowtech Alchemer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Storm Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Strike Needle
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Super Blaster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Handgun/Super Stun Gun
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Umbra Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Valiance
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Handgun/Volcanic Pepperbox
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Handgun/Volt Driver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Handgun/Voltech Alchemer
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Handgun/Voltech Alchemer Mk II
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Acheron
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Arc Razor
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Ascended Calibur
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Sword/Big Beast Basher
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Blazebrand
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Blizzbrand
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Sword/Bolted Blade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Brandish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Calibur
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Cautery Sword
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Cold Iron Carver
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Cold Iron Vanquisher
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Combuster
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Cutter
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Daring Rigadoon
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Dread Venom Striker
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Fearless Rigadoon
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Fierce Flamberge
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Final Flourish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Fireburst Brandish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Flamberge
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Flourish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Furious Flamberge
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Glacius
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Grand Flourish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Sword/Heavy Hatchet
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Hunting Blade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Iceburst Brandish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Kamarin
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Khorovod
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Leviathan Blade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Nightblade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Rigadoon
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Silent Nightblade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Spur
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Striker
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Sudaruska
+  limit: 0
+  price: -1
+- count: 1
+  energy: 65
+  featured: false
+  item: Weapon/Sword/Super Slime Slasher
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Swift Flourish
+  limit: 0
+  price: -1
+- count: 1
+  energy: 500
+  featured: false
+  item: Weapon/Sword/Tempered Calibur
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Troika
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Vile Striker
+  limit: 0
+  price: -1
+- count: 1
+  energy: 3500
+  featured: false
+  item: Weapon/Sword/Wild Hunting Blade
+  limit: 0
+  price: -1
+- count: 1
+  energy: 1600
+  featured: false
+  item: Weapon/Sword/Winmillion
+  limit: 0
+  price: -1
+- count: 1
+  energy: 150
+  featured: false
+  item: Weapon/Sword/Wrench Wand
+  limit: 0
+  price: -1

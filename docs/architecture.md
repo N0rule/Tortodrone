@@ -1,6 +1,6 @@
 # Server architecture and invariants
 
-Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights client. This describes the **implemented** design; selected content and its runtime limits are documented in [Content](content.md). Inspect source/tests and `VERSION` for the current baseline.
+Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights client. This describes the **implemented** design; configured content and its runtime limits are documented in [Content](content.md). Inspect source/tests and `VERSION` for the current baseline.
 
 ## Main components
 
@@ -13,7 +13,7 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 | Transactions, persisted identity, items and trades | `storage/{Database,WorldProfiles,TradeTransfer}` |
 | Scene templates, instances, movement and tick | `world/{SceneCatalog,SceneRegistry,SceneSimulation,TownMovement,CollisionMap,SceneContent,SceneEntities,SceneCollision}` |
 | Player combat / effects | `world/{KnightCombat,SceneWeapons,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
-| Versioned content resolution and account-manager GUI | `resources/{ContentManager,ContentRegistry,ContentMigration}`, `admin/` |
+| Atomic unified YAML resolution and account-manager GUI | `resources/{ContentManager,ContentRegistry,ContentMigration}`, `admin/` |
 
 Both executable JARs are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
 
@@ -112,3 +112,5 @@ The versioned content registry keeps supported scene/catalog definitions outside
 `build.gradle.kts` configures Java 25 toolchains and packaging; verified plugin/dependency digests are pinned under `gradle/verification-metadata.xml`. Required redistribution notices live in `src/main/resources/THIRD-PARTY.md`, JAR resources and `licenses/`. Keep private captures, stock game binaries/assets, `data/`, `.build/` and temporary test deployments out of Git.
 
 Use focused regression tests before broad stock-client checks. Avoid expanding this document with one-off milestone reports; Git history retains past investigations.
+
+Content compilation resolves map-local YAML and pinned native bindings into the existing catalog types before publication. Town and pet graphs are retained in that snapshot; scene creation and account-store initialization do not reopen catalog files. Pack dependency resolution exists only at the explicit migration boundary. See [Content](content.md) for the administration and upgrade contract.

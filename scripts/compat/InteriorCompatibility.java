@@ -67,7 +67,7 @@ public final class InteriorCompatibility {
     }
 
     private static void verify(String kind, ConfigManager manager) throws Exception {
-        var registry = new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));
+        var registry = new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
         SceneRegistry.install(registry);
         var base = registry.entry().map();
         var map = new SceneCatalog.MapScene(base.id(), base.zone(), base.zoneName(), base.name(), base.image(), kind,

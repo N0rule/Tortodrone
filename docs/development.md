@@ -18,7 +18,7 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 ```sh
 ./gradlew buildWithoutTests      # DEFAULT: compile/package main, tests and tools; execute no tests
-./gradlew buildServer buildAdmin # package both apps and selected content
+./gradlew buildServer buildAdmin # package both apps and unified content
 ./gradlew testUnit               # all standalone unit tests (not a focused filter)
 ./gradlew testIntegration        # all packaged integration tests
 ./gradlew build                  # full suite; milestone/release verification
@@ -77,8 +77,8 @@ Useful checked-in Java tools (from repository root with a separate read-only gam
 
 ```sh
 ./gradlew buildWithoutTests
-java scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
-java scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
+java -cp build/tortodrone.jar scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
+java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
 ```
 
@@ -117,3 +117,5 @@ Benchmarks copy packaged resources into disposable deployments, simulate clients
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `licenses/` and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
 
 Recent scene and Training Hall validation details are retained in [Modern captures](modern-captures.md) and [Training Hall](training-hall.md). Detailed prior investigations and their original commands stay accessible via Git history (for example `git show <commit>:docs/protocol-audit.md`); [Research](research.md) points to the relevant sources and caveats.
+
+Unified content regressions are `resources.ContentManagerTest` and `resources.ContentMigrationTest`; `resources.PackContentTest` exercises only the migration reader. Legacy parser fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, captures both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.

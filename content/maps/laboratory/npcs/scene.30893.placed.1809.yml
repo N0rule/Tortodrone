@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: 'Another strange device! This one was clearly not made by the Almirians any more than the previous device was made by jellies. One thing we''ve noticed however: this device is still active. On top of that, the energy signature is similar to the readings we took off the Artifact before it was stolen. This requires some further research I think.'
+  initial: part 1a
+id: scene.30893.placed.1809

@@ -9,7 +9,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Basic lifecycle regressions using disposable scene state and authoritative input. */
 public final class SceneLifeTest {
     public static void main(String[] args)throws Exception {
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
         health(map.content());
         shields();
         movement(map);

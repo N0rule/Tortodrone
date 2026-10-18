@@ -77,8 +77,8 @@ public final class CraftCompatibility {
         check("confirm method",confirmed.yc(),1);check("confirm args",confirmed.yd(),null);
         if(in.available()!=0)throw new AssertionError("Trailing craft reply wire bytes");
         // The alchemy machines' catalogs must resolve server-side with matchable native ingredients.
-        var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
-        var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
+        var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
+        var items=org.tortodrone.resources.ContentManager.load(Path.of(".")).items();
         for(String actor:List.of("Shop/Haven/Alchemy, Battle Sprites","scene.1.6837.39","scene.30893.207.4","scene.2.placed.5184")){
             var station=rules.station(actor);
             if(station==null)throw new AssertionError("Missing station: "+actor);

@@ -22,6 +22,7 @@ final class LegacyContent {
             Path custom=root.resolve(catalog.getValue());
             add(resources,catalog.getKey(),Files.exists(custom,LinkOption.NOFOLLOW_LINKS)?custom:base.resolve(catalog.getValue()));
         }
+        for(var optional:Map.of("town","town/catalog.json","pet-fires","combat/pet-fires.json").entrySet()){Path custom=root.resolve(optional.getValue()),path=Files.exists(custom)?custom:base.resolve(optional.getValue());if(Files.exists(path))add(resources,optional.getKey(),path);}
         warnings.add("Legacy resource paths are active (read-only compatibility); migrate to a versioned pack or set data/server.properties legacy-content=disabled. Base: "+base+"; maps: "+maps);
         return resources;
     }

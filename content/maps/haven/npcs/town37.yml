@@ -1,0 +1,43 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Tell me what you know about the gremlins.
+        next: part 2a
+      - text: Nothing at this time, thanks.
+        close: true
+      text: Hello there little one. You look as though you require knowledge of some kind.
+    part 2a:
+      responses:
+      - text: What exactly are gremlins?
+        next: part 3a
+      - text: Do the gremlins have a leader?
+        next: part 3b
+      - text: Are there any friendly gremlins within the Clockworks?
+        next: part 3c
+      - text: Actually, I have to run. Maybe some other time...
+        close: true
+      text: My knowledge is yours, little one.
+    part 3a:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: Gremlins are a race of creatures who are incredibly adept at creating and dismantling all manners of machinery. They are at once a legion of brilliant artificers and a force of powerful destruction.
+    part 3b:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: All gremlins belonging to the colony serve King Tinkinzar. Tinkinzar is said to be a great ruler and mechanical genius, responsible for the vision of the whole of the Clockworks. It is our understanding however that the king is never seen by common gremlins, but instead his orders are delivered and carried out by his Crimson Order, a fearful and zealous band of gremlins who alone share audience with the great king.
+    part 3c:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: Most of them will attack you on sight, but there are some; outcasts from the colony, that have taken refuge in the towns below the surface. Theirs is a hard life, hated by their own kind and no longer in a world they call home.
+  initial: part 1a
+id: town37

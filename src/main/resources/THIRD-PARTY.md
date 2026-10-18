@@ -27,3 +27,7 @@ bounded command history; its native terminal libraries are included.
 JLine uses the BSD 3-Clause license, included in each JAR as `licenses/jline.txt`.
 Gradle verifies the pinned artifact using `gradle/verification-metadata.xml`. CLI automation
 with redirected stdin uses plain input and does not require a native terminal.
+
+## YAML
+
+Both JARs bundle SnakeYAML **2.5**, Apache License 2.0, for bounded data-only YAML parsing. Upstream: https://github.com/snakeyaml/snakeyaml. The artifact is pinned in `gradle/verification-metadata.xml`; upstream license notices are retained in the packaged dependency.

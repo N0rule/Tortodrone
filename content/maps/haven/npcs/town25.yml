@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Thanks! I'll go see what's inside.
+        close: true
+      text: Greetings!  Beyond this door you will find the advanced training hall. As a Spiral Knight, you are free to use it to practice your skills and learn more about the Clockworks.
+  initial: part 1a
+id: town25

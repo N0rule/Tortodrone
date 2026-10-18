@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Hello {0}, I'm Izola, a knight who utilizes gear fit for a squad guardian.  The recipes I have for you produce highly defensive armor and hard-hitting weapons. \n\nHeavy weapons require precise timing to use effectively and the gear tends to slow you down some.  But what you sacrifice in usability is returned in sheer power.  The gear I specialize in will make you a knight that your squad can depend upon to stay alive and face even the fiercest of monsters."
+  initial: part_1a
+id: mannequin7

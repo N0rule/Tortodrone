@@ -36,6 +36,15 @@ public final class SceneCatalog {
     public List<MapScene> scenes(){return List.copyOf(scenes.values());}
     public static SceneCatalog empty(){return new SceneCatalog(new TreeMap<>(),0);}
     public static SceneCatalog load(Path directory)throws IOException {
+        if(!Files.exists(directory.resolve("catalog.properties"))&&Files.isDirectory(directory)) {
+            try(var paths=Files.list(directory)) {
+                if(paths.anyMatch(p->Files.exists(p.resolve("map.yml")))) {
+                    Path deployment=directory.toAbsolutePath().getParent().getParent();
+                    String start=org.tortodrone.config.ServerSettings.read(org.tortodrone.config.ServerSettings.defaultPath(deployment)).startupMap();
+                    return org.tortodrone.resources.ContentManager.loadMaps(directory,start,null);
+                }
+            }
+        }
         var settings=properties(directory.resolve("catalog.properties"));
         return load(folders(directory),number(settings,"entry-scene",1,Integer.MAX_VALUE));
     }
@@ -86,6 +95,10 @@ public final class SceneCatalog {
                 ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")));
             if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
         }
+        return of(scenes,entry);
+    }
+    public static SceneCatalog of(NavigableMap<Integer,MapScene> scenes,int entry)throws IOException {
+        scenes=new TreeMap<>(scenes);
         if(!scenes.containsKey(entry))throw new IOException("Entry scene is missing");
         if(!scenes.get(entry).town())throw new IOException("Entry scene must be a town");
         var zones=new HashMap<Integer,String>();

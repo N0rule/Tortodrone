@@ -56,6 +56,9 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         Path file=folder.resolve("content.properties");if(!Files.exists(file))return empty();
         if(Files.isSymbolicLink(file)||!Files.isRegularFile(file)||Files.size(file)>4_000_000)throw new IOException("Invalid scene content");
         var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}
+        return load(p,layoutHash);
+    }
+    public static SceneContent load(Properties p,String layoutHash)throws IOException {
         if(!"1".equals(p.getProperty("format"))||!layoutHash.equals(p.getProperty("layout-sha256")))throw new IOException("Scene content does not match layout");
         var entries=new ArrayList<Entry>();var scales=new TreeMap<String,Float>();var stats=new TreeMap<String,Float>();var keys=new HashSet<String>();
         try {

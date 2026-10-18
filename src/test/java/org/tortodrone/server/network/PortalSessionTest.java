@@ -19,8 +19,8 @@ public final class PortalSessionTest {
         Path home=Files.createTempDirectory("tortodrone-portal-session-");
         try {
             Path maps=home.resolve("maps");
-            try(var paths=Files.walk(Path.of("content/packs/vanilla/maps"))){for(var path:paths.toList()){
-                Path target=maps.resolve(Path.of("content/packs/vanilla/maps").relativize(path));
+            try(var paths=Files.walk(org.tortodrone.support.ContentFixture.path("maps"))){for(var path:paths.toList()){
+                Path target=maps.resolve(org.tortodrone.support.ContentFixture.path("maps").relativize(path));
                 if(Files.isDirectory(path))Files.createDirectories(target);else Files.copy(path,target);
             }}
             Path descriptor=maps.resolve("haven/map.properties");var properties=new Properties();

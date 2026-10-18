@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 """Index missing/partial item gameplay from the served catalogues and runtime capabilities."""
 import csv,json,pathlib,argparse,collections,re
-p=argparse.ArgumentParser();p.add_argument('--pack',type=pathlib.Path,default=pathlib.Path('content/packs/vanilla'));p.add_argument('--output',type=pathlib.Path,default=pathlib.Path('docs/item-support.csv'));a=p.parse_args()
-items=json.loads((a.pack/'items/catalog.json').read_text())['items'];town=json.loads((a.pack/'town/catalog.json').read_text());fires=json.loads((a.pack/'combat/fires.json').read_text())['entries']
+import yaml
+p=argparse.ArgumentParser();p.add_argument('--content',type=pathlib.Path,default=pathlib.Path('content'));p.add_argument('--output',type=pathlib.Path,default=pathlib.Path('docs/item-support.csv'));a=p.parse_args()
+items=[]
+for file in sorted((a.content/'items').glob('*.yml')):
+    for config,row in yaml.safe_load(file.read_text())['items'].items():items.append(dict(row,config=config))
+town={}
+for file in sorted((a.content/'town').glob('*.yml')):town.update(yaml.safe_load(file.read_text()))
+fires=json.loads((a.content/'_internal/fires.json').read_text())['entries']
 metadata={x['config']:x for x in town['items']};recipes={x['config'] for x in town['recipes']};accessories={x['config'] for x in town['accessories']};sprites={x['config'] for x in town['sprites']};weapons=collections.defaultdict(set)
 def unsupported(action,reasons):
     if not action:return
@@ -17,8 +23,8 @@ def unsupported(action,reasons):
 for attack in fires:
     for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']])
 prepared={}
-for scene in (a.pack/'maps').glob('*/content.properties'):
-    props=dict(line.split('=',1) for line in scene.read_text().splitlines() if '=' in line and not line.startswith('#'))
+for scene in (a.content/'maps').glob('*/native/bindings.json'):
+    props=json.loads(scene.read_text())['mechanics']
     for key,name in props.items():
         if re.fullmatch(r'item\.\d+\.config',key):prepared[name]=float(props.get(key[:-6]+'heal','0'))
 rows=[];equipment={'Sword','Handgun','SwingingHandgun','Bomb','BlastNetworkBomb','Helm','Armor','Shield','HelmCostume','ArmorCostume','ShieldCostume','Trinket'}

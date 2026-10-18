@@ -1,76 +1,42 @@
 package org.tortodrone.resources;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.*;
+import org.tortodrone.config.ServerSettings;
 
-/** Explicit, non-destructive export to a new pack and a reviewable selection candidate. */
+/** Reviewable migration candidate only. Never changes source content, config, keys or SQLite. */
 public final class ContentMigration {
     private ContentMigration() { }
-    public static void main(String[] args) throws Exception {
-        if(args.length!=1)throw new IllegalArgumentException("Usage: java -cp tortodrone.jar org.tortodrone.resources.ContentMigration /deployment");
-        Path root=Path.of(args[0]).toAbsolutePath().normalize();
-        migrate(root);
-        System.out.println("Exported content/custom/packs/legacy-import and data/server-migrated.properties. Review the candidate, then select it as data/server.properties while stopped. Original resources and data are unchanged.");
+    public static void main(String[] args)throws IOException {
+        if(args.length<2||args.length>3)throw new IllegalArgumentException("Usage: ContentMigration /old-deployment /fresh-candidate [/read-only-game]");
+        migrate(Path.of(args[0]),Path.of(args[1]),args.length==3?Path.of(args[2]):null);
+        System.out.println("Validated unified candidate. Review config/, content/ and migration-report.txt; install while stopped, retaining the original data/ directory.");
     }
-    public static void migrate(Path deployment) throws IOException {
-        Path root=deployment.toAbsolutePath().normalize();ContentFiles.safe(root);
+    public static void migrate(Path deployment,Path candidate,Path game)throws IOException {
+        Path root=deployment.toAbsolutePath().normalize(),target=candidate.toAbsolutePath().normalize();ContentFiles.safe(root);ContentFiles.safe(target);
+        if(target.startsWith(root)||root.startsWith(target))throw new IOException("Migration candidate must be separate from the source deployment");
+        if(Files.exists(target,LinkOption.NOFOLLOW_LINKS))throw new IOException("Migration destination already exists; nothing replaced");
         Path lockFile=root.resolve("data/server.lock");ContentFiles.safe(lockFile);
-        try(var channel=Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;
-            FileLock lock=acquire(channel)) {
-            var content=ContentManager.load(root);
-            Path parent=root.resolve("content/custom/packs"),target=parent.resolve("legacy-import"),candidate=root.resolve("data/server-migrated.properties");
-            ContentFiles.safe(target);ContentFiles.safe(candidate);
-            if(Files.exists(target,LinkOption.NOFOLLOW_LINKS)||Files.exists(candidate,LinkOption.NOFOLLOW_LINKS))throw new IOException("Migration destination already exists; nothing replaced");
-            Files.createDirectories(parent);Files.createDirectories(candidate.getParent());
-            Path staging=Files.createTempDirectory(parent,".legacy-import-");
-            boolean published=false;
+        try(var channel=Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;FileLock lock=acquire(channel)) {
+            if(Files.exists(root.resolve("content/maps")))throw new IOException("Source already has unified content; mixed layouts require manual conflict review");
+            var settings=ServerSettings.read(ServerSettings.defaultPath(root));var content=PackContent.load(root,settings);
+            // All enabled resources are converted, including Town and pet graphs. Disabled custom
+            // packs are explicitly reported so the candidate cannot silently discard them.
+            Files.createDirectories(target.getParent());Path staging=Files.createTempDirectory(target.getParent(),".content-migration-");
+            Path prepared=staging.resolve("candidate");
             try {
-                var manifest=new Properties();manifest.setProperty("format","1");manifest.setProperty("engine-format","1");
-                manifest.setProperty("id","legacy-import");manifest.setProperty("version","1.0.0");
-                var resources=new TreeMap<String,ContentRegistry.Resource>();
-                for(var entry:content.resources().entrySet()) {
-                    String key=entry.getKey();
-                    String relative=key.startsWith("scene.")?"maps/"+key.substring(6):switch(key) {
-                        case "entry"->"maps/catalog.properties";case "items"->"items/catalog.json";
-                        case "weapons"->"combat/weapons.tsv";case "equipment"->"combat/equipment.tsv";case "fires"->"combat/fires.json";
-                        default->throw new IOException("Unsupported migration resource: "+key);
-                    };
-                    Path destination=staging.resolve(relative);copy(entry.getValue().path(),destination);
-                    String digest=ContentFiles.digest(destination);
-                    manifest.setProperty("resource."+key,relative);manifest.setProperty("sha256."+key,digest);
-                    resources.put(key,new ContentRegistry.Resource("legacy-import",destination,digest));
-                }
-                ContentManager.validate(List.of(new ContentRegistry.Pack("legacy-import","1.0.0")),resources,List.of());
-                try(var output=Files.newOutputStream(staging.resolve("pack.properties"),StandardOpenOption.CREATE_NEW)){manifest.store(output,"Validated legacy export; independent complete pack");}
-                // No REPLACE_EXISTING anywhere: conflicts preserve the owner's files.
-                Files.move(staging,target);published=true;
-                var settings=org.tortodrone.config.ServerSettings.properties(root.resolve("data/server.properties"));
-                settings.setProperty("content-packs","legacy-import");settings.setProperty("legacy-content","disabled");
-                try(var output=Files.newOutputStream(candidate,StandardOpenOption.CREATE_NEW)) {settings.store(output,"Review before replacing data/server.properties; original settings are unchanged");}
-                catch(IOException failed){throw new IOException("Pack exported to "+target+" but candidate creation failed. Select content-packs=legacy-import, legacy-content=disabled explicitly in data/server.properties; existing files were preserved",failed);}
-            } finally {
-                if(!published)try(var paths=Files.walk(staging)){for(Path path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}
-            }
+                new UnifiedExport(game).export(content,prepared,settings);
+                Path custom=root.resolve("content/custom/packs");
+                if(Files.exists(custom))try(var dirs=Files.list(custom)) {for(Path path:dirs.sorted().toList())if(Files.isDirectory(path)&&content.packs().stream().noneMatch(p->p.id().equals(path.getFileName().toString())))throw new IOException("Unselected custom pack requires explicit migration/conflict review: "+path);}
+                ContentManager.load(prepared);Files.move(prepared,target,StandardCopyOption.ATOMIC_MOVE);
+            } finally {delete(staging);}
         }
     }
-    private static FileLock acquire(FileChannel channel) throws IOException {
-        if(channel==null)return null;
-        try {FileLock lock=channel.tryLock();if(lock!=null)return lock;}
-        catch(OverlappingFileLockException held){ }
+    private static FileLock acquire(FileChannel channel)throws IOException {
+        if(channel==null)return null;try{var lock=channel.tryLock();if(lock!=null)return lock;}catch(OverlappingFileLockException held){ }
         throw new IOException("Server is running; stop it before content migration");
     }
-    private static void copy(Path source,Path target) throws IOException {
-        ContentFiles.safe(source);ContentFiles.safe(target);
-        if(Files.isDirectory(source,LinkOption.NOFOLLOW_LINKS)) {
-            try(var paths=Files.walk(source)) {
-                for(Path path:paths.sorted().toList()) {
-                    ContentFiles.safe(path);Path destination=target.resolve(source.relativize(path));
-                    if(Files.isDirectory(path,LinkOption.NOFOLLOW_LINKS))Files.createDirectories(destination);
-                    else {ContentFiles.regular(path);Files.copy(path,destination);}
-                }
-            }
-        } else {Files.createDirectories(target.getParent());Files.copy(source,target);}
-    }
+    static void delete(Path root)throws IOException {if(Files.exists(root))try(var files=Files.walk(root)){for(Path p:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
 }

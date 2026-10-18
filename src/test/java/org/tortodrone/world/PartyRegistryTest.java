@@ -27,7 +27,7 @@ public class PartyRegistryTest {
             refused(()->capacity.invite(leader,"Knight-I"));capacity.boot(leader,"Knight-D");
             check(capacity.view(leader).members().size()==7&&capacity.view(members.get(3)).oid()!=oid,"leader removal splits only the authorized target");
         }finally{members.forEach(PartyRegistry.Member::close);}
-        var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));var p=scenes.parties();
+        var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));var p=scenes.parties();
         try(var a=member(p,1);var b=member(p,2);var c=member(p,3)){
             p.invite(a,"Knight-B");p.respond(b,"PARTY_INV:"+p.view(a).oid(),1);
             var shared=scenes.destination(294,1,a);check(shared==scenes.destination(294,2,b),"accepted party routes into one simulation");

@@ -11,7 +11,7 @@ public final class InteriorRegistryTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-interior-registry-");
         try {
-            Path maps=home.resolve("maps");copyTree(Path.of("content/packs/vanilla/maps"),maps);
+            Path maps=home.resolve("maps");copyTree(org.tortodrone.support.ContentFixture.path("maps"),maps);
             rewriteKind(maps.resolve("bazaar/map.properties"),"town","training");
             rewriteKind(maps.resolve("arcade/map.properties"),"town","level");
             var catalog=SceneCatalog.load(maps);var registry=new SceneRegistry(catalog);

@@ -16,8 +16,8 @@ public final class RenameMigrationTest {
     public static void main(String[] args)throws Exception {
         Path home=Files.createTempDirectory("tortodrone-rename-");
         try{
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));
-            var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
+            var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             var db=new Database(home,false);
             var protection=Passwords.protect("rename-test-password".toCharArray());
             int a=db.create("Alice",protection,false),b=db.create("Bob",protection,false);

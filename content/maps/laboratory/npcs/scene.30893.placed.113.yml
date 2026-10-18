@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: End conversation
+        close: true
+      text: We managed to pull the secondary generator from the Skylark mostly intact. Unfortunately it's barely powerful enough to keep this lab running, let alone power our ship.  We'll need to find another power source if we ever hope to return home.
+  initial: part 1a
+id: scene.30893.placed.113

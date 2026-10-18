@@ -1,0 +1,6 @@
+id: 2
+name: Haven|Bazaar
+type: town
+zone: haven
+defaultSpawn: from_town_square_west
+instances: 1

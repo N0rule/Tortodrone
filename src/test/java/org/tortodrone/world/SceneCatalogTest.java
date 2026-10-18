@@ -16,7 +16,7 @@ public final class SceneCatalogTest {
             catch(IOException expected) {
                 check(expected.getMessage().contains("catalog.properties"),"missing catalog identifies the required descriptor");
             }
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             var catalog=SceneCatalog.load(maps);
             check(catalog.scenes().size()==7 && catalog.entry().id()==1,"all seven Haven scenes load without installed game");
             check(catalog.scene(294).image().equals("traininghall.jpg"),"Training loading screen uses its native background");
@@ -68,14 +68,14 @@ public final class SceneCatalogTest {
             change(maps.resolve("bazaar/map.properties"),"zone-name","Other");refuse(()->SceneCatalog.load(maps));
             change(maps.resolve("bazaar/map.properties"),"zone-name",catalog.scene(2).zoneName());
             change(maps.resolve("bazaar/map.properties"),"kind","dungeon");refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             Path havenPortals=maps.resolve("haven/portals.properties"),bazaarPortals=maps.resolve("bazaar/portals.properties");
             change(havenPortals,"layout-sha256","0".repeat(64));refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             change(bazaarPortals,"entrance.from_town_square_west.x","NaN");refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             change(bazaarPortals,"entrance.from_town_square_west.x","9999");refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             var knownEntrance=catalog.scene(1).portals().entrances().get("from_bazaar_east");
             change(havenPortals,"entrances","from_bazaar_east,duplicate");
             change(havenPortals,"entrance.duplicate.id",Integer.toString(knownEntrance.id()));
@@ -83,19 +83,19 @@ public final class SceneCatalogTest {
             change(havenPortals,"entrance.duplicate.y",Float.toString(knownEntrance.y()));
             change(havenPortals,"entrance.duplicate.rotation",Float.toString(knownEntrance.rotation()));
             refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             change(bazaarPortals,"entrance.from_town_square_west.rotation","4");
             refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             int bazaarTrigger=catalog.scene(2).portals().triggers().getFirst().id();
             change(bazaarPortals,"trigger."+bazaarTrigger+".scene","99");refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             change(bazaarPortals,"trigger."+bazaarTrigger+".entrance","missing_arrival");refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             change(havenPortals,"entrance.from_bazaar_east.x","-38.25");
             change(havenPortals,"entrance.from_bazaar_east.y","0.4");
             refuse(()->SceneCatalog.load(maps));
-            copy(Path.of("content/packs/vanilla/maps"),maps);
+            copy(org.tortodrone.support.ContentFixture.path("maps"),maps);
             try(var folders=Files.list(maps)) {
                 for(Path folder:folders.filter(Files::isDirectory).toList())
                     Files.delete(folder.resolve("portals.properties"));

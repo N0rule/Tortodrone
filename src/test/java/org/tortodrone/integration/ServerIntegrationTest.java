@@ -160,7 +160,7 @@ public final class ServerIntegrationTest {
         Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");Files.copy(sourceJar,jar);
         Path config=directory.resolve("data/server.properties");Files.createDirectories(config.getParent());
         Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
-        rejected(jar,config,directory,"Missing content file", "incomplete deployment fails before account/key initialization");
+        rejected(jar,config,directory,"Unified content/maps is missing", "incomplete deployment fails before account/key initialization");
         check(!Files.exists(directory.resolve("data/keys"))&&!Files.exists(directory.resolve("data/tortodrone.db")),
             "missing content never creates a fallback database or identity");
         check(!Files.exists(directory.resolve("defaults")),"startup never downloads or installs legacy content");
@@ -168,26 +168,25 @@ public final class ServerIntegrationTest {
 
     private static void legacyMigrationWorkflow(Path source,Path root)throws Exception {
         Files.createDirectories(root);Path jar=root.resolve("tortodrone.jar");
-        org.tortodrone.support.TestDeployment.copyServer(source,jar);
-        Files.move(root.resolve("content/packs/vanilla"),root.resolve("defaults"));
-        Path data=root.resolve("data");seed(jar,root);
-        Path config=data.resolve("server.properties");
+        org.tortodrone.support.TestDeployment.copyServer(source,jar);seed(jar,root);
+        Path data=root.resolve("data");Path config=data.resolve("server.properties");
         Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
-        try(var server=new Running(jar,null,root);var socket=new Socket("127.0.0.1",server.ready())) {
-            TestClient.authenticate(socket,publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),true,
+        var files=java.util.List.of(data.resolve("tortodrone.db"),data.resolve("keys/private.pk8"),data.resolve("keys/public.txt"),config);
+        // Seed creates the account database; isolated first startup prepares its identity.
+        try(var server=new Running(jar,null,root)){server.ready();}
+        var original=new java.util.HashMap<Path,byte[]>();for(Path file:files)original.put(file,Files.readAllBytes(file));
+        org.tortodrone.support.ContentFixture.delete(root.resolve("content"));
+        org.tortodrone.support.ContentFixture.copy(org.tortodrone.support.ContentFixture.path(""),root.resolve("defaults"));
+        Path candidate=root.resolveSibling("legacy-candidate");
+        org.tortodrone.resources.ContentMigration.migrate(root,candidate,null);
+        for(Path file:files)check(Arrays.equals(original.get(file),Files.readAllBytes(file)),"migration preserves database, identity and settings: "+file.getFileName());
+        Files.copy(jar,candidate.resolve("tortodrone.jar"));
+        org.tortodrone.support.ContentFixture.copy(data,candidate.resolve("data"));
+        try(var server=new Running(candidate.resolve("tortodrone.jar"),null,candidate);var socket=new Socket("127.0.0.1",server.ready())) {
+            TestClient.authenticate(socket,publicKey(Files.readString(candidate.resolve("data/keys/public.txt")).trim()),true,
                 (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,true));
         }
-        var files=java.util.List.of(data.resolve("tortodrone.db"),data.resolve("keys/private.pk8"),data.resolve("keys/public.txt"),config);
-        var original=new java.util.HashMap<Path,byte[]>();for(Path file:files)original.put(file,Files.readAllBytes(file));
-        org.tortodrone.resources.ContentMigration.migrate(root);
-        for(Path file:files)check(Arrays.equals(original.get(file),Files.readAllBytes(file)),"migration preserves database, identity and settings: "+file.getFileName());
-        Files.copy(root.resolve("data/server-migrated.properties"),root.resolve("data/server.properties"),java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-        try(var server=new Running(jar,null,root);var socket=new Socket("127.0.0.1",server.ready())) {
-            TestClient.authenticate(socket,publicKey(Files.readString(data.resolve("keys/public.txt")).trim()),true,
-                (peer,wire,oid)->CharacterScenario.session(peer,wire,oid,false));
-        }
-        check(Arrays.equals(original.get(data.resolve("keys/private.pk8")),Files.readAllBytes(data.resolve("keys/private.pk8"))),"migrated deployment keeps its private identity on reconnect");
-        check(Files.readString(data.resolve("logs/latest.log")).contains("Pack[id=legacy-import, version=1.0.0]"),"the packaged server uses the explicitly selected migrated pack");
+        check(Arrays.equals(original.get(data.resolve("keys/private.pk8")),Files.readAllBytes(candidate.resolve("data/keys/private.pk8"))),"candidate reconnect keeps its copied disposable identity");
     }
 
     private static void defaultWorkflow(Path jar, Path directory) throws Exception {
@@ -239,8 +238,8 @@ public final class ServerIntegrationTest {
             && !log.contains("snapshot sent") && !log.contains("InvocationRequestEvent"), "normal mode suppresses verbose protocol logs");
         check(log.contains("Connected | session=")&&log.contains("Disconnected | session=")&&log.contains("account=tortodrone (#1)")&&log.contains("rosterId=")&&!log.contains("client-cpu"),"normal logs correlate verified account and distinct knight identities without client hardware claims");
         check(log.contains("Loading server keypair") && log.contains("Generating server keypair"), "accurate key creation/reuse messages");
-        check(!Files.exists(deployment.resolve("config"))&&!Files.exists(deployment.resolve("cache"))
-            &&Files.isRegularFile(data.resolve("server.properties")),"startup keeps settings in data and creates no separate config/cache directories");
+        check(Files.isRegularFile(deployment.resolve("config/combat.yml"))&&!Files.exists(deployment.resolve("cache"))
+            &&Files.isRegularFile(data.resolve("server.properties")),"legacy settings overrides remain usable beside unified config/content");
     }
 
     private static void managementWorkflow(Path jar, Path directory) throws Exception {

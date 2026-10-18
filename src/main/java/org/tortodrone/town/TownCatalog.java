@@ -147,8 +147,11 @@ public final class TownCatalog {
     public Collection<Station> stations(){return stations.values();}
     public static TownCatalog load(Path path)throws IOException{
         if(Files.size(path)>8_000_000)throw new IOException("Town catalogue too large");
+        return fromData(Json.parse(Files.readString(path)));
+    }
+    public static TownCatalog fromData(Object data)throws IOException{
         try{
-            var root=object(Json.parse(Files.readString(path)));if(integer(root,"format")!=1)throw new IOException("Unsupported Town catalogue");
+            var root=object(data);if(integer(root,"format")!=1)throw new IOException("Unsupported Town catalogue");
             var recipes=new LinkedHashMap<String,Recipe>();var items=new HashMap<String,Map<String,String>>();var sprites=new HashMap<String,Sprite>();var perks=new ArrayList<Perk>();var stations=new HashMap<String,Station>();
             for(var value:list(root,"recipes")){
                 var r=object(value);var ingredients=new ArrayList<Ingredient>();

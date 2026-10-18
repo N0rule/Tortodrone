@@ -10,7 +10,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Delayed capsule actions follow the owned use activity, including combat interruptions. */
 public final class SceneItemUseTest {
     public static void main(String[] args)throws Exception {
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
         var capsule=map.content().items().get("Pickup/Capsule/Health Capsule");
         try(var fixture=new Fixture(map)) {
             int started;

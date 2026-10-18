@@ -1,0 +1,34 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: I'm here to learn about the minerals found within the Clockworks.
+        next: part 2a
+      text: Hello. I'm Wegner, Chief Geo Knight of the Skylark and head of geological studies within the Clockworks.
+    part 2a:
+      responses:
+      - text: Continue
+        next: part 3a
+      text: 'During your travels in the Clockworks you will encounter five special minerals: crimsonite, moonstone, valestone, luminite and dark matter.'
+    part 3a:
+      responses:
+      - text: Continue
+        next: part 4a
+      text: You will find ore deposits in all levels of the Clockworks, and you must attack them in order to break them down into a size you can carry. You can only pick up one at a time, but you can swap them by picking up another. Look for the biggest, shiniest one you can find. They are the most valuable.
+    part 4a:
+      responses:
+      - text: Continue
+        next: part 5a
+      text: Once you safely reach the elevator, the mineral you are carrying gets deposited in your arsenal for use later. Everyone in your party gets everyone else's minerals, so no need to fight over who gets the best one!
+    part 5a:
+      responses:
+      - text: Continue
+        next: part 6a
+      text: Minerals are used to create sprite food in the Laboratory. Sprite food is very important to the development of your sprite, so grab those minerals when you see them!
+    part 6a:
+      responses:
+      - text: Sounds great! Thanks for the info!
+        close: true
+      text: Our geological research is ongoing, so there may yet be other fascinating uses for these strange and powerful minerals.
+  initial: part 1a
+id: town7

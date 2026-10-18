@@ -8,7 +8,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Exercise every retained shard graph against the authoritative projectile clock. */
 public final class FragmentationTest {
     public static void main(String[] args)throws Exception {
-        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));int checked=0;
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));int checked=0;
         for(var attack:catalog.entries()){
             if(attack.activity()!=290||attack.fireRefs().size()!=1)continue;
             var action=attack.fireRefs().getFirst().action();

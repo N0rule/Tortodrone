@@ -8,7 +8,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Focused status and emergency revive checks against the prepared Training Hall rules. */
 public final class SceneStatusTest {
     public static void main(String[] args)throws Exception{
-        var map=SceneCatalog.load(Path.of("content/packs/vanilla/maps")).scene(294);var content=map.content();
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);var content=map.content();
         thrownVials(content);
         var owlite=new WorldProfile.Item(99,WorldProfile.Slot.SHIELD,"Gear/Shield/Grey Owlite Shield",null,0,2,false,false,false);
         for(String kind:List.of("Fire","Shock")){
@@ -40,7 +40,7 @@ public final class SceneStatusTest {
         var stun=new SceneHealth(content);stun.hit(status("Stun"),1000);
         check(stun.status().modifiers().speed()<1&&stun.status().modifiers().attackSpeed()<1,"stun slows movement and attacks");
         var frozen=new SceneHealth(content);frozen.hit(status("Freeze"),1000);
-        var weapons=WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv"));var combat=new KnightCombat(weapons);
+        var weapons=WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv"));var combat=new KnightCombat(weapons);
         var sword=new WorldProfile.Item(10,WorldProfile.Slot.SWORD,"Weapon/Sword/Proto Sword",null,0,6,false,false,false);
         var shield=new WorldProfile.Item(11,WorldProfile.Slot.SHIELD,"Gear/Shield/Proto Shield",null,0,2,false,false,false);
         var profile=new WorldProfile(1,1,1,0,0,1,List.of(sword,shield));combat.equipment(profile);

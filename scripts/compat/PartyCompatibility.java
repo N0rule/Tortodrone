@@ -11,7 +11,7 @@ import com.threerings.presents.net.*;
 public class PartyCompatibility {
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
-        var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/packs/vanilla/maps")));
+        var scenes=new SceneRegistry(SceneCatalog.load(Path.of("content/maps")));
         var registry=scenes.parties();var alice=knight("Party-Alice");var bob=knight("Party-Bob");
         var events=new ArrayList<PartyRegistry.Event>();
         try(var a=registry.join(1001,alice,profile(1),e->{});var b=registry.join(1002,bob,profile(2),events::add)){

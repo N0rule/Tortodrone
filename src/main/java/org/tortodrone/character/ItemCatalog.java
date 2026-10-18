@@ -116,7 +116,8 @@ public final class ItemCatalog {
     }
     public Entry find(String config) { return entries.get(config.toLowerCase(Locale.ROOT)); }
     public static void write(Path file,Collection<Entry> entries)throws IOException { ItemCatalogJson.write(file,entries); }
-    public static ItemCatalog load(Path file)throws IOException { return ItemCatalogJson.load(file); }
+    public static ItemCatalog load(Path file)throws IOException { return Files.isDirectory(file)?org.tortodrone.resources.ItemYaml.load(file):ItemCatalogJson.load(file); }
+    public static ItemCatalog fromData(Object data)throws IOException {return ItemCatalogJson.load(data); }
     static boolean stockLocked(String type,boolean permanent) {
         return permanent||Set.of("Artifact","Mineral","Token","TokenArtifact").contains(type);
     }

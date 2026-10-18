@@ -12,7 +12,7 @@ Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; no
 - Preserve authenticated ownership/leases/revisions, GM authorization, atomic SQLite writes/rollback and commit-before-publish. Reject unknown DB schemas without automatic migration.
 - Verify native protocol class/method/argument/callback layouts and mappings. Do not invent packets, quests or rewards.
 - Scene instances own simulation state; client input is intent, not position. Guard travel/subscription generations; keep network I/O outside simulation/storage locks.
-- Vanilla/custom content packs are implemented, but imported definitions alone do not prove gameplay support.
+- Unified YAML content and a migration-only legacy pack reader are implemented; imported definitions alone do not prove gameplay support.
 
 ## Verification — fast by default
 - **Docs/minor cleanup:** inspect diff/links; no Java tests.

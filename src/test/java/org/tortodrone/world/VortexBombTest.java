@@ -8,7 +8,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Real exported vortex chains, including range, immunity, timing and final damage. */
 public final class VortexBombTest {
     public static void main(String[] args)throws Exception {
-        var catalog=FireCatalog.load(Path.of("content/packs/vanilla/combat/fires.json"));
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
         for(String name:List.of("Graviton Vortex","Electron Vortex","Celestial Vortex"))verify(catalog,"Weapon/Bomb/"+name);
         System.out.println("PASS: all three vortex bombs pull nearby monsters through five timed stages, respect range/masks/impulse immunity, damage once at the end and terminate");
     }

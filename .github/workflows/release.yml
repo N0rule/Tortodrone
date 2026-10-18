@@ -72,11 +72,11 @@ jobs:
           mkdir -p "$root"
           test -s build/tortodrone.jar
           test -s build/tortodrone-admin.jar
-          test -f build/content/packs/vanilla/maps/catalog.properties
-          test -f build/content/packs/vanilla/items/catalog.json
+          test -f build/content/maps/haven/map.yml
+          test -f build/content/items/weapons.yml
           cp build/tortodrone.jar build/tortodrone-admin.jar "$root/"
-          mkdir -p "$root/content/packs" "$root/content/custom/packs"
-          cp -a build/content/packs/vanilla "$root/content/packs/vanilla"
+          mkdir -p "$root"
+          cp -a build/content build/config build/plugins "$root/"
           cp -a docs "$root/docs"
           java -cp "$root/tortodrone.jar" org.tortodrone.resources.ContentManager "$root"
           cp VERSION README.md "$root/"
@@ -91,11 +91,11 @@ jobs:
           For headless hosting:
               java -jar tortodrone.jar --nogui
 
-          Keep the two JARs and content/ together in this directory.
-          Server settings are generated as data/server.properties on first startup.
+          Keep the two JARs and config/, content/, plugins/ together in this directory.
+          Edit config/server.yml before starting.
           Persistent data/ is created beside the JARs and is NEVER included in
           release archives. Back up data/ (including keys and database), and
-          preserve content/custom/packs/ when upgrading an existing installation.
+          preserve your existing config/, content/ and data/ when upgrading; review the documented migration candidate workflow.
           See README.md for configuration and client connection instructions.
           EOF
           (

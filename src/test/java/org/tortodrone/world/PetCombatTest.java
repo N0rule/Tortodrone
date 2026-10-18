@@ -9,16 +9,16 @@ import static org.tortodrone.support.TestWire.check;
 /** One isolated scene: owned companion, native skill intent, cooldown and departure cleanup. */
 public final class PetCombatTest {
     public static void main(String[] args)throws Exception{
-        var catalog=SceneCatalog.load(Path.of("content/packs/vanilla/maps"));var scenes=new SceneRegistry(catalog);
-        scenes.town(TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json")));
-        scenes.petFires(FireCatalog.load(Path.of("content/packs/vanilla/town/pet-fires.json")));
+        var catalog=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps"));var scenes=new SceneRegistry(catalog);
+        scenes.town(TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
+        scenes.petFires(FireCatalog.load(org.tortodrone.support.ContentFixture.path("town/pet-fires.json")));
         var map=catalog.scenes().stream().filter(m->!m.town()).findFirst().orElseThrow();var instance=scenes.destination(map.id(),10);
         int stamp=SceneClock.now();var actor=new ActorState(10,1001,"Fixture",0,stamp,map.spawnX(),map.spawnY(),0,0,0,new StarterCatalog.Model("Character/PC/Level",Map.of()));
         var sprite=new TownState.Sprite(7,"Drakon","Sparky",0,0,null,0,0,Set.of(),null,Collections.nCopies(9,0),Collections.nCopies(3,0),0);
         var profile=new WorldProfile(10,1,1,0,0,1,List.of(),KnightProgress.RECRUIT,new TownState(List.of(),List.of(sprite),7,List.of(),List.of()));
         var member=instance.simulation().join(actor,snapshot->{});
         try{
-            member.combat(WeaponCatalog.load(Path.of("content/packs/vanilla/combat/weapons.tsv")),profile);member.equipment(profile);member.enter();
+            member.combat(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")),profile);member.equipment(profile);member.enter();
             var initial=instance.simulation().snapshot();var companion=initial.actors().stream().filter(a->a.pet()!=null).findFirst().orElseThrow();
             check(!companion.player()&&companion.pet().knight()==10&&initial.players().size()==1,"pet is owned by its knight and never becomes a player occupant");
             stamp=SceneClock.now();check(member.input(stamp,0,0,128,stamp,stamp,System.nanoTime()/1_000_000),"native skill intent accepted");

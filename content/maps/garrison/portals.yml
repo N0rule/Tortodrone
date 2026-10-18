@@ -1,0 +1,34 @@
+entrances:
+  from_arcade_east:
+    id: 3563
+    facing: 0
+    x: 36.02576
+    y: 10.543983
+  from_hoh:
+    id: 3575
+    facing: 0
+    x: 44.426003
+    y: 7.6340003
+  from_lab:
+    id: 3769
+    facing: 0
+    x: 6.4260025
+    y: 9.634001
+  from_town_square_east:
+    id: 3574
+    facing: 90.00002299504568
+    x: 1.5
+    y: 2.499998
+portals:
+  '3313':
+    destination: arcade
+    entrance: from_garrison_north
+  '3560':
+    destination: haven
+    entrance: from_garrison_west
+  '3770':
+    destination: laboratory
+    entrance: level_start
+  '3568':
+    destination: hall_of_heroes
+    entrance: level_start

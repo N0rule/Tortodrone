@@ -1,0 +1,12 @@
+dialogue:
+  nodes:
+    part_1a:
+      responses:
+      - text: Ok, let's see what you have to offer.  (Browse recipes)
+        close: true
+        action: 0
+      - text: End conversation
+        close: true
+      text: "Hi there {0}, I'm Walkon, a knight who utilizes gear that offers high piercing damage defense.  The recipes I have for you produce armor and shields that protect you from the piercing attacks of slimes and beasts. \n\nOne of the best parts about choosing piercing defense is that the armor is often made of soft, squishy jelly materials.  You could just about fall asleep in it!"
+  initial: part_1a
+id: mannequin14

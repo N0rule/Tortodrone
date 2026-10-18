@@ -13,6 +13,7 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "dialogue-check" -> {if(args.length!=2)throw new IllegalArgumentException("dialogue-check expects game-directory");fixture="DialogueCompatibility";}
             case "exchange-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("exchange-check expects game-directory");fixture="ExchangeCompatibility";
             }
@@ -53,7 +54,7 @@ public final class StockTools {
             }
             case "fire-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("fire-check expects game-directory");fixture="FireCompatibility";
-                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/packs/vanilla/combat/fires.json").toString());
+                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/_internal/fires.json").toString());
             }
             case "weapons" -> {
                 if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");
@@ -80,7 +81,7 @@ public final class StockTools {
             }
             case "training-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("training-check expects game-directory");fixture="TrainingCompatibility";
-                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/packs/vanilla/maps/advanced_training").toString());
+                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/maps/advanced_training").toString());
                 sources.add(project.resolve("scripts/compat/TrainingCompatibility.java"));sources.add(project.resolve("scripts/compat/FireCompatibility.java"));
             }
             case "statuses" -> {

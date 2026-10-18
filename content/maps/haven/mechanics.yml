@@ -1,0 +1,25 @@
+# Map-specific rules only. Shared numeric balance lives in content/shared/combat.yml.
+properties:
+  destination.from_advanced_training.id: 3930
+  destination.from_advanced_training.rotation: -1.5707964
+  destination.from_advanced_training.x: -23
+  destination.from_advanced_training.y: 5.75
+  destination.from_arcade_central.id: 3573
+  destination.from_arcade_central.rotation: -1.5707963
+  destination.from_arcade_central.x: 1.019044
+  destination.from_arcade_central.y: 32.01587
+  destination.from_bazaar_east.id: 3874
+  destination.from_bazaar_east.rotation: -3.5762787e-07
+  destination.from_bazaar_east.x: -30.5
+  destination.from_bazaar_east.y: 0.5
+  destination.from_garrison_west.id: 6558
+  destination.from_garrison_west.rotation: 3.1415923
+  destination.from_garrison_west.x: 31.5
+  destination.from_garrison_west.y: -5.500003
+  destination.move_auction.id: 7966
+  destination.move_auction.rotation: 1.5707963
+  destination.move_auction.x: 1.5
+  destination.move_auction.y: 12.5
+  minimap.placed3733.icon: ui/minimap/vendor_auction.png
+  minimap.placed3733.x: 1
+  minimap.placed3733.y: 18.5

@@ -1,0 +1,14 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Snipes?
+        next: part 2a
+      text: Please be careful not to step on any of the snipes, little one.
+    part 2a:
+      responses:
+      - text: End conversation
+        close: true
+      text: The snipes are the graceful, adorable, fetchingly-corpulent birds you see roaming about Haven. Some say they are the most beautiful creatures in the galaxy, but you would never hear that from the snipes themselves as they are incredibly modest.
+  initial: part 1a
+id: town23

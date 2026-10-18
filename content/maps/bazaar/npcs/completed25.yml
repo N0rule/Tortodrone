@@ -1,0 +1,106 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Sure, show me the shops. (Follow Tylen)
+        next: part 2a
+      - text: What services can I find here? (Follow Tylen)
+        next: part 7a
+      - text: No thanks, I'll explore on my own.
+        close: true
+      text: Welcome to the Bazaar, {0}! Would you like a tour of the shops or services?
+    part 2a:
+      responses:
+      - text: Do Strangers sell anything else besides weapons and gear?
+        next: part 3a
+      text: "Strangers like Quillion here sell you weapons and armor.  Each one specializes in a particular kind of item, so talk to them and find out what they carry. They're not very chatty, but they always have a fresh stock of items every day! \n\nJust be sure that you've reached the appropriate rank to equip an item!"
+    part 3a:
+      responses:
+      - text: (Follow Tylen)
+        next: part 4a
+      text: I'm glad you asked, they certainly do!  Let's head over to Vatel.
+    part 4a:
+      responses:
+      - text: Recipes?  For weapons and gear?
+        next: part 5a
+      text: Vatel here will sell you a selection of recipes as well as personal color changers and other items.
+    part 5a:
+      responses:
+      - text: Roger.
+        next: part 6a
+      text: That's right, you can acquire recipes and materials in order to alchemize weapons and gear at alchemy stations.  Come on, I'll show you one.
+    part 6a:
+      responses:
+      - text: I'd like to see the shops again. (Follow Tylen)
+        next: part 2a
+      - text: I'd like to see the services. (Follow Tylen)
+        next: part 7a
+      - text: No thanks, I'll explore on my own.
+        close: true
+      text: "Here we have an alchemy station that you'll no doubt become very familiar with as you upgrade your arsenal. \n\nWell, that's it for the shops. Would you like another tour?"
+    part 7a:
+      responses:
+      - text: Gremlins?!
+        next: part 8a
+      text: Punch and Vise are gremlin smiths that can change the properties of your weapons and gear.
+    part 8a:
+      responses:
+      - text: Well, if you say so...
+        next: part 9a
+      text: Take it easy {0}, not all gremlins are cut from the same cloth.  Some disagree with the ways of King Tinkinzar and the Crimson Order.  In fact, somewhere down in the Clockworks I'm told there's an entire town full of gremlins who left the Great Colony.
+    part 9a:
+      responses:
+      - text: Handy, I'll keep it in mind.  What else you got?
+        next: part 10a
+      text: "Ok, back to business then. \n\nPunch can add Unique Variants, a kind of special bonus to your weapons and gear for a price. But his methods are, er... chaotic.  You never really know what you're going to get. \n\nVise is a little more precise.  He can unbind your weapons and gear for a price, allowing you to sell or gift the item again!"
+    part 10a:
+      responses:
+      - text: (Follow Tylen)
+        next: part 11a
+      text: Let's go visit Brinks.
+    part 11a:
+      responses:
+      - text: I've got it.  Anything else?
+        next: part 12a
+      text: Brinks is the Token Trader, issuing certain items to Knights in exchange for tokens that can be collected within the Clockworks.  Tokens can be found in treasure blocks, issued as mission rewards or found when defeating special boss monsters.
+    part 12a:
+      responses:
+      - text: (Follow Tylen)
+        next: part 13a
+      text: Just one last shop to visit and then we're done. I've saved the best for last.
+    part 13a:
+      responses:
+      - text: Where do I find accessory tickets?
+        next: part 14a
+      text: Here we have Bechamel the Accessorizor, who can add accessories to your gear so long as you have a ticket.  With accessories, you can make your gear really stand out in a crowd, I highly suggest giving it a try.  You'll soon become the apple of every one's eye!
+    part 14a:
+      responses:
+      - text: Roger.
+        next: part 15a
+      text: You can find accessory tickets inside lockboxes or at the Auction House if another Knight happens to be selling them.
+    part 15a:
+      responses:
+      - text: I'd like to see the shops. (Follow Tylen)
+        close: true
+      - text: I'd like to see the services again. (Follow Tylen)
+        close: true
+      - text: No thanks, I'll explore on my own.
+        close: true
+      text: "Well, that about covers the basics of the Bazaar.  It's a really fantastic place to find just about anything you need. \n\nDo you want me to go over it all again or do you think you've got it?"
+    part 16a:
+      responses:
+      - text: (Follow Tylen)
+        close: true
+      text: Another tour? No problem, follow me!
+    part 16b:
+      responses:
+      - text: (Follow Tylen)
+        close: true
+      text: Another tour? No problem, follow me!
+    part 16c:
+      responses:
+      - text: Thanks Tylen, I'll be seeing you!
+        close: true
+      text: Wonderful!  I'm glad I could help you get your bearings. Good luck to you, {0}!
+  initial: part 1a
+id: completed25

@@ -35,7 +35,7 @@ public final class GearProgressionCompatibility {
         variant.a(22L,24L,1,(A.c)null);check(1,List.of(22L,24L,1),"ResultMarshaller");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+        var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
         for(String config:List.of("Weapon/Sword/Proto Sword","Weapon/Sword/Calibur","Gear/Armor/Padded Armor")){
             var nativeItem=new LevelItem(0,new ConfigReference<ItemConfig>(config));var gear=rules.gear().gear(config);
             for(int level:new int[]{0,5,8}){nativeItem.a(manager,level,.2f);float expected=nativeItem.a(manager,17.25f),actual=gear.addHeat(level,.2f,17.25f);if(Math.abs(expected-actual)>.000001f)throw new AssertionError("Native heat gain differs: "+config+" level "+level+" "+expected+" != "+actual);}

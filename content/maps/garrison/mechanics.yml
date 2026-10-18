@@ -1,0 +1,35 @@
+# Map-specific rules only. Shared numeric balance lives in content/shared/combat.yml.
+properties:
+  destination.exit_guild_list.id: 3616
+  destination.exit_guild_list.rotation: -1.5707961
+  destination.exit_guild_list.x: 21.499998
+  destination.exit_guild_list.y: 16.6
+  destination.from_arcade_east.id: 3563
+  destination.from_arcade_east.rotation: -1.5707964
+  destination.from_arcade_east.x: 36.02576
+  destination.from_arcade_east.y: 10.543983
+  destination.from_hoh.id: 3575
+  destination.from_hoh.rotation: -1.5707964
+  destination.from_hoh.x: 44.426003
+  destination.from_hoh.y: 7.6340003
+  destination.from_lab.id: 3769
+  destination.from_lab.rotation: -1.5707964
+  destination.from_lab.x: 6.4260025
+  destination.from_lab.y: 9.634001
+  destination.from_town_square_east.id: 3574
+  destination.from_town_square_east.rotation: 3.5762787e-07
+  destination.from_town_square_east.x: 1.5
+  destination.from_town_square_east.y: 2.499998
+  destination.from_your_guildhall.id: 3549
+  destination.from_your_guildhall.rotation: -1.5707961
+  destination.from_your_guildhall.x: 21.499998
+  destination.from_your_guildhall.y: 7.5
+  minimap.placed3760.icon: ui/minimap/vendor_hoh.png
+  minimap.placed3760.x: 44.5
+  minimap.placed3760.y: 13.5
+  minimap.placed3761.icon: ui/minimap/vendor_guildhall.png
+  minimap.placed3761.x: 21.5
+  minimap.placed3761.y: 18.5
+  minimap.placed3764.icon: ui/minimap/vendor_beaker.png
+  minimap.placed3764.x: 6.5
+  minimap.placed3764.y: 13.5

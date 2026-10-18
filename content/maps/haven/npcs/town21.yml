@@ -1,0 +1,49 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: Tell me what you know about the Clockworks.
+        next: part 2a
+      - text: Nothing at this time, thanks.
+        close: true
+      text: Hello there little one. You look as though you require knowledge of some kind.
+    part 2a:
+      responses:
+      - text: How old are the Clockworks?
+        next: part 3a
+      - text: How were the Clockworks created?
+        next: part 3b
+      - text: What lies at the core of the Clockworks?
+        next: part 3c
+      - text: On second thought, I've got some adventuring to do. Bye!
+        close: true
+      text: I will share with you what I know, little one.
+    part 3a:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: |-
+        It is hard to know exactly as so much of what is within seems to hold their origin from different worlds. Some appear to be from realms of great antiquity, no doubt once home to innumerable old gods and creatures.
+
+        This world is an unnatural one. What you see within it was never meant to be here. The great histories of so many worlds endlessly churning through the cogs of this great machine... I find it quite sad.
+    part 3b:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: There are different theories. Some say the gremlins that you see working on it now are responsible. But that seems too great even for their seemingly infinite work force. Even with the means to do so, how did they "start?" Where did they find the power?
+    part 3c:
+      responses:
+      - text: I've got another question.
+        next: part 2a
+      - text: Thanks for the info tall guy, see you around town.
+        close: true
+      text: |-
+        Something of immense power, little one. There is an enormous energy signal coming from the center of the Clockworks, but that is all we know. No one has ever made it to the core. Or at least if anyone has, they have never returned.
+
+        The ones to ask would be the gremlins, for they have likely gone deeper into the Clockworks than any creature. But that might prove difficult as they are quite a disagreeable lot.
+  initial: part 1a
+id: town21

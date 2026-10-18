@@ -1,104 +1,293 @@
-# Content and default resources
+# Editing server content
 
-**Current format (v0.31.0):** versioned content packs selected through `data/server.properties`. The shipped `vanilla` pack contains the checked-in scenes and catalogs; explicitly enabled custom packs may add or replace complete resources under declared dependency/override rules. Older `defaults/` and top-level resource layouts remain available through read-only legacy compatibility when no versioned pack is selected.
-
-## What ships today
-
-`./gradlew validateContent` checks the selected checked-in pack; `./gradlew prepareContent` prepares it under `build/content/packs/vanilla/`. `buildServer` prepares the content with the executable JAR. Game installation and online archives are **not** required for ordinary preparation. The runtime resolves and validates the selected content before key/account storage and does not download missing resources.
+Version 0.33 uses one `content/` tree and readable YAML under `config/`. Edit a file,
+validate it, and restart the server. No pack selection, manifests, manual hashes,
+Java compilation or hot reload is involved. Player inventories, identities and
+progression remain in SQLite. Back up a stopped deployment before upgrading.
 
 ```text
-data/server.properties
-content/packs/vanilla/pack.properties
-content/packs/vanilla/maps/...
-content/packs/vanilla/items/catalog.json
-content/packs/vanilla/combat/{weapons.tsv,equipment.tsv,fires.json}
-content/custom/packs/<id>/pack.properties
+config/
+  server.yml                 listener, limits, logs, startup-map
+  combat.yml                 dodgeCooldownMs
+content/
+  maps/<map>/
+    map.yml                  readable identity, default entrance, instance count
+    portals.yml              arrivals and travel destinations
+    actors.yml               supported placed actor properties
+    mechanics.yml            map-local numeric rules and signals
+    npcs/<npc>.yml           dialogue graphs and text
+    native/                  pinned scene, collision and source bindings
+  items/
+    weapons.yml              item definitions and supported attack controls
+    gear.yml                 armor, helms, shields and trinkets
+    costumes.yml
+    accessories.yml
+    materials.yml
+    consumables.yml
+    misc.yml                 every remaining verified definition
+  town/
+    shops.yml                merchant catalogs and initial Depot stock
+    recipes.yml
+    stations.yml
+    sprites.yml
+    variants.yml
+    accessories.yml
+    progression.yml          item prices, forge tables and gear progression
+  shared/
+    trap-cycles.yml
+    statuses.yml
+    combat.yml               shared numeric balance and sparse gear defenses
+  _internal/                 fire graphs, native item arguments and provenance
+plugins/README.md            reservation only; no plugin loader
+src/ scripts/ docs/ gradle/   implementation, import tools, docs and build system
+data/                        private runtime state, keys and logs; never in Git
 ```
 
-The seven stock scenes are Haven (1), Bazaar (2), Arcade (3), Garrison (445), Advanced Training (294), Laboratory (30893) and the four-star Hall of Heroes (318). Captured stock layouts from October 2026 support twelve directed town portals plus six interior travel links. Training includes prepared actors, collisions and limited interactive mechanics; town layouts and the two town interiors also have prepared actors, station bindings and supported conversation graphs. None of this constitutes general dungeon/mission support. See [modern captures](modern-captures.md) and [Training Hall evidence](training-hall.md).
+The checkout and portable deployment use the same content/configuration layout.
+`./gradlew buildWithoutTests` prepares `build/content`, `build/config` and
+`build/plugins` beside both executable JARs. Ordinary builds are offline once
+Gradle dependencies are cached and never require a game installation or capture.
 
-`data/server.properties` uses `content-packs=vanilla` and `legacy-content=auto` by default. It lists enabled pack IDs (`vanilla` by default) and the legacy policy. The vanilla pack is at `content/packs/vanilla/`; other selected packs are at `content/custom/packs/<id>/`. Each pack declares a version, resource paths and SHA-256 digests in `pack.properties`. A resource is a complete catalog or scene directory. A custom pack can override an existing resource only when it declares the exact dependency/version and override owner. Packs are resolved and validated as one snapshot before the server opens persistent account/key state; unknown properties, unsafe paths, bad hashes, missing references, incompatible dependencies and undeclared overrides fail startup.
+The seven real maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
+`advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318).
+There are 9,348 indexed original item definitions, 382 weapon controls and 123
+shields. Indexed content does not establish gameplay support. The implementation
+still has the limits described in [Architecture](architecture.md) and the
+[stock support index](item-support.csv); general missions, dungeon AI, rewards,
+random vendor stock and many original actions remain incomplete.
 
-Legacy layouts remain read-only compatible when `legacy-content=auto` and legacy files are present. Do not edit or delete an existing deployment as part of migration. To prepare a candidate, run the packaged `org.tortodrone.resources.ContentMigration` command against a stopped deployment. It exports to a new `content/custom/packs/legacy-import/` directory and writes `data/server-migrated.properties`; review both before explicitly selecting the candidate. It refuses occupied destinations and does not change original resources or player data. See `src/main/java/org/tortodrone/resources/ContentMigration.java` for the exact command contract.
+## Configuration and validation
 
-## Map pack contract
+`config/server.yml` retains the existing listener/logging setting names:
 
-`content/packs/vanilla/maps/catalog.properties` selects the town spawn with `entry-scene=1` by default. Every scene directory is declared as a whole `resource.scene.<id>` in its pack manifest and needs:
+```yaml
+server-ip: 0.0.0.0
+server-port: 47624
+max-clients: 16
+log-mode: normal
+log-max-mib: 10
+log-retention: 5
+startup-map: haven
+```
 
-| File | Meaning |
-| --- | --- |
-| `map.properties` | Positive unique `scene-id`, `zone-id` and zone/name/image, `kind` (`town`/`training`/`level`), signed `version`, walkable `spawn-x/y`, `instances` (1–16), SHA-256s |
-| `scene.dat` | Original compressed Tudey scene export sent to the stock reader |
-| `walkability.gz` | Derived sampled collision grid used for authoritative movement |
-| `portals.properties` | Optional validated entrance tags, rectangular/convex-polygon triggers and destinations |
-| `content.properties` / `static-collision.properties` | Optional supported stock-derived scene actors/interactions and detailed collision (present in Training); not required for every map |
+`startup-map` names an installed map folder. The current startup flow requires a
+town; Ready Room/progression onboarding is not implemented. `--config path.yml`
+changes the settings file without relocating `data/`. Existing explicitly chosen
+`.properties` settings remain readable, including their listener overrides.
+Pack selection settings are used only by the explicit legacy migration reader.
+`config/combat.yml` holds the verified global dodge cooldown in milliseconds.
+Economy rules already have concrete owners in Town files; no empty economy file
+is shipped.
 
-The loader scans subfolders, not a fixed Java map-name list. It checks header/hashes, descriptor paths, valid spawn, portal arrival safety, unique scene IDs, shared zone-name consistency and existing destination entrance tags. Limits: **64 templates**, **128 configured instances**, scene file up to 900,000 bytes and collision file up to 1 MiB. Missing portal metadata is allowed but provides **no automatic travel**; merely adding a scene does not make it visitable. Every non-town template currently uses a private per-knight interior runtime; that is not a general dungeon/party implementation.
-
-**Install a prepared third-party pack:** stop the server; back up `data/server.properties` and current packs; copy the complete pack under `content/custom/packs/<id>/`; validate its `pack.properties` hashes and required catalog/scene references; add its ID to `content-packs=`; then restart and check scene logs and an unchanged client. A custom pack replacing an existing resource must declare the exact dependency and override owner. There is no runtime map reload or GUI pack installer.
-
-**Change starting town:** edit the selected pack's complete `maps/catalog.properties` resource, e.g. `entry-scene=123` for a valid `kind=town` scene, update that resource's manifest digest, then restart. This changes everyone's default entry scene. For portals, `trigger.<entryId>.scene` and `trigger.<entryId>.entrance` must reference an installed target with a matching `entrance.<tag>.*` and a walkable, safe arrival. Return links require explicit configuration.
-
-**Import a verified raw archived scene (maintainer/advanced):**
+Validate without starting a listener or opening SQLite/keys:
 
 ```sh
-java scripts/StockTools.java scene "/path/to/Spiral Knights" "/path/to/archive-scene.dat" "/tmp/new-scene-pack" 1 Haven
+java -cp build/tortodrone.jar org.tortodrone.resources.ContentManager /deployment
 ```
 
-Run from the **source checkout**, with JDK 25 and a compatible, read-only stock game installation (including `code/projectx-pcode.jar`); the output folder must be new. The importer derives native kind, collision samples, closest walkable spawn, descriptor/hashes and optional default interior entrance. The newer source tools can also extract optional scene content and collision metadata where supported. It cannot convert arbitrary images/models/Unity scenes, create full dungeon functionality or infer all return portals. Try the scene in the unchanged client: archive revisions/assets can differ.
+All YAML is data-only, with bounded sizes/depth, duplicate-key rejection and field
+validation. Use spaces, quote numeric-looking string keys and quote localization
+text containing YAML punctuation. Files and directories cannot traverse symlinks.
+Unknown fields, duplicate map/item/NPC identities, missing references, invalid
+spawns, broken jumps and bad native fingerprints stop loading. Errors identify
+the file or definition. Startup fingerprints inputs automatically, checks them
+again after validation, and publishes one complete snapshot. Existing snapshots
+remain usable if a subsequent load fails. Gameplay performs no YAML parsing or
+content file scans.
 
-Maintainer stock extraction and captured-layout re-exports are separate source-maintenance workflows; ordinary Gradle builds use the checked-in validated packs and do not automatically import games or captures. See `scripts/StockTools.java`, `scripts/compat/ScenePackExport.java` and `docs/development.md`.
+## NPC dialogue
 
-## Items and combat
+Open `content/maps/advanced_training/npcs/konway.yml`. Its actual opening text is:
 
-- `items/catalog.json` is the stock-derived **v2 JSON** definition catalog (v1 readable), in the selected pack; persistent owned items/equipment, binding and currencies live in SQLite. The indexed default snapshot contains 9,348 definitions; 8,570 satisfy current grantability checks. An indexed definition is **not** evidence its gameplay/use/crafting behavior works.
-- `combat/weapons.tsv`, `equipment.tsv` and `fires.json` supply numeric weapon controls, modifiers and authored fire graphs from the selected pack; server Java implements state/attacks/replication. Current snapshot includes 382 weapons, 123 shields and 1,950 attack graphs with known unsupported effects/actions. Piercing charge projectiles apply intersection damage, timer damage is imported, and parameterized bomb stages retain their full chains. Alchemer split directions use archived descriptions and the captured bounce sector; exact stripped timings remain unverified. Delayed shard-bomb actions and legacy Agent-based projectiles remain unsupported.
-- To customize definitions, create or select a complete pack under `content/custom/packs/` and declare its resources, hashes, dependencies and overrides in `pack.properties`. Restart after changing content. For raw stock extraction, use `java scripts/StockTools.java items|weapons|equipment|fires ...` with command-specific help/code; outputs are not automatically installed.
-- The stock client retains meshes, textures, audio, UI and named configs; these are **not bundled** as server assets. Server configs reference stock-compatible identities.
+```yaml
+id: konway
+dialogue:
+  initial: part 1a
+  nodes:
+    part 1a:
+      text: "Welcome to our advanced training hall. Here you will find useful survival tips to help you on your journey through the Clockworks. \n\nWould you like some directions?"
+      responses:
+      - text: Sure, where should I start?
+        next: part 2a
+      - text: No thanks, I'll explore the place myself.
+        close: true
+```
 
-## Town gameplay
+This excerpt omits the existing `part 2a` node: retain it when editing. Change
+`text` to edit a sentence. Node keys and `next` retain the native graph; response
+list order is significant. `close: true` ends a conversation. A response containing
+`action: <index>` also invokes its verified native station/command action. Keep
+that action reference when editing its sentence; dropping it fails validation.
+Animations, interface models and exact placed NPC bindings are in the map's native
+compatibility data. They do not need to appear in dialogue YAML.
 
-The optional `resource.town=town/catalog.json` resource supplies archive-derived recipe costs/ingredients, crafting variant tables, sprite progression references, accessory rules and available merchant catalogues. Scene `content.properties` binds those rules to current layouts. Runtime support includes atomic recipe learning/crafting, normal and catalogue alchemy (including sprite food and supplied special recipes), sprite hatching/care/skill allocation/perks, harness-kit installation and equipment, equipped sprite replication, accessory attachment/removal, unbinding, merchant purchases/sales, town destination commands, and auction escrow/bidding/buyouts/cancellation/watch lists with persistent attachment mail. Health, movement/attack speed and charge bonuses have server mappings; full sprite combat, other variant/perk effects, general quest/event/guild building scripts and missing source catalogues remain incomplete. Empty or stripped source stock is not replaced with invented goods or rewards. No claim of complete Town parity is made.
+The defaults resolve original English strings from the read-only stock
+`code/projectx-config.jar`, including retained `npc` keys found in the
+`conversation` bundle. Unchanged text preserves its original localization key on
+the wire, so client localization and placeholders retain their behavior. Edited
+text is accepted when it matches another verified source string in the same NPC's
+native bindings, and resolves to that string's original key. Arbitrary new text
+fails validation: the installed Conversation window calls
+`MessageBundle.get(key, knightName)` for **both messages and responses**, bypassing
+its separate `~` literal decoder. A literal produces a missing-translation fallback
+with a visible prefix and appended knight name. The isolated graphical check
+established this restriction; it is not advertised as working customization.
+Arbitrary sentence authoring remains blocked by that unchanged-client API. No
+client patch, invented packet, renamed player or replacement dialog is used.
+Existing localization keys/placeholders and graph/service behavior are preserved.
 
-Dungeon companions now spawn as native pet actors, follow their knight and accept the three stock skill commands with unlock and cooldown checks. The optional `pet-fires` resource contains 1,728 power/ultimate/harness-type graph variants; support includes projectile, laser, orbital, buff, cloak and shield handling. Quill attachments, advanced trigger effects and several perks remain incomplete. The generated [item-support.csv](item-support.csv) indexes missing or partial item behavior; regenerate it with `python3 scripts/content/index_item_support.py`.
+Migration/import without a stock installation retains unresolved original keys
+as safe defaults and reports the exact missing bundle/key. It invents no text.
+Shipped defaults contain resolved text and need no installed client. The
+`_internal/localization-report.txt` records source conversion diagnostics.
 
-The Account Manager's **Rank / prestige** action edits the selected knight's saved progression, with a **Vanguard preset** (10-3, 45,000 prestige). Its temporary **Grant first battle sprite (testing)** checkbox grants and equips one newborn Drakon, Seraphynx or Maskeraith only when the knight owns no sprites. This unlocks the stock client's “An Eternal Bond” pod requirement, which checks sprite ownership rather than a mission flag. The grant persists and refreshes online; reopening the hatch dialog may be necessary. The existing console and admin CLI commands remain available.
+## Items and weapon controls
 
-GM pet tools use the stock client commands: `/sprite_list` shows owned IDs, `/sprite_equip <id>` equips one (`0` unequips), `/sprite_level <1-100>` sets its level, `/sprite_power <skill 1-3> <power 1-3> <value 0-3>` sets a power, and `/sprite_ultimate <skill 1-3> <0|1|2>` chooses none/A/B. The latter three affect the equipped sprite and bypass ordinary progression costs and unlock requirements. F3 **Sprite Creator** grants a catalogued sprite, equipping it if none is equipped. Changes persist and update the active companion; server transactions recheck GM permission and authentication. Current stock admin methods are 45/46/47 for sprite level/power/ultimate; older archive IDs are not accepted as aliases because they now identify other operations.
+Each category has an `items` mapping keyed by the exact stock configuration path.
+Search by the visible item's name. `stockId` is the retained catalog identifier;
+it is neither the persistent inventory-row ID nor an invitation to replace saved
+integer identities. Defaults omit irrelevant flags/zero modifiers. Required stock
+model arguments have one owner in `_internal/item-arguments.json`.
 
-The stock inventory **Forge** action uses saved item levels, a full heat bar, the item's resolved forge table and the exact selected crystal tier. It consumes the matching rarity's fire crystals atomically and advances one level on success, resetting heat progress; failed rolls spend crystals and retain heat. Repeated requests with an old level are refused. Heat uses the native per-level thresholds and excludes fully heated or maximum-level gear from shared awards. GM `/heat <slot> <0-1>` sets fractional heat, `/level <slot> <level>` sets the equipped item's displayed level, and `/forge` uses the native admin result path. These tools remain GM-only with database permission/authentication checks. Dungeon heat-drop generation, level-specific combat scaling and forge bonus rewards are not completed by this change; stripped bonus rates/amounts are not invented.
+A supported weapon's `combat` section exposes `chargeTimeMs`, `chainCooldownMs`,
+`maxChain`, `cycle`, `blended`, `attackMovementSpeed`, `chargeMovementSpeed`, and its
+ordered `attacks` plus supported `incomplete`, `charged` and `cooldown` stages.
+Each stage exposes `landMs`, `rearmMs`, `clearMs`, optional blending and native
+impulse timing/displacement. Speeds are the existing native control values:
+**attackMovementSpeed controls movement while attacking, not attack rate**.
+Equipment `modifiers` are keyed by `NONE`, `SWORD`, `HANDGUN`, `BOMB`; omitted
+classes/values default to zero. `attackSpeed` there is the existing attack-speed
+modifier. Shields expose health, regeneration/break delays, defending movement
+modifier and the existing bash fraction/action.
 
-Unique Variant rolls retain resolved table parameters and weighted exclusion flags. Selecting one/two/three UVs now uses the corresponding original tree, and keeping a UV excludes its entire weighted family, including other tiers. Custom tickets retain their original group restrictions. Export verified numeric rules with `java scripts/StockTools.java gear-progression /path/to/game /tmp/fresh-gear-rules`; merge the three arrays from `progression.json` into the Town catalogue and refresh content hashes. `gear-check` checks current native RPC layouts and heat arithmetic without launching the graphical client.
+Edit existing values and validate. Damage, elemental/status effects and staged
+bomb behavior retain their verified fire/action graphs in `_internal/fires.json`.
+No universal damage multiplier is exposed: applying one without family-specific
+semantics could scale unrelated effects. New assets, missing AI, or arbitrary
+new item behaviors are not implemented by adding a YAML row.
 
-Training Hall uses native party chat and atomic health/status updates. Each floor grants one automatic emergency revive after five seconds, restoring full health with five seconds of protection; subsequent deaths show the stock Spark panel. A revive consumes one owned `Rarity/Spark of Life`, or charges the native 50-energy buy-and-use price when explicitly approved. Fire, freeze, poison, stun, shock, sleep and curse have server effects, with secondary burn/shock damage, delayed player sleep regeneration, cursed item markings/self-damage, resistance and reapplication rules. Prepared status definitions also carry script/buff/cloak/hold/shield modifiers and authored signal/expiry/damage actions. Gear resistance uses the exported level-zero gear values plus native status-resistance variants. Regenerate status/resistance properties with `java scripts/StockTools.java statuses /path/to/game /tmp/fresh-status.properties`; regenerate content checksums when installing them.
+The installed common Item record has no equivalent of BattleSprite's
+server-controlled name field; its visual name resolves through stock configs.
+No unverified `displayName` setting is accepted. Config references and native
+item variants remain compatible; server menu labels are not proof of client item
+renaming support.
 
-Town interaction input works in peaceful scenes, including NPC dialogue bindings and the existing Haven auction nodes. Punch/Vice open variant modification/unbinding; Kozma opens the native Supply Depot with captured offers, and Bazaar information NPCs have their authored conversation graphs. All nine five-star Hall of Heroes mannequins open their captured recipe shops through the original dialogue choices. Supply Depot purchases recheck offered handles and prices and charge the displayed currency. Merchant purchase limits also apply to constant catalogues, persist per knight/cycle and aggregate duplicate handles for the same item. Random variants use the original 20,000/75,000/225,000 Crown prices and tables; held random/custom tickets and retained variants are supported. The native harness installer dialog is available, but its original catalogue is absent; owned harness kits remain usable through the existing item action. Ordinary Bazaar merchant stock and the harness shop catalogue are absent from the available source. Real-money Energy billing, unsupported upgrade item records and conditional event/PvP conversations remain incomplete.
+## Map identity, actors, portals and traps
 
-The stock **Energy Exchange** now receives its native bootstrap object and order book. In Town, players can post buy/sell offers, view/cancel their own offers and use instant trades from the Energy Depot. Volume is measured in original lots of **100 Energy**; prices are Crowns per lot. Orders are funded entirely by player escrow, match by best resting price then creation order, and return price improvement to incoming buyers. Cancellation refunds only the unfilled balance. Immediate trades require enough matching liquidity and never leave an unexpected resting order. The market starts empty, survives restarts and sends book/balance updates to connected players through the existing state poller. The advertised exchange fee remains zero. Transactions reject ownership/authentication failures, malformed requests, self-matching, overflow and duplicate settlement. Each knight may have up to 64 pending offers. `java scripts/StockTools.java exchange-check /path/to/game` verifies the installed RPC, bootstrap, object and callback layouts without graphical gameplay.
+`map.yml` preserves the native ID and type, provides readable administration
+labels, and selects `defaultSpawn` by a named entrance. Names used in native
+`Name` serialization, scene version, image and zone IDs stay in
+`native/metadata.properties`; changing an administration label does not rename
+client-localized maps. The `zone` field is descriptive; native zone membership
+requires a verified reimport. `instances` remains bounded to 1–16 per template,
+64 templates and 128 total configured instances.
 
-The native Energy Exchange own-offer panel reloads its rows on reopening. Public market levels and balances update live; cancellation always checks the current unfilled balance, including when an older row is still displayed. Graphical acceptance of this exchange flow remains outstanding.
+`portals.yml` distinguishes `entrances` (arrival ID, x, y, facing in degrees) from
+`portals` (native trigger ID, destination map folder, arrival entrance). Rectangular
+and convex polygon geometry stays with verified native bindings. To redirect the
+Advanced Training exit, change its existing portal's `destination` and `entrance`;
+there is no need to copy vertices. Destination entrances must exist and be walkable;
+arrivals intersecting a portal trigger are rejected. A coordinate-only default
+point has no native `id`, is not a named travel arrival, and cannot be targeted by
+a portal. This preserves older server spawn coordinates without inventing native
+marker identities. A default entrance is used
+only when no explicit arrival applies. Travel/subscription generations, parties
+and scene ownership still use the existing runtime implementation.
 
-The admin application's sidebar separates **Accounts & knights**, **Supply Depot** and **Auction House**. Item grants and the selected inventory item's **Level / heat / UVs** action accept displayed levels, heat percentages and up to three compatible UV families. Storage validates the original gear limits, rejects stale edits and preserves instance identities and item binding/protection flags. Inventory columns show level, heat and UVs. The stock client's broad **Trash** action is a GM permission, not an item quality or binding setting; ordinary accounts retain their original item rules. Removing GM status removes staff-only actions.
+`actors.yml` keys include readable config/source identifiers and the handler
+index. A config path alone never identifies a placed actor. Edit supported
+placement/gameplay fields, such as a training generator's `child.health`, its
+position or a trap's `cycle`. `facing` is degrees in [-180,180]. Numeric and boolean
+field types are checked; unknown native fields and actor additions/removals fail
+binding validation. Source keys, handler bindings, native class/model data and
+native-layout association remain pinned. A changed native scene requires a
+reimport, not a guessed binding.
 
-**Supply Depot** lists the original offers until the first local edit, then persists the managed catalogue in the shared SQLite database. Administrators can add offers from the existing item picker, set quantity and Crown or Energy price, set a per-knight purchase limit (zero is unlimited), feature offers, and enable/disable them. Edits take effect on the next catalogue request. Transactions reject old quotes after any catalogue edit, recheck ownership, limits and balances, and commit payment and delivery together. Disabled offers retain their IDs and purchase history. Unsupported item records cannot be enabled through the editor.
+Optional `mechanics.yml` contains only each map's own rules; maps with no local rules omit it.
+`shared/combat.yml` owns global player/scaling/status parameters and sparse gear
+defenses; omitted gear values default to zero. Shared `trap-cycles.yml` owns
+stock presets A/B/A2/B2, slow/cross variants and their inverse references.
+`up`, `down`, `warn` and `offset` are **seconds**. An actor references its preset
+by name. The engine's switch/signal transitions, offsets, collision and inverse
+cycle behavior are retained. Shared statuses and complex native status actions
+remain prepared data; their presence does not claim every original effect works.
 
-**Auction House** lists player/system auctions, creates featured bidding or fixed-price stock offers from the shared item picker, inspects linked delivery/claim state, cancels through escrow/refunds, and settles expired listings. Featured prices are per offer (which may contain a stack); stock decrements once per native buyout. Featured Crown payments leave circulation, with no fictitious seller or seller payout. The running server settles up to 100 expired auctions every 30 seconds even without connected players; processing retries after errors and restarts. Fees, commissions and allowed player durations retain their stock defaults and have no configuration screen. Older listings have unknown creation timestamps, and historical mail has no auction association.
+## Town editing
 
-Town persistence uses **SQLite schema 12** in the same database. Known schema 9–11 predecessors upgrade atomically: schema 9 first gains system-owned auction metadata and mail-to-auction links, schema 9/10 gain the Supply Depot offer table, and all gain the funded Energy Exchange order table. Player auctions, bids, balances, inventory and mail remain intact. Stop the old server before upgrading; local administration refuses this upgrade while the deployment lock is held. Unknown schemas remain rejected. Back up the stopped deployment before updating. Schema 8 still requires an explicit candidate export using the new JAR:
+`town/shops.yml` contains catalog goods and initial Depot offers; good entries
+retain exact item references, count, Crown/Energy prices and purchase limits.
+`recipes.yml` retains ingredients, counts, rarity-dependent costs, outputs and
+verified variant tables. `stations.yml` owns global service definitions; map-local
+NPC actions reference them. Sprite progression, accessories, variants and gear
+progression each have their own files. Unresolved/random original stock is not
+replaced with invented goods or probabilities.
+
+Storage still rechecks authentication, item ownership, balances, quantities,
+limits and stale quotes at the atomic transaction boundary. Player data does not
+move into YAML. After the first admin-managed Supply Depot edit, that deployment's
+managed offers live in SQLite; the YAML Depot entries remain the initial defaults.
+Editing YAML does not overwrite a managed catalog. The account manager retains
+its existing live Depot/auction controls.
+
+## Native map import
+
+Reuse the verified read-only native exporters, then validate and publish into the
+same unified tree. From a built source checkout:
 
 ```sh
-java --enable-native-access=ALL-UNNAMED -cp build/tortodrone.jar \
-  org.tortodrone.storage.TownUpgrade /path/to/old/data /tmp/tortodrone-schema12-candidate
+java scripts/MapImport.java /path/to/game /path/to/scene.dat /deployment map_name 1 %town:m.haven
 ```
 
-The candidate directory must be new. The tool locks the stopped source deployment, copies a consistent SQLite snapshot and upgrades only the candidate database. Review/back up the deployment before installing that candidate; keys and other deployment files are untouched. Existing content packs without the Town resource still load with their previous limited functionality. Stock-reader checks cover Town messages; graphical gameplay remains unverified.
+The last two arguments are the verified zone ID and native zone name; cached
+scenes do not establish zone ownership. The command invokes `StockTools scene`
+with supported actor/collision extraction and writes only disposable staging
+files. It then runs the packaged installer:
 
-## Checksums and update behavior
+```sh
+java -cp build/tortodrone.jar org.tortodrone.resources.MapImport \
+  /prepared-native-map /deployment map_name /path/to/read-only-game
+```
 
-`content/packs/vanilla/pack.properties` pins each whole resource with SHA-256 digests. Preparation tools verify checked-in source manifests, fill missing output files and upgrade only destination files recognized as earlier published versions; owner-modified destination bytes are preserved. Changing a source resource requires updating its manifest digest and, for changed map geometry, matching collision/portal data. Custom packs have their own independent manifests.
+The installer retains native scene identity/version, derives the existing
+walkable arrival, converts supported actors/NPCs and localization, validates a
+complete candidate deployment, and publishes the map with one directory rename.
+It refuses a live deployment, duplicate scene ID, unsafe name or occupied map
+folder. New shared presets remain local to that imported map so publication does
+not require changing global files. Review `native/import-report.txt` for source
+limits/unresolved strings, then connect an existing compatible portal explicitly.
+Current raw exporters cannot recover all portal actions or stripped server
+scripts from a cached scene. In the available modern Laboratory capture, raw
+re-extraction with the installed client refuses source key `1065` because its
+Startup actor reference is absent. The verified prepared Laboratory remains
+loadable; the importer does not guess a replacement for that missing reference. Missing actions, AI, collision, rewards and dialogue
+are reported or rejected, never fabricated. Test imported layouts with an isolated
+stock client. No proprietary assets/captures belong in Git.
 
-Beware: owner modifications preserved by preparation may still fail runtime validation if only one matching file was edited. Do not merge geometry without matching metadata. The server may start with login/admin but reject world entry when scene loading fails.
+## Upgrade from packs or older defaults
 
-Content packs provide external definitions; they do not add mechanics to the Java engine. The current implementation supports complete scene/catalog resources and their declared selection/dependency/override rules. It does not provide hot reload, partial-file overlays, arbitrary dungeon behavior, general missions or general NPC/monster scripts. Persistent accounts, ownership and progression remain in `data/`, separate from replaceable content.
+Keep the old deployment intact. Stop both server and manager, back up its complete
+`data/`, configuration and content, then run the **new** JAR against the old tree:
 
-Builds and startup generate `data/server.properties` from bundled defaults when it is missing. Content validation reads the settings without creating files, and no separate config or diagnostic cache directory is needed. Pack hashes remain in `pack.properties`. Existing settings are preserved; missing options use the bundled defaults.
+```sh
+java -cp /new/tortodrone.jar org.tortodrone.resources.ContentMigration \
+  /old/deployment /fresh/review-candidate /optional/read-only-game
+```
+
+Omit the final argument when unavailable. The tool reads legacy settings,
+resolves and verifies the selected old packs/whole-resource overrides (or legacy
+`defaults`/top-level resources), and exports a complete separate `config/` and
+`content/`. Town and pet graphs are retained. It validates before atomic candidate
+publication and produces `migration-report.txt`. Original files, keys, SQLite and
+player progression are never changed or copied by the tool. Unselected custom
+packs, ambiguous shared/native bindings, unsupported sections and occupied
+candidates refuse migration for explicit review. There is no runtime legacy-pack
+fallback, implicit migration or competing override format.
+
+Review the candidate and report, place the two new JARs beside its directories,
+and install it while keeping the original `data/` directory in the final
+deployment. Move old packs/defaults out of that final tree after backing them up;
+mixed layouts fail clearly. Do not copy release defaults over administrator edits.
+Preparation fills missing files, upgrades only recognized unchanged defaults and
+preserves edited/unknown files. The internal source/ownership provenance replaces
+old build manifests; administrators never maintain it. Unknown SQLite schemas
+retain the existing refusal policy; this content overhaul changes no DB schema.

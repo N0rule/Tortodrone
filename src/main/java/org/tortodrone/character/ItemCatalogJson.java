@@ -30,7 +30,12 @@ final class ItemCatalogJson {
     static ItemCatalog load(Path file) throws IOException {
         if (Files.size(file)>32_000_000) throw new IOException("Item catalogue exceeds size limit");
         try {
-            var root=object(Json.parse(Files.readString(file)),Set.of("format","version","items"));
+            return load(Json.parse(Files.readString(file)));
+        } catch (IllegalArgumentException invalid) { throw new IOException("Invalid JSON item catalogue",invalid); }
+    }
+    static ItemCatalog load(Object data) throws IOException {
+        try {
+            var root=object(data,Set.of("format","version","items"));
             int version=integer(root.get("version"));
             if (!"tortodrone-items".equals(root.get("format")) || (version!=1&&version!=2))
                 throw new IOException("Unsupported JSON item catalogue");
@@ -107,11 +112,13 @@ final class ItemCatalogJson {
     }
     private static boolean bool(Object value) throws IOException { if (!(value instanceof Boolean b)) throw new IOException("Invalid item flag"); return b; }
     private static int integer(Object value) throws IOException {
-        if (!(value instanceof BigDecimal n)) throw new IOException("Invalid item integer");
+        if (!(value instanceof Number)) throw new IOException("Invalid item integer");
+        BigDecimal n=new BigDecimal(value.toString());
         try { return n.intValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
     }
     private static long longInteger(Object value) throws IOException {
-        if (!(value instanceof BigDecimal n)) throw new IOException("Invalid item integer");
+        if (!(value instanceof Number)) throw new IOException("Invalid item integer");
+        BigDecimal n=new BigDecimal(value.toString());
         try { return n.longValueExact(); } catch (ArithmeticException invalid) { throw new IOException("Invalid item integer",invalid); }
     }
 }

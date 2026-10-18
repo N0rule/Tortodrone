@@ -16,7 +16,7 @@ public final class TownEconomyTest {
         Path home=Files.createTempDirectory("tortodrone-town-economy-");
         try{
             var db=new Database(home,true);var password=new Passwords.Protection(new byte[16],new byte[32]);int a=db.create("Alice",password,false),b=db.create("Bob",password,false);
-            var items=ItemCatalog.load(Path.of("content/packs/vanilla/items/catalog.json"));var rules=TownCatalog.load(Path.of("content/packs/vanilla/town/catalog.json"));
+            var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
             var alice=new CharacterStore(db,a,"Alice",items);var bob=new CharacterStore(db,b,"Bob",items);alice.create(choices("Alice-Knight"));bob.create(choices("Bob-Knight"));
             db.currency("Alice","Alice-Knight",a,-1,Currency.CROWNS,100000);db.currency("Bob","Bob-Knight",b,-1,Currency.CROWNS,100000);
             var town=new TownStore(db,items,rules);var house=new AuctionHouse(db,items,rules);

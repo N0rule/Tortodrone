@@ -1,0 +1,6 @@
+id: 1
+name: Haven|Town Square
+type: town
+zone: haven
+defaultSpawn: default_spawn
+instances: 1

@@ -39,7 +39,7 @@ public final class AccountStore implements AutoCloseable {
     }
     public AccountStore(Path directory) throws IOException { this(directory,false); }
     public AccountStore(Path directory,boolean deploymentLocked) throws IOException { this(directory,deploymentLocked,org.tortodrone.resources.ContentManager.load(directory.toAbsolutePath().normalize().getParent())); }
-    private AccountStore(Path directory,boolean deploymentLocked,org.tortodrone.resources.ContentRegistry content)throws IOException{this(directory,deploymentLocked,content.items(),content.resources().containsKey("town")?org.tortodrone.town.TownCatalog.load(content.resources().get("town").path()):org.tortodrone.town.TownCatalog.empty());}
+    private AccountStore(Path directory,boolean deploymentLocked,org.tortodrone.resources.ContentRegistry content)throws IOException{this(directory,deploymentLocked,content.items(),content.town());}
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog) throws IOException { this(directory,deploymentLocked,catalog,org.tortodrone.town.TownCatalog.empty()); }
     public AccountStore(Path directory,boolean deploymentLocked,ItemCatalog catalog,org.tortodrone.town.TownCatalog town) throws IOException { this.catalog=Objects.requireNonNull(catalog);this.town=Objects.requireNonNull(town);database = new Database(directory,deploymentLocked); }
     public ItemCatalog catalog(){return catalog;}

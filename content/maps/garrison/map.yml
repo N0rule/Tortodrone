@@ -1,0 +1,6 @@
+id: 445
+name: Haven|Garrison
+type: town
+zone: haven
+defaultSpawn: from_town_square_east
+instances: 1

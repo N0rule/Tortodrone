@@ -1,0 +1,19 @@
+dialogue:
+  nodes:
+    part 1a:
+      responses:
+      - text: What have you learned about Almire?
+        next: part 2a
+      text: We've recovered what little remains from Owlite Keep concerning the Kingdom of Almire. Combined with the snippets we've gotten from the nature sprites within Firestorm Citadel itself, we are starting to get a clearer picture of Almire's history.
+    part 2a:
+      responses:
+      - text: What happened to the rest of the kingdom?
+        next: part 3a
+      text: From the tomes we have recovered, we've learned that Firestorm Citadel was once part of a much larger kingdom known as Almire thousands of years ago. Although it was bordered by other aggressive nations, Almire was renowned for the martial prowess of its many legions. These legions kept the kingdom safe for many years. Alas, they weren't enough.
+    part 3a:
+      responses:
+      - text: End conversation
+        close: true
+      text: Well, we now know there were massive citadels housing Almire's armed forces and great estates for its noble houses. It must have been quite a sight to see. We assume the rest of the kingdom is still a smoldering ruin somewhere. It is possible that some of it might have survived...though given the anecdotal evidence we think it is unlikely at best.
+  initial: part 1a
+id: scene.30893.placed.1793
