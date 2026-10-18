@@ -21,7 +21,7 @@ public final class FireCatalogExport {
     private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 3) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-fragmentation-catalogue]");
+        if (args.length < 2 || args.length > 4 || args.length==4&&!args[3].equals("--vortex")) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex]]");
         Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
         if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
@@ -32,7 +32,8 @@ public final class FireCatalogExport {
         manager.init();
 
         var entries = new ArrayList<AttackFire>();
-        var previous=args.length==3?FireCatalog.load(Path.of(args[2])):null;
+        var previous=args.length>=3?FireCatalog.load(Path.of(args[2])):null;
+        boolean vortex=args.length==4;
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
@@ -40,7 +41,7 @@ public final class FireCatalogExport {
             if(previous!=null){
                 if(item instanceof ItemConfig.Weapon weapon){
                     var charged=previous.find(config.getName(),290);
-                    if(charged!=null&&charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action())))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
+                    if(charged!=null&&(vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
                 }
                 continue;
             }
@@ -375,7 +376,7 @@ public final class FireCatalogExport {
     }
     private static Action withShape(Action action,Object shape){
         var children=action.children().stream().map(a->withShape(a,shape)).toList();var config=action.config();
-        if(action.kind()==Kind.DAMAGE_REGION){var arguments=new TreeMap<>(config.arguments());arguments.put("shape",shape);config=new StarterCatalog.Model(config.name(),arguments);}
+        if(action.kind()==Kind.DAMAGE_REGION||action.kind()==Kind.IMPULSE_REGION){var arguments=new TreeMap<>(config.arguments());arguments.put("shape",shape);config=new StarterCatalog.Model(config.name(),arguments);}
         return new Action(action.kind(),config,action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
     }
     private static Action unsupported(ActionConfig action) throws IOException {
@@ -576,35 +577,45 @@ public final class FireCatalogExport {
     }
     private static Action restoreDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,Action action)throws Exception {
         if(action==null)return null;
-        // Choice arguments survive stripping even when the region they address
+        // Direct and choice arguments survive stripping even when the region they address
         // does not. Follow the actual derived bindings and restore only an
         // explicitly authored detonation circle radius, never a guessed area.
         var seen=new HashSet<String>();
         while(reference!=null&&seen.add(reference.getName())){
             var config=manager.a(ActorConfig.class,reference);if(config==null)break;
-            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Choice choice){
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
+                for(String path:direct.paths)action=restoreDetonationCircle(action,path,reference.kW().get(direct.name));
+            }else if(parameter instanceof com.threerings.config.Parameter.Choice choice){
                 for(var direct:choice.directs)for(String path:direct.paths)
                     if(path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")){
                         String selected=Objects.toString(reference.kW().get(choice.name),choice.choice);
                         for(var option:choice.options)if(option.name.equals(selected)){
                             var field=option.getClass().getDeclaredField("_arguments");field.setAccessible(true);
                             Object value=((Map<?,?>)field.get(option)).get(direct.name);
-                            if(value instanceof Number radius){var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=radius.floatValue();
-                                Object shape=argumentValue(circle);
-                                var index=java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
-                                if(index.matches()){
-                                    int at=Integer.parseInt(index.group(1));
-                                    if(action.kind()!=Kind.COMPOUND||at>=action.children().size())throw new IOException("Detonation shape path changed: "+path);
-                                    var children=new ArrayList<>(action.children());children.set(at,withShape(children.get(at),shape));
-                                    action=new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
-                                }else if(action.kind()==Kind.DAMAGE_REGION)action=withShape(action,shape);
-                                else throw new IOException("Detonation circle has no matching damage action: "+path);}
+                            action=restoreDetonationCircle(action,path,value);
                         }
                     }
             }
             reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
         }
         return action;
+    }
+    private static Action restoreDetonationCircle(Action action,String path,Object value)throws Exception {
+        if(!path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")||!(value instanceof Number radius))return action;
+        if(!Float.isFinite(radius.floatValue())||radius.floatValue()<=0)throw new IOException("Invalid detonation radius: "+path);
+        var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=radius.floatValue();
+        Object shape=argumentValue(circle);
+        var index=java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
+        if(index.matches()){
+            int at=Integer.parseInt(index.group(1));
+            if(action.kind()!=Kind.COMPOUND||at>=action.children().size())throw new IOException("Detonation shape path changed: "+path);
+            var children=new ArrayList<>(action.children());var child=children.get(at);
+            if(child.kind()!=Kind.DAMAGE_REGION&&child.kind()!=Kind.IMPULSE_REGION)throw new IOException("Detonation circle has no matching region action: "+path);
+            children.set(at,withShape(child,shape));
+            return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+        }
+        if(action.kind()!=Kind.DAMAGE_REGION&&action.kind()!=Kind.IMPULSE_REGION)throw new IOException("Detonation circle has no matching region action: "+path);
+        return withShape(action,shape);
     }
     private static boolean isProjectile(String type) { return type.equals("ORBITAL") || type.equals("LASER") || type.equals("ACTOR") || type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
     private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }

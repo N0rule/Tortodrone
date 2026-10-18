@@ -89,8 +89,11 @@ public final class SceneWeapons {
             else if(next.source().actorId==next.source().ownerId&&owners.containsKey(next.source().ownerId))execute(next.action(),next.source(),next.stamp(),next.depth(),next.seed());
         }
         for(var iterator=runs.entrySet().iterator();iterator.hasNext();){var e=iterator.next();var actor=owners.get(e.getKey());if(actor==null){iterator.remove();continue;}
-            var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),actor.clientOid(),null,actor.id());
             e.getValue().removeIf(run->{
+                // Shield actions execute on the server; the client does not prefire
+                // their guarded effects. A prediction owner would hide the bump VFX.
+                var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),
+                    run.start.activity()==KnightCombat.DEFENSE?0:actor.clientOid(),null,actor.id());
                 int cutoff=run.start.started()+run.start.clear();
                 if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
                 for(int i=0;i<run.loops.length;i++){
@@ -244,7 +247,7 @@ public final class SceneWeapons {
             return true;
         }
         if(action.kind()==FireCatalog.Kind.IMPULSE_REGION){if(targets!=null)targets.impulse(action.config(),source.x,source.y,source.rotation,stamp,source.ownerId);return true;}
-        if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid));return true;}
+        if(action.kind()==FireCatalog.Kind.FIRE_EFFECT){if(action.config()==null)return true;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();effects.addLast(new SceneEffect(++sequence,action.config(),stamp,source.x,source.y,source.rotation,source.ownerOid,source.actorId));return true;}
         if(action.kind()==FireCatalog.Kind.UNSUPPORTED&&nonTargetAction(action.unsupportedType()))return true;
         if(action.kind()!=FireCatalog.Kind.EMIT_PROJECTILE)return false;
         if(!action.facingType().isEmpty())return false; // Targeted shots require actual resolved targets.

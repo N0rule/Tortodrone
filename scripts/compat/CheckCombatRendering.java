@@ -12,13 +12,14 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 3) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only|--movement-only|--depot-only|--hazards-only]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only]");
         }
+        boolean vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
         boolean hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
-        boolean trainingOnly=hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -53,6 +54,7 @@ public final class CheckCombatRendering {
             requireMaps(maps);
             if(healthOnly)healthFixture(maps);
             if(hazardsOnly)hazardFixture(maps);
+            if(vortexShieldOnly)vortexShieldFixture(maps);
             Files.createDirectories(scratch.resolve("data"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("home/system-prefs"));
@@ -93,7 +95,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
-            Path peerLog=output.resolve("peer-client.log");Process peer=hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -101,7 +103,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
@@ -174,6 +176,26 @@ public final class CheckCombatRendering {
                 actors.setProperty(prefix+"x",map.getProperty("spawn-x"));
                 actors.setProperty(prefix+"y",Float.toString(Float.parseFloat(map.getProperty("spawn-y"))+1));pad=true;
             }
+        }
+        save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
+        Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);
+        metadata.setProperty("sha256.scene.294",digest(scene));save(manifest,metadata);
+    }
+    /** Duplicate original cube definitions only in the disposable scene. */
+    private static void vortexShieldFixture(Path pack)throws Exception {
+        Path scene=pack.resolve("maps/advanced_training"),descriptor=scene.resolve("map.properties"),content=scene.resolve("content.properties");
+        Properties map=properties(descriptor),actors=properties(content);
+        String source=Arrays.stream(actors.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
+            .filter(prefix->actors.getProperty(prefix+"kind","").equals("Monster")).findFirst().orElseThrow();
+        float x=Float.parseFloat(map.getProperty("spawn-x")),y=Float.parseFloat(map.getProperty("spawn-y"))+3;
+        map.setProperty("spawn-y",Float.toString(y));
+        for(int i=0;i<2;i++){
+            String id=Integer.toString(10000+i),prefix="entry."+id+".";
+            for(String key:List.copyOf(actors.stringPropertyNames()))if(key.startsWith(source))actors.setProperty(prefix+key.substring(source.length()),actors.getProperty(key));
+            actors.setProperty(prefix+"x",Float.toString(x));actors.setProperty(prefix+"y",Float.toString(y+(i==0?-1.2f:2.3f)));actors.setProperty(prefix+"rotation","0");
+            actors.setProperty(prefix+"source-key","vortex-shield-"+i);
+            actors.setProperty(prefix+"health","10000");actors.setProperty(prefix+"acquire-distance","0");
+            actors.setProperty("entries",actors.getProperty("entries")+","+id);
         }
         save(content,actors);map.setProperty("content-sha256",digest(content));save(descriptor,map);
         Path manifest=pack.resolve("pack.properties");Properties metadata=properties(manifest);

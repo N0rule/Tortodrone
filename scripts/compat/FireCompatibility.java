@@ -41,9 +41,12 @@ public final class FireCompatibility {
             }
         }
         for(var model:effects.values()) {
-            var event=read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new SceneEffect(1,model,100,1,2,0,1001))));
+            var event=read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(),List.of(),new int[0],Map.of(),true,List.of(new SceneEffect(1,model,100,1,2,0,1001),new SceneEffect(2,model,100,1,2,0,0,71))));
             Object array=null;for(var f:SceneDeltaEvent.class.getDeclaredFields())if(f.getType().isArray()&&f.getType().getComponentType().getName().endsWith(".Effect")){f.setAccessible(true);array=f.get(event);}
             check(array!=null&&field(Array.get(array,0),"_config").equals(reference(model)),"exact native effect arguments");checked++;
+            Object serverEffect=Array.get(array,1);
+            check(field(serverEffect,"_target") instanceof com.threerings.tudey.data.EntityKey.Actor target&&target.vw()==71
+                &&(int)field(serverEffect,"_clientOid")==0,"server-fired effect retains its actor target and reaches the controlling client");
         }
         System.out.println("PASS: stock reader preserves "+checked+" representative real projectile/effect reference shapes");
     }

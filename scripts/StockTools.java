@@ -41,14 +41,19 @@ public final class StockTools {
                 fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/PetCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
             }
-            case "fragmentation-fires" -> {
-                if(args.length!=4)throw new IllegalArgumentException("fragmentation-fires expects game-directory existing-catalogue fresh-output-directory");
+            case "fragmentation-fires", "vortex-fires" -> {
+                if(args.length!=4)throw new IllegalArgumentException(args[0]+" expects game-directory existing-catalogue fresh-output-directory");
                 fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                if(args[0].equals("vortex-fires"))fixtureArgs.add("--vortex");
             }
             case "fires" -> {
                 if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
                 fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java")); fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
+            case "fire-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("fire-check expects game-directory");fixture="FireCompatibility";
+                fixtureArgs.clear();fixtureArgs.add(project.resolve("content/packs/vanilla/combat/fires.json").toString());
             }
             case "weapons" -> {
                 if(args.length!=3)throw new IllegalArgumentException("weapons expects game-directory fresh-output-directory");

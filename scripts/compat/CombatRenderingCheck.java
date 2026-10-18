@@ -54,6 +54,7 @@ public final class CombatRenderingCheck {
     private boolean hazardsOnly;
     private boolean healthOnly;
     private boolean movementOnly;
+    private boolean vortexShieldOnly;
     private List<Action> actions=ACTIONS;
     private int healthMaximum;
     private float hazardX,hazardY;
@@ -104,7 +105,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -123,6 +124,7 @@ public final class CombatRenderingCheck {
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
+        probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
         if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
@@ -142,6 +144,7 @@ public final class CombatRenderingCheck {
             }
             store.grantItems("LanPlayer","Town-Knight","Gear/Shield/Grey Owlite Shield",1,-1,-1);
             store.grantItems("LanPlayer","Town-Knight","Rarity/Spark of Life",2,-1,-1);
+            store.grantItems("LanPlayer","Town-Knight","Weapon/Bomb/Graviton Vortex",1,-1,-1);
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
@@ -171,8 +174,9 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
             if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
+            if(vortexShieldOnly&&view.sceneId()==294&&stage>=2){vortexShieldTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
                 if(GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                     throw new AssertionError("Disposable primary client must be focused for native town input");
@@ -490,6 +494,60 @@ public final class CombatRenderingCheck {
         return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
             ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
     }
+    private boolean sawShieldBump,sawVortexImplode,sawVortexExplode,sawVortexPull;
+    private int bumpFrames,vortexFrames,vortexTarget;
+    private float vortexDistance;
+    private void vortexShieldTick(View view,long now)throws Exception {
+        var own=authoritative.get(app.CT().pawnId);if(own==null||view.PO()==null)return;
+        if(stage==2){
+            if(!(own instanceof Dungeoneer)||authoritative.size()<200||app.GF().mG()||!view.PO().acL().isVisible())return;
+            if(trainingSince==0)trainingSince=now;if(now-trainingSince<3_000_000_000L)return;
+            long id=findItemId("Gear/Shield/Grey Owlite Shield");if(id==0)return;
+            equip=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,2,equip);started=now;stage=70;return;
+        }
+        if(stage==70){
+            if(!equip.done)return;if(equip.reason!=null)throw new AssertionError(equip.reason);
+            if(now-started<700_000_000L)return;
+            capture("shield-bump-before");flags(view,64);started=now;stage=71;return;
+        }
+        if(stage==71){
+            if(sawShieldBump&&bumpFrames<3&&now-started>150_000_000L*bumpFrames){capture("shield-bump-vfx-"+bumpFrames++);}
+            if(now-started<800_000_000L)return;
+            flags(view,0);
+            if(!sawShieldBump)throw new AssertionError("Controlling client did not receive shield bump VFX");
+            equip=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId("Weapon/Bomb/Graviton Vortex"),6,equip);started=now;stage=72;return;
+        }
+        if(stage==72){
+            if(!equip.done)return;if(equip.reason!=null)throw new AssertionError(equip.reason);
+            flags(view,0);
+            var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
+            var renderedWeapon=(Item)field(view.PO().implementation(),"_weapon").get(view.PO().implementation());
+            if(now-started<800_000_000L||((Dungeoneer)own).adU()!=0||weapon==null||renderedWeapon==null
+                ||!weapon.Vx().getName().equals("Weapon/Bomb/Graviton Vortex")||!renderedWeapon.Vx().getName().equals("Weapon/Bomb/Graviton Vortex"))return;
+            var target=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Monster")&&a.tz().y>own.tz().y+1.7&&Math.abs(a.tz().x-own.tz().x)<.1)
+                .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
+            vortexTarget=target.vw();vortexDistance=(float)Math.hypot(target.tz().x-own.tz().x,target.tz().y-own.tz().y);
+            flags(view,4);started=now;stage=73;return;
+        }
+        if(stage==73){
+            long elapsed=now-started;
+            if(elapsed>=4_000_000_000L)flags(view,0);
+            for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Bomb){
+                String name=actor.Mv().getName();var sprite=view.gk(actor.vw());
+                // These invisible carriers render creation/destruction transients,
+                // rather than a persistent actor model. Review the captured pixels too.
+                if(sprite==null||!sprite.acU().Mv().getName().equals(name))continue;
+                if(name.equals("Bomb/Parts/Gravidos (Implode) (Charged)"))sawVortexImplode=true;
+                if(name.equals("Bomb/Parts/Gravidos (Explode) (Charged)"))sawVortexExplode=true;
+            }
+            var target=authoritative.get(vortexTarget);
+            if(target!=null&&Math.hypot(target.tz().x-own.tz().x,target.tz().y-own.tz().y)<vortexDistance-.5)sawVortexPull=true;
+            if(elapsed>5_500_000_000L+vortexFrames*250_000_000L&&vortexFrames<16)capture("vortex-stage-"+vortexFrames++);
+            if(elapsed<10_000_000_000L)return;
+            if(!sawVortexImplode||!sawVortexExplode||!sawVortexPull)throw new AssertionError("Missing rendered vortex stage or monster pull: "+sawVortexImplode+"/"+sawVortexExplode+"/"+sawVortexPull);
+            finishImages();passed=done=true;System.out.println("PASS: stock controlling client receives shield bump VFX; native vortex implode/explode stages initialize and pull a nearby cube");app.shutdown();
+        }
+    }
     private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;
     private Confirm sparkReply;
     private void healthTick(View view,long now)throws Exception {
@@ -697,6 +755,10 @@ public final class CombatRenderingCheck {
     }
     private void receive(SceneDeltaEvent event){
         lastStamp=event.QY();
+        if(vortexShieldOnly&&event.aem()!=null)for(var effect:event.aem())if(effect.Mv().toString().contains("fx_shieldpush.dat")){
+            try{if(field(effect,"_clientOid").getInt(effect)!=0||field(effect,"_target").get(effect)==null)throw new AssertionError("Shield bump is predicted away or has no source actor target");}
+            catch(Exception error){throw new AssertionError(error);}sawShieldBump=true;
+        }
         if(healthOnly&&event.aem()!=null)for(var effect:event.aem()){
             String reference=effect.Mv().toString();
             sawHealEffect|=reference.contains("heart_acquire_01.ogg");sawSparkEffect|=reference.contains("Player/Spark Rez");
