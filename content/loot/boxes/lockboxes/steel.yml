@@ -1,0 +1,163 @@
+# APPROXIMATION: wiki candidate pool, not official odds. Shadow Key is a reward, never an opening key.
+# Families are equally selected. Each ordinary family uses the explicit 90/4/4/2 color split.
+# Prismatic Glow-Eyes has only its documented Prismatic version; it has no invented standard colors.
+boxes:
+  lockbox_steel:
+    kind: keyed
+    acceptedKeys:
+    - silver_key
+    status: approximate
+    evidence: 'https://wiki.spiralknights.com/Lockbox; box-specific candidate list; ALL rates estimated: Shadow Key 1%, aura category 1% if present,
+      Iron modifiers 5%; remaining accessories; equal families; standard/divine/volcanic/prismatic colors 90/4/4/2'
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 9800, rewards: [{group: accessories}]}
+        - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
+        - {weight: 100, rewards: [{group: auras}]}
+      aero_fin:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: aero_fin_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: aero_fin_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: aero_fin_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: aero_fin_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: aero_fin_prismatic, quantity: 1, binding: unbound}]}
+      ankle_booster:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: ankle_booster_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ankle_booster_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: ankle_booster_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: ankle_booster_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: ankle_booster_prismatic, quantity: 1, binding: unbound}]}
+      shoulder_booster:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: shoulder_booster_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shoulder_booster_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: shoulder_booster_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: shoulder_booster_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: shoulder_booster_prismatic, quantity: 1, binding: unbound}]}
+      bolted_vee:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: bolted_vee_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bolted_vee_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bolted_vee_vol, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: bolted_vee_prismatic, quantity: 1, binding: unbound}]}
+      game_face:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: game_face_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: game_face_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: game_face_vol, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: game_face_prismatic, quantity: 1, binding: unbound}]}
+      mecha_wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mecha_wings_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mecha_wings_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mecha_wings_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mecha_wings_prismatic, quantity: 1, binding: unbound}]}
+      spike_mohawk:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: spike_mohawk_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: spike_mohawk_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: spike_mohawk_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: spike_mohawk_prismatic, quantity: 1, binding: unbound}]}
+      vertical_vents:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: vertical_vents_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vertical_vents_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vertical_vents_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: vertical_vents_prismatic, quantity: 1, binding: unbound}]}
+      wide_vee:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: wide_vee_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wide_vee_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wide_vee_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: wide_vee_prismatic, quantity: 1, binding: unbound}]}
+      accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: aero_fin}]}
+        - {weight: 1, rewards: [{group: ankle_booster}]}
+        - {weight: 1, rewards: [{group: shoulder_booster}]}
+        - {weight: 1, rewards: [{group: bolted_vee}]}
+        - {weight: 1, rewards: [{group: game_face}]}
+        - {weight: 1, rewards: [{group: mecha_wings}]}
+        - {weight: 1, rewards: [{group: spike_mohawk}]}
+        - {weight: 1, rewards: [{group: vertical_vents}]}
+        - {weight: 1, rewards: [{group: wide_vee}]}
+      auras:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flames_aura, quantity: 1, binding: unbound}]}

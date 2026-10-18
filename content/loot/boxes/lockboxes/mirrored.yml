@@ -1,0 +1,32 @@
+# APPROXIMATION: the wiki lists 18 possible modifiers, without odds. Uniform choice is a local estimate.
+boxes:
+  character:
+    kind: keyed
+    acceptedKeys:
+    - silver_key
+    status: approximate
+    evidence: https://wiki.spiralknights.com/Lockbox; documented Mirrored candidates; equal item selection is an estimate; appearance Use workflow
+      remains separate
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cheeky, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: closed, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: dot, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: eks, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: jolly, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: lash, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pill, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plus, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: rage, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sad, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shifty, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sleepy, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: spiral, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: squint, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sultry, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wat, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: tallest, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shortest, quantity: 1, binding: unbound}]}

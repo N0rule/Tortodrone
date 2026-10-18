@@ -74,7 +74,7 @@ public final class ItemCatalogExport {
         return Set.of("ActionItem","Craft","Recipe","Mineral","Token","Artifact","Ticket","AccessoryTicket","VariantTicket","InstantAction",
             "SpriteEgg","Harness","Color","Eye","Height","Lockbox","Pack","GuildBond","GuildHallGlobalTicket",
             "RenameGuild","RenameKnight","WrappingPaper","GiftBox","AnimatedAction","Lift","SpawnActor","TokenArtifact",
-            "Capsule","Vial").contains(type);
+            "Capsule","Vial","Upgrade").contains(type);
     }
     static Map<String,Object> convert(Map<String,Object> a,Map<String,Object> b)throws IOException {
         if(!a.keySet().equals(b.keySet()))throw new IOException("Color-dependent argument keys");

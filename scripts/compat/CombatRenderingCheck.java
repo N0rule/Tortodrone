@@ -157,27 +157,19 @@ public final class CombatRenderingCheck {
         }
     }
     private static void seedBoxes(Path data)throws Exception {
-        // ONLY this copied disposable deployment receives synthetic loot; production pools stay disabled.
-        Path file=data.getParent().resolve("content/loot/boxes/coverage.yml");
-        var rows=new LinkedHashMap<String,Object>();
-        for(var entry:Map.of("lockbox",List.of("silver_key"),"item_000",List.of("slime_key","silver_key"),"lucky_prize_box",List.<String>of()).entrySet()) {
-            var reward=Map.of("item","calibur","quantity",1,"binding","unbound");
-            var group=Map.of("chance","100%","rolls",1,"entries",List.of(Map.of("weight",1,"rewards",List.of(reward))));
-            rows.put(entry.getKey(),Map.of("kind",entry.getValue().isEmpty()?"keyless":"keyed","acceptedKeys",entry.getValue(),"status","custom",
-                "evidence","Synthetic graphical acceptance fixture, not official rewards","groups",Map.of("main",group)));
-        }
-        Files.delete(file);org.tortodrone.resources.Yaml.write(file,Map.of("boxes",rows));
+        // Seed only this disposable account; use the shipped approximation tables unchanged.
         try(var store=new AccountStore(data)) {
-            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Lucky Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
+            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
                 store.grantItems("LanPlayer","Town-Knight",item,item.equals("Ticket/Keys/Silver Key")?3:2,-1,-1);
         }
     }
-    private int boxIndex,boxBefore,silverBefore,slimeBefore,rewardBefore;
+    private int boxIndex,boxBefore,silverBefore,slimeBefore;
+    private Map<Long,Integer> boxInventoryBefore;
     private boolean boxCancelled;
     private com.threerings.opengl.gui.aD boxArsenal;
     private com.threerings.projectx.item.client.F boxMenu;
     private com.threerings.projectx.item.client.Y boxWindow;
-    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Lucky Prize Box"};
+    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box"};
     private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open"};
     private void boxesTick(long now)throws Exception {
         if(stage==0) {
@@ -192,7 +184,7 @@ public final class CombatRenderingCheck {
         if(stage==70&&now-started>1_000_000_000L) {
             Item item=null;for(var candidate:app.CT().items)if(candidate.Vx().getName().equals(config)){item=candidate;break;}
             if(item==null)throw new AssertionError("Missing fixture box: "+config);
-            boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");rewardBefore=itemCount(SWORD);
+            boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");boxInventoryBefore=boxInventory();
             boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
             capture("box-"+boxIndex+"-arsenal-menu");boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
         }
@@ -208,24 +200,34 @@ public final class CombatRenderingCheck {
             for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y){started=now;stage=72;return;}
         }
         if(stage==74&&now-started>1_000_000_000L) {
-            if(itemCount(config)!=boxBefore||itemCount("Ticket/Keys/Silver Key")!=silverBefore||itemCount(SWORD)!=rewardBefore)throw new AssertionError("Cancelled opening changed inventory");
+            if(itemCount(config)!=boxBefore||itemCount("Ticket/Keys/Silver Key")!=silverBefore||!boxInventory().equals(boxInventoryBefore))throw new AssertionError("Cancelled opening changed inventory");
             boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
         }
         if(stage==72) {
             for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y window)boxWindow=window;
             if(boxWindow==null||now-started<10_000_000_000L)return;
             var prizes=(List<?>)field(boxWindow,"bvi").get(boxWindow);
-            if(prizes==null||prizes.size()!=1)throw new AssertionError("Native opening result did not resolve awarded IDs");
+            if(prizes==null||prizes.isEmpty()||boxIndex==3&&prizes.size()<2)throw new AssertionError("Native opening result did not resolve awarded IDs and the guaranteed Surge bundle");
+            int awarded=0;
+            for(Object raw:prizes) {
+                var prize=(com.google.common.collect.Multiset.Entry<?>)raw;Long id=(Long)prize.getElement();
+                var held=app.CT().items.f(id);
+                if(held==null||held.getCount()!=boxInventoryBefore.getOrDefault(id,0)+prize.getCount())throw new AssertionError("Native reveal differs from committed inventory delta");
+                awarded+=prize.getCount();
+            }
             int silverSpent=boxIndex==0||boxIndex==2?1:0,slimeSpent=boxIndex==1?1:0;
-            if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||itemCount(SWORD)!=rewardBefore+1)
+            if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||boxInventory().values().stream().mapToInt(Integer::intValue).sum()!=boxInventoryBefore.values().stream().mapToInt(Integer::intValue).sum()-1-silverSpent-slimeSpent+awarded)
                 throw new AssertionError("Opening consumed or rewarded the wrong items");
             capture("box-"+boxIndex+"-native-reward");boxWindow.dismiss();boxWindow=null;boxMenu.dismiss();
             if(++boxIndex==BOX_ITEMS.length) {
                 boxArsenal.dismiss();finishImages();passed=done=true;
-                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows (synthetic loot)");app.shutdown();return;
+                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows with shipped approximation pools and multi-item Surge bundle");app.shutdown();return;
             }
             started=now;stage=70;
         }
+    }
+    private Map<Long,Integer> boxInventory(){
+        var result=new HashMap<Long,Integer>();for(var item:app.CT().items)result.put(item.Mw(),item.getCount());return result;
     }
     private void tick(){
         if(done)return;

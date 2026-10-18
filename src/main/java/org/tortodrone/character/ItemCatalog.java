@@ -29,13 +29,13 @@ public final class ItemCatalog {
         public String category() { return type; }
         public String unavailableReason() {
             if (slot == null) return "No verified inventory slot";
-            if (variant == Variant.UPGRADE_ITEM) return "Upgrade item records are unsupported";
+            if (variant == Variant.UPGRADE_ITEM && (!type.equals("Upgrade") || slot != WorldProfile.Slot.OTHER)) return "Upgrade requires its native inventory representation";
             if (type.equals("Artifact") && (variant != Variant.SEED_ITEM || seed == null)) return "Artifact requires a verified seed item record";
             if (slot != WorldProfile.Slot.OTHER && stackable) return "Stackable equipment is unsupported";
             if (slot != WorldProfile.Slot.OTHER && slot != WorldProfile.Slot.TRINKET && modelArgs.isEmpty()) return "Equipment has no representable model arguments";
             return "Available";
         }
-        public boolean grantable() { return slot != null && variant!=Variant.UPGRADE_ITEM
+        public boolean grantable() { return slot != null && (variant!=Variant.UPGRADE_ITEM || type.equals("Upgrade") && slot==WorldProfile.Slot.OTHER)
             && (!type.equals("Artifact") || variant==Variant.SEED_ITEM&&seed!=null)
             && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty())); }
         public Map<String,Object> arguments(int color) { return resolve(modelArgs,color); }

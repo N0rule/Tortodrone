@@ -1,0 +1,170 @@
+# APPROXIMATION: wiki candidate pool, not official odds. Shadow Key is a reward, never an opening key.
+# Vial Bandolier uses seven documented status styles, equally selected; Luck is Depot-only.
+# Families are equally selected. Each ordinary family uses the explicit 90/4/4/2 color split.
+# Prismatic Glow-Eyes has only its documented Prismatic version; it has no invented standard colors.
+boxes:
+  lockbox_titanium:
+    kind: keyed
+    acceptedKeys:
+    - silver_key
+    status: approximate
+    evidence: 'https://wiki.spiralknights.com/Lockbox; box-specific candidate list; ALL rates estimated: Shadow Key 1%, aura category 1% if present,
+      Iron modifiers 5%; remaining accessories; equal families; standard/divine/volcanic/prismatic colors 90/4/4/2'
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 9900, rewards: [{group: accessories}]}
+        - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
+      headlamp:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: headlamp_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headlamp_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: headlamp_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: headlamp_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: headlamp_prismatic, quantity: 1, binding: unbound}]}
+      munitions_pack:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: munitions_pack_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: munitions_pack_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: munitions_pack_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: munitions_pack_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: munitions_pack_prismatic, quantity: 1, binding: unbound}]}
+      rebreather:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: rebreather_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: rebreather_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: rebreather_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: rebreather_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: rebreather_prismatic, quantity: 1, binding: unbound}]}
+      vial_bandolier:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: vial_bandolier_fire, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_freeze, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_shock, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_poison, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_stun, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_curse, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_sleep, quantity: 1, binding: unbound}]}
+      barrel_belly:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: barrel_belly_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: barrel_belly_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: barrel_belly_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: barrel_belly_prismatic, quantity: 1, binding: unbound}]}
+      helm_guards:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: helm_guards_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: helm_guards_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: helm_guards_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: helm_guards_prismatic, quantity: 1, binding: unbound}]}
+      mech_tennas:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mech_tennas_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mech_tennas_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mech_tennas_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mech_tennas_prismatic, quantity: 1, binding: unbound}]}
+      side_blade:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: side_blade_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: side_blade_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: side_blade_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: side_blade_prismatic, quantity: 1, binding: unbound}]}
+      vented_visor:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: vented_visor_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vented_visor_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vented_visor_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: vented_visor_prismatic, quantity: 1, binding: unbound}]}
+      parrying_blade:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: parrying_blade_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: parrying_blade_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: parrying_blade_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: parrying_blade_prismatic, quantity: 1, binding: unbound}]}
+      accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: headlamp}]}
+        - {weight: 1, rewards: [{group: munitions_pack}]}
+        - {weight: 1, rewards: [{group: rebreather}]}
+        - {weight: 1, rewards: [{group: vial_bandolier}]}
+        - {weight: 1, rewards: [{group: barrel_belly}]}
+        - {weight: 1, rewards: [{group: helm_guards}]}
+        - {weight: 1, rewards: [{group: mech_tennas}]}
+        - {weight: 1, rewards: [{group: side_blade}]}
+        - {weight: 1, rewards: [{group: vented_visor}]}
+        - {weight: 1, rewards: [{group: parrying_blade}]}

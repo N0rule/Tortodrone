@@ -969,7 +969,11 @@ public final class SessionCodec {
             var definition=itemCatalog.find(item.config());
             boolean seeded=item.slot()==WorldProfile.Slot.OTHER&&definition!=null&&definition.variant()==ItemCatalog.Variant.SEED_ITEM;
             boolean gift=definition!=null&&definition.type().equals("GiftBox");
-            type(out,"com.threerings.projectx.item.data."+(gift?"GiftBoxItem":item.slot()==WorldProfile.Slot.OTHER?seeded?"SeedItem":definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM?"LevelItem":"Item":"LevelItem"));
+            String subtype=gift?"GiftBoxItem":item.slot()!=WorldProfile.Slot.OTHER?"LevelItem":definition==null?"Item":switch(definition.variant()) {
+                case ITEM -> "Item";case LEVEL_ITEM -> "LevelItem";case SEED_ITEM -> "SeedItem";case UPGRADE_ITEM -> "UpgradingItem";
+            };
+            // Inactive UpgradingItem adds no fields to the common Item payload.
+            type(out,"com.threerings.projectx.item.data."+subtype);
             if(gift){
                 var record=item.gift();out.writeBoolean(record!=null);if(record!=null){
                     out.writeInt(record.contents().size());for(var content:record.contents()){value(out,giftReference(content));out.writeInt(content.count());}

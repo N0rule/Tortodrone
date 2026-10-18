@@ -42,7 +42,6 @@ boxes:
   buccaneer_booty_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   budding_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   cavalry_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  character: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   chess_mini_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   chess_mini_prize_box_winterfest: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   citrine: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
@@ -114,7 +113,6 @@ boxes:
   hunter: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   hunter_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   hunter_prize_box_2016: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  item_000: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   item_001: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   item_002: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   item_003: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
@@ -163,16 +161,8 @@ boxes:
   item_509: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   item_50e: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   katastrophe_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  katastrophe_prize_box_complete: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   katastrophe_returns_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   late_harvest_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  lockbox: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_copper: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_gold: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_platinum: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_silver: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_steel: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
-  lockbox_titanium: {kind: keyed, acceptedKeys: [silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
   lucky_prize_box: {kind: keyless, acceptedKeys: [], status: unsupported, evidence: "March 2024 announcement gives category odds only; intra-category odds unknown and furniture unsupported"}
   moorcroft_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   mystery: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
@@ -213,7 +203,6 @@ boxes:
   solstice_prize_box_2013: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   solstice_prize_box_2014: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   solstice_prize_box_2015: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  solstice_prize_box_complete: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   solstice_prize_box_summer_2016: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   solstice_prize_box_summer_2017: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   solstice_prize_box_summer_2018: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
@@ -235,7 +224,6 @@ boxes:
   stranger_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   summertech_mk_ii_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   summertech_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
-  surge_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   toyland_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   turquoise_prize_box: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
   turquoise_s2694106950_c648a1f83cc2: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}

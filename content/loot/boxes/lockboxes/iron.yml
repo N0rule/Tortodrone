@@ -1,0 +1,630 @@
+# APPROXIMATION: wiki candidate pool, not official odds. Shadow Key is a reward, never an opening key.
+# Families are equally selected. Each ordinary family uses the explicit 90/4/4/2 color split.
+# Prismatic Glow-Eyes has only its documented Prismatic version; it has no invented standard colors.
+boxes:
+  lockbox:
+    kind: keyed
+    acceptedKeys:
+    - silver_key
+    status: approximate
+    evidence: 'https://wiki.spiralknights.com/Lockbox; box-specific candidate list; ALL rates estimated: Shadow Key 1%, aura category 1% if present,
+      Iron modifiers 5%; remaining accessories; equal families; standard/divine/volcanic/prismatic colors 90/4/4/2'
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 9300, rewards: [{group: accessories}]}
+        - {weight: 100, rewards: [{item: shadow_key, quantity: 1, binding: unbound}]}
+        - {weight: 100, rewards: [{group: auras}]}
+        - {weight: 500, rewards: [{group: mirrored_modifiers}]}
+      barrel_belly:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: barrel_belly_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: barrel_belly_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: barrel_belly_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: barrel_belly_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: barrel_belly_prismatic, quantity: 1, binding: unbound}]}
+      binocular_visor:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: binocular_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: binocular_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: binocular_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: binocular_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: binocular_prismatic, quantity: 1, binding: unbound}]}
+      bolted_vee:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: bolted_vee_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bolted_vee_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bolted_vee_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bolted_vee_vol, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: bolted_vee_prismatic, quantity: 1, binding: unbound}]}
+      bomb_bandolier:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: bomb_bundle_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: bomb_bundle_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bomb_bundle_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: bomb_bundle_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: bomb_bundle_prismatic, quantity: 1, binding: unbound}]}
+      canteen:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: canteen_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: canteen_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: canteen_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: canteen_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: canteen_prismatic, quantity: 1, binding: unbound}]}
+      com_unit:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: com_unit_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: com_unit_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: com_unit_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: com_unit_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: com_unit_prismatic, quantity: 1, binding: unbound}]}
+      dapper_combo:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: pipe_and_mustache_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_and_mustache_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: pipe_and_mustache_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: pipe_and_mustache_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: pipe_and_mustache_prismatic, quantity: 1, binding: unbound}]}
+      flower:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: flower_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: flower_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: flower_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: flower_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: flower_prismatic, quantity: 1, binding: unbound}]}
+      game_face:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: game_face_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: game_face_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: game_face_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: game_face_vol, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: game_face_prismatic, quantity: 1, binding: unbound}]}
+      glasses:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: glasses_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: glasses_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: glasses_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: glasses_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: glasses_prismatic, quantity: 1, binding: unbound}]}
+      glow_eyes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: glow_eyes_prismatic, quantity: 1, binding: unbound}]}
+      goggles:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: goggles_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: goggles_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: goggles_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: goggles_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: goggles_prismatic, quantity: 1, binding: unbound}]}
+      halo:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: gear_halo_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: gear_halo_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: gear_halo_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: gear_halo_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: gear_halo_prismatic, quantity: 1, binding: unbound}]}
+      headband:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: headband_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: headband_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: headband_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: headband_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: headband_prismatic, quantity: 1, binding: unbound}]}
+      helm_mounted_display:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: power_scanner_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: power_scanner_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: power_scanner_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: power_scanner_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: power_scanner_prismatic, quantity: 1, binding: unbound}]}
+      helm_guards:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: helm_guards_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: helm_guards_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: helm_guards_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: helm_guards_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: helm_guards_prismatic, quantity: 1, binding: unbound}]}
+      knight_vision_goggles:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: knight_vision_goggles_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: knight_vision_goggles_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: knight_vision_goggles_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: knight_vision_goggles_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: knight_vision_goggles_prismatic, quantity: 1, binding: unbound}]}
+      long_feather:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: long_feather_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: long_feather_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: long_feather_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: long_feather_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: long_feather_prismatic, quantity: 1, binding: unbound}]}
+      maedate:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: maedate_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maedate_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: maedate_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: maedate_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: maedate_prismatic, quantity: 1, binding: unbound}]}
+      maid_headband:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: maid_headband_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: maid_headband_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: maid_headband_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: maid_headband_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: maid_headband_prismatic, quantity: 1, binding: unbound}]}
+      mech_tennas:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mech_tennas_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mech_tennas_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mech_tennas_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mech_tennas_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mech_tennas_prismatic, quantity: 1, binding: unbound}]}
+      mecha_wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mecha_wings_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mecha_wings_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mecha_wings_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mecha_wings_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mecha_wings_prismatic, quantity: 1, binding: unbound}]}
+      mohawk:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mohawk_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mohawk_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mohawk_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mohawk_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mohawk_prismatic, quantity: 1, binding: unbound}]}
+      mustache:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: mustache_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: mustache_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mustache_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: mustache_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: mustache_prismatic, quantity: 1, binding: unbound}]}
+      parrying_blade:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: parrying_blade_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: parrying_blade_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: parrying_blade_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: parrying_blade_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: parrying_blade_prismatic, quantity: 1, binding: unbound}]}
+      pipe:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: pipe_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: pipe_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: pipe_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: pipe_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: pipe_prismatic, quantity: 1, binding: unbound}]}
+      plume:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: plume_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: plume_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: plume_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: plume_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: plume_prismatic, quantity: 1, binding: unbound}]}
+      ribbon:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: ribbon_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: ribbon_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: ribbon_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: ribbon_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: ribbon_prismatic, quantity: 1, binding: unbound}]}
+      round_shades:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: shades_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: shades_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: shades_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: shades_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: shades_prismatic, quantity: 1, binding: unbound}]}
+      scarf:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: scarf_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: scarf_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: scarf_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: scarf_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: scarf_prismatic, quantity: 1, binding: unbound}]}
+      side_blade:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: side_blade_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: side_blade_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: side_blade_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: side_blade_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: side_blade_prismatic, quantity: 1, binding: unbound}]}
+      spike_mohawk:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: spike_mohawk_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: spike_mohawk_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: spike_mohawk_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: spike_mohawk_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: spike_mohawk_prismatic, quantity: 1, binding: unbound}]}
+      toupee:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: toupee_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: toupee_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: toupee_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: toupee_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: toupee_prismatic, quantity: 1, binding: unbound}]}
+      vented_visor:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: vented_visor_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vented_visor_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vented_visor_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vented_visor_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: vented_visor_prismatic, quantity: 1, binding: unbound}]}
+      vertical_vents:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: vertical_vents_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vertical_vents_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vertical_vents_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vertical_vents_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: vertical_vents_prismatic, quantity: 1, binding: unbound}]}
+      vitakit:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: vitakit_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: vitakit_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vitakit_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: vitakit_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: vitakit_prismatic, quantity: 1, binding: unbound}]}
+      wide_vee:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: wide_vee_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wide_vee_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wide_vee_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wide_vee_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: wide_vee_prismatic, quantity: 1, binding: unbound}]}
+      wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: wings_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wings_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wings_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wings_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: wings_prismatic, quantity: 1, binding: unbound}]}
+      wolver_tail:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 900, rewards: [{item: wolver_tail_blue, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_gold, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_green, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_pink, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_purple, quantity: 1, binding: unbound}]}
+        - {weight: 900, rewards: [{item: wolver_tail_red, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wolver_tail_divine, quantity: 1, binding: unbound}]}
+        - {weight: 280, rewards: [{item: wolver_tail_volcanic, quantity: 1, binding: unbound}]}
+        - {weight: 140, rewards: [{item: wolver_tail_prismatic, quantity: 1, binding: unbound}]}
+      accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: barrel_belly}]}
+        - {weight: 1, rewards: [{group: binocular_visor}]}
+        - {weight: 1, rewards: [{group: bolted_vee}]}
+        - {weight: 1, rewards: [{group: bomb_bandolier}]}
+        - {weight: 1, rewards: [{group: canteen}]}
+        - {weight: 1, rewards: [{group: com_unit}]}
+        - {weight: 1, rewards: [{group: dapper_combo}]}
+        - {weight: 1, rewards: [{group: flower}]}
+        - {weight: 1, rewards: [{group: game_face}]}
+        - {weight: 1, rewards: [{group: glasses}]}
+        - {weight: 1, rewards: [{group: glow_eyes}]}
+        - {weight: 1, rewards: [{group: goggles}]}
+        - {weight: 1, rewards: [{group: halo}]}
+        - {weight: 1, rewards: [{group: headband}]}
+        - {weight: 1, rewards: [{group: helm_mounted_display}]}
+        - {weight: 1, rewards: [{group: helm_guards}]}
+        - {weight: 1, rewards: [{group: knight_vision_goggles}]}
+        - {weight: 1, rewards: [{group: long_feather}]}
+        - {weight: 1, rewards: [{group: maedate}]}
+        - {weight: 1, rewards: [{group: maid_headband}]}
+        - {weight: 1, rewards: [{group: mech_tennas}]}
+        - {weight: 1, rewards: [{group: mecha_wings}]}
+        - {weight: 1, rewards: [{group: mohawk}]}
+        - {weight: 1, rewards: [{group: mustache}]}
+        - {weight: 1, rewards: [{group: parrying_blade}]}
+        - {weight: 1, rewards: [{group: pipe}]}
+        - {weight: 1, rewards: [{group: plume}]}
+        - {weight: 1, rewards: [{group: ribbon}]}
+        - {weight: 1, rewards: [{group: round_shades}]}
+        - {weight: 1, rewards: [{group: scarf}]}
+        - {weight: 1, rewards: [{group: side_blade}]}
+        - {weight: 1, rewards: [{group: spike_mohawk}]}
+        - {weight: 1, rewards: [{group: toupee}]}
+        - {weight: 1, rewards: [{group: vented_visor}]}
+        - {weight: 1, rewards: [{group: vertical_vents}]}
+        - {weight: 1, rewards: [{group: vitakit}]}
+        - {weight: 1, rewards: [{group: wide_vee}]}
+        - {weight: 1, rewards: [{group: wings}]}
+        - {weight: 1, rewards: [{group: wolver_tail}]}
+      auras:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flames_aura, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: ghostly_aura, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: twilight_aura, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: unclean_aura, quantity: 1, binding: unbound}]}
+      mirrored_modifiers:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cheeky, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: closed, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: dot, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: eks, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: jolly, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: lash, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pill, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plus, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: rage, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sad, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shifty, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sleepy, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: spiral, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: squint, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sultry, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wat, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: tallest, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shortest, quantity: 1, binding: unbound}]}

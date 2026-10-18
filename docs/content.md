@@ -646,13 +646,13 @@ before installation. Runtime `data/` is never copied as default content or packa
 
 ## Lockboxes and Prize Boxes
 
-Version 0.35.1 implements the shared native opening protocol, authenticated SQLite
-transaction, reward selector and inventory delivery. **No shipped official reward
-pool is enabled.** Complete distributions could not be verified; enabling a list
-of possible prizes with equal weights would invent official odds. The
-[box support matrix](box-support.csv) audits all 250 indexed stock `Lockbox`
-definitions individually, including internal base definitions. Being indexed or
-having a verified key configuration does not establish a playable official pool.
+Version 0.35.2 enables **12 explicitly labeled approximation pools** on the shared
+native opening transaction. Candidate items come from box-specific wiki lists and
+announcements. Published category weights are retained where consistent; missing
+rates, choices within categories and ambiguous totals are documented estimates.
+These tables are playable local approximations, **not verified official odds**.
+The [box support matrix](box-support.csv) audits all 250 indexed stock `Lockbox`
+definitions. The other 238 definitions remain disabled; they never award a fallback.
 
 ### Player interaction and current parity
 
@@ -661,17 +661,26 @@ The client presents the original confirmation and animated reward window. For a
 box with an enabled, validated definition, exactly one owned box is consumed and
 all selected rewards are delivered to persistent Arsenal inventory. Missing,
 incomplete and unsupported definitions return a failure without consuming items.
-This deliberately means the shipped ordinary, Slime and Prize boxes cannot yet
-be opened for official prizes. Administrators can author explicitly `custom`
-pools; those are a different distribution, not an official-parity claim.
+Supported ordinary boxes consume a Silver Key. Slime **serial 000** accepts the
+chosen Slime or Silver Key. Surge, Complete Solstice and Complete Katastrophe are
+keyless. Historical editions and other Slime serials retain separate definitions;
+they never inherit the current edition's pool. Administrators can also author
+explicitly `custom` distributions.
+
+**Reward workflow limitation:** timed upgrades are delivered as native, inactive
+`UpgradingItem` inventory records and persist with their correct identity and
+binding. Their activation, timers and temporary slot/boost effects are not yet
+implemented. Opening does not activate or expire them. Mirrored appearance
+modifiers similarly retain their existing separate Use-workflow limitations.
+These boxes therefore have supported limitations, even apart from estimated odds.
 
 | Box/mechanic | Stock evidence | Tortodrone coverage |
 | --- | --- | --- |
-| Iron, Mirrored, Copper, Silver, Gold, Steel, Platinum, Titanium | Native Silver Key option; community lists lack official odds | Protocol/transaction implemented; distributions disabled |
-| Each numbered/colored Slime Lockbox | Native Slime Key **or** Silver Key menu options | Both selections implemented; distinct identities retained; distributions disabled |
-| Seasonal/promotional/Anniversary Prize Boxes | Native `NONE` key classification | Keyless protocol implemented; individual pools not yet researched |
-| Lucky Prize Box | March 2024 announcement: keyless, unbound; category probabilities | Disabled: unspecified choices within categories and unsupported furniture |
-| Forge Prize Boxes | Native keyless; community pool/quantity/odds research incomplete | Disabled; binding and distributions need complete evidence |
+| Iron, Mirrored, Copper, Silver, Gold, Steel, Platinum, Titanium | Native Silver Key option; community lists lack official odds | Enabled approximations, with each box's own candidate pool |
+| Each numbered/colored Slime Lockbox | Native Slime Key **or** Silver Key menu options | Serial 000 enabled with estimated historical palette/bonuses; later serials disabled |
+| Seasonal/promotional/Anniversary Prize Boxes | Native `NONE` key classification | Surge, Complete Solstice and Complete Katastrophe enabled; other editions disabled |
+| Lucky Prize Box | March 2024 announcement: keyless, unbound; category probabilities | Disabled: unsupported furniture; not silently removed |
+| Forge Prize Boxes | Native keyless; community pool/quantity/odds research incomplete | Disabled; firsthand bundle observations are sparse, not complete distributions |
 | Surprise Boxes | Historical announcements describe another box, Confetti and independent Stately Cap chance | Historical prize selection/quantity details incomplete; no invented standalone catalog identity |
 | Gift Box | Existing player-wrapped contents, separate native method 13 | Existing wrapping/unwrapping preserved |
 | Shadow Key | Native `SHADOW_KEY`, distinct from `LOCKBOX_KEY` and `SLIME_KEY` | Never accepted as an opening key |
@@ -721,9 +730,11 @@ the required primitive arguments, listeners, multiset and inventory events.
 One isolated graphical `--boxes-only` scenario exercised the unchanged Arsenal
 panel/menu, cancel/confirm, a Silver Key Lockbox, both Slime key choices, keyless
 Prize Box opening with both key types retained, and native animated success
-windows. These tests use **synthetic Calibur rewards only in the disposable
-copied deployment**. Screenshots were reviewed. This proves the interaction and
-presentation, not any official distribution. Exact official full-inventory UI,
+windows. The original check used synthetic rewards; the updated `--boxes-only`
+check uses the **shipped approximation tables unchanged**, including the guaranteed
+multi-item Surge result. It verifies that reveal IDs/counts match committed
+inventory deltas. All four opens and cancel passed; screenshots were reviewed.
+This proves interaction and presentation, not official odds. Exact official full-inventory UI,
 mail overflow delivery and historical reward windows remain unverified. Tortodrone
 safely refuses delivery when the complete selected bundle cannot fit.
 
@@ -784,8 +795,9 @@ independent weighted choices follow. Entries require positive integer weights;
 probability is `weight / sum(weights)` **within that group only**. A selected entry
 delivers every reward in its `rewards` bundle. The example therefore has 75%/25%
 main alternatives and a separate 2% bonus; the bonus never dilutes the main pool.
-Quantity ranges are inclusive and uniform; use them only when that quantity rule
-is evidenced. Model arguments, variants and cosmetic colors come from the selected
+Quantity ranges are inclusive and uniform. For `verified` distributions this rule
+must be evidenced; for `approximate` distributions document the assumed range and
+uniform quantity selection. Model arguments, variants and cosmetic colors come from the selected
 item's existing hidden binding, never arbitrary loot fields.
 
 `binding` is explicit: `bound`, `unbound`, or `catalog`. `catalog` retains native
@@ -793,16 +805,20 @@ locked/bind-on-equip defaults. `unbound` is rejected for native locked items; it
 does not clear a normal item's future bind-on-equip flag. Reward grantability is
 checked for the entire definition at startup. Accessories, costumes, equipment,
 keys/tickets and other boxes use ordinary persisted item records where the item
-catalog supports them. Furniture, unsupported upgrade/seed representations and
-Gift Boxes without wrapped contents are rejected. Personal appearance modifier
+catalog supports them. Inactive timed upgrades use the stock `UpgradingItem`
+subclass with the common Item payload, no extra fields and no active timer.
+Their eight playable configurations have verified inventory bindings; the internal
+base remains ungrantable. Furniture, unsupported seed representations and Gift
+Boxes without wrapped contents are rejected. Personal appearance modifier
 items being grantable does not prove their separate Use workflow is implemented.
 Nested prize boxes remain in inventory for later manual opening. Recursive box or
 group cycles, missing groups, empty main outcomes and excessive expansion fail
 validation; nothing is silently dropped or replaced.
 
-Statuses are `verified` (complete sourced distribution), `custom` (explicit local
-rules), `incomplete`, `unsupported`, and `unresearched`. Only the first two enable
-opening, and both require a complete validated main pool. A citation does not
+Statuses are `verified` (complete sourced distribution), `approximate` (documented
+candidates with explicit estimated rates/rules), `custom` (administrator rules),
+`incomplete`, `unsupported`, and `unresearched`. The first three enable opening and
+require a complete validated configured main pool. A citation does not
 supply missing weights automatically. Startup validates all IDs, key identities,
 key order, quantities, bindings, weights, chances and group/box dependencies
 before publishing the immutable content snapshot.
@@ -830,11 +846,16 @@ Trade sessions are rejected; items removed to auction escrow or transferred to
 another owner are absent from the transaction's authoritative inventory.
 
 Focused checks include `BoxCatalogTest`, `BoxOpeningTest`,
-`BoxOpeningSessionTest`, `GiftWrappingTest`, `TownServicesSessionTest`,
+`BoxPoolsTest`, `BoxOpeningSessionTest`, `GiftWrappingTest`, `TownServicesSessionTest`,
 `ContentManagerTest`, `DepotStoreTest` and `AuctionParityTest`. They cover weighted
 boundaries, independent bonuses, quantities, binding, key selection, ownership,
 authentication, full inventory, stack capacity, failed grants, races, replay,
-persistence, recipe/Gift preservation and economy identity compatibility.
+persistence, recipe/Gift preservation and economy identity compatibility. All ten
+focused programs passed for this follow-up. The native reader also checked all
+250 key bindings and inactive upgrade encoding. The full build passed for the
+preceding opening-engine commit; it was not repeated for this content follow-up.
+The immutable Depot seed retains its disabled timed-upgrade offers even though
+inactive item grants are now representable; existing SQLite offers are unchanged.
 
 From a separate read-only installation, with a freshly built server JAR:
 
@@ -850,29 +871,48 @@ java --enable-native-access=ALL-UNNAMED \
 python3 scripts/content/index_box_support.py
 ```
 
-### Reward source confidence
+### Shipped approximation policy and sources
 
-- **Official announcement:** [Lucky promotion, March 2024](https://wiki.spiralknights.com/Lucky_Prize_Box_Promotion_March_2024)
-  establishes keyless opening, unbound delivery and seven category weights
-  (40/30/5/8/8/7/2). It does not specify all choices within those categories;
-  the furniture category is also ungrantable. None of these weights were expanded
-  into invented per-item odds.
-- **Official announcement:** [Golden Slime Casino Returns, June 2016](https://store.steampowered.com/news/app/99900/view/2882822940992219027)
-  allows Silver or Slime Keys and says contents may change. It does not provide
-  complete numbered-box distributions. The installed config verifies the option
-  order independently.
-- **Community documentation:** [Lockbox](https://wiki.spiralknights.com/Lockbox),
-  [Slime Lockbox](https://wiki.spiralknights.com/Slime_Lockbox) and
-  [Forge Prize Box](https://spiralknights.fandom.com/wiki/Forge_Prize_Box)
-  describe candidate contents and gaps; they are not official per-item odds.
-  Numbered Slime pools cannot be collapsed. Forge binding is documented as bound,
-  but that alone cannot complete its distribution.
-- **Historical official announcement:** [April 2014 Steam announcement archive](https://store.steampowered.com/news/posts/?appids=99900&enddate=1396561916)
-  describes Surprise Boxes containing a past prize box, Confetti and an independent
-  2% Stately Cap chance. Exact main-box weights and Confetti quantities remain
-  insufficiently evidenced.
+Every enabled file has `status: approximate`, source URLs and comments describing
+its estimates. A list of candidates is never presented as evidence of equal odds.
+Uniform choices below are explicit local assumptions authorized for these tables.
+No unsupported entry is dropped to increase the remaining probabilities.
 
-Some requested Fandom pages returned HTTP 402 during research; accessible stock
-configs, official announcements and the community wiki above were used instead.
-No private captures, original client assets, guessed percentages, pity counters,
-merchant NPCs or acquisition mechanics are included in this change.
+| Enabled definition | Evidence and retained structure | Explicit estimates |
+| --- | --- | --- |
+| Iron and six monthly metal boxes | [Lockbox wiki](https://wiki.spiralknights.com/Lockbox): separate accessory families, Shadow Key reward, box-specific auras; Iron also includes Mirrored candidates | Shadow Key 1%; aura category 1% when listed; Iron modifiers 5%; remaining chance accessories. Equal families; ordinary colors standard/Divine/Volcanic/Prismatic 90/4/4/2. Standard colors equally selected. Prismatic Glow-Eyes is one fixed variant. |
+| Mirrored | Same wiki: 16 eyes, Extra Tall and Extra Short | Equal choice among those 18 items; no other appearance modifiers imported. |
+| Titanium Vial Bandolier family | [Individual wiki](https://wiki.spiralknights.com/Vial_Bandolier) lists seven status styles from Titanium | Equal seven-way choice. Luck is a later Supply Depot style and is **excluded**. |
+| Slime serial 000 | [Slime wiki](https://wiki.spiralknights.com/Slime_Lockbox), [Node Slime Mask](https://wiki.spiralknights.com/Node_Slime_Mask): seven original families and historical palette; fireworks, confetti and bound 2-day trinket upgrade bonuses | Costumes/accessories/equipment 50/30/20, equally within each category; Divine 4%, six original colors 16% each. Independent small/medium/large fireworks 20/10/5% (one each), confetti 50% (uniform 1–3), bound upgrade 2%. Fancy and later auras/trinkets/nested colors are excluded from 000. Other serials remain disabled. |
+| Surge | [Wiki](https://wiki.spiralknights.com/Surge_Prize_Box), [linked 2012 promotion](https://wiki.spiralknights.com/Surge_Prize_Box_Promotion_September_2012): four 25% main categories; separate 5% upgrade roll with 62/31/6/1 weights; confetti | Uniform cosmetic choices; 1/2/3-ticket selection 60/30/10. Published main categories plus Hacked Aura total 101.5%: retain four main quarters and **interpret** aura as independent 1.5% extra. Confetti 1/2/3 uses 45/50/5 reconciliation. These interpretations are estimates, not additional verified mechanics. |
+| Complete Solstice | [Cronus announcement supplied by the owner](https://forums.spiralknights.com/en/node/125417), [linked June 2026 promotion](https://wiki.spiralknights.com/Solstice_Prize_Box_Promotion_June_2026): main categories, independent 40% bonus and at least one of each confetti | Published nominal main percentages already total 100% before `<1%` wings. Assume wings 0.5%, then explicitly normalize the resulting 100.5% relative total; do not claim all nominal figures as exact effective rates. Paired cosmetics and five bonus alternatives equally selected. Exactly one of each confetti guaranteed. Other season/year bindings disabled. |
+| Complete Katastrophe (2019) | [Wiki](https://wiki.spiralknights.com/Katastrophe_Prize_Box), [August 2019 promotion](https://wiki.spiralknights.com/Katastrophe_Prize_Box_Promotion_August_2019): all 56 items, category weights 0.5/1.5/4/10/20/22/20/22, unbound delivery, no additional pool | Equal choices within each category only. Earlier Katastrophe/Returns identities disabled. |
+
+Native configuration names sometimes differ from wiki names: Dapper Combo uses
+the existing `pipe_and_mustache_*` IDs; Bomb Bandolier uses `bomb_bundle_*`,
+Helm-Mounted Display uses `power_scanner_*`, and Dread/Seraph Wings use their
+existing Hexagram/Seraphynx bindings. These are the original items, not replacement
+rewards. Ordinary YAML contains only existing readable IDs.
+
+The official forum also contains empirical reports. In [Forging Data](https://forums.spiralknights.com/en/node/93101),
+posts 18 and 35 describe actual multi-item Forge openings, and post 33 reports only
+six recorded openings at that time and warns against inferring a complete table.
+Those reports support bound bundles containing crystals, sparks, an orb and a
+variant ticket/Shadow Key. They do **not** establish complete conditional weights;
+the much larger forging-attempt count measures acquisition, not opening outcomes.
+The [Forge wiki](https://wiki.spiralknights.com/Forge_Prize_Box) also explicitly
+marks quantities and pools incomplete. Forge definitions remain disabled rather
+than converting these small samples into claimed official drop rates.
+
+[Lucky March 2024](https://wiki.spiralknights.com/Lucky_Prize_Box_Promotion_March_2024)
+publishes category weights 40/30/5/8/8/7/2, keyless opening and unbound delivery,
+but furniture remains unsupported and is not removed or replaced. The historical
+[April 2014 Steam announcement archive](https://store.steampowered.com/news/posts/?appids=99900&enddate=1396561916)
+describes Surprise boxes with confetti and an independent Stately Cap chance;
+complete historical main-box selection remains disabled. Anniversary and other
+unresearched families are accurately listed in the support matrix.
+
+The [June 2016 Golden Slime Casino announcement](https://store.steampowered.com/news/app/99900/view/2882822940992219027)
+confirms alternative keys but no complete numbered-box odds. Native config
+inspection independently verifies option order. No pity counters, acquisition
+NPCs or private client assets are included.

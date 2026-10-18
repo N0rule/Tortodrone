@@ -610,7 +610,7 @@ Ticket/Variants/Custom/Weapon/Undead Damage 4,VariantTicket,unusable,no item-use
 Ticket/Variants/Variants 1,Ticket,unusable,no item-use handler for Ticket
 Ticket/Variants/Variants 2,Ticket,unusable,no item-use handler for Ticket
 Ticket/Variants/Variants 3,Ticket,unusable,no item-use handler for Ticket
-Upgrade/Coin Bonus,Upgrade,unusable,no item-use handler for Upgrade
+Upgrade/Coin Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
 Upgrade/Color/Amber,Color,unusable,no item-use handler for Color
 Upgrade/Color/Aquamarine,Color,unusable,no item-use handler for Color
 Upgrade/Color/Blue,Color,unusable,no item-use handler for Color
@@ -694,26 +694,26 @@ Upgrade/Gift Box/Slime Gift Box (Pink),GiftBox,unusable,no item-use handler for 
 Upgrade/Gift Box/Winter Gift Box (Green),GiftBox,unusable,no item-use handler for GiftBox
 Upgrade/Gift Box/Winter Gift Box (Red),GiftBox,unusable,no item-use handler for GiftBox
 Upgrade/Gift Box/Winter Gift Box (White),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Heat Bonus,Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Heat Bonus (1 day),Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Heat Bonus (30 days),Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Heat Bonus (7 days),Upgrade,unusable,no item-use handler for Upgrade
+Upgrade/Heat Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
+Upgrade/Heat Bonus (1 day),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
+Upgrade/Heat Bonus (30 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
+Upgrade/Heat Bonus (7 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
 Upgrade/Height/Normal,Height,unusable,no item-use handler for Height
 Upgrade/Height/Parts/Base,Height,unusable,no item-use handler for Height
 Upgrade/Height/Short,Height,unusable,no item-use handler for Height
 Upgrade/Height/Shortest,Height,unusable,no item-use handler for Height
 Upgrade/Height/Tall,Height,unusable,no item-use handler for Height
 Upgrade/Height/Tallest,Height,unusable,no item-use handler for Height
-Upgrade/Lockbox,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Copper",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Gold",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Platinum",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Silver",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Steel",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Lockbox, Titanium",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Character,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockbox,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Copper",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Gold",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Platinum",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Silver",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Steel",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Lockbox, Titanium",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Character,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Mystery,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/000,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/000,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/001,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Lockboxes/Slime/002,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Lockboxes/Slime/003,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
@@ -887,7 +887,7 @@ Upgrade/Prize Box/Hololite Prize Box,Lockbox,disabled,native method 12 supported
 Upgrade/Prize Box/Hunter Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Hunter Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Katastrophe Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Katastrophe Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Katastrophe Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Katastrophe Returns Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Late Harvest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Lucky Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
@@ -924,7 +924,7 @@ Upgrade/Prize Box/Solstice Prize Box,Lockbox,disabled,native method 12 supported
 "Upgrade/Prize Box/Solstice Prize Box, 2013",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 "Upgrade/Prize Box/Solstice Prize Box, 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 "Upgrade/Prize Box/Solstice Prize Box, 2015",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Prize Box/Solstice Prize Box, Summer 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 "Upgrade/Prize Box/Solstice Prize Box, Summer 2017",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 "Upgrade/Prize Box/Solstice Prize Box, Summer 2018",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
@@ -946,7 +946,7 @@ Upgrade/Prize Box/Stormy Prize Box,Lockbox,disabled,native method 12 supported; 
 Upgrade/Prize Box/Stranger Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/SummerTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/SummerTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Surge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Surge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Toyland Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Turquoise Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Vile Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
@@ -961,9 +961,9 @@ Upgrade/Prize Box/Winterfest Prize Box,Lockbox,disabled,native method 12 support
 Upgrade/Prize Box/Wizard Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Rename Guild,RenameGuild,unusable,no item-use handler for RenameGuild
 Upgrade/Rename Knight,RenameKnight,unusable,no item-use handler for RenameKnight
-Upgrade/Trinket Slot,Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Trinket Slot (2 days),Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Weapon Slot,Upgrade,unusable,no item-use handler for Upgrade
+Upgrade/Trinket Slot,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
+Upgrade/Trinket Slot (2 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
+Upgrade/Weapon Slot,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
 Upgrade/Wrapping Paper/Checker Wrapping (Blue),WrappingPaper,unusable,no item-use handler for WrappingPaper
 Upgrade/Wrapping Paper/Checker Wrapping (Red),WrappingPaper,unusable,no item-use handler for WrappingPaper
 Upgrade/Wrapping Paper/Checker Wrapping (Yellow),WrappingPaper,unusable,no item-use handler for WrappingPaper

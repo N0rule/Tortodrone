@@ -31,12 +31,14 @@ for key, binding in sorted(bindings.items()):
         raise ValueError('Stock key mismatch: ' + key)
     status = {'incomplete': 'Protocol supported but pool incomplete',
               'unsupported': 'Unsupported reward representation',
-              'unresearched': 'Not yet researched'}.get(row['status'])
+              'unresearched': 'Not yet researched',
+              'approximate': 'Supported with estimated distribution'}.get(row['status'])
     if status is None:
         raise ValueError('Review enabled definitions and client/pool evidence before updating coverage: ' + key)
-    verified = 'Mechanism only; synthetic loot' if key in {'lockbox', 'item_000', 'lucky_prize_box'} else 'Native key config only'
+    verified = ('Shipped pool; isolated native Arsenal scenario' if key in {'lockbox', 'item_000', 'surge_prize_box'}
+                else 'Mechanism only; synthetic loot' if key == 'lucky_prize_box' else 'Native key config only')
     rows.append([key, names[key]['name'], row['kind'], '; '.join(f'{n}: {value}' for n, value in enumerate(keys)) or 'None (-1)',
-                 'Unknown' if row['status'] == 'unresearched' else 'Incomplete', verified, status, row['evidence']])
+                 'Documented candidates; estimated distribution' if row['status'] == 'approximate' else 'Unknown' if row['status'] == 'unresearched' else 'Incomplete', verified, status, row['evidence']])
 args.docs.mkdir(parents=True, exist_ok=True)
 with (args.docs / 'box-support.csv').open('w', newline='') as output:
     writer = csv.writer(output, lineterminator='\n')
@@ -52,9 +54,13 @@ for row in rows:
     if row[1] == 'Lockbox':
         if row[0] not in configs:
             raise ValueError('Unclassified indexed box: ' + row[0])
-        row[2:] = ['disabled', 'native method 12 supported; reward pool unavailable or incomplete; see box-support.csv']
+        row[2:] = (['partial', 'native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md']
+                   if configs[row[0]]['status'] == 'approximate' else
+                   ['disabled', 'native method 12 supported; reward pool unavailable or incomplete; see box-support.csv'])
+    elif row[1] == 'Upgrade' and any(v['config'] == row[0] and v['slot'] == 'OTHER' and v['variant'] == 'UPGRADE_ITEM' for v in bindings.values()):
+        row[2:] = ['partial', 'native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable']
 with index.open('w', newline='') as output:
     writer = csv.writer(output, lineterminator='\n')
     writer.writerow(header)
     writer.writerows(rows)
-print(f'Audited {len(boxes)} boxes; all incomplete official pools remain disabled')
+print(f'Audited {len(boxes)} boxes; {sum(b["status"] == "approximate" for b in boxes.values())} explicit approximation pools enabled; incomplete pools remain disabled')

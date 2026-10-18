@@ -68,7 +68,7 @@ public final class ItemCatalogTest {
             check(variantCatalog.require(artifact.config()).variant()==ItemCatalog.Variant.SEED_ITEM
                 &&variantCatalog.require(artifact.config()).seed().equals(artifact.seed()),"artifact seed subtype metadata round trips and remains grantable");
             check(variantCatalog.require(energy.config()).locked()&&variantCatalog.find(upgrade.config()).variant()==ItemCatalog.Variant.UPGRADE_ITEM
-                &&!variantCatalog.find(upgrade.config()).grantable(),"locked generic metadata grants while expiring upgrade variants remain indexed only");
+                &&variantCatalog.find(upgrade.config()).grantable(),"locked generic metadata and native inactive upgrade items remain grantable");
             check(variantCatalog.require(mineral.config()).variant()==ItemCatalog.Variant.LEVEL_ITEM,
                 "MetaMineral uses the stock LevelItem variant in the generic inventory slot");
             check(variantCatalog.require(present.config()).variant()==ItemCatalog.Variant.LEVEL_ITEM

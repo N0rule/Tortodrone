@@ -1,0 +1,76 @@
+# APPROXIMATION for Complete only; historical season/year definitions remain disabled.
+# Published nominal main categories total 100% BEFORE the unspecified <1% wings.
+# Assume wings 0.5%, preserve the other values as RELATIVE weights totaling 100.5%; each effective rate is weight/1005.
+# Paired cosmetics and five bonus alternatives are equally selected ESTIMATES. Bonus remains independently 40%.
+# Guarantee exactly one of each confetti (published at least one); timer activation is unavailable.
+boxes:
+  solstice_prize_box_complete:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: https://forums.spiralknights.com/en/node/125417 and https://wiki.spiralknights.com/Solstice_Prize_Box_Promotion_June_2026; published
+      categories, independent40% bonus, guaranteed both confetti; wings assumed0.5%, nominal100.5% main weights normalized explicitly; equal paired/bonus
+      choices estimated; upgrade activation unavailable
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: wings}]}
+        - {weight: 30, rewards: [{group: crowns}]}
+        - {weight: 50, rewards: [{group: auras}]}
+        - {weight: 140, rewards: [{group: crests}]}
+        - {weight: 450, rewards: [{group: one_ticket}]}
+        - {weight: 230, rewards: [{group: two_ticket}]}
+        - {weight: 100, rewards: [{group: three_ticket}]}
+      wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: valkyrie_wings_summer, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: dragon_wings_winter, quantity: 1, binding: unbound}]}
+      crowns:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crown_summer, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: crown_winter, quantity: 1, binding: unbound}]}
+      auras:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: sunshine_aura, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: snowfall_aura, quantity: 1, binding: unbound}]}
+      crests:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crest_summer, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: crest_winter, quantity: 1, binding: unbound}]}
+      one_ticket:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: variants_1, quantity: 1, binding: unbound}]}
+      two_ticket:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: variants_2, quantity: 1, binding: unbound}]}
+      three_ticket:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: variants_3, quantity: 1, binding: unbound}]}
+      bonus_gift:
+        chance: 40%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: snow_bucket, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: bloon_bucket, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: golden_slime_coin, quantity: 5, binding: unbound}]}
+        - {weight: 1, rewards: [{item: trinket_slot_2_days, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: jar_o_fireflies, quantity: 1, binding: unbound}]}
+    guaranteed:
+    - {item: confetti_summer, quantity: 1, binding: unbound}
+    - {item: confetti_winter, quantity: 1, binding: unbound}

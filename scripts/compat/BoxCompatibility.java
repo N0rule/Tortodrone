@@ -33,22 +33,26 @@ public final class BoxCompatibility {
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.NONE.ticketTypes.isEmpty(),"keyless options");
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.SILVER.ticketTypes.toString().equals("[LOCKBOX_KEY]"),"Silver option");
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.SLIME.ticketTypes.toString().equals("[SLIME_KEY, LOCKBOX_KEY]"),"Slime options in native menu order");
-        var bytes=new ByteArrayOutputStream();var codec=new SessionCodec();
+        var bytes=new ByteArrayOutputStream();var catalog=ItemYaml.load(Path.of("content/items"));var codec=new SessionCodec(catalog);
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
         append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Alice"));
         var empty=new WorldProfile(42,1,1,0,0,1,List.of(),KnightProgress.RECRUIT);
         var item=new WorldProfile.Item(777,WorldProfile.Slot.OTHER,"Material/Brimstone",null,0,null,true,false,false,3,false);
-        var after=new WorldProfile(42,1,1,0,0,2,List.of(item),KnightProgress.RECRUIT);
+        var upgrade=catalog.require("trinket_slot_2_days");
+        var inactive=new WorldProfile.Item(778,WorldProfile.Slot.OTHER,upgrade.config(),null,0,null,true,false,false,1,false);
+        var after=new WorldProfile(42,1,1,0,0,2,List.of(item,inactive),KnightProgress.RECRUIT);
         append(bytes,codec.itemChanges(10,null,empty,after));
         append(bytes,codec.townResult(10,(short)9,new SessionDecoder.Multiset(Map.of(777L,3)),after));
         append(bytes,codec.invocationFailure(10,(short)10,"m.inventory_full"));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var added=((EventNotification)in.qe()).yj();check(added instanceof CompoundEvent,"native inventory update before reveal");
+        var decoded=((CompoundEvent)added).xE().stream().filter(e->e instanceof EntryAddedEvent<?> a&&a.xZ() instanceof com.threerings.projectx.item.data.UpgradingItem).map(e->(com.threerings.projectx.item.data.UpgradingItem)((EntryAddedEvent<?>)e).xZ()).findFirst().orElseThrow();
+        check(decoded.VA()==778&&decoded.Cs()&&decoded.getCount()==1&&decoded.VE()==null,"native inactive upgrade subclass, identity, binding and no running timer");
         var result=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
         check(result.yc()==1&&result.yf()==9&&result.yd()[0] instanceof com.google.common.collect.Multiset<?> m&&m.count(777L)==3,"native result multiset of item IDs and quantities");
         var failure=(InvocationResponseEvent)((EventNotification)in.qe()).yj();check(failure.yc()==0&&failure.yf()==10,"native failure callback");
         check(in.available()==0,"no trailing bytes");
-        System.out.println("PASS: stock method 12, all key options, ResultMarshaller, inventory-before-result, Long multiset quantities and failure serialization");
+        System.out.println("PASS: stock method 12, all key options, ResultMarshaller, inventory-before-result, Long multiset quantities, inactive UpgradingItem and failure serialization");
     }
     private static void bindings(Path game)throws Exception {
         game=game.toRealPath();
@@ -68,6 +72,11 @@ public final class BoxCompatibility {
         for(String key:List.of("silver_key","slime_key","shadow_key")) {
             var nativeKey=(ItemConfig.Ticket)manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(items.require(key).config())).w(manager);
             check(nativeKey.type.name().equals(key.equals("silver_key")?"LOCKBOX_KEY":key.toUpperCase(Locale.ROOT)),"native key identity: "+key);
+        }
+        for(var item:items.entries())if(item.variant()==ItemCatalog.Variant.UPGRADE_ITEM&&item.grantable()) {
+            var config=(ItemConfig.Upgrade)manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.config())).w(manager);
+            var nativeItem=config.a(null,item.stockId(),new ConfigReference<ItemConfig>(item.config()));
+            check(nativeItem.getClass()==com.threerings.projectx.item.data.UpgradingItem.class&&config.expireDays==0&&(config.expireEvent==null||config.expireEvent.isBlank()),"verified inactive upgrade representation: "+item.config());
         }
         check(count==pinned.size(),"complete indexed box classification");
         System.out.println("PASS: "+count+" native box key bindings and Silver/Slime/Shadow ticket identities");
