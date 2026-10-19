@@ -16,6 +16,8 @@ public final class KnightProgressTest {
             var knight=characters.create(new Knight(0,"Rank-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
             var initial=db.worldProfile(1,knight.id(),1);
             check(initial.progress().equals(KnightProgress.RECRUIT),"existing schema supplies Recruit 1-1 with zero prestige");
+            check((initial.progress().progressFlags()&4)==4&&initial.progress().progressFlags()==(initial.progress().equipmentFlags()|4),
+                "native progress flags mark the intro complete so /haven and the other travel commands are enabled");
             refuse(()->db.progress("Alice",knight.name(),2,initial.worldId(),10,3,45000,"Drakon"));
             refuse(()->db.progress("Alice",knight.name(),1,initial.worldId()+1,10,3,45000,"Drakon"));
             refuse(()->db.progress("Alice",knight.name(),1,initial.worldId(),0,3,45000,"Drakon"));

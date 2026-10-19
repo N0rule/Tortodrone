@@ -273,8 +273,12 @@ final class WorldSession implements AutoCloseable {
 
     synchronized boolean friendInvocation(SessionDecoder.Invocation request)throws IOException {
         if(request.service()!=12||(request.method()!=1&&request.method()!=2))return false;
+        // The friend service shares service 12 with scene chat. Scene chat addresses the scene
+        // object (not the global invocation object), so anything without the global oid is not a
+        // friend request and must fall through to the chat dispatcher instead of being rejected.
+        if(request.oid()!=SessionCodec.INVOCATION_OID)return false;
         var args=request.arguments();boolean invite=request.method()==1;
-        if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=(invite?4:2)||!(args.getFirst() instanceof String name)
+        if(args.size()!=(invite?4:2)||!(args.getFirst() instanceof String name)
                 ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")
                 ||invite&&(!(args.get(1) instanceof String)||!(args.get(2) instanceof String)))throw new SessionDecoder.Rejected("Invalid friend-list request");
         try {
@@ -728,10 +732,28 @@ final class WorldSession implements AutoCloseable {
                     map=candidate;entrance=new ScenePortals.Entrance(Math.round(stats.get(prefix+"id")),x,y,stats.getOrDefault(prefix+"rotation",0f));break;
                 }
                 if(map==null)throw new IOException("%chat:m.no_such_scene");
-                var next=destination(map.id());if(entrance==null)entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
+                var next=destination(map.id());
+                // The stock client refuses a forced move to the scene it is already in, so a
+                // same-scene destination must fail here instead of tearing down the live scene.
+                if(next==scene)throw new IOException("You are already in that scene");
+                if(entrance==null)entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
                 closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
                 output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),null,profile));
             }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
+        }
+        // KnightMarshaller 11 is the stock /haven travel (EN()); it carries no arguments or listener,
+        // so failures are reported through the native chat-feedback path.
+        if(service==1&&request.method()==11){
+            if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid haven request");
+            try{
+                if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
+                var map=scenes.catalog().entry();var next=destination(map.id());
+                if(next==scene)throw new IOException("You are already in that scene");
+                var entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
+                closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
+                output.send(()->codec.forceScene(oid,receiver,next));
+            }catch(CharacterStore.Refused|IOException refused){unavailable(refused.getMessage());}
+            return true;
         }
         if(service==1&&request.method()==13) {
             if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))throw new SessionDecoder.Rejected("Invalid inspect privacy request");
@@ -942,7 +964,7 @@ final class WorldSession implements AutoCloseable {
                 }
                 if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
                 AdminLocation location;
-                synchronized(this){requireAdminReady();var next=destination(map.id());location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
+                synchronized(this){requireAdminReady();var next=destination(map.id());if(next==scene)throw new IOException("You are already in that scene");location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
                 adminTravel(location);
             }else {
                 var target=adminTarget(name);var location=target.adminLocation();
@@ -953,8 +975,8 @@ final class WorldSession implements AutoCloseable {
                     // Recheck identity/readiness immediately before ending only this live connection.
                     synchronized(target){target.adminLocation();target.close();}
                     target.output.disconnect();
-                }else if(method==27){requireAdminReady();adminTravel(location);}
-                else {if(target==this)throw new IOException("You are already here");var own=adminLocation();requireAdminReady();target.adminTravel(own);}
+                }else if(method==27){requireAdminReady();if(location.scene()==scene)throw new IOException("That knight is already in this scene");adminTravel(location);}
+                else {if(target==this)throw new IOException("You are already here");var own=adminLocation();requireAdminReady();if(location.scene()==own.scene())throw new IOException("That knight is already in this scene");target.adminTravel(own);}
             }
             output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
@@ -1214,16 +1236,6 @@ final class WorldSession implements AutoCloseable {
                 throw new SessionDecoder.Rejected("Invalid scene chat request");
             try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
             sender=chat;place=scene.oid();generation=sceneGeneration;
-        }
-        String text=(String)request.arguments().get(0);
-        if(text.stripLeading().startsWith("!")&&roles.gameMaster()) {
-            try {
-                if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command.");
-                String result=org.tortodrone.server.ItemCommands.chat(SceneChat.validate(text).substring(1),characters.catalog(),
-                    (user,name,config,count)->characters.grantItems(user,name,config,count,authRevision));
-                feedback(place,generation,result);
-            }catch(IOException refused){feedback(place,generation,refused.getMessage());}
-            return;
         }
         try {
             if(!CHAT.speak(sender,(String)request.arguments().get(0),(Byte)request.arguments().get(1)))

@@ -70,7 +70,7 @@ public final class AdminServiceTest {
 
                 // Invalid, oversized and unsupported modifier requests are refused, never faked.
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Nothing Like This", 1, false, 0, (short) 7));
-                response(staffFrames, staffSocket, (short) 7, (byte) 0, "Unknown item; use !items or items to find a catalogue ID or exact config reference");
+                response(staffFrames, staffSocket, (short) 7, (byte) 0, "Unknown item; use 'items' to find a catalogue ID or exact config reference");
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1000, false, 0, (short) 8));
                 response(staffFrames, staffSocket, (short) 8, (byte) 0, "Quantity must be between 1 and 20");
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1, false, 30, (short) 9));
@@ -121,13 +121,13 @@ public final class AdminServiceTest {
     }
 
     private static void gearCommands(WorldSession world,Frames frames,Socket socket,CharacterStore staff,Knight knight,Database database)throws Exception{
-        world.admin(spriteInvoke(41,(short)50,6,.5f));response(frames,socket,(short)50,(byte)1,null);
+        world.admin(spriteInvoke(41,(short)50,6,50f));response(frames,socket,(short)50,(byte)1,null);
         var gear=staff.worldProfile(knight.name(),1).items().stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).findFirst().orElseThrow();
-        check(gear.heatProgress()==.5f,"native /heat persists fractional heat without rounding it away");
+        check(gear.heatProgress()==.5f,"native /heat reads its argument as percent and persists fractional heat without rounding it away");
         world.admin(spriteInvoke(42,(short)51,6,2));response(frames,socket,(short)51,(byte)1,null);
         check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==2&&i.heatProgress()==0),"native /level resets progress at the selected item level");
         world.admin(spriteInvoke(42,(short)52,6,0));response(frames,socket,(short)52,(byte)1,null);
-        world.admin(spriteInvoke(41,(short)53,6,1f));response(frames,socket,(short)53,(byte)1,null);
+        world.admin(spriteInvoke(41,(short)53,6,100f));response(frames,socket,(short)53,(byte)1,null);
         var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
         database.grantItems("Master",knight.name(),2,-1,items.require("Rarity/Fire Crystal/Cracked"),1,-1,-1);
         var result=new SessionDecoder.Listener(TestWire.INV+"ResultMarshaller",(short)54);

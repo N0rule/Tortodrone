@@ -155,7 +155,7 @@ public final class ItemCatalog {
             int id;try{id=Integer.parseInt(key);}catch(NumberFormatException invalid){throw new IOException("Invalid catalogue ID");}
             matches=ids.getOrDefault(id,List.of());
         } else if(matches.isEmpty()) matches=entries().stream().filter(e->e.displayName().equalsIgnoreCase(key)||displayName(e).equalsIgnoreCase(key)).toList();
-        if(matches.isEmpty())throw new IOException("Unknown item; use !items or items to find a catalogue ID or exact config reference");
+        if(matches.isEmpty())throw new IOException("Unknown item; use 'items' to find a catalogue ID or exact config reference");
         if(matches.size()>1)throw new IOException("Ambiguous item reference; choose "+String.join("; ",matches.stream().sorted(Comparator.comparing(Entry::config)).limit(5).map(e->alias(e)+" ("+e.config()+")").toList())+(matches.size()>5?"; "+matches.size()+" choices; use items <search> --page N":""));
         return matches.get(0);
     }

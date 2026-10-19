@@ -470,7 +470,7 @@ public final class SessionCodec {
             attribute(out,oid,"homeTown",this::townSummary);
             rank(out,oid,profile);
             attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));
-            attribute(out,oid,"progressFlags",o->value(o,profile.progress().equipmentFlags()));
+            attribute(out,oid,"progressFlags",o->value(o,profile.progress().progressFlags()));
             attribute(out,oid,"stats",o->{type(o,"com.threerings.stats.data.StatSet");o.writeInt(0);});
             attribute(out,oid,"pawnId",o -> value(o,profile.worldId()));
             attribute(out,oid,"knightId",o -> value(o,profile.worldId()));
@@ -500,7 +500,7 @@ public final class SessionCodec {
         attribute(out,oid,"rank",o->{type(o,"com.threerings.projectx.mission.data.RankPair");o.writeInt(profile.progress().rank());o.writeInt(profile.progress().subrank());});
     }
     public byte[] knightProgress(int oid,WorldProfile profile)throws IOException{
-        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);rank(out,oid,profile);attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));attribute(out,oid,"progressFlags",o->value(o,profile.progress().equipmentFlags()));});
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(3);rank(out,oid,profile);attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));attribute(out,oid,"progressFlags",o->value(o,profile.progress().progressFlags()));});
     }
 
     /** Item entry, equipment element and loadout entry events notify the open stock panels. */

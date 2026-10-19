@@ -4,18 +4,10 @@ import java.io.IOException;
 import org.tortodrone.character.*;
 import org.tortodrone.account.AccountStore;
 
-/** Shared console/chat syntax. The caller supplies its trusted permission boundary. */
+/** Shared console syntax. The caller supplies its trusted permission boundary. */
 public final class ItemCommands {
     private ItemCommands(){}
     @FunctionalInterface public interface Grant { WorldProfile give(String user,String knight,String config,int count)throws IOException; }
-    public static String chat(String line,ItemCatalog catalog,Grant grant)throws IOException {
-        String command=line.strip().split("\\s+",2)[0].toLowerCase(java.util.Locale.ROOT);
-        return switch(command) {
-            case "help" -> "GM commands: !help; !items <search> [--page N]; !items info <reference>; !items category <type>; !giveitem <knight-name> <1-20> <catalogue ID or exact item config>; /broadcast <message>.";
-            case "items", "giveitem" -> execute(line,catalog,grant);
-            default -> throw new IOException("Unknown command. Use !help for available commands.");
-        };
-    }
     public static String execute(String line,ItemCatalog catalog,Grant grant)throws IOException {
         var head=line.strip().split("\\s+",2);
         if(head[0].equalsIgnoreCase("items")) {

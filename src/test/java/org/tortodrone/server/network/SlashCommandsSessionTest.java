@@ -20,6 +20,16 @@ public final class SlashCommandsSessionTest {
         try {
             var content=ContentManager.load(Path.of("."));var scenes=content.createScenes();var db=new Database(home,true);
             try(var gm=person(db,content.items(),scenes,"Master",true);var player=person(db,content.items(),scenes,"Player",false);var peer=person(db,content.items(),scenes,"Other",false)) {
+                // Scene chat shares service 12 with the friend list and is addressed at the scene
+                // object, not the global invocation object; it must not be rejected as a friend call.
+                int havenOid=scenes.entry().oid();
+                var sceneChat=new SessionDecoder.Invocation(havenOid,SceneChat.SERVICE,1,List.of("scene-marker",(byte)0));
+                check(!gm.world.friendInvocation(sceneChat),"scene chat addressed at the scene is not a friend-service request");
+                check(!gm.world.partyInvocation(sceneChat)&&!gm.world.interiorPartyInvocation(sceneChat)
+                    &&!gm.world.exchangeInvocation(sceneChat)&&!gm.world.auctionInvocation(sceneChat)
+                    &&!gm.world.townInvocation(sceneChat)&&!gm.world.conversationInvocation(sceneChat)
+                    &&!gm.world.tradeInvocation(sceneChat),"no other handler claims a scene-addressed chat invocation");
+                gm.world.speak(sceneChat);peer.socket.awaitText("scene-marker");
                 gm.world.adminPeople(admin(13,"Player"));gm.socket.awaitText("; knight=");
                 player.world.adminPeople(admin(21,"Other"));player.socket.awaitText("Game Master permission required");check(!peer.socket.isClosed(),"ordinary account cannot kick another player");
                 player.world.away(new SessionDecoder.Invocation(3,3,1,List.of("Away-marker")));
@@ -60,8 +70,23 @@ public final class SlashCommandsSessionTest {
                 gm.world.adminPeople(admin(27,"Target"));gm.socket.awaitText("private instance belongs");check(gm.world.ownsScene(scenes.entry().oid()),"GM travel cannot enter another knight's private instance");
                 try{gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,13,List.of("Target",new SessionDecoder.Listener("bad",(short)8))));throw new AssertionError("Malformed admin listener accepted");}catch(SessionDecoder.Rejected expected){}
                 check(!target.socket.isClosed(),"malformed listener does not mutate peer state");
+                // /sgo 1 targets Haven (the knight's current scene). The stock client refuses
+                // same-scene moves, so the server must fail without tearing down the live scene.
+                gm.world.adminPeople(admin(28,Integer.toString(scenes.catalog().entry().id())));
+                gm.socket.awaitText("You are already in that scene");
+                check(gm.world.ownsScene(scenes.entry().oid()),"same-scene /sgo keeps the current scene subscribed");
+                check(gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("haven",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)11)))),"same-scene town destination request handled");
+                gm.socket.awaitText("You are already in that scene");
+                check(gm.world.ownsScene(scenes.entry().oid()),"same-scene travel leaves the current scene intact");
+                // KnightMarshaller 11 is the stock /haven travel, sent with no arguments or listener.
+                var secondTown=scenes.catalog().scenes().stream().filter(m->m.town()&&m.id()!=scenes.catalog().entry().id()).findFirst().orElseThrow();
+                gm.world.adminPeople(admin(28,Integer.toString(secondTown.id())));move(gm,secondTown);
+                check(!gm.world.ownsScene(scenes.entry().oid()),"GM travel reaches the second town before /haven");
+                check(gm.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of())),"native /haven command dispatched");
+                move(gm,scenes.catalog().entry());
+                check(gm.world.ownsScene(scenes.entry().oid()),"native /haven travel returns the knight to Haven");
             }
-            System.out.println("PASS: native away/back, loadouts, separate zone/trade channels, GM who/kick/go/summon, readiness, authorization, revocation and private-instance isolation");
+            System.out.println("PASS: scene-chat/friend-service routing, same-scene travel guards, native /haven, native away/back, loadouts, separate zone/trade channels, GM who/kick/go/summon, readiness, authorization, revocation and private-instance isolation");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static Person person(Database db,ItemCatalog items,SceneRegistry scenes,String name,boolean gm)throws Exception {

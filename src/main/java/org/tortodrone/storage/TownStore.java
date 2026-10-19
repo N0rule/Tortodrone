@@ -271,7 +271,7 @@ public final class TownStore {
             requireGameMaster(c,account,auth);int slot=(Integer)args.get(0);
             var item=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
             var gear=rules.gear().gear(item.config());if(gear==null||gear.levels()<1)throw new IOException("This item has no heat progression");
-            if(method==41){float heat=(Float)args.get(1);if(!Float.isFinite(heat)||heat<0||heat>1)throw new IOException("Heat progress must be between 0 and 1");setGearProgress(c,p.worldId(),item.id(),item.level(),heat);return null;}
+            if(method==41){float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");setGearProgress(c,p.worldId(),item.id(),item.level(),percent/100f);return null;}
             if(method==42){int level=(Integer)args.get(1);if(level<0||level>=gear.levels())throw new IOException("Item level is outside its progression table");setGearProgress(c,p.worldId(),item.id(),level,0);return null;}
             if(method!=23)throw new IOException("Unknown gear admin operation");
             if(gear.maximum(item.level()))return null;var props=rules.gear().forge(gear,item.level());if(props==null)return null;
