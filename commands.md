@@ -191,7 +191,7 @@ Travel follows the normal scene transition and ownership checks. `/pgo` and `/su
 | `/grant number` | `/grant 1000` | Add a nonnegative number of crowns to your knight. |
 | `/set_rank rank subrank` | `/set_rank 4 2` | Set your saved rank and subrank, without awarding mission rewards. |
 | `/level (weapon armor helmet shield) [level]` | `/level weapon 5` | Set equipped gear level within its progression table. |
-| `/heat (weapon armor helmet shield sprite) [heat]` | `/heat weapon 0.5` | Set equipped gear heat progress from 0 to 1. |
+| `/heat (weapon armor helmet shield sprite) [heat]` | `/heat weapon 50` | Set equipped gear heat progress as a percentage from 0 to 100. |
 | `/level_up (weapon armor helmet shield) [crystals]` | `/level_up weapon 4` | Attempt the native forge operation using the configured crystal-tier chance. |
 | `/accessorize (armor helmet) [clear \| accessory name]` | `/accessorize armor clear` | Clear accessories, or add a verified accessory config to equipped armor/helmet. Conflicting accessories are refused. |
 
@@ -248,16 +248,10 @@ Examples containing `<...>` need a verified definition from that missing system;
 
 ### Tortodrone GM chat extensions
 
-The stock client consumes slash command names itself, so these server extensions use `!`.
-
-| Command | Example | What it does |
-|---|---|---|
-| `!help` | `!help` | List GM chat extensions. |
-| `!items <search> [--page N]` | `!items Proto --page 1` | Search catalog names, IDs and configs. |
-| `!items category <type> [--page N]` | `!items category Sword` | Search one item category. |
-| `!items info <reference>` | `!items info proto_sword` | Inspect a catalog entry and its availability. |
-| `!giveitem <knight> <1-20> <reference>` | `!giveitem Jane 2 proto_sword` | Grant unequipped items to an online or offline knight. |
-| `!giveitem <account> <knight> <1-20> <reference>` | `!giveitem Alice Jane 1 proto_sword` | Legacy account-qualified grant syntax. |
+Tortodrone does not add GM chat commands. The stock client consumes slash
+command names itself, and ordinary players' leading `!` remains normal chat.
+Item grants are available through the local console, the account manager and
+`tortodrone-admin.jar` (see below).
 
 ## Local server console
 
