@@ -16,6 +16,8 @@ final class WorldSession implements AutoCloseable {
     private static final SceneChat CHAT=new SceneChat();
     private final SceneChat.RateLimit chatRate=new SceneChat.RateLimit();
     private SceneChat.Membership chat;
+    private String awayMessage;
+    private final Map<Integer,SceneChat.Membership> channelChats=new HashMap<>();
     private PlayerTrades trades;
     private PlayerTrades.Member tradeMember;
     private final Socket socket;
@@ -658,7 +660,7 @@ final class WorldSession implements AutoCloseable {
             var visible=visibleProfile();output.send(() -> codec.selected(oid, knight, visible));
             publishQuickbar();
             output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
-            if (subscribed) output.send(() -> codec.sceneLocation(oid,scene));
+            if (subscribed) output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
         }
     }
 
@@ -682,7 +684,7 @@ final class WorldSession implements AutoCloseable {
                 if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
                 SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;
                 if(destination.equals("haven"))map=scenes.catalog().entry();
-                if(map==null)for(var candidate:scenes.catalog().scenes())if(candidate.town()&&candidate.name().equals("%town:m."+destination)){map=candidate;break;}
+                if(map==null)for(var candidate:scenes.catalog().scenes())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
                 if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().scenes())if(candidate.town()){
                     String prefix="destination."+destination+".";var stats=candidate.content().stats();if(!stats.containsKey(prefix+"x"))continue;
                     float x=stats.get(prefix+"x"),y=stats.get(prefix+"y");if(!candidate.collision().walkable(x,y))continue;
@@ -723,6 +725,17 @@ final class WorldSession implements AutoCloseable {
             }
             if (selected()) output.send(() -> codec.emptyListResult(oid, listener.requestId()));
             else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
+            return true;
+        }
+        if(service==9&&(request.method()==4||request.method()==10)) {
+            if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout request");
+            try {
+                if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                if(request.method()==4&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
+                var result=characters.town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
+                townChanged(result);output.send(()->codec.loadouts(oid,profile));output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         if (service == 9 && request.method() == 9) {
@@ -805,14 +818,14 @@ final class WorldSession implements AutoCloseable {
             if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(targetMap.zone())))
                 throw new IOException("Scene does not belong to that zone");
             if(portalMove!=null&&target!=portalMove.destination().map().id())throw new IOException("Finish the current portal journey first");
-            var next=destination(target);
+            var next=portalMove==null?destination(target):portalMove.destination();
             if(portalMove!=null&&next!=portalMove.destination())throw new IOException("Finish the current portal journey first");
             if(next!=scene||portalMove!=null) {
                 closeConversation();
                 if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
                 leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();scenes.release(scene,profile.worldId());scene=next;
+                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
                 monitorScene();
@@ -834,7 +847,82 @@ final class WorldSession implements AutoCloseable {
 
     private void completeMove(short requestId,boolean zone)throws IOException {
         output.send(() -> codec.sceneMove(oid,requestId,zone,scene,scenes.catalog()));
-        output.send(() -> codec.sceneLocation(oid,scene));
+        output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
+    }
+
+    private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
+    private synchronized void requireAdminReady()throws IOException {
+        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(!roles.gameMaster())throw new IOException("Game Master permission required");
+    }
+    private WorldSession adminTarget(String name)throws IOException {
+        if(name.length()<3||name.length()>16||!name.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))throw new IOException("Enter a valid knight name");
+        synchronized(ACTIVE){return ACTIVE.values().stream().filter(w->w.knight.name().equalsIgnoreCase(name)
+            &&w.scenes==scenes&&w.characters.worldStorageFile().equals(characters.worldStorageFile())).findFirst().orElseThrow(()->new IOException("That knight is not online"));}
+    }
+    private synchronized AdminLocation adminLocation()throws IOException {
+        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("That knight is changing scenes");
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("That knight is no longer online",refused);}
+        var actor=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("That knight is not in a ready scene"));
+        return new AdminLocation(scene,profile.worldId(),knight.name(),actor.x(),actor.y(),actor.rotation());
+    }
+    private synchronized void adminTravel(AdminLocation location)throws IOException {
+        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+        var next=location.scene();
+        if(!next.map().town()) {
+            var owned=destination(next.map().id());
+            if(owned!=next){if(owned!=scene)scenes.release(owned,profile.worldId());throw new IOException("That private instance belongs to another knight or party");}
+            if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
+        }
+        if(!next.map().collision().walkable(location.x(),location.y()))throw new IOException("Destination is blocked");
+        closeConversation();closeTownDialog();
+        portalMove=new PortalMove(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
+        departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
+        output.send(()->codec.forceScene(oid,receiver,next));
+    }
+    /** Cross-session tools deliberately acquire only one session monitor at a time. */
+    boolean adminPeople(SessionDecoder.Invocation request)throws IOException {
+        int method=request.method();if(!Set.of(13,21,24,27,28,30,50).contains(method))return false;
+        var args=request.arguments();
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ADMIN_SERVICE||args.size()!=(method==24?3:2)
+                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")
+                ||(method==24?!(args.get(0) instanceof Integer)||!(args.get(1) instanceof Integer):!(args.getFirst() instanceof String)))throw new SessionDecoder.Rejected("Invalid player admin request");
+        String name=method==24?null:(String)args.getFirst();
+        try {
+            requireAdminReady();
+            if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command");
+            if(method==24) {
+                var own=adminLocation();adminTravel(new AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
+            }else if(method==28||method==30) {
+                SceneCatalog.MapScene map=null;
+                String key=name.strip();
+                for(var candidate:scenes.catalog().scenes()) {
+                    boolean match=method==30?candidate.town()&&(candidate.zoneName().equalsIgnoreCase(key)||candidate.zoneName().equalsIgnoreCase("%town:m."+key)||candidate.zoneName().equalsIgnoreCase("%zone:m."+key)||Integer.toString(candidate.zone()).equals(key)):
+                        candidate.name().equalsIgnoreCase(key)||Integer.toString(candidate.id()).equals(key)||candidate.name().equalsIgnoreCase("%town:m."+key);
+                    if(match){map=candidate;break;}
+                }
+                if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
+                AdminLocation location;
+                synchronized(this){requireAdminReady();var next=destination(map.id());location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
+                adminTravel(location);
+            }else {
+                var target=adminTarget(name);var location=target.adminLocation();
+                if(method==13) {
+                    synchronized(this){requireAdminReady();feedback(scene.oid(),sceneGeneration,location.name()+"; knight="+location.world()+"; scene="+location.scene().map().name()+" ("+location.scene().map().id()+"); instance="+location.scene().oid());}
+                }else if(method==21) {
+                    if(target==this)throw new IOException("You cannot kick yourself");
+                    // Recheck identity/readiness immediately before ending only this live connection.
+                    synchronized(target){target.adminLocation();target.close();}
+                    target.output.disconnect();
+                }else if(method==27){requireAdminReady();adminTravel(location);}
+                else {if(target==this)throw new IOException("You are already here");var own=adminLocation();requireAdminReady();target.adminTravel(own);}
+            }
+            output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+        return true;
     }
 
     /** Stock admin service, resolved by the client from the bootstrap; every call is authorized here. */
@@ -844,7 +932,7 @@ final class WorldSession implements AutoCloseable {
         SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
         String failure=null;
         int method=request.method();
-        if(method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47) {
+        if(method!=1&&method!=5&&method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47) {
             // Unknown tools must not leave the stock dashboard waiting for a callback.
             String reason=roles.gameMaster()?"Placeholder: this admin tool is not implemented yet":"Game Master permission required";
             if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,reason));}
@@ -852,6 +940,16 @@ final class WorldSession implements AutoCloseable {
             return;
         }
         if(listener==null||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(method==23?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid admin listener");
+        if(method==1||method==5) {
+            if(args.size()!=(method==1?3:2)||!(args.getFirst() instanceof Integer slot)||method==1&&!(args.get(1) instanceof String))throw new SessionDecoder.Rejected("Invalid accessory admin request");
+            try {
+                requireAdminReady();
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                var result=characters.town(scenes.town()).adminAccessory(characters.accountId(),knight.id(),authRevision,slot,method==1?(String)args.get(1):null,knight.costume());
+                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+            return;
+        }
         if(method==17||method==44) {
             if(args.size()!=(method==17?2:3)||!(args.getFirst() instanceof Integer)||method==44&&!(args.get(1) instanceof Integer))throw new SessionDecoder.Rejected("Invalid progress admin request");
             try {
@@ -987,7 +1085,7 @@ final class WorldSession implements AutoCloseable {
         entered = true;
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
-        chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));
+        chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);
         trades=PlayerTrades.forStore(characters);
         tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
         lastStamp = SceneClock.now();
@@ -1037,6 +1135,31 @@ final class WorldSession implements AutoCloseable {
         else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
     }
 
+    synchronized boolean ownsChannel(int channel){return selected()&&(channel==scenes.channelOid(scene.map().zone(),false)||channel==scenes.channelOid(scene.map().zone(),true));}
+    synchronized void subscribeChannel(short message,int channel)throws IOException {
+        if(closed||!ownsChannel(channel))throw new IOException("This chat channel belongs to another zone");
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(!channelChats.containsKey(channel))channelChats.put(channel,scenes.channel(channel).join(channel,oid,knight.name(),chatRate,m->deliverChannel(channel,m)));
+        output.send(()->codec.chatChannel(message,channel,scenes.channelType(channel)));
+    }
+    synchronized void unsubscribeChannel(int channel){var member=channelChats.remove(channel);if(member!=null)member.close();}
+    private synchronized boolean deliverChannel(int channel,SceneChat.Message message)throws IOException {
+        if(closed||!subscribed||!entered||!ownsChannel(channel)||!channelChats.containsKey(channel))return false;
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){return false;}
+        output.send(()->codec.chat(channel,message));return true;
+    }
+    boolean channelSpeak(SessionDecoder.Invocation request)throws IOException {
+        if(scenes.channelType(request.oid())<0)return false;
+        var args=request.arguments();SceneChat.Membership member;
+        synchronized(this) {
+            if(closed||!subscribed||!entered||!ownsChannel(request.oid())||(member=channelChats.get(request.oid()))==null)throw new SessionDecoder.Rejected("Unauthorized zone chat");
+            if(request.service()!=SceneChat.SERVICE||request.method()!=1||args.size()!=2||!(args.get(0) instanceof String)||!(args.get(1) instanceof Byte))throw new SessionDecoder.Rejected("Invalid zone chat request");
+            try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        }
+        try{if(!scenes.channel(request.oid()).speak(member,(String)args.get(0),(Byte)args.get(1)))unavailable("Please slow down before sending another message");}
+        catch(IOException refused){unavailable(refused.getMessage());}
+        return true;
+    }
     void speak(SessionDecoder.Invocation request)throws IOException {
         if(request.service()==SceneChat.PARTY_SERVICE&&scenes.parties().owns(partyMember,request.oid())){
             if(request.method()!=1||request.arguments().size()!=2||!(request.arguments().get(0) instanceof String text)||!(request.arguments().get(1) instanceof Byte mode))throw new SessionDecoder.Rejected("Invalid party chat");
@@ -1095,6 +1218,16 @@ final class WorldSession implements AutoCloseable {
             if(!CHAT.broadcast(sender,text))throw new IOException("Please slow down before sending another message.");
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
     }
+    synchronized void away(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=1||args.size()!=1||args.getFirst()!=null&&!(args.getFirst() instanceof String))throw new SessionDecoder.Rejected("Invalid away request");
+        if(closed||!selected())throw new IOException("Select a knight first");
+        try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+        if(!chatRate.allow(System.nanoTime())){unavailable("Please slow down before changing your away message");return;}
+        awayMessage=args.getFirst()==null?null:SceneChat.validate((String)args.getFirst());
+        if(chat!=null)CHAT.away(chat,awayMessage);
+        output.send(()->codec.awayMessage(oid,awayMessage));
+    }
     void tell(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=3
@@ -1109,8 +1242,8 @@ final class WorldSession implements AutoCloseable {
                 try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused e){throw new IOException("Knight changed; reconnect",e);}
                 sender=chat;
             }
-            CHAT.tell(sender,target,text);
-            output.send(()->codec.tellSucceeded(oid,listener.requestId()));
+            String away=CHAT.tell(sender,target,text);
+            output.send(()->codec.tellSucceeded(oid,listener.requestId(),away));
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
     }
     private synchronized boolean deliverChat(int place,int generation,SceneChat.Message message)throws IOException {
@@ -1273,6 +1406,7 @@ final class WorldSession implements AutoCloseable {
                 if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
                 if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
                 if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));}
+                if(!fresh.town().loadouts().equals(previous.town().loadouts()))output.send(()->codec.loadouts(oid,profile));
                 if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
             }
         }
@@ -1320,6 +1454,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean takeRenameDisconnect(){boolean requested=renameDisconnect;renameDisconnect=false;return requested;}
 
     @Override public synchronized void close() {
+        for(var member:channelChats.values())member.close();channelChats.clear();
         leaveChat();
         closed = true;
         subscribed = false;

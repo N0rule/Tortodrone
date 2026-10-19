@@ -50,8 +50,17 @@ public final class SceneRegistry {
     // active solo interior places and their party objects in disjoint ranges.
     private final ArrayDeque<Integer> interiorOids=new ArrayDeque<>();
     private static SceneRegistry system;
+    private final Map<Integer,Integer> channelZones=new HashMap<>();
+    private final Map<Integer,SceneChat> channels=new HashMap<>();
+    public int channelOid(int zone,boolean trade){Integer base=channelZones.get(zone);if(base==null)throw new IllegalArgumentException("Unknown chat zone");return base+(trade?1:0);}
+    public int channelType(int oid){for(int base:channelZones.values()){if(oid==base)return 6;if(oid==base+1)return 7;}return -1;}
+    public SceneChat channel(int oid){var channel=channels.get(oid);if(channel==null)throw new IllegalArgumentException("Unknown chat channel");return channel;}
     public SceneRegistry(SceneCatalog catalog) {
         this.catalog=catalog;int oid=10;
+        int chatOid=1_500_000_000;
+        for(int zone:catalog.scenes().stream().map(SceneCatalog.MapScene::zone).distinct().sorted().toList()) {
+            channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
+        }
         for(int id=140;id<500;id++)interiorOids.add(id);
         if(catalog.scenes().isEmpty())return;
         // Keep the entry object's identity stable for existing clients; other templates are ordered.

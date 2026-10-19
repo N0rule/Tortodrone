@@ -32,8 +32,23 @@ public final class SceneChatTest {
         check(!rate.allow(0)&&!rate.allow(999_999_999)&&rate.allow(1_000_000_000),"rate limit replenishes at one message per second");
         check(!rate.allow(-1),"clock reversal cannot grant tokens");
         replacement.close();other.close();failed.close();third.close();
-        tells();
+        tells();away();
         System.out.println("PASS: scene chat identity, echo/modes, instance isolation, departure/re-entry, failed peers, Unicode bounds and persistent rate budget");
+    }
+    private static void away()throws Exception {
+        var router=new SceneChat();var source=router.join(10,1,"Sender",new SceneChat.RateLimit(),m->true);
+        var target=router.join(11,2,"Recipient",new SceneChat.RateLimit(),m->true);
+        router.away(target,"Back soon");
+        check("Back soon".equals(router.tell(source,"Recipient","hello")),"successful tell returns the recipient's away message");
+        var replacement=router.join(12,2,"Recipient",new SceneChat.RateLimit(),m->true);
+        check(router.tell(source,"Recipient","after travel")==null,"replacement membership starts without stale away state");
+        router.away(replacement,"At lunch");target.close();
+        check("At lunch".equals(router.tell(source,"Recipient","new membership")),"late departure preserves the replacement's away state");
+        refuse(()->router.away(target,"stale update"));
+        router.away(replacement,null);
+        check(router.tell(source,"Recipient","back")==null,"back clears the away response");
+        source.close();replacement.close();
+        System.out.println("PASS: tell-away response, back, replacement membership and stale-away isolation");
     }
     private static void tells()throws Exception {
         var router=new SceneChat();var sourceMessages=new ArrayList<SceneChat.Message>();

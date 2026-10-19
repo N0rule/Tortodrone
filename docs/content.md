@@ -678,7 +678,9 @@ explicitly `custom` distributions.
 binding. Weapon-slot and trinket-slot tickets now support native Use activation,
 Extend, absolute deadlines, temporary slots and return-to-bag on slot expiry.
 Opening does not activate them. Other boost/upgrade Use handlers remain unavailable;
-see [Commands](../commands.md) for durations and usage. Mirrored appearance
+Weapon-slot and standard trinket-slot tickets last 30 days after activation;
+the short trinket ticket lasts two days. Each enables one slot, up to two extra
+weapon slots and two trinket slots. Mirrored appearance
 modifiers similarly retain their existing separate Use-workflow limitations.
 Color/eye/height changes, Guild Bonds and decorative Usable actions also retain
 the unavailable Use handlers identified in `item-support.csv`; opening grants

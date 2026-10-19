@@ -13,15 +13,16 @@ public final class SceneChat {
     @FunctionalInterface public interface Endpoint { boolean deliver(Message message)throws IOException; }
     private record Member(int scene,int client,String name,RateLimit rate,Endpoint endpoint) { }
     private final Map<Integer,Member> members=new HashMap<>();
+    private final Map<Integer,String> away=new HashMap<>();
     public final class Membership implements AutoCloseable {
         private final Member member;
         private Membership(Member member){this.member=member;}
-        @Override public void close(){synchronized(SceneChat.this){members.remove(member.client(),member);}}
+        @Override public void close(){synchronized(SceneChat.this){if(members.remove(member.client(),member))away.remove(member.client());}}
     }
     public synchronized Membership join(int scene,int client,String name,RateLimit rate,Endpoint endpoint) {
         if(scene<=0||client<=0||name==null||name.isBlank())throw new IllegalArgumentException("Invalid chat identity");
         var member=new Member(scene,client,name,Objects.requireNonNull(rate),Objects.requireNonNull(endpoint));
-        members.put(client,member);return new Membership(member);
+        members.put(client,member);away.remove(client);return new Membership(member);
     }
     /** False means rate limited; sender name and target scene are authoritative membership state. */
     public boolean speak(Membership sender,String text,byte mode)throws IOException {
@@ -63,27 +64,32 @@ public final class SceneChat {
         deliver(recipients,new Message(source.name(),text,(byte)4));return true;
     }
     /** A tell has no server echo: the stock success listener renders the sender's feedback. */
-    public void tell(Membership sender,String target,String text)throws IOException {
+    public synchronized void away(Membership sender,String text)throws IOException {
+        var member=require(sender);
+        if(text==null)away.remove(member.client());else away.put(member.client(),validate(text));
+    }
+    public String tell(Membership sender,String target,String text)throws IOException {
         text=validate(text);
         if(target==null||target.length()<3||target.length()>16||!target.matches("[A-Za-z]+(?:-[A-Za-z]+)*"))
             throw new IOException("Enter a valid knight name");
-        Member source,recipient;
+        Member source,recipient;String awayMessage;
         synchronized(this) {
             source=require(sender);
             if(!source.rate().allow(System.nanoTime()))throw new IOException("Please slow down before sending another message.");
             recipient=members.values().stream().filter(m->m.name().equalsIgnoreCase(target)).findFirst().orElse(null);
+            awayMessage=recipient==null?null:away.get(recipient.client());
         }
         if(recipient!=null) {
             try {
-                if(recipient.endpoint().deliver(new Message(source.name(),text,(byte)0,true)))return;
-            }catch(IOException failure){synchronized(this){members.remove(recipient.client(),recipient);}}
+                if(recipient.endpoint().deliver(new Message(source.name(),text,(byte)0,true)))return awayMessage;
+            }catch(IOException failure){synchronized(this){if(members.remove(recipient.client(),recipient))away.remove(recipient.client());}}
         }
         throw new IOException("That knight is not online");
     }
     private void deliver(List<Member> recipients,Message message) {
         for(var member:recipients) {
             try{member.endpoint().deliver(message);}
-            catch(IOException failure){synchronized(this){members.remove(member.client(),member);}}
+            catch(IOException failure){synchronized(this){if(members.remove(member.client(),member))away.remove(member.client());}}
         }
     }
     public static String validate(String value)throws IOException {

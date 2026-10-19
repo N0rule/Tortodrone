@@ -1,192 +1,253 @@
 # Commands
 
-Enter slash commands in the unmodified client's chat box. Names below use the installed English bundle; aliases share the same command. `<value>` is required and `[value]` is optional. Use `/help` for the client's localized syntax and slot/flag choices. Commands can require a selected knight, a ready scene, party membership, GM permission, or deployed content.
+Type slash commands in the game chat box. `<value>` is required; `[value]` is optional. Names and aliases below use the English stock client. `/help` shows the client's localized help.
 
-**Supported** means the server has the corresponding behavior. **Client-side** runs in the stock client. **Placeholder** reserves an unavailable feature: it grants nothing, changes nothing, and must not be treated as success. Placeholder examples deliberately invoke the command without action arguments to show usage; they are not working gameplay examples. The server returns a correlated failure for unsupported RPCs, or chat feedback for calls without listeners. Client-side validation may stop a command before it reaches the server.
+## Player commands
 
-The inventory below includes stock English command aliases, including legacy/reserved bundle entries. A bundle entry does not prove that the current client registers it. GM-only commands remain protected even if a modified caller sends their RPC directly. Unsupported social channels, moderation, events, quests and rewards are placeholders; no quest or reward definitions are fabricated.
+### Chat and availability
 
-## Stock slash commands
+Type a message without a slash command to speak in the current scene.
 
-| Syntax | Other aliases | Status | Example | Use / limitation |
-|---|---|---|---|---|
-| `/accessorize (armor helmet) [clear \| accessory name]` |  | Placeholder | `/accessorize` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/action command argument` |  | Placeholder | `/action` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/admin message` |  | Placeholder | `/admin` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/advance [number of floors]` |  | Placeholder | `/advance` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/alchemy` | `/craft` | Supported when deployed | `/alchemy` | Travel to the configured destination; an absent destination is refused. |
-| `/amaze [player name]` | `/amazed` | Supported | `/amaze` | Native emote; an optional target must be in the same scene. |
-| `/arcade` |  | Supported when deployed | `/arcade` | Travel to the configured destination; an absent destination is refused. |
-| `/attack` |  | Supported | `/attack` | Native emote; an optional target must be in the same scene. |
-| `/auction` | `/ah` | Supported when deployed | `/auction` | Travel to the configured destination; an absent destination is refused. |
-| `/away message` | `/afk` | Placeholder | `/away` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/back` |  | Placeholder | `/back` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/bazaar` |  | Supported when deployed | `/bazaar` | Travel to the configured destination; an absent destination is refused. |
-| `/bechamel` | `/accessory` | Supported when deployed | `/bechamel` | Travel to the configured destination; an absent destination is refused. |
-| `/beg [player name]` |  | Supported | `/beg` | Native emote; an optional target must be in the same scene. |
-| `/belch` |  | Supported | `/belch` | Native emote; an optional target must be in the same scene. |
-| `/bored [player name]` | `/boring` | Supported | `/bored` | Native emote; an optional target must be in the same scene. |
-| `/bow [player name]` |  | Supported | `/bow` | Native emote; an optional target must be in the same scene. |
-| `/broadcast message` |  | Supported | `/broadcast Server restart soon` | GM: broadcast to ready online players. |
-| `/bug description` |  | Placeholder | `/bug` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/burp` |  | Supported | `/burp` | Native emote; an optional target must be in the same scene. |
-| `/cheer [player name]` | `/hooray` | Supported | `/cheer` | Native emote; an optional target must be in the same scene. |
-| `/clap [player name]` | `/applaud` | Supported | `/clap` | Native emote; an optional target must be in the same scene. |
-| `/clear` |  | Client-side | `/clear` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/come` | `/here`, `/comehere`, `/interest`, `/beckon` | Supported | `/come` | Native emote; an optional target must be in the same scene. |
-| `/complain player name` | `/report` | Placeholder | `/complain` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/congratulate` | `/grats` | Supported | `/congratulate` | Native emote; an optional target must be in the same scene. |
-| `/crazy [player name]` |  | Supported | `/crazy` | Native emote; an optional target must be in the same scene. |
-| `/cry [player name]` | `/weep` | Supported | `/cry` | Native emote; an optional target must be in the same scene. |
-| `/dance` |  | Supported | `/dance` | Native emote; an optional target must be in the same scene. |
-| `/debug (command line)` |  | Placeholder | `/debug` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/depth [depth]` |  | Placeholder | `/depth` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/derp` | `/herp` | Supported | `/derp` | Native emote; an optional target must be in the same scene. |
-| `/drain [player name]` |  | Placeholder | `/drain` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/dump (actors sprites influences)` |  | Client-side | `/dump` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/emote message` | `/me`, `/em`, `/e` | Placeholder | `/emote` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/epicfail [player name]` |  | Supported | `/epicfail` | Native emote; an optional target must be in the same scene. |
-| `/fail [player name]` |  | Supported | `/fail` | Native emote; an optional target must be in the same scene. |
-| `/fallback` | `/retreat` | Supported | `/fallback` | Native emote; an optional target must be in the same scene. |
-| `/fire name attr value attr value...` |  | Placeholder | `/fire` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/flex` |  | Supported | `/flex` | Native emote; an optional target must be in the same scene. |
-| `/flirt [player name]` |  | Supported | `/flirt` | Native emote; an optional target must be in the same scene. |
-| `/follow` | `/followme` | Supported | `/follow` | Native emote; an optional target must be in the same scene. |
-| `/force_bug_report <knight name> [description]` |  | Placeholder | `/force_bug_report` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/frown [player name]` |  | Supported | `/frown` | Native emote; an optional target must be in the same scene. |
-| `/game message` |  | Placeholder | `/game` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/garrison` |  | Supported when deployed | `/garrison` | Travel to the configured destination; an absent destination is refused. |
-| `/gaze` |  | Supported | `/gaze` | Native emote; an optional target must be in the same scene. |
-| `/get_values` |  | Client-side | `/get_values` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/giggle [player name]` |  | Supported | `/giggle` | Native emote; an optional target must be in the same scene. |
-| `/goodbye [player name]` | `/bye`, `/farewell` | Supported | `/goodbye` | Native emote; an optional target must be in the same scene. |
-| `/grant number` |  | Supported | `/grant 100` | GM: add nonnegative crowns to your knight. |
-| `/grant_gift <account name> name attr value attr value...` |  | Placeholder | `/grant_gift` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/grant_reward <account name> <reward id> [reward param string]` |  | Placeholder | `/grant_reward` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/grin [player name]` |  | Supported | `/grin` | Native emote; an optional target must be in the same scene. |
-| `/guild message` | `/g`, `/guildchat` | Placeholder | `/guild` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/guildhall` | `/gh` | Placeholder | `/guildhall` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/guildinfo guild name` |  | Placeholder | `/guildinfo` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/happy [player name]` |  | Supported | `/happy` | Native emote; an optional target must be in the same scene. |
-| `/haven` | `/hh` | Supported when deployed | `/haven` | Travel to the configured destination; an absent destination is refused. |
-| `/heat (weapon armor helmet shield sprite) [heat]` |  | Supported | `/heat weapon 0.5` | GM: set equipped item heat; use native help for optional slot syntax. |
-| `/hi [player name]` | `/hello`, `/greet` | Supported | `/hi` | Native emote; an optional target must be in the same scene. |
-| `/help` |  | Client-side | `/help` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/helpme` | `/assistance`, `/aid` | Supported | `/helpme` | Native emote; an optional target must be in the same scene. |
-| `/hoh` | `/heroes` | Supported when deployed | `/hoh` | Travel to the configured destination; an absent destination is refused. |
-| `/hug [player name]` |  | Supported | `/hug` | Native emote; an optional target must be in the same scene. |
-| `/hungry` |  | Supported | `/hungry` | Native emote; an optional target must be in the same scene. |
-| `/impatient [player name]` |  | Supported | `/impatient` | Native emote; an optional target must be in the same scene. |
-| `/inspect [player name]` |  | Supported | `/inspect Jane` | Inspect a visible/available knight. |
-| `/invite [player name]` |  | Supported | `/invite Jane` | Invite an online knight to a party. |
-| `/item name attr value attr value...` |  | Supported | `/item Weapon/Sword/Proto Sword` | GM: create one item; use Item Creator for quantity, binding and expiry. |
-| `/item_pack pack [player name]` |  | Placeholder | `/item_pack` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/join (zone trade)` |  | Placeholder | `/join` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/joinknight [player name]` |  | Placeholder | `/joinknight` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/joy [player name]` | `/overjoyed`, `/yay` | Supported | `/joy` | Native emote; an optional target must be in the same scene. |
-| `/kick player name` |  | Placeholder | `/kick` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/kidding [player name]` | `/jk` | Supported | `/kidding` | Native emote; an optional target must be in the same scene. |
-| `/kiss [player name]` | `/blowkiss` | Supported | `/kiss` | Native emote; an optional target must be in the same scene. |
-| `/lab` | `/laboratory` | Placeholder | `/lab` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/laugh [player name]` | `/haha`, `/lol` | Supported | `/laugh` | Native emote; an optional target must be in the same scene. |
-| `/lbroadcast (en fr it de es) message` |  | Placeholder | `/lbroadcast` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/leave (zone trade)` |  | Placeholder | `/leave` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/level (weapon armor helmet shield) [level]` |  | Supported | `/level weapon 5` | GM: set equipped item level within its progression table. |
-| `/level_up (weapon armor helmet shield) [crystals]` |  | Supported | `/level_up weapon 4` | GM: native forge operation; uses the verified progression table. |
-| `/loadout [loadout]` |  | Partial | `/loadout` | Client lists the current loadout; switching saved loadouts remains a placeholder. |
-| `/lonely` |  | Supported | `/lonely` | Native emote; an optional target must be in the same scene. |
-| `/look` |  | Supported | `/look` | Native emote; an optional target must be in the same scene. |
-| `/love [player name]` |  | Supported | `/love` | Native emote; an optional target must be in the same scene. |
-| `/mission missionId` |  | Placeholder | `/mission` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/missions` |  | Placeholder | `/missions` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/move x y` |  | Placeholder | `/move` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/ignore player name` | `/mute` | Placeholder | `/ignore` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/no [player name]` | `/disagree` | Supported | `/no` | Native emote; an optional target must be in the same scene. |
-| `/officer message` | `/o` | Placeholder | `/officer` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/party message` | `/p`, `/partychat` | Supported | `/party Ready` | Current party chat. |
-| `/pbroadcast message` |  | Placeholder | `/pbroadcast` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/pgo player name` |  | Placeholder | `/pgo` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/point [player name]` | `/direct` | Supported | `/point` | Native emote; an optional target must be in the same scene. |
-| `/poke [player name]` |  | Supported | `/poke` | Native emote; an optional target must be in the same scene. |
-| `/punch` | `/uv` | Supported when deployed | `/punch` | Travel to the configured destination; an absent destination is refused. |
-| `/ready` | `/rdy` | Supported | `/ready` | Native emote; an optional target must be in the same scene. |
-| `/readyroom` | `/rr` | Placeholder | `/readyroom` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/reboot minutes message` |  | Placeholder | `/reboot` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/recharge [player name]` |  | Placeholder | `/recharge` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/rename_guild <old name> : <new name>` |  | Placeholder | `/rename_guild` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/respond message` | `/reply`, `/r` | Supported | `/respond Hello` | Reply to the last tell. |
-| `/revoke_gift <account name> name attr value attr value...` |  | Placeholder | `/revoke_gift` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/rude [player name]` |  | Supported | `/rude` | Native emote; an optional target must be in the same scene. |
-| `/sad [player name]` | `/depressed` | Supported | `/sad` | Native emote; an optional target must be in the same scene. |
-| `/salute` |  | Supported | `/salute` | Native emote; an optional target must be in the same scene. |
-| `/saveloadout <name>` |  | Placeholder | `/saveloadout` | Saving named loadouts is unavailable. |
-| `/set-ident` |  | Placeholder | `/set-ident` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/set_rank rank subrank` |  | Supported | `/set_rank 4 2` | GM: save rank/subrank; no mission rewards are generated. |
-| `/sgo scene name` |  | Placeholder | `/sgo` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/shout message` | `/yell`, `/y` | Supported | `/shout Hello` | Scene chat in shout mode. |
-| `/shrug` |  | Supported | `/shrug` | Native emote; an optional target must be in the same scene. |
-| `/sigh [player name]` |  | Supported | `/sigh` | Native emote; an optional target must be in the same scene. |
-| `/sit` | `/sitdown` | Supported | `/sit` | Native emote; an optional target must be in the same scene. |
-| `/sleep` | `/doze` | Supported | `/sleep` | Native emote; an optional target must be in the same scene. |
-| `/sleepy [player name]` | `/drowsy` | Supported | `/sleepy` | Native emote; an optional target must be in the same scene. |
-| `/smell [player name]` | `/stink` | Supported | `/smell` | Native emote; an optional target must be in the same scene. |
-| `/smile [player name]` | `/beam` | Supported | `/smile` | Native emote; an optional target must be in the same scene. |
-| `/sniff` |  | Supported | `/sniff` | Native emote; an optional target must be in the same scene. |
-| `/sorry` | `/apologize` | Supported | `/sorry` | Native emote; an optional target must be in the same scene. |
-| `/sound` |  | Client-side | `/sound` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/spawn name attr value attr value...` |  | Placeholder | `/spawn` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/sprite_equip [id]` |  | Supported | `/sprite_equip` | GM: equip an owned sprite; optional ID. |
-| `/sprite_level [level]` |  | Supported | `/sprite_level 10` | GM: set equipped sprite level. |
-| `/sprite_list` |  | Client-side | `/sprite_list` | Handled by the stock client; local UI/configuration requirements still apply. |
-| `/sprite_power skill power value` |  | Supported | `/sprite_power 0 0 3` | GM: set a sprite skill power. |
-| `/sprite_ultimate skill ultimate` |  | Supported | `/sprite_ultimate 0 1` | GM: set a sprite ultimate. |
-| `/stare` |  | Supported | `/stare` | Native emote; an optional target must be in the same scene. |
-| `/summon player name` |  | Placeholder | `/summon` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/sybil` |  | Supported when deployed | `/sybil` | Travel to the configured destination; an absent destination is refused. |
-| `/team message` |  | Placeholder | `/team` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/tell player name message` | `/msg`, `/t`, `/whisper`, `/w` | Supported | `/tell Jane Hello` | Whisper to an online knight. |
-| `/thank [player name]` | `/thanks`, `/ty`, `/thx` | Supported | `/thank` | Native emote; an optional target must be in the same scene. |
-| `/think message` |  | Placeholder | `/think` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/thirsty` |  | Supported | `/thirsty` | Native emote; an optional target must be in the same scene. |
-| `/tickle [player name]` |  | Supported | `/tickle` | Native emote; an optional target must be in the same scene. |
-| `/tired [player name]` |  | Supported | `/tired` | Native emote; an optional target must be in the same scene. |
-| `/toggle ({1})` |  | Placeholder | `/toggle` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/toggle_progress ({1})` |  | Placeholder | `/toggle_progress` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/townsquare` | `/ts` | Supported when deployed | `/townsquare` | Travel to the configured destination; an absent destination is refused. |
-| `/trade message` | `/tradechat`, `/2` | Placeholder | `/trade` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/training` |  | Supported when deployed | `/training` | Travel to the configured destination; an absent destination is refused. |
-| `/unlock_achievement <account name> <achievement name>` |  | Placeholder | `/unlock_achievement` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/unignore player name` | `/unmute` | Placeholder | `/unignore` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/vise` | `/unbind` | Supported when deployed | `/vise` | Travel to the configured destination; an absent destination is refused. |
-| `/wait` |  | Supported | `/wait` | Native emote; an optional target must be in the same scene. |
-| `/wave [player name]` |  | Supported | `/wave` | Native emote; an optional target must be in the same scene. |
-| `/whine [player name]` |  | Supported | `/whine` | Native emote; an optional target must be in the same scene. |
-| `/who player name` |  | Placeholder | `/who` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/wince [player name]` |  | Supported | `/wince` | Native emote; an optional target must be in the same scene. |
-| `/wink [player name]` |  | Supported | `/wink` | Native emote; an optional target must be in the same scene. |
-| `/yawn` |  | Supported | `/yawn` | Native emote; an optional target must be in the same scene. |
-| `/yes [player name]` | `/agree`, `/nod` | Supported | `/yes` | Native emote; an optional target must be in the same scene. |
-| `/zgo zone name` |  | Placeholder | `/zgo` | Reserved. No complete server implementation; native usage or an explicit placeholder response is expected. |
-| `/zone message` | `/z`, `/zonechat`, `/1` | Supported | `/zone Hello` | Current scene chat; cross-zone routing is unavailable. |
-
-## Tortodrone GM chat extensions
-
-These extensions use `!` because the unmodified client consumes slash commands locally. Only authenticated GMs can execute them. The server console accepts the same item syntax without `!`.
-
-| Command | Use | Example |
+| Command (aliases) | Example | What it does |
 |---|---|---|
-| `!help` | List available GM extensions. | `!help` |
-| `!items <search> [--page N]` | Search names, readable IDs, stock IDs and exact configs. | `!items Proto --page 1` |
-| `!items category <type> [--page N]` | Filter a catalog category. | `!items category Sword` |
-| `!items info <reference>` | Inspect availability, flags and native config. | `!items info proto_sword` |
-| `!giveitem <knight-name> <1-20> <reference>` | Grant unequipped items; recipient may be offline. | `!giveitem Jane 2 Weapon/Sword/Proto Sword` |
-| `!giveitem <account> <knight-name> <1-20> <reference>` | Legacy account-qualified grant. | `!giveitem Alice Jane 1 proto_sword` |
+| `/help` | `/help` | Show command help. |
+| `/shout message (/yell, /y)` | `/shout Over here!` | Shout in the current scene. |
+| `/think message` | `/think Which way?` | Show a thought bubble. |
+| `/emote message (/me, /em, /e)` | `/me checks the map` | Send a written emote in the current scene. |
+| `/zone message (/z, /zonechat, /1)` | `/zone Anyone going to the Bazaar?` | Chat with subscribers across scenes in your current zone. |
+| `/trade message (/tradechat, /2)` | `/trade Selling a Calibur` | Use the separate trade channel for your current zone. |
+| `/join (zone trade)` | `/join trade` | Enable a zone or trade channel in the client. |
+| `/leave (zone trade)` | `/leave trade` | Disable a zone or trade channel in the client. |
+| `/party message (/p, /partychat)` | `/party Ready when you are` | Chat with your party. |
+| `/tell player name message (/msg, /t, /whisper, /w)` | `/tell Jane Hello` | Whisper to an online knight. |
+| `/respond message (/reply, /r)` | `/reply On my way` | Reply to the last knight who whispered to you. |
+| `/away message (/afk)` | `/away Back in ten minutes` | Set an away message. Knights who whisper to you receive it automatically. |
+| `/back` | `/back` | Clear your away message. |
+| `/ignore player name (/mute)` | `/mute Jane` | Block a knight through the client mute list. |
+| `/unignore player name (/unmute)` | `/unmute Jane` | Remove a knight from the client mute list. |
+| `/clear` | `/clear` | Clear the local chat display and history. |
 
-## Expiring items and slot upgrades
+### Party, inspection, and equipment
 
-The native GM Item Creator accepts quantity 1–20, Locked and Expire Days 0–3650. A positive value starts an absolute timer when the grant commits, including for weapons and trinkets. Zero uses the catalog default duration. Permanent items cannot expire. Example: create `Weapon/Sword/Proto Sword`, quantity `1`, Expire Days `2` for a two-day weapon. `/item Weapon/Sword/Proto Sword` creates one item with its catalog defaults; the slash command does not expose the dialog's expiry field.
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/invite [player name]` | `/invite Jane` | Invite an online knight to your party. |
+| `/inspect [player name]` | `/inspect Jane` | Inspect a knight available in the current scene; privacy rules still apply. |
+| `/saveloadout <name>` | `/saveloadout Battle` | Save your current equipment, battle sprite, harness and perk. Up to ten case-insensitive names; saving the same name replaces it. |
+| `/loadout [loadout]` | `/loadout Battle` | List loadouts with `/loadout`, or equip a saved name. Switching requires equipment access and no active trade. Missing items or locked slots refuse the whole switch. |
 
-Grant `weapon_slot`, `trinket_slot`, or `trinket_slot_2_days` with `!giveitem Jane 1 weapon_slot`. An unused slot ticket has no running timer. Use it from the Arsenal to bind and activate it: weapon slots last 30 days, standard trinket slots 30 days, and short trinket slots two days. Each unlocks one slot, up to two extra weapon slots and two trinket slots. Use the native Extend menu to consume a matching unused ticket and add its duration to an active deadline. Reconnects, server restarts and transfers never restart a timer. When a slot expires, equipment in the lost slot returns to the bag; it is not destroyed. Activated tickets are bound and cannot be traded or wrapped.
+### Travel
+
+These commands visit deployed destinations. The client may require mission or party prerequisites for interior destinations.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/haven (/hh)` | `/haven` | Return to the server’s starting Haven scene. |
+| `/townsquare (/ts)` | `/townsquare` | Visit Haven Town Square. |
+| `/bazaar` | `/bazaar` | Visit the Bazaar. |
+| `/arcade` | `/arcade` | Visit the Arcade. |
+| `/garrison` | `/garrison` | Visit the Garrison. |
+| `/training` | `/training` | Enter Advanced Training. |
+| `/lab (/laboratory)` | `/lab` | Enter the Laboratory. |
+| `/hoh (/heroes)` | `/hoh` | Enter the Hall of Heroes. |
+| `/auction (/ah)` | `/auction` | Visit the Auction House destination. |
+| `/alchemy (/craft)` | `/alchemy` | Visit the alchemy machine. |
+| `/bechamel (/accessory)` | `/bechamel` | Visit Bechamel’s accessory station. |
+| `/punch (/uv)` | `/punch` | Visit Punch’s station. |
+| `/vise (/unbind)` | `/vise` | Visit Vise’s station. |
+| `/sybil` | `/sybil` | Visit Sybil. |
+
+### Emotes and signals
+
+A knight name is optional for targetable emotes and must refer to someone in your scene. Signals without a target affect only your own knight.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/amaze [player name] (/amazed)` | `/amaze Jane` | Targetable emote. |
+| `/attack` | `/attack` | Emote or party signal. |
+| `/beg [player name]` | `/beg Jane` | Targetable emote. |
+| `/belch` | `/belch` | Emote or party signal. |
+| `/bored [player name] (/boring)` | `/bored Jane` | Targetable emote. |
+| `/bow [player name]` | `/bow Jane` | Targetable emote. |
+| `/burp` | `/burp` | Emote or party signal. |
+| `/cheer [player name] (/hooray)` | `/cheer Jane` | Targetable emote. |
+| `/clap [player name] (/applaud)` | `/clap Jane` | Targetable emote. |
+| `/come (/here, /comehere, /interest, /beckon)` | `/come` | Emote or party signal. |
+| `/congratulate [player name] (/grats)` | `/congratulate Jane` | Targetable emote. |
+| `/crazy [player name]` | `/crazy Jane` | Targetable emote. |
+| `/cry [player name] (/weep)` | `/cry Jane` | Targetable emote. |
+| `/dance [player name]` | `/dance Jane` | Targetable emote. |
+| `/derp (/herp)` | `/derp` | Emote or party signal. |
+| `/epicfail [player name]` | `/epicfail Jane` | Targetable emote. |
+| `/fail [player name]` | `/fail Jane` | Targetable emote. |
+| `/fallback (/retreat)` | `/fallback` | Emote or party signal. |
+| `/flex` | `/flex` | Emote or party signal. |
+| `/flirt [player name]` | `/flirt Jane` | Targetable emote. |
+| `/follow (/followme)` | `/follow` | Emote or party signal. |
+| `/frown [player name]` | `/frown Jane` | Targetable emote. |
+| `/gaze` | `/gaze` | Emote or party signal. |
+| `/giggle [player name]` | `/giggle Jane` | Targetable emote. |
+| `/goodbye [player name] (/bye, /farewell)` | `/goodbye Jane` | Targetable emote. |
+| `/grin [player name]` | `/grin Jane` | Targetable emote. |
+| `/happy [player name]` | `/happy Jane` | Targetable emote. |
+| `/helpme (/assistance, /aid)` | `/helpme` | Emote or party signal. |
+| `/hi [player name] (/hello, /greet)` | `/hi Jane` | Targetable emote. |
+| `/hug [player name]` | `/hug Jane` | Targetable emote. |
+| `/hungry` | `/hungry` | Emote or party signal. |
+| `/impatient [player name]` | `/impatient Jane` | Targetable emote. |
+| `/joy [player name] (/overjoyed, /yay)` | `/joy Jane` | Targetable emote. |
+| `/kidding [player name] (/jk)` | `/kidding Jane` | Targetable emote. |
+| `/kiss [player name] (/blowkiss)` | `/kiss Jane` | Targetable emote. |
+| `/laugh [player name] (/haha, /lol)` | `/laugh Jane` | Targetable emote. |
+| `/lonely` | `/lonely` | Emote or party signal. |
+| `/look [player name]` | `/look Jane` | Targetable emote. |
+| `/love [player name]` | `/love Jane` | Targetable emote. |
+| `/no [player name] (/disagree)` | `/no Jane` | Targetable emote. |
+| `/point [player name] (/direct)` | `/point Jane` | Targetable emote. |
+| `/poke [player name]` | `/poke Jane` | Targetable emote. |
+| `/ready (/rdy)` | `/ready` | Emote or party signal. |
+| `/rude [player name]` | `/rude Jane` | Targetable emote. |
+| `/sad [player name] (/depressed)` | `/sad Jane` | Targetable emote. |
+| `/salute [player name]` | `/salute Jane` | Targetable emote. |
+| `/shrug [player name]` | `/shrug Jane` | Targetable emote. |
+| `/sigh [player name]` | `/sigh Jane` | Targetable emote. |
+| `/sit (/sitdown)` | `/sit` | Emote or party signal. |
+| `/sleep (/doze)` | `/sleep` | Emote or party signal. |
+| `/sleepy [player name] (/drowsy)` | `/sleepy Jane` | Targetable emote. |
+| `/smell [player name] (/stink)` | `/smell Jane` | Targetable emote. |
+| `/smile [player name] (/beam)` | `/smile Jane` | Targetable emote. |
+| `/sniff [player name]` | `/sniff Jane` | Targetable emote. |
+| `/sorry [player name] (/apologize)` | `/sorry Jane` | Targetable emote. |
+| `/stare [player name]` | `/stare Jane` | Targetable emote. |
+| `/thank [player name] (/thanks, /ty, /thx)` | `/thank Jane` | Targetable emote. |
+| `/thirsty` | `/thirsty` | Emote or party signal. |
+| `/tickle [player name]` | `/tickle Jane` | Targetable emote. |
+| `/tired [player name]` | `/tired Jane` | Targetable emote. |
+| `/wait` | `/wait` | Emote or party signal. |
+| `/wave [player name]` | `/wave Jane` | Targetable emote. |
+| `/whine [player name]` | `/whine Jane` | Targetable emote. |
+| `/wince [player name]` | `/wince Jane` | Targetable emote. |
+| `/wink [player name]` | `/wink Jane` | Targetable emote. |
+| `/yawn` | `/yawn` | Emote or party signal. |
+| `/yes [player name] (/agree, /nod)` | `/yes Jane` | Targetable emote. |
+
+### Player features not available yet
+
+These depend on systems the server does not currently provide. They return an unavailable response where the client sends a request; they do not perform the described action.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/bug description` | `/bug Stuck after entering a scene` | Bug-report delivery service. |
+| `/complain player name (/report)` | `/complain Jane` | Player-report submission service. |
+| `/game message` | `/game Ready to start` | PvP game chat. |
+| `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild membership and guild chat. |
+| `/guildhall (/gh)` | `/guildhall` | Guild-owned halls. |
+| `/joinknight [player name]` | `/joinknight Jane` | Social whereabouts and join permissions. |
+| `/officer message (/o)` | `/officer Meeting in Haven` | Guild officer permissions and officer chat. |
+| `/readyroom (/rr)` | `/readyroom` | Ready-room and dungeon matchmaking. |
+| `/recharge [player name]` | `/recharge Jane` | Legacy client command without a current server handler. |
+| `/set-ident` | `/set-ident` | Forum identity linking. |
+| `/team message` | `/team Defend this side` | PvP team membership and chat. |
+
+## GM-only commands
+
+These require a GM account. The server checks permissions independently of the client's command menu. Some developer tools also require a higher native client permission tier and may be hidden by the stock client.
+
+### Player lookup and moderation
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/who player name` | `/who Jane` | Show an online knight’s world ID, scene and instance. |
+| `/kick player name` | `/kick Jane` | Disconnect only that knight’s active session. Does not delete the account or ban it. |
+| `/broadcast message` | `/broadcast Server restart in five minutes` | Send a server-wide message to ready online knights. |
+
+### GM travel
+
+Travel follows the normal scene transition and ownership checks. `/pgo` and `/summon` work in towns and accessible shared instances; they cannot cross another knight’s private-instance ownership. Finish active trades first.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/pgo player name` | `/pgo Jane` | Go to an online knight’s server-observed location. |
+| `/summon player name` | `/summon Jane` | Bring an online knight to your server-observed location. |
+| `/sgo scene name` | `/sgo 30893` | Go to a deployed scene by its native name or numeric scene ID. |
+| `/zgo zone name` | `/zgo haven` | Go to a deployed zone by its name or numeric zone ID. |
+| `/move x y` | `/move 10 5` | Move within your current scene. Blocked coordinates are refused. |
+
+### Items, equipment, and progression
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/item name attr value attr value...` | `/item Weapon/Sword/Proto Sword` | Create one catalog item for yourself. Use the native Item Creator for its other creation options. |
+| `/grant number` | `/grant 1000` | Add a nonnegative number of crowns to your knight. |
+| `/set_rank rank subrank` | `/set_rank 4 2` | Set your saved rank and subrank, without awarding mission rewards. |
+| `/level (weapon armor helmet shield) [level]` | `/level weapon 5` | Set equipped gear level within its progression table. |
+| `/heat (weapon armor helmet shield sprite) [heat]` | `/heat weapon 0.5` | Set equipped gear heat progress from 0 to 1. |
+| `/level_up (weapon armor helmet shield) [crystals]` | `/level_up weapon 4` | Attempt the native forge operation using the configured crystal-tier chance. |
+| `/accessorize (armor helmet) [clear \| accessory name]` | `/accessorize armor clear` | Clear accessories, or add a verified accessory config to equipped armor/helmet. Conflicting accessories are refused. |
+
+### Battle sprites
+
+Sprite IDs come from `/sprite_list`. Skill, power and ultimate indices use the native command’s numbering; invalid or locked entries are refused.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/sprite_list` | `/sprite_list` | List your owned battle sprites and their IDs in the client. |
+| `/sprite_equip [id]` | `/sprite_equip 1` | Equip an owned sprite; omit the ID to use the client’s default selection. |
+| `/sprite_level [level]` | `/sprite_level 10` | Set the equipped sprite’s displayed level. |
+| `/sprite_power skill power value` | `/sprite_power 0 0 3` | Set a skill power value on the equipped sprite. |
+| `/sprite_ultimate skill ultimate` | `/sprite_ultimate 0 1` | Set a skill ultimate on the equipped sprite. |
+
+### Local client debugging
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/sound` | `/sound` | Toggle client sound volume. |
+| `/dump (actors sprites influences)` | `/dump actors` | Dump client scene diagnostics to the client log; native developer permissions apply. |
+
+### GM tools not available yet
+
+These require runtime systems, event definitions, or a dedicated administration backend that has not been implemented. They remain explicit placeholders rather than reporting fake success.
+Examples containing `<...>` need a verified definition from that missing system; these are argument templates, not deployed content IDs.
+
+| Command (aliases) | Example | What it does |
+|---|---|---|
+| `/action command argument` | `/action <controller-action> <argument>` | Arbitrary scene-controller actions; only implemented NPC actions are dispatched. |
+| `/admin message` | `/admin Checking the Bazaar` | Native administrator-object chat. |
+| `/advance [number of floors]` | `/advance 1` | Dungeon floor progression. |
+| `/debug (command line)` | `/debug <debug-command>` | Native server debug-command dispatcher. |
+| `/depth [depth]` | `/depth 3` | Dungeon depth state. |
+| `/drain [player name]` | `/drain Jane` | Legacy mist-energy administration. |
+| `/fire name attr value attr value...` | `/fire <effect-config>` | Administrative effect creation and lifecycle handling. |
+| `/force_bug_report <knight name> [description]` | `/force_bug_report Jane Describe the stuck screen` | Remote report collection service. |
+| `/get_values` | `/get_values` | Native runtime-value inspection service. |
+| `/grant_gift <account name> name attr value attr value...` | `/grant_gift Alice <gift-config>` | Administrative gift definitions and delivery. |
+| `/grant_reward <account name> <reward id> [reward param string]` | `/grant_reward Alice <reward-id>` | Verified mission/reward definitions and delivery. |
+| `/guildinfo guild name` | `/guildinfo <guild-name>` | Guild records. |
+| `/item_pack pack [player name]` | `/item_pack <pack-config> Jane` | Native administrative item-pack definitions. |
+| `/lbroadcast (en fr it de es) message` | `/lbroadcast en Welcome to Haven` | Localized broadcast selection. |
+| `/mission missionId` | `/mission <mission-id>` | Mission administration and progression. |
+| `/missions` | `/missions` | Mission administration and progression. |
+| `/pbroadcast message` | `/pbroadcast Welcome to Haven` | Popup announcement delivery. |
+| `/reboot minutes message` | `/reboot 5 Scheduled maintenance` | Cluster/node lifecycle control. Use the local server console for shutdown. |
+| `/rename_guild <old name> : <new name>` | `/rename_guild <old-name> : <new-name>` | Guild ownership and persistence. |
+| `/revoke_gift <account name> name attr value attr value...` | `/revoke_gift Alice <gift-config>` | Administrative gift-revocation records. |
+| `/spawn name attr value attr value...` | `/spawn <actor-config>` | Persistent actor spawning and native actor configuration resolution. |
+| `/toggle <flag>` | `/toggle invincible` | Native status flags, including `fast`, `invisible`, `stealth` and `invincible`. |
+| `/toggle_progress <flag>` | `/toggle_progress tier_2_access` | Native progression flags, including tier access and wearable rarity. |
+| `/unlock_achievement <account name> <achievement name>` | `/unlock_achievement Alice <achievement-name>` | Achievement definitions and persistence. |
+
+### Tortodrone GM chat extensions
+
+The stock client consumes slash command names itself, so these server extensions use `!`.
+
+| Command | Example | What it does |
+|---|---|---|
+| `!help` | `!help` | List GM chat extensions. |
+| `!items <search> [--page N]` | `!items Proto --page 1` | Search catalog names, IDs and configs. |
+| `!items category <type> [--page N]` | `!items category Sword` | Search one item category. |
+| `!items info <reference>` | `!items info proto_sword` | Inspect a catalog entry and its availability. |
+| `!giveitem <knight> <1-20> <reference>` | `!giveitem Jane 2 proto_sword` | Grant unequipped items to an online or offline knight. |
+| `!giveitem <account> <knight> <1-20> <reference>` | `!giveitem Alice Jane 1 proto_sword` | Legacy account-qualified grant syntax. |
 
 ## Local server console
 
@@ -194,16 +255,11 @@ The terminal and server desktop command field accept these forms with an optiona
 
 | Syntax | Use | Example |
 |---|---|---|
-| `rank <knight-name> <1-10> <subrank 1-4>` | Set saved mission rank without awarding missions or items. | `rank Jane 10 3` |
-| `prestige <knight-name> <total>` | Set a saved nonnegative prestige total. | `prestige Jane 5000` |
 | `help [command] [action]` | Show all commands or help for one command. | `help account create` |
 | `status` | Show version, uptime, sessions, resources and memory. | `status` |
 | `players` | List current TCP sessions, verified identities and locations. | `players` |
 | `session <session-id>` | Inspect an active connection. | `session 1` |
 | `inspect <knight-name>` | Inspect persistent identity, balances and inventory count. | `inspect Jane` |
-| `grant <knight-name> <crowns\|energy> <signed-amount>` | Add/subtract atomically; insufficient funds and overflow are refused. | `grant Jane crowns -25` |
-| `set <knight-name> <crowns\|energy> <balance>` | Set an absolute balance atomically, from 0 to 2147483647. | `set Jane crowns 5000` |
-| `stop` | Shut down the server cleanly. | `stop` |
 | `account list` | List accounts and Game Master roles. | `ac list` |
 | `account create <username> [gm]` | Create an account; enter its password at the prompts. | `account create Alice` |
 | `account password <username>` | Change a password; existing sessions disconnect. | `ac password Alice` |
@@ -214,7 +270,12 @@ The terminal and server desktop command field accept these forms with an optiona
 | `knight list <username>` | List an account's saved knights. | `knight list Alice` |
 | `knight info <username> <knight-name>` | Show a knight's identity, balances and inventory. | `knight info Alice Jane` |
 | `knight delete <username> <knight-name>` | Delete a knight after exact-name confirmation. | `knight delete Alice Jane` |
+| `rank <knight-name> <1-10> <subrank 1-4>` | Set saved mission rank without awarding missions or items. | `rank Jane 10 3` |
+| `prestige <knight-name> <total>` | Set a saved nonnegative prestige total. | `prestige Jane 5000` |
+| `grant <knight-name> <crowns\|energy> <signed-amount>` | Add/subtract atomically; insufficient funds and overflow are refused. | `grant Jane crowns -25` |
+| `set <knight-name> <crowns\|energy> <balance>` | Set an absolute balance atomically, from 0 to 2147483647. | `set Jane crowns 5000` |
 | `currency give <username> <knight-name> <crowns\|energy> <amount>` | Add currency to a knight. | `currency give Alice Jane crowns 100` |
 | `currency withdraw <username> <knight-name> <crowns\|energy> <amount>` | Withdraw currency; the balance cannot become negative. | `currency withdraw Alice Jane energy 5` |
 | `items [search \| category <type> \| info <reference>] [--page N]` | Search and inspect names, aliases, stock IDs, references and availability. | `items Proto Sword` |
 | `giveitem <knight-name> <1-20> <catalogue ID or exact item config>` | Grant unequipped items by unique knight name. The account-qualified form also works. | `giveitem Jane 2 Weapon/Sword/Proto Sword` |
+| `stop` | Shut down the server cleanly. | `stop` |

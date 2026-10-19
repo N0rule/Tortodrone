@@ -290,11 +290,15 @@ public final class SessionCodec {
     }
 
     /** TellListener method one carries idle duration and an optional away message. */
-    public byte[] tellSucceeded(int clientOid,short requestId)throws IOException {
+    public byte[] tellSucceeded(int clientOid,short requestId)throws IOException {return tellSucceeded(clientOid,requestId,null);}
+    public byte[] awayMessage(int oid,String message)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"awayMessage");value(out,message);});
+    }
+    public byte[] tellSucceeded(int clientOid,short requestId,String awayMessage)throws IOException {
         return frame(out->{
             eventHeader(out,"InvocationResponseEvent",clientOid);
             out.writeShort(requestId);out.writeByte(1);out.writeBoolean(true);out.writeInt(2);
-            value(out,0L);value(out,null);
+            value(out,0L);value(out,awayMessage);
         });
     }
 
@@ -757,10 +761,20 @@ public final class SessionCodec {
         return partyOid(oid,scene.map().town()?0:interiorPartyOid(scene));
     }
     public byte[] partyOid(int player,int party)throws IOException{return frame(out->{eventHeader(out,"AttributeChangedEvent",player);string(out,"partyOid");value(out,party);});}
-    public byte[] sceneLocation(int oid,SceneRegistry.Instance scene) throws IOException {
-        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?3:2);
+    public byte[] chatChannel(short message,int oid,int chatType)throws IOException {
+        if(chatType!=6&&chatType!=7)throw new IOException("Unsupported chat channel type");
+        return frame(out->{objectHeader(out,message,"com.threerings.projectx.data.ChatObject",oid);
+            type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(oid);out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
+            type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(0);out.writeInt(0);
+            type(out,"com.threerings.projectx.data.ChatType");out.writeByte(chatType);
+        });
+    }
+    public byte[] sceneLocation(int oid,SceneRegistry.Instance scene)throws IOException{return sceneLocation(oid,scene,0,0);}
+    public byte[] sceneLocation(int oid,SceneRegistry.Instance scene,int general,int trade) throws IOException {
+        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?5:4);
             if(scene.map().town())attribute(out,oid,"lastTownSceneId",o->value(o,scene.map().id()));
             attribute(out,oid,"zoneId",o->value(o,scene.map().zone()));
+            attribute(out,oid,"zoneGeneralOid",o->value(o,general));attribute(out,oid,"zoneTradeOid",o->value(o,trade));
             attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(scene.oid());o.writeInt(scene.map().id());}); });
     }
 
@@ -1012,22 +1026,29 @@ public final class SessionCodec {
         return new StarterCatalog.Model(item.config(),args);
     }
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
-        type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1);
+        type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1+profile.town().loadouts().size());
         loadout(out,profile);
+        for(var saved:profile.town().loadouts().stream().sorted(java.util.Comparator.comparing(l->l.name().toLowerCase(java.util.Locale.ROOT))).toList())loadout(out,saved.name(),saved.equipment().stream().mapToLong(Long::longValue).toArray(),saved.sprite(),saved.harness(),saved.perk());
     }
     private void loadoutUpdated(DataOutputStream out,int oid,WorldProfile profile)throws IOException {
         type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(oid);string(out,"loadouts");
         loadout(out,profile);
     }
-    private void loadout(DataOutputStream out,WorldProfile profile)throws IOException {
-        type(out,"com.threerings.projectx.data.Loadout");
-        // Loadout equipment is indexed by ItemCodes.bwt, not the full equipment slot array.
-        int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};long[] equipment=profile.equipment();
-        out.writeBoolean(true);out.writeInt(slots.length);
-        for(int slot:slots)out.writeLong(equipment[slot]);
-        out.writeBoolean(false);out.writeInt(0);out.writeInt(profile.town().equippedSprite());var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);out.writeLong(sprite==null?0:sprite.harness());
-        value(out,sprite==null||sprite.perk()==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",sprite.perk()));string(out,""); // no sprite perk; empty name is the stock current loadout.
+    public byte[] loadouts(int oid,WorldProfile profile)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"loadouts");currentLoadout(out,profile);});
     }
+    private void loadout(DataOutputStream out,WorldProfile profile)throws IOException {
+        var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
+        loadout(out,"",profile.equipment(),profile.town().equippedSprite(),sprite==null?0:sprite.harness(),sprite==null?null:sprite.perk());
+    }
+    private void loadout(DataOutputStream out,String name,long[] equipment,int sprite,long harness,Integer perk)throws IOException {
+        type(out,"com.threerings.projectx.data.Loadout");
+        int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};
+        out.writeBoolean(true);out.writeInt(slots.length);for(int slot:slots)out.writeLong(equipment[slot]);
+        out.writeBoolean(false);out.writeInt(0);out.writeInt(sprite);out.writeLong(harness);
+        value(out,perk==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",perk));string(out,name);
+    }
+
     private void townSummary(DataOutputStream out)throws IOException {
         var entry=SceneRegistry.system().entry().map();
         type(out,"com.threerings.projectx.town.data.TownSummary");string(out,entry.townName());string(out,"town");

@@ -74,7 +74,7 @@ public final class TownStore {
         try(var s=c.prepareStatement("SELECT * FROM town_sprites WHERE world_id=? ORDER BY id")){s.setInt(1,world);try(var r=s.executeQuery()){while(r.next())sprites.add(new TownState.Sprite(r.getInt("id"),r.getString("config"),r.getString("name"),r.getInt("level"),r.getFloat("heat"),r.getObject("last_full")==null?null:r.getLong("last_full"),r.getLong("full_stamp"),r.getInt("perk_level"),new HashSet<>(numbers(r.getString("perks"))),(Integer)r.getObject("perk"),numbers(r.getString("powers")),numbers(r.getString("ultimates")),r.getLong("harness")));}}
         try(var s=c.prepareStatement("SELECT * FROM town_harnesses WHERE world_id=? ORDER BY id")){s.setInt(1,world);try(var r=s.executeQuery()){while(r.next())harnesses.add(new TownState.Harness(r.getLong("id"),r.getString("config")));}}
         try(var s=c.prepareStatement("SELECT sprite FROM town_equipped WHERE world_id=?")){s.setInt(1,world);try(var r=s.executeQuery()){if(r.next())equipped=r.getInt(1);}}
-        return new TownState(recipes,sprites,equipped,harnesses,AuctionHouse.loadMail(c,world));
+        return new TownState(recipes,sprites,equipped,harnesses,AuctionHouse.loadMail(c,world),NamedLoadouts.load(c,world));
     }
     private static List<Integer> numbers(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->((Number)v).intValue()).toList();}
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}
@@ -219,6 +219,32 @@ public final class TownStore {
     }
     private static void requireGameMaster(Connection c,int account,long auth)throws SQLException,IOException{
         try(var st=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){st.setInt(1,account);st.setLong(2,auth);try(var r=st.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}}
+    }
+    public Result loadout(int account,int knight,long auth,String name,boolean save)throws IOException {
+        return change(account,knight,auth,(c,p)->{if(save)NamedLoadouts.save(c,p,name);else NamedLoadouts.equip(c,p,name,rules);return null;});
+    }
+    public Result adminAccessory(int account,int knight,long auth,int slot,String name,String costume)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            requireGameMaster(c,account,auth);
+            var gear=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
+            boolean helm=gear.slot()==WorldProfile.Slot.HELM||gear.slot()==WorldProfile.Slot.HELM_COSTUME;
+            if(!helm&&gear.slot()!=WorldProfile.Slot.ARMOR&&gear.slot()!=WorldProfile.Slot.ARMOR_COSTUME)throw new IOException("e.cant_use_accessory");
+            var accessories=new ArrayList<>(gear.nativeAccessories(costume));
+            if(name==null)accessories.clear();
+            else {
+                var accessory=rules.accessory(name);
+                if(accessory==null||accessory.remove()||rules.accessoryModel(name)==null)throw new IOException("Unknown or unsupported accessory config");
+                var blocked=new HashSet<>(rules.blockers(gear.config()));
+                for(String location:ACCESSORY_SLOTS)if(helm?location.startsWith("ARMOR_"):location.startsWith("HELM_"))blocked.add(location);
+                if(accessory.blocks().stream().anyMatch(blocked::contains))throw new IOException("e.cant_use_accessory");
+                for(String existing:accessories){var worn=rules.accessory(existing);if(worn!=null&&(worn.location().equals(accessory.location())||worn.blocks().stream().anyMatch(accessory.blocks()::contains)))throw new IOException("e.existing_accessory");}
+                accessories.add(name);
+            }
+            try(var st=c.prepareStatement("UPDATE inventory_items SET accessory=NULL,accessories=? WHERE world_id=? AND item_id=?")) {
+                st.setString(1,Json.stringify(accessories));st.setInt(2,p.worldId());st.setLong(3,gear.id());if(st.executeUpdate()!=1)throw new IOException("Item changed");
+            }
+            return null;
+        });
     }
     /** Native /grant and /set_rank: role and ownership checked inside the write transaction. */
     public Result adminProgress(int account,int knight,long auth,int method,List<Object> args)throws IOException {
@@ -520,6 +546,7 @@ public final class TownStore {
             }return result;
         });
     }
-    private Set<Integer> unlocked(int level,Set<Integer> perks){var result=new HashSet<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()<level||perks.contains(i))result.add(i);
+    private Set<Integer> unlocked(int level,Set<Integer> perks){return unlocked(rules,level,perks);}
+    static Set<Integer> unlocked(TownCatalog rules,int level,Set<Integer> perks){var result=new HashSet<Integer>();for(int i=0;i<rules.perks().size();i++)if(rules.perks().get(i).tier()<level||perks.contains(i))result.add(i);
         var remove=new HashSet<Integer>();for(int i:result){String replaced=rules.perks().get(i).previous();for(int j:result)if(rules.perks().get(j).name().equals(replaced))remove.add(j);}result.removeAll(remove);return result;}
 }

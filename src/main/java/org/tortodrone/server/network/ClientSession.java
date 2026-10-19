@@ -90,6 +90,8 @@ final class ClientSession {
                                 log.debug("DConfigObject snapshot sent");
                             } else if (request.objectId() == SessionCodec.EXCHANGE_OID) {
                                 try{world.subscribeExchange(request.messageId());}catch(IOException unavailable){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),unavailable.getMessage()));}
+                            } else if(world.ownsChannel(request.objectId())) {
+                                try{world.subscribeChannel(request.messageId(),request.objectId());}catch(IOException unavailable){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),unavailable.getMessage()));}
                             } else if(world.ownsTrade(request.objectId())) {
                                 try{world.subscribeTrade(request.objectId(),request.messageId());}
                                 catch(IOException expired){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),"Trade is no longer available"));}
@@ -109,7 +111,7 @@ final class ClientSession {
                             if(world.ownsScene(request.objectId()))world.unsubscribe();
                             if(world.ownsTrade(request.objectId()))world.unsubscribeTrade(request.objectId());
                             if(request.objectId()==SessionCodec.EXCHANGE_OID)world.unsubscribeExchange();
-                            world.unsubscribeInteriorParty(request.objectId());
+                            world.unsubscribeInteriorParty(request.objectId());world.unsubscribeChannel(request.objectId());
                             output.send(() -> outgoing.unsubscribe(request.messageId(), request.objectId()));
                         }
                         case "LogoffRequest" -> {
@@ -168,6 +170,7 @@ final class ClientSession {
             }
             world.receiverChanged(receivers);
         } else if (event instanceof SessionDecoder.Invocation invocation) {
+            if(world.channelSpeak(invocation))return;
             if(world.partyInvocation(invocation))return;
             if(world.interiorPartyInvocation(invocation))return;
             if(world.exchangeInvocation(invocation))return;
@@ -198,12 +201,13 @@ final class ClientSession {
             if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size()) {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
+            if(invocation.service()==3&&invocation.method()==1){world.away(invocation);return;}
             if(invocation.service()==3&&invocation.method()==2){world.broadcast(invocation);return;}
             if(invocation.service()==3&&invocation.method()==3){world.tell(invocation);return;}
             if(invocation.service()==SessionCodec.ADMIN_SERVICE) {
                 if(invocation.oid()!=SessionCodec.INVOCATION_OID)
                     throw new SessionDecoder.Rejected("Invalid admin invocation target");
-                world.admin(invocation);return;
+                if(!world.adminPeople(invocation))world.admin(invocation);return;
             }
             String service = SessionCodec.SERVICES.get(invocation.service() - 1);
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
