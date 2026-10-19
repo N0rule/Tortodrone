@@ -269,6 +269,18 @@ public final class TownStore {
     public Result adminGear(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return change(account,knight,auth,(c,p)->{
             requireGameMaster(c,account,auth);int slot=(Integer)args.get(0);
+            if(method==41&&slot>=6&&slot<=9){
+                // The stock /heat command exposes only a "weapon" group and always
+                // sends the first weapon slot. Apply the value to every equipped
+                // weapon so slots 7-9 are reachable through the same command.
+                float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");
+                var weapons=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()>=6&&i.equippedSlot()<=9).toList();
+                if(weapons.isEmpty())throw new IOException("Equip a weapon first");
+                boolean applied=false;
+                for(var weapon:weapons){var weaponGear=rules.gear().gear(weapon.config());if(weaponGear==null||weaponGear.levels()<1)continue;setGearProgress(c,p.worldId(),weapon.id(),weapon.level(),percent/100f);applied=true;}
+                if(!applied)throw new IOException("This item has no heat progression");
+                return null;
+            }
             var item=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
             var gear=rules.gear().gear(item.config());if(gear==null||gear.levels()<1)throw new IOException("This item has no heat progression");
             if(method==41){float percent=(Float)args.get(1);if(!Float.isFinite(percent)||percent<0||percent>100)throw new IOException("Heat progress must be between 0 and 100");setGearProgress(c,p.worldId(),item.id(),item.level(),percent/100f);return null;}

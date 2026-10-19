@@ -122,8 +122,9 @@ public final class AdminServiceTest {
 
     private static void gearCommands(WorldSession world,Frames frames,Socket socket,CharacterStore staff,Knight knight,Database database)throws Exception{
         world.admin(spriteInvoke(41,(short)50,6,50f));response(frames,socket,(short)50,(byte)1,null);
-        var gear=staff.worldProfile(knight.name(),1).items().stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).findFirst().orElseThrow();
-        check(gear.heatProgress()==.5f,"native /heat reads its argument as percent and persists fractional heat without rounding it away");
+        var weapons=staff.worldProfile(knight.name(),1).items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()>=6&&i.equippedSlot()<=9).toList();
+        check(weapons.size()>=2&&weapons.stream().allMatch(i->i.heatProgress()==.5f),"native /heat reads its argument as percent and applies it to every equipped weapon");
+        var gear=weapons.stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).findFirst().orElseThrow();
         world.admin(spriteInvoke(42,(short)51,6,2));response(frames,socket,(short)51,(byte)1,null);
         check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==2&&i.heatProgress()==0),"native /level resets progress at the selected item level");
         world.admin(spriteInvoke(42,(short)52,6,0));response(frames,socket,(short)52,(byte)1,null);

@@ -191,9 +191,13 @@ Travel follows the normal scene transition and ownership checks. `/pgo` and `/su
 | `/grant number` | `/grant 1000` | Add a nonnegative number of crowns to your knight. |
 | `/set_rank rank subrank` | `/set_rank 4 2` | Set your saved rank and subrank, without awarding mission rewards. |
 | `/level (weapon armor helmet shield) [level]` | `/level weapon 5` | Set equipped gear level within its progression table. |
-| `/heat (weapon armor helmet shield sprite) [heat]` | `/heat weapon 50` | Set equipped gear heat progress as a percentage from 0 to 100. |
+| `/heat (weapon armor helmet shield sprite) [heat]` | `/heat weapon 50` | Set equipped gear heat progress as a percentage from 0 to 100. The stock client only distinguishes the weapon group, so `/heat weapon` applies to every equipped weapon slot. |
 | `/level_up (weapon armor helmet shield) [crystals]` | `/level_up weapon 4` | Attempt the native forge operation using the configured crystal-tier chance. |
 | `/accessorize (armor helmet) [clear \| accessory name]` | `/accessorize armor clear` | Clear accessories, or add a verified accessory config to equipped armor/helmet. Conflicting accessories are refused. |
+
+The stock client echoes the typed value in its own confirmation, for example
+`Set weapon heat to 22.0.`. That text is rendered by the unmodified client; the
+server cannot change it to `22%`.
 
 ### Battle sprites
 
