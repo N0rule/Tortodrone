@@ -1,0 +1,99 @@
+# APPROXIMATION: four 25% main categories and independent 5% upgrade bonus use published weights.
+# Wiki slot percentages describe categories, NOT each listed item. Equal cosmetic choices and variant 60/30/10 are estimates.
+# Source totals 101.5% with Hacked Aura: interpret its 1.5% as an independent extra, not a verified protocol fact.
+# Confetti 1/2/3 uses estimated 45/50/5 reconciliation; no upgrade outcomes are omitted or renormalized.
+boxes:
+  surge_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: https://wiki.spiralknights.com/Surge_Prize_Box and https://wiki.spiralknights.com/Surge_Prize_Box_Promotion_September_2012; published
+      main category and upgrade bonus weights; estimated equal cosmetic choices, variants60/30/10, independent aura interpretation and confetti45/50/5;
+      inactive upgrade activation unavailable
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 25, rewards: [{group: variants}]}
+        - {weight: 25, rewards: [{group: accessories}]}
+        - {weight: 25, rewards: [{group: helm_costumes}]}
+        - {weight: 25, rewards: [{group: armor_costumes}]}
+      variants:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 60, rewards: [{item: variants_1, quantity: 1, binding: unbound}]}
+        - {weight: 30, rewards: [{item: variants_2, quantity: 1, binding: unbound}]}
+        - {weight: 10, rewards: [{item: variants_3, quantity: 1, binding: unbound}]}
+      accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bolted_vee_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: headband_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: maid_headband_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: toupee_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: glasses_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: power_scanner_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shades_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plume_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: ribbon_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scarf_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: com_unit_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: mecha_wings_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vertical_vents_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: crest_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: parrying_blade_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: side_blade_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wings_surge, quantity: 1, binding: unbound}]}
+      helm_costumes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: fur_cap_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: hood_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pith_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plate_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: round_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sallet_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scale_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: tailed_helm_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: winged_helm_surge, quantity: 1, binding: unbound}]}
+      armor_costumes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flak_jacket_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: fur_coat_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: cloak_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: brigandine_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plate_mail_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: draped_armor_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: cuirass_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scale_mail_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: culet_surge, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: raiment_surge, quantity: 1, binding: unbound}]}
+      bonus_aura:
+        chance: 1.5%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: hacked_aura, quantity: 1, binding: unbound}]}
+      bonus_confetti:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 45, rewards: [{item: confetti, quantity: 1, binding: unbound}]}
+        - {weight: 50, rewards: [{item: confetti, quantity: 2, binding: unbound}]}
+        - {weight: 5, rewards: [{item: confetti, quantity: 3, binding: unbound}]}
+      bonus_upgrade:
+        chance: 5%
+        rolls: 1
+        entries:
+        - {weight: 62, rewards: [{item: trinket_slot, quantity: 1, binding: unbound}]}
+        - {weight: 31, rewards: [{item: weapon_slot, quantity: 1, binding: unbound}]}
+        - {weight: 6, rewards: [{item: coin_bonus, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: unbound}]}

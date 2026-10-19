@@ -1,0 +1,113 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  frosty_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}, {item: flawed_snowball, quantity: 1, binding: catalog},
+            {group: choices_confetti_winter_1}, {group: choices_flawed_snowball_2}, {group: choices_confetti_winter_3}, {group: choices_flawed_snowball_4},
+            {group: choices_side_blade_freeze_5}, {group: choices_trinket_slot_9}]}
+      choices_confetti_winter_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_side_blade_freeze_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_side_blade_freeze_6}]}
+        - {weight: 1, rewards: [{group: choices_fur_coat_freeze_7}]}
+        - {weight: 1, rewards: [{group: choices_fur_cap_freeze_8}]}
+      choices_side_blade_freeze_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_freeze, quantity: 1, binding: catalog}]}
+      choices_fur_coat_freeze_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_freeze, quantity: 1, binding: catalog}]}
+      choices_fur_cap_freeze_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_freeze, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_10}]}
+        - {weight: 99, rewards: []}
+      choices_trinket_slot_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

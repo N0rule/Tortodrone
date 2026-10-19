@@ -42,8 +42,8 @@ public final class AdminServiceTest {
                 response(playerFrames, playerSocket, (short) 5, (byte) 0, "Game Master permission required");
                 check(players.worldProfile(player.name(), 1).items().stream().allMatch(i -> i.starter()),
                     "no admin item reaches an unprivileged account");
-                for(int method:new int[]{8,45,46,47}){
-                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 45->new Object[]{99};case 46->new Object[]{0,0,3};default->new Object[]{0,1};};
+                for(int method:new int[]{8,17,44,45,46,47}){
+                    Object[] values=switch(method){case 8->new Object[]{new SessionDecoder.ConfigReference("Drakon",Map.of())};case 17->new Object[]{123};case 44->new Object[]{4,2};case 45->new Object[]{99};case 46->new Object[]{0,0,3};default->new Object[]{0,1};};
                     world.admin(spriteInvoke(method,(short)20,values));
                     response(playerFrames,playerSocket,(short)20,(byte)0,"Game Master permission required");
                 }
@@ -74,15 +74,27 @@ public final class AdminServiceTest {
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1000, false, 0, (short) 8));
                 response(staffFrames, staffSocket, (short) 8, (byte) 0, "Quantity must be between 1 and 20");
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1, false, 30, (short) 9));
-                response(staffFrames, staffSocket, (short) 9, (byte) 0, "Item expiry is not supported yet");
+                response(staffFrames, staffSocket, (short) 9, (byte) 1, null);
+                var timed=staff.worldProfile(knight.name(),1).items().stream().filter(i->i.expiresAt()!=null).findFirst().orElseThrow();
+                check(timed.expiresAt()>System.currentTimeMillis()+29L*86_400_000L,"native expiry days become an absolute persistent deadline");
                 world.admin(invoke(SessionCodec.INVOCATION_OID, "Gear/Shield/Proto Shield", 1, true, 0, (short) 10));
-                response(staffFrames, staffSocket, (short) 10, (byte) 0, "Locked items are not supported for this catalogue entry");
+                response(staffFrames, staffSocket, (short) 10, (byte) 1, null);
+                check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->!i.starter()&&i.bound()),"native locked flag persists");
+                for(int days:new int[]{-1,3651}) {
+                    world.admin(invoke(SessionCodec.INVOCATION_OID,"Gear/Shield/Proto Shield",1,false,days,(short)12));
+                    response(staffFrames,staffSocket,(short)12,(byte)0,"Expiry must be between 0 and 3650 days");
+                }
                 world.admin(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID, SessionCodec.ADMIN_SERVICE, 99,
                     List.of("Gear/Shield/Proto Shield", new SessionDecoder.Listener(
                         "com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller", (short) 11))));
-                response(staffFrames, staffSocket, (short) 11, (byte) 0, "This admin tool is not available yet");
-                check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 3,
+                response(staffFrames, staffSocket, (short) 11, (byte) 0, "Placeholder: this admin tool is not implemented yet");
+                check(staff.worldProfile(knight.name(), 1).items().stream().filter(i -> !i.starter()).count() == 5,
                     "refused admin operations grant nothing");
+                world.admin(spriteInvoke(17,(short)60,123));response(staffFrames,staffSocket,(short)60,(byte)1,null);
+                check(staff.worldProfile(knight.name(),1).crowns()==123,"native crown grant persists");
+                world.admin(spriteInvoke(44,(short)61,4,2));response(staffFrames,staffSocket,(short)61,(byte)1,null);
+                check(staff.worldProfile(knight.name(),1).progress().rank()==4,"native rank command persists");
+                world.admin(spriteInvoke(44,(short)62,99,0));response(staffFrames,staffSocket,(short)62,(byte)0,"Rank must be 1–10 and subrank 1–4");
                 gearCommands(world,staffFrames,staffSocket,staff,knight,database);
                 spriteCommands(world,staffFrames,staffSocket,staff,knight,accounts,database,scenes);
             }
@@ -96,7 +108,7 @@ public final class AdminServiceTest {
             var reopened = new Database(home, false);
             var reloaded = new CharacterStore(reopened, 2, "Master").worldProfile(knight.name(), 1);
             check(reloaded.items().stream().filter(i -> i.config().equals("Gear/Shield/Proto Shield") && !i.starter())
-                .count() == 3, "created item persists in the database across sessions");
+                .count() == 5, "created item persists in the database across sessions");
             var savedSprite=reloaded.town().sprites().getFirst();
             check(savedSprite.level()==99&&savedSprite.powers().get(8)==3&&savedSprite.ultimates().get(2)==2,
                 "GM sprite level, power and ultimate persist across sessions");

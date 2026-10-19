@@ -1,0 +1,138 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  flowertech_mk_ii_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_bio_coat_tech_violet_1}]}
+      choices_bio_coat_tech_violet_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 10, rewards: [{group: choices_bio_coat_tech_violet_2}]}
+        - {weight: 12, rewards: [{group: choices_bio_helm_tech_violet_3}]}
+        - {weight: 2, rewards: [{group: choices_pollinator_tech_violet_4}]}
+        - {weight: 2, rewards: [{group: choices_pocket_seedling_tech_violet_5}]}
+        - {weight: 20, rewards: [{group: choices_test_kit_tech_violet_6}]}
+        - {weight: 25, rewards: [{group: choices_daisy_crown_tech_violet_7}]}
+        - {weight: 25, rewards: [{group: choices_daisy_chain_tech_violet_8}]}
+        - {weight: 1, rewards: [{item: flowertech_aura_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{group: choices_threepetal_9}, {group: choices_violet_10}]}
+      choices_bio_coat_tech_violet_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bio_coat_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_coat_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_coat_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_coat_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_coat_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_coat_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_coat_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_coat_tech_red, quantity: 1, binding: catalog}]}
+      choices_bio_helm_tech_violet_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bio_helm_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_helm_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_helm_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bio_helm_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_helm_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_helm_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_helm_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: budding_helm_tech_red, quantity: 1, binding: catalog}]}
+      choices_pollinator_tech_violet_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pollinator_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: virulent_seedling_tech_azure, quantity: 1, binding: catalog}]}
+      choices_pocket_seedling_tech_violet_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pocket_seedling_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pocket_seedling_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pocket_seedling_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pocket_seedling_tech_red, quantity: 1, binding: catalog}]}
+      choices_test_kit_tech_violet_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: test_kit_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: test_kit_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: test_kit_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: test_kit_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: burying_spade_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: burying_spade_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: burying_spade_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: burying_spade_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_spade_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_spade_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_spade_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_spade_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plant_fuel_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plant_fuel_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plant_fuel_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plant_fuel_tech_red, quantity: 1, binding: catalog}]}
+      choices_daisy_crown_tech_violet_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: daisy_crown_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_crown_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_crown_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_crown_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: daisy_crown, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_crown_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_crown_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_crown_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_crown_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: frasera_crown, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_crown_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_crown_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_crown_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_crown_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hibiscus_crown, quantity: 1, binding: catalog}]}
+      choices_daisy_chain_tech_violet_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: daisy_chain_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_chain_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_chain_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_chain_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: daisy_chain, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_chain_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_chain_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_chain_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_chain_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: frasera_chain, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_chain_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_chain_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_chain_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_chain_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hibiscus_chain, quantity: 1, binding: catalog}]}
+      choices_threepetal_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: threepetal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lotus, quantity: 1, binding: catalog}]}
+      choices_violet_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cobalt, quantity: 1, binding: catalog}]}

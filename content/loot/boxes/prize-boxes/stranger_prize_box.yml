@@ -1,0 +1,65 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  stranger_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_stranger_robe_blue_1}]}
+      choices_stranger_robe_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_stranger_robe_blue_2}]}
+        - {weight: 35, rewards: [{group: choices_stranger_cap_blue_3}]}
+        - {weight: 23, rewards: [{group: choices_snipe_perch_sky_4}]}
+        - {weight: 2, rewards: [{item: snipe_aura, quantity: 1, binding: catalog}]}
+      choices_stranger_robe_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_robe_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_volcanic, quantity: 1, binding: catalog}]}
+      choices_stranger_cap_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_cap_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_volcanic, quantity: 1, binding: catalog}]}
+      choices_snipe_perch_sky_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: snipe_perch_sky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_vanilla, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_lemon, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_fern, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_peach, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_lavender, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_prismatic, quantity: 1, binding: catalog}]}

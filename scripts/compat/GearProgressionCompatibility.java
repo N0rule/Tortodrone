@@ -23,6 +23,9 @@ public final class GearProgressionCompatibility {
     }
     public static void main(String[] args)throws Exception{
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");var admin=new Admin();
+        admin.a(123,(A.a)null);check(17,List.of(123),"ConfirmMarshaller");
+        admin.b(4,2,(A.a)null);check(44,List.of(4,2),"ConfirmMarshaller");
+        new Item().a(123L,456L,(A.a)null);check(5,List.of(123L,456L),"ConfirmMarshaller");
         admin.d(98,(A.a)null);check(45,List.of(98),"ConfirmMarshaller");
         admin.b(1,2,3,(A.a)null);check(46,List.of(1,2,3),"ConfirmMarshaller");
         admin.d(1,2,(A.a)null);check(47,List.of(1,2),"ConfirmMarshaller");
@@ -35,6 +38,11 @@ public final class GearProgressionCompatibility {
         variant.a(22L,24L,1,(A.c)null);check(1,List.of(22L,24L,1),"ResultMarshaller");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        for(String config:List.of("Upgrade/Weapon Slot","Upgrade/Trinket Slot","Upgrade/Trinket Slot (2 days)")) {
+            var nativeDef=(ItemConfig.Upgrade)manager.d(ItemConfig.class,config).w(manager);
+            var def=org.tortodrone.character.SlotUpgrades.find(config);
+            if(nativeDef.days!=def.days()||nativeDef.weaponSlotBonus!=def.weapons()||nativeDef.trinketSlotBonus!=def.trinkets())throw new AssertionError("Upgrade config differs: "+config);
+        }
         var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
         for(String config:List.of("Weapon/Sword/Proto Sword","Weapon/Sword/Calibur","Gear/Armor/Padded Armor")){
             var nativeItem=new LevelItem(0,new ConfigReference<ItemConfig>(config));var gear=rules.gear().gear(config);

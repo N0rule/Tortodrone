@@ -1,0 +1,149 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  buccaneer_booty_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_captain_coat_blue_1}]}
+      choices_captain_coat_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 35, rewards: [{group: choices_captain_coat_blue_2}]}
+        - {weight: 25, rewards: [{group: choices_buccaneer_bicorne_blue_7}]}
+        - {weight: 5, rewards: [{group: choices_buccaneer_broadsider_10}]}
+        - {weight: 5, rewards: [{item: ship_wheel, quantity: 1, binding: catalog}]}
+        - {weight: 24, rewards: [{group: choices_intel_tube_buccaneer_11}]}
+        - {weight: 5, rewards: [{item: skull, quantity: 1, binding: catalog}, {group: choices_cobalt_12}]}
+        - {weight: 1, rewards: [{item: keelhauled_aura, quantity: 1, binding: catalog}]}
+      choices_captain_coat_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 15, rewards: [{group: choices_captain_coat_blue_3}]}
+        - {weight: 2, rewards: [{group: choices_captain_coat_pegleg_blue_4}]}
+        - {weight: 2, rewards: [{group: choices_captain_coat_hook_blue_5}]}
+        - {weight: 1, rewards: [{group: choices_captain_coat_booched_blue_6}]}
+      choices_captain_coat_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: captain_coat_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: captain_coat_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_volcanic, quantity: 1, binding: catalog}]}
+      choices_captain_coat_pegleg_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_pegleg_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_pegleg_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: captain_coat_pegleg_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_pegleg_volcanic, quantity: 1, binding: catalog}]}
+      choices_captain_coat_hook_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: captain_coat_hook_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_hook_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_hook_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: captain_coat_hook_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_hook_volcanic, quantity: 1, binding: catalog}]}
+      choices_captain_coat_booched_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: captain_coat_booched_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_booched_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: captain_coat_booched_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: captain_coat_booched_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: captain_coat_booched_volcanic, quantity: 1, binding: catalog}]}
+      choices_buccaneer_bicorne_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 17, rewards: [{group: choices_buccaneer_bicorne_blue_8}]}
+        - {weight: 3, rewards: [{group: choices_sniped_buccaneer_bicorne_blue_9}]}
+      choices_buccaneer_bicorne_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: buccaneer_bicorne_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: buccaneer_bicorne_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: buccaneer_bicorne_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: buccaneer_bicorne_volcanic, quantity: 1, binding: catalog}]}
+      choices_sniped_buccaneer_bicorne_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sniped_buccaneer_bicorne_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sniped_buccaneer_bicorne_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sniped_buccaneer_bicorne_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sniped_buccaneer_bicorne_volcanic, quantity: 1, binding: catalog}]}
+      choices_buccaneer_broadsider_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: buccaneer_broadsider, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dread_captain_cutlass, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: powder_keg, quantity: 1, binding: catalog}]}
+      choices_intel_tube_buccaneer_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: intel_tube_buccaneer, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_buccaneer, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_buccaneer, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: patch_buccaneer, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wayward_compass, quantity: 1, binding: catalog}]}
+      choices_cobalt_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cobalt, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crimson, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: emerald_s285797_f8bc2b88653e, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: indigo, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: viridian, quantity: 1, binding: catalog}]}

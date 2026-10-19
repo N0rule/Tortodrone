@@ -1,0 +1,215 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  clockworks_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_tick_tock_top_clockworks_1}]}
+      choices_tick_tock_top_clockworks_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 24, rewards: [{group: choices_tick_tock_top_clockworks_2}]}
+        - {weight: 16, rewards: [{group: choices_clockworks_armor_clockworks_3}]}
+        - {weight: 50, rewards: [{group: choices_gearhawk_clockworks_4}]}
+        - {weight: 5, rewards: [{group: choices_clock_blocker_cool_9}]}
+        - {weight: 2, rewards: [{group: choices_bracers_prismatic_10}]}
+        - {weight: 2, rewards: [{item: gear, quantity: 1, binding: catalog}, {group: choices_orange_11}]}
+        - {weight: 1, rewards: [{item: spotlight_aura, quantity: 1, binding: catalog}]}
+      choices_tick_tock_top_clockworks_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: tick_tock_top_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: tick_tock_top_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: tick_tock_top_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: tick_tock_top_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: tick_tock_top_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_helm_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: deconstruction_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_helm_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: grate_plate_helm_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: grate_plate_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: grate_plate_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: grate_plate_helm_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: grate_plate_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_clockworks_armor_clockworks_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: clockworks_armor_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: clockworks_armor_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: clockworks_armor_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clockworks_armor_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: clockworks_armor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_rig_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_rig_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: deconstruction_rig_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: deconstruction_rig_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: deconstruction_rig_volcanic, quantity: 1, binding: catalog}]}
+      choices_gearhawk_clockworks_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{group: choices_gearhawk_clockworks_5}]}
+        - {weight: 1, rewards: [{group: choices_ear_gears_clockworks_6}]}
+        - {weight: 1, rewards: [{group: choices_bracers_clockworks_7}]}
+        - {weight: 1, rewards: [{group: choices_back_lights_clockworks_8}]}
+      choices_gearhawk_clockworks_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: gearhawk_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: gearhawk_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: gearhawk_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: gearhawk_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: gearhawk_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: spike_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: spike_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: spike_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: spike_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: spike_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: top_gear_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: top_gear_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: top_gear_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: top_gear_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: top_gear_volcanic, quantity: 1, binding: catalog}]}
+      choices_ear_gears_clockworks_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: ear_gears_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_gears_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: ear_gears_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_gears_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_gears_volcanic, quantity: 1, binding: catalog}]}
+      choices_bracers_clockworks_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: bracers_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: bracers_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: bracers_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: bracers_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: bracers_volcanic, quantity: 1, binding: catalog}]}
+      choices_back_lights_clockworks_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 666, rewards: [{item: back_lights_clockworks, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: back_lights_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: back_lights_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: back_lights_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: back_lights_volcanic, quantity: 1, binding: catalog}]}
+      choices_clock_blocker_cool_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: clock_blocker_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: clock_blocker_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: clock_blocker_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: clock_blocker_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: clock_blocker_volcanic, quantity: 1, binding: catalog}]}
+      choices_bracers_prismatic_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bracers_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_gears_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gearhawk_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_gear_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockworks_armor_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: deconstruction_rig_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: deconstruction_helm_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grate_plate_helm_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tick_tock_top_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clock_blocker_prismatic, quantity: 1, binding: catalog}]}
+      choices_orange_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: amber, quantity: 1, binding: catalog}]}

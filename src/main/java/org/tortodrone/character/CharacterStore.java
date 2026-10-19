@@ -19,6 +19,10 @@ public final class CharacterStore {
     public org.tortodrone.storage.DepotStore depot(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Supply Depot requires SQLite storage");return new org.tortodrone.storage.DepotStore(database,catalog,rules);}
     public org.tortodrone.storage.AuctionHouse auction(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Auctions require SQLite storage");return new org.tortodrone.storage.AuctionHouse(database,catalog,rules);}
     public org.tortodrone.storage.TownStore town(org.tortodrone.town.TownCatalog rules)throws IOException{if(database==null)throw new IOException("Town operations require SQLite storage");return new org.tortodrone.storage.TownStore(database,catalog,rules);}
+    public org.tortodrone.storage.BoxOpeningService boxes(org.tortodrone.loot.BoxCatalog boxes)throws IOException {
+        if(database==null)throw new IOException("Box opening requires SQLite storage");
+        return new org.tortodrone.storage.BoxOpeningService(database,catalog,boxes);
+    }
     private List<Knight> knights = List.of();
     private int nextId = 1;
     private long storageRevision;
@@ -68,6 +72,13 @@ public final class CharacterStore {
         if(database==null)throw new IOException("Item grants require SQLite storage");
         // No cross-account CharacterStore locks; resolve target and permissions in SQLite.
         return database.grantItems(username,name,-1,-1,catalog.require(config),quantity,accountId,revision);
+    }
+
+    public WorldProfile createItem(String name,String config,int quantity,long revision,boolean locked,int expireDays)throws IOException {
+        if(database==null)throw new IOException("Item grants require SQLite storage");
+        var entry=catalog.require(config);
+        return database.grantItems(username,name,accountId,-1,entry,quantity,accountId,revision,
+            ItemModifiers.NONE,org.tortodrone.town.TownCatalog.empty(),locked,expireDays==0?entry.expireDays():expireDays);
     }
 
     public synchronized void refresh()throws IOException {

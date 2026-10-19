@@ -1,0 +1,90 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hazardous_prize_box_2017:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}, {item: confetti_flare_popper, quantity: 1, binding: catalog},
+            {item: confetti_flare_popper, quantity: 1, binding: catalog}, {group: choices_confetti_flare_popper_1}, {group: choices_confetti_flare_popper_2},
+            {group: choices_mech_tennas_hazardous_3}]}
+      choices_confetti_flare_popper_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_flare_popper_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_flare_popper, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_mech_tennas_hazardous_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 28, rewards: [{group: choices_mech_tennas_hazardous_4}]}
+        - {weight: 20, rewards: [{group: choices_dangerous_brigandine_red_5}]}
+        - {weight: 35, rewards: [{group: choices_dangerous_diablo_helm_red_6}]}
+        - {weight: 16, rewards: [{group: choices_anti_personnel_spikes_red_7}]}
+        - {weight: 1, rewards: [{group: choices_dragon_wings_hazardous_8}]}
+      choices_mech_tennas_hazardous_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mech_tennas_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_blade_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vitakit_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: canteen_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maedate_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mohawk_hazardous, quantity: 1, binding: catalog}]}
+      choices_dangerous_brigandine_red_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: dangerous_brigandine_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: dangerous_draped_armor_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dangerous_hound_coat_red, quantity: 1, binding: catalog}]}
+      choices_dangerous_diablo_helm_red_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dangerous_diablo_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dangerous_grim_mask_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dangerous_oni_helm_red, quantity: 1, binding: catalog}]}
+      choices_anti_personnel_spikes_red_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: anti_personnel_spikes_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_mohawk_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_recon_ranger_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_hazardous, quantity: 1, binding: catalog}]}
+      choices_dragon_wings_hazardous_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dragon_wings_hazardous, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: the_bitter_end_red, quantity: 1, binding: catalog}]}

@@ -1,0 +1,203 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  disguise_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_stranger_helm_prismatic_1}, {group: choices_gun_puppy_disguise_11}, {group: choices_amber_12}]}
+      choices_stranger_helm_prismatic_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_helm_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{group: choices_lumberfell_beard_blue_2}]}
+        - {weight: 6, rewards: [{group: choices_smashing_mustache_blue_5}]}
+        - {weight: 8, rewards: [{group: choices_disguise_kit_blue_8}]}
+      choices_lumberfell_beard_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_lumberfell_beard_blue_3}]}
+        - {weight: 1, rewards: [{group: choices_wolver_chops_blue_4}]}
+      choices_lumberfell_beard_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lumberfell_beard_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_volcanic, quantity: 1, binding: catalog}]}
+      choices_wolver_chops_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wolver_chops_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_volcanic, quantity: 1, binding: catalog}]}
+      choices_smashing_mustache_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_smashing_mustache_blue_6}]}
+        - {weight: 1, rewards: [{group: choices_wise_whiskers_blue_7}]}
+      choices_smashing_mustache_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: smashing_mustache_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_volcanic, quantity: 1, binding: catalog}]}
+      choices_wise_whiskers_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wise_whiskers_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_volcanic, quantity: 1, binding: catalog}]}
+      choices_disguise_kit_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_disguise_kit_blue_9}]}
+        - {weight: 1, rewards: [{group: choices_stranger_helm_blue_10}]}
+      choices_disguise_kit_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: disguise_kit_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: disguise_kit_volcanic, quantity: 1, binding: catalog}]}
+      choices_stranger_helm_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_gun_puppy_disguise_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gun_puppy_disguise, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_disguise, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_disguise, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_disguise, quantity: 1, binding: catalog}]}
+      choices_amber_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{group: choices_amber_13}]}
+        - {weight: 17, rewards: []}
+      choices_amber_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_amber_14}]}
+        - {weight: 1, rewards: [{group: choices_cheeky_15}]}
+        - {weight: 1, rewards: [{group: choices_shortest_16}]}
+      choices_amber_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: amber, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aquamarine_s2316828061_c7861c43e6de, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chartreuse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cobalt, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crimson, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cyan, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: emerald_s285797_f8bc2b88653e, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: indigo, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lake, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lavender, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lime, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: magenta, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: turquoise_s2927770914_e1a05e650809, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: utramarine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vermillion, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: viridian, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: yellow, quantity: 1, binding: catalog}]}
+      choices_cheeky_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cheeky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: closed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dot, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eks, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: jolly, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lash, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pill, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rage, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sad, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shifty, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sleepy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiral, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: squint, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: star, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sultry, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wat, quantity: 1, binding: catalog}]}
+      choices_shortest_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: shortest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: short, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: normal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tall, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tallest, quantity: 1, binding: catalog}]}

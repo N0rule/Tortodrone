@@ -61,6 +61,7 @@ final class TradeTransfer {
             } else {
                 long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);
                 receivedId=id;
+                InventoryExpiry.save(c,id,item.expiresAt());
                 try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,accessory,heat,equipped_slot,bound,bind_on_equip,starter,count,permanent,level,heat_progress,variants,accessories) SELECT ?,?,slot,config,accessory,heat,NULL,bound,bind_on_equip,0,?,permanent,level,heat_progress,variants,accessories FROM inventory_items WHERE item_id=? AND world_id=?")) {
                     s.setLong(1,id);s.setInt(2,to.worldId());s.setInt(3,count);s.setLong(4,item.id());s.setInt(5,from.worldId());
                     if(s.executeUpdate()!=1)throw new IOException("Trade item changed");

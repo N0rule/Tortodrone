@@ -1,0 +1,95 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  obsidian_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_obsidian_mantle_of_devotion_4}, {group: choices_side_blade_shadow_6}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_obsidian_mantle_of_devotion_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{group: choices_obsidian_mantle_of_devotion_5}]}
+        - {weight: 2, rewards: [{item: crown_apocrean, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: apocrean_disciple_wings, quantity: 1, binding: catalog}]}
+      choices_obsidian_mantle_of_devotion_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: obsidian_mantle_of_devotion, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_hood_of_devotion, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_mantle_of_influence, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_hood_of_influence, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_mantle_of_rituals, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_hood_of_rituals, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_mantle_of_sight, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: obsidian_hood_of_sight, quantity: 1, binding: catalog}]}
+      choices_side_blade_shadow_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_side_blade_shadow_7}]}
+        - {weight: 3, rewards: []}
+      choices_side_blade_shadow_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 10, rewards: [{group: choices_side_blade_shadow_8}]}
+        - {weight: 1, rewards: [{group: choices_pipe_and_mustache_shadow_9}]}
+      choices_side_blade_shadow_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_shadow, quantity: 1, binding: catalog}]}
+      choices_pipe_and_mustache_shadow_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: pipe_and_mustache_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: cat_tail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_shadow, quantity: 1, binding: catalog}]}

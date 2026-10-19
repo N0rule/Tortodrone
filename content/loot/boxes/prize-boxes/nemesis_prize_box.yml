@@ -1,0 +1,69 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  nemesis_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_variants_1_4}, {group: choices_trinket_slot_5}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_variants_1_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 230, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 100, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 44, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: crest_divine, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: crest_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 44, rewards: [{item: spike_mohawk_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 44, rewards: [{item: bolted_vee_divine, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: wings_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 16, rewards: [{item: twinkle_aura, quantity: 1, binding: catalog}]}
+        - {weight: 16, rewards: [{item: flames_aura, quantity: 1, binding: catalog}]}
+        - {weight: 14, rewards: [{item: halo_divine, quantity: 1, binding: catalog}]}
+        - {weight: 14, rewards: [{item: halo_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 8, rewards: [{item: valkyrie_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: valkyrie_wings_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: dragon_wings_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: halo_arcane, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_6}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

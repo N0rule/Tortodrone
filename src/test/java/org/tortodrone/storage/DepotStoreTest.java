@@ -21,7 +21,7 @@ public final class DepotStoreTest {
             var content=ContentManager.load(Path.of("."));var items=content.items();var rules=content.town();var seed=DepotSeed.bundled();
             check(seed.offers().size()==328&&seed.unsupported().size()==9,"complete captured snapshot retained, including exact unsupported records");
             for(var o:seed.offers()) {
-                var d=items.find(o.good().item());check(d!=null&&d.grantable()==o.enabled()&&o.good().count()<=(d.stackable()?9999:1),"seed identity/quantity/grantability: "+o.id());
+                var d=items.find(o.good().item());check(d!=null&&(d.grantable()&&d.variant()!=ItemCatalog.Variant.UPGRADE_ITEM)==o.enabled()&&o.good().count()<=(d.stackable()?9999:1),"seed identity/quantity/grantability (inactive upgrade offers remain disabled): "+o.id());
                 check(o.good().price()==rules.price(d.config(),d.rarity(),true),"captured native price sentinel resolved: "+o.id());
             }
             var db=new Database(root.resolve("new"),false);var depot=new DepotStore(db,items,rules);

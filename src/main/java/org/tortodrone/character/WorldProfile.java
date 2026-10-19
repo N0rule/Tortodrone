@@ -16,7 +16,7 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
                 case HELM -> index==0||index==3;
                 case ARMOR -> index==1||index==4;
                 case SHIELD -> index==2||index==15;
-                case SWORD, GUN, BOMB -> index==6 || index==7;
+                case SWORD, GUN, BOMB -> index>=6 && index<=9;
                 case HELM_COSTUME -> index==3;
                 case ARMOR_COSTUME -> index==4;
                 case SHIELD_COSTUME -> index==15;
@@ -27,11 +27,15 @@ public record WorldProfile(int worldId, int accountId, int knightId, int crowns,
         public int initialIndex() { return switch(this) {case HELM->0;case ARMOR->1;case SHIELD->2;case SWORD,BOMB->6;case GUN->7;case HELM_COSTUME->3;case ARMOR_COSTUME->4;case SHIELD_COSTUME->15;case TRINKET->10;case OTHER->-1;}; }
     }
     public record Gift(int wrapperId,String wrapperName,String message,List<Item> contents) { public Gift{contents=List.copyOf(contents);} }
-    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter, int count, boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift) {
+    public record Item(long id, Slot slot, String config, String accessory, int heat, Integer equippedSlot, boolean bound, boolean bindOnEquip, boolean starter, int count, boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift,Long expiresAt) {
+        public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed,Gift gift){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,null);}
+        public Item withEquippedSlot(Integer value){return new Item(id,slot,config,accessory,heat,value,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,expiresAt);}
+        public Item withExpiration(Long value){return new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,gift,value);}
+        public boolean expired(long now){return expiresAt!=null&&expiresAt<=now;}
         public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories,boolean cursed){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,null);}
-        public Item withGift(Gift value){return new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,value);}
+        public Item withGift(Gift value){return new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,cursed,value,expiresAt);}
         public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants,List<String> additionalAccessories){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,false);}
-        public Item curse(boolean value){return cursed==value?this:new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,value,gift);}
+        public Item curse(boolean value){return cursed==value?this:new Item(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,additionalAccessories,value,gift,expiresAt);}
         public Item(long id,Slot slot,String config,String accessory,int heat,Integer equippedSlot,boolean bound,boolean bindOnEquip,boolean starter,int count,boolean permanent,int level,float heatProgress,List<StarterCatalog.Model> variants){this(id,slot,config,accessory,heat,equippedSlot,bound,bindOnEquip,starter,count,permanent,level,heatProgress,variants,List.of());}
         public List<String> nativeAccessories(String costume){var all=new java.util.ArrayList<String>();if(accessory!=null)all.add(accessory+", "+costume);all.addAll(additionalAccessories);return List.copyOf(all);}
         public Item{variants=List.copyOf(variants);additionalAccessories=List.copyOf(additionalAccessories);}

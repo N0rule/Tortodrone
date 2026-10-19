@@ -162,7 +162,7 @@ public final class BuildTools {
     private static Properties sourceOwnership(Path maps,String manifestName) throws IOException {
         Path manifest=maps.resolve(manifestName);
         if(Files.notExists(manifest,LinkOption.NOFOLLOW_LINKS))return null;
-        if(Files.isSymbolicLink(manifest)||!Files.isRegularFile(manifest)||Files.size(manifest)>65536)
+        if(Files.isSymbolicLink(manifest)||!Files.isRegularFile(manifest)||Files.size(manifest)>262144)
             throw new IOException("Invalid archive source manifest: "+manifest);
         Properties values=properties(manifest);
         if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported archive source manifest format");

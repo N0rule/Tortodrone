@@ -1,0 +1,118 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  rose_regalia_prize_box_complete:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_tabard_of_the_red_rose_1}, {item: confetti_leaf, quantity: 1, binding: catalog}, {group: choices_confetti_leaf_7},
+            {group: choices_confetti_leaf_8}]}
+      choices_tabard_of_the_red_rose_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 14, rewards: [{group: choices_tabard_of_the_red_rose_2}]}
+        - {weight: 26, rewards: [{group: choices_tabard_of_the_fire_rose_3}]}
+        - {weight: 7, rewards: [{group: choices_chapeau_of_the_red_rose_4}]}
+        - {weight: 13, rewards: [{group: choices_chapeau_of_the_fire_rose_5}]}
+        - {weight: 1, rewards: [{item: rose_trail, quantity: 1, binding: catalog}]}
+        - {weight: 39, rewards: [{group: choices_boutonniere_black_6}]}
+      choices_tabard_of_the_red_rose_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tabard_of_the_red_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_black_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_white_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_blue_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_green_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_gold_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_prismatic_rose, quantity: 1, binding: catalog}]}
+      choices_tabard_of_the_fire_rose_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tabard_of_the_fire_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_freeze_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_poison_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_curse_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_stun_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_shock_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tabard_of_the_sleep_rose, quantity: 1, binding: catalog}]}
+      choices_chapeau_of_the_red_rose_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: chapeau_of_the_red_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_black_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_white_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_blue_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_green_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_gold_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_prismatic_rose, quantity: 1, binding: catalog}]}
+      choices_chapeau_of_the_fire_rose_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: chapeau_of_the_fire_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_freeze_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_poison_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_curse_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_stun_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_shock_rose, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chapeau_of_the_sleep_rose, quantity: 1, binding: catalog}]}
+      choices_boutonniere_black_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: boutonniere_black, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_coral, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_fire, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_poison, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_shock, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_sleep, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_stun, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_violet, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: boutonniere_white, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: boutonniere_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_black, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_coral, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_fire, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_poison, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_shock, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_sleep, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_stun, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_violet, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rose_white, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rose_prismatic, quantity: 1, binding: catalog}]}
+      choices_confetti_leaf_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_leaf_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
+        - {weight: 19, rewards: []}

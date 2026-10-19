@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  garnet:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_garnet_s671151686_ff4dd8_1}]}
+      choices_node_slime_garnet_s671151686_ff4dd8_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_garnet_s671151686_ff4dd88b415f, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_garnet_s3309991113_0364c92ca55b, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_garnet_s3065752437_42780c94c0f8, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_garnet_s3647361764_33f44eaf2fd4, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_garnet_s1318759299_e92a4bc665e0, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_garnet_s2296691426_2c0631b45d6d, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slime_arms_garnet, quantity: 1, binding: catalog}]}

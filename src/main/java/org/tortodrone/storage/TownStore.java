@@ -106,7 +106,7 @@ public final class TownStore {
     }
     @FunctionalInterface private interface Mutation{Object run(Connection c,WorldProfile profile)throws SQLException,IOException;}
     private Result change(int account,int knight,long auth,Mutation mutation)throws IOException{
-        return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),result);});
+        return database.write(c->{var profile=WorldProfiles.load(c,account,knight,auth);Object result=mutation.run(c,profile);InventoryExpiry.reconcile(c,profile.worldId(),System.currentTimeMillis());touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),result);});
     }
     static void touch(Connection c,int world)throws SQLException{try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,world);if(s.executeUpdate()!=1)throw new SQLException("Missing Town owner");}}
     static WorldProfile.Item owned(WorldProfile p,long id)throws IOException{return p.items().stream().filter(i->i.id()==id).findFirst().orElseThrow(()->new IOException("m.internal_error"));}
@@ -135,6 +135,7 @@ public final class TownStore {
             try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,count,bound,bind_on_equip,permanent,level,heat_progress,variants) VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
                 s.setLong(1,id);s.setInt(2,p.worldId());s.setString(3,def.slot().name());s.setString(4,config);s.setInt(5,def.stackable()?count:1);s.setBoolean(6,locked||def.locked());s.setBoolean(7,def.bindOnEquip());s.setBoolean(8,def.permanent());s.setInt(9,level);s.setFloat(10,heat);s.setString(11,Json.stringify(variants.stream().map(StarterCatalog.Model::name).toList()));s.executeUpdate();
             }
+            InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.expireDays()));
             try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,def.stackable()?count:1);s.setLong(4,id);s.setLong(5,System.currentTimeMillis());s.executeUpdate();}
         }
         return first;
@@ -219,6 +220,25 @@ public final class TownStore {
     private static void requireGameMaster(Connection c,int account,long auth)throws SQLException,IOException{
         try(var st=c.prepareStatement("SELECT game_master FROM accounts WHERE id=? AND auth_revision=?")){st.setInt(1,account);st.setLong(2,auth);try(var r=st.executeQuery()){if(!r.next()||!r.getBoolean(1))throw new IOException("Game Master permission required");}}
     }
+    /** Native /grant and /set_rank: role and ownership checked inside the write transaction. */
+    public Result adminProgress(int account,int knight,long auth,int method,List<Object> args)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            requireGameMaster(c,account,auth);
+            if(method==17) {
+                int amount=(Integer)args.getFirst();
+                if(amount<0)throw new IOException("Crown grant must be nonnegative");
+                credit(c,p.worldId(),amount,0);
+            }else if(method==44) {
+                org.tortodrone.character.KnightProgress progress;
+                try{progress=new org.tortodrone.character.KnightProgress((Integer)args.get(0),(Integer)args.get(1),p.progress().prestige());}
+                catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1–10 and subrank 1–4");}
+                try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
+                    st.setString(1,WorldProfiles.progressKey(p.worldId(),"rank"));st.setInt(2,progress.rank()*10+progress.subrank());st.executeUpdate();
+                }
+            }else throw new IOException("Unknown progress admin operation");
+            return null;
+        });
+    }
     /** Current stock /heat, /level and /forge commands; setters never grant normal-player authority. */
     public Result adminGear(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return change(account,knight,auth,(c,p)->{
@@ -232,6 +252,28 @@ public final class TownStore {
             int crystals=(Integer)args.get(1);if(crystals<0||crystals>9999)throw new IOException("Invalid forge crystal tier");
             float chance=props.chance(crystals,false);if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
             setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return item.level()+1;
+        });
+    }
+    /** Native extendUpgrade(active item, unused item), ItemMarshaller method five. */
+    public Result extendUpgrade(int account,int knight,long auth,long active,long unused)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            var target=owned(p,active);var source=owned(p,unused);var a=SlotUpgrades.find(target.config());var b=SlotUpgrades.find(source.config());
+            if(active==unused||a==null||b==null||a.weapons()!=b.weapons()||a.trinkets()!=b.trinkets()||target.expiresAt()==null||source.expiresAt()!=null||source.count()!=1)throw new IOException("These upgrades cannot be combined");
+            long deadline;
+            try{deadline=Math.addExact(target.expiresAt(),Math.multiplyExact((long)b.days(),86_400_000L));}
+            catch(ArithmeticException overflow){throw new IOException("Upgrade duration exceeds supported limits");}
+            consume(c,p,unused,1);InventoryExpiry.save(c,active,deadline);return null;
+        });
+    }
+    public Result activateUpgrade(int account,int knight,long auth,long id)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            var item=owned(p,id);var def=SlotUpgrades.find(item.config());
+            if(def==null||item.expiresAt()!=null||item.count()!=1||item.equippedSlot()!=null||item.gift()!=null)throw new IOException("This upgrade cannot be activated");
+            int used=def.weapons()>0?SlotUpgrades.weapons(p)-2:SlotUpgrades.trinkets(p);
+            if(used>=2)throw new IOException("All slots of this type are already unlocked");
+            InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.days()));
+            try(var st=c.prepareStatement("UPDATE inventory_items SET bound=1 WHERE world_id=? AND item_id=?")){st.setInt(1,p.worldId());st.setLong(2,id);st.executeUpdate();}
+            return null;
         });
     }
     public Result learn(int account,int knight,long auth,long item)throws IOException{
@@ -250,7 +292,7 @@ public final class TownStore {
             for(var entry:selected.entrySet()){
                 var item=owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
                 if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
-                gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)));
+                gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)).withExpiration(item.expiresAt()));
             }
             String name;try(var st=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){st.setInt(1,account);st.setInt(2,knight);try(var row=st.executeQuery()){if(!row.next())throw new IOException("m.internal_error");name=row.getString(1);}}
             consume(c,p,paperId,1);for(var entry:selected.entrySet())consume(c,p,entry.getKey(),entry.getValue());
@@ -262,7 +304,9 @@ public final class TownStore {
             var box=owned(p,boxId);if(!items.require(box.config()).type().equals("GiftBox")||box.gift()==null)throw new IOException("m.internal_error");
             var contents=box.gift().contents();consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
             for(var item:contents){
+                if(item.expired(System.currentTimeMillis()))continue;
                 long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants());
+                InventoryExpiry.save(c,id,item.expiresAt());
                 try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
                 result.put(id,item.count());
             }

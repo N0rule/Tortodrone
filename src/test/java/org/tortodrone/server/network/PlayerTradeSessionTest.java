@@ -25,6 +25,8 @@ public final class PlayerTradeSessionTest {
             db.grantItems("Alice","Alice-Knight",alice,-1,ItemCatalog.starter().require("Weapon/Sword/Proto Sword"),1,-1,-1);
             db.currency("Bob","Bob-Knight",bob,-1,Currency.CROWNS,20);
             long item=db.worldProfile(alice,1,1).items().stream().filter(i->!i.starter()).findFirst().orElseThrow().id();
+            long expiry=System.currentTimeMillis()+30L*86_400_000L;
+            db.write(c->{try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,"item.expires."+item);st.setLong(2,expiry);st.executeUpdate();}return null;});
             var sa=new RecordingSocket();var sb=new RecordingSocket();
             try(var oa=new SessionOutput(sa);var ob=new SessionOutput(sb);
                     var a=new WorldSession(sa,as,oa,new SessionCodec(),1102,1,m->{});
@@ -36,13 +38,14 @@ public final class PlayerTradeSessionTest {
                 check(a.ownsTrade(1001)&&b.ownsTrade(1001),"only the two participants own the opened trade");
                 a.subscribeTrade(1001,(short)8);b.subscribeTrade(1001,(short)9);
                 a.tradeInvocation(rpc(1001,1,2,item,1,confirm()));
+                sa.await("firstItems",new String(java.nio.ByteBuffer.allocate(8).putLong(expiry).array(),StandardCharsets.ISO_8859_1));
                 a.tradeInvocation(rpc(1001,1,1,2,confirm()));
                 b.tradeInvocation(rpc(1001,1,4,10,confirm())); // Changes revision and invalidates first acceptance.
                 a.tradeInvocation(rpc(1001,1,1,2,confirm()));sa.await("offer changed");
                 check(db.worldProfile(alice,1,1).items().stream().anyMatch(i->i.id()==item),"stale acceptance does not transfer ownership");
                 a.tradeInvocation(rpc(1001,1,1,3,confirm()));b.tradeInvocation(rpc(1001,1,1,3,confirm()));
                 var committed=db.worldProfile(bob,1,1);
-                check(committed.items().stream().anyMatch(i->i.id()==item)&&committed.crowns()==10&&db.worldProfile(alice,1,1).crowns()==10,"final acceptance transfers atomically");
+                check(committed.items().stream().anyMatch(i->i.id()==item&&Objects.equals(i.expiresAt(),expiry))&&committed.crowns()==10&&db.worldProfile(alice,1,1).crowns()==10,"final acceptance transfers atomically");
                 b.tradeInvocation(rpc(1001,1,1,3,confirm()));sb.await("already completed");
                 check(db.worldProfile(bob,1,1).equals(committed),"completed acceptance cannot replay");
                 a.tradeInvocation(rpc(10,6,1,0L));check(a.ownsTrade(1001),"stale dialog close preserves newer dialog");
@@ -69,6 +72,7 @@ public final class PlayerTradeSessionTest {
     private static final class RecordingSocket extends Socket {
         private final BlockingQueue<String> frames=new LinkedBlockingQueue<>();
         public OutputStream getOutputStream(){return new OutputStream(){public void write(int value){throw new AssertionError("whole frames");}public void write(byte[] bytes){frames.add(new String(bytes,StandardCharsets.ISO_8859_1));}};}
-        void await(String text)throws Exception {long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(System.nanoTime()<end){var frame=frames.poll(100,TimeUnit.MILLISECONDS);if(frame!=null&&frame.contains(text))return;}throw new AssertionError("Missing response: "+text);}
+        void await(String text)throws Exception {await(text,null);}
+        void await(String text,String extra)throws Exception {long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(System.nanoTime()<end){var frame=frames.poll(100,TimeUnit.MILLISECONDS);if(frame!=null&&frame.contains(text)&&(extra==null||frame.contains(extra)))return;}throw new AssertionError("Missing response: "+text);}
     }
 }

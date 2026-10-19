@@ -1,0 +1,103 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  blooming_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}, {group: choices_confetti_bubbles_1}, {group: choices_confetti_bubbles_2},
+            {group: choices_side_blade_lovely_3}]}
+      choices_confetti_bubbles_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_bubbles_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_side_blade_lovely_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 400, rewards: [{group: choices_side_blade_lovely_4}]}
+        - {weight: 250, rewards: [{group: choices_fur_coat_lovely_5}]}
+        - {weight: 250, rewards: [{group: choices_fur_cap_lovely_6}]}
+        - {weight: 90, rewards: [{group: choices_extra_vertical_vents_broken_lovely_7}]}
+        - {weight: 3, rewards: [{item: nature_trail, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{group: choices_purple_snipe_wandering_8}]}
+      choices_side_blade_lovely_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_lovely, quantity: 1, binding: catalog}]}
+      choices_fur_coat_lovely_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_lovely, quantity: 1, binding: catalog}]}
+      choices_fur_cap_lovely_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_lovely, quantity: 1, binding: catalog}]}
+      choices_extra_vertical_vents_broken_lovely_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: extra_vertical_vents_broken_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bunny_tail_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: whiskers_lovely, quantity: 1, binding: catalog}]}
+      choices_purple_snipe_wandering_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: purple_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nature_trail, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: halo_flowers, quantity: 1, binding: catalog}]}

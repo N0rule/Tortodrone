@@ -1,0 +1,9 @@
+# Native key options are verified; incomplete official reward distributions never open.
+boxes:
+  anniversary_base: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
+  base_s0_10e524c9fb2f: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
+  base_s0_ab745f1d7fe0: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
+  base_s0_e1dbd374411c: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
+  equinox_base: {kind: keyless, acceptedKeys: [], status: unresearched, evidence: "Stock keyless classification verified; reward distribution not yet researched"}
+  variant_base: {kind: keyed, acceptedKeys: [slime_key, silver_key], status: incomplete, evidence: "Stock key options verified; community Lockbox documentation reports no official odds"}
+  mystery: {kind: keyless, acceptedKeys: [], status: unsupported, evidence: "Native Mystery placeholder has an empty reward graph; no real reward pool exists to approximate"}

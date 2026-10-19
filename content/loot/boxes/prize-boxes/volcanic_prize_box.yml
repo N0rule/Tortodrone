@@ -1,0 +1,92 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  volcanic_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_plated_pathfinder_armor_volcanic_1}]}
+      choices_plated_pathfinder_armor_volcanic_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 8, rewards: [{group: choices_plated_pathfinder_armor_volcanic_2}]}
+        - {weight: 14, rewards: [{group: choices_plated_pathfinder_helm_volcanic_3}]}
+        - {weight: 40, rewards: [{group: choices_brigandine_volcanic_4}]}
+        - {weight: 70, rewards: [{group: choices_crescent_helm_volcanic_5}]}
+        - {weight: 60, rewards: [{group: choices_spiralhorns_volcanic_6}]}
+        - {weight: 7, rewards: [{item: maskerraith_egg_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fiery_aura, quantity: 1, binding: catalog}]}
+      choices_plated_pathfinder_armor_volcanic_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: plated_pathfinder_armor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plated_sentinel_armor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plated_shade_armor_volcanic, quantity: 1, binding: catalog}]}
+      choices_plated_pathfinder_helm_volcanic_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: plated_pathfinder_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plated_sentinel_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plated_shade_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_brigandine_volcanic_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_volcanic, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_volcanic_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_spiralhorns_volcanic_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiralhorns_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extra_vertical_vents_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extra_vertical_vents_broken_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shackles_magmatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_vol, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sealed_pauldrons_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: whiskers_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bunny_tail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_volcanic, quantity: 1, binding: catalog}]}

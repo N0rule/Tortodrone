@@ -1,0 +1,112 @@
+# APPROXIMATION: exact published category weights, estimated equal selection within each category.
+# All 56 documented 2019 outcomes included. No confetti/extra pool exists for this family.
+# Earlier Katastrophe and Returns boxes retain their distinct disabled definitions.
+boxes:
+  katastrophe_prize_box_complete:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: https://wiki.spiralknights.com/Katastrophe_Prize_Box and https://wiki.spiralknights.com/Katastrophe_Prize_Box_Promotion_August_2019;
+      all56 candidates; published category weights0.5/1.5/4/10/20/22/20/22; uniform choice within categories estimated; all unbound; no additional
+      pool
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: aura}]}
+        - {weight: 15, rewards: [{group: wings}]}
+        - {weight: 40, rewards: [{group: rare_shadow}]}
+        - {weight: 100, rewards: [{group: gems}]}
+        - {weight: 200, rewards: [{group: shadow_accessories}]}
+        - {weight: 220, rewards: [{group: kat_suits}]}
+        - {weight: 200, rewards: [{group: helm_costumes}]}
+        - {weight: 220, rewards: [{group: armor_costumes}]}
+      aura:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dreadful_aura, quantity: 1, binding: unbound}]}
+      wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: hexagram_wings_prismatic, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: seraphynx_wings_prismatic, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: heavenly_halo_prismatic, quantity: 1, binding: unbound}]}
+      rare_shadow:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cat_tail_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: dragon_wings_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wings_shadow, quantity: 1, binding: unbound}]}
+      gems:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dread_seal, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: dazzling_gem_prismatic, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: seraph_tenna_prismatic, quantity: 1, binding: unbound}]}
+      shadow_accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bolted_vee_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: com_unit_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: crest_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: glasses_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: headband_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: power_scanner_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: maid_headband_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: mecha_wings_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: parrying_blade_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plume_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: ribbon_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: shades_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scarf_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: side_blade_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: toupee_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: vertical_vents_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wind_up_key_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: wrench_shadow, quantity: 1, binding: unbound}]}
+      kat_suits:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: kat_suit_dark, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: kat_suit_red, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: kat_suit_tan, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: kat_suit_white, quantity: 1, binding: unbound}]}
+      helm_costumes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: fur_cap_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: hood_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: pith_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plate_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: round_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: sallet_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scale_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: tailed_helm_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: winged_helm_shadow, quantity: 1, binding: unbound}]}
+      armor_costumes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flak_jacket_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: fur_coat_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: cloak_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: brigandine_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: plate_mail_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: draped_armor_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: cuirass_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: scale_mail_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: culet_shadow, quantity: 1, binding: unbound}]}
+        - {weight: 1, rewards: [{item: raiment_shadow, quantity: 1, binding: unbound}]}

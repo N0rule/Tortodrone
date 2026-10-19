@@ -1,0 +1,31 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  chess_mini_prize_box_winterfest:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_pawn_winterfest_red_1}]}
+      choices_pawn_winterfest_red_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: pawn_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 16, rewards: [{item: pawn_winterfest_white, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: knight_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: knight_winterfest_white, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: bishop_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: bishop_winterfest_white, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: rook_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: rook_winterfest_white, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: queen_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: queen_winterfest_white, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: king_winterfest_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: king_winterfest_white, quantity: 1, binding: catalog}]}

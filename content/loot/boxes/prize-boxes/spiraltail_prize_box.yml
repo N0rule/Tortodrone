@@ -1,0 +1,72 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  spiraltail_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_spiraltail_mail_blue_1}]}
+      choices_spiraltail_mail_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_spiraltail_mail_blue_2}]}
+        - {weight: 30, rewards: [{group: choices_spiraltail_mask_blue_3}]}
+        - {weight: 20, rewards: [{group: choices_spiraltail_blue_4}]}
+        - {weight: 7, rewards: [{group: choices_firetail_5}]}
+        - {weight: 3, rewards: [{item: drakon_egg_spiraltail, quantity: 1, binding: catalog}]}
+      choices_spiraltail_mail_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiraltail_mail_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mail_volcanic, quantity: 1, binding: catalog}]}
+      choices_spiraltail_mask_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiraltail_mask_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_mask_volcanic, quantity: 1, binding: catalog}]}
+      choices_spiraltail_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiraltail_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_volcanic, quantity: 1, binding: catalog}]}
+      choices_firetail_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: firetail, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: firetail_mail, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: firetail_mask, quantity: 1, binding: catalog}]}

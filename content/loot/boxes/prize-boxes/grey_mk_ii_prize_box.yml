@@ -1,0 +1,85 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  grey_mk_ii_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_fowl_cowl_grey_1}]}
+      choices_fowl_cowl_grey_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 15, rewards: [{group: choices_fowl_cowl_grey_2}]}
+        - {weight: 12, rewards: [{group: choices_fowl_cloak_grey_3}]}
+        - {weight: 65, rewards: [{group: choices_alpha_vertical_vents_grey_4}, {group: choices_large_fireworks_silver_5}]}
+        - {weight: 6, rewards: [{group: choices_owlite_wand_grey_6}]}
+        - {weight: 2, rewards: [{group: choices_feathered_aura_grey_7}]}
+      choices_fowl_cowl_grey_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fowl_cowl_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: astute_owlite_mask_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sagacious_owlite_mask_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: battle_boar_helmet_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_mask_grey, quantity: 1, binding: catalog}]}
+      choices_fowl_cloak_grey_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fowl_cloak_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_robe_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: battle_boar_suit_grey, quantity: 1, binding: catalog}]}
+      choices_alpha_vertical_vents_grey_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: alpha_vertical_vents_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_pipe_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_spectacles_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_feathers_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scholarly_tam_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: warding_candle_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hoghawk_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pigtails_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: porkular_vents_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: truffle_snuffler_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: doggie_tail_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rooster_tail_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ancient_scroll_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: astrolabe_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ritualist_pack_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sash_bag_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: treat_pouch_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pig_tail_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: razorback_pack_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trotters_grey, quantity: 1, binding: catalog}]}
+      choices_large_fireworks_silver_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: confetti_silver, quantity: 1, binding: catalog}]}
+      choices_owlite_wand_grey_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: owlite_wand_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: alpha_claw_gauntlet_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: piggy_banker_grey, quantity: 1, binding: catalog}]}
+      choices_feathered_aura_grey_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: feathered_aura_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grey_aura_dark, quantity: 1, binding: catalog}]}

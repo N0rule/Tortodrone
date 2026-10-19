@@ -1,0 +1,101 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hunter_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}, {item: confetti_leaf, quantity: 1, binding: catalog}, {
+              group: choices_confetti_leaf_1}, {group: choices_confetti_leaf_1}, {group: choices_confetti_leaf_2}, {group: choices_variants_1_3},
+            {group: choices_trinket_slot_7}]}
+      choices_confetti_leaf_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_leaf_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_leaf, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_variants_1_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 192, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 132, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 96, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 80, rewards: [{group: choices_side_blade_hunter_4}]}
+        - {weight: 58, rewards: [{group: choices_fur_cap_hunter_5}]}
+        - {weight: 58, rewards: [{group: choices_fur_coat_hunter_6}]}
+        - {weight: 7, rewards: [{item: leaf_aura_green, quantity: 1, binding: catalog}]}
+      choices_side_blade_hunter_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_hunter, quantity: 1, binding: catalog}]}
+      choices_fur_cap_hunter_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_hunter, quantity: 1, binding: catalog}]}
+      choices_fur_coat_hunter_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_hunter, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_8}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

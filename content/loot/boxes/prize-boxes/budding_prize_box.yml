@@ -1,0 +1,102 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  budding_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}, {group: choices_confetti_bubbles_1}, {group: choices_confetti_bubbles_2},
+            {group: choices_side_blade_verdant_3}]}
+      choices_confetti_bubbles_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_bubbles_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_bubbles, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_side_blade_verdant_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_side_blade_verdant_4}]}
+        - {weight: 25, rewards: [{group: choices_fur_coat_verdant_5}]}
+        - {weight: 25, rewards: [{group: choices_fur_cap_verdant_6}]}
+        - {weight: 9, rewards: [{group: choices_extra_vertical_vents_broken_verdant_7}]}
+        - {weight: 1, rewards: [{group: choices_yellow_snipe_wandering_8}]}
+      choices_side_blade_verdant_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_verdant, quantity: 1, binding: catalog}]}
+      choices_fur_coat_verdant_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_verdant, quantity: 1, binding: catalog}]}
+      choices_fur_cap_verdant_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_verdant, quantity: 1, binding: catalog}]}
+      choices_extra_vertical_vents_broken_verdant_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: extra_vertical_vents_broken_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bunny_tail_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: whiskers_verdant, quantity: 1, binding: catalog}]}
+      choices_yellow_snipe_wandering_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: yellow_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: halo_flowers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nature_trail, quantity: 1, binding: catalog}]}

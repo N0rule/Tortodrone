@@ -96,6 +96,8 @@ Back up the whole stopped `data/`, `config/` and `content/` before changing the 
 
 ## Documentation
 
+- [Commands](commands.md): player/GM slash commands, examples, console syntax and explicit placeholders.
+
 - [Operations](docs/operations.md): deployment, accounts, commands, client troubleshooting, backup and releases.
 - [Content](docs/content.md): maps, items, combat defaults, verified imports and current extension limits.
 - [Architecture](docs/architecture.md): identity/storage, protocol, simulation and security invariants.

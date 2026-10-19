@@ -1,0 +1,124 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  lucky_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_gold_buckled_coat_ancient_1}]}
+      choices_gold_buckled_coat_ancient_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 30, rewards: [{group: choices_gold_buckled_coat_ancient_2}]}
+        - {weight: 8, rewards: [{group: choices_pot_o_crowns_3}]}
+        - {weight: 40, rewards: [{group: choices_lucky_topper_ancient_4}]}
+        - {weight: 8, rewards: [{group: choices_cat_tail_rainbow_14}]}
+        - {weight: 2, rewards: [{group: choices_lucky_aura_15}]}
+        - {weight: 5, rewards: [{item: rainbow, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: clover, quantity: 1, binding: catalog}, {group: choices_green_16}]}
+      choices_gold_buckled_coat_ancient_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gold_buckled_coat_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gold_buckled_coat_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gold_buckled_coat_peridot, quantity: 1, binding: catalog}]}
+      choices_pot_o_crowns_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pot_o_crowns, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: caladbolg, quantity: 1, binding: catalog}]}
+      choices_lucky_topper_ancient_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_lucky_topper_ancient_5}]}
+        - {weight: 2, rewards: [{group: choices_lapel_clover_ancient_6}]}
+      choices_lucky_topper_ancient_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lucky_topper_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lucky_topper_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lucky_topper_peridot, quantity: 1, binding: catalog}]}
+      choices_lapel_clover_ancient_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_lapel_clover_ancient_7}, {group: choices_pipe_ancient_8}]}
+        - {weight: 1, rewards: [{group: choices_lapel_clover_hunter_10}, {group: choices_pipe_hunter_11}]}
+        - {weight: 1, rewards: [{group: choices_lapel_clover_peridot_12}, {group: choices_pipe_peridot_13}]}
+      choices_lapel_clover_ancient_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lapel_clover_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clover_ancient, quantity: 1, binding: catalog}]}
+      choices_pipe_ancient_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pipe_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{group: choices_lumberfell_beard_autumn_9}]}
+      choices_lumberfell_beard_autumn_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lumberfell_beard_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_dazed, quantity: 1, binding: catalog}]}
+      choices_lapel_clover_hunter_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lapel_clover_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clover_hunter, quantity: 1, binding: catalog}]}
+      choices_pipe_hunter_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pipe_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{group: choices_lumberfell_beard_autumn_9}]}
+      choices_lapel_clover_peridot_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lapel_clover_peridot, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clover_peridot, quantity: 1, binding: catalog}]}
+      choices_pipe_peridot_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pipe_peridot, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{group: choices_lumberfell_beard_autumn_9}]}
+      choices_cat_tail_rainbow_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cat_tail_rainbow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_rainbow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_rainbow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_tail_rainbow, quantity: 1, binding: catalog}]}
+      choices_lucky_aura_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lucky_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rainbow_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clover_aura, quantity: 1, binding: catalog}]}
+      choices_green_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: emerald_s285797_f8bc2b88653e, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lime, quantity: 1, binding: catalog}]}

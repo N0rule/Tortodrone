@@ -1,0 +1,127 @@
+# APPROXIMATION for serial 000 ONLY. Later serials keep their own disabled definitions.
+# Estimated main split: costumes 50/accessories 30/equipment 20; Divine 4%, six other colors 16% each.
+# Independent bonus estimates: small 20%, medium 10%, large 5% (one firework each), confetti 50% (uniform 1..3), bound 2-day trinket upgrade 2%.
+# Inactive upgrade items persist and trade subject to binding; timed activation is not yet implemented.
+boxes:
+  item_000:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: https://wiki.spiralknights.com/Slime_Lockbox and https://wiki.spiralknights.com/Node_Slime_Mask; serial 000 historical seven families
+      and pre-August-2016 colors; ALL main/color/bonus rates estimated; inactive timed upgrade delivery supported, activation unavailable
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 25, rewards: [{group: mask}]}
+        - {weight: 25, rewards: [{group: guards}]}
+        - {weight: 10, rewards: [{group: receiver}]}
+        - {weight: 10, rewards: [{group: container}]}
+        - {weight: 10, rewards: [{group: tendrils}]}
+        - {weight: 10, rewards: [{group: crusher}]}
+        - {weight: 10, rewards: [{group: wall}]}
+      mask:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_slime_blue_s1502234395_c4826438bf45, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_green_s3624374370_f7db2993ddc3, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_purple_s947286589_126399148bde, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_red_s3512157616_3ec9b773f724, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_gold_s1502385953_4fbc25aa40ff, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_heavy_s3624907302_3bd3809c26ec, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_slime_divine_s592767024_fab2f3a51925, quantity: 1, binding: unbound}]}
+      guards:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_slime_blue_s2769783390_4d3dc2256963, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_green_s4263687551_7e09aad05aa1, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_purple_s3586126016_0a510e312445, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_red_s3275951629_b7ad8894da47, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_gold_s2769934948_5f142f1e0af6, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_heavy_s4264220483_bf581c526de6, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_slime_divine_s3231606451_2aa03fc629f9, quantity: 1, binding: unbound}]}
+      receiver:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_blue_s3074044729_a3bdb14104f0, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_green_s810887172_c2e52140586d, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_purple_s3923496667_ada41199b0f7, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_red_s2315935186_6e928c4da542, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_gold_s3074196287_14d276a8d22b, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_heavy_s811420104_3ceea9812b1c, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_divine_s3568977102_11e2c857f4c1, quantity: 1, binding: unbound}]}
+      container:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_blue_s3565059082_81555683296b, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_green_s3147430227_4cf8f776fe5c, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_purple_s3341887340_8f0777999136, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_red_s530659041_a10fa56b8f1c, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_gold_s3565210640_3acc853a8d2d, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_heavy_s3147963159_402e4161319f, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_divine_s2987367775_c60cd1f8eb8c, quantity: 1, binding: unbound}]}
+      tendrils:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: slime_arms_blue, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: slime_arms_green, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: slime_arms_purple, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: slime_arms_red, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: slime_arms_gold, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: slime_arms_heavy, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: slime_arms_divine, quantity: 1, binding: unbound}]}
+      crusher:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_slime_blue_s77211544_a23ce188c093, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_green_s2398338949_e78efb05f04a, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_purple_s1594894202_e18d75fc7931, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_red_s1387979155_2f5fe00ec230, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_gold_s77363102_61582259f00d, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_heavy_s2398871881_066969828531, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_slime_divine_s1240374637_1655640819dd, quantity: 1, binding: unbound}]}
+      wall:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 16, rewards: [{item: node_slime_blue_s3935208119_4f114f37b390, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_green_s1737148486_ad53b115b300, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_purple_s2572826329_987939647e58, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_red_s4283377300_822047113baa, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_gold_s3935359677_b4b91cd0f9fa, quantity: 1, binding: unbound}]}
+        - {weight: 16, rewards: [{item: node_slime_heavy_s1737681418_8689a1a595d2, quantity: 1, binding: unbound}]}
+        - {weight: 4, rewards: [{item: node_slime_divine_s2218306764_f9aee65a9693, quantity: 1, binding: unbound}]}
+      bonus_small_firework:
+        chance: 20%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: small_fireworks_slime, quantity: 1, binding: unbound}]}
+      bonus_medium_firework:
+        chance: 10%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: medium_fireworks_slime, quantity: 1, binding: unbound}]}
+      bonus_large_firework:
+        chance: 5%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_slime, quantity: 1, binding: unbound}]}
+      bonus_confetti:
+        chance: 50%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_slime, quantity: {min: 1, max: 3}, binding: unbound}]}
+      bonus_trinket_slot:
+        chance: 2%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trinket_slot_2_days, quantity: 1, binding: bound}]}

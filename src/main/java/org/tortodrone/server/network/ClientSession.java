@@ -214,12 +214,15 @@ final class ClientSession {
                 characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision,world,receivers);
                 return;
             }
+            boolean answered=false;
             for (Object argument : invocation.arguments()) {
                 if (argument instanceof SessionDecoder.Listener listener) {
-                    String reason = "Server operation not implemented yet";
+                    answered=true;
+                    String reason = "Placeholder: this server operation is not implemented yet";
                     output.send(() -> outgoing.invocationFailure(clientOid, listener.requestId(), reason));
                 }
             }
+            if(!answered)world.unavailable("Placeholder: this server operation is not implemented yet");
         }
     }
 

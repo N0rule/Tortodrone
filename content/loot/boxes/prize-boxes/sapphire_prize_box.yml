@@ -1,0 +1,82 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  sapphire_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_fur_coat_sapphire_1}]}
+      choices_fur_coat_sapphire_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 70, rewards: [{group: choices_fur_coat_sapphire_2}]}
+        - {weight: 60, rewards: [{group: choices_fur_cap_sapphire_3}]}
+        - {weight: 40, rewards: [{group: choices_side_blade_sapphire_4}]}
+        - {weight: 27, rewards: [{group: choices_floating_sapphires_5}]}
+        - {weight: 3, rewards: [{item: sapphire_aura, quantity: 1, binding: catalog}]}
+      choices_fur_coat_sapphire_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_sapphire, quantity: 1, binding: catalog}]}
+      choices_fur_cap_sapphire_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_sapphire, quantity: 1, binding: catalog}]}
+      choices_side_blade_sapphire_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_sapphire, quantity: 1, binding: catalog}]}
+      choices_floating_sapphires_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: floating_sapphires, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: apocrean_disciple_wings_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crown_sapphire, quantity: 1, binding: catalog}]}

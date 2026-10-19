@@ -34,6 +34,7 @@ public final class Database {
         try{observer.completed(kind,elapsed,failed);}catch(RuntimeException ignored){ }
     }
     private final Path file;
+    private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
     private final boolean upgradeCandidate;
@@ -51,7 +52,7 @@ public final class Database {
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
             }else requireCurrentVersion();
-            return;
+            initialized=true;return;
         }
         if (deploymentLocked) initialize();
         else {
@@ -61,6 +62,7 @@ public final class Database {
                 if (Files.exists(file)) requireCurrentVersion(); else initialize();
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
+        initialized=true;
     }
     private void requireCurrentVersion() throws IOException {
         int version = version();
@@ -108,6 +110,7 @@ public final class Database {
         try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
             try {
+                if(initialized)InventoryExpiry.prune(connection,System.currentTimeMillis());
                 T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
             } catch(SQLException|IOException|RuntimeException error) {
                 rollbacks.incrementAndGet();
@@ -318,6 +321,7 @@ public final class Database {
     }
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
     public Map<Integer,WorldState> worldStates()throws IOException {
+        if(read(c->InventoryExpiry.due(c,System.currentTimeMillis())))write(c->null);
         return read(c->{
             var states=new HashMap<Integer,WorldState>();
             try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
@@ -429,12 +433,18 @@ public final class Database {
             var profile=WorldProfiles.load(c,accountId,knightId,revision);
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
+            if(slot!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,slot))throw new IOException("Activate a slot upgrade first");
+            try(var st=c.prepareStatement("DELETE FROM metadata WHERE key IN (SELECT 'item.weapon-slot.'||item_id FROM inventory_items WHERE world_id=?) AND (key=? OR value=?)")) {
+                st.setInt(1,profile.worldId());st.setString(2,"item.weapon-slot."+itemId);if(slot==null)st.setNull(3,Types.INTEGER);else st.setInt(3,slot);st.executeUpdate();
+            }
+
             if(slot!=null)try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=NULL WHERE world_id=? AND equipped_slot=?")){s.setInt(1,profile.worldId());s.setInt(2,slot);s.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE inventory_items SET equipped_slot=?,bound=CASE WHEN ? IS NOT NULL AND bind_on_equip=1 THEN 1 ELSE bound END WHERE world_id=? AND item_id=?")){
-                if(slot==null)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
+                if(slot==null||slot==8||slot==9)s.setNull(1,Types.INTEGER);else s.setInt(1,slot);
                 if(slot==null)s.setNull(2,Types.INTEGER);else s.setInt(2,slot);
                 s.setInt(3,profile.worldId());s.setLong(4,itemId);s.executeUpdate();
             }
+            if(slot!=null&&(slot==8||slot==9))try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,"item.weapon-slot."+itemId);st.setInt(2,slot);st.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
             return WorldProfiles.load(c,accountId,knightId,revision);
         });
@@ -447,6 +457,12 @@ public final class Database {
     public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
             org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
             org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.town.TownCatalog rules)throws IOException {
+        return grantItems(username,knightName,expectedAccount,expectedWorld,entry,quantity,actorAccount,actorRevision,modifiers,rules,false,entry.expireDays());
+    }
+    public WorldProfile grantItems(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.ItemCatalog.Entry entry,int quantity,int actorAccount,long actorRevision,
+            org.tortodrone.character.ItemModifiers modifiers,org.tortodrone.town.TownCatalog rules,boolean locked,int expireDays)throws IOException {
+        if(expireDays<0||expireDays>3650||expireDays>0&&entry.permanent())throw new IOException("Expiry must be 0–3650 days and cannot apply to permanent items");
         if(quantity<1||quantity>org.tortodrone.character.ItemCatalog.GRANT_LIMIT)throw new IOException("Quantity must be between 1 and 20");
         if(!entry.grantable())throw new IOException("Unsupported item for grants");
         modifiers.validate(entry,rules);
@@ -471,8 +487,8 @@ public final class Database {
             var profile=WorldProfiles.load(c,account,knight,-1);
             if(expectedWorld>=0&&profile.worldId()!=expectedWorld)throw new IOException("Knight changed; refresh");
             // Stack only plain inventory items with identical grant flags; equipment stays distinct.
-            var stack=entry.stackable()&&modifiers.equals(org.tortodrone.character.ItemModifiers.NONE)?profile.items().stream().filter(i->i.config().equals(entry.config())
-                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&i.bound()==(entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
+            var stack=expireDays==0&&entry.stackable()&&modifiers.equals(org.tortodrone.character.ItemModifiers.NONE)?profile.items().stream().filter(i->i.config().equals(entry.config())
+                &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&i.expiresAt()==null&&i.bound()==(locked||entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
                 &&i.equippedSlot()==null&&i.level()==0&&i.heatProgress()==0&&i.variants().isEmpty()&&i.count()+quantity<=9999).findFirst().orElse(null):null;
             int instances=stack!=null?0:entry.stackable()?1:quantity;
             if(profile.items().size()+instances>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
@@ -486,8 +502,9 @@ public final class Database {
                 for(int i=0;i<instances;i++) {
                     long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(i==0)first=id;
                     s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
-                    s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,entry.locked()||entry.permanent());
+                    s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,locked||entry.locked()||entry.permanent());
                     s.setInt(9,modifiers.level());s.setFloat(10,modifiers.heat());s.setString(11,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.executeUpdate();
+                    InventoryExpiry.save(c,id,InventoryExpiry.deadline(expireDays));
                 }
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}

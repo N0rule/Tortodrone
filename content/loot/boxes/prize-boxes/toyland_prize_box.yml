@@ -1,0 +1,385 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  toyland_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_toy_soldier_cap_cool_1}]}
+      choices_toy_soldier_cap_cool_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 82, rewards: [{group: choices_toy_soldier_cap_cool_2}]}
+        - {weight: 9, rewards: [{group: choices_toy_soldier_cap_blue_coat_25}]}
+        - {weight: 5, rewards: [{group: choices_harlequin_cowl_snow_queen_29}]}
+        - {weight: 2, rewards: [{group: choices_toy_soldier_crown_prismatic_30}]}
+        - {weight: 2, rewards: [{group: choices_jingle_bandolier_32}]}
+      choices_toy_soldier_cap_cool_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 10, rewards: [{group: choices_toy_soldier_cap_cool_3}]}
+        - {weight: 7, rewards: [{group: choices_toy_soldier_coat_cool_7}]}
+        - {weight: 9, rewards: [{group: choices_wind_up_key_winter_cool_10}]}
+        - {weight: 6, rewards: [{group: choices_ear_puffs_cool_14}]}
+        - {weight: 9, rewards: [{group: choices_button_eye_cool_17}]}
+        - {weight: 9, rewards: [{group: choices_harlequin_tutu_cool_21}]}
+      choices_toy_soldier_cap_cool_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_toy_soldier_cap_cool_4}]}
+        - {weight: 1, rewards: [{group: choices_toy_soldier_crown_cool_5}]}
+        - {weight: 1, rewards: [{group: choices_harlequin_cowl_cool_6}]}
+      choices_toy_soldier_cap_cool_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: toy_soldier_cap_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_cap_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_cap_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_cap_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_cap_volcanic, quantity: 1, binding: catalog}]}
+      choices_toy_soldier_crown_cool_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: toy_soldier_crown_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_crown_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_crown_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_crown_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_crown_volcanic, quantity: 1, binding: catalog}]}
+      choices_harlequin_cowl_cool_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: harlequin_cowl_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_cowl_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_cowl_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_cowl_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_cowl_volcanic, quantity: 1, binding: catalog}]}
+      choices_toy_soldier_coat_cool_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_toy_soldier_coat_cool_8}]}
+        - {weight: 1, rewards: [{group: choices_harlequin_doll_cool_9}]}
+      choices_toy_soldier_coat_cool_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: toy_soldier_coat_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_coat_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_coat_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_soldier_coat_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_soldier_coat_volcanic, quantity: 1, binding: catalog}]}
+      choices_harlequin_doll_cool_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: harlequin_doll_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_doll_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_doll_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_doll_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_doll_volcanic, quantity: 1, binding: catalog}]}
+      choices_wind_up_key_winter_cool_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_wind_up_key_winter_cool_11}]}
+        - {weight: 1, rewards: [{group: choices_drum_cool_12}]}
+        - {weight: 1, rewards: [{group: choices_toy_ribbon_cool_13}]}
+      choices_wind_up_key_winter_cool_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: wind_up_key_winter_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wind_up_key_winter_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_winter_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wind_up_key_winter_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wind_up_key_winter_volcanic, quantity: 1, binding: catalog}]}
+      choices_drum_cool_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: drum_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: drum_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: drum_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: drum_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: drum_volcanic, quantity: 1, binding: catalog}]}
+      choices_toy_ribbon_cool_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: toy_ribbon_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_ribbon_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_ribbon_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_ribbon_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_ribbon_volcanic, quantity: 1, binding: catalog}]}
+      choices_ear_puffs_cool_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_ear_puffs_cool_15}]}
+        - {weight: 1, rewards: [{group: choices_jingle_slippers_cool_16}]}
+      choices_ear_puffs_cool_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ear_puffs_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ear_puffs_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_puffs_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_puffs_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ear_puffs_volcanic, quantity: 1, binding: catalog}]}
+      choices_jingle_slippers_cool_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: jingle_slippers_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: jingle_slippers_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: jingle_slippers_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: jingle_slippers_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: jingle_slippers_volcanic, quantity: 1, binding: catalog}]}
+      choices_button_eye_cool_17:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_button_eye_cool_18}]}
+        - {weight: 1, rewards: [{group: choices_nutcracker_beard_black_19}]}
+        - {weight: 1, rewards: [{group: choices_tiara_cool_20}]}
+      choices_button_eye_cool_18:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: button_eye_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: button_eye_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: button_eye_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: button_eye_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: button_eye_volcanic, quantity: 1, binding: catalog}]}
+      choices_nutcracker_beard_black_19:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: nutcracker_beard_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_white, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_white, quantity: 1, binding: catalog}]}
+      choices_tiara_cool_20:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: tiara_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tiara_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tiara_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tiara_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tiara_volcanic, quantity: 1, binding: catalog}]}
+      choices_harlequin_tutu_cool_21:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_harlequin_tutu_cool_22}]}
+        - {weight: 1, rewards: [{group: choices_toy_sword_cool_23}]}
+        - {weight: 1, rewards: [{group: choices_ornament_bandolier_cool_24}]}
+      choices_harlequin_tutu_cool_22:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: harlequin_tutu_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_tutu_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_tutu_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: harlequin_tutu_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: harlequin_tutu_volcanic, quantity: 1, binding: catalog}]}
+      choices_toy_sword_cool_23:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: toy_sword_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_sword_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_sword_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: toy_sword_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: toy_sword_volcanic, quantity: 1, binding: catalog}]}
+      choices_ornament_bandolier_cool_24:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ornament_bandolier_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ornament_bandolier_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ornament_bandolier_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ornament_bandolier_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ornament_bandolier_volcanic, quantity: 1, binding: catalog}]}
+      choices_toy_soldier_cap_blue_coat_25:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 7, rewards: [{group: choices_toy_soldier_cap_blue_coat_26}]}
+        - {weight: 10, rewards: [{group: choices_toy_soldier_coat_blue_coat_27}]}
+        - {weight: 33, rewards: [{group: choices_wind_up_key_winter_blue_coat_28}]}
+      choices_toy_soldier_cap_blue_coat_26:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: toy_soldier_cap_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_cap_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_crown_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_crown_red_coat, quantity: 1, binding: catalog}]}
+      choices_toy_soldier_coat_blue_coat_27:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: toy_soldier_coat_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_coat_red_coat, quantity: 1, binding: catalog}]}
+      choices_wind_up_key_winter_blue_coat_28:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wind_up_key_winter_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_winter_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: drum_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: drum_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_ribbon_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_ribbon_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_puffs_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_puffs_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nutcracker_beard_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: soldier_beard_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_sword_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_sword_red_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ornament_bandolier_blue_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ornament_bandolier_red_coat, quantity: 1, binding: catalog}]}
+      choices_harlequin_cowl_snow_queen_29:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 11, rewards: [{item: harlequin_cowl_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: harlequin_cowl_sugarplum, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: harlequin_doll_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: harlequin_doll_sugarplum, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: toy_ribbon_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: toy_ribbon_sugarplum, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: jingle_slippers_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: jingle_slippers_sugarplum, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: harlequin_tutu_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: harlequin_tutu_sugarplum, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: ornament_bandolier_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: [{item: ornament_bandolier_sugarplum, quantity: 1, binding: catalog}]}
+      choices_toy_soldier_crown_prismatic_30:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: toy_soldier_crown_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_cowl_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_soldier_coat_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_doll_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{group: choices_wind_up_key_winter_prismatic_31}]}
+      choices_wind_up_key_winter_prismatic_31:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wind_up_key_winter_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: drum_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_ribbon_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_puffs_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: jingle_slippers_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: button_eye_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tiara_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: harlequin_tutu_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toy_sword_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ornament_bandolier_prismatic, quantity: 1, binding: catalog}]}
+      choices_jingle_bandolier_32:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: jingle_bandolier, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tiara_snow_queen, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sugarplum_aura, quantity: 1, binding: catalog}]}

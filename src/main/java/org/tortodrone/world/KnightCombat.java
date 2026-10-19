@@ -115,7 +115,7 @@ public final class KnightCombat {
     }
     public void input(int flags,int changed,int time,float facing,float direction,boolean baseAllows) {
         advance(time,facing);
-        if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<2)select(6+index);}return;}
+        if(!baseAllows){if(canOverride()){int index=(flags&56)>>>3;if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);}return;}
         if(activity==CHARGE&&(flags&4)==0) {
             if(definition!=null)startAttack(time-started>=EquipmentCatalog.chargeTimeMillis(definition.chargeTime(),equipmentModifiers,weaponModifiers)?CHARGED:nextNormal(time),time);
             else clear(time);
@@ -145,8 +145,8 @@ public final class KnightCombat {
         }
         if(canOverride()) {
             int index=(flags&56)>>>3;
-            // The current server owns two unlocked native weapon slots, 6 and 7.
-            if(index<2)select(6+index);
+            // The profile owns the unlocked native weapon slots; input only selects an owned slot.
+            if(index<org.tortodrone.character.SlotUpgrades.weapons(profile))select(6+index);
         }
     }
     private boolean canCharge(){return definition!=null&&definition.charged()!=null&&definition.incomplete()!=null;}

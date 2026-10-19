@@ -1,0 +1,124 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  dark_harvest_prize_box_2017:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_dark_harvest, quantity: 1, binding: catalog}, {item: confetti_dark_harvest, quantity: 1, binding: catalog},
+            {group: choices_confetti_dark_harvest_1}, {group: choices_confetti_dark_harvest_1}, {group: choices_confetti_dark_harvest_2}, {group: choices_crest_nova_3},
+            {group: choices_trinket_slot_11}]}
+      choices_confetti_dark_harvest_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_dark_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_dark_harvest_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_dark_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_crest_nova_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 20, rewards: [{group: choices_crest_nova_4}]}
+        - {weight: 20, rewards: [{group: choices_fur_coat_nova_9}]}
+        - {weight: 20, rewards: [{group: choices_fur_cap_nova_10}]}
+        - {weight: 1, rewards: [{item: haunted_aura, quantity: 1, binding: catalog}]}
+      choices_crest_nova_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 400, rewards: [{group: choices_crest_nova_5}]}
+        - {weight: 100, rewards: [{group: choices_intel_tube_nova_6}]}
+        - {weight: 20, rewards: [{group: choices_rebreather_nova_7}]}
+        - {weight: 1, rewards: [{group: choices_shoulder_booster_nova_8}]}
+      choices_crest_nova_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crest_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_pumpkin, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vitakit_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binoculars_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: canteen_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: goggles_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vented_visor_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wide_vee_nova, quantity: 1, binding: catalog}]}
+      choices_intel_tube_nova_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: intel_tube_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maedate_nova, quantity: 1, binding: catalog}]}
+      choices_rebreather_nova_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: rebreather_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_booster_nova, quantity: 1, binding: catalog}]}
+      choices_shoulder_booster_nova_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: shoulder_booster_nova, quantity: 1, binding: catalog}]}
+      choices_fur_coat_nova_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pumpkin_bombhead_mask, quantity: 1, binding: catalog}]}
+      choices_fur_cap_nova_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_nova, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_12}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

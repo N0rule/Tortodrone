@@ -12,6 +12,7 @@ import org.tortodrone.character.Knight;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.character.WorldProfile;
 import org.tortodrone.character.ItemCatalog;
+import org.tortodrone.character.SlotUpgrades;
 import org.tortodrone.world.KnightCombat;
 import org.tortodrone.world.TownMovement;
 import org.tortodrone.world.ActorState;
@@ -399,6 +400,9 @@ public final class SessionCodec {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal"); out.writeInt(color.value());
         } else if (value instanceof StarterCatalog.TransColorization color) {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$TransNormal");out.writeInt(color.clazz());out.writeInt(color.value());
+        } else if (value instanceof StarterCatalog.CustomColorization color) {
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$CustomOffsets");out.writeInt(color.clazz());
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Triplet");out.writeFloat(color.hue());out.writeFloat(color.saturation());out.writeFloat(color.value());
         } else if (value instanceof Float number) {
             type(out,"java.lang.Float");out.writeFloat(number);
         } else if (value instanceof Integer number) {
@@ -444,7 +448,7 @@ public final class SessionCodec {
     public byte[] selected(int oid, Knight knight, WorldProfile profile) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);
-            type(out,"com.threerings.util.StreamableArrayList"); out.writeInt(20);
+            type(out,"com.threerings.util.StreamableArrayList"); out.writeInt(21);
             attribute(out,oid,"knight",o -> name(o,knight.name()));
             attribute(out,oid,"color",o -> value(o,256 | knight.color()));
             attribute(out,oid,"eye",o -> { type(o,"com.threerings.projectx.data.ProjectXCodes$EyeType");o.writeByte(knight.eye()); });
@@ -454,7 +458,8 @@ public final class SessionCodec {
             attribute(out,oid,"equipment",o -> longs(o,profile.equipment()));
             attribute(out,oid,"loadouts",o -> currentLoadout(o,profile));
             attribute(out,oid,"quickbar",o -> longs(o,new long[4]));
-            attribute(out,oid,"weaponSlots",o -> value(o,2));
+            attribute(out,oid,"weaponSlots",o -> value(o,SlotUpgrades.weapons(profile)));
+            attribute(out,oid,"trinketSlots",o -> value(o,SlotUpgrades.trinkets(profile)));
             attribute(out,oid,"crowns",o -> value(o,profile.crowns()));
             attribute(out,oid,"energy",o -> value(o,profile.energy()));
             attribute(out,oid,"showEnergy",o -> value(o,true));
@@ -504,7 +509,9 @@ public final class SessionCodec {
         var slots=new ArrayList<Integer>();
         for(int slot=0;slot<equipment.length;slot++)if(oldEquipment[slot]!=equipment[slot])slots.add(slot);
         return frame(out->{
-            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+removed.size()+slots.size()+(slots.isEmpty()?0:1));
+            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+removed.size()+slots.size()+(slots.isEmpty()?0:1)+2);
+            attribute(out,oid,"weaponSlots",o->value(o,SlotUpgrades.weapons(after)));
+            attribute(out,oid,"trinketSlots",o->value(o,SlotUpgrades.trinkets(after)));
             for(var item:removed)entryRemoved(out,oid,"items",item.id());
             for(var item:changed) {
                 type(out,"com.threerings.presents.dobj."+(old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent"));
@@ -969,7 +976,12 @@ public final class SessionCodec {
             var definition=itemCatalog.find(item.config());
             boolean seeded=item.slot()==WorldProfile.Slot.OTHER&&definition!=null&&definition.variant()==ItemCatalog.Variant.SEED_ITEM;
             boolean gift=definition!=null&&definition.type().equals("GiftBox");
-            type(out,"com.threerings.projectx.item.data."+(gift?"GiftBoxItem":item.slot()==WorldProfile.Slot.OTHER?seeded?"SeedItem":definition!=null&&definition.variant()==ItemCatalog.Variant.LEVEL_ITEM?"LevelItem":"Item":"LevelItem"));
+            String subtype=gift?"GiftBoxItem":item.slot()!=WorldProfile.Slot.OTHER?"LevelItem":definition==null?"Item":switch(definition.variant()) {
+                case ITEM -> "Item";case LEVEL_ITEM -> "LevelItem";case SEED_ITEM -> "SeedItem";case UPGRADE_ITEM -> "UpgradingItem";case FURNITURE_ITEM -> "FurniItem";
+            };
+            // Inactive UpgradingItem adds no fields to the common Item payload.
+            type(out,"com.threerings.projectx.item.data."+subtype);
+            if(definition!=null&&definition.variant()==ItemCatalog.Variant.FURNITURE_ITEM)out.writeInt(0); // native undeployed count
             if(gift){
                 var record=item.gift();out.writeBoolean(record!=null);if(record!=null){
                     out.writeInt(record.contents().size());for(var content:record.contents()){value(out,giftReference(content));out.writeInt(content.count());}
@@ -986,7 +998,7 @@ public final class SessionCodec {
             // Stock Item.o / LevelItem.a compare this configuration ID, not the
             // config name. A shared zero leaves the previous weapon's sprite and
             // attack animations active after equipping a different weapon.
-            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
+            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());value(out,item.expiresAt());
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
             out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0) | (item.cursed()?4:0));

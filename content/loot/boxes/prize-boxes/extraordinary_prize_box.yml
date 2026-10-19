@@ -1,0 +1,169 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  extraordinary_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_grand_topper_blue_1}]}
+      choices_grand_topper_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 7, rewards: [{group: choices_grand_topper_blue_2}]}
+        - {weight: 6, rewards: [{group: choices_headlamp_blue_3}]}
+        - {weight: 4, rewards: [{group: choices_mechaknight_exhaust_blue_4}]}
+        - {weight: 3, rewards: [{group: choices_pipe_and_mustache_blue_5}]}
+      choices_grand_topper_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: grand_topper_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_vol, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_prismatic, quantity: 1, binding: catalog}]}
+      choices_headlamp_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: headlamp_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_prismatic, quantity: 1, binding: catalog}]}
+      choices_mechaknight_exhaust_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_prismatic, quantity: 1, binding: catalog}]}
+      choices_pipe_and_mustache_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pipe_and_mustache_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: clockwork_crest_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_prismatic, quantity: 1, binding: catalog}]}

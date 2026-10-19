@@ -1,0 +1,81 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  autumn_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_brigandine_autumn_1}]}
+      choices_brigandine_autumn_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 70, rewards: [{group: choices_brigandine_autumn_2}]}
+        - {weight: 60, rewards: [{group: choices_crescent_helm_autumn_3}]}
+        - {weight: 40, rewards: [{group: choices_side_blade_autumn_4}]}
+        - {weight: 27, rewards: [{group: choices_punkin_cinnamug_5}]}
+        - {weight: 3, rewards: [{item: autumn_aura, quantity: 1, binding: catalog}]}
+      choices_brigandine_autumn_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_autumn, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_autumn_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_autumn, quantity: 1, binding: catalog}]}
+      choices_side_blade_autumn_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_autumn, quantity: 1, binding: catalog}]}
+      choices_punkin_cinnamug_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: punkin_cinnamug, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wooly_pullover, quantity: 1, binding: catalog}]}

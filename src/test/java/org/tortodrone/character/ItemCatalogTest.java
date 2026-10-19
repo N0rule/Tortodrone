@@ -34,6 +34,8 @@ public final class ItemCatalogTest {
             }
             var unsupported=new ItemCatalog(List.of(new ItemCatalog.Entry("Recipe/Test",1,"Recipe","m.recipe",2,false,null,false,Map.of())));
             try{unsupported.require("Recipe/Test");throw new AssertionError("Unsupported type accepted");}catch(IOException expected){}
+            var wrongFurniture=new ItemCatalog(List.of(new ItemCatalog.Entry("Invalid/Furniture",99,"Sword","m.sword",0,false,WorldProfile.Slot.SWORD,false,false,false,ItemCatalog.Variant.FURNITURE_ITEM,null,sword.modelArgs())));
+            try{wrongFurniture.require("Invalid/Furniture");throw new AssertionError("Wrong native furniture subtype accepted");}catch(IOException expected){}
             String original=Files.readString(file);
             for(String invalid:List.of(original.replace("\"version\": 2","\"version\": 999"),
                     original.replaceFirst("\"stockId\":0","\"stockId\":2147483648"),
@@ -48,7 +50,7 @@ public final class ItemCatalogTest {
             try{ItemCatalog.load(duplicates);throw new AssertionError("Duplicate catalogue accepted");}catch(IOException expected){}
             var typed=new ItemCatalog.Entry("Unicode/雪 \"Item\"",-3,"Trinket","m.item",2,false,WorldProfile.Slot.TRINKET,true,true,
                 Map.of("float",1.25f,"integer",-8,"flag",true,"literal","playerColor", "color",new StarterCatalog.Colorization(5),
-                    "trans",new StarterCatalog.TransColorization(2,4),"model",new StarterCatalog.Model("nested",Map.of("Colorization",ItemCatalog.PlayerColor.VALUE))));
+                    "trans",new StarterCatalog.TransColorization(2,4),"custom",new StarterCatalog.CustomColorization(12,.25f,-.5f,.75f),"model",new StarterCatalog.Model("nested",Map.of("Colorization",ItemCatalog.PlayerColor.VALUE))));
             Path types=home.resolve("types.json");ItemCatalog.write(types,List.of(typed));
             check(ItemCatalog.load(types).entries().equals(List.of(typed)),"JSON preserves float/integer, Unicode, booleans, colors, nested models and permanence");
             var artifact=new ItemCatalog.Entry("Item/Artifact/Test",9,"Artifact","m.artifact",4,false,WorldProfile.Slot.OTHER,
@@ -68,7 +70,7 @@ public final class ItemCatalogTest {
             check(variantCatalog.require(artifact.config()).variant()==ItemCatalog.Variant.SEED_ITEM
                 &&variantCatalog.require(artifact.config()).seed().equals(artifact.seed()),"artifact seed subtype metadata round trips and remains grantable");
             check(variantCatalog.require(energy.config()).locked()&&variantCatalog.find(upgrade.config()).variant()==ItemCatalog.Variant.UPGRADE_ITEM
-                &&!variantCatalog.find(upgrade.config()).grantable(),"locked generic metadata grants while expiring upgrade variants remain indexed only");
+                &&variantCatalog.find(upgrade.config()).grantable(),"locked generic metadata and native inactive upgrade items remain grantable");
             check(variantCatalog.require(mineral.config()).variant()==ItemCatalog.Variant.LEVEL_ITEM,
                 "MetaMineral uses the stock LevelItem variant in the generic inventory slot");
             check(variantCatalog.require(present.config()).variant()==ItemCatalog.Variant.LEVEL_ITEM

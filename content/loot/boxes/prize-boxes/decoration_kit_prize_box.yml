@@ -1,0 +1,63 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  decoration_kit_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_ice_block_1}, {group: choices_ice_block_1}, {group: choices_ice_block_1}, {group: choices_ice_block_1},
+            {group: choices_ice_block_1}, {group: choices_candle_platter_xmas_green_2}, {group: choices_candle_platter_xmas_green_2}, {group: choices_winterfest_tree_green_3},
+            {group: choices_winterfest_table_4}, {group: choices_blue_snipe_wandering_5}, {group: choices_green_snipe_wandering_7}]}
+      choices_ice_block_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ice_block, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holiday_presents_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holiday_presents_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holiday_presents_white, quantity: 1, binding: catalog}]}
+      choices_candle_platter_xmas_green_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: candle_platter_xmas_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: candle_platter_xmas_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: candle_platter_xmas_white, quantity: 1, binding: catalog}]}
+      choices_winterfest_tree_green_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: winterfest_tree_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winterfest_tree_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winterfest_tree_white, quantity: 1, binding: catalog}]}
+      choices_winterfest_table_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: winterfest_table, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: []}
+      choices_blue_snipe_wandering_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_blue_snipe_wandering_6}]}
+        - {weight: 24, rewards: []}
+      choices_blue_snipe_wandering_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: blue_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: white_snipe_flying, quantity: 1, binding: catalog}]}
+      choices_green_snipe_wandering_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: green_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 199, rewards: []}

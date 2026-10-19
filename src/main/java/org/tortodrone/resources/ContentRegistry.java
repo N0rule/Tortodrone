@@ -9,18 +9,18 @@ import org.tortodrone.world.*;
 public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, SceneCatalog scenes,
         ItemCatalog items, WeaponCatalog weapons, EquipmentCatalog equipment, FireCatalog fires,
         List<String> warnings, org.tortodrone.town.TownCatalog town, FireCatalog petFires,
-        org.tortodrone.news.NewsCatalog news) {
+        org.tortodrone.news.NewsCatalog news, org.tortodrone.loot.BoxCatalog boxes) {
     public record Pack(String id,String version) { }
     public record Resource(String pack,Path path,String sha256) { }
     public ContentRegistry {
         packs=List.copyOf(packs);resources=Collections.unmodifiableMap(new TreeMap<>(resources));warnings=List.copyOf(warnings);
         Objects.requireNonNull(scenes);Objects.requireNonNull(items);Objects.requireNonNull(weapons);
         Objects.requireNonNull(equipment);Objects.requireNonNull(fires);Objects.requireNonNull(town);Objects.requireNonNull(petFires);
-        Objects.requireNonNull(news);
+        Objects.requireNonNull(news);Objects.requireNonNull(boxes);
     }
     public SceneRegistry createScenes() {
         var registry=new SceneRegistry(scenes);
-        registry.town(town);registry.petFires(petFires);registry.news(news);
+        registry.boxes(boxes);registry.town(town);registry.petFires(petFires);registry.news(news);
         registry.weapons(weapons);registry.equipment(equipment);registry.fires(fires);
         return registry;
     }

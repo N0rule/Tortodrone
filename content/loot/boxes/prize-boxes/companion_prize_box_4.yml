@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  companion_prize_box_4:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: power_orb, quantity: 1, binding: bound}, {item: divine_orb, quantity: 1, binding: bound}, {item: shadow_orb,
+              quantity: 1, binding: bound}, {item: spark_of_life, quantity: 2, binding: bound}, {group: choices_shining_1}, {group: choices_elite_2}]}
+      choices_shining_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: shining, quantity: 10, binding: bound}]}
+        - {weight: 1, rewards: []}
+      choices_elite_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: elite, quantity: 1, binding: bound}]}
+        - {weight: 99, rewards: []}

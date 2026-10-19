@@ -1,0 +1,74 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  spiralhorn_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_spiralhorns_blue_1}, {group: choices_small_fireworks_red_4}, {group: choices_medium_fireworks_red_5},
+            {group: choices_large_fireworks_red_7}]}
+      choices_spiralhorns_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 90, rewards: [{group: choices_spiralhorns_blue_2}]}
+        - {weight: 7, rewards: [{group: choices_spiralhorns_divine_3}]}
+        - {weight: 3, rewards: [{item: maskerraith_egg_spiralhorn, quantity: 1, binding: catalog}]}
+      choices_spiralhorns_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiralhorns_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_red, quantity: 1, binding: catalog}]}
+      choices_spiralhorns_divine_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: spiralhorns_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiralhorns_prismatic, quantity: 1, binding: catalog}]}
+      choices_small_fireworks_red_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: small_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_medium_fireworks_red_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_medium_fireworks_red_6}]}
+        - {weight: 1, rewards: []}
+      choices_medium_fireworks_red_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: medium_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_large_fireworks_red_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_large_fireworks_red_8}]}
+        - {weight: 19, rewards: []}
+      choices_large_fireworks_red_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_green, quantity: 5, binding: catalog}]}

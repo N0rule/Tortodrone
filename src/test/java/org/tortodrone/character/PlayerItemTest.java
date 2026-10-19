@@ -33,6 +33,10 @@ public final class PlayerItemTest {
             refused(()->store.grantItems("Alice","Saved-Knight",1,saved.worldId(),material,2,-1,-1));
             check(store.worldProfile(1,1,1).equals(before),"audit failure rolls back stack merge and revision");
             store.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_audit");}return null;});
+            var upgrade=org.tortodrone.resources.ItemYaml.load(Path.of("content/items")).require("trinket_slot");
+            var tickets=store.grantItems("Alice","Saved-Knight",1,saved.worldId(),upgrade,2,-1,-1).items().stream().filter(i->i.config().equals(upgrade.config())).toList();
+            var town=new org.tortodrone.storage.TownStore(store,ItemCatalog.starter(),org.tortodrone.town.TownCatalog.empty());
+            for(var ticket:tickets)town.activateUpgrade(1,1,1,ticket.id());
             for(var slot:List.of(WorldProfile.Slot.HELM_COSTUME,WorldProfile.Slot.ARMOR_COSTUME,WorldProfile.Slot.SHIELD_COSTUME,WorldProfile.Slot.TRINKET)) {
                 var e=new ItemCatalog.Entry("Costume/"+slot,102,"Costume","m.costume",0,false,slot,true,true,Map.of("Helmet",new StarterCatalog.Model("test",Map.of())));
                 p=store.grantItems("Alice","Saved-Knight",1,saved.worldId(),e,1,-1,-1);var item=p.items().get(p.items().size()-1);

@@ -1,0 +1,117 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  polar_prize_box_2016:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_mustache_polar_1}, {group: choices_snow_bucket_9}, {item: confetti_winter, quantity: 1, binding: catalog},
+            {item: flawed_snowball, quantity: 1, binding: catalog}, {group: choices_confetti_winter_10}, {group: choices_flawed_snowball_11},
+            {group: choices_confetti_winter_12}, {group: choices_flawed_snowball_13}]}
+      choices_mustache_polar_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{group: choices_mustache_polar_2}]}
+        - {weight: 56, rewards: [{group: choices_polar_wolf_hood_3}]}
+        - {weight: 40, rewards: [{group: choices_polar_wolf_coat_6}]}
+        - {weight: 2, rewards: [{item: halo_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_tail_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: leaf_aura_divine, quantity: 1, binding: catalog}]}
+      choices_mustache_polar_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mustache_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mohawk_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_guards_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maedate_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_mohawk_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binoculars_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rebreather_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lumberfell_beard_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: smashing_mustache_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wise_whiskers_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_chops_polar, quantity: 1, binding: catalog}]}
+      choices_polar_wolf_hood_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_polar_wolf_hood_4}]}
+        - {weight: 1, rewards: [{group: choices_polar_warden_hood_5}]}
+      choices_polar_wolf_hood_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_wolf_hood, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_wolf_hood_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_wolf_hood_white, quantity: 1, binding: catalog}]}
+      choices_polar_warden_hood_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_warden_hood, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_hood_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_hood_white, quantity: 1, binding: catalog}]}
+      choices_polar_wolf_coat_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_polar_wolf_coat_7}]}
+        - {weight: 1, rewards: [{group: choices_polar_warden_coat_8}]}
+      choices_polar_wolf_coat_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_wolf_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_wolf_coat_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_wolf_coat_white, quantity: 1, binding: catalog}]}
+      choices_polar_warden_coat_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_warden_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_coat_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_coat_white, quantity: 1, binding: catalog}]}
+      choices_snow_bucket_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: snow_bucket, quantity: 1, binding: catalog}]}
+        - {weight: 17, rewards: []}
+      choices_confetti_winter_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}

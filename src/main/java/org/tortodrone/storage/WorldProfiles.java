@@ -86,13 +86,22 @@ final class WorldProfiles {
         }
         // All supported inventory/balance writes increment state_revision in their transaction.
         // Still validate current ownership/authentication before reusing immutable inventory.
-        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision)return cached;
+        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision&&cached.items().stream().noneMatch(i->i.expired(System.currentTimeMillis())))return cached;
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
                 while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
             }
         }
+        var expirations=InventoryExpiry.load(c,worldId);
+        items.replaceAll(item->item.withExpiration(expirations.get(item.id())));
+        items.removeIf(item->item.expired(System.currentTimeMillis()));
+        // Bonus weapon slots use metadata so existing schema-15 databases need no migration.
+        var bonusSlots=new HashMap<Long,Integer>();
+        try(var s=c.prepareStatement("SELECT i.item_id,m.value FROM inventory_items i JOIN metadata m ON m.key='item.weapon-slot.'||i.item_id WHERE i.world_id=?")) {
+            s.setInt(1,worldId);try(var r=s.executeQuery()){while(r.next()){int slot=r.getInt(2);if(slot!=8&&slot!=9)throw new IOException("Invalid bonus weapon slot");bonusSlots.put(r.getLong(1),slot);}}
+        }
+        items.replaceAll(item->bonusSlots.containsKey(item.id())?item.withEquippedSlot(bonusSlots.get(item.id())):item);
         var gifts=GiftStore.load(c,worldId);items.replaceAll(item->gifts.containsKey(item.id())?item.withGift(gifts.get(item.id())):item);
         int consumed;try(var s=c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")){s.setInt(1,worldId);try(var r=s.executeQuery()){r.next();consumed=r.getInt(1);}}
         if(items.stream().filter(WorldProfile.Item::starter).count()+consumed!=5)throw new IOException("Incomplete starter inventory; restore the saved database");
@@ -101,7 +110,11 @@ final class WorldProfiles {
             s.setString(1,progressKey(worldId,"rank"));s.setString(2,progressKey(worldId,"prestige"));
             try(var r=s.executeQuery()){while(r.next()){long value=r.getLong(2);if(value<0||value>Integer.MAX_VALUE)throw new IOException("Invalid saved knight progress");if(r.getString(1).endsWith(".rank"))rank=(int)value;else prestige=(int)value;}}
         }
-        try{return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige),TownStore.load(c,worldId));}
+        try{
+            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige),TownStore.load(c,worldId));
+            var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
+            return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town());
+        }
         catch(IllegalArgumentException invalid){throw new IOException("Invalid saved knight progress",invalid);}
     }
     static String progressKey(int world,String field){return "knight.progress."+world+"."+field;}

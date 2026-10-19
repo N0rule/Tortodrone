@@ -291,7 +291,44 @@ final class WorldSession implements AutoCloseable {
         return true;
     }
 
+    private record BoxRequest(int world,short request) { }
+    private record BoxReply(long box,int option,Object rewards,String failure) { }
+    // Stock listener IDs wrap. Keep only recent requests on this connection, never persist a client ID.
+    private final java.util.LinkedHashMap<BoxRequest,BoxReply> boxReplies=new java.util.LinkedHashMap<>();
+    private boolean boxInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=9||request.method()!=12)return false;
+        var args=request.arguments();
+        if(args.size()!=3||!(args.get(0) instanceof Long id)||!(args.get(1) instanceof Integer option)
+                ||!(args.get(2) instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))
+            throw new SessionDecoder.Rejected("Invalid box opening request");
+        BoxRequest token=null;
+        try {
+            if(closed||!selected()||!entered||!subscribed)throw new IOException("m.internal_error");
+            var current=characters.worldProfile(knight.name(),authRevision,profile);
+            if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+            token=new BoxRequest(current.worldId(),listener.requestId());var prior=boxReplies.get(token);
+            if(prior!=null) {
+                if(prior.box()!=id||prior.option()!=option||prior.failure()!=null)throw new IOException(prior.failure()==null?"m.internal_error":prior.failure());
+                Object rewards=prior.rewards();output.send(()->codec.townResult(oid,listener.requestId(),rewards,profile));return true;
+            }
+            var result=characters.boxes(scenes.boxes()).open(characters.accountId(),knight.id(),authRevision,current.revision(),id,option);
+            // Retain the receipt before publication: a queued-output failure must never cause a second write.
+            rememberBox(token,new BoxReply(id,option,result.result(),null));
+            townChanged(result,false);
+            output.send(()->codec.townResult(oid,listener.requestId(),result.result(),result.profile()));
+        }catch(CharacterStore.Refused|IOException failure) {
+            if(token!=null&&!boxReplies.containsKey(token))rememberBox(token,new BoxReply(id,option,null,failure.getMessage()));
+            output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
+        }
+        return true;
+    }
+    private void rememberBox(BoxRequest request,BoxReply result) {
+        boxReplies.put(request,result);if(boxReplies.size()>256)boxReplies.remove(boxReplies.keySet().iterator().next());
+    }
+
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(boxInvocation(request))return true;
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
         if(billingInvocation(request))return true;
@@ -356,7 +393,9 @@ final class WorldSession implements AutoCloseable {
         boolean use=global&&request.service()==9&&request.method()==14&&a.size()==3&&a.get(1)==null;
         boolean learn=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("recipe"));
         boolean harness=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("harness"));
-        if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap)return false;
+        boolean extend=global&&request.service()==9&&request.method()==5;
+        boolean slotUpgrade=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&SlotUpgrades.find(i.config())!=null);
+        if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap&&!slotUpgrade&&!extend)return false;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener))throw new SessionDecoder.Rejected("Missing Town listener");
         boolean resultListener=hatch||forge||unwrap||operation&&(townDialog==null||!Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))||sprite&&request.method()==7;
         if(!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid Town listener");
@@ -367,7 +406,16 @@ final class WorldSession implements AutoCloseable {
             if(!scene.map().town()&&!scene.map().kind().equals("training")&&!staff)throw new IOException("This operation requires a town");
             var store=characters.town(scenes.town());org.tortodrone.storage.TownStore.Result result;
             var priorRecipes=profile.town().recipes();
-            if(open){
+            if(extend){
+                if(a.size()!=3||!(a.get(0) instanceof Long active)||!(a.get(1) instanceof Long unused))throw new SessionDecoder.Rejected("Invalid upgrade extension request");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                result=store.extendUpgrade(characters.accountId(),knight.id(),authRevision,active,unused);
+                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
+            }else if(slotUpgrade){
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                result=store.activateUpgrade(characters.accountId(),knight.id(),authRevision,(Long)a.getFirst());
+                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
+            }else if(open){
                 if(!scene.map().town()||a.size()!=1||request.method()<1||request.method()>4)throw new IOException("Invalid town service");
                 String kind=switch(request.method()){case 1->"OpenAccessorizer";case 2->"OpenCrafter";case 3->"OpenUnbinder";default->"OpenVariantMaker";};
                 openTownDialog(new org.tortodrone.town.TownCatalog.Station("",kind,"","NORMAL","~","~","","",List.of()),null);
@@ -796,12 +844,26 @@ final class WorldSession implements AutoCloseable {
         SessionDecoder.Listener listener=args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener last)?null:last;
         String failure=null;
         int method=request.method();
-        if(method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47) {
+        if(method!=17&&method!=44&&method!=7&&method!=8&&method!=41&&method!=42&&method!=23&&method!=45&&method!=46&&method!=47) {
             // Unknown tools must not leave the stock dashboard waiting for a callback.
-            if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,"This admin tool is not available yet"));}
+            String reason=roles.gameMaster()?"Placeholder: this admin tool is not implemented yet":"Game Master permission required";
+            if(listener!=null){short id=listener.requestId();output.send(()->codec.invocationFailure(oid,id,reason));}
+            else unavailable(reason);
             return;
         }
         if(listener==null||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(method==23?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid admin listener");
+        if(method==17||method==44) {
+            if(args.size()!=(method==17?2:3)||!(args.getFirst() instanceof Integer)||method==44&&!(args.get(1) instanceof Integer))throw new SessionDecoder.Rejected("Invalid progress admin request");
+            try {
+                if(closed||!selected())throw new IOException("Select a knight first");
+                if(!roles.gameMaster())throw new IOException("Game Master permission required");
+                if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                var result=characters.town(scenes.town()).adminProgress(characters.accountId(),knight.id(),authRevision,method,args);
+                townChanged(result);if(method==44)output.send(()->codec.knightProgress(oid,profile));
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+            return;
+        }
         if(method==41||method==42||method==23){
             if(args.size()!=3||!(args.getFirst() instanceof Integer)||!(method==41?args.get(1) instanceof Float:args.get(1) instanceof Integer))throw new SessionDecoder.Rejected("Invalid gear admin request");
             try{
@@ -847,14 +909,12 @@ final class WorldSession implements AutoCloseable {
             if(!roles.gameMaster())return "Game Master permission required";
             if(quantity<1||quantity>ItemCatalog.GRANT_LIMIT)
                 return "Quantity must be between 1 and "+ItemCatalog.GRANT_LIMIT;
-            if(expireDays>0)return "Item expiry is not supported yet";
+            if(expireDays<0||expireDays>3650)return "Expiry must be between 0 and 3650 days";
             var entry=characters.catalog().require(reference.name());
-            if(locked&&!entry.locked()&&!entry.permanent())
-                return "Locked items are not supported for this catalogue entry";
             try{characters.worldProfile(knight.name(),authRevision);}
             catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             var before=visibleProfile();
-            profile=characters.grantItems(characters.username(),knight.name(),entry.config(),quantity,authRevision);
+            profile=characters.createItem(knight.name(),entry.config(),quantity,authRevision,locked,expireDays);
             var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));
             log.info("Created "+quantity+" x "+entry.displayName()+"; knightId="+profile.worldId()+"; config="+entry.config());
             return null;
@@ -1012,6 +1072,9 @@ final class WorldSession implements AutoCloseable {
     }
     private synchronized void feedback(int place,int generation,String reason)throws IOException {
         if(!closed&&subscribed&&entered&&scene.oid()==place&&sceneGeneration==generation)output.send(()->codec.chatFeedback(scene.map().town()?place:partyOid(),reason));
+    }
+    synchronized void unavailable(String reason)throws IOException {
+        if(!closed&&selected()&&subscribed&&entered)feedback(scene.oid(),sceneGeneration,reason);
     }
     /** Crowd ChatService method 2. ListenerMarshaller has failure only, no success response. */
     void broadcast(SessionDecoder.Invocation request)throws IOException {

@@ -52,7 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
-    private boolean depotOnly;
+    private boolean depotOnly,boxesOnly;
     private boolean hazardsOnly;
     private boolean healthOnly;
     private boolean movementOnly;
@@ -97,8 +97,9 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&(args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
+            if(args[0].equals("--seed-boxes"))seedBoxes(Path.of(args[1]));
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.ENERGY,100000,-1,-1);
@@ -110,7 +111,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -126,6 +127,7 @@ public final class CombatRenderingCheck {
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
+        probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
@@ -154,6 +156,81 @@ public final class CombatRenderingCheck {
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
         }
     }
+    private static void seedBoxes(Path data)throws Exception {
+        // Seed only this disposable account; use the shipped approximation tables unchanged.
+        try(var store=new AccountStore(data)) {
+            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
+                store.grantItems("LanPlayer","Town-Knight",item,item.equals("Ticket/Keys/Silver Key")?3:2,-1,-1);
+        }
+    }
+    private int boxIndex,boxBefore,silverBefore,slimeBefore;
+    private Map<Long,Integer> boxInventoryBefore;
+    private boolean boxCancelled;
+    private com.threerings.opengl.gui.aD boxArsenal;
+    private com.threerings.projectx.item.client.F boxMenu;
+    private com.threerings.projectx.item.client.Y boxWindow;
+    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box"};
+    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open","open","open"};
+    private void boxesTick(long now)throws Exception {
+        if(stage==0) {
+            var arsenal=new com.threerings.projectx.item.client.ArsenalPanel(app);
+            boxArsenal=new com.threerings.opengl.gui.aD(app,null);
+            // Retail contains a class and a package both named gui.d; resolve its layout by name.
+            boxArsenal.getClass().getMethod("setLayoutManager",Class.forName("com.threerings.opengl.gui.d.g")).invoke(boxArsenal,Class.forName("com.threerings.opengl.gui.d.c").getConstructor().newInstance());boxArsenal.add(arsenal,Class.forName("com.threerings.opengl.gui.d.c").getField("CENTER").get(null));
+            app.GG().addWindow(boxArsenal,false);boxArsenal.pack();boxArsenal.center();
+            arsenal.e(com.threerings.projectx.item.data.ItemCodes.Group.UPGRADE);started=now;stage=70;return;
+        }
+        String config=BOX_ITEMS[boxIndex];
+        if(stage==70&&now-started>1_000_000_000L) {
+            Item item=null;for(var candidate:app.CT().items)if(candidate.Vx().getName().equals(config)){item=candidate;break;}
+            if(item==null)throw new AssertionError("Missing fixture box: "+config);
+            boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");boxInventoryBefore=boxInventory();
+            boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
+            capture("box-"+boxIndex+"-arsenal-menu");boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
+        }
+        if(stage==71&&now-started>1_000_000_000L) {
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.client.ui.k confirm) {
+                capture("box-"+boxIndex+"-confirmation");
+                if(boxIndex==0&&!boxCancelled) {
+                    ((com.threerings.opengl.gui.e)field(confirm,"awp").get(confirm)).doClick();boxCancelled=true;started=now;stage=74;return;
+                }
+                ((com.threerings.opengl.gui.e)field(confirm,"aCW").get(confirm)).doClick();started=now;stage=72;return;
+            }
+            // A native preference may suppress subsequent confirmations in this disposable process.
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y){started=now;stage=72;return;}
+        }
+        if(stage==74&&now-started>1_000_000_000L) {
+            if(itemCount(config)!=boxBefore||itemCount("Ticket/Keys/Silver Key")!=silverBefore||!boxInventory().equals(boxInventoryBefore))throw new AssertionError("Cancelled opening changed inventory");
+            boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
+        }
+        if(stage==72) {
+            for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y window)boxWindow=window;
+            if(boxWindow==null||now-started<10_000_000_000L)return;
+            var prizes=(List<?>)field(boxWindow,"bvi").get(boxWindow);
+            if(prizes==null||prizes.isEmpty()||boxIndex==3&&prizes.size()<2)throw new AssertionError("Native opening result did not resolve awarded IDs and the guaranteed Surge bundle");
+            int awarded=0;
+            for(Object raw:prizes) {
+                var prize=(com.google.common.collect.Multiset.Entry<?>)raw;Long id=(Long)prize.getElement();
+                var held=app.CT().items.f(id);
+                if(held==null||held.getCount()!=boxInventoryBefore.getOrDefault(id,0)+prize.getCount())throw new AssertionError("Native reveal differs from committed inventory delta");
+                if(boxIndex==4&&!(held instanceof com.threerings.projectx.item.data.FurniItem))throw new AssertionError("Furniture box returned a different subtype");
+                awarded+=prize.getCount();
+            }
+            if(boxIndex==5&&prizes.stream().map(e->app.CT().items.f((Long)((com.google.common.collect.Multiset.Entry<?>)e).getElement())).noneMatch(i->i.VE()!=null&&i.VE()>System.currentTimeMillis()))throw new AssertionError("Disguise bundle lacks persisted native expiration");
+            int silverSpent=boxIndex==0||boxIndex==2?1:0,slimeSpent=boxIndex==1?1:0;
+            if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||boxInventory().values().stream().mapToInt(Integer::intValue).sum()!=boxInventoryBefore.values().stream().mapToInt(Integer::intValue).sum()-1-silverSpent-slimeSpent+awarded)
+                throw new AssertionError("Opening consumed or rewarded the wrong items");
+            capture("box-"+boxIndex+"-native-reward");boxWindow.dismiss();boxWindow=null;boxMenu.dismiss();
+            if(++boxIndex==BOX_ITEMS.length) {
+                boxArsenal.dismiss();finishImages();passed=done=true;
+                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows with shipped approximation pools multi-item Surge/Disguise bundles, furniture and timed rewards");app.shutdown();return;
+            }
+            started=now;stage=70;
+        }
+    }
+    private Map<Long,Integer> boxInventory(){
+        var result=new HashMap<Long,Integer>();for(var item:app.CT().items)result.put(item.Mw(),item.getCount());return result;
+    }
     private void tick(){
         if(done)return;
         try{
@@ -177,6 +254,7 @@ public final class CombatRenderingCheck {
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(peer){peerTick(view);return;}
             if(townDialogsOnly){townDialogsTick(view,now);return;}
+            if(boxesOnly){boxesTick(now);return;}
             if(depotOnly){depotTick(view,now);return;}
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)

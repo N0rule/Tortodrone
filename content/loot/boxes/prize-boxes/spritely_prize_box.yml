@@ -1,0 +1,72 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  spritely_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_cat_tail_ancient_1}]}
+      choices_cat_tail_ancient_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 60, rewards: [{group: choices_cat_tail_ancient_2}]}
+        - {weight: 37, rewards: [{group: choices_drakon_egg_divine_3}]}
+        - {weight: 3, rewards: [{item: maskerraith_egg_snarblepup, quantity: 1, binding: catalog}]}
+      choices_cat_tail_ancient_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cat_tail_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_surge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_vile, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_surge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_vile, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_surge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_vile, quantity: 1, binding: catalog}]}
+      choices_drakon_egg_divine_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: drakon_egg_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: drakon_egg_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maskerraith_egg_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maskerraith_egg_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: seraphynx_egg_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: seraphynx_egg_tan, quantity: 1, binding: catalog}]}

@@ -1,0 +1,100 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  anniversary_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_birthday_candle_blue_4}, {group: choices_birthday_candle_blue_8}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_birthday_candle_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_birthday_candle_blue_5}]}
+        - {weight: 40, rewards: [{group: choices_party_blowout_blue_6}]}
+        - {weight: 40, rewards: [{group: choices_party_hat_blue_7}]}
+        - {weight: 1, rewards: [{item: sprinkle_aura, quantity: 1, binding: catalog}]}
+      choices_birthday_candle_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: birthday_candle_blue, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: birthday_candle_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: birthday_candle_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: birthday_candle_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: birthday_candle_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: birthday_candle_shadow, quantity: 1, binding: catalog}]}
+      choices_party_blowout_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: party_blowout_blue, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_blowout_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_blowout_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_blowout_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_blowout_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: party_blowout_shadow, quantity: 1, binding: catalog}]}
+      choices_party_hat_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: party_hat_blue, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: party_hat_red, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_hat_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_hat_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: party_hat_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: party_hat_shadow, quantity: 1, binding: catalog}]}
+      choices_birthday_candle_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_birthday_candle_blue_9}]}
+        - {weight: 49, rewards: []}
+      choices_birthday_candle_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_birthday_candle_blue_5}]}
+        - {weight: 1, rewards: [{group: choices_party_blowout_blue_6}]}
+        - {weight: 1, rewards: [{group: choices_party_hat_blue_7}]}

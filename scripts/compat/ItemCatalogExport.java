@@ -24,7 +24,7 @@ public final class ItemCatalogExport {
             boolean named=item.name!=null&&!item.name.isBlank()
                 ||item instanceof ItemConfig.AccessoryTicket ticket&&ticket.accessory!=null&&manager.a(AccessoryConfig.class,ticket.accessory)!=null;
             boolean player=config.getConfigId()!=0&&named&&item.icon!=null
-                &&item.expireDays==0&&(item.expireEvent==null||item.expireEvent.isBlank());
+                &&(item.expireEvent==null||item.expireEvent.isBlank());
             boolean levelOther=item instanceof ItemConfig.MetaMineral||item instanceof DungeonItemConfig.Present;
             if(player&&levelOther)slot=WorldProfile.Slot.OTHER;
             else if(player&&item instanceof ItemConfig.Level&&!item.stackable) {
@@ -54,11 +54,12 @@ public final class ItemCatalogExport {
                 ||item instanceof ItemConfig.Craft craft&&craft.locked;
             ItemCatalog.Variant variant=item instanceof ItemConfig.Artifact?ItemCatalog.Variant.SEED_ITEM
                 :levelOther?ItemCatalog.Variant.LEVEL_ITEM
-                :item instanceof ItemConfig.Upgrade?ItemCatalog.Variant.UPGRADE_ITEM:ItemCatalog.Variant.ITEM;
+                :item instanceof ItemConfig.Upgrade?ItemCatalog.Variant.UPGRADE_ITEM
+                :Set.of("Prop","Actor","SpecialProp").contains(item.getClass().getSimpleName())?ItemCatalog.Variant.FURNITURE_ITEM:ItemCatalog.Variant.ITEM;
             Long seed=item instanceof ItemConfig.Artifact artifact?artifact.seed:null;
             entries.add(new ItemCatalog.Entry(config.getName(),config.getConfigId(),item.getClass().getSimpleName(),
                 item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,
-                permanent,locked,variant,seed,model));
+                permanent,locked,variant,seed,model,item.expireDays));
         }
         Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.json"),entries);
         String facts="# Read-only stock metadata; not game assets.\n";
@@ -74,7 +75,7 @@ public final class ItemCatalogExport {
         return Set.of("ActionItem","Craft","Recipe","Mineral","Token","Artifact","Ticket","AccessoryTicket","VariantTicket","InstantAction",
             "SpriteEgg","Harness","Color","Eye","Height","Lockbox","Pack","GuildBond","GuildHallGlobalTicket",
             "RenameGuild","RenameKnight","WrappingPaper","GiftBox","AnimatedAction","Lift","SpawnActor","TokenArtifact",
-            "Capsule","Vial").contains(type);
+            "Capsule","Vial","Upgrade","Prop","Actor","SpecialProp").contains(type);
     }
     static Map<String,Object> convert(Map<String,Object> a,Map<String,Object> b)throws IOException {
         if(!a.keySet().equals(b.keySet()))throw new IOException("Color-dependent argument keys");
@@ -90,6 +91,9 @@ public final class ItemCatalogExport {
         if(a instanceof com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal c
                 &&b instanceof com.threerings.opengl.renderer.config.ColorizationConfig.TransNormal d&&c.clazz==d.clazz&&c.colorization==d.colorization)
             return new StarterCatalog.TransColorization(c.clazz,c.colorization);
+        if(a instanceof com.threerings.opengl.renderer.config.ColorizationConfig.CustomOffsets c
+                &&b instanceof com.threerings.opengl.renderer.config.ColorizationConfig.CustomOffsets d&&c.clazz==d.clazz&&c.offsets.equals(d.offsets))
+            return new StarterCatalog.CustomColorization(c.clazz,c.offsets.hue,c.offsets.saturation,c.offsets.value);
         if(Objects.equals(a,b)&&(a instanceof String||a instanceof Integer||a instanceof Boolean||a instanceof Float f&&Float.isFinite(f)))return a;
         throw new IOException("Unsupported item model value");
     }

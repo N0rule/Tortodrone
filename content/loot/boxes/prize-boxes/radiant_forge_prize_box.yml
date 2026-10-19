@@ -1,0 +1,99 @@
+# Explicit local approximation; unavailable official probabilities are not claimed.
+boxes:
+  radiant_forge_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: https://wiki.spiralknights.com/Forge_Prize_Box and forum node/93101 document incomplete bundles/binding; archived item-frequency
+      audit supplies candidate means. Estimated independent bundles, fixed sparks, crystal quantities with weights 50/49/1, variant/orb weights
+      and 1% extra-upgrade event; not official drop rates; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 50
+          rewards:
+          - item: radiant
+            quantity: 25
+            binding: bound
+        - weight: 49
+          rewards:
+          - item: radiant
+            quantity: 50
+            binding: bound
+        - weight: 1
+          rewards:
+          - item: radiant
+            quantity: 75
+            binding: bound
+      bonus_variant:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 100
+          rewards:
+          - item: variants_1
+            quantity: 1
+            binding: bound
+        - weight: 69
+          rewards:
+          - item: variants_2
+            quantity: 1
+            binding: bound
+        - weight: 30
+          rewards:
+          - item: variants_3
+            quantity: 1
+            binding: bound
+      bonus_orb:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 2
+          rewards:
+          - item: elite
+            quantity: 1
+            binding: bound
+        - weight: 1
+          rewards:
+          - item: eternal
+            quantity: 1
+            binding: bound
+      bonus_upgrade:
+        chance: 1%
+        rolls: 1
+        entries:
+        - weight: 100
+          rewards:
+          - item: trinket_slot
+            quantity: 1
+            binding: bound
+        - weight: 50
+          rewards:
+          - item: weapon_slot
+            quantity: 1
+            binding: bound
+        - weight: 10
+          rewards:
+          - item: coin_bonus
+            quantity: 1
+            binding: bound
+        - weight: 1
+          rewards:
+          - item: heat_bonus_s909083618_3f30bba58f51
+            quantity: 1
+            binding: bound
+      bonus_shadow_key:
+        chance: 0.1%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: shadow_key
+            quantity: 1
+            binding: bound
+    guaranteed:
+    - item: spark_of_life
+      quantity: 10
+      binding: bound

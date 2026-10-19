@@ -1,0 +1,51 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  almire_furniture_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_bench_restored_1}]}
+      choices_bench_restored_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 600, rewards: [{group: choices_bench_restored_2}]}
+        - {weight: 300, rewards: [{group: choices_bench_charred_3}]}
+        - {weight: 70, rewards: [{group: choices_rug_restored_4}]}
+        - {weight: 30, rewards: [{group: choices_tapestry_stand_charred_5}]}
+        - {weight: 2, rewards: [{item: nature_sprite, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cursed_nature_sprite, quantity: 1, binding: catalog}]}
+      choices_bench_restored_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bench_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: table_restored, quantity: 1, binding: catalog}]}
+      choices_bench_charred_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bench_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: table_charred, quantity: 1, binding: catalog}]}
+      choices_rug_restored_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: rug_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tapestry_stand_restored, quantity: 1, binding: catalog}]}
+      choices_tapestry_stand_charred_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tapestry_stand_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rug_charred, quantity: 1, binding: catalog}]}

@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  sapphire:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_sapphire_s115234563_45c5_1}]}
+      choices_node_slime_sapphire_s115234563_45c5_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_sapphire_s115234563_45c5975c5bc3, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_sapphire_s2009219270_ad3e07e12d52, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_sapphire_s3519052914_7835455a39f7, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_sapphire_s4099867681_83728fabe048, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_sapphire_s3990860032_4521fb4cf8e5, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_sapphire_s3185796255_9530ff6e222f, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slime_arms_sapphire, quantity: 1, binding: catalog}]}

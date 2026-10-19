@@ -1,0 +1,70 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  item_2017_prize_box_3:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_polar_prize_box_2016_1}, {group: choices_polar_prize_box_2016_1}, {group: choices_polar_prize_box_2016_1},
+            {group: choices_item_2017_prize_box_4_2}, {group: choices_field_cap_stately_blue_3}, {item: confetti, quantity: 2, binding: catalog},
+            {group: choices_confetti_5}, {group: choices_confetti_6}, {group: choices_confetti_7}]}
+      choices_polar_prize_box_2016_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_prize_box_2016, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_prize_box, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: guild_hall_prize_box, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hunter_prize_box_2016, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wicked_prize_box_2016, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dangerous_prize_box_2016, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: volcanic_prize_box, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glacial_prize_box_2016, quantity: 1, binding: catalog}]}
+      choices_item_2017_prize_box_4_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: item_2017_prize_box_4, quantity: 1, binding: catalog}]}
+        - {weight: 199, rewards: []}
+      choices_field_cap_stately_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_field_cap_stately_blue_4}]}
+        - {weight: 49, rewards: []}
+      choices_field_cap_stately_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: field_cap_stately_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_stately_red, quantity: 1, binding: catalog}]}
+      choices_confetti_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}

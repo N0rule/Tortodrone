@@ -54,7 +54,7 @@ public final class OptionRefusalTest {
                             && response.readInt() == playerOid && response.readShort() == id
                             && response.readUnsignedByte() == 0, "correlated failure callback");
                         check(response.readBoolean() && response.readInt() == 1
-                            && wire.object(response).equals("~Server operation not implemented yet")
+                            && wire.object(response).equals("~Placeholder: this server operation is not implemented yet")
                             && response.available() == 0, "unsupported option refused");
                         writer.send(socket.getOutputStream(), out -> writer.message(out, "PingRequest", id));
                         var pong = wire.frame(socket.getInputStream());

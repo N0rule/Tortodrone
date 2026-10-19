@@ -1,0 +1,131 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  construct_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_mechaknight_suit_blue_1}]}
+      choices_mechaknight_suit_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_mechaknight_suit_blue_2}]}
+        - {weight: 30, rewards: [{group: choices_mechaknight_helm_blue_3}]}
+        - {weight: 20, rewards: [{group: choices_mechaknight_exhaust_blue_4}]}
+        - {weight: 9, rewards: [{group: choices_gunpuppy_helm_blue_7}]}
+        - {weight: 1, rewards: [{group: choices_gear_halo_blue_8}]}
+      choices_mechaknight_suit_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mechaknight_suit_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_suit_volcanic, quantity: 1, binding: catalog}]}
+      choices_mechaknight_helm_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mechaknight_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_mechaknight_exhaust_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_mechaknight_exhaust_blue_5}]}
+        - {weight: 1, rewards: [{group: choices_wrench_blue_6}]}
+      choices_mechaknight_exhaust_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_volcanic, quantity: 1, binding: catalog}]}
+      choices_wrench_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wrench_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_prismatic, quantity: 1, binding: catalog}]}
+      choices_gunpuppy_helm_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gunpuppy_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gunpuppy_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_gear_halo_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_gear_halo_blue_9}]}
+        - {weight: 1, rewards: [{group: choices_wind_up_key_blue_10}]}
+        - {weight: 1, rewards: [{item: pylons_prismatic, quantity: 1, binding: catalog}]}
+      choices_gear_halo_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gear_halo_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_prismatic, quantity: 1, binding: catalog}]}
+      choices_wind_up_key_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wind_up_key_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_prismatic, quantity: 1, binding: catalog}]}

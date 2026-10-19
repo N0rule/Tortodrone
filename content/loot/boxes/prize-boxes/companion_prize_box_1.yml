@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  companion_prize_box_1:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: power_mote, quantity: 1, binding: bound}, {item: divine_mote, quantity: 1, binding: bound}, {item: shadow_mote,
+              quantity: 1, binding: bound}, {item: spark_of_life, quantity: 1, binding: bound}, {group: choices_dim_1}, {group: choices_flawed_2}]}
+      choices_dim_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dim, quantity: 10, binding: bound}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed, quantity: 1, binding: bound}]}
+        - {weight: 99, rewards: []}

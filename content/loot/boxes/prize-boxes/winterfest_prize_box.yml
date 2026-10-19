@@ -1,0 +1,83 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  winterfest_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}, {item: flawed_snowball, quantity: 1, binding: catalog},
+            {group: choices_confetti_winter_1}, {group: choices_flawed_snowball_2}, {group: choices_confetti_winter_3}, {group: choices_flawed_snowball_4},
+            {group: choices_ice_block_5}, {group: choices_trinket_slot_8}]}
+      choices_confetti_winter_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_ice_block_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 200, rewards: [{group: choices_ice_block_6}]}
+        - {weight: 50, rewards: [{group: choices_crest_winter_7}]}
+        - {weight: 3, rewards: [{item: impostoclaus_hat, quantity: 1, binding: catalog}, {item: winterfest_coat, quantity: 1, binding: catalog}]}
+      choices_ice_block_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 20, rewards: [{item: ice_block, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: holiday_presents_green, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: holiday_presents_red, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: holiday_presents_white, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: candle_platter_xmas_green, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: candle_platter_xmas_red, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: candle_platter_xmas_white, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: winterfest_tree_green, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: winterfest_tree_red, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: winterfest_tree_white, quantity: 1, binding: catalog}]}
+      choices_crest_winter_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: crest_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snowfall_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crown_winter, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_9}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

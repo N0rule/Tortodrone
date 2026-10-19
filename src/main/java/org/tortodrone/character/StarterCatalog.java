@@ -11,6 +11,9 @@ public final class StarterCatalog {
     }
     public record Colorization(int value) { }
     public record TransColorization(int clazz,int value) { }
+    public record CustomColorization(int clazz,float hue,float saturation,float value) {
+        public CustomColorization { if(!Float.isFinite(hue)||!Float.isFinite(saturation)||!Float.isFinite(value))throw new IllegalArgumentException("Nonfinite color offsets"); }
+    }
     private record Entry(String category, String parameter, String model, Map<String, String> arguments) { }
     private static final Map<String, Entry> ENTRIES = load();
     private static final Set<String> COSTUMES = Set.of("Blue", "Gold", "Green", "Heavy", "Pink", "Purple", "Red");

@@ -1,0 +1,238 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hololite_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_hololite_helm_cool_1}]}
+      choices_hololite_helm_cool_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 36, rewards: [{group: choices_hololite_helm_cool_2}]}
+        - {weight: 40, rewards: [{group: choices_lite_infantry_plate_cool_3}]}
+        - {weight: 40, rewards: [{group: choices_ear_fins_cool_4}]}
+        - {weight: 37, rewards: [{group: choices_pigtail_plumes_cool_5}]}
+        - {weight: 12, rewards: [{group: choices_holo_back_gear_6}]}
+        - {weight: 12, rewards: [{group: choices_pigtail_plumes_prismatic_7}]}
+        - {weight: 10, rewards: [{group: choices_hololite_shield_cool_8}]}
+        - {weight: 6, rewards: [{group: choices_joy_9}, {group: choices_viridian_10}]}
+        - {weight: 4, rewards: [{group: choices_hololite_helm_prismatic_11}]}
+        - {weight: 3, rewards: [{group: choices_status_symbol_cool_12}]}
+      choices_hololite_helm_cool_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: hololite_helm_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: hololite_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: hololite_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_helm_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: hololite_helm_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: valiant_visor_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: valiant_visor_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: valiant_visor_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: valiant_visor_volcanic, quantity: 1, binding: catalog}]}
+      choices_lite_infantry_plate_cool_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: lite_infantry_plate_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: lite_infantry_plate_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: lite_infantry_plate_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: lite_infantry_plate_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: rogue_lite_cuirass_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: rogue_lite_cuirass_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: rogue_lite_cuirass_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: rogue_lite_cuirass_volcanic, quantity: 1, binding: catalog}]}
+      choices_ear_fins_cool_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: ear_fins_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_fins_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: ear_fins_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_fins_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_fins_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_kits_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: ear_kits_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: ear_kits_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: ear_kits_volcanic, quantity: 1, binding: catalog}]}
+      choices_pigtail_plumes_cool_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: pigtail_plumes_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pigtail_plumes_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: pigtail_plumes_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pigtail_plumes_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pigtail_plumes_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pom_pom_plumes_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: pom_pom_plumes_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pom_pom_plumes_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pom_pom_plumes_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pony_plume_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: pony_plume_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: pony_plume_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: pony_plume_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: high_pony_plume_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: high_pony_plume_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: high_pony_plume_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: high_pony_plume_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: perky_plume_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: perky_plume_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: perky_plume_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: perky_plume_volcanic, quantity: 1, binding: catalog}]}
+      choices_holo_back_gear_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: holo_back_gear, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_back_heart, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_back_knight, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_back_lite, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_back_shield, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_arm_gear, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_arm_heart, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_arm_knight, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_arm_lite, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_arm_shield, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_chest_gear, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_chest_heart, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_chest_knight, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_chest_lite, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: holo_chest_shield, quantity: 1, binding: catalog}]}
+      choices_pigtail_plumes_prismatic_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pigtail_plumes_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pom_pom_plumes_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_plume_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: high_pony_plume_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: perky_plume_prismatic, quantity: 1, binding: catalog}]}
+      choices_hololite_shield_cool_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{item: hololite_shield_cool, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: hololite_shield_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_military, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_regal, quantity: 1, binding: catalog}]}
+        - {weight: 333, rewards: [{item: hololite_shield_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1000, rewards: [{item: hololite_shield_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 666, rewards: [{item: hololite_shield_volcanic, quantity: 1, binding: catalog}]}
+      choices_joy_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: joy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bright, quantity: 1, binding: catalog}]}
+      choices_viridian_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: viridian, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chartreuse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: magenta, quantity: 1, binding: catalog}]}
+      choices_hololite_helm_prismatic_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: hololite_helm_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valiant_visor_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: lite_infantry_plate_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rogue_lite_cuirass_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hololite_shield_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_arcs, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_fins_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_kits_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_tags, quantity: 1, binding: catalog}]}
+      choices_status_symbol_cool_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: status_symbol_cool, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_military, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: status_symbol_prismatic, quantity: 1, binding: catalog}]}

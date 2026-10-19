@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hunter:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_hunter_s718137857_9ad351_1}]}
+      choices_node_slime_hunter_s718137857_9ad351_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_hunter_s718137857_9ad351081c72, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_hunter_s3356977284_30cd50664a9d, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_hunter_s3112738608_83a104d170af, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_hunter_s3694347935_ab6fe4062dee, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_hunter_s1365745470_ed0c8714e95a, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_hunter_s2343677597_e2820495d1f1, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slime_arms_hunter, quantity: 1, binding: catalog}]}

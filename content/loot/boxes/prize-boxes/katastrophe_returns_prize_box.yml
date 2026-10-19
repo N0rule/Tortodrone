@@ -1,0 +1,88 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  katastrophe_returns_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_fur_coat_shadow_1}]}
+      choices_fur_coat_shadow_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 35, rewards: [{group: choices_fur_coat_shadow_2}]}
+        - {weight: 25, rewards: [{group: choices_fur_cap_shadow_3}]}
+        - {weight: 22, rewards: [{group: choices_kat_suit_dark_4}]}
+        - {weight: 15, rewards: [{group: choices_seraph_tenna_prismatic_5}]}
+        - {weight: 2, rewards: [{group: choices_pipe_and_mustache_shadow_6}]}
+        - {weight: 1, rewards: [{group: choices_dragon_wings_cursed_7}]}
+      choices_fur_coat_shadow_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_coat_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brigandine_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_shadow, quantity: 1, binding: catalog}]}
+      choices_fur_cap_shadow_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crescent_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_shadow, quantity: 1, binding: catalog}]}
+      choices_kat_suit_dark_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: kat_suit_dark, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: kat_suit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: kat_suit_tan, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: kat_suit_white, quantity: 1, binding: catalog}]}
+      choices_seraph_tenna_prismatic_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: seraph_tenna_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dazzling_gem_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dread_seal, quantity: 1, binding: catalog}]}
+      choices_pipe_and_mustache_shadow_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pipe_and_mustache_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heavenly_halo_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_shadow, quantity: 1, binding: catalog}]}
+      choices_dragon_wings_cursed_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: dragon_wings_cursed, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: seraphynx_wings_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dreadful_aura, quantity: 1, binding: catalog}]}

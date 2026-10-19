@@ -1,0 +1,91 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  frosty_present:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}, {item: flawed_snowball, quantity: 1, binding: catalog},
+            {group: choices_confetti_winter_1}, {group: choices_flawed_snowball_2}, {group: choices_confetti_winter_3}, {group: choices_flawed_snowball_4},
+            {group: choices_mustache_freeze_5}]}
+      choices_confetti_winter_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_mustache_freeze_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_mustache_freeze_6}]}
+        - {weight: 35, rewards: [{group: choices_mohawk_freeze_7}]}
+        - {weight: 23, rewards: [{group: choices_field_cap_freeze_8}]}
+        - {weight: 2, rewards: [{group: choices_trojan_helm_freeze_9}]}
+      choices_mustache_freeze_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mustache_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rebreather_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: goggles_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_guards_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wide_vee_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binoculars_freeze, quantity: 1, binding: catalog}]}
+      choices_mohawk_freeze_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: mohawk_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_mohawk_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maedate_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_booster_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shoulder_booster_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: monocle_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_fin_freeze, quantity: 1, binding: catalog}]}
+      choices_field_cap_freeze_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: field_cap_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vial_bandolier_freeze, quantity: 1, binding: catalog}]}
+      choices_trojan_helm_freeze_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trojan_helm_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_freeze, quantity: 1, binding: catalog}]}

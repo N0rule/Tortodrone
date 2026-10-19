@@ -1,0 +1,69 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  gremlin_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_gremlin_suit_blue_1}, {group: choices_gremlin_disguise_5}]}
+      choices_gremlin_suit_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 50, rewards: [{group: choices_gremlin_suit_blue_2}]}
+        - {weight: 35, rewards: [{group: choices_gremlin_helm_blue_3}]}
+        - {weight: 15, rewards: [{group: choices_gremlin_goggles_blue_4}]}
+        - {weight: 1, rewards: [{item: drakon_egg_gun_pup, quantity: 1, binding: catalog}]}
+      choices_gremlin_suit_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gremlin_suit_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_suit_volcanic, quantity: 1, binding: catalog}]}
+      choices_gremlin_helm_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gremlin_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_gremlin_goggles_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gremlin_goggles_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gremlin_goggles_vol, quantity: 1, binding: catalog}]}
+      choices_gremlin_disguise_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gremlin_disguise, quantity: 1, binding: catalog}]}
+        - {weight: 99, rewards: []}

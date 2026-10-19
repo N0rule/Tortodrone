@@ -1,0 +1,407 @@
+# Explicit local approximation; unavailable official probabilities are not claimed.
+boxes:
+  aerotech_mk_ii_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: 'https://wiki.spiralknights.com/AeroTech_Mk_II_Prize_Box_Promotion_August_2026 and official forum node/125556: published 1/2/5/5/8/15/15/30/19
+      category percentages, distribution list colors override conflicting introductory text; equal within-category odds estimated; unbound; see
+      docs/content.md'
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - group: aura
+        - weight: 2
+          rewards:
+          - group: eyes
+        - weight: 5
+          rewards:
+          - group: shields
+        - weight: 5
+          rewards:
+          - group: ankles
+        - weight: 8
+          rewards:
+          - group: backs
+        - weight: 15
+          rewards:
+          - group: helms
+        - weight: 15
+          rewards:
+          - group: armor
+        - weight: 30
+          rewards:
+          - group: accessories
+        - weight: 19
+          rewards:
+          - group: fins
+      aura:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: mayday_aura
+            quantity: 1
+            binding: catalog
+      eyes:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: propeller
+            quantity: 1
+            binding: catalog
+      shields:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: airbraker_shield_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: airbraker_shield_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: airbraker_shield_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: airbraker_shield_tech_azure
+            quantity: 1
+            binding: catalog
+      ankles:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: ankle_spoilers_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_spoilers_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_spoilers_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_spoilers_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_wings_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_wings_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_wings_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_wings_tech_azure
+            quantity: 1
+            binding: catalog
+      backs:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: chaff_pack_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: chaff_pack_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: chaff_pack_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: chaff_pack_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: swing_wings_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: swing_wings_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: swing_wings_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: swing_wings_tech_azure
+            quantity: 1
+            binding: catalog
+      helms:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: aero_helm_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_helm_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_helm_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_helm_tech_azure
+            quantity: 1
+            binding: catalog
+      armor:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: aero_armor_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_armor_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_armor_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_armor_tech_azure
+            quantity: 1
+            binding: catalog
+      accessories:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: top_prop_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: top_prop_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: top_prop_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: top_prop_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: com_dish_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: com_dish_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: com_dish_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: com_dish_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: handy_propellors_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: handy_propellors_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: handy_propellors_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: handy_propellors_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: helm_wings_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: helm_wings_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: helm_wings_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: helm_wings_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: pop_tennas_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: pop_tennas_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: pop_tennas_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: pop_tennas_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: tailspin_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: tailspin_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: tailspin_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: tailspin_tech_azure
+            quantity: 1
+            binding: catalog
+      fins:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: aero_spoiler_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_spoiler_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_spoiler_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: aero_spoiler_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_fins_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_fins_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_fins_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: ankle_fins_tech_azure
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: double_aero_fin_tech_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: double_aero_fin_tech_violet
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: double_aero_fin_tech_yellow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: double_aero_fin_tech_azure
+            quantity: 1
+            binding: catalog

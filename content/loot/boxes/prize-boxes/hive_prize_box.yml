@@ -1,0 +1,282 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hive_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_arthro_pod_cool_1}]}
+      choices_arthro_pod_cool_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 24, rewards: [{group: choices_arthro_pod_cool_2}]}
+        - {weight: 24, rewards: [{group: choices_hexoskeleton_cool_3}]}
+        - {weight: 16, rewards: [{group: choices_ant_tennas_cool_4}]}
+        - {weight: 12, rewards: [{group: choices_beetlebrow_horn_cool_5}]}
+        - {weight: 5, rewards: [{group: choices_tympanal_panels_cool_6}]}
+        - {weight: 6, rewards: [{group: choices_crest_ant_7}]}
+        - {weight: 5, rewards: [{group: choices_roly_poly_cool_8}]}
+        - {weight: 2, rewards: [{group: choices_hive_wings_cool_9}]}
+        - {weight: 1, rewards: [{group: choices_hexagram_wings_cool_10}]}
+        - {weight: 2, rewards: [{group: choices_bug_11}, {group: choices_orange_12}]}
+        - {weight: 2, rewards: [{group: choices_hive_helm_prismatic_13}]}
+        - {weight: 1, rewards: [{item: hive_aura, quantity: 1, binding: catalog}]}
+      choices_arthro_pod_cool_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: arthro_pod_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: arthro_pod_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: arthro_pod_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: arthro_pod_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: arthro_pod_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: arthro_pod_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hex_visor_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hex_visor_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hex_visor_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hex_visor_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hex_visor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_helm_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hive_helm_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_helm_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_hexoskeleton_cool_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: hexoskeleton_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexoskeleton_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexoskeleton_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hexoskeleton_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexoskeleton_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexoskeleton_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pollinator_plate_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pollinator_plate_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pollinator_plate_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pollinator_plate_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pollinator_plate_volcanic, quantity: 1, binding: catalog}]}
+      choices_ant_tennas_cool_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ant_tennas_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ant_tennas_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ant_tennas_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ant_tennas_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ant_tennas_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bar_tennas_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bar_tennas_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bar_tennas_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bar_tennas_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bee_tennas_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bee_tennas_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bee_tennas_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bee_tennas_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bug_tennas_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bug_tennas_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bug_tennas_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: bug_tennas_volcanic, quantity: 1, binding: catalog}]}
+      choices_beetlebrow_horn_cool_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: beetlebrow_horn_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: beetlebrow_horn_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: beetlebrow_horn_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: beetlebrow_horn_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: beetlebrow_horn_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexules_horns_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexules_horns_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hexules_horns_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexules_horns_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: stagsect_mandible_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: stagsect_mandible_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stagsect_mandible_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: stagsect_mandible_volcanic, quantity: 1, binding: catalog}]}
+      choices_tympanal_panels_cool_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: tympanal_panels_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tympanal_panels_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tympanal_panels_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tympanal_panels_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: tympanal_panels_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tympanal_panels_volcanic, quantity: 1, binding: catalog}]}
+      choices_crest_ant_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crest_ant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_bee, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_beetle, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_butterfly, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_moth, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_wasp, quantity: 1, binding: catalog}]}
+      choices_roly_poly_cool_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: roly_poly_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: roly_poly_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: roly_poly_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: roly_poly_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: roly_poly_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: roly_poly_volcanic, quantity: 1, binding: catalog}]}
+      choices_hive_wings_cool_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: hive_wings_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_wings_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hive_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hive_wings_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hive_wings_volcanic, quantity: 1, binding: catalog}]}
+      choices_hexagram_wings_cool_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: hexagram_wings_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexagram_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexagram_wings_honey, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hexagram_wings_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hexagram_wings_volcanic, quantity: 1, binding: catalog}]}
+      choices_bug_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bug, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bee, quantity: 1, binding: catalog}]}
+      choices_orange_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: turquoise_s2927770914_e1a05e650809, quantity: 1, binding: catalog}]}
+      choices_hive_helm_prismatic_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 8, rewards: [{item: hive_helm_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 8, rewards: [{item: hex_visor_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 8, rewards: [{item: arthro_pod_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 12, rewards: [{item: pollinator_plate_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 12, rewards: [{item: hexoskeleton_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ant_tennas_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bee_tennas_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bar_tennas_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: bug_tennas_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: stagsect_mandible_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: beetlebrow_horn_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexules_horns_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: tympanal_panels_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hexagram_wings_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: hive_wings_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: roly_poly_prismatic, quantity: 1, binding: catalog}]}
