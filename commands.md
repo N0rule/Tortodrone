@@ -27,6 +27,16 @@ Type a message without a slash command to speak in the current scene.
 | `/unignore player name (/unmute)` | `/unmute Jane` | Remove a knight from the client mute list. |
 | `/clear` | `/clear` | Clear the local chat display and history. |
 
+### Friends
+
+Use the **Social** panel’s **Add Friend** action, or choose **Befriend** from a
+knight’s menu, to send a friend request with an optional message. The recipient
+accepts it in mail, or deletes the request to decline. Accepted friends appear
+in both knights’ lists, with online/offline status and their current scene;
+the lists survive reconnects and server restarts. Choose **Unfriend** from a
+friend’s menu to remove the friendship from both lists. The limit is 250 friends
+per knight. Joining a friend’s scene is not available yet.
+
 ### Party, inspection, and equipment
 
 | Command (aliases) | Example | What it does |

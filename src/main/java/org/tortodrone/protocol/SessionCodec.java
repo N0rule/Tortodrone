@@ -549,6 +549,21 @@ public final class SessionCodec {
             type(out,"com.threerings.projectx.social.data.Notification$TradeRequest");name(out,sender);
         }else {eventHeader(out,"EntryRemovedEvent",playerOid);string(out,"notifications");value(out,"TRADE_REQ:"+sender);}});
     }
+    public record FriendView(int world,String name,int color,String location,long lastSession) { }
+    /** Native social UI observes entry events, including online/offline changes and renames. */
+    public byte[] friends(int oid,List<FriendView> before,List<FriendView> after)throws IOException {
+        var previous=new java.util.TreeMap<String,FriendView>(String.CASE_INSENSITIVE_ORDER);for(var friend:before)previous.put(friend.name(),friend);
+        var current=new java.util.TreeMap<String,FriendView>(String.CASE_INSENSITIVE_ORDER);for(var friend:after)current.put(friend.name(),friend);
+        var events=new java.util.ArrayList<Writer>();
+        for(var friend:before)if(!current.containsKey(friend.name()))events.add(out->{partyEntry(out,oid,"friends","EntryRemovedEvent");name(out,friend.name());});
+        for(var friend:after)if(!friend.equals(previous.get(friend.name())))events.add(out->{partyEntry(out,oid,"friends",previous.containsKey(friend.name())?"EntryUpdatedEvent":"EntryAddedEvent");
+            type(out,"com.threerings.projectx.social.data.FriendEntry");name(out,friend.name());out.writeInt(friend.world());
+            if(friend.location()==null){type(out,"com.threerings.projectx.social.data.Whereabouts$Offline");out.writeLong(friend.lastSession());}
+            else {type(out,"com.threerings.projectx.social.data.Whereabouts$Online");string(out,friend.location());out.writeInt(0);out.writeInt(0);}
+            out.writeInt(friend.color());
+        });
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(events.size());for(var event:events)event.write(out);});
+    }
     public byte[] tradeDialog(int playerOid,TradeView view,long created)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
             attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
@@ -606,7 +621,7 @@ public final class SessionCodec {
 
     public byte[] townState(int oid,WorldProfile profile)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(5);
-            attribute(out,oid,"newMailInfo",o->{type(o,"com.threerings.presents.dobj.DSet");var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o," 7");value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",3));}});
+            attribute(out,oid,"newMailInfo",o->{type(o,"com.threerings.presents.dobj.DSet");var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o,m.sender());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));}});
             attribute(out,oid,"recipes",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().recipes().size());for(var recipe:profile.town().recipes()){type(o,"com.threerings.projectx.craft.data.Recipe");o.writeBoolean(true);o.writeLong(recipe.id());string(o,recipe.config());}});
             attribute(out,oid,"harnesses",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().harnesses().size());for(var h:profile.town().harnesses())harness(o,h);});
             attribute(out,oid,"sprites",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().sprites().size());for(var sprite:profile.town().sprites())sprite(o,profile,sprite);});
@@ -647,10 +662,11 @@ public final class SessionCodec {
         else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
         else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}
-        else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out," 7");out.writeLong(m.sent());string(out,m.subject());string(out,m.body());
-            if(m.claimed()||m.item()==null&&m.crowns()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
+        else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out,m.sender());out.writeLong(m.sent());string(out,m.subject());string(out,m.body());
+            if(m.friendRequest()){type(out,"com.threerings.projectx.uplink.data.FriendRequest");out.writeInt(m.friendWorld());}
+            else if(m.claimed()||m.item()==null&&m.crowns()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
                 out.writeBoolean(m.item()!=null);if(m.item()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(m.item().config(),Map.of()));out.writeInt(m.item().count());}out.writeInt(m.crowns());out.writeInt(0);}
-            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",3));out.writeByte(m.read()?0:1);
+            value(out,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));out.writeByte((m.read()?0:1)|(m.claimed()?2:0));
         }else value(out,value);
     }
     private void listing(DataOutputStream out,org.tortodrone.town.AuctionState.Listing a)throws IOException{

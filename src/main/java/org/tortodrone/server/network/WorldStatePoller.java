@@ -7,7 +7,7 @@ import java.util.concurrent.*;
 import org.tortodrone.character.CharacterStore;
 import org.tortodrone.character.WorldProfile;
 
-/** One metadata read per deployment every 250 ms, outside scene and session locks.
+/** Batched world and social reads per deployment every 250 ms, outside scene and session locks.
  * The existing account watcher/transactional permission checks remain authoritative.
  * Full inventory is read only for a changed revision. No idle polling thread survives. */
 final class WorldStatePoller {
@@ -64,6 +64,10 @@ final class WorldStatePoller {
             try {
                 var states=members.getFirst().characters.worldStates();
                 for(var member:members)try{member.session.refreshState(member,states.get(member.worldId));}
+                    catch(IOException|RuntimeException failure){member.session.refreshFailed(member,failure);}
+                var friends=members.getFirst().characters.friends().snapshot();
+                var online=WorldSession.friendPresence(members.getFirst().characters.worldStorageFile());
+                for(var member:members)try{member.session.refreshFriends(member,friends,online);}
                     catch(IOException|RuntimeException failure){member.session.refreshFailed(member,failure);}
                 if(members.stream().anyMatch(m->m.session.wantsExchange())){
                     var book=members.getFirst().characters.exchange().book();

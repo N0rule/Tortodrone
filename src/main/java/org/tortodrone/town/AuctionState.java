@@ -14,5 +14,10 @@ public final class AuctionState {
     }
     public record Page(int pages,List<Listing> listings){public Page{listings=List.copyOf(listings);}}
     public record Update(Listing listing,String message) { }
-    public record Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,boolean claimed,boolean read) { }
+    public record Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,boolean claimed,boolean read,int friendWorld,String friendName) {
+        public Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,boolean claimed,boolean read){this(id,world,sent,subject,body,crowns,item,claimed,read,0,null);}
+        public boolean friendRequest(){return friendWorld>0;}
+        public String sender(){return friendRequest()?friendName:" 7";}
+        public int nativeType(){return friendRequest()?1:3;}
+    }
 }

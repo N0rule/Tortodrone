@@ -18,6 +18,9 @@ final class WorldSession implements AutoCloseable {
     private SceneChat.Membership chat;
     private String awayMessage;
     private final Map<Integer,SceneChat.Membership> channelChats=new HashMap<>();
+    private List<SessionCodec.FriendView> publishedFriends=List.of();
+    private volatile boolean friendOnline;
+    private volatile String friendLocation="~";
     private PlayerTrades trades;
     private PlayerTrades.Member tradeMember;
     private final Socket socket;
@@ -266,6 +269,36 @@ final class WorldSession implements AutoCloseable {
             var house=characters.auction(scenes.town());var result=auction?house.operate(characters.accountId(),knight.id(),authRevision,method,a,roles.gameMaster()):house.mail(characters.accountId(),knight.id(),authRevision,method,a);
             townChanged(result);if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
+    }
+
+    synchronized boolean friendInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.service()!=12||(request.method()!=1&&request.method()!=2))return false;
+        var args=request.arguments();boolean invite=request.method()==1;
+        if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=(invite?4:2)||!(args.getFirst() instanceof String name)
+                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")
+                ||invite&&(!(args.get(1) instanceof String)||!(args.get(2) instanceof String)))throw new SessionDecoder.Rejected("Invalid friend-list request");
+        try {
+            if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
+            var friends=characters.friends();
+            if(invite){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));}
+            else {friends.remove(characters.accountId(),knight.id(),authRevision,name);profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));}
+            output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+        return true;
+    }
+
+    /** Only volatile presence is read under ACTIVE; no peer session monitor is acquired. */
+    static Map<Integer,String> friendPresence(java.nio.file.Path storage) {
+        var result=new HashMap<Integer,String>();
+        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.friendLocation);}}
+        return Map.copyOf(result);
+    }
+    synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,String> online)throws IOException {
+        if(closed||!selected()||registration!=null&&persistence!=registration)return;
+        if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=authRevision)throw new IOException("Knight or account changed; reconnect");
+        if(snapshot.revisions().getOrDefault(profile.worldId(),-1L)<profile.revision())return;
+        var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.get(p.world()),p.lastSession())).toList();
+        if(!next.equals(publishedFriends)){var previous=publishedFriends;output.send(()->codec.friends(oid,previous,next));publishedFriends=next;}
     }
 
     /** Compatibility only: the stock Depot constructs its purchase panel using this service.
@@ -641,11 +674,14 @@ final class WorldSession implements AutoCloseable {
             }
         }
         created = SceneClock.now();
+        if(characters.hasWorldStorage()){characters.friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
+        friendOnline=true;
         attach();
         partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);partyState();
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.townState(oid,profile));
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
+        if(characters.hasWorldStorage())refreshFriends(null,characters.friends().snapshot(),friendPresence(characters.worldStorageFile()));
         refreshParty();
         receiverChanged(receivers);
         log.selected(knight.id(),profile.worldId(),knight.name());
@@ -1083,6 +1119,7 @@ final class WorldSession implements AutoCloseable {
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
+        friendLocation=scene.map().name();
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);
@@ -1254,6 +1291,7 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.chat(message.personal()?oid:scene.map().town()?place:partyOid(),message));return true;
     }
     private void leaveChat(){
+        friendLocation="~";
         townDialog=null;townSource=null;townService++;
         if(tradeMember!=null){trades.leave(tradeMember);tradeMember=null;}
         if(chat!=null){chat.close();chat=null;}
@@ -1454,6 +1492,7 @@ final class WorldSession implements AutoCloseable {
     synchronized boolean takeRenameDisconnect(){boolean requested=renameDisconnect;renameDisconnect=false;return requested;}
 
     @Override public synchronized void close() {
+        friendOnline=false;
         for(var member:channelChats.values())member.close();channelChats.clear();
         leaveChat();
         closed = true;
