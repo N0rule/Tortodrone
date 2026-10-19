@@ -1,0 +1,142 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  running_wild_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_wolver_mask_tawny_1}]}
+      choices_wolver_mask_tawny_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 34, rewards: [{group: choices_wolver_mask_tawny_2}]}
+        - {weight: 30, rewards: [{group: choices_large_fireworks_beast_4}, {group: choices_cloak_tawny_5}]}
+        - {weight: 30, rewards: [{group: choices_large_fireworks_beast_4}, {group: choices_fur_cap_tawny_6}]}
+        - {weight: 4, rewards: [{item: alpha_claw_gauntlet, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: wild_bone_pendant, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{group: choices_doggie_tail_tawny_7}]}
+        - {weight: 25, rewards: [{group: choices_alpha_vertical_vents_tawny_9}]}
+        - {weight: 25, rewards: [{group: choices_treat_pouch_tawny_11}]}
+        - {weight: 20, rewards: [{group: choices_large_fireworks_beast_4}, {group: choices_wolver_chops_tawny_13}]}
+        - {weight: 2, rewards: [{item: wild_aura, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: seraphynx_egg_love_puppy, quantity: 1, binding: catalog}]}
+      choices_wolver_mask_tawny_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wolver_mask_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{group: choices_wolver_mask_blue_3}]}
+      choices_wolver_mask_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: wolver_mask_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_mask_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wolver_mask_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_mask_volcanic, quantity: 1, binding: catalog}]}
+      choices_large_fireworks_beast_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_beast, quantity: 1, binding: catalog}, {item: small_fireworks_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_beast, quantity: 1, binding: catalog}, {item: medium_fireworks_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_beast, quantity: 1, binding: catalog}, {item: large_fireworks_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_beast, quantity: 3, binding: catalog}, {item: small_fireworks_red, quantity: 1, binding: catalog},
+            {item: small_fireworks_beast, quantity: 1, binding: catalog}, {item: small_fireworks_red, quantity: 3, binding: catalog}]}
+      choices_cloak_tawny_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cloak_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_tawny, quantity: 1, binding: catalog}]}
+      choices_fur_cap_tawny_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: fur_cap_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_tawny, quantity: 1, binding: catalog}]}
+      choices_doggie_tail_tawny_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: doggie_tail_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{group: choices_doggie_tail_blue_8}]}
+      choices_doggie_tail_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: doggie_tail_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: doggie_tail_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: doggie_tail_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: doggie_tail_volcanic, quantity: 1, binding: catalog}]}
+      choices_alpha_vertical_vents_tawny_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: alpha_vertical_vents_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{group: choices_alpha_vertical_vents_blue_10}]}
+      choices_alpha_vertical_vents_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: alpha_vertical_vents_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: alpha_vertical_vents_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: alpha_vertical_vents_volcanic, quantity: 1, binding: catalog}]}
+      choices_treat_pouch_tawny_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: treat_pouch_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{group: choices_treat_pouch_blue_12}]}
+      choices_treat_pouch_blue_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: treat_pouch_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: treat_pouch_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: treat_pouch_volcanic, quantity: 1, binding: catalog}]}
+      choices_wolver_chops_tawny_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: wolver_chops_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: canteen_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_tawny, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vitakit_tawny, quantity: 1, binding: catalog}]}

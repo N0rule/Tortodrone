@@ -1,0 +1,88 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  rooster_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_fowl_cowl_black_1}]}
+      choices_fowl_cowl_black_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 30, rewards: [{group: choices_fowl_cowl_black_2}]}
+        - {weight: 25, rewards: [{group: choices_fowl_cloak_black_3}]}
+        - {weight: 15, rewards: [{group: choices_rooster_tail_black_4}]}
+        - {weight: 27, rewards: [{group: choices_black_rooster_snipe_lazy_5}]}
+        - {weight: 3, rewards: [{group: choices_feathered_aura_black_9}]}
+      choices_fowl_cowl_black_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: fowl_cowl_black, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fowl_cowl_brown, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fowl_cowl_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fowl_cowl_fiery, quantity: 1, binding: catalog}]}
+      choices_fowl_cloak_black_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: fowl_cloak_black, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fowl_cloak_brown, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fowl_cloak_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fowl_cloak_fiery, quantity: 1, binding: catalog}]}
+      choices_rooster_tail_black_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: rooster_tail_black, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rooster_tail_brown, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rooster_tail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rooster_tail_fiery, quantity: 1, binding: catalog}]}
+      choices_black_rooster_snipe_lazy_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 8, rewards: [{group: choices_black_rooster_snipe_lazy_6}]}
+        - {weight: 1, rewards: [{group: choices_black_rooster_snipe_plump_7}]}
+        - {weight: 1, rewards: [{group: choices_black_rooster_snipe_wandering_8}]}
+      choices_black_rooster_snipe_lazy_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: black_rooster_snipe_lazy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: brown_rooster_snipe_lazy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: gold_rooster_snipe_lazy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fiery_rooster_snipe_lazy, quantity: 1, binding: catalog}]}
+      choices_black_rooster_snipe_plump_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: black_rooster_snipe_plump, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: brown_rooster_snipe_plump, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: gold_rooster_snipe_plump, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fiery_rooster_snipe_plump, quantity: 1, binding: catalog}]}
+      choices_black_rooster_snipe_wandering_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: black_rooster_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: brown_rooster_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: gold_rooster_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fiery_rooster_snipe_wandering, quantity: 1, binding: catalog}]}
+      choices_feathered_aura_black_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 10, rewards: [{item: feathered_aura_black, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: feathered_aura_brown, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: feathered_aura_gold, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: feathered_aura_fiery, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: feathered_aura_prismatic, quantity: 1, binding: catalog}]}

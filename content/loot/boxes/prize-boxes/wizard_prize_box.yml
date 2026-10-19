@@ -1,0 +1,172 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  wizard_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_charming_cap_cool_1}]}
+      choices_charming_cap_cool_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 22, rewards: [{group: choices_charming_cap_cool_2}]}
+        - {weight: 26, rewards: [{group: choices_magister_robe_cool_3}]}
+        - {weight: 13, rewards: [{group: choices_grizzled_gorget_cool_4}]}
+        - {weight: 13, rewards: [{group: choices_cauldron_curse_5}]}
+        - {weight: 13, rewards: [{group: choices_broom_cool_6}]}
+        - {weight: 5, rewards: [{group: choices_spell_book_cool_7}]}
+        - {weight: 3, rewards: [{group: choices_wanderer_s_wand_cool_8}]}
+        - {weight: 2, rewards: [{group: choices_lavender_9}, {group: choices_moon_10}]}
+        - {weight: 1, rewards: [{item: sorcerer_aura, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{group: choices_charming_cap_prismatic_11}]}
+      choices_charming_cap_cool_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: charming_cap_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: charming_cap_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: charming_cap_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: charming_cap_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: charming_cap_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: casting_cone_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: casting_cone_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: casting_cone_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: casting_cone_volcanic, quantity: 1, binding: catalog}]}
+      choices_magister_robe_cool_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: magister_robe_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: magister_robe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: magister_robe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: magister_robe_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: magister_robe_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sorcerer_robe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sorcerer_robe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sorcerer_robe_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sorcerer_robe_volcanic, quantity: 1, binding: catalog}]}
+      choices_grizzled_gorget_cool_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: grizzled_gorget_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: grizzled_gorget_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grizzled_gorget_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: grizzled_gorget_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: grizzled_gorget_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: grizzled_gorget_grey, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: grizzled_gorget_white, quantity: 1, binding: catalog}]}
+      choices_cauldron_curse_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: cauldron_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_fire, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cauldron_luck, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_poison, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_shock, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_sleep, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: cauldron_stun, quantity: 1, binding: catalog}]}
+      choices_broom_cool_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: broom_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: broom_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: broom_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: broom_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: broom_volcanic, quantity: 1, binding: catalog}]}
+      choices_spell_book_cool_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: spell_book_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: spell_book_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spell_book_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: spell_book_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: spell_book_volcanic, quantity: 1, binding: catalog}]}
+      choices_wanderer_s_wand_cool_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: wanderer_s_wand_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wanderer_s_wand_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_military, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_regal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wanderer_s_wand_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: wanderer_s_wand_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: wanderer_s_wand_volcanic, quantity: 1, binding: catalog}]}
+      choices_lavender_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: lavender, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: violet, quantity: 1, binding: catalog}]}
+      choices_moon_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: moon, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sun, quantity: 1, binding: catalog}]}
+      choices_charming_cap_prismatic_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 11, rewards: [{item: charming_cap_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 11, rewards: [{item: casting_cone_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: magister_robe_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: sorcerer_robe_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: grizzled_gorget_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: broom_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: spell_book_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 13, rewards: [{item: wanderer_s_wand_prismatic, quantity: 1, binding: catalog}]}

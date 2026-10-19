@@ -9,10 +9,13 @@ public final class ItemCatalog {
     public static final int INVENTORY_LIMIT = 256, GRANT_LIMIT = 20;
     public enum PlayerColor { VALUE }
     /** Stock Item subclasses which carry state beyond the common Item fields. */
-    public enum Variant { ITEM, LEVEL_ITEM, SEED_ITEM, UPGRADE_ITEM }
+    public enum Variant { ITEM, LEVEL_ITEM, SEED_ITEM, UPGRADE_ITEM, FURNITURE_ITEM }
     public record Entry(String config, int stockId, String type, String nameKey, int rarity,
             boolean stackable, WorldProfile.Slot slot, boolean bindOnEquip, boolean permanent,
-            boolean locked, Variant variant, Long seed, Map<String,Object> modelArgs) {
+            boolean locked, Variant variant, Long seed, Map<String,Object> modelArgs, int expireDays) {
+        public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,boolean bindOnEquip,boolean permanent,boolean locked,Variant variant,Long seed,Map<String,Object> modelArgs) {
+            this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,permanent,locked,variant,seed,modelArgs,0);
+        }
         public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,
                 boolean bindOnEquip,boolean permanent,Map<String,Object> modelArgs) {
             this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,permanent,stockLocked(type,permanent),Variant.ITEM,null,modelArgs);
@@ -22,6 +25,7 @@ public final class ItemCatalog {
         }
         public Entry {
             Objects.requireNonNull(variant); modelArgs = Map.copyOf(modelArgs);
+            if(expireDays<0||expireDays>3650||expireDays>0&&(permanent||stackable))throw new IllegalArgumentException("Invalid expiring item metadata");
             if ((variant==Variant.SEED_ITEM)!=(seed!=null)) throw new IllegalArgumentException("Seed item metadata mismatch");
             if (permanent && !locked) throw new IllegalArgumentException("Permanent stock items are locked");
         }
@@ -30,12 +34,14 @@ public final class ItemCatalog {
         public String unavailableReason() {
             if (slot == null) return "No verified inventory slot";
             if (variant == Variant.UPGRADE_ITEM && (!type.equals("Upgrade") || slot != WorldProfile.Slot.OTHER)) return "Upgrade requires its native inventory representation";
+            if (variant == Variant.FURNITURE_ITEM && (slot != WorldProfile.Slot.OTHER || !Set.of("Prop","Actor","SpecialProp").contains(type))) return "Furniture requires its native inventory representation";
             if (type.equals("Artifact") && (variant != Variant.SEED_ITEM || seed == null)) return "Artifact requires a verified seed item record";
             if (slot != WorldProfile.Slot.OTHER && stackable) return "Stackable equipment is unsupported";
             if (slot != WorldProfile.Slot.OTHER && slot != WorldProfile.Slot.TRINKET && modelArgs.isEmpty()) return "Equipment has no representable model arguments";
             return "Available";
         }
         public boolean grantable() { return slot != null && (variant!=Variant.UPGRADE_ITEM || type.equals("Upgrade") && slot==WorldProfile.Slot.OTHER)
+            && (variant!=Variant.FURNITURE_ITEM || slot==WorldProfile.Slot.OTHER&&Set.of("Prop","Actor","SpecialProp").contains(type))
             && (!type.equals("Artifact") || variant==Variant.SEED_ITEM&&seed!=null)
             && (slot==WorldProfile.Slot.OTHER || !stackable && (slot==WorldProfile.Slot.TRINKET || !modelArgs.isEmpty())); }
         public Map<String,Object> arguments(int color) { return resolve(modelArgs,color); }

@@ -1,0 +1,246 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  aerodynamic_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_aero_armor_blue_1}]}
+      choices_aero_armor_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 14, rewards: [{group: choices_aero_armor_blue_2}]}
+        - {weight: 10, rewards: [{group: choices_aero_helm_blue_3}]}
+        - {weight: 35, rewards: [{group: choices_aero_spoiler_blue_4}]}
+        - {weight: 30, rewards: [{group: choices_top_prop_blue_10}]}
+        - {weight: 8, rewards: [{group: choices_chaff_pack_blue_17}]}
+        - {weight: 2, rewards: [{item: airbraker_shield, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: contrail_aura, quantity: 1, binding: catalog}]}
+      choices_aero_armor_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: aero_armor_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_armor_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_armor_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_armor_volcanic, quantity: 1, binding: catalog}]}
+      choices_aero_helm_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: aero_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_helm_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_aero_spoiler_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_aero_spoiler_blue_5}]}
+        - {weight: 1, rewards: [{group: choices_double_aero_fin_blue_6}]}
+        - {weight: 1, rewards: [{group: choices_ankle_spoilers_blue_7}]}
+        - {weight: 1, rewards: [{group: choices_ankle_fins_blue_8}]}
+        - {weight: 1, rewards: [{group: choices_ankle_wings_blue_9}]}
+      choices_aero_spoiler_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: aero_spoiler_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_spoiler_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: aero_spoiler_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_spoiler_volcanic, quantity: 1, binding: catalog}]}
+      choices_double_aero_fin_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: double_aero_fin_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: double_aero_fin_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: double_aero_fin_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: double_aero_fin_volcanic, quantity: 1, binding: catalog}]}
+      choices_ankle_spoilers_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: ankle_spoilers_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_spoilers_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_spoilers_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_spoilers_volcanic, quantity: 1, binding: catalog}]}
+      choices_ankle_fins_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: ankle_fins_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_fins_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_fins_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_fins_volcanic, quantity: 1, binding: catalog}]}
+      choices_ankle_wings_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: ankle_wings_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ankle_wings_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_wings_volcanic, quantity: 1, binding: catalog}]}
+      choices_top_prop_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_top_prop_blue_11}]}
+        - {weight: 1, rewards: [{group: choices_helm_wings_blue_12}]}
+        - {weight: 1, rewards: [{group: choices_com_dish_blue_13}]}
+        - {weight: 1, rewards: [{group: choices_pop_tennas_blue_14}]}
+        - {weight: 1, rewards: [{group: choices_handy_propellors_blue_15}]}
+        - {weight: 1, rewards: [{group: choices_tailspin_blue_16}]}
+      choices_top_prop_blue_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: top_prop_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_prop_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: top_prop_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_prop_volcanic, quantity: 1, binding: catalog}]}
+      choices_helm_wings_blue_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: helm_wings_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: helm_wings_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_wings_volcanic, quantity: 1, binding: catalog}]}
+      choices_com_dish_blue_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: com_dish_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_dish_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: com_dish_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_dish_volcanic, quantity: 1, binding: catalog}]}
+      choices_pop_tennas_blue_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: pop_tennas_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pop_tennas_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pop_tennas_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pop_tennas_volcanic, quantity: 1, binding: catalog}]}
+      choices_handy_propellors_blue_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: handy_propellors_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: handy_propellors_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: handy_propellors_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: handy_propellors_volcanic, quantity: 1, binding: catalog}]}
+      choices_tailspin_blue_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: tailspin_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailspin_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tailspin_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailspin_volcanic, quantity: 1, binding: catalog}]}
+      choices_chaff_pack_blue_17:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_chaff_pack_blue_18}]}
+        - {weight: 1, rewards: [{group: choices_swing_wings_blue_19}]}
+      choices_chaff_pack_blue_18:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: chaff_pack_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chaff_pack_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chaff_pack_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chaff_pack_volcanic, quantity: 1, binding: catalog}]}
+      choices_swing_wings_blue_19:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: swing_wings_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: swing_wings_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_gold, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_green, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_pink, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_purple, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: swing_wings_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: swing_wings_volcanic, quantity: 1, binding: catalog}]}

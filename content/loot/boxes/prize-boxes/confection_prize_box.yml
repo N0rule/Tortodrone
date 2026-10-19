@@ -1,0 +1,74 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  confection_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_power_star_4}, {group: choices_power_star_4}, {group: choices_chef_coat_yellow_5}, {group: choices_sprinkle_aura_9}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_power_star_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: power_star, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: divine_star, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shadow_star, quantity: 1, binding: catalog}]}
+      choices_chef_coat_yellow_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: choices_chef_coat_yellow_6}]}
+        - {weight: 4, rewards: [{group: choices_chef_hat_yellow_7}]}
+        - {weight: 1, rewards: [{group: choices_overcharged_mixmaster_8}]}
+      choices_chef_coat_yellow_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: chef_coat_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chef_coat_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chef_coat_purple, quantity: 1, binding: catalog}]}
+      choices_chef_hat_yellow_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: chef_hat_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chef_hat_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chef_hat_purple, quantity: 1, binding: catalog}]}
+      choices_overcharged_mixmaster_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: overcharged_mixmaster, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_mitt, quantity: 1, binding: catalog}]}
+      choices_sprinkle_aura_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: sprinkle_aura, quantity: 1, binding: catalog}]}
+        - {weight: 99, rewards: []}

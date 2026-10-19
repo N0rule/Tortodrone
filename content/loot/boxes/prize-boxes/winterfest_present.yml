@@ -1,0 +1,64 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  winterfest_present:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}, {item: flawed_snowball, quantity: 1, binding: catalog},
+            {group: choices_confetti_winter_1}, {group: choices_flawed_snowball_2}, {group: choices_confetti_winter_3}, {group: choices_flawed_snowball_4},
+            {group: choices_impostoclaus_hat_5}]}
+      choices_confetti_winter_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_impostoclaus_hat_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: impostoclaus_hat, quantity: 1, binding: catalog}, {item: winterfest_coat, quantity: 1, binding: catalog}]}
+        - {weight: 60, rewards: [{group: choices_winter_onesie_candy_6}]}
+        - {weight: 40, rewards: [{group: choices_winter_pullover_flashy_7}]}
+      choices_winter_onesie_candy_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: winter_onesie_candy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_onesie_festively, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_onesie_holly, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_onesie_joyous, quantity: 1, binding: catalog}]}
+      choices_winter_pullover_flashy_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: winter_pullover_flashy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_pullover_garish, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_pullover_gaudy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_pullover_tacky, quantity: 1, binding: catalog}]}

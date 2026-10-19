@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  turquoise_s2694106950_c648a1f83cc2:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_turquoise_s4077098240_05_1}]}
+      choices_node_slime_turquoise_s4077098240_05_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_turquoise_s4077098240_05b4bbb06a23, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_turquoise_s2661082013_0722ac9a7d00, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_turquoise_s2221284721_33a9c556e8da, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: [{item: node_turquoise_s3046673314_77e848ce5627, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_turquoise_s3962403491_c6a49f8c213f, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_turquoise_s480262884_fd9f4dcc4471, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slime_arms_turquoise, quantity: 1, binding: catalog}]}

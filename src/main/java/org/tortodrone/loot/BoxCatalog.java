@@ -125,7 +125,6 @@ public final class BoxCatalog {
         var group=box.groups().get(name);if(group==null||!visiting.add(name)||visiting.size()>16)throw new IOException("Missing, cyclic or excessively nested reward group: "+name);
         int max=0;
         for(var entry:group.entries()) {
-            if(entry.rewards().isEmpty())throw new IOException("Empty reward entry");
             max=Math.max(max,bounds(box,entry.rewards(),visiting));
         }
         visiting.remove(name);if((long)max*group.rolls()>9999)throw new IOException("Reward group expansion exceeds limit");return max*group.rolls();

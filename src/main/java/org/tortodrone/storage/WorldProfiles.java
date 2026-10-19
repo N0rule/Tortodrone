@@ -86,13 +86,16 @@ final class WorldProfiles {
         }
         // All supported inventory/balance writes increment state_revision in their transaction.
         // Still validate current ownership/authentication before reusing immutable inventory.
-        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision)return cached;
+        if(cached!=null&&cached.accountId()==accountId&&cached.knightId()==knightId&&cached.worldId()==worldId&&cached.revision()==revision&&cached.items().stream().noneMatch(i->i.expired(System.currentTimeMillis())))return cached;
         List<WorldProfile.Item> items = new ArrayList<>();
         try (PreparedStatement s = c.prepareStatement("SELECT * FROM inventory_items WHERE world_id=? ORDER BY item_id")) {
             s.setInt(1,worldId); try (ResultSet r = s.executeQuery()) {
                 while (r.next()) items.add(new WorldProfile.Item(r.getLong("item_id"),Slot.valueOf(r.getString("slot")),r.getString("config"),r.getString("accessory"),r.getInt("heat"),(Integer)r.getObject("equipped_slot"),r.getBoolean("bound"),r.getBoolean("bind_on_equip"),r.getBoolean("starter"),r.getInt("count"),r.getBoolean("permanent"),r.getInt("level"),r.getFloat("heat_progress"),TownStore.variants(r.getString("variants")),TownStore.strings(r.getString("accessories"))));
             }
         }
+        var expirations=InventoryExpiry.load(c,worldId);
+        items.replaceAll(item->item.withExpiration(expirations.get(item.id())));
+        items.removeIf(item->item.expired(System.currentTimeMillis()));
         var gifts=GiftStore.load(c,worldId);items.replaceAll(item->gifts.containsKey(item.id())?item.withGift(gifts.get(item.id())):item);
         int consumed;try(var s=c.prepareStatement("SELECT count(*) FROM town_consumed_starters WHERE world_id=?")){s.setInt(1,worldId);try(var r=s.executeQuery()){r.next();consumed=r.getInt(1);}}
         if(items.stream().filter(WorldProfile.Item::starter).count()+consumed!=5)throw new IOException("Incomplete starter inventory; restore the saved database");

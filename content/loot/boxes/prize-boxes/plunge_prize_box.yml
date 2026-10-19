@@ -1,0 +1,75 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  plunge_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trunks_ancient_1}, {group: choices_bloon_bucket_4}]}
+      choices_trunks_ancient_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 800, rewards: [{group: choices_trunks_ancient_2}]}
+        - {weight: 200, rewards: [{group: choices_deadly_charcoaler_3}]}
+        - {weight: 3, rewards: [{item: soaked_aura, quantity: 1, binding: catalog}]}
+      choices_trunks_ancient_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trunks_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_surge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trunks_vile, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_ancient, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_hunter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_lovely, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_nova, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_surge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_verdant, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrap_vile, quantity: 1, binding: catalog}]}
+      choices_deadly_charcoaler_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: deadly_charcoaler, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiral_soaker, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: furious_fork, quantity: 1, binding: catalog}]}
+      choices_bloon_bucket_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: bloon_bucket, quantity: 1, binding: catalog}, {group: choices_bloon_bucket_5}, {group: choices_bloon_bucket_6}]}
+        - {weight: 17, rewards: []}
+      choices_bloon_bucket_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bloon_bucket, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_bloon_bucket_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: bloon_bucket, quantity: 1, binding: catalog}]}
+        - {weight: 7, rewards: []}

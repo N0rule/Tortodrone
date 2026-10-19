@@ -22,7 +22,7 @@ final class ReadableItemExport {
         var bindings=new TreeMap<String,Object>();var arguments=new TreeMap<String,Object>();var gear=new HashMap<String,EquipmentCatalog.Entry>();for(var e:source.equipment().entries())gear.put(e.config(),e);
         for(Object o:list(raw.get("items"),"items")) {
             var nativeRow=map(o,"item");String config=text(nativeRow.get("config"),"config");var e=items.find(config);String id=items.referenceId(e);
-            var b=new LinkedHashMap<String,Object>();for(String k:List.of("config","stockId","type","slot","nameKey","variant","seed"))b.put(k,nativeRow.get(k));b.put("equipment",gear.containsKey(config));bindings.put(id,b);
+            var b=new LinkedHashMap<String,Object>();for(String k:List.of("config","stockId","type","slot","nameKey","variant","seed","expireDays"))b.put(k,nativeRow.get(k));b.put("equipment",gear.containsKey(config));bindings.put(id,b);
             var args=map(nativeRow.get("modelArguments"),"arguments");if(!args.isEmpty())arguments.put(config,args);
             var row=new LinkedHashMap<String,Object>();row.put("name",items.displayName(e));row.put("category",items.hasLabels(e)?items.category(e):category(e));
             if(items.hasLabels(e)) {if(!items.subcategory(e).isEmpty())row.put("subcategory",items.subcategory(e));}

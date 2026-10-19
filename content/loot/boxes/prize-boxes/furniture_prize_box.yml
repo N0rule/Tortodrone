@@ -1,0 +1,156 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  furniture_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_divan_green_1}, {item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_14},
+            {group: choices_confetti_15}, {group: choices_confetti_16}, {group: choices_trinket_slot_17}]}
+      choices_divan_green_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 20, rewards: [{group: choices_divan_green_2}]}
+        - {weight: 20, rewards: [{group: choices_bone_pile_skulls_3}, {group: choices_item_5000_4}]}
+        - {weight: 20, rewards: [{group: choices_ancient_tome_7}]}
+        - {weight: 2, rewards: [{group: choices_cursed_tome_8}]}
+        - {weight: 20, rewards: [{group: choices_bench_restored_9}]}
+        - {weight: 10, rewards: [{group: choices_bench_charred_10}]}
+        - {weight: 4, rewards: [{group: choices_rug_restored_11}]}
+        - {weight: 2, rewards: [{group: choices_tapestry_stand_charred_12}]}
+        - {weight: 1, rewards: [{item: monitors_small_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{group: choices_mewkat_13}]}
+      choices_divan_green_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: divan_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: divan_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wood_default, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: antique, quantity: 1, binding: catalog}]}
+      choices_bone_pile_skulls_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bone_pile_skulls, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bone_pile_stack, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: luggage_pile_a, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: luggage_pile_b, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: item_1unit_stack_a, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: item_1unit_stack_b, quantity: 1, binding: catalog}]}
+      choices_item_5000_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{group: choices_item_5000_5}]}
+        - {weight: 1, rewards: [{item: bedroll_01, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{group: choices_spiral_order_cool_tone_s1371394632__6}]}
+      choices_item_5000_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 18, rewards: [{item: item_5000, quantity: 1, binding: bound}]}
+        - {weight: 1, rewards: [{item: item_10000, quantity: 1, binding: bound}]}
+        - {weight: 1, rewards: [{item: item_20000, quantity: 1, binding: bound}]}
+      choices_spiral_order_cool_tone_s1371394632__6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: spiral_order_cool_tone_s1371394632_5516a72f2840, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiral_order_cool_tone_s1939081200_6d12faddab38, quantity: 1, binding: catalog}]}
+      choices_ancient_tome_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ancient_tome, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: blue_lamp_s1197269104_d71c159f7b6c, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: green_lamp_s3889851587_d62b5290d717, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: orange_lamp_s292461212_87089bae1162, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: violet_lamp_s2296542955_9490ff80eceb, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: blue_lamp_s2729131511_e65aade2cf5b, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: green_lamp_s4132945948_cabe329d6d96, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: orange_lamp_s3533419107_b8fdc248747c, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: violet_lamp_s1242533554_0c6bab0f95d4, quantity: 1, binding: catalog}]}
+      choices_cursed_tome_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cursed_tome, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mystical_tome, quantity: 1, binding: catalog}]}
+      choices_bench_restored_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bench_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: table_restored, quantity: 1, binding: catalog}]}
+      choices_bench_charred_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: bench_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chair_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: table_charred, quantity: 1, binding: catalog}]}
+      choices_rug_restored_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: rug_restored, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tapestry_stand_restored, quantity: 1, binding: catalog}]}
+      choices_tapestry_stand_charred_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tapestry_stand_charred, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rug_charred, quantity: 1, binding: catalog}]}
+      choices_mewkat_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: mewkat, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: zombie_bellhop, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: nature_sprite, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cursed_nature_sprite, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: chromalisk, quantity: 1, binding: catalog}]}
+      choices_confetti_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_trinket_slot_17:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_18}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_18:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

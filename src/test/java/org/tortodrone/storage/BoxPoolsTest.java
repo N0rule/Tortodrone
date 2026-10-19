@@ -37,8 +37,9 @@ public final class BoxPoolsTest {
                 var p=player();p.grant(box.id(),1);p.grant("silver_key",2);p.grant("slime_key",2);
                 var after=p.open(box.id(),box.kind()==BoxDefinition.Kind.KEYLESS?-1:0,new Choices(false));
                 check(count(after,box.id())==0,"each real box is consumed once");
-                check(count(after,"silver_key")== (box.id().equals("item_000")||box.kind()==BoxDefinition.Kind.KEYLESS?2:1)
-                    &&count(after,"slime_key")== (box.id().equals("item_000")?1:2),"real native key menu preserves the unselected type");
+                check(count(after,"silver_key")== (box.keys().equals(List.of("Ticket/Keys/Slime Key","Ticket/Keys/Silver Key"))||box.kind()==BoxDefinition.Kind.KEYLESS?2:1)
+                    &&count(after,"slime_key")== (box.keys().equals(List.of("Ticket/Keys/Slime Key","Ticket/Keys/Silver Key"))?1:2),"real native key menu preserves the unselected type");
+                for(var reward:after.items())if(items.require(reward.config()).expireDays()>0)check(reward.expiresAt()!=null&&reward.expiresAt()>System.currentTimeMillis(),"timed reward receives a persisted native deadline");
                 check(new CharacterStore(db,p.account,p.user,items).worldProfile(p.name,1).equals(after),"reconnect retains real rewards");
                 check(new Database(home,true).worldProfile(p.account,1,1).equals(after),"reopened database retains real rewards");
             }
@@ -72,7 +73,7 @@ public final class BoxPoolsTest {
             }
             var kat=boxes.find(items.require("katastrophe_prize_box_complete").config());
             check(rewardConfigs(kat).size()==56&&kat.groups().keySet().stream().noneMatch(g->g.startsWith("bonus_")),"Complete Katastrophe has all 56 outcomes and no invented bonus pool");
-            check(!boxes.find(items.require("katastrophe_returns_prize_box").config()).enabled()&&!boxes.find(items.require("item_001").config()).enabled(),"historical box identities do not inherit another edition's estimates");
+            check(!rewardConfigs(boxes.find(items.require("item_001").config())).equals(candidates),"historical Slime editions retain distinct pools");
             // Exact main/color boundaries include both rare colors and Shadow Key as a reward.
             var iron=boxes.find(items.require("lockbox").config());
             check(BoxRewardSelector.select(iron,new Choices(false,9300)).getFirst().config().equals(items.require("shadow_key").config()),"Iron Shadow Key category remains a reward only");
@@ -80,7 +81,7 @@ public final class BoxPoolsTest {
                 var reward=BoxRewardSelector.select(iron,new Choices(false,0,0,color)).getFirst();
                 check(reward.config().equals(items.require(color<6300?"barrel_belly_red":color<6580?"barrel_belly_divine":color<6860?"barrel_belly_volcanic":"barrel_belly_prismatic").config()),"explicit standard/divine/volcanic/prismatic boundaries");
             }
-            System.out.println("PASS: 12 shipped approximation pools, actual ordinary/Slime/keyless opens, all upgrade/bonus outcomes, historical separation, rarity boundaries and reconnect/restart persistence");
+            System.out.println("PASS: 243 shipped approximation pools, actual ordinary/Slime/keyless opens, all upgrade/bonus outcomes, historical separation, rarity boundaries and reconnect/restart persistence");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static Set<String> rewardConfigs(BoxDefinition box) {
@@ -88,8 +89,9 @@ public final class BoxPoolsTest {
         box.groups().values().forEach(g->g.entries().forEach(e->e.rewards().forEach(r->{if(r instanceof BoxDefinition.Item i)result.add(i.config());})));return result;
     }
     private static Player player()throws Exception {
-        String user="PoolPlayer"+(++serial),name="Pool-Knight"+(char)('a'+serial);int account=db.create(user,new Passwords.Protection(new byte[16],new byte[32]),false);
+        String user="PoolPlayer"+(++serial),name="Pool-Knight"+letters(serial);int account=db.create(user,new Passwords.Protection(new byte[16],new byte[32]),false);
         new CharacterStore(db,account,user,items).create(new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));return new Player(account,user,name);
     }
+    private static String letters(int n){return n<26?String.valueOf((char)('a'+n)):letters(n/26)+(char)('a'+n%26);}
     private static int count(WorldProfile p,String id)throws IOException{String config=items.require(id).config();return p.items().stream().filter(i->i.config().equals(config)).mapToInt(WorldProfile.Item::count).sum();}
 }

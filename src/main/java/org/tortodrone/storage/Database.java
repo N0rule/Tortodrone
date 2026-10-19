@@ -34,6 +34,7 @@ public final class Database {
         try{observer.completed(kind,elapsed,failed);}catch(RuntimeException ignored){ }
     }
     private final Path file;
+    private boolean initialized;
     @FunctionalInterface public interface Work<T> { T run(Connection connection) throws SQLException, IOException; }
 
     private final boolean upgradeCandidate;
@@ -51,7 +52,7 @@ public final class Database {
                     if(lock==null)throw new IOException("Stop the server before upgrading the database");requireCurrentVersion();
                 }catch(OverlappingFileLockException live){throw new IOException("Stop the server before upgrading the database",live);}
             }else requireCurrentVersion();
-            return;
+            initialized=true;return;
         }
         if (deploymentLocked) initialize();
         else {
@@ -61,6 +62,7 @@ public final class Database {
                 if (Files.exists(file)) requireCurrentVersion(); else initialize();
             } catch (OverlappingFileLockException e) { throw new IOException("Database initialization is already in progress", e); }
         }
+        initialized=true;
     }
     private void requireCurrentVersion() throws IOException {
         int version = version();
@@ -108,6 +110,7 @@ public final class Database {
         try(Connection connection=connect();Statement statement=connection.createStatement()) {
             statement.execute("BEGIN IMMEDIATE");
             try {
+                if(initialized)InventoryExpiry.prune(connection,System.currentTimeMillis());
                 T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
             } catch(SQLException|IOException|RuntimeException error) {
                 rollbacks.incrementAndGet();
@@ -318,6 +321,7 @@ public final class Database {
     }
     /** Lightweight consistent metadata for active world observers; inventories load only on change. */
     public Map<Integer,WorldState> worldStates()throws IOException {
+        if(read(c->InventoryExpiry.due(c,System.currentTimeMillis())))write(c->null);
         return read(c->{
             var states=new HashMap<Integer,WorldState>();
             try(var s=c.createStatement();var rows=s.executeQuery("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id")) {
@@ -488,6 +492,7 @@ public final class Database {
                     s.setLong(1,id);s.setInt(2,profile.worldId());s.setString(3,entry.slot().name());s.setString(4,entry.config());s.setBoolean(5,entry.bindOnEquip());
                     s.setInt(6,entry.stackable()?quantity:1);s.setBoolean(7,entry.permanent());s.setBoolean(8,entry.locked()||entry.permanent());
                     s.setInt(9,modifiers.level());s.setFloat(10,modifiers.heat());s.setString(11,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.executeUpdate();
+                    InventoryExpiry.save(c,id,InventoryExpiry.deadline(entry.expireDays()));
                 }
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}

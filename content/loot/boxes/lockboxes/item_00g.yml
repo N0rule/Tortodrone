@@ -1,0 +1,230 @@
+# Explicit local approximation; unavailable official probabilities are not claimed.
+boxes:
+  item_00g:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: 'https://wiki.spiralknights.com/Slime_Lockbox: 00G Crow/Rabbit masks and back accessories, Late Harvest/Frosty/Autumn/Shadow/Prismatic
+      colors; category rates and shared aura/trinket bundle estimated from archived 00F, equal edition-color odds estimated; see docs/content.md'
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 66
+          rewards:
+          - group: crow_slime
+        - weight: 66
+          rewards:
+          - group: rabbit_slime
+        - weight: 32
+          rewards:
+          - group: crow_slime_wings
+        - weight: 32
+          rewards:
+          - group: rabbit_slime_tail
+        - weight: 1
+          rewards:
+          - group: choices_slimed_aura_blue_6
+        - weight: 3
+          rewards:
+          - item: trinket_slot_2_days
+            quantity: 1
+            binding: bound
+          - group: choices_somnambulist_s_totem_7
+      crow_slime:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: crow_slime_late_harvest
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_frosty
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_autumn
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_shadow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_prismatic
+            quantity: 1
+            binding: catalog
+      rabbit_slime:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_late_harvest
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_frosty
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_autumn
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_shadow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_prismatic
+            quantity: 1
+            binding: catalog
+      crow_slime_wings:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: crow_slime_wings_late_harvest
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_wings_frosty
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_wings_autumn
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_wings_shadow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: crow_slime_wings_prismatic
+            quantity: 1
+            binding: catalog
+      rabbit_slime_tail:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_tail_late_harvest
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_tail_frosty
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_tail_autumn
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_tail_shadow
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: rabbit_slime_tail_prismatic
+            quantity: 1
+            binding: catalog
+      choices_slimed_aura_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 4
+          rewards:
+          - item: slimed_aura_blue
+            quantity: 1
+            binding: catalog
+        - weight: 2
+          rewards:
+          - item: slimed_aura_divine
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_gold
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_green
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_heavy
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_pink
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_purple
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: slimed_aura_red
+            quantity: 1
+            binding: catalog
+        - weight: 1
+          rewards:
+          - item: slimed_aura_shadow
+            quantity: 1
+            binding: catalog
+        - weight: 2
+          rewards:
+          - item: slimed_aura_volcanic
+            quantity: 1
+            binding: catalog
+      choices_somnambulist_s_totem_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - weight: 1
+          rewards:
+          - item: somnambulist_s_totem
+            quantity: 1
+            binding: catalog
+        - weight: 2
+          rewards:
+          - item: daybreaker_band
+            quantity: 1
+            binding: catalog
+        - weight: 4
+          rewards:
+          - item: dawn_bracelet
+            quantity: 1
+            binding: catalog
+        - weight: 8
+          rewards:
+          - item: early_riser_ring
+            quantity: 1
+            binding: catalog

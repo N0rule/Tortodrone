@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  glacial:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_glacial_s3924729548_6a14_1}]}
+      choices_node_slime_glacial_s3924729548_6a14_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_glacial_s3924729548_6a1480506cda, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_glacial_s4124373161_d65af8d609af, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_glacial_s847941501_1b2d6c4e2702, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_glacial_s1697961454_c26b8681ab7a, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_glacial_s2525729071_abbd5c7b85d4, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_glacial_s2776853936_29010b68f5df, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slime_arms_glacial, quantity: 1, binding: catalog}]}

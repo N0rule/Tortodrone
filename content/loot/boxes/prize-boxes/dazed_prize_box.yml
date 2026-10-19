@@ -1,0 +1,85 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  dazed_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_brigandine_dazed_1}]}
+      choices_brigandine_dazed_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 70, rewards: [{group: choices_brigandine_dazed_2}]}
+        - {weight: 60, rewards: [{group: choices_crescent_helm_dazed_3}]}
+        - {weight: 40, rewards: [{group: choices_side_blade_dazed_4}]}
+        - {weight: 27, rewards: [{group: choices_seeing_stars_halo_dazed_5}]}
+        - {weight: 3, rewards: [{item: stun_aura, quantity: 1, binding: catalog}]}
+      choices_brigandine_dazed_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_dazed, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_dazed_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_dazed, quantity: 1, binding: catalog}]}
+      choices_side_blade_dazed_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_dazed, quantity: 1, binding: catalog}]}
+      choices_seeing_stars_halo_dazed_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: seeing_stars_halo_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: seeing_stars_halo_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stunning_shades_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stunning_shades_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stagger_star_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stagger_star_prismatic, quantity: 1, binding: catalog}]}

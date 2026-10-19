@@ -1,0 +1,71 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  equinox_prize_box_complete:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_equinox_5},
+            {group: choices_confetti_equinox_6}]}
+      choices_variants_1_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 46, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 23, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 18, rewards: [{group: choices_stellar_sentinel_helm_2}]}
+        - {weight: 2, rewards: [{group: choices_plasma_wings_gold_3}]}
+        - {weight: 1, rewards: [{group: choices_celestial_saber_4}]}
+      choices_stellar_sentinel_helm_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stellar_sentinel_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stellar_sentinel_suit, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: celestial_nav_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: celestial_nav_suit, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: galactic_guardian_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: galactic_guardian_vest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_tail_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_mohawk_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_celestial, quantity: 1, binding: catalog}]}
+      choices_plasma_wings_gold_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: plasma_wings_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plasma_wings_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dragon_wings_celestial, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: orbit_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_celestial, quantity: 1, binding: catalog}]}
+      choices_celestial_saber_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: celestial_saber, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: celestial_vortex, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: celestial_shield, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: celestial_orbitgun, quantity: 1, binding: catalog}]}
+      choices_confetti_equinox_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_equinox_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}

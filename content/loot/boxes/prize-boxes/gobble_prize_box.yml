@@ -1,0 +1,68 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  gobble_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_black_gobble_snipe_lazy_4}, {group: choices_gift_of_autumn_8}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_black_gobble_snipe_lazy_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 9, rewards: [{group: choices_black_gobble_snipe_lazy_5}]}
+        - {weight: 9, rewards: [{group: choices_black_gobble_snipe_wandering_6}]}
+        - {weight: 1, rewards: [{group: choices_black_gobble_snipe_plump_7}]}
+      choices_black_gobble_snipe_lazy_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: black_gobble_snipe_lazy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brown_gobble_snipe_lazy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gold_gobble_snipe_lazy, quantity: 1, binding: catalog}]}
+      choices_black_gobble_snipe_wandering_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: black_gobble_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brown_gobble_snipe_wandering, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gold_gobble_snipe_wandering, quantity: 1, binding: catalog}]}
+      choices_black_gobble_snipe_plump_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: black_gobble_snipe_plump, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: brown_gobble_snipe_plump, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gold_gobble_snipe_plump, quantity: 1, binding: catalog}]}
+      choices_gift_of_autumn_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gift_of_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}

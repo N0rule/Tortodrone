@@ -1,0 +1,50 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  item_403:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_pink_s1502648375_a573ec9_1}, {group: choices_confetti_slime_2}]}
+      choices_node_slime_pink_s1502648375_a573ec9_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_pink_s1502648375_a573ec987de8, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_pink_s2770197370_d152081eb587, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_pink_s3565473062_4cfd0a158adb, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_pink_s3074458709_7dcdc9575c23, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_pink_s77625524_5f00eb7d72ab, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_pink_s3935622099_219f8c64ab93, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slime_arms_pink, quantity: 1, binding: catalog}]}
+      choices_confetti_slime_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: choices_confetti_slime_3}]}
+        - {weight: 4, rewards: [{group: choices_small_fireworks_slime_4}]}
+        - {weight: 1, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}, {item: medium_fireworks_slime, quantity: 2, binding: catalog},
+            {item: small_fireworks_slime, quantity: 3, binding: catalog}]}
+      choices_confetti_slime_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: confetti_slime, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: confetti_slime, quantity: 2, binding: catalog}]}
+        - {weight: 1, rewards: [{item: confetti_slime, quantity: 3, binding: catalog}]}
+      choices_small_fireworks_slime_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: small_fireworks_slime, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: medium_fireworks_slime, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}]}

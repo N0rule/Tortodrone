@@ -1,0 +1,81 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  item_00b:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_fox_slime_dusky_1}]}
+      choices_fox_slime_dusky_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 66, rewards: [{group: choices_fox_slime_dusky_2}]}
+        - {weight: 66, rewards: [{group: choices_rabbit_slime_dusky_3}]}
+        - {weight: 32, rewards: [{group: choices_fox_slime_tail_dusky_4}]}
+        - {weight: 32, rewards: [{group: choices_rabbit_slime_tail_dusky_5}]}
+        - {weight: 1, rewards: [{group: choices_slimed_aura_blue_6}]}
+        - {weight: 3, rewards: [{item: trinket_slot_2_days, quantity: 1, binding: bound}, {group: choices_somnambulist_s_totem_7}]}
+      choices_fox_slime_dusky_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: fox_slime_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fox_slime_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fox_slime_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fox_slime_toasty, quantity: 1, binding: catalog}]}
+      choices_rabbit_slime_dusky_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: rabbit_slime_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rabbit_slime_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rabbit_slime_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rabbit_slime_toasty, quantity: 1, binding: catalog}]}
+      choices_fox_slime_tail_dusky_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: fox_slime_tail_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fox_slime_tail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fox_slime_tail_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: fox_slime_tail_toasty, quantity: 1, binding: catalog}]}
+      choices_rabbit_slime_tail_dusky_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: rabbit_slime_tail_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rabbit_slime_tail_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rabbit_slime_tail_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: rabbit_slime_tail_toasty, quantity: 1, binding: catalog}]}
+      choices_slimed_aura_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: slimed_aura_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slimed_aura_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: slimed_aura_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slimed_aura_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slimed_aura_volcanic, quantity: 1, binding: catalog}]}
+      choices_somnambulist_s_totem_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: somnambulist_s_totem, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: daybreaker_band, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: dawn_bracelet, quantity: 1, binding: catalog}]}
+        - {weight: 8, rewards: [{item: early_riser_ring, quantity: 1, binding: catalog}]}

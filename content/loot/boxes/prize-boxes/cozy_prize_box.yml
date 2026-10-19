@@ -1,0 +1,87 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  cozy_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_pullover_blue_1}, {group: choices_pile_o_pillows_6}]}
+      choices_pullover_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_pullover_blue_2}]}
+        - {weight: 35, rewards: [{group: choices_onesie_blue_3}]}
+        - {weight: 23, rewards: [{group: choices_night_cap_round_blue_4}]}
+        - {weight: 2, rewards: [{group: choices_ashtail_slippers_5}]}
+      choices_pullover_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pullover_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_volcanic, quantity: 1, binding: catalog}]}
+      choices_onesie_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: onesie_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_volcanic, quantity: 1, binding: catalog}]}
+      choices_night_cap_round_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: night_cap_round_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_volcanic, quantity: 1, binding: catalog}]}
+      choices_ashtail_slippers_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ashtail_slippers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: dusker_slippers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: skolver_slippers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snarbolax_slippers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vog_slippers, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_slippers, quantity: 1, binding: catalog}]}
+      choices_pile_o_pillows_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: pile_o_pillows, quantity: 1, binding: catalog}]}
+        - {weight: 17, rewards: []}

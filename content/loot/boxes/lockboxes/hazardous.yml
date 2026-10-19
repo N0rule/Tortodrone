@@ -1,0 +1,28 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  hazardous:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_hazardous_s1844183002_64_1}]}
+      choices_node_slime_hazardous_s1844183002_64_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{item: node_slime_hazardous_s1844183002_6403db306d5e, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: node_slime_hazardous_s428166775_2cb84e6dd9a2, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_hazardous_s4283336779_f1e6821f14d6, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: node_hazardous_s813758076_922c1f476bf7, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_hazardous_s1729488253_231bb9773a3f, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_hazardous_s2542314942_540a080c4e96, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slime_arms_hazardous, quantity: 1, binding: catalog}]}

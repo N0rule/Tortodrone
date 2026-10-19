@@ -159,7 +159,7 @@ public final class CombatRenderingCheck {
     private static void seedBoxes(Path data)throws Exception {
         // Seed only this disposable account; use the shipped approximation tables unchanged.
         try(var store=new AccountStore(data)) {
-            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
+            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
                 store.grantItems("LanPlayer","Town-Knight",item,item.equals("Ticket/Keys/Silver Key")?3:2,-1,-1);
         }
     }
@@ -169,8 +169,8 @@ public final class CombatRenderingCheck {
     private com.threerings.opengl.gui.aD boxArsenal;
     private com.threerings.projectx.item.client.F boxMenu;
     private com.threerings.projectx.item.client.Y boxWindow;
-    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box"};
-    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open"};
+    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box"};
+    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open","open","open"};
     private void boxesTick(long now)throws Exception {
         if(stage==0) {
             var arsenal=new com.threerings.projectx.item.client.ArsenalPanel(app);
@@ -213,15 +213,17 @@ public final class CombatRenderingCheck {
                 var prize=(com.google.common.collect.Multiset.Entry<?>)raw;Long id=(Long)prize.getElement();
                 var held=app.CT().items.f(id);
                 if(held==null||held.getCount()!=boxInventoryBefore.getOrDefault(id,0)+prize.getCount())throw new AssertionError("Native reveal differs from committed inventory delta");
+                if(boxIndex==4&&!(held instanceof com.threerings.projectx.item.data.FurniItem))throw new AssertionError("Furniture box returned a different subtype");
                 awarded+=prize.getCount();
             }
+            if(boxIndex==5&&prizes.stream().map(e->app.CT().items.f((Long)((com.google.common.collect.Multiset.Entry<?>)e).getElement())).noneMatch(i->i.VE()!=null&&i.VE()>System.currentTimeMillis()))throw new AssertionError("Disguise bundle lacks persisted native expiration");
             int silverSpent=boxIndex==0||boxIndex==2?1:0,slimeSpent=boxIndex==1?1:0;
             if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||boxInventory().values().stream().mapToInt(Integer::intValue).sum()!=boxInventoryBefore.values().stream().mapToInt(Integer::intValue).sum()-1-silverSpent-slimeSpent+awarded)
                 throw new AssertionError("Opening consumed or rewarded the wrong items");
             capture("box-"+boxIndex+"-native-reward");boxWindow.dismiss();boxWindow=null;boxMenu.dismiss();
             if(++boxIndex==BOX_ITEMS.length) {
                 boxArsenal.dismiss();finishImages();passed=done=true;
-                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows with shipped approximation pools and multi-item Surge bundle");app.shutdown();return;
+                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows with shipped approximation pools multi-item Surge/Disguise bundles, furniture and timed rewards");app.shutdown();return;
             }
             started=now;stage=70;
         }

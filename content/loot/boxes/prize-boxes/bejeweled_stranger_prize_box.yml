@@ -1,0 +1,73 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  bejeweled_stranger_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_stranger_robe_amethyst_1}]}
+      choices_stranger_robe_amethyst_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 40, rewards: [{group: choices_stranger_robe_amethyst_2}]}
+        - {weight: 35, rewards: [{group: choices_stranger_cap_amethyst_3}]}
+        - {weight: 23, rewards: [{group: choices_snipe_perch_cherry_4}]}
+        - {weight: 2, rewards: [{group: choices_snipe_aura_cocoa_5}]}
+      choices_stranger_robe_amethyst_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_robe_amethyst, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_aquamarine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_diamond, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_emerald, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_garnet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_opal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_pearl, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_peridot, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_ruby, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_robe_turquoise, quantity: 1, binding: catalog}]}
+      choices_stranger_cap_amethyst_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: stranger_cap_amethyst, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_aquamarine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_diamond, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_emerald, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_garnet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_opal, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_pearl, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_peridot, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_ruby, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_sapphire, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: stranger_cap_turquoise, quantity: 1, binding: catalog}]}
+      choices_snipe_perch_cherry_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: snipe_perch_cherry, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_lime, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_mint, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_plum, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_sage, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_sea, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_wheat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_perch_prismatic, quantity: 1, binding: catalog}]}
+      choices_snipe_aura_cocoa_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: snipe_aura_cocoa, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: snipe_aura_vanilla, quantity: 1, binding: catalog}]}

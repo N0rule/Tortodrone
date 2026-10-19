@@ -1,0 +1,80 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  stormy_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_storm, quantity: 1, binding: catalog}, {item: confetti_storm, quantity: 1, binding: catalog},
+            {group: choices_confetti_storm_1}, {group: choices_confetti_storm_1}, {group: choices_confetti_storm_2}, {group: choices_eye_of_fury_blue_3},
+            {group: choices_trinket_slot_7}]}
+      choices_confetti_storm_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_storm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_storm_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_storm, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_eye_of_fury_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 20, rewards: [{group: choices_eye_of_fury_blue_4}]}
+        - {weight: 10, rewards: [{group: choices_storm_avenger_helm_5}]}
+        - {weight: 3, rewards: [{group: choices_storm_rider_mantle_6}]}
+      choices_eye_of_fury_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: eye_of_fury_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: eye_of_fury_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_storms, quantity: 1, binding: catalog}]}
+      choices_storm_avenger_helm_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: storm_avenger_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: storm_champion_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: storm_crusader_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: storm_dragon_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: storm_warrior_helm, quantity: 1, binding: catalog}]}
+      choices_storm_rider_mantle_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: storm_rider_mantle, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: thunderous_plate_mail, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_fury, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_8}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

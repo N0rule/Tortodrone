@@ -1,0 +1,44 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  solstice_prize_box_winter_2014:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter,
+              quantity: 1, binding: catalog}, {group: choices_confetti_summer_2}, {group: choices_snow_bucket_3}]}
+      choices_variants_1_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 450, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 230, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 100, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 70, rewards: [{item: crest_summer, quantity: 1, binding: catalog}]}
+        - {weight: 70, rewards: [{item: crest_winter, quantity: 1, binding: catalog}]}
+        - {weight: 25, rewards: [{item: sunshine_aura, quantity: 1, binding: catalog}]}
+        - {weight: 25, rewards: [{item: snowfall_aura, quantity: 1, binding: catalog}]}
+        - {weight: 15, rewards: [{item: crown_winter, quantity: 1, binding: catalog}]}
+        - {weight: 15, rewards: [{item: crown_summer, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: valkyrie_wings_summer, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: dragon_wings_winter, quantity: 1, binding: catalog}]}
+      choices_confetti_summer_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 9, rewards: []}
+        - {weight: 10, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: confetti_summer, quantity: 2, binding: catalog}, {item: confetti_winter, quantity: 2, binding: catalog}]}
+      choices_snow_bucket_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: snow_bucket, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}

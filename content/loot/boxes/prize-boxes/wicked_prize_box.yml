@@ -1,0 +1,81 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  wicked_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_brigandine_curse_1}]}
+      choices_brigandine_curse_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 7, rewards: [{group: choices_brigandine_curse_2}]}
+        - {weight: 6, rewards: [{group: choices_crescent_helm_curse_3}]}
+        - {weight: 4, rewards: [{group: choices_side_blade_curse_4}]}
+        - {weight: 3, rewards: [{group: choices_nefarious_hood_5}]}
+      choices_brigandine_curse_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_curse, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_curse_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_curse, quantity: 1, binding: catalog}]}
+      choices_side_blade_curse_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_curse, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_curse, quantity: 1, binding: catalog}]}
+      choices_nefarious_hood_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: nefarious_hood, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: nefarious_raiment, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_of_curse, quantity: 1, binding: catalog}]}

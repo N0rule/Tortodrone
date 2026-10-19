@@ -1,0 +1,82 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  anniversary_prize_box_2016:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 2, binding: catalog}, {group: choices_confetti_1}, {group: choices_confetti_2}, {group: choices_confetti_3},
+            {group: choices_grand_topper_blue_4}]}
+      choices_confetti_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_grand_topper_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{group: choices_grand_topper_blue_5}]}
+        - {weight: 3, rewards: [{group: choices_field_cap_blue_6}]}
+        - {weight: 3, rewards: [{group: choices_field_cap_plumed_blue_7}]}
+        - {weight: 1, rewards: [{group: choices_grand_topper_prismatic_8}]}
+      choices_grand_topper_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: grand_topper_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_red, quantity: 1, binding: catalog}]}
+      choices_field_cap_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: field_cap_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_red, quantity: 1, binding: catalog}]}
+      choices_field_cap_plumed_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: field_cap_plumed_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_red, quantity: 1, binding: catalog}]}
+      choices_grand_topper_prismatic_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: grand_topper_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_plumed_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: field_cap_prismatic, quantity: 1, binding: catalog}]}

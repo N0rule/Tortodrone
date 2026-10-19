@@ -1,0 +1,68 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  solstice_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}, {item: confetti_winter, quantity: 1, binding: catalog},
+            {group: choices_confetti_summer_1}, {group: choices_confetti_winter_2}, {group: choices_confetti_summer_3}, {group: choices_confetti_winter_4},
+            {group: choices_variants_1_5}, {group: choices_trinket_slot_6}]}
+      choices_confetti_summer_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_summer_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_summer, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_confetti_winter_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}
+      choices_variants_1_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 20, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 17, rewards: [{item: crest_summer, quantity: 1, binding: catalog}]}
+        - {weight: 17, rewards: [{item: crest_winter, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: sunshine_aura, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: snowfall_aura, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: crown_summer, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: crown_winter, quantity: 1, binding: catalog}]}
+      choices_trinket_slot_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_trinket_slot_7}]}
+        - {weight: 19, rewards: []}
+      choices_trinket_slot_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{item: trinket_slot, quantity: 1, binding: catalog}]}
+        - {weight: 50, rewards: [{item: weapon_slot, quantity: 1, binding: catalog}]}
+        - {weight: 10, rewards: [{item: coin_bonus, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: heat_bonus_s909083618_3f30bba58f51, quantity: 1, binding: catalog}]}

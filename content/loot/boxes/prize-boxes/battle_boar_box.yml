@@ -1,0 +1,171 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  battle_boar_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_battle_boar_suit_1}]}
+      choices_battle_boar_suit_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 18, rewards: [{group: choices_battle_boar_suit_2}]}
+        - {weight: 22, rewards: [{group: choices_battle_boar_helmet_3}]}
+        - {weight: 53, rewards: [{group: choices_hoghawk_4}]}
+        - {weight: 2, rewards: [{item: piggy_banker, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: snout_patrol_pendant, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: drakon_egg_piggy, quantity: 1, binding: catalog}]}
+      choices_battle_boar_suit_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: battle_boar_suit, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: battle_boar_suit_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_suit_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: battle_boar_suit_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: battle_boar_suit_volcanic, quantity: 1, binding: catalog}]}
+      choices_battle_boar_helmet_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: battle_boar_helmet, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: battle_boar_helmet_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: battle_boar_helmet_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: battle_boar_helmet_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: battle_boar_helmet_volcanic, quantity: 1, binding: catalog}]}
+      choices_hoghawk_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_hoghawk_5}]}
+        - {weight: 1, rewards: [{group: choices_pig_tail_6}]}
+        - {weight: 1, rewards: [{group: choices_pigtails_7}]}
+        - {weight: 1, rewards: [{group: choices_porkular_vents_8}]}
+        - {weight: 1, rewards: [{group: choices_razorback_pack_9}]}
+        - {weight: 1, rewards: [{group: choices_trotters_10}]}
+        - {weight: 1, rewards: [{group: choices_truffle_snuffler_11}]}
+      choices_hoghawk_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: hoghawk, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hoghawk_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: hoghawk_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hoghawk_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: hoghawk_volcanic, quantity: 1, binding: catalog}]}
+      choices_pig_tail_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: pig_tail, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pig_tail_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pig_tail_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pig_tail_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pig_tail_volcanic, quantity: 1, binding: catalog}]}
+      choices_pigtails_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: pigtails, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pigtails_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: pigtails_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pigtails_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pigtails_volcanic, quantity: 1, binding: catalog}]}
+      choices_porkular_vents_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: porkular_vents, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: porkular_vents_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: porkular_vents_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: porkular_vents_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: porkular_vents_volcanic, quantity: 1, binding: catalog}]}
+      choices_razorback_pack_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: razorback_pack, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: razorback_pack_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: razorback_pack_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: razorback_pack_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: razorback_pack_volcanic, quantity: 1, binding: catalog}]}
+      choices_trotters_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: trotters, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trotters_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: trotters_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trotters_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trotters_volcanic, quantity: 1, binding: catalog}]}
+      choices_truffle_snuffler_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: truffle_snuffler, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: truffle_snuffler_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: truffle_snuffler_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: truffle_snuffler_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: truffle_snuffler_volcanic, quantity: 1, binding: catalog}]}

@@ -1,0 +1,134 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  grey_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_brigandine_grey_1}]}
+      choices_brigandine_grey_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 15, rewards: [{group: choices_brigandine_grey_2}]}
+        - {weight: 20, rewards: [{group: choices_crescent_helm_grey_3}]}
+        - {weight: 5, rewards: [{group: choices_drakon_egg_grey_4}]}
+        - {weight: 1, rewards: [{group: choices_dragon_wings_grey_5}]}
+        - {weight: 15, rewards: [{group: choices_gremlin_goggles_grey_6}]}
+        - {weight: 42, rewards: [{group: choices_ankle_booster_grey_7}, {group: choices_large_fireworks_silver_8}]}
+        - {weight: 1, rewards: [{item: grey_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: silver, quantity: 1, binding: catalog}]}
+      choices_brigandine_grey_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_grey, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_grey_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_grey, quantity: 1, binding: catalog}]}
+      choices_drakon_egg_grey_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: drakon_egg_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maskerraith_egg_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: seraphynx_egg_grey_gry, quantity: 1, binding: catalog}]}
+      choices_dragon_wings_grey_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: dragon_wings_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: valkyrie_wings_grey, quantity: 1, binding: catalog}]}
+      choices_gremlin_goggles_grey_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: gremlin_goggles_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mechaknight_exhaust_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sealed_pauldrons_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extra_vertical_vents_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extra_vertical_vents_broken_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wind_up_key_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wrench_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: gear_halo_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: grand_topper_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: splendid_topper_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cat_tail_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spiraltail_grey, quantity: 1, binding: catalog}]}
+      choices_ankle_booster_grey_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ankle_booster_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shoulder_booster_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_blade_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vitakit_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binoculars_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: canteen_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: goggles_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rebreather_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vented_visor_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_guards_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_fin_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: devious_horns_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maedate_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mohawk_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: spike_mohawk_grey, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wide_vee_grey, quantity: 1, binding: catalog}]}
+      choices_large_fireworks_silver_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_silver, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: confetti_silver, quantity: 1, binding: catalog}]}

@@ -1,0 +1,184 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  aerotech_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_aero_armor_tech_blue_1}]}
+      choices_aero_armor_tech_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 15, rewards: [{group: choices_aero_armor_tech_blue_2}]}
+        - {weight: 15, rewards: [{group: choices_aero_helm_tech_blue_3}]}
+        - {weight: 5, rewards: [{group: choices_ankle_spoilers_tech_blue_4}]}
+        - {weight: 21, rewards: [{group: choices_aero_spoiler_tech_blue_7}]}
+        - {weight: 30, rewards: [{group: choices_top_prop_tech_blue_11}]}
+        - {weight: 8, rewards: [{group: choices_swing_wings_tech_blue_18}]}
+        - {weight: 5, rewards: [{group: choices_airbraker_shield_tech_blue_21}]}
+        - {weight: 1, rewards: [{item: contrail_aura, quantity: 1, binding: catalog}]}
+      choices_aero_armor_tech_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: aero_armor_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_armor_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_armor_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_armor_tech_pink, quantity: 1, binding: catalog}]}
+      choices_aero_helm_tech_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: aero_helm_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_helm_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_helm_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_helm_tech_pink, quantity: 1, binding: catalog}]}
+      choices_ankle_spoilers_tech_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_ankle_spoilers_tech_blue_5}]}
+        - {weight: 1, rewards: [{group: choices_ankle_wings_tech_blue_6}]}
+      choices_ankle_spoilers_tech_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ankle_spoilers_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_spoilers_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_spoilers_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_spoilers_tech_pink, quantity: 1, binding: catalog}]}
+      choices_ankle_wings_tech_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ankle_wings_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_wings_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_wings_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_wings_tech_pink, quantity: 1, binding: catalog}]}
+      choices_aero_spoiler_tech_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_aero_spoiler_tech_blue_8}]}
+        - {weight: 1, rewards: [{group: choices_double_aero_fin_tech_blue_9}]}
+        - {weight: 1, rewards: [{group: choices_ankle_fins_tech_blue_10}]}
+      choices_aero_spoiler_tech_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: aero_spoiler_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_spoiler_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_spoiler_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: aero_spoiler_tech_pink, quantity: 1, binding: catalog}]}
+      choices_double_aero_fin_tech_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: double_aero_fin_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: double_aero_fin_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: double_aero_fin_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: double_aero_fin_tech_pink, quantity: 1, binding: catalog}]}
+      choices_ankle_fins_tech_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ankle_fins_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_fins_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_fins_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ankle_fins_tech_pink, quantity: 1, binding: catalog}]}
+      choices_top_prop_tech_blue_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_top_prop_tech_blue_12}]}
+        - {weight: 1, rewards: [{group: choices_com_dish_tech_blue_13}]}
+        - {weight: 1, rewards: [{group: choices_helm_wings_tech_blue_14}]}
+        - {weight: 1, rewards: [{group: choices_pop_tennas_tech_blue_15}]}
+        - {weight: 1, rewards: [{group: choices_handy_propellors_tech_blue_16}]}
+        - {weight: 1, rewards: [{group: choices_tailspin_tech_blue_17}]}
+      choices_top_prop_tech_blue_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: top_prop_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_prop_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_prop_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: top_prop_tech_pink, quantity: 1, binding: catalog}]}
+      choices_com_dish_tech_blue_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: com_dish_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_dish_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_dish_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_dish_tech_pink, quantity: 1, binding: catalog}]}
+      choices_helm_wings_tech_blue_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: helm_wings_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_wings_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_wings_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: helm_wings_tech_pink, quantity: 1, binding: catalog}]}
+      choices_pop_tennas_tech_blue_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pop_tennas_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pop_tennas_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pop_tennas_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pop_tennas_tech_pink, quantity: 1, binding: catalog}]}
+      choices_handy_propellors_tech_blue_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: handy_propellors_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: handy_propellors_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: handy_propellors_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: handy_propellors_tech_pink, quantity: 1, binding: catalog}]}
+      choices_tailspin_tech_blue_17:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tailspin_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailspin_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailspin_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailspin_tech_pink, quantity: 1, binding: catalog}]}
+      choices_swing_wings_tech_blue_18:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_swing_wings_tech_blue_19}]}
+        - {weight: 1, rewards: [{group: choices_chaff_pack_tech_blue_20}]}
+      choices_swing_wings_tech_blue_19:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: swing_wings_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: swing_wings_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: swing_wings_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: swing_wings_tech_pink, quantity: 1, binding: catalog}]}
+      choices_chaff_pack_tech_blue_20:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: chaff_pack_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chaff_pack_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chaff_pack_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: chaff_pack_tech_pink, quantity: 1, binding: catalog}]}
+      choices_airbraker_shield_tech_blue_21:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: airbraker_shield_tech_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: airbraker_shield_tech_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: airbraker_shield_tech_orange, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: airbraker_shield_tech_pink, quantity: 1, binding: catalog}]}

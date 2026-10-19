@@ -28,7 +28,7 @@ public final class ItemYaml {
         var labels=new TreeMap<String,ItemCatalog.Labels>();var names=new TreeMap<String,String>();var ids=new TreeMap<String,String>();var seen=new HashSet<String>();
         for(var e:bindings.entrySet()) {
             String at=bindingFile+" → "+e.getKey();if(!e.getKey().matches("[a-z][a-z0-9_]{0,159}"))throw new IOException(at+": invalid administrator ID");
-            var b=map(e.getValue(),at);fields(b,at,"config","stockId","type","slot","nameKey","variant","seed","equipment");
+            var b=map(e.getValue(),at);fields(b,at,"config","stockId","type","slot","nameKey","variant","seed","equipment","expireDays");
             String config=text(b.get("config"),at+" → config");if(ids.putIfAbsent(config,e.getKey())!=null)throw new IOException(at+": duplicate native binding");
         }
         for(String family:CATEGORIES) {

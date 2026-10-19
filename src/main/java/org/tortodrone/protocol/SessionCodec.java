@@ -399,6 +399,9 @@ public final class SessionCodec {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal"); out.writeInt(color.value());
         } else if (value instanceof StarterCatalog.TransColorization color) {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$TransNormal");out.writeInt(color.clazz());out.writeInt(color.value());
+        } else if (value instanceof StarterCatalog.CustomColorization color) {
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$CustomOffsets");out.writeInt(color.clazz());
+            type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Triplet");out.writeFloat(color.hue());out.writeFloat(color.saturation());out.writeFloat(color.value());
         } else if (value instanceof Float number) {
             type(out,"java.lang.Float");out.writeFloat(number);
         } else if (value instanceof Integer number) {
@@ -970,10 +973,11 @@ public final class SessionCodec {
             boolean seeded=item.slot()==WorldProfile.Slot.OTHER&&definition!=null&&definition.variant()==ItemCatalog.Variant.SEED_ITEM;
             boolean gift=definition!=null&&definition.type().equals("GiftBox");
             String subtype=gift?"GiftBoxItem":item.slot()!=WorldProfile.Slot.OTHER?"LevelItem":definition==null?"Item":switch(definition.variant()) {
-                case ITEM -> "Item";case LEVEL_ITEM -> "LevelItem";case SEED_ITEM -> "SeedItem";case UPGRADE_ITEM -> "UpgradingItem";
+                case ITEM -> "Item";case LEVEL_ITEM -> "LevelItem";case SEED_ITEM -> "SeedItem";case UPGRADE_ITEM -> "UpgradingItem";case FURNITURE_ITEM -> "FurniItem";
             };
             // Inactive UpgradingItem adds no fields to the common Item payload.
             type(out,"com.threerings.projectx.item.data."+subtype);
+            if(definition!=null&&definition.variant()==ItemCatalog.Variant.FURNITURE_ITEM)out.writeInt(0); // native undeployed count
             if(gift){
                 var record=item.gift();out.writeBoolean(record!=null);if(record!=null){
                     out.writeInt(record.contents().size());for(var content:record.contents()){value(out,giftReference(content));out.writeInt(content.count());}
@@ -990,7 +994,7 @@ public final class SessionCodec {
             // Stock Item.o / LevelItem.a compare this configuration ID, not the
             // config name. A shared zero leaves the previous weapon's sprite and
             // attack animations active after equipping a different weapon.
-            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());out.writeShort(0);
+            out.writeLong(item.id());out.writeInt(worldId);out.writeInt(definition==null?0:definition.stockId());out.writeUTF(item.config());out.writeInt(item.count());value(out,item.expiresAt());
             // Stock Item.writeObject: bit 2 is the mutable binding flag (aTY),
             // tested by Cs(). Stock cv(true) sets both permanent and binding flags.
             out.writeByte((item.bound() || definition!=null&&definition.locked() ? 2 : 0) | (item.permanent() ? 1 : 0) | (item.cursed()?4:0));

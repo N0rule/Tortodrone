@@ -1,0 +1,93 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  late_harvest_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_fall_equinox, quantity: 1, binding: catalog}, {group: choices_brigandine_late_harvest_1}]}
+      choices_brigandine_late_harvest_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 25, rewards: [{group: choices_brigandine_late_harvest_2}]}
+        - {weight: 20, rewards: [{group: choices_crescent_helm_late_harvest_3}]}
+        - {weight: 35, rewards: [{group: choices_intel_tube_late_harvest_4}]}
+        - {weight: 17, rewards: [{group: choices_leaf_chain_late_harvest_5}]}
+        - {weight: 2, rewards: [{group: choices_untimely_scythe_6}]}
+        - {weight: 1, rewards: [{item: last_straw_aura, quantity: 1, binding: catalog}]}
+      choices_brigandine_late_harvest_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_late_harvest, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_late_harvest_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_late_harvest, quantity: 1, binding: catalog}]}
+      choices_intel_tube_late_harvest_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: intel_tube_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: side_blade_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vitakit_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: barrel_belly_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binoculars_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: canteen_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sensor_unit_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rebreather_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: targeting_module_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headlamp_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_late_harvest, quantity: 1, binding: catalog}]}
+      choices_leaf_chain_late_harvest_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: leaf_chain_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_chain_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_chain_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_chain_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: leaf_crown_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: daisy_crown_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: frasera_crown_late_harvest, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hibiscus_crown_late_harvest, quantity: 1, binding: catalog}]}
+      choices_untimely_scythe_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: untimely_scythe, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: untimely_scythe_shadow, quantity: 1, binding: catalog}]}

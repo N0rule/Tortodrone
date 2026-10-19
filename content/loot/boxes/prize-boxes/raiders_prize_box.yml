@@ -1,0 +1,107 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  raiders_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_firestorm_raider_tunic_1}]}
+      choices_firestorm_raider_tunic_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: choices_firestorm_raider_tunic_2}]}
+        - {weight: 8, rewards: [{group: choices_firestorm_raider_helm_3}]}
+        - {weight: 1, rewards: [{group: choices_winter_s_edge_4}]}
+        - {weight: 1, rewards: [{item: raider_buckler, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{group: choices_braided_beard_freeze_5}]}
+      choices_firestorm_raider_tunic_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: firestorm_raider_tunic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: squall_raider_tunic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_raider_tunic, quantity: 1, binding: catalog}]}
+      choices_firestorm_raider_helm_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: firestorm_raider_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: squall_raider_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winter_raider_helm, quantity: 1, binding: catalog}]}
+      choices_winter_s_edge_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: winter_s_edge, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: firestorm_skeggox, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: squall_caller, quantity: 1, binding: catalog}]}
+      choices_braided_beard_freeze_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_braided_beard_freeze_6}]}
+        - {weight: 1, rewards: [{group: choices_braided_plume_freeze_7}]}
+        - {weight: 1, rewards: [{group: choices_raider_crest_freeze_8}]}
+        - {weight: 1, rewards: [{group: choices_raider_horns_freeze_9}]}
+      choices_braided_beard_freeze_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: braided_beard_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_shock, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_polar, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_regal, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_beard_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: braided_beard_prismatic, quantity: 1, binding: catalog}]}
+      choices_braided_plume_freeze_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: braided_plume_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_shock, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_autumn, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_citrine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_cool, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_dusky, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_fancy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_military, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_polar, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_regal, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: braided_plume_toasty, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: braided_plume_prismatic, quantity: 1, binding: catalog}]}
+      choices_raider_crest_freeze_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: raider_crest_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raider_crest_shock, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raider_crest_volcanic, quantity: 1, binding: catalog}]}
+      choices_raider_horns_freeze_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: raider_horns_freeze, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raider_horns_shock, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raider_horns_volcanic, quantity: 1, binding: catalog}]}

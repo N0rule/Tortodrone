@@ -135,6 +135,7 @@ public final class TownStore {
             try(var s=c.prepareStatement("INSERT INTO inventory_items(item_id,world_id,slot,config,count,bound,bind_on_equip,permanent,level,heat_progress,variants) VALUES(?,?,?,?,?,?,?,?,?,?,?)")){
                 s.setLong(1,id);s.setInt(2,p.worldId());s.setString(3,def.slot().name());s.setString(4,config);s.setInt(5,def.stackable()?count:1);s.setBoolean(6,locked||def.locked());s.setBoolean(7,def.bindOnEquip());s.setBoolean(8,def.permanent());s.setInt(9,level);s.setFloat(10,heat);s.setString(11,Json.stringify(variants.stream().map(StarterCatalog.Model::name).toList()));s.executeUpdate();
             }
+            InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.expireDays()));
             try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,def.stackable()?count:1);s.setLong(4,id);s.setLong(5,System.currentTimeMillis());s.executeUpdate();}
         }
         return first;
@@ -250,7 +251,7 @@ public final class TownStore {
             for(var entry:selected.entrySet()){
                 var item=owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
                 if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
-                gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)));
+                gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)).withExpiration(item.expiresAt()));
             }
             String name;try(var st=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){st.setInt(1,account);st.setInt(2,knight);try(var row=st.executeQuery()){if(!row.next())throw new IOException("m.internal_error");name=row.getString(1);}}
             consume(c,p,paperId,1);for(var entry:selected.entrySet())consume(c,p,entry.getKey(),entry.getValue());
@@ -262,7 +263,9 @@ public final class TownStore {
             var box=owned(p,boxId);if(!items.require(box.config()).type().equals("GiftBox")||box.gift()==null)throw new IOException("m.internal_error");
             var contents=box.gift().contents();consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
             for(var item:contents){
+                if(item.expired(System.currentTimeMillis()))continue;
                 long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants());
+                InventoryExpiry.save(c,id,item.expiresAt());
                 try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
                 result.put(id,item.count());
             }

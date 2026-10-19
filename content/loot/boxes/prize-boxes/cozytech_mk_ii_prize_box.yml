@@ -1,0 +1,177 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  cozytech_mk_ii_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_pullover_tech_violet_1}]}
+      choices_pullover_tech_violet_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 20, rewards: [{group: choices_pullover_tech_violet_2}]}
+        - {weight: 44, rewards: [{group: choices_night_cap_pith_tech_violet_3}]}
+        - {weight: 28, rewards: [{group: choices_cloak_tech_violet_4}]}
+        - {weight: 28, rewards: [{group: choices_hood_tech_violet_5}]}
+        - {weight: 5, rewards: [{group: choices_sweet_dreams_tech_violet_6}]}
+        - {weight: 5, rewards: [{group: choices_teddy_bear_buckler_tech_violet_7}]}
+        - {weight: 20, rewards: [{group: choices_checkered_scarf_tech_violet_8}]}
+        - {weight: 38, rewards: [{group: choices_munitions_pack_tech_violet_9}, {item: pile_o_pillows, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{group: choices_cozy_aura_tech_azure_10}]}
+        - {weight: 8, rewards: [{group: choices_cozy_halo_tech_azure_11}]}
+      choices_pullover_tech_violet_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pullover_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pullover_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: onesie_tech_red, quantity: 1, binding: catalog}]}
+      choices_night_cap_pith_tech_violet_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: night_cap_pith_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_pith_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_pith_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_pith_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_round_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_sallet_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_tailed_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_tailed_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_tailed_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: night_cap_tailed_tech_red, quantity: 1, binding: catalog}]}
+      choices_cloak_tech_violet_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cloak_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_tech_red, quantity: 1, binding: catalog}]}
+      choices_hood_tech_violet_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: hood_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_tech_red, quantity: 1, binding: catalog}]}
+      choices_sweet_dreams_tech_violet_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: sweet_dreams_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sweet_dreams_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sweet_dreams_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sweet_dreams_tech_red, quantity: 1, binding: catalog}]}
+      choices_teddy_bear_buckler_tech_violet_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: teddy_bear_buckler_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: teddy_bear_buckler_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: teddy_bear_buckler_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: teddy_bear_buckler_tech_red, quantity: 1, binding: catalog}]}
+      choices_checkered_scarf_tech_violet_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: checkered_scarf_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: checkered_scarf_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: checkered_scarf_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: checkered_scarf_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slippers_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slippers_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slippers_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slippers_tech_red, quantity: 1, binding: catalog}]}
+      choices_munitions_pack_tech_violet_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: munitions_pack_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: munitions_pack_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: knight_vision_goggles_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mech_tennas_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: binocular_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: intel_tube_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_tech_yellow, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_tech_red, quantity: 1, binding: catalog}]}
+      choices_cozy_aura_tech_azure_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cozy_aura_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_aura_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_aura_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_aura_tech_yellow, quantity: 1, binding: catalog}]}
+      choices_cozy_halo_tech_azure_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: cozy_halo_tech_azure, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_halo_tech_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_halo_tech_violet, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cozy_halo_tech_yellow, quantity: 1, binding: catalog}]}

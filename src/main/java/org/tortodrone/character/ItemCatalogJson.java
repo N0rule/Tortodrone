@@ -21,7 +21,7 @@ final class ItemCatalogJson {
                 row.put("nameKey",entry.nameKey()); row.put("rarity",entry.rarity()); row.put("stackable",entry.stackable());
                 row.put("slot",entry.slot()==null?null:entry.slot().name()); row.put("bindOnEquip",entry.bindOnEquip());
                 row.put("permanent",entry.permanent()); row.put("locked",entry.locked()); row.put("variant",entry.variant().name());
-                row.put("seed",entry.seed()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
+                row.put("expireDays",entry.expireDays()); row.put("seed",entry.seed()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
                 if (comma) out.write(",\n"); comma=true; out.write("    "+Json.stringify(row));
             }
             out.write("\n  ]\n}\n");
@@ -42,7 +42,9 @@ final class ItemCatalogJson {
             if (!(root.get("items") instanceof List<?> rows)) throw new IOException("Invalid item list");
             var entries=new ArrayList<ItemCatalog.Entry>();
             for (Object value:rows) {
-                var row=object(value,version==1?FIELDS_V1:FIELDS_V2);
+                var fields=new HashSet<>(version==1?FIELDS_V1:FIELDS_V2);
+                if(value instanceof Map<?,?> m&&m.containsKey("expireDays"))fields.add("expireDays");
+                var row=object(value,fields);
                 String config=text(row.get("config"),512),type=text(row.get("type"),512),name=text(row.get("nameKey"),1024);
                 int rarity=integer(row.get("rarity")); if (rarity < -1 || rarity > 10) throw new IOException("Invalid item rarity");
                 WorldProfile.Slot slot=row.get("slot")==null?null:WorldProfile.Slot.valueOf(text(row.get("slot"),32));
@@ -52,7 +54,7 @@ final class ItemCatalogJson {
                 Long seed=version==1||row.get("seed")==null?null:longInteger(row.get("seed"));
                 entries.add(new ItemCatalog.Entry(config,integer(row.get("stockId")),type,name,rarity,
                     bool(row.get("stackable")),slot,bool(row.get("bindOnEquip")),permanent,locked,variant,seed,
-                    decode(row.get("modelArguments"),0,new int[]{0})));
+                    decode(row.get("modelArguments"),0,new int[]{0}),row.containsKey("expireDays")?integer(row.get("expireDays")):0));
             }
             return new ItemCatalog(entries);
         } catch (IllegalArgumentException invalid) { throw new IOException("Invalid JSON item catalogue",invalid); }
@@ -66,6 +68,7 @@ final class ItemCatalogJson {
             else if (value instanceof StarterCatalog.Model model) encoded=Map.of("type","model","name",model.name(),"arguments",encode(model.arguments(),depth+1,nodes));
             else if (value instanceof StarterCatalog.Colorization c) encoded=Map.of("type","colorization","value",c.value());
             else if (value instanceof StarterCatalog.TransColorization c) encoded=Map.of("type","transColorization","class",c.clazz(),"value",c.value());
+            else if (value instanceof StarterCatalog.CustomColorization c) encoded=Map.of("type","customColorization","class",c.clazz(),"hue",c.hue(),"saturation",c.saturation(),"value",c.value());
             else if (value==ItemCatalog.PlayerColor.VALUE) encoded=Map.of("type","playerColor");
             else if (value instanceof Float f && Float.isFinite(f)) encoded=Map.of("type","float","value",f);
             else throw new IOException("Unsupported item model argument");
@@ -89,6 +92,7 @@ final class ItemCatalogJson {
                     case "playerColor" -> { object(v,Set.of("type")); yield ItemCatalog.PlayerColor.VALUE; }
                     case "colorization" -> { var m=object(v,Set.of("type","value")); yield new StarterCatalog.Colorization(integer(m.get("value"))); }
                     case "transColorization" -> { var m=object(v,Set.of("type","class","value")); yield new StarterCatalog.TransColorization(integer(m.get("class")),integer(m.get("value"))); }
+                    case "customColorization" -> { var m=object(v,Set.of("type","class","hue","saturation","value")); yield new StarterCatalog.CustomColorization(integer(m.get("class")),number(m.get("hue")),number(m.get("saturation")),number(m.get("value"))); }
                     case "float" -> {
                         var m=object(v,Set.of("type","value"));
                         if (!(m.get("value") instanceof BigDecimal number)) throw new IOException("Invalid model float");
@@ -110,6 +114,7 @@ final class ItemCatalogJson {
         if (!(value instanceof String s) || s.length()>max || s.chars().anyMatch(c->c<32)) throw new IOException("Invalid item text");
         return s;
     }
+    private static float number(Object value)throws IOException{if(!(value instanceof Number n)||!Float.isFinite(n.floatValue()))throw new IOException("Invalid model float");return n.floatValue();}
     private static boolean bool(Object value) throws IOException { if (!(value instanceof Boolean b)) throw new IOException("Invalid item flag"); return b; }
     private static int integer(Object value) throws IOException {
         if (!(value instanceof Number)) throw new IOException("Invalid item integer");

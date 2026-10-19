@@ -1,0 +1,103 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  colossal_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_pony_tail_prismatic_1}, {group: choices_small_fireworks_red_6}, {group: choices_medium_fireworks_red_7},
+            {group: choices_large_fireworks_red_9}]}
+      choices_pony_tail_prismatic_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pony_tail_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crystal_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{group: choices_pony_tail_divine_2}]}
+        - {weight: 2, rewards: [{item: knightmare_aura, quantity: 1, binding: catalog}]}
+        - {weight: 14, rewards: [{group: choices_pony_tail_purple_3}]}
+        - {weight: 30, rewards: [{group: choices_trojan_armor_divine_4}]}
+        - {weight: 150, rewards: [{group: choices_trojan_armor_purple_5}]}
+      choices_pony_tail_divine_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pony_tail_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_volcanic, quantity: 1, binding: catalog}]}
+      choices_pony_tail_purple_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pony_tail_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pony_tail_red, quantity: 1, binding: catalog}]}
+      choices_trojan_armor_divine_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trojan_armor_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_divine, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_volcanic, quantity: 1, binding: catalog}]}
+      choices_trojan_armor_purple_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trojan_armor_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_armor_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: trojan_helm_red, quantity: 1, binding: catalog}]}
+      choices_small_fireworks_red_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: small_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_medium_fireworks_red_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_medium_fireworks_red_8}]}
+        - {weight: 1, rewards: []}
+      choices_medium_fireworks_red_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: medium_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_large_fireworks_red_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_large_fireworks_red_10}]}
+        - {weight: 19, rewards: []}
+      choices_large_fireworks_red_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_green, quantity: 5, binding: catalog}]}

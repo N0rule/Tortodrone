@@ -1,0 +1,112 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  item_001:
+    kind: keyed
+    acceptedKeys:
+    - slime_key
+    - silver_key
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_1}, {group: choices_confetti_slime_8}]}
+      choices_node_slime_blue_s1502234395_c482643_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1000, rewards: [{group: choices_node_slime_blue_s1502234395_c482643_2}]}
+        - {weight: 750, rewards: [{group: choices_node_slime_blue_s2769783390_4d3dc22_3}]}
+        - {weight: 500, rewards: [{group: choices_node_blue_s3565059082_81555683296b_4}]}
+        - {weight: 125, rewards: [{group: choices_node_slime_blue_s77211544_a23ce188c_5}]}
+        - {weight: 125, rewards: [{group: choices_node_slime_blue_s3935208119_4f114f3_6}]}
+        - {weight: 25, rewards: [{group: choices_slime_arms_blue_7}]}
+        - {weight: 2, rewards: [{item: node_aura, quantity: 1, binding: catalog}]}
+      choices_node_slime_blue_s1502234395_c482643_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: node_slime_blue_s1502234395_c4826438bf45, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_slime_divine_s592767024_fab2f3a51925, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_gold_s1502385953_4fbc25aa40ff, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_red_s3512157616_3ec9b773f724, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_green_s3624374370_f7db2993ddc3, quantity: 1, binding: catalog}]}
+      choices_node_slime_blue_s2769783390_4d3dc22_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: node_slime_blue_s2769783390_4d3dc2256963, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_slime_divine_s3231606451_2aa03fc629f9, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_gold_s2769934948_5f142f1e0af6, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_red_s3275951629_b7ad8894da47, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_green_s4263687551_7e09aad05aa1, quantity: 1, binding: catalog}]}
+      choices_node_blue_s3565059082_81555683296b_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: node_blue_s3565059082_81555683296b, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_divine_s2987367775_c60cd1f8eb8c, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_gold_s3565210640_3acc853a8d2d, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_red_s530659041_a10fa56b8f1c, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_green_s3147430227_4cf8f776fe5c, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_blue_s3074044729_a3bdb14104f0, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_divine_s3568977102_11e2c857f4c1, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_gold_s3074196287_14d276a8d22b, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_red_s2315935186_6e928c4da542, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_green_s810887172_c2e52140586d, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: node_prismatic_s579569054_a883108fae6d, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: node_prismatic_s1404957647_1a156d81c9e6, quantity: 1, binding: catalog}]}
+      choices_node_slime_blue_s77211544_a23ce188c_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: node_slime_blue_s77211544_a23ce188c093, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_slime_divine_s1240374637_1655640819dd, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_gold_s77363102_61582259f00d, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_red_s1387979155_2f5fe00ec230, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_green_s2398338949_e78efb05f04a, quantity: 1, binding: catalog}]}
+      choices_node_slime_blue_s3935208119_4f114f3_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: node_slime_blue_s3935208119_4f114f37b390, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: node_slime_divine_s2218306764_f9aee65a9693, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_gold_s3935359677_b4b91cd0f9fa, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_red_s4283377300_822047113baa, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: node_slime_green_s1737148486_ad53b115b300, quantity: 1, binding: catalog}]}
+      choices_slime_arms_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: slime_arms_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: slime_arms_divine, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: slime_arms_gold, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: slime_arms_red, quantity: 1, binding: catalog}]}
+        - {weight: 5, rewards: [{item: slime_arms_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: slime_arms_prismatic, quantity: 1, binding: catalog}]}
+      choices_confetti_slime_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{group: choices_confetti_slime_9}]}
+        - {weight: 4, rewards: [{group: choices_small_fireworks_slime_10}]}
+        - {weight: 1, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}, {item: medium_fireworks_slime, quantity: 2, binding: catalog},
+            {item: small_fireworks_slime, quantity: 3, binding: catalog}]}
+      choices_confetti_slime_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 5, rewards: [{item: confetti_slime, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: confetti_slime, quantity: 2, binding: catalog}]}
+        - {weight: 1, rewards: [{item: confetti_slime, quantity: 3, binding: catalog}]}
+      choices_small_fireworks_slime_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: small_fireworks_slime, quantity: 1, binding: catalog}]}
+        - {weight: 3, rewards: [{item: medium_fireworks_slime, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: large_fireworks_slime, quantity: 1, binding: catalog}]}

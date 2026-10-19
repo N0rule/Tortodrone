@@ -1,0 +1,45 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  equinox_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_variants_1_1}, {item: confetti_equinox, quantity: 1, binding: catalog}, {group: choices_confetti_equinox_2},
+            {group: choices_confetti_equinox_3}]}
+      choices_variants_1_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 470, rewards: [{item: variants_1, quantity: 1, binding: catalog}]}
+        - {weight: 240, rewards: [{item: variants_2, quantity: 1, binding: catalog}]}
+        - {weight: 100, rewards: [{item: variants_3, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: crest_sun, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: crest_moon, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: celestial_nav_suit, quantity: 1, binding: catalog}]}
+        - {weight: 35, rewards: [{item: celestial_nav_helm, quantity: 1, binding: catalog}]}
+        - {weight: 30, rewards: [{item: galactic_guardian_vest, quantity: 1, binding: catalog}]}
+        - {weight: 35, rewards: [{item: galactic_guardian_helm, quantity: 1, binding: catalog}]}
+        - {weight: 6, rewards: [{item: celestial_shield, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: orbit_aura, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plasma_wings_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plasma_wings_gold, quantity: 1, binding: catalog}]}
+      choices_confetti_equinox_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_equinox_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_equinox, quantity: 1, binding: catalog}]}
+        - {weight: 9, rewards: []}

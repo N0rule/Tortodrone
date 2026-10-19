@@ -1,0 +1,226 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  owlite_archaeology_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_owlite_robe_blue_1}]}
+      choices_owlite_robe_blue_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 24, rewards: [{group: choices_owlite_robe_blue_2}]}
+        - {weight: 18, rewards: [{group: choices_astute_owlite_mask_blue_3}]}
+        - {weight: 50, rewards: [{group: choices_astrolabe_blue_6}]}
+        - {weight: 2, rewards: [{group: choices_owlite_wand_blue_16}]}
+        - {weight: 5, rewards: [{item: illuminating_ward, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: enchanter_aura, quantity: 1, binding: catalog}]}
+      choices_owlite_robe_blue_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: owlite_robe_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_robe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_robe_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_robe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_robe_volcanic, quantity: 1, binding: catalog}]}
+      choices_astute_owlite_mask_blue_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_astute_owlite_mask_blue_4}]}
+        - {weight: 1, rewards: [{group: choices_sagacious_owlite_mask_blue_5}]}
+      choices_astute_owlite_mask_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: astute_owlite_mask_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: astute_owlite_mask_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astute_owlite_mask_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: astute_owlite_mask_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: astute_owlite_mask_volcanic, quantity: 1, binding: catalog}]}
+      choices_sagacious_owlite_mask_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sagacious_owlite_mask_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sagacious_owlite_mask_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sagacious_owlite_mask_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sagacious_owlite_mask_volcanic, quantity: 1, binding: catalog}]}
+      choices_astrolabe_blue_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_astrolabe_blue_7}]}
+        - {weight: 1, rewards: [{group: choices_ear_feathers_blue_8}]}
+        - {weight: 1, rewards: [{group: choices_owlite_pipe_blue_9}]}
+        - {weight: 1, rewards: [{group: choices_ritualist_pack_blue_10}]}
+        - {weight: 1, rewards: [{group: choices_sash_bag_blue_11}]}
+        - {weight: 1, rewards: [{group: choices_ancient_scroll_blue_12}]}
+        - {weight: 1, rewards: [{group: choices_owlite_spectacles_blue_13}]}
+        - {weight: 1, rewards: [{group: choices_scholarly_tam_blue_14}]}
+        - {weight: 1, rewards: [{group: choices_warding_candle_blue_15}]}
+      choices_astrolabe_blue_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: astrolabe_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: astrolabe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: astrolabe_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: astrolabe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: astrolabe_volcanic, quantity: 1, binding: catalog}]}
+      choices_ear_feathers_blue_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ear_feathers_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ear_feathers_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ear_feathers_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ear_feathers_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ear_feathers_volcanic, quantity: 1, binding: catalog}]}
+      choices_owlite_pipe_blue_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: owlite_pipe_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_pipe_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_pipe_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_pipe_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_pipe_volcanic, quantity: 1, binding: catalog}]}
+      choices_ritualist_pack_blue_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ritualist_pack_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ritualist_pack_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ritualist_pack_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ritualist_pack_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ritualist_pack_volcanic, quantity: 1, binding: catalog}]}
+      choices_sash_bag_blue_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: sash_bag_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sash_bag_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: sash_bag_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sash_bag_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: sash_bag_volcanic, quantity: 1, binding: catalog}]}
+      choices_ancient_scroll_blue_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: ancient_scroll_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: ancient_scroll_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ancient_scroll_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_volcanic, quantity: 1, binding: catalog}]}
+      choices_owlite_spectacles_blue_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: owlite_spectacles_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_spectacles_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_spectacles_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_spectacles_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_spectacles_volcanic, quantity: 1, binding: catalog}]}
+      choices_scholarly_tam_blue_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: scholarly_tam_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: scholarly_tam_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: scholarly_tam_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scholarly_tam_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: scholarly_tam_volcanic, quantity: 1, binding: catalog}]}
+      choices_warding_candle_blue_15:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: warding_candle_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: warding_candle_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: warding_candle_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: warding_candle_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: warding_candle_volcanic, quantity: 1, binding: catalog}]}
+      choices_owlite_wand_blue_16:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 4, rewards: [{item: owlite_wand_blue, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_wand_divine, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_gold, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_green, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_pink, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_purple, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: [{item: owlite_wand_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: owlite_wand_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: owlite_wand_volcanic, quantity: 1, binding: catalog}]}

@@ -1,0 +1,83 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  electric_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_brigandine_electric_1}]}
+      choices_brigandine_electric_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 7, rewards: [{group: choices_brigandine_electric_2}]}
+        - {weight: 6, rewards: [{group: choices_crescent_helm_electric_3}]}
+        - {weight: 4, rewards: [{group: choices_side_blade_electric_4}]}
+        - {weight: 3, rewards: [{group: choices_voltaic_radical_mask_5}]}
+      choices_brigandine_electric_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: brigandine_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cloak_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: cuirass_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: culet_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: draped_armor_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: flak_jacket_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_coat_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_mail_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raiment_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_mail_electric, quantity: 1, binding: catalog}]}
+      choices_crescent_helm_electric_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crescent_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: fur_cap_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: hood_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pith_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plate_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: round_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: sallet_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scale_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tailed_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: winged_helm_electric, quantity: 1, binding: catalog}]}
+      choices_side_blade_electric_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_electric, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_electric, quantity: 1, binding: catalog}]}
+      choices_voltaic_radical_mask_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: voltaic_radical_mask, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: voltaic_radical_suit, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plasma_wings_voltaic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: extension_cord_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: voltaic_headset_prismatic, quantity: 1, binding: catalog}]}

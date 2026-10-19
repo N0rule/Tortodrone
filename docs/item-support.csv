@@ -20,293 +20,293 @@ Accessory/Helm/Parts/Top,AccessoryTicket,unusable,no resolved accessory
 Accessory/Helm/Top/Snipe Perch/Parts/Base,AccessoryTicket,unusable,no resolved accessory
 Accessory/Parts/Base,AccessoryTicket,unusable,no resolved accessory
 "Accessory/Parts/Base, Custom Colors",AccessoryTicket,unusable,no resolved accessory
-"Furni/Bed/Spiral Order/Military, 2x3/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Bed/Spiral Order/Military, 2x3/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Bed/Spiral Order/Military, 2x3/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Bed/Spiral Order/Military, 2x3/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Cool",Prop,unusable,no item-use handler for Prop
-"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Warm",Prop,unusable,no item-use handler for Prop
+"Furni/Bed/Spiral Order/Military, 2x3/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bed/Spiral Order/Military, 2x3/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bed/Spiral Order/Military, 2x3/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bed/Spiral Order/Military, 2x3/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Cool",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Warm",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Bed/Spiral Order/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Almire/Bench, Charred",Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Almire/Bench, Restored",Prop,unusable,no item-use handler for Prop
+"Furni/Bench/Almire/Bench, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bench/Almire/Bench, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Bench/Almire/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Manor/Divan, green",Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Manor/Divan, violet",Prop,unusable,no item-use handler for Prop
+"Furni/Bench/Manor/Divan, green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Bench/Manor/Divan, violet",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Bench/Manor/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Block/Ice Block,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Almire/Chair, Charred",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Almire/Chair, Restored",Prop,unusable,no item-use handler for Prop
+Furni/Block/Ice Block,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Almire/Chair, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Almire/Chair, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Chair/Almire/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Manor/Chair, green",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Manor/Chair, violet",Prop,unusable,no item-use handler for Prop
+"Furni/Chair/Manor/Chair, green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Manor/Chair, violet",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Chair/Manor/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Chair/Spiral Order/Field/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Spiral Order/Field/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Chair/Spiral Order/Field/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Chair/Spiral Order/Field/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Spiral Order/Field/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Spiral Order/Field/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chair/Spiral Order/Field/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 "Furni/Chest/Spiral Order/1unit, Footlocker/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Almire/Tapestry Stand, Charred",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Almire/Tapestry Stand, Restored",Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Apocrea/Obsidian Obelisk,Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken Floating",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Floating",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Bone Fragments/Bone Pile, Skulls",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Bone Fragments/Bone Pile, Stack",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Holiday Presents/Holiday Presents, Green",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Holiday Presents/Holiday Presents, Red",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Holiday Presents/Holiday Presents, White",Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Luggage/Luggage Pile A,Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Luggage/Luggage Pile B,Prop,unusable,no item-use handler for Prop
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Almire/Tapestry Stand, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Almire/Tapestry Stand, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Apocrea/Obsidian Obelisk,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken Floating",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Floating",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Bone Fragments/Bone Pile, Skulls",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Bone Fragments/Bone Pile, Stack",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Holiday Presents/Holiday Presents, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Holiday Presents/Holiday Presents, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Holiday Presents/Holiday Presents, White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Luggage/Luggage Pile A,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Luggage/Luggage Pile B,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Clutter/Plants and Foliage/Houseplants/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Blue",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Green",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Red",Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Yellow",Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Spiral Order/Bedroll/Bedroll 01,Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Spiral Order/Escape Pod/Escape Pod, Shut",Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Spiral Order/Field Sensor,Prop,unusable,no item-use handler for Prop
-Furni/Clutter/Spiral Order/Sundries 01,Prop,unusable,no item-use handler for Prop
-"Furni/Counter/Spiral Order/1unit/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Counter/Spiral Order/Corner/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Blue",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Yellow",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Spiral Order/Bedroll/Bedroll 01,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Clutter/Spiral Order/Escape Pod/Escape Pod, Shut",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Spiral Order/Field Sensor,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Clutter/Spiral Order/Sundries 01,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Counter/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Counter/Spiral Order/Corner/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 "Furni/Counter/Spiral Order/Parts/1unit, Base",Prop,unusable,no item-use handler for Prop
 "Furni/Counter/Spiral Order/Parts/Corner, Base",Prop,unusable,no item-use handler for Prop
-"Furni/Crate/Spiral Order/1unit, Toughbox/Shut",Prop,unusable,no item-use handler for Prop
-"Furni/Crate/Spiral Order/1unit, Toughbox/Weapons Crate",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Pale, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Crate/Spiral Order/1unit, Toughbox/Shut",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Crate/Spiral Order/1unit, Toughbox/Weapons Crate",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Drawer/Spiral Order/1unit/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Rust, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Feature/Chess Minis/Bishop, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Bishop, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Bishop, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Bishop, Winterfest White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/King, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/King, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/King, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/King, Winterfest White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Knight, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Knight, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Knight, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Knight, Winterfest White",Actor,unusable,no item-use handler for Actor
+"Furni/Drawer/Spiral Order/1unit/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Bishop, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Bishop, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Bishop, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Bishop, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/King, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/King, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/King, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/King, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Knight, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Knight, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Knight, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Knight, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Feature/Chess Minis/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Pawn, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Pawn, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Pawn, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Pawn, Winterfest White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Queen, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Queen, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Queen, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Queen, Winterfest White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Rook, Black",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Rook, White",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Rook, Winterfest Red",Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Rook, Winterfest White",Actor,unusable,no item-use handler for Actor
+"Furni/Feature/Chess Minis/Pawn, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Pawn, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Pawn, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Pawn, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Queen, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Queen, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Queen, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Queen, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Rook, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Rook, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Rook, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Feature/Chess Minis/Rook, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Feature/Knight Statue,KnightStatue,unusable,no item-use handler for KnightStatue
 Furni/Feature/Knight Statue - Relaxed,KnightStatue,unusable,no item-use handler for KnightStatue
 "Furni/Feature/Knight Statue - Relaxed, Large",KnightStatue,unusable,no item-use handler for KnightStatue
 "Furni/Feature/Knight Statue, Large",KnightStatue,unusable,no item-use handler for KnightStatue
 "Furni/Feature/Knight Statue, Medium",KnightStatue,unusable,no item-use handler for KnightStatue
 Furni/Feature/Mist Well/Mist Well,Placeable,unusable,no item-use handler for Placeable
-"Furni/Floor/Almire/Rug, Charred",Prop,unusable,no item-use handler for Prop
-"Furni/Floor/Almire/Rug, Restored",Prop,unusable,no item-use handler for Prop
-"Furni/Floor/Monitors/Monitors, Prismatic",Actor,unusable,no item-use handler for Actor
-"Furni/Floor/Monitors/Monitors, Small, Prismatic",Actor,unusable,no item-use handler for Actor
-Furni/Library/Lectern/Manor/Ancient Tome,Prop,unusable,no item-use handler for Prop
-Furni/Library/Lectern/Manor/Cursed Tome,Prop,unusable,no item-use handler for Prop
-Furni/Library/Lectern/Manor/Mystical Tome,Prop,unusable,no item-use handler for Prop
-Furni/Library/Loose Books/Manor/1unit Stack A,Prop,unusable,no item-use handler for Prop
-Furni/Library/Loose Books/Manor/1unit Stack B,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Short/Blue Flame,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Short/Green Flame,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Short/Orange Flame,Prop,unusable,no item-use handler for Prop
+"Furni/Floor/Almire/Rug, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Floor/Almire/Rug, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Floor/Monitors/Monitors, Prismatic",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Floor/Monitors/Monitors, Small, Prismatic",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Library/Lectern/Manor/Ancient Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Library/Lectern/Manor/Cursed Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Library/Lectern/Manor/Mystical Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Library/Loose Books/Manor/1unit Stack A,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Library/Loose Books/Manor/1unit Stack B,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Short/Blue Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Short/Green Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Short/Orange Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Lighting/Braziers/Castle/Short/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Short/Violet Flame,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Tall/Blue Flame,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Tall/Green Flame,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Tall/Orange Flame,Prop,unusable,no item-use handler for Prop
+Furni/Lighting/Braziers/Castle/Short/Violet Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Tall/Blue Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Tall/Green Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Braziers/Castle/Tall/Orange Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Lighting/Braziers/Castle/Tall/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Tall/Violet Flame,Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Candles/Candle Platter, Xmas Green",Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Candles/Candle Platter, Xmas Red",Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Candles/Candle Platter, Xmas White",Prop,unusable,no item-use handler for Prop
+Furni/Lighting/Braziers/Castle/Tall/Violet Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Candles/Candle Platter, Xmas Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Candles/Candle Platter, Xmas Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Candles/Candle Platter, Xmas White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Lighting/Candles/Platter/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Floor Beacons/Floor Beacon, Blue",Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Floor Beacons/Floor Beacon, Green",Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Floor Beacons/Floor Beacon, Red",Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Floor Beacons/Floor Beacon, Yellow",Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Short/Blue Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Short/Green Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Short/Orange Lamp,Prop,unusable,no item-use handler for Prop
+"Furni/Lighting/Floor Beacons/Floor Beacon, Blue",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Floor Beacons/Floor Beacon, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Floor Beacons/Floor Beacon, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Lighting/Floor Beacons/Floor Beacon, Yellow",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Short/Blue Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Short/Green Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Short/Orange Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Lighting/Gaslamps/Short/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Short/Violet Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Tall/Blue Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Tall/Green Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Tall/Orange Lamp,Prop,unusable,no item-use handler for Prop
+Furni/Lighting/Gaslamps/Short/Violet Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Tall/Blue Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Tall/Green Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Gaslamps/Tall/Orange Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Lighting/Gaslamps/Tall/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Tall/Violet Lamp,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Rainbow,SpecialProp,unusable,no item-use handler for SpecialProp
+Furni/Lighting/Gaslamps/Tall/Violet Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Lighting/Rainbow,SpecialProp,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Parts/Base (Actor),Actor,unusable,no item-use handler for Actor
 Furni/Parts/Base (Knight statue),KnightStatue,unusable,no item-use handler for KnightStatue
 Furni/Parts/Base (ModelProp),ModelProp,unusable,no item-use handler for ModelProp
 Furni/Parts/Base (Placeable),Placeable,unusable,no item-use handler for Placeable
 Furni/Parts/Base (Prop),Prop,unusable,no item-use handler for Prop
 Furni/Parts/Base (SpecialProp),SpecialProp,unusable,no item-use handler for SpecialProp
-Furni/Pet/Chromalisk/Chromalisk,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Black Gobble Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Brown Gobble Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Gold Gobble Snipe, Lazy",Actor,unusable,no item-use handler for Actor
+Furni/Pet/Chromalisk/Chromalisk,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Black Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Brown Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Gold Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Black Gobble Snipe, Plump",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Brown Gobble Snipe, Plump",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Gold Gobble Snipe, Plump",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Black Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Brown Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Gold Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Black Gobble Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Brown Gobble Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Gold Gobble Snipe, Wandering",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Black Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Brown Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Gold Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Nature Sprite/Cursed Nature Sprite,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Nature Sprite/Nature Sprite,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Black Rooster Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Brown Rooster Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Fiery Rooster Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Gold Rooster Snipe, Lazy",Actor,unusable,no item-use handler for Actor
+Furni/Pet/Nature Sprite/Cursed Nature Sprite,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Pet/Nature Sprite/Nature Sprite,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Black Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Brown Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Fiery Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Gold Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Black Rooster Snipe, Plump",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Brown Rooster Snipe, Plump",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Fiery Rooster Snipe, Plump",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Gold Rooster Snipe, Plump",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Black Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Brown Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Fiery Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Gold Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Black Rooster Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Brown Rooster Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Fiery Rooster Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Gold Rooster Snipe, Wandering",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Black Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Brown Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Fiery Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Gold Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Slime/Companion Cube,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Black Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Blue Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Cherry Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Green Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Lime Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Mint Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Orange Snipe, Flying",Actor,unusable,no item-use handler for Actor
+Furni/Pet/Slime/Companion Cube,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Black Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Blue Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Cherry Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Green Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Lime Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Mint Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Orange Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Snipe/Flying Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Plum Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Purple Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Red Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Sage Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Sea Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Wheat Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/White Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Yellow Snipe, Flying",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Black Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Blue Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Cherry Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Green Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Lime Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Mint Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Orange Snipe, Lazy",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Snipe/Flying Snipe/Plum Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Purple Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Red Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Sage Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Sea Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Wheat Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/White Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Flying Snipe/Yellow Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Black Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Blue Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Cherry Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Green Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Lime Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Mint Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Orange Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Snipe/Lazy Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Plum Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Purple Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Red Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Sage Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Sea Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Wheat Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/White Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Yellow Snipe, Lazy",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Black Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Blue Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Cherry Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Green Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Lime Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Mint Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Orange Snipe, Wandering",Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Snipe/Lazy Snipe/Plum Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Purple Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Red Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Sage Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Sea Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Wheat Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/White Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Lazy Snipe/Yellow Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Black Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Blue Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Cherry Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Green Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Lime Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Mint Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Orange Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Snipe/Wandering Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Plum Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Purple Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Red Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Sage Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Sea Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Wheat Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/White Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Yellow Snipe, Wandering",Actor,unusable,no item-use handler for Actor
-Furni/Pet/Spookat/Mewkat,Actor,unusable,no item-use handler for Actor
+"Furni/Pet/Snipe/Wandering Snipe/Plum Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Purple Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Red Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Sage Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Sea Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Wheat Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/White Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Pet/Snipe/Wandering Snipe/Yellow Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Pet/Spookat/Mewkat,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Pet/Spookat/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Zombie/Zombie Bellhop,Actor,unusable,no item-use handler for Actor
-"Furni/Shelf/Manor/2unit, Bookcase/Antique",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+Furni/Pet/Zombie/Zombie Bellhop,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Manor/2unit, Bookcase/Antique",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 "Furni/Shelf/Spiral Order/2unit, Random clutter/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Almire/Table, Charred",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Almire/Table, Restored",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Manor/1unit/Wood, Default",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Pale, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Almire/Table, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Almire/Table, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Manor/1unit/Wood, Default",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Table/Spiral Order/1unit/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Rust, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
-Furni/Table/Winterfest/1unit/Winterfest Table,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 1,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 2,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 3,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 4,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Roarmulus/1 - Blueprints,Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Boss Trophy/Roarmulus/2 - Replica Roarmulus, small",Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Boss Trophy/Roarmulus/3 - Replica Roarmulus, large",Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Royal Jelly/1 - Jelly Gem,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Royal Jelly/2 - Jelly Crown,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Royal Jelly/3 - Royal Jelly,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Snarbolax/1 - Frumious Fang,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Snarbolax/2 - Miniature Snarbolax,Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Boss Trophy/Snarbolax/3 - Stuffed Snarbolax, Invuln",Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Vanaduke/1 - Almirian Seal,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Vanaduke/2 - Mask of Vanaduke,Prop,unusable,no item-use handler for Prop
-Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,unusable,no item-use handler for Prop
+"Furni/Table/Spiral Order/1unit/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Table/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Table/Winterfest/1unit/Winterfest Table,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 1,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 2,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 3,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 4,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Roarmulus/1 - Blueprints,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Trophy/Boss Trophy/Roarmulus/2 - Replica Roarmulus, small",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Trophy/Boss Trophy/Roarmulus/3 - Replica Roarmulus, large",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Royal Jelly/1 - Jelly Gem,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Royal Jelly/2 - Jelly Crown,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Royal Jelly/3 - Royal Jelly,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Snarbolax/1 - Frumious Fang,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Snarbolax/2 - Miniature Snarbolax,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Trophy/Boss Trophy/Snarbolax/3 - Stuffed Snarbolax, Invuln",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Vanaduke/1 - Almirian Seal,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Vanaduke/2 - Mask of Vanaduke,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Furni/Trophy/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, Green",Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, Red",Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, White",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 "Furni/Wardrobe/Spiral Order/2 unit, Locker/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Warm tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,unusable,no item-use handler for Prop
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
 Gear/Dungeon/Event/Winterfest/Large Present,Present,unusable,no item-use handler for Present
 Gear/Dungeon/Event/Winterfest/Present/Base,Present,unusable,no item-use handler for Present
 Gear/Dungeon/Event/Winterfest/Small Present,Present,unusable,no item-use handler for Present
@@ -714,251 +714,251 @@ Upgrade/Lockbox,Lockbox,partial,native opening with documented candidates and ex
 Upgrade/Lockboxes/Character,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Mystery,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Lockboxes/Slime/000,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Lockboxes/Slime/001,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/002,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/003,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/004,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/005,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/006,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/007,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/008,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/009,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00A,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00C,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00D,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00E,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00F,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/00G,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/403,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/40G,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/40N,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/41C,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/41D,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/509,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/50E,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A10,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A12,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A14,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A16,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A17,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A18,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A19,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A1A,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A1B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A1H,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A1I,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/A1J,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Amethyst,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Aquamarine,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/B1B,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Citrine,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Curse,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Dangerous,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Diamond,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Emerald,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Garnet,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Glacial,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Hazardous,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Hunter,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Opal,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/001,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/002,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/003,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/004,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/005,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/006,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/007,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/008,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/009,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00A,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00B,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00C,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00D,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00E,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00F,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/00G,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/403,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/40G,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/40N,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/41C,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/41D,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/509,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/50E,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A10,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A12,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A14,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A16,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A17,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A18,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A19,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A1A,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A1B,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A1H,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A1I,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/A1J,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Amethyst,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Aquamarine,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/B1B,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Citrine,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Curse,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Dangerous,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Diamond,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Emerald,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Garnet,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Glacial,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Hazardous,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Hunter,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Opal,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Lockboxes/Slime/Parts/Variant Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Pearl,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Peridot,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/QQQ,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Ruby,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Sapphire,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Shadow,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Turquoise,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Lockboxes/Slime/Pearl,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Peridot,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/QQQ,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Ruby,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Sapphire,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Shadow,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Lockboxes/Slime/Turquoise,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Pack/Eyes, Amazing",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Bedazzling",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Shapely",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Suited",Pack,unusable,no item-use handler for Pack
 Upgrade/Parts/Heat Bonus,Upgrade,unusable,no item-use handler for Upgrade
-Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/AeroTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Aerodynamic Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Almire Furniture Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Amethyst Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Ancient Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/AeroTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Aerodynamic Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Almire Furniture Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Amethyst Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Ancient Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Anniversary 2014/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2014,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Anniversary Prize Box 2019,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Anniversary Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Aquamarine Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Autumn Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Battle Boar Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Bejeweled Stranger Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Blazing Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Blooming Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Buccaneer Booty Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Budding Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Cavalry Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Chess Mini Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Chess Mini Prize Box, Winterfest",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Citrine Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Clockworks Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Colossal Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 1,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 2,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 4,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 5,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2016/2016 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2017/2017 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2018/2018 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary 2019/2019 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2014,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2015,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2017,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2018,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Anniversary Prize Box 2019,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Anniversary Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Aquamarine Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Autumn Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Battle Boar Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Bejeweled Stranger Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Blazing Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Blooming Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Buccaneer Booty Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Budding Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Cavalry Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Chess Mini Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Chess Mini Prize Box, Winterfest",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Citrine Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Clockworks Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Colossal Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 1,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 5,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Companion Prize Box/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Confection Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Construct Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Cozy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/CozyTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/CozyTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Cracked Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dangerous Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dangerous Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dark Harvest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dark Harvest Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dark Harvest Prize Box Series 3,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dazed Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Decoration Kit Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Diamond Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Dim Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Disguise Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Electric Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Elite Trinket Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Emerald Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Equinox Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Equinox Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Extraordinary Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Fall Equinox Prize Box 2014,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Fall Equinox Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Fall Equinox Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Fall Equinox Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Fall Equinox Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/FlowerTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/FlowerTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Frenzy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Frosty Present,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Frosty Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Furniture Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Garnet Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Glacial Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Glacial Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Glacial Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Glowing Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Gobble Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Gourmet Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Gremlin Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Grey Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Grey Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Guild Hall Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hazardous Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hazardous Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hive Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hololite Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hunter Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Hunter Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Katastrophe Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Confection Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Construct Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Cozy Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/CozyTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/CozyTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Cracked Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dangerous Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dangerous Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dark Harvest Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dark Harvest Prize Box 2017,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dark Harvest Prize Box Series 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dazed Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Decoration Kit Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Diamond Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Dim Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Disguise Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Electric Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Elite Trinket Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Emerald Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Equinox Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Equinox Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Extraordinary Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Fall Equinox Prize Box 2014,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Fall Equinox Prize Box 2015,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Fall Equinox Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Fall Equinox Prize Box 2017,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Fall Equinox Prize Box 2018,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/FlowerTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/FlowerTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Frenzy Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Frosty Present,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Frosty Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Furniture Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Garnet Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Glacial Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Glacial Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Glacial Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Glowing Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Gobble Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Gourmet Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Gremlin Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Grey Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Grey Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Guild Hall Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hazardous Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hazardous Prize Box 2017,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hive Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hololite Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hunter Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Hunter Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Katastrophe Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Prize Box/Katastrophe Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Prize Box/Katastrophe Returns Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Late Harvest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Lucky Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Moorcroft Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Nemesis Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Obsidian Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Opal Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Owlite Archaeology Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Katastrophe Returns Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Late Harvest Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Lucky Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Moorcroft Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Nemesis Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Obsidian Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Opal Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Owlite Archaeology Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Parts/Anniversary Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Parts/Equinox Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Pearl Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Peridot Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Plunge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Polar Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Polar Prize Box, 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Polar Prize Box, 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Radiant Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rage Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Raiders Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rooster Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rose Regalia Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Rose Regalia Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rose Regalia Returns Again Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rose Regalia Returns Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Rose Regalia Reunion Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Ruby Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Running Wild Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Sapphire Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/ShadowTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Shining Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Slime Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Slumber Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Solstice Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, 2013",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, 2015",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Pearl Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Peridot Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Plunge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Polar Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Polar Prize Box, 2014",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Polar Prize Box, 2016",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Radiant Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rage Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Raiders Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rooster Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rose Regalia Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Rose Regalia Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rose Regalia Returns Again Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rose Regalia Returns Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Rose Regalia Reunion Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Ruby Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Running Wild Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Sapphire Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/ShadowTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Shining Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Slime Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Slumber Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Solstice Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, 2013",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, 2014",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, 2015",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Prize Box/Solstice Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2017",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Summer 2018",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2014",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2015",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2016",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2017",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Solstice Prize Box, Winter 2018",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spiralhorn Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spiraltail Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Splash Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spring Equinox Prize Box 2015,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spring Equinox Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spring Equinox Prize Box 2017,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spring Equinox Prize Box 2018,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spring Equinox Prize Box 2019,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Spritely Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Stormy Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Stranger Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/SummerTech Mk II Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/SummerTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2016",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2017",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Summer 2018",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2014",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2015",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2016",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2017",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Solstice Prize Box, Winter 2018",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spiralhorn Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spiraltail Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Splash Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spring Equinox Prize Box 2015,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spring Equinox Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spring Equinox Prize Box 2017,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spring Equinox Prize Box 2018,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spring Equinox Prize Box 2019,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Spritely Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Stormy Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Stranger Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/SummerTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/SummerTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Surge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Prize Box/Toyland Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Turquoise Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Vile Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Volcanic Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Warm Forge Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Wicked Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Wicked Prize Box 2016,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-"Upgrade/Prize Box/Wicked Prize Box, Complete",Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/WinterTech Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Winterfest Present,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Winterfest Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Wizard Prize Box,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
+Upgrade/Prize Box/Toyland Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Turquoise Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Vile Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Volcanic Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Warm Forge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Wicked Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Wicked Prize Box 2016,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+"Upgrade/Prize Box/Wicked Prize Box, Complete",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/WinterTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Winterfest Present,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Winterfest Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
+Upgrade/Prize Box/Wizard Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Rename Guild,RenameGuild,unusable,no item-use handler for RenameGuild
 Upgrade/Rename Knight,RenameKnight,unusable,no item-use handler for RenameKnight
 Upgrade/Trinket Slot,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable

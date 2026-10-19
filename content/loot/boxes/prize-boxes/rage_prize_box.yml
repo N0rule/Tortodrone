@@ -1,0 +1,78 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  rage_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_confetti_rage_1}, {group: choices_tome_blue_4}]}
+      choices_confetti_rage_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: confetti_rage, quantity: 1, binding: catalog}, {item: confetti_rage, quantity: 1, binding: catalog}, {
+              group: choices_confetti_rage_2}, {group: choices_confetti_rage_2}, {group: choices_confetti_rage_3}]}
+        - {weight: 17, rewards: []}
+      choices_confetti_rage_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_rage, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_rage_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_rage, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_tome_blue_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 120, rewards: [{group: choices_tome_blue_5}]}
+        - {weight: 60, rewards: [{group: choices_raging_avenger_helm_6}]}
+        - {weight: 20, rewards: [{group: choices_raging_rider_mantle_7}]}
+        - {weight: 1, rewards: [{group: choices_tome_volcanic_8}]}
+      choices_tome_blue_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: tome_blue, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_gold, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_green, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_heavy, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_pink, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_purple, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: tome_red, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_rage, quantity: 1, binding: catalog}]}
+      choices_raging_avenger_helm_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: raging_avenger_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raging_champion_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raging_crusader_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raging_dragon_helm, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: raging_warrior_helm, quantity: 1, binding: catalog}]}
+      choices_raging_rider_mantle_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: raging_rider_mantle, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: rageous_plate_mail, quantity: 1, binding: catalog}]}
+      choices_tome_volcanic_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 2, rewards: [{item: tome_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tome_divine, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tome_shadow, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: tome_prismatic, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_rage, quantity: 1, binding: catalog}]}

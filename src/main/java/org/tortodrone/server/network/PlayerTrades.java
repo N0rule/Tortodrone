@@ -41,7 +41,7 @@ final class PlayerTrades {
         }
         int side(Member m)throws IOException {if(m==members[0])return 0;if(m==members[1])return 1;throw new IOException("Not a trade participant");}
         SessionCodec.TradeView view(){return new SessionCodec.TradeView(oid,members[0].knight,owners[0],offered(0),members[1].knight,owners[1],offered(1),crowns[0],crowns[1],energy[0],energy[1],revision,accepted[0],accepted[1],completed);}
-        List<WorldProfile.Item> offered(int side){return owners[side].items().stream().filter(i->items[side].containsKey(i.id())).map(i->new WorldProfile.Item(i.id(),i.slot(),i.config(),i.accessory(),i.heat(),null,i.bound(),i.bindOnEquip(),i.starter(),items[side].get(i.id()),i.permanent(),i.level(),i.heatProgress(),i.variants(),i.additionalAccessories())).toList();}
+        List<WorldProfile.Item> offered(int side){return owners[side].items().stream().filter(i->items[side].containsKey(i.id())).map(i->new WorldProfile.Item(i.id(),i.slot(),i.config(),i.accessory(),i.heat(),null,i.bound(),i.bindOnEquip(),i.starter(),items[side].get(i.id()),i.permanent(),i.level(),i.heatProgress(),i.variants(),i.additionalAccessories()).withExpiration(i.expiresAt())).toList();}
     }
     private final Map<String,Member> members=new HashMap<>();
     private final Map<Member,Invite> invitations=new HashMap<>(); // At most one outstanding request per participant.

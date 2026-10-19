@@ -1,0 +1,94 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  polar_prize_box_2014:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_side_blade_polar_1}, {group: choices_snow_bucket_5}, {item: confetti_winter, quantity: 1, binding: catalog},
+            {item: flawed_snowball, quantity: 1, binding: catalog}, {group: choices_confetti_winter_6}, {group: choices_flawed_snowball_7}, {
+              group: choices_confetti_winter_8}, {group: choices_flawed_snowball_9}]}
+      choices_side_blade_polar_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 100, rewards: [{group: choices_side_blade_polar_2}]}
+        - {weight: 56, rewards: [{group: choices_polar_warden_hood_3}]}
+        - {weight: 40, rewards: [{group: choices_polar_warden_coat_4}]}
+        - {weight: 2, rewards: [{item: halo_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wolver_tail_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: leaf_aura_divine, quantity: 1, binding: catalog}]}
+      choices_side_blade_polar_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: side_blade_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wings_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bomb_bundle_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: crest_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: parrying_blade_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: plume_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: ribbon_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: scarf_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: pipe_and_mustache_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: power_scanner_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: glasses_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: shades_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: com_unit_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: mecha_wings_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: vertical_vents_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: bolted_vee_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: headband_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: maid_headband_polar, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: toupee_polar, quantity: 1, binding: catalog}]}
+      choices_polar_warden_hood_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_warden_hood, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_hood_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_hood_white, quantity: 1, binding: catalog}]}
+      choices_polar_warden_coat_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: polar_warden_coat, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_coat_black, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: polar_warden_coat_white, quantity: 1, binding: catalog}]}
+      choices_snow_bucket_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 3, rewards: [{item: snow_bucket, quantity: 1, binding: catalog}]}
+        - {weight: 17, rewards: []}
+      choices_confetti_winter_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_flawed_snowball_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: []}
+      choices_confetti_winter_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: confetti_winter, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}
+      choices_flawed_snowball_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: flawed_snowball, quantity: 1, binding: catalog}]}
+        - {weight: 4, rewards: []}

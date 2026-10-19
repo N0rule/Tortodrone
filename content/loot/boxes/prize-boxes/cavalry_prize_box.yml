@@ -1,0 +1,151 @@
+# Archived stock approximation. Explicit no-op alternatives preserve optional outcomes.
+# Weights are relative within each group; bundles grant every selected reward.
+boxes:
+  cavalry_prize_box:
+    kind: keyless
+    acceptedKeys: []
+    status: approximate
+    evidence: Archived stock spawn graph and independent item-frequency audit (2026-09-25); graph weights/bundles retained, historical source
+      not verified against current live server; see docs/content.md
+    groups:
+      main:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_small_fireworks_red_1}, {group: choices_medium_fireworks_red_2}, {group: choices_large_fireworks_red_4},
+            {group: choices_trojan_armor_fiery_6}]}
+      choices_small_fireworks_red_1:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: small_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: small_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_medium_fireworks_red_2:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_medium_fireworks_red_3}]}
+        - {weight: 1, rewards: []}
+      choices_medium_fireworks_red_3:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: medium_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: medium_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_large_fireworks_red_4:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_large_fireworks_red_5}]}
+        - {weight: 19, rewards: []}
+      choices_large_fireworks_red_5:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: large_fireworks_red, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_yellow, quantity: 5, binding: catalog}]}
+        - {weight: 1, rewards: [{item: large_fireworks_green, quantity: 5, binding: catalog}]}
+      choices_trojan_armor_fiery_6:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 25, rewards: [{group: choices_trojan_armor_fiery_7}]}
+        - {weight: 21, rewards: [{group: choices_trojan_helm_fiery_8}]}
+        - {weight: 46, rewards: [{group: choices_pony_tail_fiery_9}]}
+        - {weight: 5, rewards: [{group: choices_great_defender_volcanic_14}]}
+        - {weight: 2, rewards: [{item: sealed_pauldrons_fiery, quantity: 1, binding: catalog}]}
+        - {weight: 1, rewards: [{item: wild_aura_fiery, quantity: 1, binding: catalog}]}
+      choices_trojan_armor_fiery_7:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trojan_armor_fiery, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_armor_vile, quantity: 1, binding: catalog}]}
+      choices_trojan_helm_fiery_8:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: trojan_helm_fiery, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: trojan_helm_vile, quantity: 1, binding: catalog}]}
+      choices_pony_tail_fiery_9:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{group: choices_pony_tail_fiery_10}]}
+        - {weight: 1, rewards: [{group: choices_crystal_volcanic_11}]}
+        - {weight: 1, rewards: [{group: choices_ancient_scroll_volcanic_12}]}
+        - {weight: 1, rewards: [{group: choices_treat_pouch_volcanic_13}]}
+      choices_pony_tail_fiery_10:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: pony_tail_fiery, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: pony_tail_vile, quantity: 1, binding: catalog}]}
+      choices_crystal_volcanic_11:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: crystal_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: crystal_vile, quantity: 1, binding: catalog}]}
+      choices_ancient_scroll_volcanic_12:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: ancient_scroll_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: ancient_scroll_vile, quantity: 1, binding: catalog}]}
+      choices_treat_pouch_volcanic_13:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: treat_pouch_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: treat_pouch_vile, quantity: 1, binding: catalog}]}
+      choices_great_defender_volcanic_14:
+        chance: 100%
+        rolls: 1
+        entries:
+        - {weight: 1, rewards: [{item: great_defender_volcanic, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_blazing, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_curse, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_dazed, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_electric, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_glacial, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_slumber, quantity: 1, binding: catalog}]}
+        - {weight: 2, rewards: [{item: great_defender_vile, quantity: 1, binding: catalog}]}
