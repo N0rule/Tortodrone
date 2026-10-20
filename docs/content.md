@@ -189,7 +189,10 @@ item configuration. It does not support an item-name override in this record.
 
 `_internal/item-bindings.json` version 1 maps each ID to the exact original config,
 stock ID, native type, slot, localization key, serialization variant, optional seed
-and equipment membership. `_internal/item-arguments.json` retains typed model
+and equipment membership. Six developer-only entries whose original localization
+keys are absent from the stock item bundle use literal `~` names so server-composed
+`%item:` text stays readable; the unchanged client still shows its own native
+configuration name for those items. `_internal/item-arguments.json` retains typed model
 arguments by native config. Treat both as internal compatibility resources. Never
 renumber them or rename an ID to change a display label. IDs are used only in
 static configuration/discovery; existing SQLite inventories and Depot offers keep
