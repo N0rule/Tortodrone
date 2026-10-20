@@ -9,6 +9,14 @@ import static org.tortodrone.support.TestWire.check;
 public final class SceneEntitiesTest {
     public static void main(String[] args)throws Exception {
         var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var trainingEntities=new SceneEntities(map.content(),map.collision());
+        var arsenal=trainingEntities.station("OpenArsenal");
+        var arsenalSpec=trainingEntities.specification(arsenal.id());
+        check(arsenalSpec.contains(19.5f,1.5f,arsenal.rotation(),19.5f,-.45f,0),"arsenal floor zone follows the placed prop's unrotated rectangle");
+        check(!arsenalSpec.contains(19.5f,1.5f,arsenal.rotation(),16.5f,1.5f,0),"arsenal zone excludes the former sideways hitbox");
+        var arsenalPrompt=trainingEntities.interaction(19.5f,-2.3f,(float)Math.PI/2);
+        check(arsenalPrompt!=null&&"1955".equals(arsenalPrompt.entryKey()),"facing the front of the actual arsenal floor mat offers its placed interaction");
+        check(trainingEntities.interaction(16.5f,1.5f,0)==null,"old sideways arsenal approach cannot trigger interaction");
         var haven=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(1);
         var townEntities=new SceneEntities(haven.content(),haven.collision());
         var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();

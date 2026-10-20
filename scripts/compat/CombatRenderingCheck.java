@@ -269,7 +269,12 @@ public final class CombatRenderingCheck {
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
             if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
-            if(arsenalBlinkOnly&&view.sceneId()==294&&stage>=2){arsenalBlinkTick(view,now);return;}
+            if(arsenalBlinkOnly&&stage==43&&view.sceneId()==1){
+                if(!app.GQ().Pu())throw new AssertionError("Returning to Haven retained a solo mission party");
+                app.nk().a(null,"/training",false);blinkHidden=blinkVisible=false;started=now;stage=45;return;
+            }
+            if(arsenalBlinkOnly&&(view.sceneId()==294||view.sceneId()==318)&&stage>=2){arsenalBlinkTick(view,now);return;}
+            if(arsenalBlinkOnly&&stage>=43){if(now-started>10_000_000_000L)throw new AssertionError("Native town/training command round trip timed out");return;}
             if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
             if(vortexShieldOnly&&view.sceneId()==294&&stage>=2){vortexShieldTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
@@ -645,12 +650,28 @@ public final class CombatRenderingCheck {
             finishImages();passed=done=true;System.out.println("PASS: stock controlling client receives shield bump VFX; native vortex implode/explode stages initialize and pull a nearby cube");app.shutdown();
         }
     }
-    private boolean blinkHidden,blinkVisible,arsenalOpened;
+    private boolean blinkHidden,blinkVisible,arsenalOpened,arrivalFlag;
     private long arsenalPressed,arsenalOpenedAt;
     private void arsenalBlinkTick(View view,long now)throws Exception {
         var pawn=authoritative.get(app.CT().pawnId);if(!(pawn instanceof Dungeoneer own))return;
-        if(!app.GQ().Pu())throw new AssertionError("Training commands incorrectly require mission-abandonment confirmation");
+        if(stage==43)return;
+        if(stage==45){
+            if(own.bR(Dungeoneer.INVULNERABLE)){blinkVisible|=view.PO().acL().isVisible();blinkHidden|=!view.PO().acL().isVisible();}
+            if(blinkVisible&&blinkHidden){capture("training-command-entry-blink");app.GF().bl(318);blinkHidden=blinkVisible=false;started=now;stage=44;}
+            else if(now-started>5_000_000_000L)throw new AssertionError("/training did not arrive with visible entry blinking");
+            return;
+        }
+        if(stage==44){
+            if(view.sceneId()!=318)return;
+            if(!blinkVisible||!blinkHidden){
+                if(own.bR(Dungeoneer.INVULNERABLE)){blinkVisible|=view.PO().acL().isVisible();blinkHidden|=!view.PO().acL().isVisible();}
+                if(now-started>5_000_000_000L)throw new AssertionError("Hall of Heroes entry did not visibly blink");return;
+            }
+            capture("hall-of-heroes-entry-blink");finishImages();passed=done=true;
+            System.out.println("PASS: native Arsenal inventory, Training and Hall of Heroes entry blinking, and /training without a stale town confirmation");app.shutdown();return;
+        }
         boolean protectedHit=own.bR(Dungeoneer.INVULNERABLE);
+        if(stage==2&&protectedHit)arrivalFlag=true;
         if(protectedHit){boolean visible=view.PO().acL().isVisible();blinkHidden|=!visible;blinkVisible|=visible;}
         if(now-started>25_000_000_000L)throw new AssertionError("Arsenal/blink timeout: prompt="+own.Ns()+" policy="+app.CT().equipPolicy+" flags="+own.bR(64)+" visible="+blinkVisible+" hidden="+blinkHidden+" position="+own.tz());
         if(stage==2){
@@ -665,9 +686,12 @@ public final class CombatRenderingCheck {
         if(inventory instanceof com.threerings.opengl.gui.aD window&&window.isAdded()){
             if(!arsenalOpened){arsenalOpenedAt=now;arsenalOpened=true;System.out.println("CHECK: server interaction opened the native Arsenal window; policy="+app.CT().equipPolicy);}
             if(blinkVisible&&blinkHidden&&now-arsenalOpenedAt>2_000_000_000L){
+                if(!arrivalFlag)throw new AssertionError("Training did not receive entry protection");
                 if(app.GG().getDisplayWidth()<1024)throw new AssertionError("Native Arsenal viewport is too small for visual verification");
                 Object equipment=field(hud,"aDX").get(hud);if(!(equipment instanceof com.threerings.opengl.gui.aD equipmentWindow)||!equipmentWindow.isAdded())throw new AssertionError("Native equipment window did not open");
-                capture("native-arsenal-open");capture("native-post-hit-blink");finishImages();passed=done=true;System.out.println("PASS: native Arsenal interaction opens equipment UI and the controlling knight's native model visibly blinks during server post-hit protection");app.shutdown();}
+                capture("native-arsenal-open");capture("native-entry-blink");
+                ((com.threerings.opengl.gui.aD)inventory).dismiss();equipmentWindow.dismiss();
+                app.nk().a(null,"/haven",false);started=now;stage=43;}
         }
     }
     private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;

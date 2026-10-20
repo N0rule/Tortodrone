@@ -27,6 +27,10 @@ public final class SparseContentTest {
                     check(historical.getProperty("destination.move_auction.id").equals("7966")&&historical.getProperty("destination.move_auction.x").equals("1.5"),"native auction destination restored");
                     historical.keySet().removeIf(k->k.toString().startsWith("destination.move_auction."));
                 }
+                if(map.getKey()==294){
+                    String rotation=historical.stringPropertyNames().stream().filter(k->k.endsWith(".town-station")&&historical.getProperty(k).equals("scene.294.placed.1955")).findFirst().orElseThrow().replace(".town-station",".rotation");
+                    check(historical.getProperty(rotation).equals("0.0"),"Arsenal floor shape uses its captured placeable rotation");historical.setProperty(rotation,"-1.5707964");
+                }
                 for(String key:new HashSet<>(historical.stringPropertyNames()))if(key.endsWith(".collision-mask")&&key.startsWith("entry.")){
                     check(historical.getProperty(key).equals("79"),"supported monsters retain their native movement mask");historical.remove(key);
                 }
@@ -52,6 +56,9 @@ public final class SparseContentTest {
             actors.put(alias.getValue().toString(),Map.of());write(actorFile,Map.of("actors",actors));refused(()->ContentManager.load(root));
             write(actorFile,Map.of("actors",Map.of(alias.getKey(),Map.of("config","Forged/Identity"))));refused(()->ContentManager.load(root));
             check(!baseline.items().search("Silver Key").isEmpty(),"localized item names discover canonical stock IDs");
+            var mirakat=baseline.items().find("Gear/Helm/Mirakat Hat");
+            check(mirakat!=null&&mirakat.nameKey().equals("~Mirakat Hat"),"missing item bundle keys fall back to readable literal names");
+            check(baseline.items().entries().stream().noneMatch(e->e.nameKey().startsWith("~m.")),"no unresolved item bundle keys remain");
             System.out.println("PASS: seven golden scene/portal snapshots, 9348 exact item definitions, sparse aliases/controls, duplicate/native-identity rejection and discovery names");
         }finally{ContentFixture.delete(root);}
     }

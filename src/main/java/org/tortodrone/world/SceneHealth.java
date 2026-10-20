@@ -6,7 +6,7 @@ import org.tortodrone.character.WorldProfile;
 /** Party health is instance state; it is never written to the account database. */
 public final class SceneHealth {
     /** Retail Dungeoneer.INVULNERABLE; its sprite flashes every 50 ms while set. */
-    public static final int INVULNERABLE_FLAG=64, POST_HIT_MILLIS=1000;
+    public static final int INVULNERABLE_FLAG=64, POST_HIT_MILLIS=1000, ENTRY_PROTECTION_MILLIS=3000;
     public record State(int current,int maximum,int bonus,int reviveFlags) {
         public State(int current,int maximum,int bonus){this(current,maximum,bonus,1);}
     }
@@ -55,6 +55,7 @@ public final class SceneHealth {
     public State state(){return new State(current,maximum,bonus,(emergencyRevive?1:0)|(emergencyAt!=0?8:0));}
     public boolean alive(){return current>0;}
     public boolean invulnerable(int stamp){return stamp<invulnerableUntil;}
+    public void protectEntry(int stamp){if(alive())invulnerableUntil=Math.max(invulnerableUntil,stamp+ENTRY_PROTECTION_MILLIS);}
     /** Archive emergency revive: five-second delay and five seconds of invulnerability. */
     private void died(int stamp){if(!alive()){status.clear();if(emergencyRevive&&emergencyAt==0)emergencyAt=stamp+5000;}}
     public boolean canSparkRevive(){return !alive()&&!emergencyRevive&&emergencyAt==0;}

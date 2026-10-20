@@ -748,6 +748,9 @@ final class WorldSession implements AutoCloseable {
             try{
                 if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
                 SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;
+                if(destination.equals("move_alchemy_machine")){
+                    entrance=nearestAlchemy();if(entrance!=null)map=scene.map();
+                }
                 if(destination.equals("haven"))map=scenes.catalog().entry();
                 if(map==null)for(var candidate:scenes.catalog().scenes())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
                 if(map==null&&destination.matches("[a-zA-Z0-9_-]{1,96}"))for(var candidate:scenes.catalog().scenes())if(candidate.town()){
@@ -965,7 +968,7 @@ final class WorldSession implements AutoCloseable {
             // The stock PartyDirector resubscribes on every partyOid event,
             // even when its value is unchanged. Existing HUD listeners retain
             // the previous party object if a second snapshot replaces it.
-            if(party!=announcedPartyOid)refreshParty();
+            refreshParty();
             // The stock dungeon HUD creates its quickbar once, while the scene
             // model is attached. Let its party subscription complete first.
             if(scene.map().town()||subscribedPartyOid==party)completeMove(listener.requestId(),zone);
@@ -1231,6 +1234,25 @@ final class WorldSession implements AutoCloseable {
         if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
     }
 
+    /** Prefer this scene's nearest general-purpose machine, preserving its instance lease. */
+    private ScenePortals.Entrance nearestAlchemy()throws IOException {
+        var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst()
+            .orElseThrow(()->new IOException("Knight left scene"));
+        var machines=scene.map().content().entries().stream()
+            .filter(e->e.spec().text("town-kind","").equals("OpenCrafter")&&e.spec().config().name().equals("Shop/Haven/Alchemy"))
+            .sorted(Comparator.comparingDouble(e->Math.hypot(e.x()-own.x(),e.y()-own.y()))).toList();
+        for(var machine:machines){
+            // The actor's facing identifies its front. Validate the complete pawn placement,
+            // including live props, before relocating; never land inside the machine.
+            for(float distance:new float[]{1.7f,2f,2.5f,3f}){
+                float x=machine.x()+(float)Math.cos(machine.rotation())*distance;
+                float y=machine.y()+(float)Math.sin(machine.rotation())*distance;
+                if(scene.simulation().placement(x,y))return new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI));
+            }
+        }
+        if(!machines.isEmpty())throw new IOException("Alchemy machines are blocked");
+        return null;
+    }
     private ActorState auctionSource(SceneRegistry.Instance destination)throws IOException {
         var source=destination.simulation().station("OpenAuction");
         if(source==null)throw new IOException("No Auction House in this scene");

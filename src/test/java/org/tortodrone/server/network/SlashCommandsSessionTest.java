@@ -69,6 +69,11 @@ public final class SlashCommandsSessionTest {
                 gm.world.adminPeople(admin(30,"haven"));move(gm,scenes.catalog().entry());
                 check(target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)7)))),"native training travel dispatched");
                 var training=scenes.catalog().scene(294);move(target,training);
+                var announcedParty=WorldSession.class.getDeclaredField("announcedPartyOid");announcedParty.setAccessible(true);
+                check(announcedParty.getInt(target.world)!=0,"Training retains the party object required by its HUD");
+                target.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(target,scenes.catalog().entry());
+                check(announcedParty.getInt(target.world)==0,"returning to town clears the solo mission party so /training does not ask to abandon it");
+                target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,training);
                 gm.world.adminPeople(admin(27,"Target"));gm.socket.awaitText("private instance belongs");check(gm.world.ownsScene(scenes.entry().oid()),"GM travel cannot enter another knight's private instance");
                 try{gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,13,List.of("Target",new SessionDecoder.Listener("bad",(short)8))));throw new AssertionError("Malformed admin listener accepted");}catch(SessionDecoder.Rejected expected){}
                 check(!target.socket.isClosed(),"malformed listener does not mutate peer state");
@@ -99,8 +104,24 @@ public final class SlashCommandsSessionTest {
                 move(gm,scenes.catalog().entry());
                 check(gm.world.ownsScene(scenes.entry().oid()),"native /haven travel returns the knight to Haven");
                 var result=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)12);
+                var currentScene=WorldSession.class.getDeclaredField("scene");currentScene.setAccessible(true);
+                var currentMember=WorldSession.class.getDeclaredField("membership");currentMember.setAccessible(true);
+                for(int mapId:new int[]{1,2}){
+                    if(mapId!=1){gm.world.adminPeople(admin(28,Integer.toString(mapId)));move(gm,scenes.catalog().scene(mapId));}
+                    var place=(SceneRegistry.Instance)currentScene.get(gm.world);
+                    var machines=place.map().content().entries().stream().filter(e->e.spec().config().name().equals("Shop/Haven/Alchemy")).toList();
+                    check(machines.size()==2,"fixture has two general alchemy machines");
+                    for(var machine:machines){
+                        float x=machine.x()+(float)Math.cos(machine.rotation())*3,y=machine.y()+(float)Math.sin(machine.rotation())*3;
+                        check(((SceneSimulation.Membership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
+                        gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_alchemy_machine",result)));gm.drain();
+                        var atMachine=place.simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
+                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&Math.hypot(atMachine.x()-machine.x(),atMachine.y()-machine.y())<3,
+                            "/alchemy chooses the nearest machine in the current instance without loading Bazaar");
+                    }
+                }
                 var bazaar=scenes.catalog().scenes().stream().filter(m->m.content().stats().containsKey("destination.move_bechamel.x")).findFirst().orElseThrow();
-                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));move(gm,bazaar);
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
                 check(pending.get(gm.world)==null&&gm.world.ownsScene(scenes.destination(bazaar.id(),1).oid()),"captured named command relocates within the existing scene");
                 gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));move(gm,scenes.catalog().entry());
@@ -121,7 +142,7 @@ public final class SlashCommandsSessionTest {
     }
     private static void move(Person person,SceneCatalog.MapScene map)throws Exception {
         person.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),map.version(),new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));
-        // Level-party HUD readiness can defer the native move result; scene subscription is still owned.
+        if(!map.town())person.world.subscribeInteriorParty((short)11);
         person.world.subscribe((short)10);person.world.entered();person.drain();
     }
     private static SessionDecoder.Listener confirm(){return new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)3);}

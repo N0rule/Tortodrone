@@ -27,7 +27,9 @@ public class CooperativeTrainingTest {
             try(var a=new Player(db,items,scenes,"Alice",1001);var b=new Player(db,items,scenes,"Bob",1002);var c=new Player(db,items,scenes,"Carol",1003)){
                 int party=a.party().oid();b.socket.frames.clear();a.operation(2,b.name);b.socket.await("Notification$PartyInvite");
                 b.world.partyInvocation(new SessionDecoder.Invocation(3,12,5,List.of("PARTY_INV:"+party,1,listener())));
-                b.world.subscribeInteriorParty((short)5);await(()->a.publishedMembers()==2);
+                // Native clients subscribe when the newly visible partyOid is announced.
+                await(()->(int)field(a.world,"announcedPartyOid")==party&&(int)field(b.world,"announcedPartyOid")==party);
+                a.world.subscribeInteriorParty((short)5);b.world.subscribeInteriorParty((short)5);await(()->a.publishedMembers()==2);
                 check(a.party().oid()==b.party().oid(),"native accept joins the inviter's stable party");
                 a.travel(294);b.travel(294);c.travel(294);
                 var shared=a.place();check(shared==b.place()&&shared!=c.place(),"party shares one Training simulation while an unrelated knight stays private");
@@ -39,7 +41,8 @@ public class CooperativeTrainingTest {
                 a.world.speak(new SessionDecoder.Invocation(party,SceneChat.PARTY_SERVICE,1,List.of("cooperative-private-chat",(byte)0)));
                 a.socket.await("cooperative-private-chat");b.socket.await("cooperative-private-chat");check(!c.socket.contains("cooperative-private-chat"),"party chat is private to authorized members");
                 synchronized(shared.simulation()){
-                    var health=(SceneHealth)field(a.membership(),"health");health.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",30f,"flags",1)),SceneClock.now());
+                    var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);
+                    var health=(SceneHealth)field(a.membership(),"health");immunity.setInt(health,0);health.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",30f,"flags",1)),SceneClock.now());
                     var entities=(SceneEntities)field(shared.simulation(),"entities");var cube=entities.actors().stream().filter(p->p.entity().kind().equals("Monster")).findFirst().orElseThrow();
                     entities.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",new FireCatalog.DataValue("Damage$Normal",Map.of("amount",100000f,"flags",2)))),cube.x(),cube.y(),0,SceneClock.now(),a.member().worldId);
                     check(b.place().simulation().snapshot().actors().stream().anyMatch(p->p.id()==cube.id()&&p.entity().health()==0),"both sessions observe the same defeated enemy");
@@ -48,6 +51,7 @@ public class CooperativeTrainingTest {
                 db.grantItems("Alice",a.name,-1,-1,items.require("Rarity/Spark of Life"),2,-1,-1);
                 synchronized(shared.simulation()){
                     var down=(SceneHealth)field(b.membership(),"health");int now=SceneClock.now();
+                    var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);immunity.setInt(down,0);
                     down.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",100000f,"flags",1)),now);
                     down.revive(now); // Spend the single emergency charge before the qualifying Spark death.
                     down.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",100000f,"flags",1)),now+2000);

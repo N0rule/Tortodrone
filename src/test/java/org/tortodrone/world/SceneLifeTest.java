@@ -11,10 +11,30 @@ public final class SceneLifeTest {
     public static void main(String[] args)throws Exception {
         var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
         health(map.content());
+        entryProtection(map);
         shields();
         movement(map);
         training(map);
         System.out.println("PASS: death, once-per-level Emergency Revive, input/instance isolation and health/status invariants");
+    }
+    private static void entryProtection(SceneCatalog.MapScene training)throws Exception {
+        var health=new SceneHealth(training.content());health.protectEntry(1000);
+        check(health.invulnerable(3999)&&health.hit(damage(10),3999).amount()==0,"arrival protection blocks damage for three seconds");
+        check(!health.invulnerable(4000)&&health.hit(damage(10),4000).amount()==10,"arrival protection ends at its deadline");
+        for(int id:new int[]{1,294,318}){
+            var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(id);
+            var simulation=new SceneRegistry.Instance(790+id,0,map).simulation();int stamp=SceneClock.now();
+            var actor=new ActorState(219,1001,"Arrival",256,stamp,map.spawnX(),map.spawnY(),0,0,0,0,stamp,new StarterCatalog.Model("Character/PC/Default",Map.of()),false);
+            try(var member=simulation.join(actor,s->{})){
+                check((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)==0,"loading does not consume the arrival window");
+                member.enter();
+                check(((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)!=0)==!map.town(),"ready Training and Hall of Heroes blink; town arrival stays normal");
+                var memberHealth=SceneSimulation.Membership.class.getDeclaredField("health");memberHealth.setAccessible(true);
+                var deadline=SceneHealth.class.getDeclaredField("invulnerableUntil");deadline.setAccessible(true);deadline.setInt(memberHealth.get(member),0);
+                member.pause();member.enter();
+                check((simulation.snapshot().players().getFirst().flags()&SceneHealth.INVULNERABLE_FLAG)==0,"resubscription cannot renew arrival protection");
+            }
+        }
     }
     private static void shields()throws Exception{
         var content=new SceneContent(List.of(),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());

@@ -165,7 +165,7 @@ public final class CheckCombatRendering {
         var originals=Yaml.map(bindings.get("actors"),"actors");
         for(var actor:actors.entrySet()){
             var original=Yaml.map(originals.get(actor.getKey()),"binding");var editable=Yaml.map(actor.getValue(),"actor");
-            if("1955".equals(original.get("source-key"))){editable.put("x",x+2.65f);editable.put("y",y);}
+            if("1955".equals(original.get("source-key"))){editable.put("x",x+2.65f);editable.put("y",y+1.95f);}
             if(((String)original.getOrDefault("config","")).endsWith("/Floor/Fire")){editable.put("x",x);editable.put("y",y);}
         }
         Files.delete(file);Yaml.write(file,yaml);

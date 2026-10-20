@@ -90,7 +90,7 @@ public final class SceneSimulation {
         private final TownMovement movement;
         private KnightCombat combat;
         private final Consumer<Snapshot> publish;
-        private boolean entered, detached;
+        private boolean entered, detached, arrived;
         private ScenePortals.Trigger portal;
         private int interactionTarget;
         private int lift,dropAt;
@@ -186,7 +186,9 @@ public final class SceneSimulation {
                 boolean drop=!entities.canThrow(lift)||snap;
                 movement.thrown(drop,stamp);if(drop)dropAt=stamp+400;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
         }
-        public void enter(){synchronized(SceneSimulation.this){check();entered=true;start();}}
+        public void enter(){synchronized(SceneSimulation.this){check();
+            if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
+            entered=true;start();}}
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){

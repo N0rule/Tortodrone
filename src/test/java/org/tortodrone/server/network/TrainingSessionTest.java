@@ -48,6 +48,8 @@ public final class TrainingSessionTest {
                 var memberField=WorldSession.class.getDeclaredField("membership");memberField.setAccessible(true);var member=(SceneSimulation.Membership)memberField.get(world);
                 var healthField=member.getClass().getDeclaredField("health");healthField.setAccessible(true);var health=(SceneHealth)healthField.get(member);
                 synchronized(place.simulation()){
+                    // Exercise damage publication after the separately tested arrival window.
+                    var arrivalProtection=SceneHealth.class.getDeclaredField("invulnerableUntil");arrivalProtection.setAccessible(true);arrivalProtection.setInt(health,0);
                     int stamp=SceneClock.now();
                     health.hit(new FireCatalog.DataValue("Damage$Unblockable",Map.of("amount",40f,"flags",1)),stamp);
                     var freeze=place.map().content().statuses().get("Freeze");
