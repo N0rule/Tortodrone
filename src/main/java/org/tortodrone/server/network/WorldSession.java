@@ -55,6 +55,7 @@ final class WorldSession implements AutoCloseable {
     private PortalMove portalMove;
     private ScenePortals.Entrance arrival;
     private boolean auctionAfterArrival;
+    private String alchemyTarget;
     private int departedSceneOid;
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
@@ -959,7 +960,7 @@ final class WorldSession implements AutoCloseable {
                 if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
                 leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupants=Set.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;departedSceneOid=scene.oid();membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+                reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
                 monitorScene();
@@ -1234,24 +1235,39 @@ final class WorldSession implements AutoCloseable {
         if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
     }
 
-    /** Prefer this scene's nearest general-purpose machine, preserving its instance lease. */
+    /**
+     * Relocate to this scene's nearest general-purpose alchemy machine. Repeated use alternates
+     * through every machine, matching the stock command's usefulness in a crowded town, while
+     * preserving the scene's instance lease.
+     */
     private ScenePortals.Entrance nearestAlchemy()throws IOException {
         var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst()
             .orElseThrow(()->new IOException("Knight left scene"));
         var machines=scene.map().content().entries().stream()
             .filter(e->e.spec().text("town-kind","").equals("OpenCrafter")&&e.spec().config().name().equals("Shop/Haven/Alchemy"))
             .sorted(Comparator.comparingDouble(e->Math.hypot(e.x()-own.x(),e.y()-own.y()))).toList();
-        for(var machine:machines){
+        if(machines.isEmpty())return null;
+        // Start from the nearest machine, but skip the one used last so a second command reaches
+        // the next station instead of staying put. If it is blocked, the remaining machines and
+        // the previous one are still tried in distance order.
+        var candidates=new ArrayList<>(machines);
+        if(machines.size()>1&&alchemyTarget!=null){
+            var previous=candidates.stream().filter(e->e.key().equals(alchemyTarget)).findFirst().orElse(null);
+            if(previous!=null){candidates.remove(previous);candidates.add(previous);}
+        }
+        for(var machine:candidates){
             // The actor's facing identifies its front. Validate the complete pawn placement,
             // including live props, before relocating; never land inside the machine.
             for(float distance:new float[]{1.7f,2f,2.5f,3f}){
                 float x=machine.x()+(float)Math.cos(machine.rotation())*distance;
                 float y=machine.y()+(float)Math.sin(machine.rotation())*distance;
-                if(scene.simulation().placement(x,y))return new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI));
+                if(scene.simulation().placement(x,y)){
+                    alchemyTarget=machine.key();
+                    return new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI));
+                }
             }
         }
-        if(!machines.isEmpty())throw new IOException("Alchemy machines are blocked");
-        return null;
+        throw new IOException("Alchemy machines are blocked");
     }
     private ActorState auctionSource(SceneRegistry.Instance destination)throws IOException {
         var source=destination.simulation().station("OpenAuction");

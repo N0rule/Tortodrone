@@ -111,13 +111,14 @@ public final class SlashCommandsSessionTest {
                     var place=(SceneRegistry.Instance)currentScene.get(gm.world);
                     var machines=place.map().content().entries().stream().filter(e->e.spec().config().name().equals("Shop/Haven/Alchemy")).toList();
                     check(machines.size()==2,"fixture has two general alchemy machines");
-                    for(var machine:machines){
-                        float x=machine.x()+(float)Math.cos(machine.rotation())*3,y=machine.y()+(float)Math.sin(machine.rotation())*3;
-                        check(((SceneSimulation.Membership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
+                    var first=machines.get(0);var second=machines.get(1);
+                    float x=first.x()+(float)Math.cos(first.rotation())*3,y=first.y()+(float)Math.sin(first.rotation())*3;
+                    check(((SceneSimulation.Membership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
+                    for(var expected:List.of(first,second,first)){
                         gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_alchemy_machine",result)));gm.drain();
                         var atMachine=place.simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
-                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&Math.hypot(atMachine.x()-machine.x(),atMachine.y()-machine.y())<3,
-                            "/alchemy chooses the nearest machine in the current instance without loading Bazaar");
+                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&Math.hypot(atMachine.x()-expected.x(),atMachine.y()-expected.y())<3,
+                            "/alchemy starts at the nearest machine, cycles through the others and stays in the current instance");
                     }
                 }
                 var bazaar=scenes.catalog().scenes().stream().filter(m->m.content().stats().containsKey("destination.move_bechamel.x")).findFirst().orElseThrow();
