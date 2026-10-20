@@ -45,6 +45,9 @@ public final class TownEconomyTest {
             crafted=new TownStore.Result(depotPurchase.profile(),craftedGear);
             var shop=new TownCatalog.Station("fixture","OpenShop","CROWN","NORMAL","~","~","","",List.of(),new TownCatalog.Shop("Captured/Hall of Heroes/Cobalt",10,"BASIC","CONSTANT",false));
             var goods=rules.goods(shop.shop(),0,crafted.profile().worldId());check(!goods.isEmpty()&&goods.getFirst().price()==1000,"captured merchant price preserved");
+            int crownBalance=db.worldProfile(a,1,1).crowns();db.setCurrency("Alice","Alice-Knight",a,-1,Currency.CROWNS,0);
+            refusedWith("m.nsf_crowns",()->town.shop(a,1,1,shop,0,Map.of(0,1),Map.of()));
+            db.setCurrency("Alice","Alice-Knight",a,-1,Currency.CROWNS,crownBalance);
             var bought=town.shop(a,1,1,shop,0,Map.of(0,1),Map.of());check(bought.profile().crowns()==crafted.profile().crowns()-1000,"merchant purchase debits the displayed price");
             var accessory=items.entries().stream().filter(ItemCatalog.Entry::grantable).filter(e->{String name=rules.item(e.config()).get("accessory");var definition=name==null?null:rules.accessory(name);return definition!=null&&!definition.remove()&&definition.location().equals("ARMOR_BACK");}).findFirst().orElseThrow();
             grant(db,items,"Alice","Alice-Knight",accessory.config(),2);long gear=(Long)crafted.result(),ticket=id(db.worldProfile(a,1,1),accessory.config());town.accessorize(a,1,1,1,gear,ticket,"Blue");
@@ -99,7 +102,7 @@ public final class TownEconomyTest {
             var brinks=rules.station("scene.2.2354.21");var tokenGoods=rules.goods(brinks.shop(),0,madeStar.worldId());
             check(tokenGoods.size()==128&&tokenGoods.getFirst().tokenCount()==10,"Brinks documented original token stock is bound to the spawned merchant");
             grant(db,items,"Alice","Alice-Knight",tokenGoods.getFirst().token(),10);
-            var tokenBefore=db.worldProfile(a,1,1);refused(()->town.shop(b,1,1,brinks,0,Map.of(0,1),Map.of()));
+            var tokenBefore=db.worldProfile(a,1,1);refusedWith("m.nsf_tokens",()->town.shop(b,1,1,brinks,0,Map.of(0,1),Map.of()));
             var tokenPurchase=town.shop(a,1,1,brinks,0,Map.of(0,1),Map.of()).profile();
             check(tokenPurchase.crowns()==tokenBefore.crowns()&&tokenPurchase.items().stream().anyMatch(i->i.config().equals(tokenGoods.getFirst().item())&&i.bound()),"token purchase consumes tokens and binds equipment without charging crowns");
             // Rename failures never spend the ticket or partially publish an identity.
@@ -117,4 +120,5 @@ public final class TownEconomyTest {
     private static Knight choices(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0);}
     private interface Checked{void run()throws Exception;}
     private static void refused(Checked work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){}}
+    private static void refusedWith(String message,Checked work)throws Exception{try{work.run();throw new AssertionError("Expected refusal");}catch(IOException expected){check(message.equals(expected.getMessage()),"failure text: "+expected.getMessage());}}
 }

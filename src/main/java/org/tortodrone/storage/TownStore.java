@@ -116,7 +116,8 @@ public final class TownStore {
         try(var s=c.prepareStatement(count==i.count()?"DELETE FROM inventory_items WHERE world_id=? AND item_id=?":"UPDATE inventory_items SET count=count-"+count+" WHERE world_id=? AND item_id=?")){s.setInt(1,p.worldId());s.setLong(2,id);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
     }
     static void pay(Connection c,WorldProfile p,int crowns,int energy)throws SQLException,IOException{
-        if(crowns<0||energy<0||p.crowns()<crowns||p.energy()<energy)throw new IOException("m.insufficient_funds");
+        if(crowns<0||p.crowns()<crowns)throw new IOException("m.nsf_crowns");
+        if(energy<0||p.energy()<energy)throw new IOException("m.nsf_energy");
         credit(c,p.worldId(),-crowns,-energy);
     }
     static void credit(Connection c,int world,int crowns,int energy)throws SQLException,IOException{
@@ -165,7 +166,9 @@ public final class TownStore {
             for(var required:tokens.entrySet()){int needed=required.getValue();for(var held:p.items())if(held.config().equals(required.getKey())&&held.equippedSlot()==null&&!held.permanent()){
                     int free=held.count()-consume.getOrDefault(held.id(),0),used=Math.min(Math.max(0,free),needed);if(used>0){consume.merge(held.id(),used,Math::addExact);needed-=used;}if(needed==0)break;}
                 if(needed!=0)throw new IOException("m.nsf_tokens");}
-            if(crowns+ p.crowns()<0||crowns+p.crowns()>Integer.MAX_VALUE||energy<0||energy>p.energy())throw new IOException("m.insufficient_funds");
+            if(crowns+p.crowns()<0)throw new IOException("m.nsf_crowns");
+            if(crowns+p.crowns()>Integer.MAX_VALUE)throw new IOException("Currency balance exceeds supported limits");
+            if(energy<0||energy>p.energy())throw new IOException("m.nsf_energy");
             credit(c,p.worldId(),Math.toIntExact(crowns),-(int)energy);for(var use:consume.entrySet())consume(c,p,use.getKey(),use.getValue());
             for(var buy:buys.entrySet()){var good=goods.get(buy.getKey());long quantity=(long)good.count()*buy.getValue();if(quantity>9999)throw new IOException("Purchase count exceeds limit");var d=items.require(good.item());boolean locked=station.shop().preparer().equals("LOCKED")||station.shop().preparer().equals("LOCK_NON_STACKABLE")&&!d.stackable();create(c,p,good.item(),(int)quantity,locked,0,0,List.of());
                 if(limits.containsKey(good.item()))try(var s=c.prepareStatement("INSERT INTO town_purchases(world_id,catalog,item,cycle,purchased) VALUES(?,?,?,?,?) ON CONFLICT(world_id,catalog,item,cycle) DO UPDATE SET purchased=purchased+excluded.purchased")){s.setInt(1,p.worldId());s.setString(2,station.shop().catalog());s.setString(3,good.item());s.setLong(4,cycle);s.setInt(5,buy.getValue());s.executeUpdate();}
@@ -500,7 +503,7 @@ public final class TownStore {
                 var def=items.require(good.item());int price=good.price()<0?rules.price(good.item(),def.rarity(),true):good.price();if(price<0||good.energy()<0)throw new IOException("e.good_unavailable");
                 crowns+=price;energy+=good.energy();configs.add(config);
             }
-            if(crowns>Integer.MAX_VALUE||energy>Integer.MAX_VALUE)throw new IOException("m.insufficient_funds");pay(c,p,(int)crowns,(int)energy);
+            if(crowns>Integer.MAX_VALUE||energy>Integer.MAX_VALUE)throw new IOException("Currency balance exceeds supported limits");pay(c,p,(int)crowns,(int)energy);
             for(String config:configs)try(var st=c.prepareStatement("INSERT INTO town_harnesses(world_id,config) VALUES(?,?)")){st.setInt(1,p.worldId());st.setString(2,config);st.executeUpdate();}return null;
         });
     }

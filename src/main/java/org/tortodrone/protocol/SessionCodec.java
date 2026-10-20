@@ -268,15 +268,15 @@ public final class SessionCodec {
         if(!java.util.Set.of("m.forge_already","m.forge_locked","m.insufficient_crystals","m.costupdate").contains(reason))return invocationFailure(clientOid,requestId,reason);
         return frame(out->{eventHeader(out,"InvocationResponseEvent",clientOid);out.writeShort(requestId);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason);});
     }
-    /** Listener method zero is the standard failure callback; reason is literal display text. */
+    /** Listener method zero is the standard failure callback; stock message keys stay localizable. */
     public byte[] invocationFailure(int clientOid, short requestId, String reason) throws IOException {
         return frame(out -> {
             type(out, PREFIX + "EventNotification"); out.writeShort(-1);
             type(out, "com.threerings.presents.dobj.InvocationResponseEvent"); out.writeInt(clientOid);
             out.writeShort(requestId); out.writeByte(0);
             out.writeBoolean(true); out.writeInt(1);
-            // MessageBundle's literal prefix avoids looking up our text as a translation key.
-            type(out, "java.lang.String"); out.writeUTF("~" + reason);
+            // MessageBundle treats a leading tilde as literal text; stock m.* keys are translated.
+            type(out, "java.lang.String"); out.writeUTF(reason != null && reason.matches("m\\.[a-z0-9_]+") ? reason : "~" + reason);
         });
     }
 
@@ -892,8 +892,8 @@ public final class SessionCodec {
         });
     }
     public byte[] reviveFailure(int playerOid,short request,String reason)throws IOException{
-        if(!java.util.Set.of("m.costupdate","m.no_revive","m.insufficient_funds").contains(reason))return invocationFailure(playerOid,request,reason);
-        return frame(out->{eventHeader(out,"InvocationResponseEvent",playerOid);out.writeShort(request);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason.equals("m.insufficient_funds")?"m.nsf_energy":reason);});
+        if(!java.util.Set.of("m.costupdate","m.no_revive","m.nsf_energy").contains(reason))return invocationFailure(playerOid,request,reason);
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",playerOid);out.writeShort(request);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason);});
     }
     public byte[] partyDamage(int partyOid,org.tortodrone.world.SceneCombatEvent event)throws IOException {
         return frame(out->{type(out,PREFIX+"EventNotification");out.writeShort(-1);
