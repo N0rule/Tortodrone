@@ -9,9 +9,9 @@ import org.tortodrone.town.TownCatalog;
 /** SQLite is the sole catalog authority. Quotes and purchases use the same effective-offer resolver. */
 public final class DepotStore {
     public record Offer(int id,TownCatalog.Good good,boolean featured,boolean enabled,boolean promotionOnly,
-            int originalPrice,boolean sale,long promotionId) {
-        public Offer(int id,TownCatalog.Good good,boolean featured,boolean enabled){this(id,good,featured,enabled,false,0,false,0);}
-        public Offer(int id,TownCatalog.Good good,boolean featured,boolean enabled,boolean promotionOnly){this(id,good,featured,enabled,promotionOnly,0,false,0);}
+            int originalPrice,boolean sale,long promotionId,long promotionEnds) {
+        public Offer(int id,TownCatalog.Good good,boolean featured,boolean enabled){this(id,good,featured,enabled,false,0,false,0,0);}
+        public Offer(int id,TownCatalog.Good good,boolean featured,boolean enabled,boolean promotionOnly){this(id,good,featured,enabled,promotionOnly,0,false,0,0);}
     }
     public record Snapshot(long revision,List<Offer> offers){public Snapshot{offers=List.copyOf(offers);}}
     public record Quote(long revision,Offer offer) { }
@@ -68,7 +68,7 @@ public final class DepotStore {
         }
         var offers=new ArrayList<Offer>();for(var o:base.offers()) {
             var p=active.get(o.id());var g=o.good();boolean available=o.enabled()&&(!o.promotionOnly()||p!=null);
-            offers.add(p==null?new Offer(o.id(),g,o.featured(),available,o.promotionOnly()):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id()));
+            offers.add(p==null?new Offer(o.id(),g,o.featured(),available,o.promotionOnly()):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id(),p.ends()));
         }
         return new Snapshot(base.revision(),offers);
     }
@@ -77,7 +77,7 @@ public final class DepotStore {
     }
     private void validate(Offer offer)throws IOException {
         var g=offer.good();values(g);var item=items.find(g.item());
-        if(item==null||offer.enabled()&&!item.grantable()||g.count()>(item.stackable()?9999:1)||g.price()>0&&g.energy()>0||offer.originalPrice()!=0||offer.sale()||offer.promotionId()!=0)throw new IOException("Choose a grantable item, valid quantity and one currency; edit promotions separately");
+        if(item==null||offer.enabled()&&!item.grantable()||g.count()>(item.stackable()?9999:1)||g.price()>0&&g.energy()>0||offer.originalPrice()!=0||offer.sale()||offer.promotionId()!=0||offer.promotionEnds()!=0)throw new IOException("Choose a grantable item, valid quantity and one currency; edit promotions separately");
     }
     private static void expected(Connection c,long expected)throws SQLException,IOException {if(revision(c)!=expected)throw new IOException("Supply Depot changed; refresh before editing");}
     private static void advance(Connection c,long before)throws SQLException {metadata(c,"supply-depot-revision",Math.addExact(before,1));}

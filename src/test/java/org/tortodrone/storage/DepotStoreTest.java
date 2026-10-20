@@ -37,6 +37,7 @@ public final class DepotStoreTest {
             var before=db.worldProfile(account,1,1);refused(()->town.depot(account,1,1,base.id(),20,quote));check(before.equals(db.worldProfile(account,1,1)),"price edit rejects old quote without debit/grant");
             long now=System.currentTimeMillis();saved=depot.schedule(saved.revision(),new DepotStore.Promotion(0,base.id(),now-1000,now+3600000,10,0,25,true,false));
             var active=depot.catalog().offers().getLast();check(active.sale()&&active.originalPrice()==25&&active.featured()&&active.good().price()==10,"native effective discount fields");
+            check(active.promotionEnds()==now+3600000,"quote carries stable expiry, not a ticking countdown");
             long rev=saved.revision();refused(()->depot.schedule(rev,new DepotStore.Promotion(0,base.id(),now,now+7200000,5,0,null,true,false)));
             var p=depot.promotions().getFirst();
             check(db.read(c->DepotStore.effective(c,p.starts()-1)).offers().getLast().good().price()==25,"start not yet active");

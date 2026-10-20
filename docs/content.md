@@ -553,7 +553,14 @@ optional genuine regular-price comparison and temporary featured status. A suppl
 comparison must match the offer's regular price and currency at scheduling time
 and exceed the sale price. Without a comparison, the offer is a temporary price,
 not advertised as a discount. A discount uses native `_originalPrice` / `_sale`;
-featured goods use `RankGood.special`. No new packet or countdown was introduced.
+featured goods use `RankGood.special`. Active promotions also use that flag and
+join the featured response, including direct-price promotions. Native `promoHeader`
+is `~`; `promoDetail` carries `m.promo_hours_left|~N` below 36 hours, otherwise
+`m.promo_days_left|~N`. These verified wire values come from reference inputs
+`DepotTimedGoods` and its cited native DEFAULT countdown. The quote retains the
+fixed expiry so countdown changes cannot invalidate a purchase. Daily automatic
+selection remains unavailable: the archive explicitly labels its selection,
+discount draw and winter reset timing INTERIM, not recovered original rules.
 
 Times persist as Unix milliseconds UTC, **start inclusive, end exclusive**; the
 admin forms show the local timezone. Overlapping uncancelled windows for the same

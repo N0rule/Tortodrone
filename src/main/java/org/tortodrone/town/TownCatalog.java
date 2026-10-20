@@ -22,7 +22,15 @@ public final class TownCatalog {
     public record Shop(String catalog,int level,String preparer,String cycle,boolean perKnight){public static final Shop EMPTY=new Shop("",10,"BASIC","CONSTANT",false);}
     public record Bonus(String weapon,int health,float charge,float speed,float attack) { }
     public record Good(String item,int count,int price,int energy,int limit,String token,int tokenCount) { }
-    public record DepotGood(Good good,boolean featured,int originalPrice,boolean sale) {
+    public record DepotGood(Good good,boolean featured,int originalPrice,boolean sale,String promoHeader,String promoDetail) {
+        public DepotGood(Good good,boolean featured,int originalPrice,boolean sale){this(good,featured,originalPrice,sale,null,null);}
+        /** Native DEFAULT countdown; archive DepotTimedGoods documents the wire strings. */
+        public static DepotGood timed(Good good,boolean featured,int originalPrice,boolean sale,long ends,long now){
+            if(ends<=now)return new DepotGood(good,featured,originalPrice,sale);
+            long remaining=ends-now,hours=remaining/3_600_000;
+            String detail=hours<36?"m.promo_hours_left|~"+hours:"m.promo_days_left|~"+(remaining/86_400_000+1);
+            return new DepotGood(good,true,originalPrice,sale,"~",detail);
+        }
         public DepotGood(Good good,boolean featured){this(good,featured,0,false);}
     }
     public record DepotOffers(Map<Integer,DepotGood> goods) { public DepotOffers{goods=Map.copyOf(goods);} }
