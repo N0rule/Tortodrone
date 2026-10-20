@@ -236,6 +236,9 @@ public final class TownStore {
     public Result loadout(int account,int knight,long auth,String name,boolean save)throws IOException {
         return change(account,knight,auth,(c,p)->{if(save)NamedLoadouts.save(c,p,name);else NamedLoadouts.equip(c,p,name,rules);return null;});
     }
+    public Result loadoutPvp(int account,int knight,long auth,String name,boolean enabled)throws IOException {
+        return change(account,knight,auth,(c,p)->{NamedLoadouts.pvp(c,p,name,enabled);return null;});
+    }
     public Result adminAccessory(int account,int knight,long auth,int slot,String name,String costume)throws IOException {
         return change(account,knight,auth,(c,p)->{
             requireGameMaster(c,account,auth);

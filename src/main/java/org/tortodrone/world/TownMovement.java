@@ -30,6 +30,7 @@ public final class TownMovement {
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
+    private int warpUntil;
     private int interactionChange=-1;
     private int interactionMillis=670;
     public void interactionDuration(int millis){if(millis<0||millis>10000)throw new IllegalArgumentException("Invalid interaction duration");interactionMillis=millis;}
@@ -131,6 +132,20 @@ public final class TownMovement {
         if(combat!=null)combat.reset(sceneTime);
     }
 
+    /** Relocate the existing pawn; retain the input watermark to discard pre-warp frames. */
+    public boolean teleport(float toX,float toY,float facing,int stamp) {
+        if(!Float.isFinite(toX)||!Float.isFinite(toY)||!Float.isFinite(facing)||portal!=null||dead()
+                ||!terrain.walkable(toX,toY)
+                ||!staticCollision.isEmpty()&&(!staticCollision.floorSupported(toX,toY)
+                    ||staticCollision.penetration(collisionMask,toX,toY,ScenePortals.PAWN_RADIUS).present())
+                ||!dynamicCollision.test(toX,toY)||dynamicPenetration.apply(toX,toY).present()
+                ||portals.triggers().stream().anyMatch(t->t.intersects(toX,toY)))return false;
+        int watermark=inputSeen?Math.max(lastTimestamp,stamp):stamp;
+        resetInput(stamp);lastTimestamp=watermark;inputSeen=true;
+        x=toX;y=toY;rotation=direction=normalize(facing);warpUntil=stamp+100;
+        return true;
+    }
+
     public boolean accept(int stamp, float facing, float heading, int inputFlags,
             int sceneTime, long now) {
         return accept(stamp,facing,heading,inputFlags,stamp,sceneTime,now);
@@ -183,8 +198,8 @@ public final class TownMovement {
                 var emote = PlayerEmotes.byActivity(activity);
                 if(emote!=null)setActivity(emote.endActivity(),timestamp);
             }
-            if ((inputFlags & 2) != 0 && activity != INVENTORY && (activity==0||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
-                if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);
+            if ((inputFlags & 2) != 0 && activity != INVENTORY && (activity==0||activity==INVENTORY_END||PlayerEmotes.byActivity(activity)!=null) && (combat==null||combat.canOverride())) {
+                if(combat!=null)combat.reset(timestamp);setActivity(INVENTORY, timestamp);rotation=-(float)Math.PI/2;
             }
             else if ((inputFlags & 2) == 0 && activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
             if(activity==269&&(inputFlags&4)!=0&&frame.actionChanged()>=activityStarted&&throwing.test(timestamp))inputFlags&=~4;
@@ -224,7 +239,7 @@ public final class TownMovement {
             int ended = activityStarted + duration;
             // A movement-enabled animation permits the same movement before and after
             // its exact deadline, so integrate the whole interval in one pass.
-            if (!movingEmote && activity!=HURT && ended - timestamp > 0) timestamp = ended;
+            if (!movingEmote && !activityAllowsMovement() && ended - timestamp > 0) timestamp = ended;
             setActivity(0, ended);
             updateFlags();
         }
@@ -280,7 +295,7 @@ public final class TownMovement {
     public float y() { return y; }
     public float rotation() { return rotation; }
     public float direction() { return direction; }
-    public int flags() { return flags|(combat==null?0:combat.flags()); }
+    public int flags() { return flags|(timestamp<warpUntil?1:0)|(combat==null?0:combat.flags()); }
     public int inputFlags(){return inputFlags;}
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
@@ -290,7 +305,7 @@ public final class TownMovement {
         activityStarted = started;
     }
     private boolean activityAllowsMovement() {
-        if(activity==269||activity==HURT)return true;
+        if(activity==269||activity==HURT||activity==USE_ITEM)return true;
         var emote=PlayerEmotes.byActivity(activity);
         return emote!=null&&emote.allowsMovement();
     }

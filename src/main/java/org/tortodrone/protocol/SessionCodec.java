@@ -491,7 +491,7 @@ public final class SessionCodec {
             out.writeBoolean(true);out.writeInt(2); // MessageEvent's declared Object[] field.
             type(out,"com.threerings.tudey.config.ClientActionConfig$ControllerAction");string(out,command);string(out,"");
             if(source==null)out.writeShort(0);
-            else if(command.equals("auction")&&source.entity()!=null){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(source.entity().key()));}
+            else if(!command.equals("forge")&&source.entity()!=null&&source.entity().key().matches("[0-9]+")){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(source.entity().key()));}
             else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
         });
     }
@@ -669,7 +669,7 @@ public final class SessionCodec {
         else if(value instanceof org.tortodrone.town.AuctionState.Page page){type(out,"com.threerings.projectx.auction.data.ListingsPage");out.writeInt(page.pages());out.writeBoolean(true);out.writeInt(page.listings().size());for(var listing:page.listings())listing(out,listing);}
         else if(value instanceof org.tortodrone.town.AuctionState.Listing listing)listing(out,listing);
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}
-        else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out,m.sender());out.writeLong(m.sent());string(out,m.subject());string(out,m.body());
+        else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out,m.sender());out.writeLong(m.sent());string(out,auctionMailText(m.subject()));string(out,auctionMailText(m.body()));
             if(m.friendRequest()){type(out,"com.threerings.projectx.uplink.data.FriendRequest");out.writeInt(m.friendWorld());}
             else if(m.claimed()||m.item()==null&&m.crowns()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
                 out.writeBoolean(m.item()!=null);if(m.item()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(m.item().config(),Map.of()));out.writeInt(m.item().count());}out.writeInt(m.crowns());out.writeInt(0);}
@@ -683,6 +683,9 @@ public final class SessionCodec {
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
         long hours=(a.expires()-System.currentTimeMillis())/3600000;int time=a.cancelled()?6:a.ended()||a.expires()<=System.currentTimeMillis()?5:hours<1?0:hours<4?1:hours<12?2:hours<48?3:4;
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());if(a.featured()){type(out,"com.threerings.projectx.auction.data.FeaturedInfo");out.writeShort(a.featuredRemaining());out.writeShort(a.featuredTotal());}else out.writeShort(0);
+    }
+    private static String auctionMailText(String text){
+        return text!=null&&text.matches("%auction:[sm]\\.(auction|bid)_.*")?"%uplink:"+text.substring(9):text;
     }
     private int listingViewer;
 
@@ -1051,7 +1054,7 @@ public final class SessionCodec {
     private void currentLoadout(DataOutputStream out,WorldProfile profile) throws IOException {
         type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1+profile.town().loadouts().size());
         loadout(out,profile);
-        for(var saved:profile.town().loadouts().stream().sorted(java.util.Comparator.comparing(l->l.name().toLowerCase(java.util.Locale.ROOT))).toList())loadout(out,saved.name(),saved.equipment().stream().mapToLong(Long::longValue).toArray(),saved.sprite(),saved.harness(),saved.perk());
+        for(var saved:profile.town().loadouts().stream().sorted(java.util.Comparator.comparing(l->l.name().toLowerCase(java.util.Locale.ROOT))).toList())loadout(out,saved,profile);
     }
     private void loadoutUpdated(DataOutputStream out,int oid,WorldProfile profile)throws IOException {
         type(out,"com.threerings.presents.dobj.EntryUpdatedEvent");out.writeInt(oid);string(out,"loadouts");
@@ -1060,15 +1063,35 @@ public final class SessionCodec {
     public byte[] loadouts(int oid,WorldProfile profile)throws IOException {
         return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"loadouts");currentLoadout(out,profile);});
     }
+    public byte[] loadoutChanges(int oid,WorldProfile before,WorldProfile after)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");
+            var old=new java.util.LinkedHashMap<String,org.tortodrone.town.TownState.Loadout>();
+            var current=new java.util.LinkedHashMap<String,org.tortodrone.town.TownState.Loadout>();
+            for(var l:before.town().loadouts())old.put(l.name(),l);for(var l:after.town().loadouts())current.put(l.name(),l);
+            int count=1+(int)old.keySet().stream().filter(k->!current.containsKey(k)).count()
+                +(int)current.values().stream().filter(l->!l.equals(old.get(l.name()))).count();
+            out.writeInt(count);
+            loadoutUpdated(out,oid,after);
+            for(String key:old.keySet())if(!current.containsKey(key))entryRemoved(out,oid,"loadouts",key.toLowerCase(java.util.Locale.ROOT));
+            for(var l:current.values())if(!l.equals(old.get(l.name()))){event(out,old.containsKey(l.name())?"EntryUpdatedEvent":"EntryAddedEvent",oid);string(out,"loadouts");loadout(out,l,after);}
+        });
+    }
+    private void loadout(DataOutputStream out,org.tortodrone.town.TownState.Loadout saved,WorldProfile profile)throws IOException {
+        loadout(out,saved.name(),saved.equipment().stream().mapToLong(Long::longValue).toArray(),saved.sprite(),saved.harness(),saved.perk(),saved.pvp(),loadoutRarity(profile,saved.equipment().stream().mapToLong(Long::longValue).toArray()));
+    }
     private void loadout(DataOutputStream out,WorldProfile profile)throws IOException {
         var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
-        loadout(out,"",profile.equipment(),profile.town().equippedSprite(),sprite==null?0:sprite.harness(),sprite==null?null:sprite.perk());
+        loadout(out,"",profile.equipment(),profile.town().equippedSprite(),sprite==null?0:sprite.harness(),sprite==null?null:sprite.perk(),false,loadoutRarity(profile,profile.equipment()));
     }
-    private void loadout(DataOutputStream out,String name,long[] equipment,int sprite,long harness,Integer perk)throws IOException {
+    private int loadoutRarity(WorldProfile profile,long[] equipment){
+        int rarity=0;for(long id:equipment)if(id!=0)for(var item:profile.items())if(item.id()==id){var definition=itemCatalog.find(item.config());if(definition!=null)rarity=Math.max(rarity,definition.rarity());}
+        return rarity;
+    }
+    private void loadout(DataOutputStream out,String name,long[] equipment,int sprite,long harness,Integer perk,boolean pvp,int rarity)throws IOException {
         type(out,"com.threerings.projectx.data.Loadout");
         int[] slots={0,1,2,3,4,15,6,7,8,9,10,11};
         out.writeBoolean(true);out.writeInt(slots.length);for(int slot:slots)out.writeLong(equipment[slot]);
-        out.writeBoolean(false);out.writeInt(0);out.writeInt(sprite);out.writeLong(harness);
+        out.writeBoolean(pvp);out.writeInt(rarity);out.writeInt(sprite);out.writeLong(harness);
         value(out,perk==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",perk));string(out,name);
     }
 
@@ -1156,9 +1179,11 @@ public final class SessionCodec {
     }
     private void interaction(DataOutputStream out,org.tortodrone.world.InteractionState interaction)throws IOException {
         if(interaction==null){out.writeShort(0);out.writeShort(0);out.writeShort(0);return;}
-        if(!java.util.Set.of("Interact","Talk","Lift","Resurrect").contains(interaction.action()))throw new IOException("Unsupported interaction action");
+        if(!java.util.Set.of("Interact","Talk","Shop","Lift","Resurrect").contains(interaction.action()))throw new IOException("Unsupported interaction action");
         type(out,"com.threerings.projectx.config.ActionDesc$"+interaction.action());
-        type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(interaction.actorId());value(out,interaction.description());
+        if(interaction.entryKey()!=null){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(interaction.entryKey()));}
+        else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(interaction.actorId());}
+        value(out,interaction.description());
     }
     private void petActor(DataOutputStream out,ActorState a)throws IOException {
         type(out,"com.threerings.projectx.dungeon.data.actor.SpriteActor");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);

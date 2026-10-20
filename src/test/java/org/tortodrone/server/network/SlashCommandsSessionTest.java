@@ -39,6 +39,8 @@ public final class SlashCommandsSessionTest {
                 player.world.invocation(new SessionDecoder.Invocation(3,9,10,List.of("First",confirm())));
                 check(player.chars.worldProfile("Player",1).town().loadouts().size()==1,"native save-loadout dispatch persists the named snapshot");
                 player.world.invocation(new SessionDecoder.Invocation(3,9,4,List.of("First",confirm())));
+                check(player.world.invocation(new SessionDecoder.Invocation(3,1,15,List.of("First",true,confirm()))),"Knight service owns native PvP loadout method 15");
+                check(player.chars.worldProfile("Player",1).town().loadouts().getFirst().pvp(),"PvP designation changes through the authenticated session");
                 int general=scenes.channelOid(scenes.catalog().entry().zone(),false),trade=scenes.channelOid(scenes.catalog().entry().zone(),true);
                 gm.world.subscribeChannel((short)20,general);peer.world.subscribeChannel((short)21,general);player.world.subscribeChannel((short)22,trade);
                 check(gm.world.channelSpeak(speak(general,"zone-marker",(byte)0)),"native zone speak dispatched");peer.socket.awaitText("zone-marker");
@@ -76,8 +78,19 @@ public final class SlashCommandsSessionTest {
                 gm.socket.awaitText("You are already in that scene");
                 check(gm.world.ownsScene(scenes.entry().oid()),"same-scene /sgo keeps the current scene subscribed");
                 check(gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("haven",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)11)))),"same-scene town destination request handled");
-                gm.socket.awaitText("You are already in that scene");
+                gm.drain();
                 check(gm.world.ownsScene(scenes.entry().oid()),"same-scene travel leaves the current scene intact");
+                var pending=WorldSession.class.getDeclaredField("portalMove");pending.setAccessible(true);
+                check(pending.get(gm.world)==null,"same-scene destination never starts a loading transition");
+                Thread.sleep(1100);
+                int moveX=0,moveY=0;boolean found=false;
+                for(int x=-5;x<=5&&!found;x++)for(int y=-12;y<=-4;y++)if(scenes.entry().simulation().placement(x,y)){moveX=x;moveY=y;found=true;break;}
+                check(found,"fixture has a validated integer destination");
+                gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,24,List.of(moveX,moveY,confirm())));gm.drain();
+                var own=scenes.entry().simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
+                check(own.x()==moveX&&own.y()==moveY&&pending.get(gm.world)==null,"/move relocates the existing pawn with no forced scene; actual="+own.x()+","+own.y()+" expected="+moveX+","+moveY);
+                gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,24,List.of(Integer.MIN_VALUE,0,confirm())));gm.socket.awaitText("Destination is blocked");
+                check(gm.world.ownsScene(scenes.entry().oid())&&pending.get(gm.world)==null,"invalid coordinates leave the scene ready");
                 // KnightMarshaller 11 is the stock /haven travel, sent with no arguments or listener.
                 var secondTown=scenes.catalog().scenes().stream().filter(m->m.town()&&m.id()!=scenes.catalog().entry().id()).findFirst().orElseThrow();
                 gm.world.adminPeople(admin(28,Integer.toString(secondTown.id())));move(gm,secondTown);
@@ -85,6 +98,17 @@ public final class SlashCommandsSessionTest {
                 check(gm.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of())),"native /haven command dispatched");
                 move(gm,scenes.catalog().entry());
                 check(gm.world.ownsScene(scenes.entry().oid()),"native /haven travel returns the knight to Haven");
+                var result=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)12);
+                var bazaar=scenes.catalog().scenes().stream().filter(m->m.content().stats().containsKey("destination.move_bechamel.x")).findFirst().orElseThrow();
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));move(gm,bazaar);
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_bechamel",result)));gm.drain();
+                check(pending.get(gm.world)==null&&gm.world.ownsScene(scenes.destination(bazaar.id(),1).oid()),"captured named command relocates within the existing scene");
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));move(gm,scenes.catalog().entry());
+                var auctionPending=WorldSession.class.getDeclaredField("auctionAfterArrival");auctionPending.setAccessible(true);
+                check(!auctionPending.getBoolean(gm.world)&&pending.get(gm.world)==null,"auction opening completes after the native cross-scene callbacks");
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_auction",result)));gm.drain();
+                var atAuction=scenes.entry().simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
+                check(atAuction.x()==1.5f&&atAuction.y()==12.5f&&pending.get(gm.world)==null,"/ah uses the authored destination and opens in-scene without a loading transition");
             }
             System.out.println("PASS: scene-chat/friend-service routing, same-scene travel guards, native /haven, native away/back, loadouts, separate zone/trade channels, GM who/kick/go/summon, readiness, authorization, revocation and private-instance isolation");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}

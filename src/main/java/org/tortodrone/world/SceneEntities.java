@@ -208,7 +208,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
         e.claim=0;e.claimTaken=false;if(success)e.destroyed=SceneClock.now();else e.refusedPickups.add(player);
     }
     public void cancelClaims(int player){for(var e:entities.values()){if(e.claim==player){e.claim=0;e.claimTaken=false;}e.refusedPickups.remove(player);}}
-    public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",670);}
+    public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",Set.of("Talk","Shop").contains(interactionAction(e))?1667:670);}
+    private String interactionAction(Entity e){
+        String station=e.spec.text("town-kind","");
+        String fallback=e.kind.equals("DungeonLift")?"Lift":
+            content.conversations().containsKey(e.spec.text("dialogue",e.config.name()))?"Talk":
+            Set.of("OpenShop","OpenDepot","OpenAuction").contains(station)?"Shop":"Interact";
+        return e.spec.text("interaction-action",fallback);
+    }
     public InteractionState interaction(float x,float y,float rotation){
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
         for(var e:entities.values())if((e.interactive||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
@@ -220,7 +227,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         if(nearest==null)return null;
         String description=nearest.spec.text("description","");
-        return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),nearest.kind.equals("DungeonLift")?"Lift":nearest.spec.text("interaction-action","Interact"));
+        String action=interactionAction(nearest);
+        return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),action,
+            nearest.spec.integer("handler-index",0)<0&&nearest.binding.key().matches("[0-9]+")?nearest.binding.key():null);
     }
     public void advance(int stamp,List<ActorState> occupants){
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
@@ -436,7 +445,28 @@ public final class SceneEntities implements SceneWeapons.Targets {
         e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
         float step=Math.min(nearest,e.speed*e.status.state().modifiers().speed()*elapsed);
         float x=e.x+(float)Math.cos(e.direction)*step,y=e.y+(float)Math.sin(e.direction)*step;
-        if(terrain.walkableSegment(e.x,e.y,x,y)&&walkable(x,y,e.id)){e.x=x;e.y=y;e.flags|=2;}
+        if(moveEntity(e,x,y))e.flags|=2;
+    }
+    /** Actor-specific masks and shapes, including subjective monster barriers. */
+    private boolean moveEntity(Entity mover,float x,float y){
+        int mask=mover.spec.integer("collision-mask",pawnCollisionMask);
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(x-mover.x,y-mover.y)/.1));
+        float dx=(x-mover.x)/steps,dy=(y-mover.y)/steps;boolean moved=false;
+        for(int i=0;i<steps;i++){
+            float nx=mover.x+dx,ny=mover.y+dy;
+            boolean clear=staticCollision.isEmpty()||mover.shape==null?terrain.walkableSegment(mover.x,mover.y,nx,ny):
+                staticCollision.floorSupported(nx,ny)&&staticCollision.clearSegment(mask,mover.shape,mover.x,mover.y,nx,ny,mover.rotation);
+            if(!clear)break;
+            for(var obstacle:entities.values()){
+                if(obstacle==mover||obstacle.destroyed!=Integer.MAX_VALUE||obstacle.carrier!=0
+                        ||obstacle.kind.equals("Door")&&(obstacle.flags&6)==2||(obstacle.collisionFlags&mask)==0)continue;
+                if(mover.shape!=null&&obstacle.shape!=null
+                        ?SceneCollision.overlaps(mover.shape,nx,ny,mover.rotation,obstacle.shape,obstacle.x,obstacle.y,obstacle.rotation,0)
+                        :obstacle.containsPawn(nx,ny)){clear=false;break;}
+            }
+            if(!clear)break;mover.x=nx;mover.y=ny;moved=true;
+        }
+        return moved;
     }
     private void cycle(Entity e,int stamp){
         var cycle=content.cycles().getOrDefault(e.cycle,e.spec);
@@ -636,7 +666,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void advanceImpulse(Entity e,int stamp){
         if(e.impulse==null)return;float portion=e.impulse.fraction(stamp)-e.impulse.fraction(e.impulseAdvanced);e.impulseAdvanced=stamp;
         float dx=e.impulse.x()*portion,dy=e.impulse.y()*portion;int steps=Math.max(1,(int)Math.ceil(Math.hypot(dx,dy)/.1));
-        for(int i=0;i<steps;i++){float x=e.x+dx/steps,y=e.y+dy/steps;if(terrain.walkableSegment(e.x,e.y,x,y)&&walkable(x,y,e.id)){e.x=x;e.y=y;}else break;}
+        for(int i=0;i<steps;i++){if(!moveEntity(e,e.x+dx/steps,e.y+dy/steps))break;}
         if(stamp>=e.impulse.started()+e.impulse.duration())e.impulse=null;
     }
     private void blockHit(Entity e,int stamp){

@@ -182,6 +182,11 @@ public final class SceneSimulation {
         public void enter(){synchronized(SceneSimulation.this){check();entered=true;start();}}
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
+        public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
+            check();if(!entered||portal!=null||lift!=0||pendingItem!=0||!health.alive())return false;
+            if(!movement.teleport(x,y,rotation,SceneClock.now()))return false;
+            interactionTarget=0;weapons.cancelAttacks(appearance.id());return true;
+        }}
         public boolean input(int stamp,float facing,float heading,int flags,int sceneTime,long now) {
             return input(stamp,facing,heading,flags,stamp,sceneTime,now);
         }
@@ -230,7 +235,7 @@ public final class SceneSimulation {
         private ActorState actor() {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
-                movement.rotation(),movement.direction(),movement.flags()|(health.invulnerable(SceneClock.now())?64:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
+                movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill,health.hitTime()));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
@@ -254,6 +259,14 @@ public final class SceneSimulation {
     private Snapshot previous;
     private long tickCount;
     private final List<SceneContent.Entry> arsenalZones;
+    public synchronized boolean placement(float x,float y){
+        var map=instance.map();
+        return Float.isFinite(x)&&Float.isFinite(y)&&map.collision().walkable(x,y)
+            &&(map.staticCollision().isEmpty()||map.staticCollision().floorSupported(x,y)
+                &&!map.staticCollision().penetration(Math.round(map.content().stats().getOrDefault("player.collision-mask",43f)),x,y,ScenePortals.PAWN_RADIUS).present())
+            &&!entities.penetration(x,y,0).present()
+            &&map.portals().triggers().stream().noneMatch(t->t.intersects(x,y));
+    }
     public SceneSimulation(SceneRegistry.Instance instance){this.instance=Objects.requireNonNull(instance);
         arsenalZones=instance.map().content().entries().stream().filter(e->e.spec().flag("arsenal-zone",false)).toList();
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());

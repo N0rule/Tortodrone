@@ -44,6 +44,15 @@ public final class NamedLoadoutsTest {
             refused(()->town.adminAccessory(b,1,1,1,accessory,"Blue"));refused(()->town.adminAccessory(a,1,1,1,"Unknown/Accessory","Blue"));
             check(db.worldProfile(a,1,1).equals(adorned),"GM permission and unknown accessory refusals change nothing");
             var cleared=town.adminAccessory(a,1,1,1,null,"Blue").profile();check(cleared.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==1).findFirst().orElseThrow().additionalAccessories().isEmpty(),"GM clear removes accessories without deleting gear");
+            var pvp=town.loadoutPvp(a,1,1,"Basic",true).profile();
+            check(new Database(home,true).worldProfile(a,1,1).town().loadouts().stream().anyMatch(l->l.name().equals("Basic")&&l.pvp()),"PvP designation persists across reopen");
+            refused(()->town.loadoutPvp(b,1,1,"Basic",false));refused(()->town.loadoutPvp(a,1,99,"Basic",false));refused(()->town.loadoutPvp(a,1,1,"Missing",true));refused(()->town.loadoutPvp(a,1,1,"",true));
+            check(db.worldProfile(a,1,1).equals(pvp),"invalid and foreign PvP changes leave the owned loadout intact");
+            db.write(c->{c.createStatement().execute("CREATE TRIGGER reject_pvp BEFORE INSERT ON metadata WHEN NEW.key LIKE 'knight.loadout.%.pvp' BEGIN SELECT RAISE(ABORT,'test'); END");return null;});
+            refused(()->town.loadoutPvp(a,1,1,"Basic",false));check(db.worldProfile(a,1,1).equals(pvp),"PvP write failure rolls back state and revision");
+            db.write(c->{c.createStatement().execute("DROP TRIGGER reject_pvp");return null;});
+            var resaved=town.loadout(a,1,1,"Basic",true).profile();check(resaved.town().loadouts().stream().anyMatch(l->l.name().equals("Basic")&&l.pvp()),"saving gear preserves designation");
+            check(town.loadoutPvp(a,1,1,"Basic",false).profile().town().loadouts().stream().noneMatch(l->l.name().equals("Basic")&&l.pvp()),"PvP designation can be cleared");
             db.deleteKnight("Alice",knight.name(),a,pet.worldId());
             check(db.read(c->{try(var st=c.createStatement();var r=st.executeQuery("SELECT count(*) FROM metadata WHERE key LIKE 'knight.loadout.%'")){r.next();return r.getInt(1)==0;}}),"knight deletion removes owned loadout metadata");
             System.out.println("PASS: named loadout save/switch/reopen, sprite restoration, ownership/auth, missing items, rollback, replacement and deletion cleanup");

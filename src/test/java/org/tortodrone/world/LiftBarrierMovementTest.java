@@ -17,6 +17,7 @@ public final class LiftBarrierMovementTest {
                 out.writeInt(0x54445731);out.writeInt(size);out.writeInt(size);out.writeFloat(-10);out.writeFloat(-10);out.writeFloat(.25f);out.write(bits);
             }
             var terrain=CollisionMap.read(grid);
+            monsters(terrain);
             for(boolean open:new boolean[]{false,true})for(float speed:new float[]{1,20})for(float heading:new float[]{0,.2f,-.2f}){
                 var door=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Door","config","Fixture",
                     "collision-flags","8192","start-open",Boolean.toString(open),"shape","Rectangle","width","1","height","8"));
@@ -39,6 +40,22 @@ public final class LiftBarrierMovementTest {
             }
             System.out.println("PASS: authoritative lift-barrier movement, open/closed, high speed/diagonal, drop/throw and independent carriers");
         }finally{Files.delete(grid);}
+    }
+    private static void monsters(CollisionMap terrain)throws Exception {
+        for(int barrierMask:new int[]{1,64,8192})for(boolean open:new boolean[]{false,true}){
+            var door=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Door","config","Fixture",
+                "collision-flags",Integer.toString(barrierMask),"start-open",Boolean.toString(open),"shape","Rectangle","width","1","height","8"));
+            var fields=new HashMap<String,String>();
+            fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Monster");fields.put("config","Fixture");
+            fields.put("collision-flags","8");fields.put("collision-mask","79");fields.put("radius",".4");fields.put("health","40");
+            fields.put("speed","10");fields.put("acquire-distance","20");fields.put("attack-count","0");
+            fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f))))));
+            var entities=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("door",0,0,0,door),new SceneContent.Entry("monster",-2,0,0,new SceneContent.Spec(fields))),Map.of()),terrain);
+            int stamp=SceneClock.now();for(int i=1;i<=20;i++)entities.advance(stamp+i*50,List.of(actor(7,3,0)));
+            float x=entities.actors().stream().filter(a->a.entity().kind().equals("Monster")).findFirst().orElseThrow().x();
+            check(open||barrierMask==8192?x>0:x<=-.899f,"monster uses native mask/shape for live barrier: mask="+barrierMask+", open="+open+", x="+x);
+            check(open||barrierMask!=64||!entities.penetration(0,0,7).present(),"monster-only barrier still permits a normal pawn");
+        }
     }
     private static ActorState actor(int id,float x,float y){return new ActorState(id,1000+id,"Fixture",0,1000,x,y,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));}
     private static TownMovement movement(CollisionMap terrain,SceneEntities entities,ActorState actor,float speed){

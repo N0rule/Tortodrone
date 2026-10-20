@@ -14,9 +14,12 @@ public final class SceneEntitiesTest {
         var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();
         var prompt=townEntities.interaction(clock.x()-1.9f,clock.y(),0);
         check(prompt!=null&&prompt.actorId()==clock.id(),"Haven NPC interaction resolves its prepared dialogue binding");
+        check(prompt.action().equals("Talk")&&prompt.entryKey()==null,"NPC dialogue uses its native talk icon and actor source");
         check(townEntities.interaction(clock.x()-1.9f,clock.y(),(float)Math.PI)==null,"NPC interaction respects the knight's facing and range");
         var auction=townEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Misc/Interact Node/Base")).findFirst().orElseThrow();
         check(townEntities.interaction(auction.x()-.9f,auction.y(),0)!=null,"auction interaction node is eligible in Haven");
+        var auctionPrompt=townEntities.interaction(.45199376f,14.619257f,1.28f);
+        check(auctionPrompt!=null&&auctionPrompt.action().equals("Shop")&&"3733".equals(auctionPrompt.entryKey()),"Auction House uses the native crowns prompt and placed entry identity");
         var hall=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
         check(hall.content().conversations().size()==9,"all captured Hall of Heroes vendors have authored conversations");
         for(var dialogue:hall.content().conversations().values()){

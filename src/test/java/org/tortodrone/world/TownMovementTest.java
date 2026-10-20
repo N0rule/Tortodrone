@@ -18,8 +18,34 @@ public final class TownMovementTest {
                 out.writeFloat(-1);out.writeFloat(-9);out.writeFloat(.25f);
                 out.write(java.util.Arrays.copyOf(clear.toByteArray(),(width*height+7)/8));
             }
-            corridor=CollisionMap.read(fixture);verify();hurt();boxes();
+            corridor=CollisionMap.read(fixture);verify();hurt();boxes();teleport();rapidInventory();
         } finally {java.nio.file.Files.deleteIfExists(fixture);}
+    }
+    private static void teleport(){
+        var player=movement();player.resetInput(1000);
+        check(player.accept(1200,0,0,1,1000,1000),"pre-warp future input queued");
+        check(!player.teleport(Float.NaN,-8,0,1050)&&!player.teleport(10000,-8,0,1050),"invalid destination fails without movement");
+        check(player.teleport(4,-8,.7f,1050)&&player.x()==4&&(player.flags()&1)!=0,"same pawn relocates with native WARP flag");
+        check(!player.accept(1150,0,0,1,1050,1050),"pre-warp frames cannot replay");
+        player.advance(1250,1250);check(player.x()==4&&(player.flags()&1)==0,"old queued intent cleared and WARP expires");
+        check(player.accept(1251,0,0,1,1251,1251),"fresh post-warp input resumes");player.advance(1300,1300);check(player.x()>4,"normal authoritative movement continues");
+    }
+    private static void rapidInventory(){
+        var player=movement();player.resetInput(1000);
+        for(int i=0;i<20;i++){
+            int stamp=1000+i*20;
+            check(player.accept(stamp,1,0,2,stamp,stamp),"open inventory intent");player.advance(stamp,stamp);
+            check(player.activity()==TownMovement.INVENTORY&&player.activityStarted()==stamp&&Math.abs(player.rotation()+Math.PI/2)<.00001,"reopen interrupts closing with native facing");
+            check(player.accept(stamp+10,1,0,0,stamp+10,stamp+10),"close inventory intent");player.advance(stamp+10,stamp+10);
+            check(player.activity()==TownMovement.INVENTORY_END&&player.activityStarted()==stamp+10,"closing timestamp advances monotonically");
+        }
+        check(player.confetti("Usable/Confetti, Leaf",1400),"confetti starts from closing inventory");
+        check(Math.abs(player.rotation()+Math.PI/2)<.00001,"native confetti retains the inventory animation facing");
+        int start=player.activityStarted();for(int i=1401;i<1450;i++){
+            player.accept(i,1,0,i%2==0?2:0,i,i);player.advance(i,i);
+            check(player.activity()==TownMovement.ANIMATED_ITEM&&player.activityStarted()==start,"rapid selection cannot restart or overlap confetti");
+        }
+        player.advance(3300,3300);check(player.activity()==0&&player.activityData()==null,"animated item recovers naturally");
     }
     private static void boxes(){
         var player=movement();player.resetInput(1000);
@@ -114,7 +140,7 @@ public final class TownMovementTest {
             && inventory.flags()==0 && inventory.x()==0, "inventory blocks walking");
         check(inventory.accept(200,2,0,3,150,1050), "continued inventory input accepted");
         inventory.advance(200,1100);
-        check(inventory.activityStarted()==100 && inventory.rotation()==1, "inventory start and facing remain stable");
+        check(inventory.activityStarted()==100 && Math.abs(inventory.rotation()+Math.PI/2)<.00001, "inventory start and native facing remain stable");
         check(inventory.accept(250,2,0,1,200,1100), "inventory close accepted");
         inventory.advance(250,1150);
         check(inventory.activity()==4 && inventory.activityStarted()==250, "closing activity starts once");

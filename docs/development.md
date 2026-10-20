@@ -146,3 +146,10 @@ and the existing Town/featured/expiry/session tests use disposable SQLite state.
 item catalog against pre-overhaul `0078b50` fingerprints. The focused stock
 `--depot-only` fixture schedules a Silver Key discount and verifies its native
 price fields, Specials, purchase debit/delivery and refused real-money billing.
+
+Gameplay wire checks: `scripts/compat/GameplayCompatibility.java` reads loadout DSet
+events, Arsenal entry keys/equipment policies, interaction icons, warp/invulnerability
+deltas, conversation bundles and auction mail with the installed retail classes.
+`ConfettiCompatibility.java` checks all fourteen original animation definitions and
+their timestamp-seeded durations. These are read-only reader checks; visible blinking,
+animation composition and live UI/travel behavior still require in-game acceptance.

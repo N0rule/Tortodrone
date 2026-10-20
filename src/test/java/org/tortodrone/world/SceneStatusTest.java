@@ -19,7 +19,10 @@ public final class SceneStatusTest {
         var reactive=new SceneHealth(content);
         var blow=new FireCatalog.DataValue("Damage$Normal",Map.of("amount",10f,"flags",8,"shouldReact",true));
         check(reactive.hit(blow,1000).react()&&reactive.invulnerable(1999)&&reactive.hit(blow,1500).amount()==0,"authored hurt reaction grants one second of protection");
+        check(reactive.hitTime()==1000&&reactive.hit(blow,1999).amount()==0&&reactive.hitTime()==1000,"protected hits neither change hit time nor extend flashing protection");
         check(reactive.hit(blow,2000).amount()>0,"hurt protection expires on its deadline");
+        var passive=new SceneHealth(content);passive.hit(hit(1),1000);
+        check(!passive.invulnerable(1001)&&passive.hit(hit(1),1001).amount()>0,"nonreacting damage does not grant the reacting-hit window");
         var hurt=new TownMovement(map.collision(),map.spawnX(),map.spawnY());hurt.combat(new KnightCombat(WeaponCatalog.empty()));hurt.resetInput(1000);hurt.hurt(1000);
         hurt.advance(1425,1425);check(hurt.activity()==TownMovement.HURT,"native hurt activity continues beyond the animation-only 425 ms cutoff");
         hurt.advance(1499,1499);check(hurt.activity()==TownMovement.HURT,"native hurt activity lasts 500 ms");

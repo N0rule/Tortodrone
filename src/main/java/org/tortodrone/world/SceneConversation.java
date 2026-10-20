@@ -17,7 +17,11 @@ public record SceneConversation(String actor,String name,String bundle,String in
         public Node(String id,String message,List<Response> responses,StarterCatalog.Model animation,StarterCatalog.Model transientModel){this(id,message,responses,animation,transientModel,null);}
         public Node { responses=List.copyOf(responses); }
     }
-    public SceneConversation { nodes=Map.copyOf(nodes); }
+    public SceneConversation {
+        // Legacy exports named the server's NPC namespace; the retail bundle is conversation.
+        if(bundle.equals("npc"))bundle="conversation";
+        nodes=Map.copyOf(nodes);
+    }
     static Map<String,SceneConversation> load(Properties p)throws IOException {
         var result=new TreeMap<String,SceneConversation>();
         for(String id:p.getProperty("dialogues","").split(",")){

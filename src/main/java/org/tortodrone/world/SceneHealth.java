@@ -5,6 +5,8 @@ import org.tortodrone.character.WorldProfile;
 
 /** Party health is instance state; it is never written to the account database. */
 public final class SceneHealth {
+    /** Retail Dungeoneer.INVULNERABLE; its sprite flashes every 50 ms while set. */
+    public static final int INVULNERABLE_FLAG=64, POST_HIT_MILLIS=1000;
     public record State(int current,int maximum,int bonus,int reviveFlags) {
         public State(int current,int maximum,int bonus){this(current,maximum,bonus,1);}
     }
@@ -87,7 +89,7 @@ public final class SceneHealth {
         amount+=(int)Math.ceil(status.damaged(amount,stamp));
         if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount,stamp);died(stamp);
         boolean react=amount>0&&SceneDamage.reacts(damage);
-        if(react&&alive())invulnerableUntil=stamp+1000;
+        if(react&&alive())invulnerableUntil=stamp+POST_HIT_MILLIS;
         return new Hit(amount,SceneDamage.playerFeedback(damage,content,mitigation,amount,multiplier,blockableScale),react);
     }
     private boolean rawDamage(int amount,int stamp){if(amount<=0||current==0)return false;current=Math.max(0,current-amount);hitTime=stamp;return true;}

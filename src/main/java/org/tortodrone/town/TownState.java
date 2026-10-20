@@ -8,7 +8,8 @@ public record TownState(List<LearnedRecipe> recipes,List<Sprite> sprites,int equ
     public TownState(List<LearnedRecipe> recipes,List<Sprite> sprites,int equippedSprite,List<Harness> harnesses){this(recipes,sprites,equippedSprite,harnesses,List.of());}
     public static final TownState EMPTY=new TownState(List.of(),List.of(),0,List.of());
     public TownState{recipes=List.copyOf(recipes);sprites=List.copyOf(sprites);harnesses=List.copyOf(harnesses);mail=List.copyOf(mail);loadouts=List.copyOf(loadouts);}
-    public record Loadout(String name,List<Long> equipment,int sprite,long harness,Integer perk) {
+    public record Loadout(String name,List<Long> equipment,int sprite,long harness,Integer perk,boolean pvp) {
+        public Loadout(String name,List<Long> equipment,int sprite,long harness,Integer perk){this(name,equipment,sprite,harness,perk,false);}
         public Loadout { equipment=List.copyOf(equipment);if(equipment.size()!=16)throw new IllegalArgumentException("Loadout equipment must contain 16 slots"); }
     }
     public record LearnedRecipe(long id,String config,int crafted,long expires) { }

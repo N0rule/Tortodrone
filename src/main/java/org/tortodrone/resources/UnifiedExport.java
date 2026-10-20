@@ -114,7 +114,13 @@ final class UnifiedExport {
         var map=new LinkedHashMap<String,Object>();map.put("id",Integer.parseInt(descriptor.getProperty("scene-id")));map.put("name",readable(descriptor.getProperty("name")));map.put("type",descriptor.getProperty("kind"));map.put("zone",names.getOrDefault(Integer.parseInt(descriptor.getProperty("zone-id")),descriptor.getProperty("zone-id")));map.put("defaultSpawn",defaultSpawn);map.put("instances",Integer.parseInt(descriptor.getProperty("instances")));write(target.resolve("map.yml"),map);
     }
     private Map<String,Object> exportNpc(Properties original,String id,Path target)throws IOException {
-        String prefix="dialogue."+id+".";var properties=section(original,prefix);String bundle=properties.get("bundle");var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model"))if(properties.containsKey(key))fixed.put(key,properties.get(key));
+        String prefix="dialogue."+id+".";var properties=section(original,prefix);String bundle=properties.get("bundle");if(bundle.equals("npc"))bundle="conversation";
+        var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model"))if(properties.containsKey(key))fixed.put(key,properties.get(key));fixed.put("bundle",bundle);
+        String speaker=properties.get("name");
+        if(game!=null&&speaker!=null&&!speaker.startsWith("~")&&!speaker.startsWith("%")&&!bundle(bundle).containsKey(speaker)){
+            String found=null;for(String candidate:List.of("shop","conversation","mission"))if(bundle(candidate).containsKey(speaker)){if(found!=null){found=null;break;}found=candidate;}
+            if(found!=null)fixed.put("name","%"+found+":"+speaker);
+        }
         var nodes=new LinkedHashMap<String,Object>();var nativeNodes=new LinkedHashMap<String,Object>();
         for(String index:properties.get("nodes").split(",")) {
             String np="node."+index+".";var node=section(original,prefix+np);String name=node.get("name"),key=node.get("message"),text=resolve(bundle,key);
@@ -150,10 +156,15 @@ final class UnifiedExport {
         }
         return result;
     }
-    private String resolve(String bundle,String key)throws IOException {
-        if(key.startsWith("~"))return key.substring(1);
+    private Properties bundle(String bundle)throws IOException {
         Properties strings=bundles.get(bundle);
         if(strings==null){strings=new Properties();if(game!=null){ContentFiles.regular(game.resolve("code/projectx-config.jar"));try(var zip=new ZipFile(game.resolve("code/projectx-config.jar").toFile())){var entry=zip.getEntry("rsrc/i18n/"+bundle+".properties");if(entry!=null)try(var in=zip.getInputStream(entry)){strings.load(in);}}}bundles.put(bundle,strings);}
+        return strings;
+    }
+    private String resolve(String bundle,String key)throws IOException {
+        if(key.startsWith("~"))return key.substring(1);
+        if(key.startsWith("%")&&key.contains(":")){int colon=key.indexOf(':');return resolve(key.substring(1,colon),key.substring(colon+1));}
+        Properties strings=bundle(bundle);
         String result=strings.getProperty(key);
         if(result==null&&game!=null&&bundle.equals("npc")) {
             try(var zip=new ZipFile(game.resolve("code/projectx-config.jar").toFile())) {

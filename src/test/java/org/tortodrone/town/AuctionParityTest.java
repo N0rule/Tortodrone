@@ -21,6 +21,10 @@ public final class AuctionParityTest {
             new CharacterStore(db,owner,"Alice",items).create(new Knight(0,"Auction-Alice","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",0,2,0,0));
             db.currency("Alice","Auction-Alice",owner,-1,org.tortodrone.character.Currency.CROWNS,10000);
             var house=new AuctionHouse(db,items,rules);
+            var confetti=house.createFeatured("Usable/Confetti, Leaf",1,10,10,0,2);
+            var usable=new SessionDecoder.AuctionSearch(true,new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$Group",17),null,0,true,false);
+            var usablePage=(AuctionState.Page)house.operate(owner,1,1,5,List.of(usable,0),false).result();
+            check(usablePage.listings().stream().anyMatch(l->l.id()==confetti.id()),"native Usable category includes AnimatedAction items");
             check(AuctionHouse.nextBid(1,0,false)==2&&AuctionHouse.nextBid(99,0,false)==103&&AuctionHouse.nextBid(1000,0,false)==1050&&AuctionHouse.nextBid(Integer.MAX_VALUE,0,false)==Integer.MAX_VALUE,"native rounded increment boundaries");
             check(AuctionHouse.nextBid(1000,1020,false)==1020&&AuctionHouse.nextBid(1000,0,true)==1000,"buyout cap and first bid");
             var cheapLot=house.createFeatured("Material/Gel Drop",2,40,40,0,2);

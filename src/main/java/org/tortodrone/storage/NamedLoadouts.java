@@ -29,16 +29,23 @@ final class NamedLoadouts {
         var result=new ArrayList<TownState.Loadout>();var names=new HashSet<String>();
         for(var row:values.entrySet()) {
             if(!names.add(row.getKey().toLowerCase(Locale.ROOT)))throw new IOException("Duplicate saved loadout name");
-            var fields=row.getValue();if(fields.size()!=19)throw new IOException("Incomplete saved loadout");
+            var fields=row.getValue();if(fields.size()!=19+(fields.containsKey("pvp")?1:0))throw new IOException("Incomplete saved loadout");
             var equipment=new ArrayList<Long>();for(int i=0;i<16;i++)equipment.add(require(fields,"slot"+i));
             long sprite=require(fields,"sprite"),harness=require(fields,"harness"),perk=require(fields,"perk");
             if(equipment.stream().anyMatch(i->i<0)||sprite<0||sprite>Integer.MAX_VALUE||harness<0||perk< -1||perk>Integer.MAX_VALUE)throw new IOException("Invalid saved loadout state");
-            result.add(new TownState.Loadout(row.getKey(),equipment,(int)sprite,harness,perk<0?null:(int)perk));
+            long pvp=fields.getOrDefault("pvp",0L);if(pvp!=0&&pvp!=1)throw new IOException("Invalid saved loadout designation");
+            result.add(new TownState.Loadout(row.getKey(),equipment,(int)sprite,harness,perk<0?null:(int)perk,pvp==1));
         }
         result.sort(Comparator.comparing(l->l.name().toLowerCase(Locale.ROOT)));
         return List.copyOf(result);
     }
     private static long require(Map<String,Long> fields,String key)throws IOException {var value=fields.get(key);if(value==null)throw new IOException("Incomplete saved loadout");return value;}
+    static void pvp(Connection c,WorldProfile p,String name,boolean enabled)throws SQLException,IOException {
+        validate(name);var saved=p.town().loadouts().stream().filter(l->l.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("No saved loadout with that name"));
+        try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
+            s.setString(1,key(p.worldId(),saved.name())+"pvp");s.setInt(2,enabled?1:0);s.executeUpdate();
+        }
+    }
     static void save(Connection c,WorldProfile p,String name)throws SQLException,IOException {
         validate(name);
         String storedName=p.town().loadouts().stream().map(TownState.Loadout::name).filter(n->n.equalsIgnoreCase(name)).findFirst().orElse(name);

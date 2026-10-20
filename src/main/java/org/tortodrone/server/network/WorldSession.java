@@ -54,6 +54,7 @@ final class WorldSession implements AutoCloseable {
     private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
     private PortalMove portalMove;
     private ScenePortals.Entrance arrival;
+    private boolean auctionAfterArrival;
     private int departedSceneOid;
     private record DeferredMove(short requestId,boolean zone,int sceneOid) { }
     private DeferredMove deferredMove;
@@ -208,6 +209,8 @@ final class WorldSession implements AutoCloseable {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
         if(publishTown)output.send(()->codec.townState(oid,after));
+        if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
+                ||!before.town().sprites().equals(after.town().sprites()))output.send(()->codec.loadoutChanges(oid,before,after));
     }
     private boolean exchangeSubscribed;
     private long exchangeRevision=-1;
@@ -747,12 +750,18 @@ final class WorldSession implements AutoCloseable {
                 }
                 if(map==null)throw new IOException("%chat:m.no_such_scene");
                 var next=destination(map.id());
-                // The stock client refuses a forced move to the scene it is already in, so a
-                // same-scene destination must fail here instead of tearing down the live scene.
-                if(next==scene)throw new IOException("You are already in that scene");
                 if(entrance==null)entrance=new ScenePortals.Entrance(1,map.spawnX(),map.spawnY(),map.spawnRotation());
+                if(!next.simulation().placement(entrance.x(),entrance.y()))throw new IOException("Destination is blocked");
+                if(destination.equals("move_auction"))auctionSource(next);
+                if(next==scene){
+                    if(!membership.teleport(entrance.x(),entrance.y(),entrance.rotation()))throw new IOException("Destination is blocked or the knight is busy");
+                    closeConversation();closeTownDialog();
+                    if(destination.equals("move_auction"))openAuction();
+                    output.send(()->codec.townResult(oid,listener.requestId(),"",profile));return true;
+                }
+                auctionAfterArrival=destination.equals("move_auction");
                 closeConversation();closeTownDialog();portalMove=new PortalMove(next,entrance);departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
-                output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),null,profile));
+                output.send(()->codec.forceScene(oid,receiver,next));output.send(()->codec.townResult(oid,listener.requestId(),"",profile));
             }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
         }
         // KnightMarshaller 11 is the stock /haven travel (EN()); it carries no arguments or listener,
@@ -806,12 +815,22 @@ final class WorldSession implements AutoCloseable {
                 if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
                 if(request.method()==4&&!membership.equipmentAllowed())throw new IOException("Equipment is locked outside an Arsenal Station in this level");
                 var result=characters.town(scenes.town()).loadout(characters.accountId(),knight.id(),authRevision,name,request.method()==10);
-                townChanged(result);output.send(()->codec.loadouts(oid,profile));output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+                townChanged(result);output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         if (service == 9 && request.method() == 9) {
             equip(args);
+            return true;
+        }
+        if(service==1&&request.method()==15){
+            if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=3||!(args.get(0) instanceof String name)||!(args.get(1) instanceof Boolean enabled)
+                    ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
+            try{
+                if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
+                townChanged(characters.town(scenes.town()).loadoutPvp(characters.accountId(),knight.id(),authRevision,name,enabled));
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
@@ -974,7 +993,11 @@ final class WorldSession implements AutoCloseable {
             if(owned!=next){if(owned!=scene)scenes.release(owned,profile.worldId());throw new IOException("That private instance belongs to another knight or party");}
             if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
         }
-        if(!next.map().collision().walkable(location.x(),location.y()))throw new IOException("Destination is blocked");
+        if(!next.simulation().placement(location.x(),location.y()))throw new IOException("Destination is blocked");
+        if(next==scene){
+            if(!membership.teleport(location.x(),location.y(),location.rotation()))throw new IOException("Destination is blocked or the knight is busy");
+            closeConversation();closeTownDialog();return;
+        }
         closeConversation();closeTownDialog();
         portalMove=new PortalMove(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
         departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
@@ -1188,8 +1211,19 @@ final class WorldSession implements AutoCloseable {
         tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
         lastStamp = SceneClock.now();
         membership.enter();
+        if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
         if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
+    }
+
+    private ActorState auctionSource(SceneRegistry.Instance destination)throws IOException {
+        return destination.simulation().snapshot().actors().stream().filter(a->a.entity()!=null
+            &&destination.map().content().entries().stream().anyMatch(e->e.key().equals(a.entity().key())&&e.spec().text("town-kind","").equals("OpenAuction"))).findFirst()
+            .orElseThrow(()->new IOException("No Auction House in this scene"));
+    }
+    private void openAuction()throws IOException {
+        var source=auctionSource(scene);
+        output.send(()->codec.controllerAction(oid,"auction",source));
     }
 
     synchronized void unsubscribe() { leaveChat();subscribed = entered = false; sceneGeneration++;if(membership!=null)membership.pause(); }
@@ -1495,7 +1529,7 @@ final class WorldSession implements AutoCloseable {
                 if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
                 if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
                 if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));}
-                if(!fresh.town().loadouts().equals(previous.town().loadouts()))output.send(()->codec.loadouts(oid,profile));
+                if(!fresh.town().loadouts().equals(previous.town().loadouts()))output.send(()->codec.loadoutChanges(oid,previous,profile));
                 if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
             }
         }

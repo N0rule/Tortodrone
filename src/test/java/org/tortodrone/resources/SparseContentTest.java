@@ -24,7 +24,13 @@ public final class SparseContentTest {
                 if(map.getKey().toString().equals("1")){
                     String rotation=historical.stringPropertyNames().stream().filter(k->k.endsWith(".town-station")&&historical.getProperty(k).equals("scene.1.placed.3733")).findFirst().orElseThrow().replace(".town-station",".rotation");
                     check(historical.getProperty(rotation).equals("0.0"),"Auction House uses captured native facing");historical.setProperty(rotation,"-1.5707964");
+                    check(historical.getProperty("destination.move_auction.id").equals("7966")&&historical.getProperty("destination.move_auction.x").equals("1.5"),"native auction destination restored");
+                    historical.keySet().removeIf(k->k.toString().startsWith("destination.move_auction."));
                 }
+                for(String key:new HashSet<>(historical.stringPropertyNames()))if(key.endsWith(".collision-mask")&&key.startsWith("entry.")){
+                    check(historical.getProperty(key).equals("79"),"supported monsters retain their native movement mask");historical.remove(key);
+                }
+                if(map.getKey()==318)for(String key:new HashSet<>(historical.stringPropertyNames()))if(key.startsWith("dialogue.")&&key.endsWith(".name")&&historical.getProperty(key).startsWith("%shop:n.hoh_"))historical.setProperty(key,historical.getProperty(key).substring(6));
                 check(hash(historical).equals(sceneGolden.get(map.getKey().toString())),"inherited scene properties unchanged outside explicit corrections: "+map.getKey());
                 check(hash(prepared.portals()).equals(catalogGolden.get("portals."+map.getKey())),"portal identity/coordinates/precise headings unchanged: "+map.getKey());
                 var edits=Yaml.map(Yaml.read(map.getValue().resolve("actors.yml")).get("actors"),"actors");

@@ -185,6 +185,7 @@ public final class SceneContentExport {
         writeGeometry(out, prefix, field(original, "shape"));
         addOptionalNumber(out, prefix + "speed", field(original, "speed"));
         addOptionalNumber(out, prefix + "collision-flags", field(original, "collisionFlags"));
+        addOptionalNumber(out, prefix + "collision-mask", field(original, "collisionMask"));
         for(String name:List.of("damageMask","blockDamage","vacuumExpansion","vacuumSpeed","targetedSpeed"))addOptional(out,prefix+kebab(name),field(original,name));
         Object sprite=field(original,"sprite");Object description=field(sprite,"description");
         if(description instanceof ConfigReference<?> r)put(out,prefix+"description",r.getName());
