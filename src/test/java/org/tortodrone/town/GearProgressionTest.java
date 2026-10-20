@@ -24,6 +24,11 @@ public final class GearProgressionTest {
             town.adminGear(staff,1,1,42,List.of(6,9));var maxed=town.addHeat(staff,1,1,40).profile();
             check(maxed.items().stream().filter(i->Integer.valueOf(6).equals(i.equippedSlot())).allMatch(i->i.heatProgress()==0),"maximum-level equipment receives no heat and does not dilute the award");
             town.adminGear(staff,1,1,42,List.of(6,0));town.adminGear(staff,1,1,41,List.of(6,1f));
+            var partial=db.worldProfile(staff,1,1);
+            check(item(partial,sword.id()).heatProgress()==.01f,"GM heat accepts percentages rather than normalized progress");
+            refused(()->town.forge(staff,1,1,sword.id(),0,0));
+            check(db.worldProfile(staff,1,1).equals(partial),"partial heat forge refusal preserves inventory and revisions");
+            town.adminGear(staff,1,1,41,List.of(6,100f));
             var ready=db.worldProfile(staff,1,1);refused(()->town.forge(other,1,1,sword.id(),0,0));refused(()->town.forge(staff,1,1,sword.id(),999,0));
             check(db.worldProfile(staff,1,1).equals(ready),"foreign inventory and forged crystal tiers are refused atomically");
             int starterCost=rules.gear().forge(rules.gear().gear(sword.config()),0).crystals().getFirst();
