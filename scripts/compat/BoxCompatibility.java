@@ -45,7 +45,9 @@ public final class BoxCompatibility {
         var furni=new WorldProfile.Item(779,WorldProfile.Slot.OTHER,furniture.config(),null,0,null,false,false,false,2,false);
         var timed=new WorldProfile.Item(780,disguise.slot(),disguise.config(),null,0,null,false,false,false,1,false).withExpiration(expiry);
         var after=new WorldProfile(42,1,1,0,0,2,List.of(item,inactive,furni,timed),KnightProgress.RECRUIT);
+        append(bytes,codec.itemAcquireDelay(10,7500));
         append(bytes,codec.itemChanges(10,null,empty,after));
+        append(bytes,codec.itemAcquireDelay(10,0));
         append(bytes,codec.townResult(10,(short)9,new SessionDecoder.Multiset(Map.of(777L,3)),after));
         append(bytes,codec.invocationFailure(10,(short)10,"m.inventory_full"));
         var weapon=(StarterCatalog.Model)catalog.require("untimely_scythe").arguments(256).get("Weapon");
@@ -54,7 +56,16 @@ public final class BoxCompatibility {
         var active=inactive.withExpiration(expiry);
         var activated=new WorldProfile(42,1,1,0,0,3,List.of(item,active,furni,timed),KnightProgress.RECRUIT);
         append(bytes,codec.selected(10,new Knight(1,"Test-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),activated));
+        var references=List.of(new StarterCatalog.Model("Upgrade/Prize Box/Dark Harvest Prize Box, Complete",Map.of()),
+            new StarterCatalog.Model("Usable/Confetti, Dark Harvest",Map.of()),
+            new StarterCatalog.Model("Costume/Recolor Sets/Helm/Crescent Helm/Crescent Helm, Nova",Map.of()));
+        var actor=new org.tortodrone.world.ActorState(42,10,"Test-Knight",256,100,0,0,-(float)Math.PI/2,0,0,265,1000,
+            new StarterCatalog.Model("Character/PC/Default",Map.of()),false,null,null,null,null,new org.tortodrone.world.SceneKnightState(references,0));
+        append(bytes,codec.sceneDelta(10,0,0,1000,List.of(actor),List.of(),new int[0]));
+        append(bytes,codec.sceneDelta(10,0,1000,1050,List.of(),List.of(actor),new int[0]));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
+        var delay=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        check(delay.getName().equals("itemAcquireDelay")&&delay.getValue().equals(7500),"captured acquisition delay before item events");
         var added=((EventNotification)in.qe()).yj();check(added instanceof CompoundEvent,"native inventory update before reveal");
         var decoded=((CompoundEvent)added).xE().stream().filter(e->e instanceof EntryAddedEvent<?> a&&a.xZ() instanceof com.threerings.projectx.item.data.UpgradingItem).map(e->(com.threerings.projectx.item.data.UpgradingItem)((EntryAddedEvent<?>)e).xZ()).findFirst().orElseThrow();
         check(decoded.VA()==778&&decoded.Cs()&&decoded.getCount()==1&&decoded.VE()==null,"native inactive upgrade subclass, identity, binding and no running timer");
@@ -63,6 +74,8 @@ public final class BoxCompatibility {
         check(furnitureRead instanceof com.threerings.projectx.item.data.FurniItem&&furnitureRead.getCount()==2&&furnitureRead.VE()==null,"native undeployed FurniItem layout");
         var timedRead=newItems.stream().filter(e->e.VA()==780).findFirst().orElseThrow();
         check(timedRead instanceof com.threerings.projectx.item.data.LevelItem&&Objects.equals(timedRead.VE(),expiry),"native absolute Long expiration layout");
+        var reset=(AttributeChangedEvent)((EventNotification)in.qe()).yj();
+        check(reset.getName().equals("itemAcquireDelay")&&reset.getValue().equals(0),"delay cleared before reward callback");
         var result=(InvocationResponseEvent)((EventNotification)in.qe()).yj();
         check(result.yc()==1&&result.yf()==9&&result.yd()[0] instanceof com.google.common.collect.Multiset<?> m&&m.count(777L)==3,"native result multiset of item IDs and quantities");
         var failure=(InvocationResponseEvent)((EventNotification)in.qe()).yj();check(failure.yc()==0&&failure.yf()==10,"native failure callback");
@@ -77,8 +90,15 @@ public final class BoxCompatibility {
         var attrs=selected.xE().stream().filter(e->e instanceof AttributeChangedEvent).map(e->(AttributeChangedEvent)e).toList();
         check(attrs.stream().anyMatch(e->e.getName().equals("weaponSlots")&&e.getValue().equals(2)),"native base weapon slots");
         check(attrs.stream().anyMatch(e->e.getName().equals("trinketSlots")&&e.getValue().equals(1)),"native activated trinket slot");
+        var reveal=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
+        var knight=(com.threerings.projectx.data.actor.Knight)reveal.aej()[0];
+        var revealDelta=(com.threerings.tudey.dobj.SceneDeltaEvent)((EventNotification)in.qe()).yj();
+        knight=(com.threerings.projectx.data.actor.Knight)revealDelta.aek()[0].apply(knight);
+        var nativeReferences=knight.bY(List.class);
+        check(knight.adU()==265&&knight.adV()==1000&&nativeReferences.size()==3,"native opening activity and list data survive initial actor and delta");
+        for(int n=0;n<references.size();n++)check(((ConfigReference<?>)nativeReferences.get(n)).getName().equals(references.get(n).name()),"box then unique reward config references");
         check(in.available()==0,"no trailing bytes");
-        System.out.println("PASS: stock method 12, all key options, ResultMarshaller, inventory-before-result, Long multiset quantities, inactive UpgradingItem, furniture, timed costume and failure serialization");
+        System.out.println("PASS: stock method 12, all key options, ResultMarshaller, acquisition delay/reset, inventory-before-result, Long multiset quantities, opening actor/list delta, inactive UpgradingItem, furniture, timed costume and failure serialization");
     }
     private static void bindings(Path game)throws Exception {
         game=game.toRealPath();

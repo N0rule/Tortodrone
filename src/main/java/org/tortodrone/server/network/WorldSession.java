@@ -351,10 +351,21 @@ final class WorldSession implements AutoCloseable {
                 if(prior.box()!=id||prior.option()!=option||prior.failure()!=null)throw new IOException(prior.failure()==null?"m.internal_error":prior.failure());
                 Object rewards=prior.rewards();output.send(()->codec.townResult(oid,listener.requestId(),rewards,profile));return true;
             }
+            if(!membership.canOpenBox())throw new IOException("Finish your current action before opening a box");
             var result=characters.boxes(scenes.boxes()).open(characters.accountId(),knight.id(),authRevision,current.revision(),id,option);
             // Retain the receipt before publication: a queued-output failure must never cause a second write.
             rememberBox(token,new BoxReply(id,option,result.result(),null));
+            var references=new ArrayList<StarterCatalog.Model>();
+            references.add(new StarterCatalog.Model(current.items().stream().filter(i->i.id()==id).findFirst().orElseThrow().config(),Map.of()));
+            var rewards=((SessionDecoder.Multiset)result.result()).counts();
+            result.profile().items().stream().filter(i->rewards.containsKey(i.id())).map(WorldProfile.Item::config).distinct()
+                .forEach(config->references.add(new StarterCatalog.Model(config,Map.of())));
+            membership.openBox(List.copyOf(references));
+            // Capture: suppress ordinary acquisition popups while consuming/granting, then
+            // clear the delay before the native reward-window callback. Publish only after commit.
+            output.send(()->codec.itemAcquireDelay(oid,7500));
             townChanged(result,false);
+            output.send(()->codec.itemAcquireDelay(oid,0));
             output.send(()->codec.townResult(oid,listener.requestId(),result.result(),result.profile()));
         }catch(CharacterStore.Refused|IOException failure) {
             if(token!=null&&!boxReplies.containsKey(token))rememberBox(token,new BoxReply(id,option,null,failure.getMessage()));

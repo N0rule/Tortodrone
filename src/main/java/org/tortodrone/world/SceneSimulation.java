@@ -205,6 +205,12 @@ public final class SceneSimulation {
         public boolean emote(PlayerEmotes.Descriptor emote,int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.emote(emote,sceneTime,now);}
         }
+        public boolean canOpenBox(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&lift==0&&pendingItem==0&&movement.canOpenBox();}}
+        /** Called only with committed rewards; no storage or network work under the scene lock. */
+        public void openBox(List<org.tortodrone.character.StarterCatalog.Model> references){
+            synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
+                weapons.cancelAttacks(appearance.id());movement.openBox(references,SceneClock.now());}
+        }
         private void updateLife(int stamp){
             if(health.alive()){if(movement.dead()){movement.resurrect(stamp);weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);}return;}
             if(movement.dead())return;

@@ -400,6 +400,8 @@ public final class SessionCodec {
             for (var argument : new java.util.TreeMap<>(model.arguments()).entrySet()) {
                 intern(out,argument.getKey()); value(out,argument.getValue());
             }
+        } else if (value instanceof java.util.List<?> list) {
+            type(out,"java.util.ArrayList");out.writeInt(list.size());for(var element:list)value(out,element);
         } else if (value instanceof StarterCatalog.Colorization color) {
             type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal"); out.writeInt(color.value());
         } else if (value instanceof StarterCatalog.TransColorization color) {
@@ -641,6 +643,9 @@ public final class SessionCodec {
         out.writeBoolean(true);out.writeInt(3);for(int skill=0;skill<3;skill++){type(out,"com.threerings.projectx.sprites.data.BattleSprite$SkillBonus");primitiveInts(out,new int[]{s.powers().get(skill*3),s.powers().get(skill*3+1),s.powers().get(skill*3+2)});value(out,new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpriteCodes$Ultimate",s.ultimates().get(skill)));}
         out.writeInt(s.perkLevel());out.writeBoolean(true);out.writeInt(s.perks().size());for(int perk:s.perks().stream().sorted().toList())value(out,new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",perk));
         value(out,s.perk()==null?null:new SessionDecoder.EnumValue("com.threerings.projectx.sprites.data.SpritePerk",s.perk()));out.writeInt(s.id());out.writeInt(worldId);out.writeUTF(s.config());harness(out,h==null?new org.tortodrone.town.TownState.Harness(0,"Iron Harness"):h);
+    }
+    public byte[] itemAcquireDelay(int oid,int millis)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"itemAcquireDelay");value(out,millis);});
     }
     public byte[] townResult(int oid,short request,Object result,WorldProfile profile)throws IOException {
         listingViewer=profile==null?0:profile.worldId();

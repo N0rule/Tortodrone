@@ -741,6 +741,35 @@ has its own ID. Stock `item.client.H` passes that multiset to the animated
 Failure uses native method `0` and a reason string; the stock window exits its
 waiting state. There is no client-supplied reward or random seed.
 
+The owner's `source-archive.zip` official Dark Harvest Complete capture establishes the
+shared opening presentation (original protocol lines 665–679, 919): method 12
+with option `-1`, `itemAcquireDelay=7500` before inventory changes, actor activity
+`265` with a list containing the box config followed by distinct reward configs,
+then `itemAcquireDelay=0` before the successful reward-ID multiset callback.
+The observed bundle was three Dark Harvest Confetti merged into an existing
+stack and one Nova Crescent Helm with a new identity. Service/object numbers
+are assigned by the advertised marshaller mapping; the capture's routing numbers
+differ from Tortodrone's. The private capture is not distributed with the server.
+
+All supported boxes now publish that acquisition-delay/reset sequence after the
+atomic grant commits and start the reveal in the owning scene simulation.
+Read-only stock `KnightAdvancer` (`projectx.util.j`/`n`) inspection establishes
+the 8,250 ms stationary activity and south-facing pose; `KnightSprite.KD()`
+requires a `List<ConfigReference<ItemConfig>>`, with the box first. Multiple copies
+of a reward use one appearance reference while retaining their full quantities
+in the callback. Input and animated emotes cannot replace the reveal; a second
+opening is refused while busy, and receipt replay does not restart it. Leaving
+the scene clears its presentation without changing the committed rewards.
+This capture verifies presentation and delivery for one opening, not loot odds;
+the existing historical/estimated distributions remain unchanged.
+
+Verification for this presentation change passed `BoxOpeningTest`,
+`BoxOpeningSessionTest`, `TownMovementTest` and `SceneSimulationTest`, plus the
+stock `BoxCompatibility` reader. One isolated `--boxes-only` graphical run
+passed seven openings, including Dark Harvest Complete, both Slime key options,
+furniture and timed costumes; reviewed screenshots show the scene box animation
+and native success/reward presentation. The full suite was not run for this fix.
+
 Read-only class/config inspection and `scripts/compat/BoxCompatibility.java`
 verify method/argument/listener/result layouts, the three key identities and all
 250 indexed key classifications against the installed build. Its hashes are in

@@ -34,8 +34,16 @@ public final class BoxOpeningSessionTest {
                 var request=new SessionDecoder.Invocation(3,9,12,List.of(ids.getFirst(),-1,result));
                 check(world.townInvocation(request),"native method 12 dispatched");var opened=db.worldProfile(account,1,1);drain(output,frames);
                 check(count(opened,"Weapon/Sword/Calibur")==2&&count(opened,"Ticket/Keys/Silver Key")==2,"keyless native operation grants real rewards and preserves keys");
+                var actor=scenes.entry().simulation().snapshot().players().getFirst();
+                var references=(List<?>)actor.sceneKnight().activityData();
+                check(actor.activity()==265&&references.size()==4&&((StarterCatalog.Model)references.getFirst()).name().equals("Upgrade/Prize Box/Lucky Prize Box"),"committed rewards start native actor reveal with one reference per reward config");
                 world.townInvocation(request);check(db.worldProfile(account,1,1).equals(opened),"same native invocation receipt prevents replay");
+                check(scenes.entry().simulation().snapshot().players().getFirst().activityStarted()==actor.activityStarted(),"receipt replay never restarts opening animation");
                 world.townInvocation(new SessionDecoder.Invocation(3,9,12,List.of(ids.get(1),-1,result)));check(db.worldProfile(account,1,1).equals(opened),"reused request ID with different box is rejected");
+                world.townInvocation(new SessionDecoder.Invocation(3,9,12,List.of(ids.get(1),-1,new SessionDecoder.Listener(result.type(),(short)14))));
+                check(db.worldProfile(account,1,1).equals(opened),"busy actor cannot consume a second box during its reveal");
+                // A scene resubscription clears the old scene-owned activity; a fresh intent can open again.
+                world.unsubscribe();world.subscribe((short)2);world.entered();drain(output,frames);
                 world.townInvocation(new SessionDecoder.Invocation(3,9,12,List.of(ids.get(1),-1,new SessionDecoder.Listener(result.type(),(short)13))));
                 var twice=db.worldProfile(account,1,1);check(count(twice,"Weapon/Sword/Calibur")==4,"fresh listener opens another box legitimately");
                 try{world.townInvocation(new SessionDecoder.Invocation(3,9,12,List.of(ids.getFirst(),-1,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)14))));throw new AssertionError("Expected malformed callback refusal");}catch(SessionDecoder.Rejected expected){ }

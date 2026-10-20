@@ -23,6 +23,7 @@ public final class SceneSimulationTest {
             check(a.playerCount()==2&&a.snapshot().players().size()==2,"selected actors are scene-owned before readiness");
             check(!one.input(start,0,0,1,start,System.nanoTime()/1_000_000L),"movement is gated by entry");
             check(!one.sit(start,System.nanoTime()/1_000_000L),"sitting is gated by entry");
+            check(!one.canOpenBox(),"box opening is gated by entry");
             one.enter();two.enter();isolated.enter();
             var previous=next(first);var peer=next(second);
             check(previous==peer,"recipients receive the exact same immutable scene publication");
@@ -35,8 +36,14 @@ public final class SceneSimulationTest {
             check(current.actors().getFirst().x()>previous.actors().getFirst().x(),"movement advances centrally before publication");
             check(current.actors().getFirst().config()==model,"ordinary ticks retain cached appearance identity");
             check(current.delta(previous).updated().size()==2,"prediction repair fields remain in every actor delta");
+            var references=List.of(new StarterCatalog.Model("Upgrade/Prize Box/Lucky Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of()));
+            check(one.canOpenBox(),"ready actor can open a box");one.openBox(references);
+            var opening=a.snapshot();
+            check(opening.players().getFirst().activity()==265&&opening.players().getFirst().sceneKnight().activityData().equals(references)
+                &&opening.players().get(1).activity()==0&&b.snapshot().players().getFirst().activity()==0,"committed reveal belongs only to the actor in its scene instance");
             // Pause clears movement; resuming after an idle interval cannot integrate it.
             one.pause();float frozen=a.snapshot().actors().getFirst().x();Thread.sleep(160);
+            check(a.snapshot().players().getFirst().sceneKnight().activityData()==null&&!one.canOpenBox(),"pause clears reveal and prevents stale scene opening");
             check(a.snapshot().actors().getFirst().x()==frozen,"unsubscribed actors stop advancing");
             one.enter();Thread.sleep(70);check(a.snapshot().actors().getFirst().x()==frozen,"re-entry cannot replay stale input");
             check(one.sit(SceneClock.now(),System.nanoTime()/1_000_000L),"entered knight can request sitting");

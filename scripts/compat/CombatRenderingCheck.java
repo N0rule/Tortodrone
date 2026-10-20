@@ -159,18 +159,18 @@ public final class CombatRenderingCheck {
     private static void seedBoxes(Path data)throws Exception {
         // Seed only this disposable account; use the shipped approximation tables unchanged.
         try(var store=new AccountStore(data)) {
-            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
+            for(String item:List.of("Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box","Upgrade/Prize Box/Dark Harvest Prize Box, Complete","Ticket/Keys/Silver Key","Ticket/Keys/Slime Key"))
                 store.grantItems("LanPlayer","Town-Knight",item,item.equals("Ticket/Keys/Silver Key")?3:2,-1,-1);
         }
     }
     private int boxIndex,boxBefore,silverBefore,slimeBefore;
     private Map<Long,Integer> boxInventoryBefore;
-    private boolean boxCancelled;
+    private boolean boxCancelled,boxActivitySeen,boxActorCaptured;
     private com.threerings.opengl.gui.aD boxArsenal;
     private com.threerings.projectx.item.client.F boxMenu;
     private com.threerings.projectx.item.client.Y boxWindow;
-    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box"};
-    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open","open","open"};
+    private static final String[] BOX_ITEMS={"Upgrade/Lockbox","Upgrade/Lockboxes/Slime/000","Upgrade/Lockboxes/Slime/000","Upgrade/Prize Box/Surge Prize Box","Upgrade/Prize Box/Almire Furniture Box","Upgrade/Prize Box/Disguise Prize Box","Upgrade/Prize Box/Dark Harvest Prize Box, Complete"};
+    private static final String[] BOX_ACTIONS={"unlock_0","unlock_0","unlock_1","open","open","open","open"};
     private void boxesTick(long now)throws Exception {
         if(stage==0) {
             var arsenal=new com.threerings.projectx.item.client.ArsenalPanel(app);
@@ -184,7 +184,7 @@ public final class CombatRenderingCheck {
         if(stage==70&&now-started>1_000_000_000L) {
             Item item=null;for(var candidate:app.CT().items)if(candidate.Vx().getName().equals(config)){item=candidate;break;}
             if(item==null)throw new AssertionError("Missing fixture box: "+config);
-            boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");boxInventoryBefore=boxInventory();
+            boxActivitySeen=boxActorCaptured=false;boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");boxInventoryBefore=boxInventory();
             boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
             capture("box-"+boxIndex+"-arsenal-menu");boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
         }
@@ -204,8 +204,16 @@ public final class CombatRenderingCheck {
             boxMenu.n(BOX_ACTIONS[boxIndex],null);started=now;stage=71;return;
         }
         if(stage==72) {
+            var own=authoritative.get(app.CT().pawnId);
+            if(!boxActivitySeen&&own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adU()==265){
+                var references=knight.bY(List.class);
+                if(references==null||references.size()<2||!((com.threerings.config.ConfigReference<?>)references.getFirst()).getName().equals(config))throw new AssertionError("Opening actor lacks box/reward references");
+                boxActivitySeen=true;
+            }
+            if(boxActivitySeen&&!boxActorCaptured&&now-started>4_000_000_000L){capture("box-"+boxIndex+"-opening-actor");boxActorCaptured=true;}
             for(int n=0;n<app.getRoot().getWindowCount();n++)if(app.getRoot().getWindow(n) instanceof com.threerings.projectx.item.client.Y window)boxWindow=window;
             if(boxWindow==null||now-started<10_000_000_000L)return;
+            if(!boxActivitySeen)throw new AssertionError("Native actor opening animation was never published");
             var prizes=(List<?>)field(boxWindow,"bvi").get(boxWindow);
             if(prizes==null||prizes.isEmpty()||boxIndex==3&&prizes.size()<2)throw new AssertionError("Native opening result did not resolve awarded IDs and the guaranteed Surge bundle");
             int awarded=0;
@@ -223,7 +231,7 @@ public final class CombatRenderingCheck {
             capture("box-"+boxIndex+"-native-reward");boxWindow.dismiss();boxWindow=null;boxMenu.dismiss();
             if(++boxIndex==BOX_ITEMS.length) {
                 boxArsenal.dismiss();finishImages();passed=done=true;
-                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Box and native animated reward windows with shipped approximation pools multi-item Surge/Disguise bundles, furniture and timed rewards");app.shutdown();return;
+                System.out.println("PASS: unchanged Arsenal menu, cancel/confirm, Silver Lockbox, both Slime key choices, keyless Prize Boxes including Dark Harvest, scene-owned opening animations and native reward windows with multi-item Surge/Disguise bundles, furniture and timed rewards");app.shutdown();return;
             }
             started=now;stage=70;
         }

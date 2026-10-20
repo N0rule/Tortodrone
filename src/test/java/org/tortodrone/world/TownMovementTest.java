@@ -18,8 +18,23 @@ public final class TownMovementTest {
                 out.writeFloat(-1);out.writeFloat(-9);out.writeFloat(.25f);
                 out.write(java.util.Arrays.copyOf(clear.toByteArray(),(width*height+7)/8));
             }
-            corridor=CollisionMap.read(fixture);verify();hurt();
+            corridor=CollisionMap.read(fixture);verify();hurt();boxes();
         } finally {java.nio.file.Files.deleteIfExists(fixture);}
+    }
+    private static void boxes(){
+        var player=movement();player.resetInput(1000);
+        var refs=new java.util.ArrayList<org.tortodrone.character.StarterCatalog.Model>();
+        refs.add(new org.tortodrone.character.StarterCatalog.Model("Upgrade/Prize Box/Dark Harvest Prize Box, Complete",java.util.Map.of()));
+        refs.add(new org.tortodrone.character.StarterCatalog.Model("Usable/Confetti, Dark Harvest",java.util.Map.of()));
+        refs.add(new org.tortodrone.character.StarterCatalog.Model("Costume/Recolor Sets/Helm/Crescent Helm/Crescent Helm, Nova",java.util.Map.of()));
+        check(player.openBox(refs,1000),"box activity starts from idle");refs.clear();
+        check(player.activity()==265&&((java.util.List<?>)player.activityData()).size()==3&&Math.abs(player.rotation()+Math.PI/2)<.00001,"captured opening activity, immutable box/reward references and native facing");
+        check(!player.canOpenBox()&&!player.emote(PlayerEmotes.find("Sit"),1000,1000),"opening cannot restart or be replaced by an emote");
+        player.accept(1001,0,0,7,1001,1001);player.advance(1100,1100);
+        check(player.x()==0&&player.activity()==265&&player.flags()==0,"input cannot move, rotate or replace opening activity");
+        player.advance(9249,9249);check(player.activity()==265,"opening lasts through 8249 ms");
+        player.advance(9250,9250);check(player.activity()==0&&player.activityData()==null&&player.canOpenBox(),"opening ends at native 8250 ms boundary and clears reveal data");
+        player.die(9300);check(!player.canOpenBox(),"dead knight cannot open boxes");
     }
     private static void hurt(){
         var player=movement();player.resetInput(1000);
