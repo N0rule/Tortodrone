@@ -30,6 +30,12 @@ public final class BoxCompatibility {
             check(invocation.arguments().get(2) instanceof SessionDecoder.Listener l&&l.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"),"native result listener");
         }
 
+        for(boolean spawnAll:new boolean[]{true,false}){
+            if(spawnAll)service.c(123L,(A.c)null);else service.d(123L,(A.c)null);
+            var wire=new ByteArrayOutputStream();var writer=new com.threerings.io.w(wire);writer.bf(new ForwardEventRequest(dispatch.event));writer.flush();
+            var invocation=(SessionDecoder.Invocation)new HandshakeCodec().sessionRequest(wire.toByteArray()).event();
+            check(invocation.service()==9&&invocation.method()==(spawnAll?11:6)&&invocation.arguments().size()==2&&invocation.arguments().getFirst().equals(123L),"native GM Spawn All/calculator method and callback layout");
+        }
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.NONE.ticketTypes.isEmpty(),"keyless options");
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.SILVER.ticketTypes.toString().equals("[LOCKBOX_KEY]"),"Silver option");
         check(com.threerings.projectx.item.config.ItemConfig.Lockbox.KeyType.SLIME.ticketTypes.toString().equals("[SLIME_KEY, LOCKBOX_KEY]"),"Slime options in native menu order");
@@ -107,13 +113,24 @@ public final class BoxCompatibility {
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         var items=ItemYaml.load(Path.of("content/items"));
         var pinned=Yaml.map(Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/box-bindings.json"))),"bindings").get("boxes"),"boxes");
+        var category=org.tortodrone.storage.AuctionHouse.class.getDeclaredMethod("groupOrdinal",ItemCatalog.Entry.class);category.setAccessible(true);
+        var categoryErrors=new TreeSet<String>();
+        for(var item:items.entries()){
+            var nativeItem=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.config())).w(manager);
+            if(((Integer)category.invoke(null,item))!=nativeItem.getGroup().ordinal())categoryErrors.add(item.type()+" -> "+nativeItem.getGroup().name()+" ("+nativeItem.getGroup().ordinal()+")");
+        }
+        check(categoryErrors.isEmpty(),"native auction categories: "+categoryErrors);
+        System.out.println("PASS: all "+items.entries().size()+" auction categories match installed ItemConfig.getGroup()");
         int count=0;
         for(var item:items.entries())if(item.type().equals("Lockbox")) {
             var config=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.config()));
             check(config!=null&&config.w(manager) instanceof ItemConfig.Lockbox,"native Lockbox identity");
             var nativeBox=(ItemConfig.Lockbox)config.w(manager);
             var expected=nativeBox.key.ticketTypes.stream().map(t->switch(t){case SLIME_KEY->"slime_key";case LOCKBOX_KEY->"silver_key";default->throw new AssertionError("Unverified key type: "+t);}).toList();
-            check(Yaml.map(pinned.get(items.referenceId(item)),"box").get("keyOptions").equals(expected),"native key binding: "+items.referenceId(item));count++;
+            var binding=Yaml.map(pinned.get(items.referenceId(item)),"box");
+            check(binding.get("keyOptions").equals(expected),"native key binding: "+items.referenceId(item));
+            String table=nativeBox.spawnTable==null?nativeBox.namedTable:nativeBox.spawnTable.getName();
+            check(Objects.equals(binding.get("spawnTable"),table==null||table.isBlank()?null:table),"native calculator spawn table: "+items.referenceId(item));count++;
         }
         for(String key:List.of("silver_key","slime_key","shadow_key")) {
             var nativeKey=(ItemConfig.Ticket)manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(items.require(key).config())).w(manager);

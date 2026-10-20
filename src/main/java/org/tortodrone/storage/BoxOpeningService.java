@@ -21,15 +21,27 @@ public final class BoxOpeningService {
     }
     /** keyOption is the native menu index, not a key instance ID. Revision rejects stale concurrent intent. */
     public TownStore.Result open(int account,int knight,long auth,long revision,long boxId,int keyOption)throws IOException {
+        return open(account,knight,auth,revision,boxId,keyOption,false);
+    }
+    public TownStore.Result spawnAll(int account,int knight,long auth,long revision,long boxId)throws IOException {
+        return open(account,knight,auth,revision,boxId,-2,true);
+    }
+    public StarterCatalog.Model spawnTable(int account,int knight,long auth,long boxId)throws IOException {
+        return database.read(c->{var profile=WorldProfiles.load(c,account,knight,auth);TownStore.requireGameMaster(c,account,auth);
+            String table=boxes.spawnTable(TownStore.owned(profile,boxId).config());if(table==null||table.isBlank())throw new IOException("No native spawn table for this box");return new StarterCatalog.Model(table,Map.of());});
+    }
+    private TownStore.Result open(int account,int knight,long auth,long revision,long boxId,int keyOption,boolean all)throws IOException {
         if(auth<0||revision<1||boxId<1)throw new IOException("m.internal_error");
         return database.write(c->{
             var profile=WorldProfiles.load(c,account,knight,auth);
+            if(all)TownStore.requireGameMaster(c,account,auth);
             if(profile.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
             var held=TownStore.owned(profile,boxId);var box=boxes.find(held.config());
             if(box==null||!box.enabled())throw new IOException("This box has no complete supported reward distribution.");
             if(held.equippedSlot()!=null||held.permanent()||held.gift()!=null||!items.require(held.config()).type().equals("Lockbox"))throw new IOException("m.internal_error");
             WorldProfile.Item key=null;
-            if(box.kind()==BoxDefinition.Kind.KEYLESS) {
+            if(all){/* Native GM operation neither unlocks nor consumes the source box. */}
+            else if(box.kind()==BoxDefinition.Kind.KEYLESS) {
                 if(keyOption!=-1)throw new IOException("m.internal_error");
             }else {
                 if(keyOption<0||keyOption>=box.keys().size())throw new IOException("m.internal_error");
@@ -37,10 +49,10 @@ public final class BoxOpeningService {
                 // The wire identifies a key type only. Choose a deterministic owned stack of that exact type.
                 key=profile.items().stream().filter(i->i.config().equals(config)&&i.count()>0&&i.equippedSlot()==null&&!i.permanent()).min(Comparator.comparingLong(WorldProfile.Item::id)).orElseThrow(()->new IOException("m.internal_error"));
             }
-            var prizes=BoxRewardSelector.select(box,random);
+            var prizes=all?BoxRewardSelector.all(box):BoxRewardSelector.select(box,random);
             if(prizes.isEmpty())throw new IOException("m.internal_error");
-            var delivery=plan(profile,held,key,prizes);
-            TownStore.consume(c,profile,boxId,1);
+            var delivery=plan(profile,all?null:held,key,prizes);
+            if(!all)TownStore.consume(c,profile,boxId,1);
             if(key!=null)TownStore.consume(c,profile,key.id(),1);
             var inventory=new TownStore(database,items,org.tortodrone.town.TownCatalog.empty());
             var result=new LinkedHashMap<Object,Integer>();
@@ -76,10 +88,10 @@ public final class BoxOpeningService {
     }
     /** Project consumption and compatible stack merges before changing any inventory row. */
     private List<Grant> plan(WorldProfile profile,WorldProfile.Item box,WorldProfile.Item key,List<BoxRewardSelector.Prize> prizes)throws IOException {
-        int slots=profile.items().size()-(box.count()==1?1:0)-(key!=null&&key.count()==1?1:0);
+        int slots=profile.items().size()-(box!=null&&box.count()==1?1:0)-(key!=null&&key.count()==1?1:0);
         var delivery=new ArrayList<Grant>();
         for(var held:profile.items()) {
-            int remaining=held.count()-(held.id()==box.id()||key!=null&&held.id()==key.id()?1:0);
+            int remaining=held.count()-(box!=null&&held.id()==box.id()||key!=null&&held.id()==key.id()?1:0);
             var entry=items.find(held.config());
             if(held.expiresAt()==null&&remaining>0&&entry!=null&&entry.stackable()&&held.slot()==WorldProfile.Slot.OTHER&&!held.starter()
                     &&held.equippedSlot()==null&&held.accessory()==null&&held.additionalAccessories().isEmpty()&&!held.cursed()&&held.variants().isEmpty()

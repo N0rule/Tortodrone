@@ -13,8 +13,9 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 3) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only]");
         }
+        boolean arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
         boolean boxesOnly=Arrays.asList(args).contains("--boxes-only");
         boolean dialogueOnly=Arrays.asList(args).contains("--dialogue-only");
         boolean townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
@@ -23,7 +24,7 @@ public final class CheckCombatRendering {
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
-        boolean trainingOnly=boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -60,6 +61,7 @@ public final class CheckCombatRendering {
             Path maps = scratch.resolve("content");
             if(dialogueOnly){Path npc=maps.resolve("maps/advanced_training/npcs/konway.yml");var yaml=Yaml.read(npc);var dialogue=Yaml.map(yaml.get("dialogue"),"dialogue");var nodes=Yaml.map(dialogue.get("nodes"),"nodes");Yaml.map(nodes.get("part 1a"),"node").put("text","Thanks! I'm off to explore now.");Files.delete(npc);Yaml.write(npc,yaml);}
             requireMaps(maps);
+            if(arsenalBlinkOnly)arsenalBlinkFixture(maps);
             if(healthOnly)healthFixture(maps);
             if(hazardsOnly)hazardFixture(maps);
             if(vortexShieldOnly)vortexShieldFixture(maps);
@@ -103,7 +105,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
-            Path peerLog=output.resolve("peer-client.log");Process peer=boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
+            Path peerLog=output.resolve("peer-client.log");Process peer=arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
             if(peer!=null&&(!peer.isAlive()||!Files.isRegularFile(peerOutput.resolve("peer-ready"))))
@@ -111,7 +113,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(arsenalBlinkOnly?"--arsenal-blink-only":boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
@@ -155,6 +157,19 @@ public final class CheckCombatRendering {
 
     /** Fixture placements are edited through the same map-local YAML as administrator content. */
     private static void hazardFixture(Path content)throws Exception { relocate(content,"hazards"); }
+    private static void arsenalBlinkFixture(Path content)throws Exception {
+        Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");
+        var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
+        float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));
+        var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");inheritFixtureActors(bindings,actors);
+        var originals=Yaml.map(bindings.get("actors"),"actors");
+        for(var actor:actors.entrySet()){
+            var original=Yaml.map(originals.get(actor.getKey()),"binding");var editable=Yaml.map(actor.getValue(),"actor");
+            if("1955".equals(original.get("source-key"))){editable.put("x",x+2.65f);editable.put("y",y);}
+            if(((String)original.getOrDefault("config","")).endsWith("/Floor/Fire")){editable.put("x",x);editable.put("y",y);}
+        }
+        Files.delete(file);Yaml.write(file,yaml);
+    }
     private static void healthFixture(Path content)throws Exception { relocate(content,"health"); }
     private static void relocate(Path content,String kind)throws Exception {
         Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");

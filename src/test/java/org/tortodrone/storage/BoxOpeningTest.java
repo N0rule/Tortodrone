@@ -30,6 +30,12 @@ public final class BoxOpeningTest {
                 ?new ItemCatalog.Entry(e.config(),e.stockId(),e.type(),e.nameKey(),e.rarity(),true,e.slot(),e.bindOnEquip(),e.permanent(),e.locked(),e.variant(),e.seed(),e.modelArgs()):e).toList())
                 .withReferenceIds(nativeItems.entries().stream().collect(java.util.stream.Collectors.toMap(ItemCatalog.Entry::config,nativeItems::referenceId)));
             BoxFixture.write(home.resolve("content"));boxes=BoxCatalog.load(home.resolve("content"),items);db=new Database(home.resolve("data"),true);
+            var admin=player();admin.grant(PRIZE,1);var allBefore=admin.profile();long gmBox=id(allBefore,PRIZE);
+            refused(()->service().spawnAll(admin.account,1,1,allBefore.revision(),gmBox));check(admin.profile().equals(allBefore),"Spawn All requires stored GM permission");
+            db.gameMaster(admin.username,true,admin.account);
+            var all=service().spawnAll(admin.account,1,1,allBefore.revision(),gmBox).profile();
+            check(count(all,PRIZE)==1&&count(all,"Weapon/Sword/Calibur")>0&&count(all,"Material/Brimstone")>0,"Spawn All enumerates alternatives without consuming the box or keys");
+            refused(()->service().spawnAll(admin.account,1,99,all.revision(),gmBox));check(admin.profile().equals(all),"stale GM authorization cannot mint rewards");
             var p=player();p.grant(IRON,2);var before=p.profile();
             refused(()->p.open(IRON,0));p.grant(SLIME,2);p.grant("Ticket/Keys/Shadow Key",2);before=p.profile();final var missing=before;
             refused(()->p.open(IRON,0));check(p.profile().equals(missing),"ordinary box rejects Slime Key alone without side effects");

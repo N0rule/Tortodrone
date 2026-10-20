@@ -12,9 +12,12 @@ import static org.tortodrone.loot.BoxDefinition.*;
 /** Explicit native key bindings and fail-closed, readable loot definitions. */
 public final class BoxCatalog {
     private final Map<String,BoxDefinition> boxes;
-    private BoxCatalog(Map<String,BoxDefinition> boxes){this.boxes=Map.copyOf(boxes);}
+    private final Map<String,String> tables;
+    private BoxCatalog(Map<String,BoxDefinition> boxes){this(boxes,Map.of());}
+    private BoxCatalog(Map<String,BoxDefinition> boxes,Map<String,String> tables){this.boxes=Map.copyOf(boxes);this.tables=Map.copyOf(tables);}
     public static BoxCatalog empty(){return new BoxCatalog(Map.of());}
     public BoxDefinition find(String config){return boxes.get(config);}
+    public String spawnTable(String config){return tables.get(config);}
     public Collection<BoxDefinition> entries(){return boxes.values();}
     public static BoxCatalog load(Path content,ItemCatalog items)throws IOException {
         Path file=content.resolve("_internal/box-bindings.json");
@@ -22,13 +25,14 @@ public final class BoxCatalog {
         ContentFiles.regular(file);if(Files.size(file)>32_000_000)throw new IOException("Box bindings exceed 32 MB");
         var root=map(Json.parseCatalog(Files.readString(file)),file.toString());fields(root,file.toString(),"format","version","boxes");
         if(!"tortodrone-box-bindings".equals(root.get("format"))||integer(root.get("version"),"box bindings version")!=1)throw new IOException("Unsupported box bindings");
-        var nativeBoxes=map(root.get("boxes"),"box bindings");var definitions=new HashMap<String,BoxDefinition>();
+        var nativeBoxes=map(root.get("boxes"),"box bindings");var definitions=new HashMap<String,BoxDefinition>();var tables=new HashMap<String,String>();
         for(Path yaml:yamlFiles(content.resolve("loot/boxes"))) {
             var data=read(yaml);fields(data,yaml.toString(),"boxes");
             for(var row:map(data.get("boxes"),"boxes").entrySet()) {
                 String id=row.getKey();String config=item(items,id).config();
                 if(!items.inspect(config).type().equals("Lockbox"))throw new IOException("Not a Lockbox: "+id);
-                var binding=map(nativeBoxes.get(id),"Missing native box binding: "+id);fields(binding,id,"keyOptions");
+                var binding=map(nativeBoxes.get(id),"Missing native box binding: "+id);fields(binding,id,"keyOptions","spawnTable");
+                if(binding.containsKey("spawnTable"))tables.put(config,text(binding.get("spawnTable"),id+" spawn table"));
                 var nativeKeys=keys(binding.get("keyOptions"),items);
                 var value=map(row.getValue(),id);fields(value,id,"kind","acceptedKeys","status","evidence","groups","guaranteed");
                 Kind kind=enumeration(Kind.class,value.get("kind"),id);Status status=enumeration(Status.class,value.get("status"),id);
@@ -65,7 +69,7 @@ public final class BoxCatalog {
         }
         // Nested boxes stay unopened. Reject automatic reward cycles even across box definitions.
         for(var box:definitions.values())nested(box,definitions,new HashSet<>());
-        return new BoxCatalog(definitions);
+        return new BoxCatalog(definitions,tables);
     }
     private static List<Path> yamlFiles(Path directory)throws IOException {
         ContentFiles.safe(directory);if(!Files.isDirectory(directory))throw new IOException("Missing loot/boxes directory");

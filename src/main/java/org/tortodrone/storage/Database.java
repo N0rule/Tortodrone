@@ -114,11 +114,15 @@ public final class Database {
                 T value=work.run(connection);statement.execute("COMMIT");failed=false;return value;
             } catch(SQLException|IOException|RuntimeException error) {
                 rollbacks.incrementAndGet();
-                try{statement.execute("ROLLBACK");}catch(SQLException rollback){error.addSuppressed(rollback);}
+                try{statement.execute("ROLLBACK");if(error instanceof Refused)failed=false;}catch(SQLException rollback){error.addSuppressed(rollback);}
                 throw error;
             }
         } catch(SQLException error){throw failure(error);}
         finally{measured("write",start,failed);}
+    }
+    /** Expected business refusal: rollback normally, without reporting a storage failure. */
+    public static final class Refused extends IOException {
+        public Refused(String message){super(message);}
     }
     private int version() throws IOException {
         return read(connection -> { try (Statement s = connection.createStatement(); ResultSet r = s.executeQuery("PRAGMA user_version")) { r.next(); return r.getInt(1); } });

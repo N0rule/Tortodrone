@@ -12,7 +12,8 @@ public final class ItemCatalog {
     public enum Variant { ITEM, LEVEL_ITEM, SEED_ITEM, UPGRADE_ITEM, FURNITURE_ITEM }
     public record Entry(String config, int stockId, String type, String nameKey, int rarity,
             boolean stackable, WorldProfile.Slot slot, boolean bindOnEquip, boolean permanent,
-            boolean locked, Variant variant, Long seed, Map<String,Object> modelArgs, int expireDays) {
+            boolean locked, Variant variant, Long seed, Map<String,Object> modelArgs, int expireDays,int auctionGroup) {
+        public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,boolean bindOnEquip,boolean permanent,boolean locked,Variant variant,Long seed,Map<String,Object> modelArgs,int expireDays){this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,permanent,locked,variant,seed,modelArgs,expireDays,-1);}
         public Entry(String config,int stockId,String type,String nameKey,int rarity,boolean stackable,WorldProfile.Slot slot,boolean bindOnEquip,boolean permanent,boolean locked,Variant variant,Long seed,Map<String,Object> modelArgs) {
             this(config,stockId,type,nameKey,rarity,stackable,slot,bindOnEquip,permanent,locked,variant,seed,modelArgs,0);
         }
@@ -25,6 +26,7 @@ public final class ItemCatalog {
         }
         public Entry {
             Objects.requireNonNull(variant); modelArgs = Map.copyOf(modelArgs);
+            if(auctionGroup< -1||auctionGroup>=29)throw new IllegalArgumentException("Invalid native auction group");
             if(expireDays<0||expireDays>3650||expireDays>0&&(permanent||stackable))throw new IllegalArgumentException("Invalid expiring item metadata");
             if ((variant==Variant.SEED_ITEM)!=(seed!=null)) throw new IllegalArgumentException("Seed item metadata mismatch");
             if (permanent && !locked) throw new IllegalArgumentException("Permanent stock items are locked");

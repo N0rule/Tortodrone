@@ -40,6 +40,11 @@ final class NamedLoadouts {
         return List.copyOf(result);
     }
     private static long require(Map<String,Long> fields,String key)throws IOException {var value=fields.get(key);if(value==null)throw new IOException("Incomplete saved loadout");return value;}
+    static void remove(Connection c,WorldProfile p,String name)throws SQLException,IOException {
+        validate(name);var saved=p.town().loadouts().stream().filter(l->l.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("No saved loadout with that name"));
+        String prefix=key(p.worldId(),saved.name());
+        try(var s=c.prepareStatement("DELETE FROM metadata WHERE key>=? AND key<?")){s.setString(1,prefix);s.setString(2,prefix+"~");s.executeUpdate();}
+    }
     static void pvp(Connection c,WorldProfile p,String name,boolean enabled)throws SQLException,IOException {
         validate(name);var saved=p.town().loadouts().stream().filter(l->l.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("No saved loadout with that name"));
         try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){

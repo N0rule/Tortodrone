@@ -123,7 +123,14 @@ public final class SceneSimulation {
             String damage=town.harnessDamage(harness==null?"Iron Harness":harness.config());if(damage==null)damage="NORMAL";
             var attack=petFires.find(name+"|"+sprite.powers().get(skill*3+1)+"|"+sprite.powers().get(skill*3+2)+"|"+damage,292);if(attack==null)return;
             int power=sprite.powers().get(skill*3),recharge=(int)(ability.recharge().get(power)*1000*town.harnessRecharge(harness==null?"Iron Harness":harness.config()));
-            int minimum=ability.minimum().get(power)*1000;nextSkill[skill]=stamp+Math.max(minimum,recharge);
+            // Retail uses each skill's minimum recharge for the shared lockout. A zero
+            // minimum means its harness-adjusted recharge, not an absent lockout.
+            for(int i=0;i<def.skills().size()&&i<nextSkill.length;i++){
+                var other=def.skills().get(i);int otherPower=sprite.powers().get(i*3);
+                int otherRecharge=(int)(other.recharge().get(otherPower)*1000*town.harnessRecharge(harness==null?"Iron Harness":harness.config()));
+                int minimum=other.minimum().get(otherPower)*1000;
+                nextSkill[i]=Math.max(nextSkill[i],stamp+(i==skill?Math.max(minimum,recharge):minimum==0?otherRecharge:minimum));
+            }
             petSkill=input;petStarted=stamp;petClear=stamp+Math.max(1,((Number)attack.attack().arguments().getOrDefault("clear",1000)).intValue());petFollow=ability.follow();petX=movement.x();petY=movement.y();petRotation=movement.rotation();
             int land=((Number)attack.attack().arguments().getOrDefault("land",0)).intValue();
             weapons.attack(petId,new KnightCombat.AttackStart(attack.weaponConfig(),292,stamp,land,petClear-stamp),attack);
@@ -300,6 +307,9 @@ public final class SceneSimulation {
             }
         });
         entities.attacks((actor,action)->weapons.fire(action,actor,SceneClock.now()));}
+    public record InteractionSource(ActorState actor,SceneContent.Spec specification) { }
+    public synchronized InteractionSource interactionSource(int id){return new InteractionSource(entities.actor(id),entities.specification(id));}
+    public synchronized ActorState station(String kind){return entities.station(kind);}
     public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
         var membership=new Membership(actor,Objects.requireNonNull(publish));members.put(actor.id(),membership);return membership;

@@ -54,7 +54,7 @@ public final class CombatRenderingCheck {
     private boolean townDialogsOnly;
     private boolean depotOnly,boxesOnly;
     private boolean hazardsOnly;
-    private boolean healthOnly;
+    private boolean healthOnly,arsenalBlinkOnly;
     private boolean movementOnly;
     private boolean vortexShieldOnly;
     private List<Action> actions=ACTIONS;
@@ -111,7 +111,7 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -130,6 +130,7 @@ public final class CombatRenderingCheck {
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
+        probe.arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
@@ -267,7 +268,8 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;if(dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(arsenalBlinkOnly&&view.sceneId()==294&&stage>=2){arsenalBlinkTick(view,now);return;}
             if(healthOnly&&view.sceneId()==294&&stage>=2){healthTick(view,now);return;}
             if(vortexShieldOnly&&view.sceneId()==294&&stage>=2){vortexShieldTick(view,now);return;}
             if(stage==1&&now-started>5_000_000_000L){
@@ -643,6 +645,31 @@ public final class CombatRenderingCheck {
             finishImages();passed=done=true;System.out.println("PASS: stock controlling client receives shield bump VFX; native vortex implode/explode stages initialize and pull a nearby cube");app.shutdown();
         }
     }
+    private boolean blinkHidden,blinkVisible,arsenalOpened;
+    private long arsenalPressed,arsenalOpenedAt;
+    private void arsenalBlinkTick(View view,long now)throws Exception {
+        var pawn=authoritative.get(app.CT().pawnId);if(!(pawn instanceof Dungeoneer own))return;
+        if(!app.GQ().Pu())throw new AssertionError("Training commands incorrectly require mission-abandonment confirmation");
+        boolean protectedHit=own.bR(Dungeoneer.INVULNERABLE);
+        if(protectedHit){boolean visible=view.PO().acL().isVisible();blinkHidden|=!visible;blinkVisible|=visible;}
+        if(now-started>25_000_000_000L)throw new AssertionError("Arsenal/blink timeout: prompt="+own.Ns()+" policy="+app.CT().equipPolicy+" flags="+own.bR(64)+" visible="+blinkVisible+" hidden="+blinkHidden+" position="+own.tz());
+        if(stage==2){
+            moveEast(view,false);
+            if(own.Ns() instanceof com.threerings.tudey.data.EntityKey.Entry entry&&Integer.valueOf(1955).equals(entry.getKey())){
+                flags(view,4);arsenalPressed=now;stage=42;return;
+            }
+            return;
+        }
+        if(now-arsenalPressed>180_000_000L)flags(view,0);
+        Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());Object inventory=field(hud,"aDN").get(hud);
+        if(inventory instanceof com.threerings.opengl.gui.aD window&&window.isAdded()){
+            if(!arsenalOpened){arsenalOpenedAt=now;arsenalOpened=true;System.out.println("CHECK: server interaction opened the native Arsenal window; policy="+app.CT().equipPolicy);}
+            if(blinkVisible&&blinkHidden&&now-arsenalOpenedAt>2_000_000_000L){
+                if(app.GG().getDisplayWidth()<1024)throw new AssertionError("Native Arsenal viewport is too small for visual verification");
+                Object equipment=field(hud,"aDX").get(hud);if(!(equipment instanceof com.threerings.opengl.gui.aD equipmentWindow)||!equipmentWindow.isAdded())throw new AssertionError("Native equipment window did not open");
+                capture("native-arsenal-open");capture("native-post-hit-blink");finishImages();passed=done=true;System.out.println("PASS: native Arsenal interaction opens equipment UI and the controlling knight's native model visibly blinks during server post-hit protection");app.shutdown();}
+        }
+    }
     private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;
     private Confirm sparkReply;
     private void healthTick(View view,long now)throws Exception {
@@ -736,7 +763,7 @@ public final class CombatRenderingCheck {
     private boolean hazardRendered;
     private long hazardSince;
     private void hazardsTick(View view,long now)throws Exception {
-        if(stage==0){GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
+        if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
         if(view.sceneId()!=294)return;
         var own=authoritative.get(app.CT().pawnId);if(!(own instanceof Dungeoneer knight))return;
         String potConfig="Dynamic/Lift Objects/"+(hazardRound%2==0?"Fire Pot":"Oil Pot");
@@ -792,7 +819,7 @@ public final class CombatRenderingCheck {
     private void townDialogsTick(View view,long now)throws Exception {
         Object place=field(app.Gu(),"bJl").get(app.Gu());
         if(!(place instanceof com.threerings.projectx.town.data.TownSceneObject scene)||view.sceneId()!=1)return;
-        if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;stage=80;return;}
+        if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;stage=80;return;}
         if(stage==80){
             if(now-started<3_000_000_000L)return;
             equip=new Confirm();scene.townSceneService.m(equip);started=now;stage=81;return;

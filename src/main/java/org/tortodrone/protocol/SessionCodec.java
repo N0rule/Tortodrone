@@ -490,10 +490,16 @@ public final class SessionCodec {
         return frame(out->{eventHeader(out,"MessageEvent",oid);string(out,"forceClientAction");
             out.writeBoolean(true);out.writeInt(2); // MessageEvent's declared Object[] field.
             type(out,"com.threerings.tudey.config.ClientActionConfig$ControllerAction");string(out,command);string(out,"");
-            if(source==null)out.writeShort(0);
-            else if(!command.equals("forge")&&source.entity()!=null&&source.entity().key().matches("[0-9]+")){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(source.entity().key()));}
-            else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
+            sourceKey(out,source);
         });
+    }
+
+    private void sourceKey(DataOutputStream out,ActorState source)throws IOException {
+        if(source==null)out.writeShort(0);
+        else if(source.entity()!=null&&source.entity().entrySource()){
+            if(!source.entity().key().matches("[0-9]+"))throw new IOException("Placed interaction has no numeric entry identity");
+            type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(source.entity().key()));
+        }else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
     }
 
     public byte[] balances(int oid,WorldProfile profile) throws IOException {
@@ -588,10 +594,10 @@ public final class SessionCodec {
                 if(station==null){o.writeShort(0);return;}
                 String kind=station.kind();
                 if(kind.equals("OpenDepot")){type(o,"com.threerings.projectx.exchange.data.DepotDialogInfo");o.writeShort(0);o.writeShort(0);o.writeFloat(0);o.writeShort(0);o.writeShort(0);string(o,station.type());return;}
-                if(kind.equals("OpenAuction")){type(o,"com.threerings.projectx.auction.data.AuctionDialogInfo");if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}o.writeShort(0);o.writeShort(0);return;}
+                if(kind.equals("OpenAuction")){type(o,"com.threerings.projectx.auction.data.AuctionDialogInfo");if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{sourceKey(o,source);vector(o,source.x(),source.y());o.writeFloat(source.rotation());}o.writeShort(0);o.writeShort(0);return;}
                 if(kind.equals("OpenShop")){
                     type(o,"com.threerings.projectx.shop.data.ShopDialogInfo");
-                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{sourceKey(o,source);vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
                     o.writeShort(0);o.writeShort(0);value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
                     o.writeInt(station.shop().level());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.data.ShopDialogInfo$Type",station.type().equals("ENERGY")?1:station.type().equals("TOKEN")?2:0));
                     int preparer=List.of("BASIC","GREMLIN","LOCKED","LOCK_NON_STACKABLE","DEPOT","STATUE").indexOf(station.shop().preparer());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.shop.util.ItemPreparer",Math.max(0,preparer)));o.writeBoolean(station.shop().perKnight());
@@ -599,13 +605,13 @@ public final class SessionCodec {
                 }
                 if(kind.equals("OpenHarnessInstaller")){
                     type(o,"com.threerings.projectx.sprites.data.HarnessDialogInfo");
-                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                    if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{sourceKey(o,source);vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
                     o.writeShort(0);o.writeShort(0);value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
                     type(o,"com.threerings.projectx.sprites.data.HarnessInstallerMarshaller");o.writeInt(sceneOid);o.writeInt(service);return;
                 }
                 String dialog=kind.equals("OpenUnbinder")?"UnbindDialogInfo":kind.equals("OpenAccessorizer")?"AccessoryDialogInfo":kind.equals("OpenVariantMaker")?"VariantMakerDialogInfo":"CrafterDialogInfo";
                 type(o,"com.threerings.projectx.craft.data."+dialog);
-                if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
+                if(source==null){o.writeShort(0);o.writeShort(0);o.writeFloat(0);}else{sourceKey(o,source);vector(o,source.x(),source.y());o.writeFloat(source.rotation());}
                 o.writeShort(0);o.writeShort(0);
                 value(o,station.model().isEmpty()?null:new StarterCatalog.Model(station.model(),Map.of()));o.writeShort(0);string(o,station.name());string(o,station.title());
                 if(dialog.equals("CrafterDialogInfo")){
@@ -697,7 +703,7 @@ public final class SessionCodec {
                 if(conversation==null){o.writeShort(0);return;}
                 var node=conversation.nodes().get(nodeId);
                 type(o,"com.threerings.projectx.data.ConversationDialogInfo");
-                type(o,"com.threerings.tudey.data.EntityKey$Actor");o.writeInt(source.id());
+                sourceKey(o,source);
                 vector(o,source.x(),source.y());o.writeFloat(source.rotation());value(o,node.transientModel());o.writeShort(0);
                 value(o,node.userInterface());value(o,conversation.model());value(o,node.animation());o.writeShort(0);
                 string(o,conversation.name());string(o,conversation.bundle());string(o,node.message());

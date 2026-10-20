@@ -62,6 +62,15 @@ public final class TownCatalog {
     private Map<String,Set<String>> blockers=Map.of();
     private Map<String,String> harnesses=Map.of();
     private final Map<String,Float> harnessRecharge=new HashMap<>();
+    private final Map<String,String> harnessPrerequisites=new HashMap<>();
+    private final Map<String,Integer> harnessPrices=new HashMap<>();
+    public String harnessPrerequisite(String config){return harnessPrerequisites.getOrDefault(config,"");}
+    public boolean harnessAvailable(org.tortodrone.character.WorldProfile profile,String config){
+        var owned=new HashSet<String>();profile.town().harnesses().forEach(h->owned.add(h.config()));
+        if(!profile.town().sprites().isEmpty())owned.add("Iron Harness");
+        for(String existing:owned){var seen=new HashSet<String>();while(!existing.isEmpty()&&seen.add(existing)){if(existing.equals(config))return false;existing=harnessPrerequisite(existing);}}
+        String required=harnessPrerequisite(config);return !profile.town().sprites().isEmpty()&&(required.isEmpty()||owned.contains(required));
+    }
     public float harnessRecharge(String name){return harnessRecharge.getOrDefault(name,1f);}
     private Map<String,Catalog> catalogs=Map.of();
     private Map<String,Bonus> bonuses=Map.of();
@@ -87,6 +96,11 @@ public final class TownCatalog {
         };
     }
     public List<Good> goods(Shop shop,long cycle,int world){var result=new ArrayList<Good>();goods(shop.catalog(),new Random(cycle+(shop.perKnight()?world:0)),result,0);return List.copyOf(result);}
+    public List<Good> goods(Station station,long cycle,int world){
+        if(!station.kind().equals("OpenHarnessInstaller")||!station.shop().catalog().isEmpty())return goods(station.shop(),cycle,world);
+        return items.entrySet().stream().filter(e->harnessPrices.containsKey(e.getValue().get("harness"))).sorted(Map.Entry.comparingByKey())
+            .map(e->new Good(e.getKey(),1,harnessPrices.get(e.getValue().get("harness")),0,0,"",0)).toList();
+    }
     private void goods(String name,Random random,List<Good> output,int depth){
         if(depth>16)return;var catalog=catalogs.get(name);if(catalog==null||catalog.kind().equals("Optional")&&random.nextFloat()>=catalog.chance())return;
         var goods=new ArrayList<Good>();for(String include:catalog.includes())goods(include,random,goods,depth+1);goods.addAll(catalog.goods());
@@ -167,7 +181,7 @@ public final class TownCatalog {
             var tables=new HashMap<String,Map<String,Object>>();for(var value:list(root,"variantTables")){var t=object(value);tables.put(string(t,"config"),object(t.get("root")));}result.variantTables=Map.copyOf(tables);
             var accessories=new HashMap<String,Accessory>();for(var value:list(root,"accessories")){var v=object(value);accessories.put(string(v,"config"),new Accessory(string(v,"config"),string(v,"location"),Set.copyOf(strings(v,"blocks")),bool(v,"remove"),bool(v,"destroy")));}result.accessories=Map.copyOf(accessories);
             var blockers=new HashMap<String,Set<String>>();for(var value:list(root,"blockers")){var v=object(value);blockers.put(string(v,"config"),Set.copyOf(strings(v,"slots")));}result.blockers=Map.copyOf(blockers);
-            var harnesses=new HashMap<String,String>();for(var value:list(root,"harnesses")){var v=object(value);harnesses.put(string(v,"config"),string(v,"damageType"));result.harnessRecharge.put(string(v,"config"),((Number)v.getOrDefault("rechargeModifier",1)).floatValue());}result.harnesses=Map.copyOf(harnesses);
+            var harnesses=new HashMap<String,String>();for(var value:list(root,"harnesses")){var v=object(value);harnesses.put(string(v,"config"),string(v,"damageType"));result.harnessPrerequisites.put(string(v,"config"),(String)v.getOrDefault("prerequisite",""));if(v.containsKey("crowns")){int price=((Number)v.get("crowns")).intValue();if(price<1)throw new IOException("Invalid harness price");result.harnessPrices.put(string(v,"config"),price);}result.harnessRecharge.put(string(v,"config"),((Number)v.getOrDefault("rechargeModifier",1)).floatValue());}result.harnesses=Map.copyOf(harnesses);
             var catalogs=new HashMap<String,Catalog>();for(var value:list(root,"catalogs")){var v=object(value);var goods=new ArrayList<Good>();for(var raw:list(v,"goods")){var g=object(raw);goods.add(new Good(string(g,"item"),integer(g,"count"),integer(g,"price"),integer(g,"energy"),integer(g,"limit"),string(g,"token"),integer(g,"tokenCount")));}catalogs.put(string(v,"config"),new Catalog(string(v,"config"),string(v,"kind"),strings(v,"includes"),List.copyOf(goods),integer(v,"min"),integer(v,"max"),((Number)v.get("chance")).floatValue()));}result.catalogs=Map.copyOf(catalogs);
             var bonuses=new HashMap<String,Bonus>();for(var value:list(root,"bonuses")){var v=object(value);bonuses.put(string(v,"config"),new Bonus(string(v,"weapon"),integer(v,"health"),((Number)v.get("charge")).floatValue(),((Number)v.get("speed")).floatValue(),((Number)v.get("attack")).floatValue()));}result.bonuses=Map.copyOf(bonuses);
             var models=new HashMap<String,org.tortodrone.character.StarterCatalog.Model>();var parameters=new HashMap<String,String>();for(var value:list(root,"accessories")){var v=object(value);if(v.containsKey("model")){models.put(string(v,"config"),org.tortodrone.world.FireCatalog.modelJson(string(v,"model")));parameters.put(string(v,"config"),string(v,"parameter"));}}result.accessoryModels=Map.copyOf(models);result.accessoryParameters=Map.copyOf(parameters);

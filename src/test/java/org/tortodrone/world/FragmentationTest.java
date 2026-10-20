@@ -28,6 +28,7 @@ public final class FragmentationTest {
             scene.advance(101,List.of(owner));int burst=100+timer.delay();scene.advance(burst+1,List.of(owner));
             var bullets=scene.actors().stream().filter(a->a.projectile().nativeType().equals("BULLET")).toList();
             check(bullets.size()==expected&&bullets.stream().map(ActorState::id).distinct().count()==expected,"independent children: "+attack.weaponConfig());
+            check(bullets.stream().map(a->Math.round(a.rotation()*1000)).distinct().count()==expected,"shard directions remain distinct: "+attack.weaponConfig());
             check(bullets.stream().allMatch(a->a.projectile().faction()==71&&a.projectile().ownerOid()==0),"server-owned children retain the knight faction");
             check(bullets.stream().allMatch(a->Objects.equals(a.config().arguments().get("Damage"),parent.config().arguments().get("Shard Damage"))),"every branch inherits shard damage, including the broken native parameter path");
             scene.advance(burst+200,List.of(owner));
@@ -39,6 +40,6 @@ public final class FragmentationTest {
             checked++;
         }
         check(checked==26,"all affected catalogue entries exercised");
-        System.out.println("PASS: "+checked+" fragmentation graphs restore children, movement, ownership, one-shot damage and cleanup; missing retail angles remain unverified");
+        System.out.println("PASS: "+checked+" fragmentation graphs restore children, movement, ownership, distinct family fan directions, one-shot damage and cleanup");
     }
 }

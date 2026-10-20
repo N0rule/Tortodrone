@@ -6,142 +6,174 @@
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A10"
     },
     "a12": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A12"
     },
     "a14": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A14"
     },
     "a16": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A16"
     },
     "a17": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A17"
     },
     "a18": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A18"
     },
     "a19": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A19"
     },
     "a1a": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A1A"
     },
     "a1b": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A1B"
     },
     "a1h": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A1H"
     },
     "a1i": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A1I"
     },
     "a1j": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/A1J"
     },
     "aerodynamic_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Aerodynamic Box"
     },
     "aerotech_mk_ii_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/AeroTech Mk II Prize Box"
     },
     "aerotech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/AeroTech Prize Box"
     },
     "almire_furniture_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Almire Furniture Prize Box"
     },
     "amethyst": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Amethyst"
     },
     "amethyst_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Amethyst Prize Box"
     },
     "ancient_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Ancient Prize Box"
     },
     "anniversary_base": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack, Complete"
     },
     "anniversary_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack"
     },
     "anniversary_prize_box_2014": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack 2014"
     },
     "anniversary_prize_box_2015": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack 2015"
     },
     "anniversary_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack 2016"
     },
     "anniversary_prize_box_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack 2017"
     },
     "anniversary_prize_box_2018": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack, Complete"
     },
     "anniversary_prize_box_2019": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack, Complete"
     },
     "anniversary_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary Pack, Complete"
     },
     "aquamarine_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Aquamarine Prize Box"
     },
     "aquamarine_s3663179769_d55637365871": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Aquamarine"
     },
     "autumn_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Autumn Prize Box"
     },
     "b1b": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/B1B"
     },
     "base_s0_10e524c9fb2f": {
       "keyOptions": [
@@ -156,755 +188,959 @@
       "keyOptions": []
     },
     "battle_boar_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Battle Boar Box"
     },
     "bejeweled_stranger_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Bejeweled Stranger Prize Box"
     },
     "blazing_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Blazing Prize Box"
     },
     "blooming_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Blooming Prize Box"
     },
     "buccaneer_booty_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Buccaneer Booty Box"
     },
     "budding_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Budding Prize Box"
     },
     "cavalry_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Cavalry Prize Box"
     },
     "character": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Character Lockbox"
     },
     "chess_mini_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Chess Mini Prize Box"
     },
     "chess_mini_prize_box_winterfest": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Chess Mini Prize Box, Winterfest"
     },
     "citrine": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Citrine"
     },
     "citrine_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Citrine Prize Box"
     },
     "clockworks_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Clockworks Prize Box"
     },
     "colossal_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Colossal Prize Box"
     },
     "companion_prize_box_1": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Companion Prize Box/Companion Prize Box 1"
     },
     "companion_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Companion Prize Box/Companion Prize Box 2"
     },
     "companion_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Companion Prize Box/Companion Prize Box 3"
     },
     "companion_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Companion Prize Box/Companion Prize Box 4"
     },
     "companion_prize_box_5": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Companion Prize Box/Companion Prize Box 5"
     },
     "confection_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Confection Prize Box"
     },
     "construct_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Construct Prize Box"
     },
     "cozy_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Cozy Prize Box"
     },
     "cozytech_mk_ii_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/CozyTech Mk II Prize Box"
     },
     "cozytech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/CozyTech Prize Box"
     },
     "cracked_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Cracked Forge Prize Box"
     },
     "curse_s1593184055_a07da837537b": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Curse"
     },
     "dangerous": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Dangerous"
     },
     "dangerous_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dangerous Prize Box"
     },
     "dangerous_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dangerous Prize Box 2016"
     },
     "dark_harvest_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dark Harvest Prize Box"
     },
     "dark_harvest_prize_box_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dark Harvest Prize Box 2017"
     },
     "dark_harvest_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dark Harvest Prize Box, Complete"
     },
     "dark_harvest_prize_box_series_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dark Harvest Prize Box Series 3"
     },
     "dazed_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Dazed Prize Box"
     },
     "decoration_kit_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Winterfest Decoration Kit"
     },
     "diamond_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Diamond Prize Box"
     },
     "diamond_s2569607865_91acdc04b350": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Diamond"
     },
     "dim_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Dim Forge Prize Box"
     },
     "disguise_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Disguise Prize Box"
     },
     "electric_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Electric Prize Box"
     },
     "elite_trinket_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Elite Trinket Box"
     },
     "emerald_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Emerald Prize Box"
     },
     "emerald_s3575457673_92818a0c31ec": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Emerald"
     },
     "equinox_base": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall even year"
     },
     "equinox_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box"
     },
     "equinox_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Complete"
     },
     "extraordinary_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Extraordinary Prize Box"
     },
     "fall_equinox_prize_box_2014": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall 2014"
     },
     "fall_equinox_prize_box_2015": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall 2015"
     },
     "fall_equinox_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall even year"
     },
     "fall_equinox_prize_box_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall odd year"
     },
     "fall_equinox_prize_box_2018": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Fall even year"
     },
     "flowertech_mk_ii_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/FlowerTech Mk II Prize Box"
     },
     "flowertech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/FlowerTech Prize Box"
     },
     "frenzy_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Frenzy Prize Box"
     },
     "frosty_present": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Frosty Present Box"
     },
     "frosty_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Frosty Prize Box"
     },
     "furniture_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Furniture Prize Box"
     },
     "garnet": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Garnet"
     },
     "garnet_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Garnet Prize Box"
     },
     "glacial": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Glacial"
     },
     "glacial_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Glacial Prize Box"
     },
     "glacial_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Glacial Prize Box 2016"
     },
     "glacial_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Glacial Prize Box, Complete"
     },
     "glowing_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Glowing Forge Prize Box"
     },
     "gobble_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Gobble Snipe Box"
     },
     "gourmet_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Gourmet Prize Box"
     },
     "gremlin_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Gremlin Prize Box"
     },
     "grey_mk_ii_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Grey Mk II Prize Box"
     },
     "grey_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Grey Prize Box"
     },
     "guild_hall_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Guild Hall Prize Box"
     },
     "hazardous": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Hazardous"
     },
     "hazardous_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hazardous Prize Box"
     },
     "hazardous_prize_box_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hazardous Prize Box 2017"
     },
     "hive_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hive Prize Box"
     },
     "hololite_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hololite Prize Box"
     },
     "hunter": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Hunter"
     },
     "hunter_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hunter Prize Box"
     },
     "hunter_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Hunter Prize Box 2016"
     },
     "item_000": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/000"
     },
     "item_001": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/001"
     },
     "item_002": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/002"
     },
     "item_003": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/003"
     },
     "item_004": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/004"
     },
     "item_005": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/005"
     },
     "item_006": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/006"
     },
     "item_007": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/007"
     },
     "item_008": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/008"
     },
     "item_009": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/009"
     },
     "item_00a": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00A"
     },
     "item_00b": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00B"
     },
     "item_00c": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00C"
     },
     "item_00d": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00D"
     },
     "item_00e": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00E"
     },
     "item_00f": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00F"
     },
     "item_00g": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/00G"
     },
     "item_2014_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2014/Prize Box 1"
     },
     "item_2014_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2014/Prize Box 2"
     },
     "item_2014_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2014/Prize Box 3"
     },
     "item_2014_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2014/Prize Box 4"
     },
     "item_2015_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2015/Prize Box 1"
     },
     "item_2015_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2015/Prize Box 2"
     },
     "item_2015_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2015/Prize Box 3"
     },
     "item_2015_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2015/Prize Box 4"
     },
     "item_2016_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2016/Prize Box 1"
     },
     "item_2016_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2016/Prize Box 2"
     },
     "item_2016_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2016/Prize Box 3"
     },
     "item_2016_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2016/Prize Box 4"
     },
     "item_2017_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2017/Prize Box 1"
     },
     "item_2017_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2017/Prize Box 2"
     },
     "item_2017_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2017/Prize Box 3"
     },
     "item_2017_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2017/Prize Box 4"
     },
     "item_2018_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2018/Prize Box 1"
     },
     "item_2018_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2018/Prize Box 2"
     },
     "item_2018_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2018/Prize Box 3"
     },
     "item_2018_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2018/Prize Box 4"
     },
     "item_2019_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2019/Prize Box 1"
     },
     "item_2019_prize_box_2": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2019/Prize Box 2"
     },
     "item_2019_prize_box_3": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2019/Prize Box 3"
     },
     "item_2019_prize_box_4": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Anniversary 2019/Prize Box 4"
     },
     "item_403": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/403"
     },
     "item_40g": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/40G"
     },
     "item_40n": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/40N"
     },
     "item_41c": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/41C"
     },
     "item_41d": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/41D"
     },
     "item_509": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/509"
     },
     "item_50e": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/50E"
     },
     "katastrophe_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Katastrophe Prize Box"
     },
     "katastrophe_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Katastrophe Prize Box, Complete"
     },
     "katastrophe_returns_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Katastrophe Returns Prize Box"
     },
     "late_harvest_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Late Harvest Prize Box"
     },
     "lockbox": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Base Lockbox"
     },
     "lockbox_copper": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Copper Lockbox"
     },
     "lockbox_gold": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Gold Lockbox"
     },
     "lockbox_platinum": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Platinum Lockbox"
     },
     "lockbox_silver": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Silver Lockbox"
     },
     "lockbox_steel": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Steel Lockbox"
     },
     "lockbox_titanium": {
       "keyOptions": [
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Titanium Lockbox"
     },
     "lucky_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Lucky Prize Box"
     },
     "moorcroft_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Moorcroft Prize Box"
     },
     "mystery": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "default (Compound)"
     },
     "nemesis_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Nemesis Prize Box"
     },
     "obsidian_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Obsidian Prize Box"
     },
     "opal": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Opal"
     },
     "opal_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Opal Prize Box"
     },
     "owlite_archaeology_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Owlite Archaeology Box"
     },
     "pearl": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Pearl"
     },
     "pearl_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Pearl Prize Box"
     },
     "peridot": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Peridot"
     },
     "peridot_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Peridot Prize Box"
     },
     "plunge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Plunge Prize Box"
     },
     "polar_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Polar Prize Box"
     },
     "polar_prize_box_2014": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Polar Prize Box, 2014"
     },
     "polar_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Polar Prize Box, 2016"
     },
     "qqq": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/QQQ"
     },
     "radiant_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Radiant Forge Prize Box"
     },
     "rage_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rage Prize Box"
     },
     "raiders_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Raiders Prize Box"
     },
     "rooster_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rooster Prize Box"
     },
     "rose_regalia_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rose Regalia Prize Box"
     },
     "rose_regalia_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rose Regalia Prize Box, Complete"
     },
     "rose_regalia_returns_again_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rose Regalia Returns Again Prize Box"
     },
     "rose_regalia_returns_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rose Regalia Returns Prize Box"
     },
     "rose_regalia_reunion_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Rose Regalia Reunion Prize Box"
     },
     "ruby": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Ruby"
     },
     "ruby_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Ruby Prize Box"
     },
     "running_wild_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Running Wild Box"
     },
     "sapphire": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Sapphire"
     },
     "sapphire_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Sapphire Prize Box"
     },
     "shadow": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Shadow"
     },
     "shadowtech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/ShadowTech Prize Box"
     },
     "shining_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Shining Forge Prize Box"
     },
     "slime_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Slime Prize Box (Group 1)"
     },
     "slumber_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Slumber Prize Box"
     },
     "solstice_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box"
     },
     "solstice_prize_box_2013": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, 2013"
     },
     "solstice_prize_box_2014": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, 2014"
     },
     "solstice_prize_box_2015": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, 2015"
     },
     "solstice_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Complete"
     },
     "solstice_prize_box_summer_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Summer 2016"
     },
     "solstice_prize_box_summer_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Summer 2017"
     },
     "solstice_prize_box_summer_2018": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Summer 2018"
     },
     "solstice_prize_box_winter_2014": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Winter 2014"
     },
     "solstice_prize_box_winter_2015": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Winter 2015"
     },
     "solstice_prize_box_winter_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Winter 2016"
     },
     "solstice_prize_box_winter_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Winter 2017"
     },
     "solstice_prize_box_winter_2018": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Solstice Prize Box, Winter 2018"
     },
     "spiralhorn_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Spiralhorn Prize Box"
     },
     "spiraltail_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Spiraltail Prize Box"
     },
     "splash_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Splash Prize Box"
     },
     "spring_equinox_prize_box_2015": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Spring 2015"
     },
     "spring_equinox_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Spring 2016"
     },
     "spring_equinox_prize_box_2017": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Spring odd year"
     },
     "spring_equinox_prize_box_2018": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Spring even year"
     },
     "spring_equinox_prize_box_2019": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Equinox Prize Box, Spring odd year"
     },
     "spritely_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Spritely Prize Box"
     },
     "stormy_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Stormy Prize Box"
     },
     "stranger_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Stranger Prize Box"
     },
     "summertech_mk_ii_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/SummerTech Mk II Prize Box"
     },
     "summertech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/SummerTech Prize Box"
     },
     "surge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Surge Prize Box"
     },
     "toyland_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Toyland Prize Box"
     },
     "turquoise_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Turquoise Prize Box"
     },
     "turquoise_s2694106950_c648a1f83cc2": {
       "keyOptions": [
         "slime_key",
         "silver_key"
-      ]
+      ],
+      "spawnTable": "Lockbox/Slime/Turquoise"
     },
     "variant_base": {
       "keyOptions": [
@@ -913,34 +1149,44 @@
       ]
     },
     "vile_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Vile Prize Box"
     },
     "volcanic_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Volcanic Prize Box"
     },
     "warm_forge_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Forge/Warm Forge Prize Box"
     },
     "wicked_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Wicked Prize Box"
     },
     "wicked_prize_box_2016": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Wicked Prize Box 2016"
     },
     "wicked_prize_box_complete": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Wicked Prize Box, Complete"
     },
     "winterfest_present": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Winterfest Present Box"
     },
     "winterfest_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Winterfest Prize Box"
     },
     "wintertech_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/WinterTech Prize Box"
     },
     "wizard_prize_box": {
-      "keyOptions": []
+      "keyOptions": [],
+      "spawnTable": "Promo/Wizard Prize Box"
     }
   }
 }

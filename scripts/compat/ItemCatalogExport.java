@@ -59,7 +59,7 @@ public final class ItemCatalogExport {
             Long seed=item instanceof ItemConfig.Artifact artifact?artifact.seed:null;
             entries.add(new ItemCatalog.Entry(config.getName(),config.getConfigId(),item.getClass().getSimpleName(),
                 item.name==null?"":item.name,item.rarity,item.stackable,slot,item instanceof ItemConfig.Level l&&l.lockOnEquip,
-                permanent,locked,variant,seed,model,item.expireDays));
+                permanent,locked,variant,seed,model,item.expireDays,item.getGroup().ordinal()));
         }
         Files.createDirectories(out);ItemCatalog.write(out.resolve("catalog.json"),entries);
         String facts="# Read-only stock metadata; not game assets.\n";

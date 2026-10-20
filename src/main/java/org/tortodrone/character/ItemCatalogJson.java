@@ -22,6 +22,7 @@ final class ItemCatalogJson {
                 row.put("slot",entry.slot()==null?null:entry.slot().name()); row.put("bindOnEquip",entry.bindOnEquip());
                 row.put("permanent",entry.permanent()); row.put("locked",entry.locked()); row.put("variant",entry.variant().name());
                 row.put("expireDays",entry.expireDays()); row.put("seed",entry.seed()); row.put("modelArguments",encode(entry.modelArgs(),0,new int[]{0}));
+                if(entry.auctionGroup()>=0)row.put("auctionGroup",entry.auctionGroup());
                 if (comma) out.write(",\n"); comma=true; out.write("    "+Json.stringify(row));
             }
             out.write("\n  ]\n}\n");
@@ -44,6 +45,7 @@ final class ItemCatalogJson {
             for (Object value:rows) {
                 var fields=new HashSet<>(version==1?FIELDS_V1:FIELDS_V2);
                 if(value instanceof Map<?,?> m&&m.containsKey("expireDays"))fields.add("expireDays");
+                if(value instanceof Map<?,?> m&&m.containsKey("auctionGroup"))fields.add("auctionGroup");
                 var row=object(value,fields);
                 String config=text(row.get("config"),512),type=text(row.get("type"),512),name=text(row.get("nameKey"),1024);
                 int rarity=integer(row.get("rarity")); if (rarity < -1 || rarity > 10) throw new IOException("Invalid item rarity");
@@ -54,7 +56,7 @@ final class ItemCatalogJson {
                 Long seed=version==1||row.get("seed")==null?null:longInteger(row.get("seed"));
                 entries.add(new ItemCatalog.Entry(config,integer(row.get("stockId")),type,name,rarity,
                     bool(row.get("stackable")),slot,bool(row.get("bindOnEquip")),permanent,locked,variant,seed,
-                    decode(row.get("modelArguments"),0,new int[]{0}),row.containsKey("expireDays")?integer(row.get("expireDays")):0));
+                    decode(row.get("modelArguments"),0,new int[]{0}),row.containsKey("expireDays")?integer(row.get("expireDays")):0,row.containsKey("auctionGroup")?integer(row.get("auctionGroup")):-1));
             }
             return new ItemCatalog(entries);
         } catch (IllegalArgumentException invalid) { throw new IOException("Invalid JSON item catalogue",invalid); }

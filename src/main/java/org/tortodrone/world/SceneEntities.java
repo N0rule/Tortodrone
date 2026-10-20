@@ -59,10 +59,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(posedPawnShape==null||pawnX!=x||pawnY!=y||pawnRotation!=rotation){posedPawnShape=pawnShape.at(x,y,rotation);pawnX=x;pawnY=y;pawnRotation=rotation;}
             return posedPawnShape.penetration(px,py,ScenePortals.PAWN_RADIUS);
         }
+        boolean entrySource(){return interactive&&spec.integer("handler-index",0)<0&&binding.key().matches("[0-9]+");}
         ActorState snapshot(){return new ActorState(id,0,"",0,created,x,y,rotation,direction,flags,activity,activityStarted,config,false,null,null,
             new SceneEntityState(kind,destroyed,speed,pawnRadius,
                 maximumHealth>0?health/maximumHealth:-1,state,stateEntered,count,hitTime,binding.key(),
-                kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime));}
+                kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime,entrySource()));}
     }
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
@@ -87,13 +88,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         "Dynamic/Lift Objects/Clay Pot",new Pot(.5f,null,null,null,0,0),
         "Dynamic/Lift Objects/Fire Pot",new Pot(1f,new StarterCatalog.Model("Fire",Map.of(
                 "Chance",1f,"Power",80,
-                "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA"),
-                "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE"))),
+                "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
+                "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2))),
             new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of(
                 "flags",2,"statusCondition",new StarterCatalog.Model("Fire",Map.of(
                     "Chance",1f,"Power",80,
-                    "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA"),
-                    "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE"))))),
+                    "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
+                    "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2))))),
             "Bomb/Monster/ScorcherTorch",1f,6000),
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
 
@@ -149,8 +150,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(blocked){pad.nextGeneration=stamp+pad.spec.integer("delay",0);return;}
         spawn(pad.binding,pad.spec.child(),pad,stamp);pad.count++;pad.nextGeneration=0;pad.flags&=~2;
     }
-    public List<ActorState> actors(){return entities.values().stream().map(Entity::snapshot).toList();}
+    // Negative handlers describe placed entry interactions, not additional visible actors.
+    public List<ActorState> actors(){return entities.values().stream().filter(e->!e.entrySource()).map(Entity::snapshot).toList();}
     public ActorState actor(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.snapshot();}
+    public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
+    public ActorState station(String kind){return entities.values().stream().filter(e->e.spec.text("town-kind","").equals(kind)&&e.destroyed==Integer.MAX_VALUE).map(Entity::snapshot).findFirst().orElse(null);}
     public boolean carry(int id,ActorState player,int stamp){
         var e=entities.get(id);if(e==null||!e.kind.equals("DungeonLift")||e.destroyed!=Integer.MAX_VALUE||(e.flags&6)!=0)return false;
         e.carrier=e.owner=player.id();e.ownerOid=player.clientOid();e.dropPoint=null;e.flags|=4;return true;
@@ -229,7 +233,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         String description=nearest.spec.text("description","");
         String action=interactionAction(nearest);
         return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),action,
-            nearest.spec.integer("handler-index",0)<0&&nearest.binding.key().matches("[0-9]+")?nearest.binding.key():null);
+            nearest.entrySource()?nearest.binding.key():null);
     }
     public void advance(int stamp,List<ActorState> occupants){
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
@@ -263,7 +267,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     List.of(new FireCatalog.FieldValue("radius","float",e.spec.number("radius",0))));
                 var hitArgs=new LinkedHashMap<String,Object>(Map.of("damage",e.hazardStatus,
                     "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
-                        "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",0f))));
+                        "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",0f))));
                 hitArgs.put("shape",shape);
                 damage(new StarterCatalog.Model("DamageRegionFromPoint",hitArgs),e.x,e.y,e.rotation,stamp,e.id,null);
             }
@@ -349,12 +353,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
             Map.of("flags",2,"statusCondition",pot.ailment())));
         damages.add(new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$DepthScale",Map.of(
             "depthScale",new StarterCatalog.Model("PC/Damage/Base/Default",Map.of()),
-            "type",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$DamageType","NORMAL"),"flags",2)));
+            "type",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.util.DamageSummary$DamageType","NORMAL",0),"flags",2)));
         var args=new LinkedHashMap<String,Object>(Map.of("damage",new FireCatalog.DataValue(
                 "com.threerings.projectx.dungeon.config.DamageConfig$Compound",Map.of("damages",
                     new FireCatalog.ListValue("com.threerings.projectx.dungeon.config.DamageConfig",damages))),
             "region",new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of(
-                "location",new FireCatalog.EnumValue("com.threerings.tudey.config.TargetConfig$Location","SOURCE"),"expansion",pot.blast()))));
+                "location",new FireCatalog.DataValue("com.threerings.tudey.config.TargetConfig$Source",List.of()),"expansion",pot.blast()))));
         var prepared=e.spec.model("source-shape");
         if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
         damage(new StarterCatalog.Model("DamageRegionFromPoint",args),e.x,e.y,e.rotation,stamp,e.id,null);
@@ -494,7 +498,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void setSwitch(Entity e,int state,int stamp){
         e.state=state;e.stateEntered=stamp;
+        String effect=e.spec.text("state."+state+".effect","");if(!effect.isBlank())fireEffect(e,new StarterCatalog.Model(effect,Map.of()),stamp);
+        var condition=e.spec.model("state."+state+".status");
+        if(condition!=null){
+            String tag=e.spec.text("state."+state+".status-tag","");float radius=e.spec.number("state."+state+".status-radius",0);
+            var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",condition));
+            for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
+        }
         signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp);
+    }
+    private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
+        attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
     }
     private void signal(String tag,String name,int stamp){
         if(tag.isEmpty()||name.isEmpty())return;
@@ -610,7 +624,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(hitOnce!=null&&!hitOnce.add(e.id))continue;
             if(e.kind.equals("Switch")){
                 String mode=e.spec.text("switch-mode","");
-                if(mode.startsWith("damage-")&&stamp>=e.nextSwitch&&SceneDamage.amount(damage,content,e.spec,multiplier)>0){
+                Object switchDamage=SceneDamage.prune(damage,e.spec.integer("switch-damage-mask",255));
+                if(mode.startsWith("damage-")&&stamp>=e.nextSwitch&&SceneDamage.amount(switchDamage,content,e.spec,multiplier)>0){
                     setSwitch(e,e.state==0?1:0,stamp);e.nextSwitch=stamp+e.spec.integer(mode.equals("damage-timed")?"switch-delay":"switch-cooldown",0);
                 }
                 continue;
@@ -629,7 +644,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     float fraction=dealt/e.spec.number("health",1);
                     feedback.accept(new SceneCombatEvent(0,stamp,e.id,dealt,sourceId,fraction>.4f?"NORMAL_LARGE":fraction>.2f?"NORMAL_MEDIUM":"NORMAL_SMALL"));
                 }
-            }else if(amount>0&&e.kind.startsWith("Block"))blockHit(e,stamp);
+            }else if(amount>0&&(e.kind.startsWith("Block")||e.spec.text("damage-action","").equals("destroy")))blockHit(e,stamp);
         }
     }
     @Override public void impulse(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){

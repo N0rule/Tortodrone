@@ -27,9 +27,10 @@ public final class PetCombatTest {
                 command|=snapshot.actors().stream().anyMatch(a->a.pet()!=null&&a.activity()==1&&a.pet().nextSkill().getFirst()>snapshot.timestamp());
                 fired=snapshot.actors().stream().anyMatch(a->a.projectile()!=null&&a.config().name().equals("Bullet/Pet/Drakon/Firebolt")&&a.projectile().faction()==10);
             }
+            check(instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).allMatch(a->a.pet().nextSkill().stream().allMatch(t->t>SceneClock.now())),"using one skill places all three on their native recharge");
             check(command&&fired,"pet skill produces an owned firebolt and publishes its cooldown");
             stamp=SceneClock.now();member.input(stamp,0,0,256,stamp,stamp,System.nanoTime()/1_000_000);Thread.sleep(100);
-            check(instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).allMatch(a->a.pet().nextSkill().get(1)==0),"locked skill cannot start or consume a cooldown");
+            check(instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).allMatch(a->a.pet().nextSkill().get(1)>SceneClock.now()),"locked skill cannot start or consume a cooldown");
         }finally{member.close();}
         check(instance.simulation().snapshot().actors().stream().noneMatch(a->a.pet()!=null||a.projectile()!=null&&a.projectile().faction()==10),"departure removes companion and its projectiles");scenes.release(instance,10);
         System.out.println("PASS: dungeon companion, skill command, cooldown, locked skill and owned cleanup");

@@ -290,6 +290,21 @@ public final class SceneContentExport {
 
     private static void writeMechanism(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,Object original)throws Exception {
         var args=reference.kW();String mode=out.get(prefix+"switch-mode");
+        if(reference.getName().startsWith("Dynamic/Breakable Objects/")&&original instanceof ActorConfig.Original actor){
+            for(var handler:actor.handlers)if(handler instanceof com.threerings.projectx.dungeon.config.DungeonHandlerConfig.Damage damage){
+                out.put(prefix+"damage-mask",Integer.toString(damage.mask));out.put(prefix+"damage-action","destroy");
+            }
+        }
+        if(reference.getName().equals("Dynamic/Monster Objects/Beast Bell/Beast Bell")){
+            if(!(args.get("Cooldown") instanceof Number cooldown))throw new IOException("Beast Bell cooldown argument missing");
+            out.put(prefix+"switch-mode","damage-timed");out.put(prefix+"switch-damage-mask","2");out.put(prefix+"switch-delay",Integer.toString(cooldown.intValue()));
+            out.put(prefix+"state.1.effect","Objects/Monster Objects/Beast Bell/Ring bell, beast stun");
+            var effect=cm.d(com.threerings.tudey.config.EffectConfig.class,"Objects/Monster Objects/Beast Bell/Ring bell, beast stun");
+            var status=bellStatus(effect.action);
+            if(status==null||!(effect.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))throw new IOException("Beast Bell effect layout changed");
+            out.put(prefix+"state.1.status",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(status)));
+            out.put(prefix+"state.1.status-radius",Float.toString(circle.radius));out.put(prefix+"state.1.status-tag","fam_beast");
+        }
         if(mode!=null){
             if(mode.equals("pressure")){
                 out.put(prefix+"state.0.signal",Objects.toString(args.get("(Off Signal)"),""));out.put(prefix+"state.0.tag",Objects.toString(args.get("(Target Tag)"),""));
@@ -326,6 +341,12 @@ public final class SceneContentExport {
             if(field(original,"handlers") instanceof HandlerConfig[] handlers)for(var handler:handlers)if(handler instanceof HandlerConfig.Timer timer&&timer.action instanceof ActionConfig.Conditional conditional)
                 out.put(prefix+"heal-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,conditional.action)));
         }
+    }
+    private static ConfigReference<com.threerings.projectx.dungeon.config.StatusConditionConfig> bellStatus(ActionConfig action){
+        if(action instanceof ActionConfig.TargetedAction targeted)return bellStatus(targeted.action);
+        if(action instanceof ActionConfig.Compound compound)for(var child:compound.actions){var found=bellStatus(child);if(found!=null)return found;}
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.DamageTarget target&&target.damage instanceof com.threerings.projectx.dungeon.config.DamageConfig.Status status)return status.statusCondition;
+        return null;
     }
 
     private static void writeDefense(ConfigManager cm, Map<String, String> out, String prefix,

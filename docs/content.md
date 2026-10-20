@@ -498,6 +498,17 @@ and variants YAML no longer duplicate them. Advanced overrides merge by exact
 invented or removed. NPC filenames use verified native names where available;
 `id` and native dialogue bindings remain authoritative even after a file rename.
 
+Harness merchant definitions in `town/sprites.yml` now include `prerequisite` and
+`crowns`. Prerequisites and recharge modifiers come from installed stock configs;
+the 8,000/32,000/128,000 crown prices are corroborated by the
+[player gameplay guide](https://steamcommunity.com/sharedfiles/filedetails/?id=394352657)
+and [harness reference](https://spiralknights.fandom.com/wiki/Battle_Sprites#Harnesses).
+They await a live harness-purchase capture. Purchases check prerequisites and
+ownership inside the currency transaction; upgrades retain shared harness identity.
+GM sprite-level changes fill skipped native perk draws without rerolling earned perks.
+Native auction groups are pinned per item, including Ticket subclasses whose group
+depends on their native ticket type.
+
 ## Live economy administration
 
 The Supply Depot and Auction House are **SQLite-only**. Use the existing account
@@ -760,7 +771,12 @@ the native menu shows a missing-key label instead of the corresponding unlock
 action. Cancel completes locally, without sending an opening invocation. Forged
 options and foreign, stale or absent inventory instances fail server validation.
 Method 14 remains ordinary item Use and recipe/harness dispatch; method 13 remains
-Gift Box unwrap. No new packet or custom reward window was introduced.
+Gift Box unwrap. GM Spawn All uses native method 11 and enumerates reachable
+reward alternatives without consuming the source box or keys; stored GM permission,
+revision and capacity are checked in the same write. Method 6 returns the installed
+stock spawn-table reference to the native calculator (246 of 250 box bindings have
+one). This does not turn the shipped approximate pools into verified official odds.
+No new packet or custom reward window was introduced.
 
 After commit, existing `EntryRemovedEvent`, `EntryUpdatedEvent` and
 `EntryAddedEvent` notifications update the native inventory DSet. The result

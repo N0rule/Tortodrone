@@ -17,7 +17,7 @@ public final class TownYaml {
         Map.entry("accessories","blocks config destroy location model parameter remove"),Map.entry("blockers","config slots"),
         Map.entry("bonuses","attack charge config health speed weapon"),Map.entry("catalogs","chance config goods includes kind max min"),
         Map.entry("forgeTables","config rows"),
-        Map.entry("gearProgression","baseHeat config forge levels maxHeat"),Map.entry("harnesses","config damageType rechargeModifier"),
+        Map.entry("gearProgression","baseHeat config forge levels maxHeat"),Map.entry("harnesses","config damageType rechargeModifier prerequisite crowns"),
         Map.entry("items","accessory buyPrices config crowns giftBox harness itemProp levelProp rarity recipe sellPrices sprite spriteFoodRole type variant variantGroups"),
         Map.entry("perks","name previous tier variant"),Map.entry("recipes","config count crowns ingredients item locked maxHours oneTime useOrbs variantTable"),
         Map.entry("sprites","config preferredFood restrictDamageType skills"),Map.entry("stations","actor catalog cycle description group kind level model name perKnight preparer recipes title type"),

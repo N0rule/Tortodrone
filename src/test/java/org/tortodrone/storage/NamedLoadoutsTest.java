@@ -53,6 +53,15 @@ public final class NamedLoadoutsTest {
             db.write(c->{c.createStatement().execute("DROP TRIGGER reject_pvp");return null;});
             var resaved=town.loadout(a,1,1,"Basic",true).profile();check(resaved.town().loadouts().stream().anyMatch(l->l.name().equals("Basic")&&l.pvp()),"saving gear preserves designation");
             check(town.loadoutPvp(a,1,1,"Basic",false).profile().town().loadouts().stream().noneMatch(l->l.name().equals("Basic")&&l.pvp()),"PvP designation can be cleared");
+            var beforeRemoval=db.worldProfile(a,1,1);
+            refused(()->town.removeLoadout(b,1,1,"Basic"));refused(()->town.removeLoadout(a,1,99,"Basic"));refused(()->town.removeLoadout(a,1,1,"Missing"));
+            check(db.worldProfile(a,1,1).equals(beforeRemoval),"foreign, stale and missing deletion cannot change loadouts");
+            db.write(c->{c.createStatement().execute("CREATE TRIGGER reject_loadout_delete BEFORE DELETE ON metadata WHEN OLD.key LIKE 'knight.loadout.%.slot9' BEGIN SELECT RAISE(ABORT,'test'); END");return null;});
+            refused(()->town.removeLoadout(a,1,1,"Basic"));check(db.worldProfile(a,1,1).equals(beforeRemoval),"failed multi-row loadout deletion rolls back metadata and revision");
+            db.write(c->{c.createStatement().execute("DROP TRIGGER reject_loadout_delete");return null;});
+            var removed=town.removeLoadout(a,1,1,"bAsIc").profile();
+            check(removed.town().loadouts().size()==2&&removed.town().loadouts().stream().noneMatch(l->l.name().equals("Basic"))&&Arrays.equals(removed.equipment(),beforeRemoval.equipment()),"deleting a loadout preserves equipped gear and other loadouts");
+            check(new Database(home,true).worldProfile(a,1,1).town().loadouts().equals(removed.town().loadouts()),"removed loadout stays deleted after reopen");
             db.deleteKnight("Alice",knight.name(),a,pet.worldId());
             check(db.read(c->{try(var st=c.createStatement();var r=st.executeQuery("SELECT count(*) FROM metadata WHERE key LIKE 'knight.loadout.%'")){r.next();return r.getInt(1)==0;}}),"knight deletion removes owned loadout metadata");
             System.out.println("PASS: named loadout save/switch/reopen, sprite restoration, ownership/auth, missing items, rollback, replacement and deletion cleanup");

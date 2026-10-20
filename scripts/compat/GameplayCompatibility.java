@@ -16,9 +16,17 @@ import org.tortodrone.world.*;
 
 /** Focused retail-reader oracle. No sockets, client process, preferences or persistent state. */
 public final class GameplayCompatibility {
+    private static final class Dispatch extends com.threerings.presents.client.x {
+        InvocationRequestEvent request;
+        @Override public void a(int oid,int code,int method,Object[] args,Transport transport){request=new InvocationRequestEvent(oid,code,method,args);}
+    }
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Locale.setDefault(Locale.ENGLISH);
+        var dispatch=new Dispatch();var itemService=new com.threerings.projectx.item.data.ItemMarshaller();itemService.a(3,9,dispatch);itemService.n("Battle",(com.threerings.presents.client.A.a)null);
+        var requestBytes=new ByteArrayOutputStream();var nativeWriter=new com.threerings.io.w(requestBytes);nativeWriter.bf(new ForwardEventRequest(dispatch.request));nativeWriter.flush();
+        var removal=(SessionDecoder.Invocation)new HandshakeCodec().sessionRequest(requestBytes.toByteArray()).event();
+        check(removal.service()==9&&removal.method()==2&&removal.arguments().getFirst().equals("Battle")&&removal.arguments().getLast() instanceof SessionDecoder.Listener listener&&listener.type().endsWith("$ConfirmMarshaller"),"native loadout removal request and confirmation callback");
         var items=ItemYaml.load(Path.of("content/items"));var maps=SceneCatalog.load(Path.of("content/maps"));
         var codec=new SessionCodec(items);var bytes=new ByteArrayOutputStream();
         append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
@@ -30,12 +38,13 @@ public final class GameplayCompatibility {
         append(bytes,codec.loadoutChanges(1001,added,marked));
         append(bytes,codec.loadoutChanges(1001,marked,empty));
         var entities=new SceneEntities(maps.scene(294).content(),maps.scene(294).collision());
-        var station=entities.actors().stream().filter(a->a.entity().key().equals("1955")&&a.entity().kind().equals("Actor")).findFirst().orElseThrow();
+        var station=entities.station("OpenArsenal");
         append(bytes,codec.equipPolicy(1001,true));
         append(bytes,codec.controllerAction(1001,"show_arsenal_station",station));
         append(bytes,codec.equipPolicy(1001,false));
         var prompt=new InteractionState(station.id(),null,"Shop","3733");
-        var data=new SceneKnightState(null,0,SceneStatus.State.NORMAL,KnightProgress.RECRUIT,null,null,0,0,1000);
+        var potStatus=new SceneStatus.State(List.of(new StarterCatalog.Model("Fire",Map.of("Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),"Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2),"Chance",1f,"Power",80))),List.of(9000),SceneStatus.Modifiers.NORMAL);
+        var data=new SceneKnightState(null,0,potStatus,KnightProgress.RECRUIT,null,null,0,0,1000);
         var knight=new ActorState(42,1001,"Fixture",256,1,0,0,0,0,SceneHealth.INVULNERABLE_FLAG,274,1000,
             new StarterCatalog.Model("Character/PC/Level",Map.of()),false,null,null,null,prompt,data);
         append(bytes,codec.sceneDelta(1001,10,0,(short)0,0,1000,(short)50,List.of(knight),List.of(),new int[0],Map.of(),true));
@@ -63,6 +72,7 @@ public final class GameplayCompatibility {
         var delta=(SceneDeltaEvent)((EventNotification)in.qe()).yj();pawn=(com.threerings.projectx.dungeon.data.actor.Dungeoneer)delta.aek()[0].apply(pawn);
         check(!pawn.bR(64)&&pawn.bR(1)&&pawn.tz().x==4&&pawn.Nr()==null&&pawn.Ns()==null,"delta ends blinking, warps position and clears stale interaction");
         apply(in,player);var dialog=(com.threerings.projectx.data.ConversationDialogInfo)player.sceneDialog;
+        check(dialog.sourceKey instanceof EntityKey.Entry,"placed conversation keeps its entry identity without a synthetic actor");
         var messages=new com.threerings.util.R("rsrc.i18n");var bundle=messages.gw(dialog.bundle);
         for(var map:maps.scenes())for(var c:map.content().conversations().values()){
             var nativeBundle=messages.gw(c.bundle());check(c.name().startsWith("~")||nativeBundle.gu(c.name()),"supported NPC name resolves: "+c.name());

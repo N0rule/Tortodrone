@@ -24,6 +24,9 @@ public final class AuctionParityTest {
             var confetti=house.createFeatured("Usable/Confetti, Leaf",1,10,10,0,2);
             var usable=new SessionDecoder.AuctionSearch(true,new SessionDecoder.EnumValue("com.threerings.projectx.item.data.ItemCodes$Group",17),null,0,true,false);
             var usablePage=(AuctionState.Page)house.operate(owner,1,1,5,List.of(usable,0),false).result();
+            var box=house.createFeatured(items.require("anniversary_prize_box_2018").config(),1,10,10,0,2);
+            usablePage=(AuctionState.Page)house.operate(owner,1,1,5,List.of(usable,0),false).result();
+            check(usablePage.listings().stream().anyMatch(l->l.id()==box.id()),"native Usable category includes prize boxes");
             check(usablePage.listings().stream().anyMatch(l->l.id()==confetti.id()),"native Usable category includes AnimatedAction items");
             check(AuctionHouse.nextBid(1,0,false)==2&&AuctionHouse.nextBid(99,0,false)==103&&AuctionHouse.nextBid(1000,0,false)==1050&&AuctionHouse.nextBid(Integer.MAX_VALUE,0,false)==Integer.MAX_VALUE,"native rounded increment boundaries");
             check(AuctionHouse.nextBid(1000,1020,false)==1020&&AuctionHouse.nextBid(1000,0,true)==1000,"buyout cap and first bid");
@@ -34,6 +37,18 @@ public final class AuctionParityTest {
             check(page.listings().getFirst().id()==cheapLot.id(),"bid sorting compares price per item, not per lot");
             var buySearch=new SessionDecoder.AuctionSearch(true,null,search.configs(),2,false,false);
             page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(buySearch,0),false).result();check(page.listings().getFirst().id()==expensiveUnit.id(),"descending buyout price per item");
+            var town=new TownStore(db,items,rules);
+            var granted=db.grantItems("Alice","Auction-Alice",owner,-1,items.require("calibur"),1,-1,-1);
+            long sword=granted.items().stream().filter(i->i.config().equals("Weapon/Sword/Calibur")).findFirst().orElseThrow().id();
+            var infinite=new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.Duration",9);
+            refused(()->house.operate(owner,1,1,6,List.of(sword,1,10,20,infinite,true),true));
+            check(db.worldProfile(owner,1,1).equals(granted),"forged staff flag cannot bypass stored GM role or consume escrow");
+            db.gameMaster("Alice",true,owner);
+            var gm=(AuctionState.Listing)house.operate(owner,1,1,6,List.of(sword,1,10,20,infinite,true),true).result();
+            check(gm.featured()&&gm.seller()==0&&gm.expires()==Long.MAX_VALUE&&db.worldProfile(owner,1,1).items().stream().anyMatch(i->i.id()==sword),"authorized GM can create infinite featured listing");
+            check(((AuctionState.Page)house.operate(owner,1,1,5,List.of(new SessionDecoder.AuctionSearch(true,null,null,0,true,false),0),true).result()).listings().stream().anyMatch(a->a.id()==gm.id()),"GM-created featured listing is searchable");
+            house.operate(owner,1,1,1,List.of(gm.id(),10),true);
+            house.operate(owner,1,1,2,List.of(gm.id()),true);check(house.deliveries(gm.id()).size()==1&&house.deliveries(gm.id()).getFirst().crowns()==10&&!house.deliveries(gm.id()).getFirst().item(),"GM cancellation refunds outstanding featured bids without duplicating the retained source item");
             long now=System.currentTimeMillis();var future=house.scheduleFeatured("Material/Gel Drop",1,5,0,1,now+3600000,now+7200000);
             var saved=db.worldProfile(owner,1,1);refused(()->house.operate(owner,1,1,1,List.of(future.id(),5),false));check(db.worldProfile(owner,1,1).equals(saved),"unpublished schedule cannot reserve crowns");
             page=(AuctionState.Page)house.operate(owner,1,1,5,List.of(search,0),false).result();check(page.listings().stream().noneMatch(a->a.id()==future.id()),"scheduled listing absent from native search");

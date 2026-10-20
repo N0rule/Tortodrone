@@ -1370,41 +1370,63 @@ perks:
   variant: Dmg Construct High
 harnesses:
 - config: Crystal Harness
+  prerequisite: ''
+  crowns: 8000
   damageType: ELEMENTAL
   rechargeModifier: 1
 - config: Crystal Harness Adv
+  prerequisite: Crystal Harness
+  crowns: 32000
   damageType: ELEMENTAL
   rechargeModifier: 0.95
 - config: Crystal Harness Eli
+  prerequisite: Crystal Harness Adv
+  crowns: 128000
   damageType: ELEMENTAL
   rechargeModifier: 0.9
 - config: Dark Harness
+  prerequisite: ''
+  crowns: 8000
   damageType: SHADOW
   rechargeModifier: 1
 - config: Dark Harness Adv
+  prerequisite: Dark Harness
+  crowns: 32000
   damageType: SHADOW
   rechargeModifier: 0.95
 - config: Dark Harness Eli
+  prerequisite: Dark Harness Adv
+  crowns: 128000
   damageType: SHADOW
   rechargeModifier: 0.9
 - config: Dev/Ultimate Harness
   damageType: NORMAL
   rechargeModifier: 0.2
 - config: Golden Harness
+  prerequisite: ''
+  crowns: 8000
   damageType: PIERCING
   rechargeModifier: 1
 - config: Golden Harness Adv
+  prerequisite: Golden Harness
+  crowns: 32000
   damageType: PIERCING
   rechargeModifier: 0.95
 - config: Golden Harness Eli
+  prerequisite: Golden Harness Adv
+  crowns: 128000
   damageType: PIERCING
   rechargeModifier: 0.9
 - config: Iron Harness
   damageType: NORMAL
   rechargeModifier: 1
 - config: Iron Harness Adv
+  prerequisite: Iron Harness
+  crowns: 32000
   damageType: NORMAL
   rechargeModifier: 0.95
 - config: Iron Harness Eli
+  prerequisite: Iron Harness Adv
+  crowns: 128000
   damageType: NORMAL
   rechargeModifier: 0.9

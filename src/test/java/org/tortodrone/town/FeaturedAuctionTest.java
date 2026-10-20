@@ -26,7 +26,7 @@ public final class FeaturedAuctionTest {
             var featured=house.createFeatured("Weapon/Sword/Calibur",1,100,500,0,1);
             check(featured.featured()&&featured.seller()==0&&!featured.stock(),"featured bid is system owned without a character");
             var before=db.worldProfile(alice,1,1);
-            refused(()->house.operate(alice,1,1,2,List.of(featured.id()),true));check(before.equals(db.worldProfile(alice,1,1)),"even GM game-client cancellation cannot administer featured auctions");
+            refused(()->house.operate(alice,1,1,2,List.of(featured.id()),true));check(before.equals(db.worldProfile(alice,1,1)),"a forged GM flag cannot administer featured auctions");
             house.operate(alice,1,1,1,List.of(featured.id(),100),false);house.operate(bob,1,1,1,List.of(featured.id(),200),false);
             check(house.deliveries(featured.id()).stream().filter(d->d.crowns()==100).count()==1,"outbid crowns have one durable refund");
             var filtered=(AuctionState.Page)house.operate(bob,1,1,5,List.of(new SessionDecoder.AuctionSearch(true,null,null,0,true,false),0),false).result();

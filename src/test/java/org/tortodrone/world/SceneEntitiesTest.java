@@ -16,8 +16,8 @@ public final class SceneEntitiesTest {
         check(prompt!=null&&prompt.actorId()==clock.id(),"Haven NPC interaction resolves its prepared dialogue binding");
         check(prompt.action().equals("Talk")&&prompt.entryKey()==null,"NPC dialogue uses its native talk icon and actor source");
         check(townEntities.interaction(clock.x()-1.9f,clock.y(),(float)Math.PI)==null,"NPC interaction respects the knight's facing and range");
-        var auction=townEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Misc/Interact Node/Base")).findFirst().orElseThrow();
-        check(townEntities.interaction(auction.x()-.9f,auction.y(),0)!=null,"auction interaction node is eligible in Haven");
+        var auction=townEntities.station("OpenAuction");
+        check(townEntities.actors().stream().noneMatch(a->a.id()==auction.id()),"placed interaction helpers are not published as debug actors");
         var auctionPrompt=townEntities.interaction(.45199376f,14.619257f,1.28f);
         check(auctionPrompt!=null&&auctionPrompt.action().equals("Shop")&&"3733".equals(auctionPrompt.entryKey()),"Auction House uses the native crowns prompt and placed entry identity");
         var hall=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(318);var rules=org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));
@@ -26,6 +26,26 @@ public final class SceneEntitiesTest {
             String station=dialogue.nodes().get(dialogue.initial()).responses().getFirst().station();var service=rules.station(station);
             check(service!=null&&service.kind().equals("OpenShop")&&!rules.goods(service.shop(),0,1).isEmpty(),"vendor dialogue opens its captured catalogue");
         }
+        var hallEntities=new SceneEntities(hall.content(),hall.collision());
+        var brazier=hallEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Breakable Objects/Castle/Brazier, ground")).findFirst().orElseThrow();
+        hallEntities.damage(hit(shape("Circle",Map.of("radius",1f)),2,1),brazier.x(),brazier.y(),0,SceneClock.now(),219);
+        check(hallEntities.actor(brazier.id())==null&&hallEntities.specification(brazier.id())==null,"destroyed brazier cannot remain an interaction source");
+        var lab=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(30893);
+        var bellEntry=lab.content().entries().stream().filter(e->e.spec().config().name().equals("Dynamic/Monster Objects/Beast Bell/Beast Bell")).findFirst().orElseThrow();
+        var bellEntries=new ArrayList<SceneContent.Entry>();bellEntries.add(bellEntry);
+        for(int i=0;i<3;i++){
+            var target=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture","kind","Monster","health","100","radius","0.4","damage-mask","2","tags",i==1?"fam_slime":"fam_beast"));
+            bellEntries.add(new SceneContent.Entry("bell-target-"+i,bellEntry.x()+(i==2?6:2.5f),bellEntry.y(),0,target));
+        }
+        var labContent=lab.content();var labEntities=new SceneEntities(new SceneContent(bellEntries,labContent.scales(),Map.of(),labContent.stats(),labContent.items(),labContent.cycles(),labContent.statuses()),lab.collision());
+        var bell=labEntities.actors().stream().filter(a->a.config().name().equals("Dynamic/Monster Objects/Beast Bell/Beast Bell")).findFirst().orElseThrow();
+        var bellEffects=new ArrayList<FireCatalog.Action>();labEntities.attacks((a,action)->bellEffects.add(action));int bellStamp=SceneClock.now();
+        labEntities.damage(hit(shape("Circle",Map.of("radius",1f)),2,1),bell.x(),bell.y(),0,bellStamp,219);
+        check(labEntities.actor(bell.id()).entity().state()==1&&bellEffects.stream().anyMatch(a->a.config().name().equals("Objects/Monster Objects/Beast Bell/Ring bell, beast stun")),"bell hit rings the native effect and enters its activation animation");
+        var bellTargets=labEntities.actors().stream().filter(a->a.entity().kind().equals("Monster")).toList();
+        check(!bellTargets.get(0).entity().status().conditions().isEmpty()&&bellTargets.get(1).entity().status().conditions().isEmpty()&&bellTargets.get(2).entity().status().conditions().isEmpty(),"bell wave stuns nearby beasts while preserving family and range exclusions");
+        labEntities.damage(hit(shape("Circle",Map.of("radius",1f)),2,1),bell.x(),bell.y(),0,bellStamp+1,219);check(bellEffects.size()==1,"bell cooldown rejects repeated hits");
+        labEntities.advance(bellStamp+8000,List.of());check(labEntities.actor(bell.id()).entity().state()==0,"bell returns to its inactive state after its authored cooldown");
         var rectangle=shape("Rectangle",Map.of("width",2f,"height",1f));
         var circle=shape("Circle",Map.of("radius",.1f));
         var fields=new HashMap<String,String>();

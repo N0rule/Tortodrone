@@ -16,6 +16,22 @@ public final class BoxRewardSelector {
         for(String name:box.groups().keySet())if(name.startsWith("bonus_"))group(box,name,random,result);
         return List.copyOf(result);
     }
+    /** GM Spawn All enumerates alternatives; it does not perform probability rolls. */
+    public static List<Prize> all(BoxDefinition box){
+        var prizes=new LinkedHashMap<String,Prize>();
+        var rewards=new ArrayList<Reward>(box.guaranteed());
+        rewards.add(new Reference("main"));for(String name:box.groups().keySet())if(name.startsWith("bonus_"))rewards.add(new Reference(name));
+        all(box,rewards,new HashSet<>(),prizes);
+        return List.copyOf(prizes.values());
+    }
+    private static void all(BoxDefinition box,List<Reward> rewards,Set<String> visited,Map<String,Prize> prizes){
+        for(var reward:rewards)if(reward instanceof Reference ref){
+            var group=box.groups().get(ref.group());if(group.chance()==0||!visited.add(ref.group()))continue;
+            for(var entry:group.entries())all(box,entry.rewards(),visited,prizes);
+        }else if(reward instanceof Item item){
+            var prize=new Prize(item.config(),item.maximum(),item.binding());String key=item.config()+"|"+item.binding();var prior=prizes.get(key);if(prior==null||prior.count()<prize.count())prizes.put(key,prize);
+        }
+    }
     private static void group(BoxDefinition box,String name,RandomGenerator random,List<Prize> out) {
         var group=box.groups().get(name);
         if(group.chance()<1_000_000&&random.nextInt(1_000_000)>=group.chance())return;

@@ -99,7 +99,8 @@ public final class FireCatalogExport {
             var timers=new ArrayList<ActorTimer>();for(int i=0;i<actor.timers().size();i++){var t=actor.timers().get(i);timers.add(new ActorTimer(t.delay(),t.interval(),t.limit(),preserveHeadings(t.action(),i<old.actor().timers().size()?old.actor().timers().get(i).action():null),t.endAction()));}
             actor=new ActorSpec(actor.nativeType(),actor.config(),actor.fuse(),actor.speed(),actor.maxStep(),actor.flags(),actor.offsetX(),actor.offsetY(),actor.height(),actor.detonation(),actor.orbit(),actor.collisionMask(),actor.collisionShape(),timers,actor.shutdown());
         }
-        return new Action(fresh.kind(),fresh.config(),actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),old.rotation(),old.rotationVariance(),old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
+        boolean repairedFan=fresh.actor()!=null&&fresh.actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")&&fresh.relative()&&!old.relative()&&old.rotation()==0;
+        return new Action(fresh.kind(),fresh.config(),actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),repairedFan?fresh.rotation():old.rotation(),old.rotationVariance(),repairedFan||old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
     }
 
     private static boolean fragmentation(Action action){
@@ -510,7 +511,7 @@ public final class FireCatalogExport {
             Object visualFuse=actor.sprite.model==null?null:actor.sprite.model.kW().get("Fuse");
             if(!(visualFuse instanceof Float seconds)||!Float.isFinite(seconds)||seconds<=0)throw new IOException("Shard bomb has no visual fuse");
             for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Timer timer)
-                timers.add(new ActorTimer((int)(seconds*1000),0,1,readAction(manager,bindShardBranches(timer.action,reference)),destroySource()));
+                timers.add(new ActorTimer((int)(seconds*1000),0,1,shardFan(readAction(manager,bindShardBranches(timer.action,reference))),destroySource()));
         }
         if(refName.equals("Bomb/Parts/Shard/Shard Base (Timer)")){
             // Its signal trigger/timer is stripped. End the retained visual and damage
@@ -564,6 +565,25 @@ public final class FireCatalogExport {
             return copy;
         }
         return raw;
+    }
+
+    /** The retained Rock Salt graph supplies the family's equally spaced relative fan.
+     * Retail strips SpawnTransformedActor headings from later tier graphs; otherwise all
+     * authored branches overlap at absolute east. Keep the authored branch count/timing. */
+    private static Action shardFan(Action action){
+        if(action==null||action.kind()!=Kind.COMPOUND)return action;
+        var branches=action.children().stream().filter(a->a.kind()==Kind.DELAYED&&a.children().size()==1&&a.children().getFirst().actor()!=null&&a.children().getFirst().actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")).toList();
+        if(branches.size()<2||branches.stream().anyMatch(a->a.children().getFirst().rotation()!=0))return action;
+        var children=new ArrayList<Action>();int index=0;
+        for(var child:action.children()){
+            if(branches.contains(child)){
+                var a=child.children().getFirst();
+                var spread=new Action(a.kind(),a.config(),a.actor(),a.targetType(),a.facingType(),a.collisionSourceType(),a.x(),a.y(),(float)(index++*2*Math.PI/branches.size()),a.rotationVariance(),true,a.count(),a.stepSize(),a.steps(),a.collisionMask(),a.stopOnFailure(),a.children(),a.unsupportedType(),a.parameter(),a.values());
+                child=new Action(child.kind(),child.config(),child.actor(),child.targetType(),child.facingType(),child.collisionSourceType(),child.x(),child.y(),child.rotation(),child.rotationVariance(),child.relative(),child.count(),child.stepSize(),child.steps(),child.collisionMask(),child.stopOnFailure(),List.of(spread),child.unsupportedType(),child.parameter(),child.values());
+            }
+            children.add(child);
+        }
+        return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
     }
 
     private static Action destroySource(){return new Action(Kind.DESTROY_SOURCE,null,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");}
