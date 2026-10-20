@@ -6,7 +6,7 @@ public final class SceneShape {
     public static boolean intersects(Object shape,float x,float y,float radius) {
         if(!(shape instanceof FireCatalog.DataValue geometry))return false;
         String type=geometry.type();
-        if(type.endsWith("$TransformedShape")){
+        if(type.endsWith("$TransformedShape")||type.endsWith("$Transformed")){
             Object transform=SceneDamage.field(shape,"transform");
             Object translation=SceneDamage.field(transform,"_translation");
             float dx=x-SceneDamage.number(translation,"x",0),dy=y-SceneDamage.number(translation,"y",0);
@@ -21,6 +21,11 @@ public final class SceneShape {
             return false;
         }
         if(type.endsWith("$Segment")){float dx=x-Math.clamp(x,0,SceneDamage.number(shape,"length",0));return dx*dx+y*y<=radius*radius;}
+        if(type.endsWith("$Capsule")){
+            float half=SceneDamage.number(shape,"length",0)/2;
+            float dx=x-Math.clamp(x,-half,half),r=radius+SceneDamage.number(shape,"radius",0);
+            return dx*dx+y*y<=r*r;
+        }
         if(type.endsWith("$Circle"))return Math.hypot(x,y)<=SceneDamage.number(shape,"radius",0)+radius;
         if(type.endsWith("$Rectangle")){
             float dx=Math.max(0,Math.abs(x)-SceneDamage.number(shape,"width",0)/2);

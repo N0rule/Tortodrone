@@ -12,6 +12,7 @@ public final class TownMovement {
     public static final int USE_ITEM=5, USE_ITEM_MILLIS=1433;
     // Stock KnightAdvancer registers the lockbox reveal as a stationary 8250 ms activity.
     public static final int OPEN_BOX=265, OPEN_BOX_MILLIS=8250;
+    public static final int ANIMATED_ITEM=267;
     // Stock EmoteConfig sorted animation index 17, plus 9; end index adds 20 emotes.
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
@@ -51,6 +52,7 @@ public final class TownMovement {
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
     private Object activityData;
+    private int animatedItemMillis;
     private java.util.function.IntPredicate throwing=stamp->false;
     public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
     public boolean lift(int stamp){
@@ -68,6 +70,12 @@ public final class TownMovement {
         if(combat!=null)combat.reset(stamp);
         setActivity(OPEN_BOX,stamp);activityData=java.util.List.copyOf(references);
         rotation=-(float)Math.PI/2;updateFlags();return true;
+    }
+    public boolean confetti(String config,int stamp){
+        if(!canOpenBox()||!org.tortodrone.character.Confetti.supports(config))return false;
+        if(combat!=null)combat.reset(stamp);
+        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=org.tortodrone.character.Confetti.duration(config,stamp);
+        activityData=new org.tortodrone.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
     }
     public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
         if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;
@@ -152,7 +160,7 @@ public final class TownMovement {
         if(portal!=null||dead()||activity==RESURRECT)return false;
         // Text-only emotes use the normal chat bubble path and must not clear a pose.
         if (!emote.animated()) return true;
-        if (activity == INVENTORY || activity == INVENTORY_END || activity==OPEN_BOX || combat!=null&&!combat.canOverride()) return false;
+        if (activity == INVENTORY || activity == INVENTORY_END || activity==OPEN_BOX || activity==ANIMATED_ITEM || combat!=null&&!combat.canOverride()) return false;
         if(combat!=null)combat.reset(timestamp);
         if (activity != emote.activity() || emote.activity()!=SIT)
             setActivity(emote.activity(), timestamp);
@@ -207,7 +215,7 @@ public final class TownMovement {
     private void moveTo(int target) {
         if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
         if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
-        int duration = activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        int duration = activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();

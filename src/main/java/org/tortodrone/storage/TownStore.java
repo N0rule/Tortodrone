@@ -90,6 +90,16 @@ public final class TownStore {
             return null;
         });
     }
+    /** Only verified cosmetic AnimatedAction items; revision/ownership checked in the same write. */
+    public Result confetti(int account,int knight,long auth,long revision,long item)throws IOException {
+        return change(account,knight,auth,(c,p)->{
+            if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
+            var held=owned(p,item);
+            if(!Confetti.supports(held.config())||!items.require(held.config()).type().equals("AnimatedAction")
+                    ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
+            consume(c,p,item,1);return held.config();
+        });
+    }
     /** Native PartyMarshaller.revive: -1 spends one owned Spark; a positive approval buys its use. */
     public Result revive(int account,int knight,long auth,int approvedCost)throws IOException{
         if(approvedCost < -1)throw new IOException("m.costupdate");

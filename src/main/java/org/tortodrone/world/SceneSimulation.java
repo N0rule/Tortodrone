@@ -211,6 +211,9 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
                 weapons.cancelAttacks(appearance.id());movement.openBox(references,SceneClock.now());}
         }
+        /** Animate an already-committed persistent consumable in this scene only. */
+        public void confetti(String config){synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
+            weapons.cancelAttacks(appearance.id());movement.confetti(config,SceneClock.now());}}
         private void updateLife(int stamp){
             if(health.alive()){if(movement.dead()){movement.resurrect(stamp);weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);}return;}
             if(movement.dead())return;

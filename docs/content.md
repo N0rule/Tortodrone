@@ -644,6 +644,37 @@ before runtime content changes. Prepare a fresh candidate and transfer the edits
 manually. Validate the whole candidate, including native resources/descriptors,
 before installation. Runtime `data/` is never copied as default content or packaged.
 
+## Confetti and Auction House access
+
+Arsenal → Usable → Use consumes one owned confetti and plays the stock activity
+`267` with its item config reference. All 14 indexed variants are supported,
+including Bubbles, Party Flare and the Storm/Rage/Frenzy callers. The client
+provides the animation, particles and sound. Verified stock `AnimatedAction`
+metadata supplies the 300 ms land time and 1,600/3,100 ms clears; Dark Harvest
+chooses trick (3,500 ms clear) or treat (1,600 ms clear) from the activity timestamp,
+using the same seeded selection as the stock client. Busy use returns native
+`e.not_use_busy`. Consumption checks ownership, authentication and revision in
+one SQLite write; failures roll back, and replayed listener receipts cannot spend
+again. Scene presentation follows commit and clears on departure.
+
+The Haven Auction House opens at its public counter through the captured
+`forceClientAction` message: `ControllerAction("auction", "")` and placed entry
+key `3733`. It uses the existing auction search/listing service. Its interaction
+area now handles the native transformed capsule and uses the captured building's
+unrotated heading, correcting the imported -90-degree actor-facing conversion.
+The historical sparse-content comparison checks this one correction separately.
+
+Evidence: the owner's private `Confetti.zip` protocol lines 732, 749, 1236–1245
+and 1583–1586, the captured placed entry transform, and read-only installed
+`ItemConfig.AnimatedAction`, `KnightAdvancer` and `KnightSprite` inspection.
+`ConfettiSessionTest` covers consumption, rollback, replay, busy handling and
+counter reachability; `scripts/compat/ConfettiCompatibility.java` checks all
+variant timings and the native actor/controller-action layouts without launching
+a graphical client. Captures and client assets are not distributed.
+Focused confetti, scene entity/item-use, Town service and movement checks passed,
+as did the stock-reader check and a narrow Haven fingerprint comparison. The
+full suite and graphical acceptance were skipped for this lightweight check.
+
 ## Lockboxes and Prize Boxes
 
 Version 0.35.3 enables **243 explicitly labeled approximation pools**, covering

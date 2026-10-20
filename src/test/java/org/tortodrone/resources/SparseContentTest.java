@@ -17,9 +17,18 @@ public final class SparseContentTest {
             var sceneGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/scene-defaults.json"))),"scene baseline");
             var baseline=ContentManager.load(Path.of("."));ItemCatalog.write(root.resolve("items.json"),baseline.items().entries());check(ContentFiles.digest(root.resolve("items.json")).equals(catalogGolden.get("items")),"all 9,348 indexed item metadata/arguments remain identical");
             for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
-                var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());check(hash(prepared.content()).equals(sceneGolden.get(map.getKey().toString())),"complete inherited scene properties unchanged: "+map.getKey());
+                var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());
+                var historical=new Properties();historical.putAll(prepared.content());
+                // One deliberate correction to the old exporter: placed entry 3733 has no
+                // native rotation. Check it separately before comparing the historical snapshot.
+                if(map.getKey().toString().equals("1")){
+                    String rotation=historical.stringPropertyNames().stream().filter(k->k.endsWith(".town-station")&&historical.getProperty(k).equals("scene.1.placed.3733")).findFirst().orElseThrow().replace(".town-station",".rotation");
+                    check(historical.getProperty(rotation).equals("0.0"),"Auction House uses captured native facing");historical.setProperty(rotation,"-1.5707964");
+                }
+                check(hash(historical).equals(sceneGolden.get(map.getKey().toString())),"inherited scene properties unchanged outside explicit corrections: "+map.getKey());
                 check(hash(prepared.portals()).equals(catalogGolden.get("portals."+map.getKey())),"portal identity/coordinates/precise headings unchanged: "+map.getKey());
-                check(Yaml.map(Yaml.read(map.getValue().resolve("actors.yml")).get("actors"),"actors").isEmpty(),"actor defaults require no generated YAML repetition");
+                var edits=Yaml.map(Yaml.read(map.getValue().resolve("actors.yml")).get("actors"),"actors");
+                check(edits.equals(map.getKey().toString().equals("1")?Map.of("base_2",Map.of("facing",0)):Map.of()),"actor YAML contains only the deliberate auction-facing correction");
             }
             ContentFixture.copy(Path.of("content"),root.resolve("content"));ContentFixture.copy(Path.of("config"),root.resolve("config"));
             for(String resource:List.of("town-definitions.json","statuses.json")) {

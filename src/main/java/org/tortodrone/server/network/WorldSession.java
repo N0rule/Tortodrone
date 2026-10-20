@@ -182,8 +182,9 @@ final class WorldSession implements AutoCloseable {
     }
     private void openTownDialog(org.tortodrone.town.TownCatalog.Station station,ActorState source)throws IOException {
         if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade before using a town station");
-        if(station.kind().equals("OpenArsenal")){
-            closeConversation();closeTownDialog();output.send(()->codec.controllerAction(oid,"show_arsenal_station",source));return;
+        if(station.kind().equals("OpenArsenal")||station.kind().equals("OpenAuction")){
+            String command=station.kind().equals("OpenAuction")?"auction":"show_arsenal_station";
+            closeConversation();closeTownDialog();output.send(()->codec.controllerAction(oid,command,source));return;
         }
         townTradeGeneration=tradeMember==null?0:tradeMember.dialogGeneration;closeConversation();closeTownDialog();
         var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElseThrow(()->new IOException("Knight left scene"));townX=own.x();townY=own.y();
@@ -331,6 +332,8 @@ final class WorldSession implements AutoCloseable {
     }
 
     private record BoxRequest(int world,short request) { }
+    private record ConfettiReply(long item,String failure) { }
+    private final LinkedHashMap<BoxRequest,ConfettiReply> confettiReplies=new LinkedHashMap<>();
     private record BoxReply(long box,int option,Object rewards,String failure) { }
     // Stock listener IDs wrap. Keep only recent requests on this connection, never persist a client ID.
     private final java.util.LinkedHashMap<BoxRequest,BoxReply> boxReplies=new java.util.LinkedHashMap<>();
@@ -812,8 +815,33 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
-        if(service==9&&request.method()==14){
-            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller")||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
+        if(request.oid()==SessionCodec.INVOCATION_OID&&service==9&&request.method()==14){
+            if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
+            if(!selected()||!subscribed||!entered||portalMove!=null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Enter a scene first"));return true;}
+            var token=new BoxRequest(profile.worldId(),listener.requestId());var receipt=confettiReplies.get(token);
+            if(receipt!=null){
+                try{characters.worldProfile(knight.name(),authRevision,profile);}
+                catch(CharacterStore.Refused failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));return true;}
+                if(receipt.item()!=id||receipt.failure()!=null)output.send(()->codec.invocationFailure(oid,listener.requestId(),receipt.failure()==null?"m.internal_error":receipt.failure()));
+                else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
+            }
+            var held=profile.items().stream().filter(i->i.id()==id).findFirst().orElse(null);
+            if(held!=null&&Confetti.supports(held.config())){
+                try{
+                    var current=characters.worldProfile(knight.name(),authRevision,profile);
+                    if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+                    if(!membership.canOpenBox())throw new IOException("e.not_use_busy");
+                    var result=characters.town(scenes.town()).confetti(characters.accountId(),knight.id(),authRevision,current.revision(),id);
+                    confettiReplies.put(token,new ConfettiReply(id,null));
+                    membership.confetti((String)result.result());townChanged(result,false);
+                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+                }catch(CharacterStore.Refused|IOException failure){
+                    confettiReplies.putIfAbsent(token,new ConfettiReply(id,failure.getMessage()));
+                    output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));
+                }
+                if(confettiReplies.size()>256)confettiReplies.remove(confettiReplies.keySet().iterator().next());
+                return true;
+            }
             var item=temporaryItems.get(id);var spec=item==null||!selected()?null:scene.map().content().items().get(item.config());
             if(spec!=null&&membership.useItem(id,spec))output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             else output.send(()->codec.invocationFailure(oid,listener.requestId(),"That item cannot be used now"));return true;

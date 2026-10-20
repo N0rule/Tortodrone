@@ -1,4 +1,8 @@
 # Overrides only. Native actor identities/defaults: native/bindings.json (actorAliases).
 # Example existing actor alias: alchemy_1
 # Position uses game units; facing uses degrees; attackIntervalMs uses milliseconds.
-actors: {}
+# Auction House placed entry 3733 has no rotation in the stock scene; its
+# interaction capsule must extend south toward the public counter.
+actors:
+  base_2:
+    facing: 0

@@ -275,8 +275,8 @@ public final class SessionCodec {
             type(out, "com.threerings.presents.dobj.InvocationResponseEvent"); out.writeInt(clientOid);
             out.writeShort(requestId); out.writeByte(0);
             out.writeBoolean(true); out.writeInt(1);
-            // MessageBundle treats a leading tilde as literal text; stock m.* keys are translated.
-            type(out, "java.lang.String"); out.writeUTF(reason != null && reason.matches("m\\.[a-z0-9_]+") ? reason : "~" + reason);
+            // MessageBundle treats a leading tilde as literal text; known stock keys translate.
+            type(out, "java.lang.String"); out.writeUTF(reason != null && (reason.matches("m\\.[a-z0-9_]+")||reason.equals("e.not_use_busy")) ? reason : "~" + reason);
         });
     }
 
@@ -486,11 +486,13 @@ public final class SessionCodec {
     }
     /** TudeyBodyObject.FORCE_CLIENT_ACTION, as emitted by ForceClientAction logic. */
     public byte[] controllerAction(int oid,String command,ActorState source)throws IOException {
-        if(!java.util.Set.of("forge","show_arsenal_station").contains(command))throw new IOException("Unsupported controller action");
+        if(!java.util.Set.of("forge","show_arsenal_station","auction").contains(command))throw new IOException("Unsupported controller action");
         return frame(out->{eventHeader(out,"MessageEvent",oid);string(out,"forceClientAction");
             out.writeBoolean(true);out.writeInt(2); // MessageEvent's declared Object[] field.
             type(out,"com.threerings.tudey.config.ClientActionConfig$ControllerAction");string(out,command);string(out,"");
-            if(source==null)out.writeShort(0);else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
+            if(source==null)out.writeShort(0);
+            else if(command.equals("auction")&&source.entity()!=null){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(source.entity().key()));}
+            else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(source.id());}
         });
     }
 

@@ -976,20 +976,6 @@ Upgrade/Wrapping Paper/Winter Wrapping (Green),WrappingPaper,unusable,no item-us
 Upgrade/Wrapping Paper/Winter Wrapping (Red),WrappingPaper,unusable,no item-use handler for WrappingPaper
 Upgrade/Wrapping Paper/Winter Wrapping (White),WrappingPaper,unusable,no item-use handler for WrappingPaper
 Usable/Bloon Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
-Usable/Confetti,AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Bubbles",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Dark Harvest",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Equinox",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Fall Equinox",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Flare Popper",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Frenzy",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Leaf",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Rage",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Silver",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Slime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Storm",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Summer",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Confetti, Winter",AnimatedAction,unusable,no item-use handler for AnimatedAction
 "Usable/Fireworks/Large/Large Fireworks, Amber",AnimatedAction,unusable,no item-use handler for AnimatedAction
 "Usable/Fireworks/Large/Large Fireworks, Aquamarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
 "Usable/Fireworks/Large/Large Fireworks, Beast",AnimatedAction,unusable,no item-use handler for AnimatedAction

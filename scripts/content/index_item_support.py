@@ -42,6 +42,7 @@ for item in items:
         if data.get('sprite') not in sprites:reasons.append('no resolved sprite')
         else:state='partial';reasons.append('quill attachments, advanced pet triggers and some perk effects remain incomplete')
     elif kind=='Harness':pass
+    elif kind=='AnimatedAction' and re.fullmatch(r'Usable/Confetti(?:, (?:Bubbles|Dark Harvest|Equinox|Fall Equinox|Flare Popper|Frenzy|Leaf|Rage|Silver|Slime|Storm|Summer|Winter))?',name):pass
     elif kind in resources:pass  # Materials/tokens are consumed by crafting/shops, not used directly.
     elif kind in {'Vial','Capsule'}:
         if name not in prepared:reasons.append('no prepared scene item-use definition')
