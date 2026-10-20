@@ -392,7 +392,44 @@ final class WorldSession implements AutoCloseable {
         boxReplies.put(request,result);if(boxReplies.size()>256)boxReplies.remove(boxReplies.keySet().iterator().next());
     }
 
+    private boolean styleInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID)return false;
+        boolean apply=request.service()==1&&request.method()==1;
+        var args=request.arguments();
+        boolean use=request.service()==9&&request.method()==14&&args.size()==3&&args.getFirst() instanceof Long id&&profile!=null
+            &&profile.items().stream().anyMatch(item->item.id()==id&&org.tortodrone.storage.StyleStore.kit(item.config())!=null);
+        if(!apply&&!use)return false;
+        if(args.size()!=(apply?2:3)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||use&&args.get(1)!=null)
+            throw new SessionDecoder.Rejected("Invalid style request");
+        try{
+            if(closed||!selected()||!entered||!subscribed||portalMove!=null)throw new IOException("Enter a scene first");
+            if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+            if(!membership.canOpenBox())throw new IOException("e.not_use_busy");
+            org.tortodrone.storage.StyleStore.Style style=null;
+            if(apply){
+                var value=args.getFirst();var kind=org.tortodrone.storage.StyleStore.Kind.Color;int ordinal;
+                if(value instanceof Integer color)ordinal=color;
+                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.data.ProjectXCodes$EyeType")){kind=org.tortodrone.storage.StyleStore.Kind.Eye;ordinal=e.ordinal();}
+                else if(value instanceof SessionDecoder.EnumValue e&&e.type().equals("com.threerings.projectx.data.ProjectXCodes$KnightHeight")){kind=org.tortodrone.storage.StyleStore.Kind.Height;ordinal=e.ordinal();}
+                else throw new IOException("m.internal_error");
+                try{style=new org.tortodrone.storage.StyleStore.Style(kind,ordinal);}catch(IllegalArgumentException invalid){throw new IOException("m.internal_error");}
+            }
+            var current=characters.worldProfile(knight.name(),authRevision,profile);
+            var result=characters.styles().change(characters.accountId(),knight.id(),authRevision,current.revision(),use?(Long)args.getFirst():null,style);
+            characters.refresh();knight=characters.roster().stream().filter(k->k.id()==knight.id()).findFirst().orElseThrow();
+            townChanged(result);publishStyles();partyState();
+            output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+        }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
+        return true;
+    }
+    private void publishStyles()throws IOException {
+        if(!characters.hasWorldStorage())return;
+        var saved=characters.styles().saved(characters.accountId(),knight.id(),authRevision);
+        output.send(()->codec.styles(oid,knight,saved));
+    }
+
     synchronized boolean townInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(styleInvocation(request))return true;
         if(boxInvocation(request))return true;
         if(depotInvocation(request))return true;
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
@@ -710,6 +747,7 @@ final class WorldSession implements AutoCloseable {
         partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);partyState();
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.townState(oid,profile));
+        publishStyles();
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
         if(characters.hasWorldStorage())refreshFriends(null,characters.friends().snapshot(),friendPresence(characters.worldStorageFile()));
         refreshParty();

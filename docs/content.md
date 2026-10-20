@@ -918,8 +918,19 @@ catalog supports them. Inactive timed upgrades use the stock `UpgradingItem`
 subclass with the common Item payload, no extra fields and no active timer.
 Their eight playable configurations have verified inventory bindings; the internal
 base remains ungrantable. Furniture, unsupported seed representations and Gift
-Boxes without wrapped contents are rejected. Personal appearance modifier
-items being grantable does not prove their separate Use workflow is implemented.
+Boxes without wrapped contents are rejected. The 75 playable personal color, eye
+and height kits now support native Use: consume one, apply the style and save its
+unlock atomically. Internal Parts/Base configurations remain unsupported.
+The native Style Kit reapplies an unlocked style for 1,000 Crowns; already worn
+or locked styles fail without a charge. Unlocks persist in per-world integer
+metadata, alongside the existing roster appearance and revisions, without schema
+migration. `seeds/style-kits.tsv` records only factual config-to-value mappings
+from reference inputs `rsrc/config/item.xml` and `ProjectXCodes`; behavior was
+checked against `UseLogic.Style`, `KnightManager.applyStyle` and the native
+`ItemConfig` UI rules. No archive implementation or client assets were copied.
+`StyleSessionTest` verifies native dispatch, ownership and transactional rollback;
+`scripts/compat/StyleCompatibility.java` verifies native marshalling and all saved
+style arrays with the stock reader. Visual appearance has not been verified.
 Nested prize boxes remain in inventory for later manual opening. Recursive box or
 group cycles, missing groups, empty main outcomes and excessive expansion fail
 validation; nothing is silently dropped or replaced.

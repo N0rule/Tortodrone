@@ -611,78 +611,8 @@ Ticket/Variants/Variants 1,Ticket,unusable,no item-use handler for Ticket
 Ticket/Variants/Variants 2,Ticket,unusable,no item-use handler for Ticket
 Ticket/Variants/Variants 3,Ticket,unusable,no item-use handler for Ticket
 Upgrade/Coin Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Color/Amber,Color,unusable,no item-use handler for Color
-Upgrade/Color/Aquamarine,Color,unusable,no item-use handler for Color
-Upgrade/Color/Blue,Color,unusable,no item-use handler for Color
-Upgrade/Color/Chartreuse,Color,unusable,no item-use handler for Color
-Upgrade/Color/Cobalt,Color,unusable,no item-use handler for Color
-Upgrade/Color/Crimson,Color,unusable,no item-use handler for Color
-Upgrade/Color/Cyan,Color,unusable,no item-use handler for Color
-Upgrade/Color/Emerald,Color,unusable,no item-use handler for Color
-Upgrade/Color/Green,Color,unusable,no item-use handler for Color
-Upgrade/Color/Indigo,Color,unusable,no item-use handler for Color
-Upgrade/Color/Lake,Color,unusable,no item-use handler for Color
-Upgrade/Color/Lavender,Color,unusable,no item-use handler for Color
-Upgrade/Color/Lime,Color,unusable,no item-use handler for Color
-Upgrade/Color/Magenta,Color,unusable,no item-use handler for Color
-Upgrade/Color/Orange,Color,unusable,no item-use handler for Color
 Upgrade/Color/Parts/Base,Color,unusable,no item-use handler for Color
-Upgrade/Color/Purple,Color,unusable,no item-use handler for Color
-Upgrade/Color/Red,Color,unusable,no item-use handler for Color
-Upgrade/Color/Silver,Color,unusable,no item-use handler for Color
-Upgrade/Color/Sky,Color,unusable,no item-use handler for Color
-Upgrade/Color/Turquoise,Color,unusable,no item-use handler for Color
-Upgrade/Color/Utramarine,Color,unusable,no item-use handler for Color
-Upgrade/Color/Vermillion,Color,unusable,no item-use handler for Color
-Upgrade/Color/Violet,Color,unusable,no item-use handler for Color
-Upgrade/Color/Viridian,Color,unusable,no item-use handler for Color
-Upgrade/Color/Yellow,Color,unusable,no item-use handler for Color
-Upgrade/Eye/Almond,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Bee,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Blooming,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Bright,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Bug,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Cheeky,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Circuit,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Closed,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Clover,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Club,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Default,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Determined,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Diamond,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Dot,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Eks,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Flower,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Gear,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Happy,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Heart,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Hexagon,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Jolly,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Joy,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Lash,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Lotus,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Moon,Eye,unusable,no item-use handler for Eye
 Upgrade/Eye/Parts/Base,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Pill,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Plus,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Propeller,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Rage,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Sad,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Shifty,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Skull,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Sleepy,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Snowflake,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Spade,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Sparkle,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Spiral,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Square,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Squint,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Star,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Sultry,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Sun,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/ThreePetal,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Triangle,Eye,unusable,no item-use handler for Eye
-Upgrade/Eye/Wat,Eye,unusable,no item-use handler for Eye
 Upgrade/Gift Box/Checker Gift Box (Blue),GiftBox,unusable,no item-use handler for GiftBox
 Upgrade/Gift Box/Checker Gift Box (Red),GiftBox,unusable,no item-use handler for GiftBox
 Upgrade/Gift Box/Checker Gift Box (Yellow),GiftBox,unusable,no item-use handler for GiftBox
@@ -698,12 +628,7 @@ Upgrade/Heat Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant
 Upgrade/Heat Bonus (1 day),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
 Upgrade/Heat Bonus (30 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
 Upgrade/Heat Bonus (7 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Height/Normal,Height,unusable,no item-use handler for Height
 Upgrade/Height/Parts/Base,Height,unusable,no item-use handler for Height
-Upgrade/Height/Short,Height,unusable,no item-use handler for Height
-Upgrade/Height/Shortest,Height,unusable,no item-use handler for Height
-Upgrade/Height/Tall,Height,unusable,no item-use handler for Height
-Upgrade/Height/Tallest,Height,unusable,no item-use handler for Height
 Upgrade/Lockbox,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Lockbox, Copper",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Lockbox, Gold",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md

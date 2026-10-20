@@ -629,6 +629,21 @@ public final class SessionCodec {
         });
     }
 
+    public byte[] styles(int oid,Knight knight,org.tortodrone.storage.StyleStore.Saved saved)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(6);
+            attribute(out,oid,"color",o->value(o,256|knight.color()));
+            attribute(out,oid,"eye",o->value(o,new SessionDecoder.EnumValue("com.threerings.projectx.data.ProjectXCodes$EyeType",knight.eye())));
+            attribute(out,oid,"height",o->value(o,new SessionDecoder.EnumValue("com.threerings.projectx.data.ProjectXCodes$KnightHeight",knight.height())));
+            attribute(out,oid,"savedColors",o->{type(o,"[I");o.writeInt(saved.colors().size());for(int color:saved.colors())o.writeInt(color);});
+            attribute(out,oid,"savedEyes",o->styleArray(o,"EyeType",saved.eyes()));
+            attribute(out,oid,"savedHeights",o->styleArray(o,"KnightHeight",saved.heights()));
+        });
+    }
+    private void styleArray(DataOutputStream out,String kind,List<Integer> values)throws IOException {
+        type(out,"[Lcom.threerings.projectx.data.ProjectXCodes$"+kind+";");out.writeInt(values.size());
+        out.writeShort((values.size()+7)/8);for(int i=0;i<values.size();i+=8)out.writeByte((1<<Math.min(8,values.size()-i))-1);
+        for(int value:values)out.writeByte(value);
+    }
     public byte[] townState(int oid,WorldProfile profile)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(5);
             attribute(out,oid,"newMailInfo",o->{type(o,"com.threerings.presents.dobj.DSet");var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o,m.sender());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));}});
