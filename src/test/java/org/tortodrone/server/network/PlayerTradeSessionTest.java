@@ -43,12 +43,16 @@ public final class PlayerTradeSessionTest {
                 b.tradeInvocation(rpc(1001,1,4,10,confirm())); // Changes revision and invalidates first acceptance.
                 a.tradeInvocation(rpc(1001,1,1,2,confirm()));sa.await("offer changed");
                 check(db.worldProfile(alice,1,1).items().stream().anyMatch(i->i.id()==item),"stale acceptance does not transfer ownership");
+                a.tradeInvocation(rpc(10,6,1,0L));check(a.ownsTrade(1001),"stale dialog close preserves the active trade");
+                sa.clear();sb.clear();
                 a.tradeInvocation(rpc(1001,1,1,3,confirm()));b.tradeInvocation(rpc(1001,1,1,3,confirm()));
                 var committed=db.worldProfile(bob,1,1);
                 check(committed.items().stream().anyMatch(i->i.id()==item&&Objects.equals(i.expiresAt(),expiry))&&committed.crowns()==10&&db.worldProfile(alice,1,1).crowns()==10,"final acceptance transfers atomically");
-                b.tradeInvocation(rpc(1001,1,1,3,confirm()));sb.await("already completed");
+                sa.await("sceneDialogCreated");sb.await("sceneDialogCreated");
+                check(!a.ownsTrade(1001)&&!b.ownsTrade(1001),"completion closes both trade views");
+                b.tradeInvocation(rpc(1001,1,1,3,confirm()));sb.await("No such trade");
                 check(db.worldProfile(bob,1,1).equals(committed),"completed acceptance cannot replay");
-                a.tradeInvocation(rpc(10,6,1,0L));check(a.ownsTrade(1001),"stale dialog close preserves newer dialog");
+                a.tradeInvocation(rpc(10,6,1,0L));check(!a.ownsTrade(1001),"a closed trade cannot be reopened by the stock close callback");
                 a.unsubscribeTrade(1001);check(!a.ownsTrade(1001)&&!b.ownsTrade(1001),"closing one view releases both participants");
                 a.tradeInvocation(rpc(10,6,4,"Bob-Knight",confirm()));b.tradeInvocation(rpc(3,12,5,"TRADE_REQ:Alice-Knight",1,confirm()));
                 check(a.ownsTrade(1003),"new trade gets a fresh object identity");
@@ -73,6 +77,7 @@ public final class PlayerTradeSessionTest {
         private final BlockingQueue<String> frames=new LinkedBlockingQueue<>();
         public OutputStream getOutputStream(){return new OutputStream(){public void write(int value){throw new AssertionError("whole frames");}public void write(byte[] bytes){frames.add(new String(bytes,StandardCharsets.ISO_8859_1));}};}
         void await(String text)throws Exception {await(text,null);}
+        void clear(){frames.clear();}
         void await(String text,String extra)throws Exception {long end=System.nanoTime()+TimeUnit.SECONDS.toNanos(5);while(System.nanoTime()<end){var frame=frames.poll(100,TimeUnit.MILLISECONDS);if(frame!=null&&frame.contains(text)&&(extra==null||frame.contains(extra)))return;}throw new AssertionError("Missing response: "+text);}
     }
 }

@@ -147,6 +147,9 @@ final class PlayerTrades {
         var after=t.view();IOException failure=null;
         for(var member:List.copyOf(t.subscribers))try{member.output.send(()->member.codec.tradeChanges(before,after));}catch(IOException failed){failure=failed;}
         if(failure!=null){cancel(t);throw failure;}
+        // The stock dialog only reports the completed flag; clearing sceneDialog is what closes
+        // the window. Keep the completed update first so the client still shows its feedback.
+        if(t.completed)cancel(t);
     }
     private boolean busy(Member m){return trades.containsKey(m)||invitations.containsKey(m);}
     private void remove(Invite i){invitations.remove(i.sender,i);invitations.remove(i.recipient,i);
