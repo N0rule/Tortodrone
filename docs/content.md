@@ -628,8 +628,8 @@ stock client. No proprietary assets/captures belong in Git.
 
 ## Upgrading
 
-SQLite schema 15 requires an **explicit offline candidate** for known schemas
-9–14. Normal startup refuses those predecessors and all unknown versions, leaving
+SQLite schema 16 requires an **explicit offline candidate** for known schemas
+9–15. Normal startup refuses those predecessors and all unknown versions, leaving
 saved state unchanged. Never reset the database or regenerate keys.
 
 1. Stop the server and account manager; back up the complete `data/`, `content/`
@@ -945,7 +945,7 @@ before publishing the immutable content snapshot.
 
 ### Transactions, persistence and verification
 
-The opening service uses the existing schema-15 SQLite database with **no schema
+The opening service uses the existing schema-16 SQLite database with **no schema
 change or new inventory**. One `BEGIN IMMEDIATE` transaction rechecks account,
 knight, authentication revision and expected inventory revision, resolves the
 owned box and chosen key, selects and validates rewards, projects capacity after
@@ -1081,7 +1081,7 @@ estimate. The wiki does not verify these rates or inherited extras.
 `BoxPoolsTest` opens every enabled definition on disposable SQLite, checks key
 consumption and reloads after reconnect/database reopen. `InventoryExpiryTest`
 covers deadlines, transfers, gifts, escrow encoding, expiry rollback and revision
-publication. Schema 15 is unchanged: absolute deadlines use the existing integer
+publication. Schema 16 is unchanged by box opening: absolute deadlines use the existing integer
 metadata namespace `item.expires.<id>`. No owner database is migrated. Native
 reader checks cover furniture's undeployed count, common item `Long` expiry and
 custom color triplets. All 5,918 distinct candidate reward configurations match

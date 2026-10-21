@@ -10,14 +10,14 @@ import org.tortodrone.resources.*;
 import org.tortodrone.town.TownCatalog;
 import static org.tortodrone.resources.Yaml.*;
 
-/** Explicit offline 9..14 -> 15 candidate. Source DB, content and keys are never replaced. */
+/** Explicit offline 9..15 -> 16 candidate. Source DB, content and keys are never replaced. */
 public final class EconomyUpgrade {
     private EconomyUpgrade() { }
     public static void main(String[] args)throws Exception {
         if(args.length!=2)throw new IllegalArgumentException("Usage: EconomyUpgrade /stopped-deployment /fresh-candidate-data-directory");
         Path root=Path.of(args[0]).toAbsolutePath().normalize();
         export(root.resolve("data"),Path.of(args[1]),()->deploymentLegacy(root));
-        System.out.println("Exported schema-15 candidate database. Original is unchanged. Back up the entire stopped deployment, review the candidate and remove only the legacy depot section from a COPY of shops.yml. Retain original keys when installing the reviewed database.");
+        System.out.println("Exported schema-16 candidate database. Original is unchanged. Back up the entire stopped deployment, review the candidate and remove only the legacy depot section from a COPY of shops.yml. Retain original keys when installing the reviewed database.");
     }
     private static DepotSeed.Data deploymentLegacy(Path root)throws IOException {
         var items=ItemYaml.load(root.resolve("content/items"));
@@ -55,7 +55,7 @@ public final class EconomyUpgrade {
                 DepotSeed.Data legacy;
                 try(var c=DriverManager.getConnection("jdbc:sqlite:file:"+source.resolve("tortodrone.db")+"?mode=ro");var s=c.createStatement()) {
                     int version;try(var r=s.executeQuery("PRAGMA user_version")){r.next();version=r.getInt(1);}
-                    if(version<9||version>14)throw new IOException("EconomyUpgrade accepts only schemas 9–14; found "+version);
+                    if(version<9||version>15)throw new IOException("EconomyUpgrade accepts only schemas 9–15; found "+version);
                     long revision=0;if(version>=11)try(var r=s.executeQuery("SELECT value FROM metadata WHERE key='supply-depot-revision'")){if(r.next())revision=r.getLong(1);}
                     legacy=revision==0?legacySource.load():null;
                     if(revision==0&&legacy==null)throw new IOException("YAML-backed Depot requires the original shops.yml Depot section; refusing to substitute stock defaults");
@@ -64,7 +64,7 @@ public final class EconomyUpgrade {
                 if(Files.getFileStore(staging).supportsFileAttributeView("posix"))Files.setPosixFilePermissions(staging.resolve("tortodrone.db"),java.nio.file.attribute.PosixFilePermissions.fromString("rw-------"));
                 var upgraded=new Database(staging,true,true,legacy);
                 upgraded.read(c->{try(var s=c.createStatement();var r=s.executeQuery("PRAGMA integrity_check")){if(!r.next()||!r.getString(1).equals("ok"))throw new IOException("Candidate integrity check failed");}return null;});
-                Files.writeString(staging.resolve("economy-upgrade.txt"),"Source schema 9–14 exported without replacement; candidate schema 15. Purchase ledger, managed offers/revision, escrow and player records retained. Keys are intentionally not copied.\n"+(legacy==null?"Managed SQLite Depot retained.\n":legacy.provenance()+"\n"+legacy.unsupported()+"\n"));
+                Files.writeString(staging.resolve("economy-upgrade.txt"),"Source schema 9–15 exported without replacement; candidate schema 16. Purchase ledger, managed offers/revision, escrow, mail and player records retained. Keys are intentionally not copied.\n"+(legacy==null?"Managed SQLite Depot retained.\n":legacy.provenance()+"\n"+legacy.unsupported()+"\n"));
                 Files.move(staging,output,StandardCopyOption.ATOMIC_MOVE);
             } finally {if(Files.exists(staging))try(var paths=Files.walk(staging)){for(Path p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
         }catch(OverlappingFileLockException held){throw new IOException("Stop the server before exporting an economy upgrade",held);}catch(SQLException failure){throw new IOException("Economy upgrade failed; original retained",failure);}

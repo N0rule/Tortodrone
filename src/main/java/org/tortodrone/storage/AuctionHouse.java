@@ -14,6 +14,9 @@ public final class AuctionHouse {
     public AuctionHouse(Database database,ItemCatalog items,TownCatalog rules){this.database=database;this.items=items;town=new TownStore(database,items,rules);}
     private static final int[] RARITY_FEES={10,25,50,100,200,500},HOURS={4,12,24,48,72,96,120,144,168};
     private static final float[] MULTIPLIERS={.5f,.6f,.75f,1,0,0,0,0,0,0};
+    /** ServerObject mail fees from the archive: a letter costs 25, any attachment adds 75. */
+    public static final int MAIL_FEE=25,MAIL_ATTACH_FEE=75;
+    private static final int MAX_MAIL_ATTACHMENTS=14;
     public static int listingFee(int rarity,int count,int duration,int bid,int buy){long base=(long)count*RARITY_FEES[Math.clamp(rarity,0,5)];return (int)Math.ceil(Math.max(base,Math.max(wonFee(bid),wonFee(buy/20)))*MULTIPLIERS[duration]);}
     public static int wonFee(int crowns){return Math.max(0,(int)Math.ceil(crowns*.1f));}
     public static int nextBid(int bid,int buy,boolean first){if(first)return bid;int raw=Math.max(1,(int)Math.floor(.05f*bid)),mag=(int)Math.pow(10,(int)Math.log10(raw));int next=(int)Math.min(Integer.MAX_VALUE,(long)bid+Math.max(1,mag*(raw/mag)));return buy==0||buy>next?next:buy;}
@@ -125,19 +128,105 @@ public final class AuctionHouse {
     }
     public TownStore.Result mail(int account,int knight,long auth,int method,List<Object> args)throws IOException{
         return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);Object result=null;
-            if(method==6){long[] ids=(long[])args.getFirst();var messages=loadMail(c,p.worldId());result=ids==null?messages:messages.stream().filter(m->java.util.stream.LongStream.of(ids).anyMatch(id->id==m.id())).toList();}
+            if(method==5)deliver(c,p,(SessionDecoder.SentMail)args.getFirst());
+            else if(method==6){long[] ids=(long[])args.getFirst();var messages=loadMail(c,p.worldId());result=ids==null?messages:messages.stream().filter(m->java.util.stream.LongStream.of(ids).anyMatch(id->id==m.id())).toList();}
             else if(method==11){long[] ids=(long[])args.getFirst();for(long id:ids)try(var s=c.prepareStatement("UPDATE town_mail SET is_read=1 WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}}
             else{long id=(Long)args.getFirst();var mail=loadMail(c,p.worldId()).stream().filter(m->m.id()==id).findFirst().orElseThrow(()->new IOException("Unknown owned mail"));
-                if(method==1||method==2){if(mail.claimed())throw new IOException("%uplink:b.accepted");if(mail.friendRequest())FriendStore.accept(c,p.worldId(),mail);TownStore.credit(c,p.worldId(),mail.crowns(),0);if(mail.item()!=null&&!mail.item().expired(System.currentTimeMillis())){var i=mail.item();long created=town.create(c,p,i.config(),i.count(),i.bound(),i.level(),i.heatProgress(),i.variants());InventoryExpiry.save(c,created,i.expiresAt());try(var s=c.prepareStatement("UPDATE inventory_items SET accessory=?,accessories=? WHERE item_id=? AND world_id=?")){s.setString(1,i.accessory());s.setString(2,Json.stringify(i.additionalAccessories()));s.setLong(3,created);s.setInt(4,p.worldId());s.executeUpdate();}GiftStore.save(c,created,i.gift());}try(var s=c.prepareStatement("UPDATE town_mail SET claimed=1,is_read=1 WHERE id=? AND world_id=? AND claimed=0")){s.setLong(1,id);s.setInt(2,p.worldId());if(s.executeUpdate()!=1)throw new IOException("Attachment changed");}}
-                if(method==1||method==4){if(method==4&&!mail.claimed()&&!mail.friendRequest())throw new IOException("Accept the attachment before deleting this mail");try(var s=c.prepareStatement("DELETE FROM town_mail WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}FriendStore.deletedMail(c,id);}
+                if(method==1||method==2)claim(c,p,mail);
+                if(method==1||method==4){
+                    if(method==4&&!mail.claimed()&&!mail.friendRequest()&&hasAttachment(mail))throw new IOException("Accept the attachment before deleting this mail");
+                    try(var s=c.prepareStatement("DELETE FROM town_mail WHERE id=? AND world_id=?")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}FriendStore.deletedMail(c,id);
+                }
             }TownStore.touch(c,p.worldId());return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),result);});
+    }
+    private static boolean hasAttachment(AuctionState.Mail mail){return !mail.items().isEmpty()||mail.crowns()>0||mail.energy()>0;}
+    private void claim(Connection c,WorldProfile p,AuctionState.Mail mail)throws SQLException,IOException {
+        if(mail.claimed())throw new IOException("%uplink:b.accepted");
+        if(mail.friendRequest())FriendStore.accept(c,p.worldId(),mail);
+        TownStore.credit(c,p.worldId(),mail.crowns(),mail.energy());
+        long now=System.currentTimeMillis();
+        for(var item:mail.items())if(item!=null&&!item.expired(now))grant(c,p,item);
+        try(var s=c.prepareStatement("UPDATE town_mail SET claimed=1,is_read=1 WHERE id=? AND world_id=? AND claimed=0")){s.setLong(1,mail.id());s.setInt(2,p.worldId());if(s.executeUpdate()!=1)throw new IOException("Attachment changed");}
+    }
+    private void grant(Connection c,WorldProfile p,WorldProfile.Item i)throws SQLException,IOException {
+        long created=town.create(c,p,i.config(),i.count(),i.bound(),i.level(),i.heatProgress(),i.variants());
+        InventoryExpiry.save(c,created,i.expiresAt());
+        try(var s=c.prepareStatement("UPDATE inventory_items SET accessory=?,accessories=? WHERE item_id=? AND world_id=?")){s.setString(1,i.accessory());s.setString(2,Json.stringify(i.additionalAccessories()));s.setLong(3,created);s.setInt(4,p.worldId());s.executeUpdate();}
+        GiftStore.save(c,created,i.gift());
+    }
+    private record Recipient(int world,boolean gameMaster) { }
+    private static Recipient recipient(Connection c,String name)throws SQLException,IOException {
+        if(CharacterStore.nameError(name)!=null)throw new IOException("m.unknown_knight");
+        try(var s=c.prepareStatement("SELECT w.world_id,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE k.name_key=?")){
+            s.setString(1,name.toLowerCase(Locale.ROOT));
+            try(var r=s.executeQuery()){if(!r.next())throw new IOException("m.unknown_knight");return new Recipient(r.getInt(1),r.getBoolean(2));}
+        }
+    }
+    /** Uplink method 5: validate text, fee and item ownership, then escrow everything in one write. */
+    private void deliver(Connection c,WorldProfile p,SessionDecoder.SentMail sent)throws SQLException,IOException {
+        if(sent==null||sent.subject()==null||sent.body()==null||sent.subject().length()>50||sent.body().length()>8096||sent.crowns()<0||sent.energy()<0)
+            throw new IOException("Invalid mail text or attachment");
+        long units=0;
+        for(var count:sent.items().values()){if(count==null||count<1)throw new IOException("Invalid mail attachment");units+=count;}
+        if(units>MAX_MAIL_ATTACHMENTS)throw new IOException("A mail can carry at most 14 item units");
+        var target=recipient(c,sent.recipient());
+        if(target.gameMaster){
+            // Stock first-market behaviour: a GM badge bounces the letter back without charging.
+            try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,sender,mail_type) VALUES(?,?,?,?,?,3)")){
+                s.setInt(1,p.worldId());s.setLong(2,System.currentTimeMillis());
+                s.setString(3,"%uplink:"+compose("s.bounced",sent.recipient(),sent.subject()));
+                s.setString(4,"%uplink:"+compose("m.bounced",sent.body()));s.setInt(5,-2);s.executeUpdate();
+            }
+            TownStore.touch(c,p.worldId());return;
+        }
+        boolean attached=!sent.items().isEmpty()||sent.crowns()>0||sent.energy()>0;
+        long cost=(long)(MAIL_FEE+(attached?MAIL_ATTACH_FEE:0))+sent.crowns();
+        if(cost>Integer.MAX_VALUE)throw new Database.Refused("m.nsf_crowns");
+        if(p.crowns()<cost)throw new Database.Refused("m.nsf_crowns");
+        if(p.energy()<sent.energy())throw new Database.Refused("m.nsf_energy");
+        TradeTransfer.validate(p,sent.items(),0,0,items);
+        var held=new ArrayList<WorldProfile.Item>();
+        for(var entry:sent.items().entrySet()){
+            var item=TownStore.owned(p,entry.getKey());int count=entry.getValue();
+            held.add(new WorldProfile.Item(item.id(),item.slot(),item.config(),item.accessory(),item.heat(),null,
+                item.bound(),item.bindOnEquip(),false,count,item.permanent(),item.level(),item.heatProgress(),
+                item.variants(),item.additionalAccessories()).withGift(item.gift()).withExpiration(item.expiresAt()));
+        }
+        TownStore.pay(c,p,(int)cost,sent.energy());
+        for(var entry:sent.items().entrySet())TownStore.consume(c,p,entry.getKey(),entry.getValue());
+        try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,energy,attachments,sender,mail_type) VALUES(?,?,?,?,?,?,?,?,4)")){
+            s.setInt(1,target.world());s.setLong(2,System.currentTimeMillis());s.setString(3,sent.subject());s.setString(4,sent.body());
+            s.setInt(5,sent.crowns());s.setInt(6,sent.energy());s.setString(7,held.isEmpty()?null:encodeItems(held));
+            s.setInt(8,p.worldId());s.executeUpdate();
+        }
+        TownStore.touch(c,target.world());
     }
     static List<AuctionState.Mail> loadMail(Connection c,int world)throws SQLException,IOException {
         var messages=new ArrayList<AuctionState.Mail>();
-        try(var s=c.prepareStatement("SELECT m.*,r.value AS friend_world,k.name AS friend_name FROM town_mail m LEFT JOIN metadata r ON r.key='social.request.'||m.id LEFT JOIN world_characters w ON w.world_id=r.value LEFT JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE m.world_id=? ORDER BY m.sent DESC,m.id DESC LIMIT 500")) {
-            s.setInt(1,world);try(var r=s.executeQuery()){while(r.next())messages.add(new AuctionState.Mail(r.getLong("id"),world,r.getLong("sent"),r.getString("subject"),r.getString("body"),r.getInt("crowns"),r.getString("item")==null?null:decode(r.getString("item")),r.getBoolean("claimed"),r.getBoolean("is_read"),r.getInt("friend_world"),r.getString("friend_name")));}
+        try(var s=c.prepareStatement("SELECT m.*,r.value AS friend_world,k.name AS friend_name,s.name AS sender_name FROM town_mail m LEFT JOIN metadata r ON r.key='social.request.'||m.id LEFT JOIN world_characters fw ON fw.world_id=r.value LEFT JOIN knights k ON k.account_id=fw.account_id AND k.id=fw.knight_id LEFT JOIN world_characters sw ON sw.world_id=m.sender LEFT JOIN knights s ON s.account_id=sw.account_id AND s.id=sw.knight_id WHERE m.world_id=? ORDER BY m.sent DESC,m.id DESC LIMIT 500")) {
+            s.setInt(1,world);try(var r=s.executeQuery()){while(r.next()){
+                var held=new ArrayList<WorldProfile.Item>();
+                if(r.getString("item")!=null)held.add(decode(r.getString("item")));
+                held.addAll(decodeItems(r.getString("attachments")));
+                messages.add(new AuctionState.Mail(r.getLong("id"),world,r.getLong("sent"),r.getString("subject"),r.getString("body"),
+                    r.getInt("crowns"),r.getInt("energy"),held,r.getBoolean("claimed"),r.getBoolean("is_read"),
+                    r.getInt("friend_world"),r.getString("friend_name"),r.getInt("sender"),r.getInt("mail_type"),r.getString("sender_name")));
+            }}
         }
         return List.copyOf(messages);
+    }
+    private static String encodeItems(List<WorldProfile.Item> items)throws IOException {
+        var encoded=new ArrayList<String>(items.size());
+        for(var item:items)encoded.add(encode(item));
+        return Json.stringify(encoded);
+    }
+    @SuppressWarnings("unchecked") private static List<WorldProfile.Item> decodeItems(String json)throws IOException {
+        if(json==null)return List.of();
+        try{
+            var encoded=(List<Object>)Json.parse(json);var items=new ArrayList<WorldProfile.Item>(encoded.size());
+            for(var value:encoded){if(!(value instanceof String text))throw new IOException("Invalid mail attachment");items.add(decode(text));}
+            return List.copyOf(items);
+        }catch(RuntimeException bad){throw new IOException("Invalid mail attachment",bad);}
     }
     static String encode(WorldProfile.Item i)throws IOException{var m=new TreeMap<String,Object>();m.put("id",i.id());m.put("expiresAt",i.expiresAt());m.put("gift",i.gift()==null?null:GiftStore.encode(i.gift()));m.put("config",i.config());m.put("slot",i.slot().name());m.put("accessory",i.accessory());m.put("heat",i.heat());m.put("count",i.count());m.put("bound",i.bound());m.put("bindOnEquip",i.bindOnEquip());m.put("permanent",i.permanent());m.put("level",i.level());m.put("progress",i.heatProgress());m.put("accessories",i.additionalAccessories());m.put("variants",i.variants().stream().map(StarterCatalog.Model::name).toList());return Json.stringify(m);}
     @SuppressWarnings("unchecked") static WorldProfile.Item decode(String json)throws IOException{try{var m=(Map<String,Object>)Json.parse(json);return new WorldProfile.Item(((Number)m.getOrDefault("id",0)).longValue(),WorldProfile.Slot.valueOf((String)m.get("slot")),(String)m.get("config"),(String)m.get("accessory"),((Number)m.get("heat")).intValue(),null,(Boolean)m.get("bound"),(Boolean)m.get("bindOnEquip"),false,((Number)m.get("count")).intValue(),(Boolean)m.get("permanent"),((Number)m.get("level")).intValue(),((Number)m.get("progress")).floatValue(),((List<String>)m.get("variants")).stream().map(v->new StarterCatalog.Model(v,Map.of())).toList(),(List<String>)m.getOrDefault("accessories",List.of())).withGift(m.get("gift")==null?null:GiftStore.decode((String)m.get("gift"))).withExpiration(m.get("expiresAt")==null?null:((Number)m.get("expiresAt")).longValue());}catch(RuntimeException bad){throw new IOException("Invalid escrow item",bad);}}

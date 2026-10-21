@@ -29,7 +29,7 @@ public final class TownStore {
             s.execute("CREATE TABLE town_harnesses(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,config TEXT NOT NULL)");
             s.execute("CREATE TABLE town_equipped(world_id INTEGER PRIMARY KEY REFERENCES world_characters(world_id) ON DELETE CASCADE,sprite INTEGER NOT NULL DEFAULT 0)");
             AuctionSchema.create(c);
-            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id))");
+            s.execute("CREATE TABLE town_mail(id INTEGER PRIMARY KEY AUTOINCREMENT,world_id INTEGER NOT NULL REFERENCES world_characters(world_id) ON DELETE CASCADE,sent INTEGER NOT NULL,subject TEXT NOT NULL,body TEXT NOT NULL,crowns INTEGER NOT NULL DEFAULT 0,item TEXT,claimed INTEGER NOT NULL DEFAULT 0,is_read INTEGER NOT NULL DEFAULT 0,auction INTEGER REFERENCES town_auctions(id),sender INTEGER,energy INTEGER NOT NULL DEFAULT 0 CHECK(energy BETWEEN 0 AND 2147483647),attachments TEXT,mail_type INTEGER NOT NULL DEFAULT 3 CHECK(mail_type BETWEEN 0 AND 4))");
             s.execute("CREATE TABLE town_auction_bids(auction INTEGER NOT NULL REFERENCES town_auctions(id),world_id INTEGER NOT NULL REFERENCES world_characters(world_id),watching INTEGER NOT NULL DEFAULT 0,has_bid INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(auction,world_id))");
             knightRenameClock(c);
         }

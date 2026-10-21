@@ -51,7 +51,7 @@ Tortodrone/
 
 The build prepares `build/{config,content,plugins}/` beside both JARs. Deploy these
 complete directories. Release archives include defaults and omit private `data/`.
-Existing schemas 9–14 require an explicit offline economy upgrade candidate; see
+Existing schemas 9–15 require an explicit offline economy upgrade candidate; see
 [Upgrading](docs/content.md#upgrading). Keep the original Depot YAML until export.
 
 ## Client connection

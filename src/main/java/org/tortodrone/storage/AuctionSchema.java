@@ -31,4 +31,20 @@ final class AuctionSchema {
             s.execute("ALTER TABLE town_mail ADD COLUMN auction INTEGER REFERENCES town_auctions(id)");
         }
     }
+    /** Schema 16 adds player-to-player mail beside auction settlement and friend requests.
+     *  Every step is guarded because a schema-9 fixture may already carry the newer columns. */
+    static void mailColumns(Connection c)throws SQLException {
+        for(String[] column:new String[][]{
+            {"sender","INTEGER"},
+            {"energy","INTEGER NOT NULL DEFAULT 0 CHECK(energy BETWEEN 0 AND 2147483647)"},
+            {"attachments","TEXT"},
+            {"mail_type","INTEGER NOT NULL DEFAULT 3 CHECK(mail_type BETWEEN 0 AND 4)"}}){
+            try(var check=c.createStatement();var r=check.executeQuery("SELECT 1 FROM pragma_table_info('town_mail') WHERE name='"+column[0]+"'")){
+                if(r.next())continue;
+            }
+            try(var s=c.createStatement()){s.execute("ALTER TABLE town_mail ADD COLUMN "+column[0]+" "+column[1]);}
+        }
+        // Existing friend requests predate the stored type column.
+        try(var s=c.prepareStatement("UPDATE town_mail SET mail_type=1 WHERE id IN(SELECT CAST(substr(key,16) AS INTEGER) FROM metadata WHERE key LIKE 'social.request.%')")){s.executeUpdate();}
+    }
 }

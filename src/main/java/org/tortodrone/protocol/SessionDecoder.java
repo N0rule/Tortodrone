@@ -39,6 +39,10 @@ public final class SessionDecoder {
     public record Listener(String type, short requestId) { }
     public record EnumValue(String type, int ordinal) { }
     public record AuctionSearch(boolean featured,EnumValue group,java.util.Set<Integer> configs,int sort,boolean ascending,boolean all) { }
+    /** Player mail as the stock Uplink.deliver call streams it: item id repeated per unit. */
+    public record SentMail(String recipient,String subject,String body,Map<Long,Integer> items,int crowns,int energy) {
+        public SentMail { items = Map.copyOf(items); }
+    }
     /** Stock ConfigReference: an interned config name plus its streamed argument map. */
     public record ConfigReference(String name, Map<String,Object> arguments) {
         public ConfigReference {
@@ -164,6 +168,7 @@ public final class SessionDecoder {
             case "com.threerings.projectx.auction.data.Duration" -> enumeration(in,type,10);
             case "com.threerings.projectx.auction.data.Search$Sort" -> enumeration(in,type,6);
             case "com.threerings.projectx.auction.data.Search" -> auctionSearch(in,depth);
+            case "com.threerings.projectx.uplink.data.SentMail" -> sentMail(in,depth);
             case "com.threerings.config.ConfigReference" -> configReference(in,depth);
             case "com.threerings.config.ArgumentMap" -> argumentEntries(in,depth);
             case "com.threerings.presents.dobj.DSet", "com.threerings.util.StreamableArrayList", "java.util.List", "java.util.Set", "java.util.ArrayList", "java.util.HashSet", "java.util.LinkedHashSet" -> values(in, depth);
@@ -194,6 +199,22 @@ public final class SessionDecoder {
         Object sort=value(in,depth+1);check(group==null||group instanceof EnumValue&&((EnumValue)group).type().equals("com.threerings.projectx.item.data.ItemCodes$Group"),"Invalid auction group");
         check(sort==null||sort instanceof EnumValue&&((EnumValue)sort).type().equals("com.threerings.projectx.auction.data.Search$Sort"),"Invalid auction sort");
         return new AuctionSearch(featured,(EnumValue)group,configs==null?null:java.util.Set.copyOf(configs),sort==null?0:((EnumValue)sort).ordinal(),present(in),present(in));
+    }
+    /** Name, subject, body, Multiset&lt;Long&gt; item ids, crowns, energy, in that streamed order. */
+    private SentMail sentMail(DataInputStream in,int depth)throws IOException {
+        Object recipient=value(in,depth+1);
+        check(recipient==null||recipient instanceof String,"Invalid mail recipient");
+        String subject=string(in),body=string(in);
+        var items=new LinkedHashMap<Long,Integer>();
+        if(present(in)){
+            int size=count(in);
+            for(int i=0;i<size;i++){
+                Object entry=value(in,depth+1);int number=in.readInt();
+                check(entry instanceof Long&&number>0&&number<=9999
+                    &&items.put((Long)entry,number)==null,"Invalid mail items");
+            }
+        }
+        return new SentMail((String)recipient,subject,body,items,in.readInt(),in.readInt());
     }
     private SessionDecoder.ConfigReference configReference(DataInputStream in,int depth)throws IOException {
         String name=intern(in);

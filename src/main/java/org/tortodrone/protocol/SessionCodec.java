@@ -184,7 +184,7 @@ public final class SessionCodec {
                 for(int i=0;i<5;i++)out.writeInt(0);
                 emptyObjectArray(out,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
             } else emptyDSet(out);
-            out.writeInt(0); out.writeInt(0); out.writeFloat(.1f); // mail fees, recovered auction sale fee
+            out.writeInt(org.tortodrone.storage.AuctionHouse.MAIL_FEE); out.writeInt(org.tortodrone.storage.AuctionHouse.MAIL_ATTACH_FEE); out.writeFloat(.1f); // mail fees, recovered auction sale fee
             out.writeLong(0); string(out, null); emptyCollection(out); // reboot, disabled achievements
             out.writeFloat(0); emptyCollection(out); emptyCollection(out); // surveys, missions, scope vars
             out.writeBoolean(false); out.writeBoolean(false); emptyCollection(out); // love, uploads, events
@@ -692,8 +692,8 @@ public final class SessionCodec {
         else if(value instanceof org.tortodrone.town.AuctionState.Update update){type(out,"com.threerings.projectx.auction.data.ListingUpdate");listing(out,update.listing());string(out,update.message());}
         else if(value instanceof org.tortodrone.town.AuctionState.Mail m){type(out,"com.threerings.projectx.uplink.data.ReceivedMail");out.writeLong(m.id());name(out,m.sender());out.writeLong(m.sent());string(out,auctionMailText(m.subject()));string(out,auctionMailText(m.body()));
             if(m.friendRequest()){type(out,"com.threerings.projectx.uplink.data.FriendRequest");out.writeInt(m.friendWorld());}
-            else if(m.claimed()||m.item()==null&&m.crowns()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
-                out.writeBoolean(m.item()!=null);if(m.item()!=null){out.writeInt(1);value(out,new StarterCatalog.Model(m.item().config(),Map.of()));out.writeInt(m.item().count());}out.writeInt(m.crowns());out.writeInt(0);}
+            else if(m.claimed()||m.items().isEmpty()&&m.crowns()==0&&m.energy()==0)out.writeShort(0);else{type(out,"com.threerings.projectx.uplink.data.MultiAttachment");
+                out.writeBoolean(!m.items().isEmpty());if(!m.items().isEmpty()){out.writeInt(m.items().size());for(var item:m.items()){value(out,new StarterCatalog.Model(item.config(),Map.of()));out.writeInt(item.count());}}out.writeInt(m.crowns());out.writeInt(m.energy());}
             value(out,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));out.writeByte((m.read()?0:1)|(m.claimed()?2:0));
         }else value(out,value);
     }
@@ -1061,7 +1061,7 @@ public final class SessionCodec {
     private void attribute(DataOutputStream out,int oid,String field,Writer writer)throws IOException {
         type(out,"com.threerings.presents.dobj.AttributeChangedEvent");out.writeInt(oid);string(out,field);writer.write(out);
     }
-    private void name(DataOutputStream out,String name)throws IOException{type(out,"com.threerings.util.Name");string(out,name);}
+    private void name(DataOutputStream out,String name)throws IOException{if(name==null){out.writeShort(0);return;}type(out,"com.threerings.util.Name");string(out,name);}
     private void longs(DataOutputStream out,long[] values)throws IOException{type(out,"[J");out.writeInt(values.length);for(long v:values)out.writeLong(v);}
     private static void primitiveInts(DataOutputStream out,int[] values)throws IOException{out.writeBoolean(values!=null);if(values==null)return;out.writeInt(values.length);for(int v:values)out.writeInt(v);}
     private void items(DataOutputStream out,Knight knight,WorldProfile profile)throws IOException {

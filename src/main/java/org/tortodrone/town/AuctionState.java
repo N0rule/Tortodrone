@@ -14,10 +14,32 @@ public final class AuctionState {
     }
     public record Page(int pages,List<Listing> listings){public Page{listings=List.copyOf(listings);}}
     public record Update(Listing listing,String message) { }
-    public record Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,boolean claimed,boolean read,int friendWorld,String friendName) {
-        public Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,boolean claimed,boolean read){this(id,world,sent,subject,body,crowns,item,claimed,read,0,null);}
+    /**
+     * One inbox row. {@code sender} is a knight's world id, or {@code -ordinal} for a
+     * {@code SystemSender} (mail uses the default auction-house sender when it is zero), and
+     * {@code items} holds both an auction's single escrow item and a player mail's attachments.
+     */
+    public record Mail(long id,int world,long sent,String subject,String body,int crowns,int energy,
+            List<WorldProfile.Item> items,boolean claimed,boolean read,int friendWorld,String friendName,
+            int senderRef,int type,String senderName) {
+        public Mail {
+            items=List.copyOf(items);
+            if(type<0||type>4)throw new IllegalArgumentException("Invalid mail type");
+        }
+        public Mail(long id,int world,long sent,String subject,String body,int crowns,WorldProfile.Item item,
+                boolean claimed,boolean read,int friendWorld,String friendName) {
+            this(id,world,sent,subject,body,crowns,0,item==null?List.of():List.of(item),claimed,read,friendWorld,friendName,0,3,null);
+        }
         public boolean friendRequest(){return friendWorld>0;}
-        public String sender(){return friendRequest()?friendName:" 7";}
-        public int nativeType(){return friendRequest()?1:3;}
+        /** First attachment, kept for auction and legacy callers. Player mail can carry more. */
+        public WorldProfile.Item item(){return items.isEmpty()?null:items.getFirst();}
+        public String sender(){
+            if(friendRequest())return friendName;
+            if(senderRef<0)return " "+(-senderRef);
+            if(senderRef>0)return senderName;
+            return " 7";
+        }
+        /** Friend requests keep their own wire type; all other mail carries the stored kind. */
+        public int nativeType(){return friendRequest()?1:type;}
     }
 }
