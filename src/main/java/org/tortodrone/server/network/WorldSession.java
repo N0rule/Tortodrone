@@ -20,7 +20,15 @@ final class WorldSession implements AutoCloseable {
     private final Map<Integer,SceneChat.Membership> channelChats=new HashMap<>();
     private List<SessionCodec.FriendView> publishedFriends=List.of();
     private volatile boolean friendOnline;
-    private volatile String friendLocation="~";
+    private volatile FriendPresence friendLocation=new FriendPresence("~",0,0);
+    record FriendPresence(String location,int zone,int instance) { }
+    /** Per-knight-session join secret published through PlayerObject.ML(); never persisted. */
+    private static final java.security.SecureRandom SECRETS=new java.security.SecureRandom();
+    private final long externalSecret=mintSecret();
+    private volatile boolean lookingForGroup;
+    private volatile int lookingForGroupDifficulty=-1;
+    private volatile boolean lookingForGroupAnyLanguage;
+    private static long mintSecret(){long value;do{value=SECRETS.nextLong();}while(value==0);return value;}
     private PlayerTrades trades;
     private PlayerTrades.Member tradeMember;
     private final Socket socket;
@@ -283,37 +291,131 @@ final class WorldSession implements AutoCloseable {
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
     }
 
-    synchronized boolean friendInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.service()!=12||(request.method()!=1&&request.method()!=2))return false;
+    boolean friendInvocation(SessionDecoder.Invocation request)throws IOException {
+        int method=request.method();
         // The friend service shares service 12 with scene chat. Scene chat addresses the scene
         // object (not the global invocation object), so anything without the global oid is not a
         // friend request and must fall through to the chat dispatcher instead of being rejected.
-        if(request.oid()!=SessionCodec.INVOCATION_OID)return false;
-        var args=request.arguments();boolean invite=request.method()==1;
-        if(args.size()!=(invite?4:2)||!(args.getFirst() instanceof String name)
-                ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")
-                ||invite&&(!(args.get(1) instanceof String)||!(args.get(2) instanceof String)))throw new SessionDecoder.Rejected("Invalid friend-list request");
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=12||!Set.of(1,2,3,4,6).contains(method))return false;
+        var args=request.arguments();
+        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid friend-list listener");
+        boolean valid=switch(method){
+            case 1->args.size()==4&&args.get(0) instanceof String&&args.get(1) instanceof String&&args.get(2) instanceof String;
+            case 2,6->args.size()==2&&args.get(0) instanceof String;
+            // joinOrSpectate: the secret is PlayerObject.ML(), spectate is carried but unobserved.
+            case 3->args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Boolean;
+            // setLookingForGroup: the client sends the inverted toggle, the saved difficulty and
+            // the saved party_with_any preference. Only the toggle has player-visible behavior.
+            case 4->args.size()==4&&args.get(0) instanceof Boolean
+                &&(args.get(1)==null||args.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(DIFFICULTY))
+                &&args.get(2) instanceof Boolean;
+            default->false;
+        };
+        if(!valid)throw new SessionDecoder.Rejected("Invalid friend-list arguments");
         try {
-            if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
-            var friends=characters.friends();
-            if(invite){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));}
-            else {friends.remove(characters.accountId(),knight.id(),authRevision,name);profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));}
+            switch(method){
+                case 2->joinFriend((String)args.get(0));
+                case 3->joinBySecret((String)args.get(0),(Boolean)args.get(1));
+                case 4->setLookingForGroup((Boolean)args.get(0),(SessionDecoder.EnumValue)args.get(1),(Boolean)args.get(2));
+                default->{synchronized(this){
+                    requireFriendReady();var friends=characters.friends();String name=(String)args.get(0);
+                    if(method==1){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));}
+                    else{friends.remove(characters.accountId(),knight.id(),authRevision,name);profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));}
+                }}
+            }
             output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
         return true;
     }
+    private static final String DIFFICULTY="com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty";
+    private static String friendUnjoinable(String name){return "%social:m.friend_unjoinable|~"+name;}
+    /** Native method 2: relationship-authorized travel, rechecked after the peer is captured. */
+    private void joinFriend(String name)throws IOException {
+        int target;
+        synchronized(this){requireFriendReady();target=friendNamed(name);}
+        WorldSession peer;
+        synchronized(ACTIVE){peer=ACTIVE.get(target);}
+        if(peer==null||peer==this||peer.scenes!=scenes||!peer.characters.worldStorageFile().equals(characters.worldStorageFile()))throw new IOException(friendUnjoinable(name));
+        // Like archive joinPlayerInstance: capture the ready target, then transfer on the
+        // caller. Never acquire both session monitors; recheck presence before departure.
+        var location=peer.adminLocation();var presence=peer.friendLocation;
+        synchronized(this){
+            requireFriendReady();if(friendNamed(name)!=target||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
+                    ||!location.scene().map().town()||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
+            if(scene!=location.scene())adminTravel(location);
+        }
+    }
+    /** Native method 3: the per-session join secret authorizes travel without a friendship. */
+    private void joinBySecret(String secret,boolean spectate)throws IOException {
+        synchronized(this){requireFriendReady();}
+        int comma=secret.lastIndexOf(',');
+        if(comma<1||secret.length()-comma-1!=16)throw new IOException("%social:m.internal_error");
+        long claimed;
+        try{claimed=Long.parseUnsignedLong(secret.substring(comma+1),16);}catch(NumberFormatException invalid){throw new IOException("%social:m.internal_error");}
+        String name=secret.substring(0,comma);
+        if(name.equalsIgnoreCase(knight.name()))throw new IOException("%social:m.friend_self");
+        List<WorldSession> candidates;
+        synchronized(ACTIVE){
+            candidates=ACTIVE.values().stream().filter(s->s.friendOnline&&!s.socket.isClosed()&&s.scenes==scenes
+                &&s.characters.hasWorldStorage()&&s.characters.worldStorageFile().equals(characters.worldStorageFile())).toList();
+        }
+        WorldSession peer=null;int target=0;
+        for(var candidate:candidates){
+            var identity=candidate.identity();
+            if(identity!=null&&identity.knight().equalsIgnoreCase(name)){peer=candidate;target=identity.worldId();break;}
+        }
+        // A forged secret must not learn whether the knight it names is joinable.
+        if(peer==null||peer.externalSecret!=claimed)throw new IOException(friendUnjoinable(name));
+        // Neither shipped 2026 sender sets spectate; the archive refuses a spectator through
+        // joinability anyway, so the flag is carried and has no separate destination here.
+        if(spectate&&log.debugEnabled())log.debug("joinOrSpectate arrived with spectate=true; joining as usual");
+        var location=peer.adminLocation();var presence=peer.friendLocation;
+        synchronized(this){
+            requireFriendReady();
+            if(peer!=ACTIVE.get(target)||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
+                    ||!location.scene().map().town()||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
+            if(scene!=location.scene())adminTravel(location);
+        }
+    }
+    /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
+    private void setLookingForGroup(boolean enabled,SessionDecoder.EnumValue difficulty,boolean anyLanguage)throws IOException {
+        synchronized(this){
+            if(closed||!selected())throw new IOException("Select a knight first");
+            try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+            if((profile.progress().progressFlags()&4)==0)throw new IOException("m.internal_error");
+            lookingForGroupDifficulty=enabled&&difficulty!=null?difficulty.ordinal():-1;
+            lookingForGroupAnyLanguage=enabled&&anyLanguage;
+            lookingForGroup=enabled;
+            if(log.debugEnabled())log.debug("Party finder "+(enabled?"enabled":"disabled")+"; difficulty="+lookingForGroupDifficulty+"; anyLanguage="+lookingForGroupAnyLanguage);
+            output.send(()->codec.lookingForGroup(oid,enabled));
+        }
+    }
+    private void requireFriendReady()throws IOException {
+        if(closed||!selected()||!entered||!subscribed||portalMove!=null||deferredMove!=null)throw new IOException("Enter a scene first");
+        try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+    }
+    private int friendNamed(String name)throws IOException {
+        return characters.friends().list(characters.accountId(),knight.id(),authRevision).stream().filter(p->p.name().equalsIgnoreCase(name))
+            .mapToInt(org.tortodrone.storage.FriendStore.Peer::world).findFirst().orElseThrow(()->new IOException("m.internal_error"));
+    }
 
+    long externalSecret(){return externalSecret;}
+    boolean lookingForGroup(){return lookingForGroup;}
+    private record Identity(int worldId,String knight) { }
+    /** Snapshot taken under the session monitor, never under ACTIVE (close locks in that order). */
+    private synchronized Identity identity(){return knight==null||profile==null?null:new Identity(profile.worldId(),knight.name());}
     /** Only volatile presence is read under ACTIVE; no peer session monitor is acquired. */
-    static Map<Integer,String> friendPresence(java.nio.file.Path storage) {
-        var result=new HashMap<Integer,String>();
+    static Map<Integer,FriendPresence> friendPresence(java.nio.file.Path storage) {
+        var result=new HashMap<Integer,FriendPresence>();
         synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.friendLocation);}}
         return Map.copyOf(result);
     }
-    synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,String> online)throws IOException {
+    synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,FriendPresence> online)throws IOException {
         if(closed||!selected()||registration!=null&&persistence!=registration)return;
         if(snapshot.authentication().getOrDefault(profile.worldId(),-1L)!=authRevision)throw new IOException("Knight or account changed; reconnect");
         if(snapshot.revisions().getOrDefault(profile.worldId(),-1L)<profile.revision())return;
-        var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.get(p.world()),p.lastSession())).toList();
+        var next=snapshot.lists().getOrDefault(profile.worldId(),List.of()).stream().map(p->new SessionCodec.FriendView(p.world(),p.name(),p.color(),online.containsKey(p.world())?online.get(p.world()).location():null,p.lastSession(),online.containsKey(p.world())?online.get(p.world()).zone():0,online.containsKey(p.world())?online.get(p.world()).instance():0)).toList();
         if(!next.equals(publishedFriends)){var previous=publishedFriends;output.send(()->codec.friends(oid,previous,next));publishedFriends=next;}
     }
 
@@ -1257,7 +1359,7 @@ final class WorldSession implements AutoCloseable {
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
-        friendLocation=scene.map().name();
+        friendLocation=new FriendPresence(scene.map().name(),scene.map().zone(),scene.map().town()?scene.oid():0);
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);
@@ -1465,7 +1567,7 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.chat(message.personal()?oid:scene.map().town()?place:partyOid(),message));return true;
     }
     private void leaveChat(){
-        friendLocation="~";
+        friendLocation=new FriendPresence("~",0,0);
         townDialog=null;townSource=null;townService++;
         if(tradeMember!=null){trades.leave(tradeMember);tradeMember=null;}
         if(chat!=null){chat.close();chat=null;}

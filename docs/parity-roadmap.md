@@ -32,7 +32,7 @@ sequence.
 | 2 | **Monster loot drops + loot tables** | Combat currently has no reward loop; general drops are absent from `SceneEntities`/`SceneSimulation` | M | Medium | `world/SceneSimulation`, `world/SceneEntities`, `loot/`, `storage/` |
 | 3 | **Enemy AI basics: line-of-sight, leashing, obstacle avoidance** | Acquisition/chase exists but no LOS or pathfinding; encounters feel wrong in every non-trivial room | M–L | Medium | `world/SceneEntities` (`acquire-distance`, `acquisition-interval`, `move`) |
 | 4 | **Combat fidelity: item-level damage bonuses and status resistance** | The docs list these as incomplete; they affect every fight and every gear choice | M | Medium | `world/SceneDamage`, `world/SceneHealth`, `town/GearRules`, fire catalogs |
-| 5 | **Party persistence + join a friend's scene** | Parties reset on reconnect and friends cannot meet; both are core social expectations | M | Medium | `world/PartyRegistry`, `storage/FriendStore`, `WorldSession` presence |
+| 5 | **Party persistence + join a friend's scene** | Done: friends travel by relationship or native secret, and player parties survive a brief reconnect | S | Low | `world/PartyRegistry`, `storage/FriendStore`, `WorldSession` presence |
 | 6 | **Vendor/catalog reachability audit** | 99 stations, 59 `OpenShop`, but only 20 curated catalogs; some vendors are known to be thin | S–M | Low | `content/town/stations.yml`, `content/town/shops.yml`, `town/TownCatalog` |
 | 7 | **Forge bonus/prize policy** | Forge chances are data-driven but official bonus/prize rules are not; decide "verified table" vs "explicit uniform policy" | S–M | Low | `town/GearRules`, `content/town/progression.yml` |
 | 8 | **Fill service 2/7/8 only where observed** | Generic failures are harmless until the client exercises them; instrument first, then implement | S–M | Low | `server/network/ClientSession`, `protocol/SessionCodec` |
@@ -87,8 +87,9 @@ sequence.
    acceptance sweep, vendor reachability audit. Cheap, reduces risk.
 2. **Milestone B — combat loop.** Loot drops, AI basics, damage/status fidelity.
    This is the biggest player-visible gain in scope.
-3. **Milestone C — social/economy depth.** Party persistence,
-   join-friend. Reuses existing durable primitives.
+3. **Milestone C — social/economy depth.** Party matchmaking/ready room and
+   the party-finder matcher. Friend travel, secret join and party reconnect
+   are already in place.
 4. **Milestone D — optional large systems.** Guilds, events, PvP, sprite depth,
    persistence. Only after A–C are stable and verified.
 

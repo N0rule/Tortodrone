@@ -22,11 +22,27 @@ public final class PartyRegistry {
         private final Consumer<Event> endpoint;
         private Party party;private int order;private boolean town=true;
         private Member(int oid,Knight knight,WorldProfile profile,Consumer<Event> endpoint){playerOid=oid;worldId=profile.worldId();this.knight=knight;this.profile=profile;this.endpoint=endpoint;}
-        @Override public void close(){synchronized(PartyRegistry.this){if(online.remove(worldId,this)){invalidate(this);remove(this,false);}}}
+        /**
+         * A disconnected player keeps a rejoin claim for a short grace window. Training groups
+         * are automatic matchmaking, not a player party, so they release the seat immediately.
+         */
+        @Override public void close(){synchronized(PartyRegistry.this){
+            if(!online.remove(worldId,this))return;
+            invalidate(this);
+            var old=party;
+            if(old==null)return;
+            old.members.remove(this);old.revision++;this.party=null;
+            if(old.members.isEmpty())training.remove(old);
+            if(!old.automatic)detached.put(worldId,new Detached(old,clock.getAsLong()+RECONNECT_GRACE_NANOS));
+            if(!old.members.isEmpty())publish(old);
+        }}
     }
     private static final class Party {final int oid;long revision;int nextOrder;boolean shared,automatic;final LinkedHashSet<Member> members=new LinkedHashSet<>();Party(int oid){this.oid=oid;} }
     private record Invite(Member target,Member sender,Party party,long expires) { }
+    private record Detached(Party party,long expires) { }
+    private static final long RECONNECT_GRACE_NANOS=120_000_000_000L;
     private final Map<Integer,Member> online=new HashMap<>();
+    private final Map<Integer,Detached> detached=new HashMap<>();
     private final LinkedHashSet<Party> training=new LinkedHashSet<>();
     private final Map<Member,Map<Integer,Invite>> invitations=new HashMap<>();
     private final LongSupplier clock;
@@ -34,9 +50,16 @@ public final class PartyRegistry {
     public PartyRegistry(){this(System::nanoTime);}
     public PartyRegistry(LongSupplier clock){this.clock=Objects.requireNonNull(clock);}
     public synchronized Member join(int oid,Knight knight,WorldProfile profile,Consumer<Event> endpoint)throws IOException {
+        purge();
         if(online.containsKey(profile.worldId()))throw new IOException("Knight already has a party session");
-        var member=new Member(oid,knight,profile,Objects.requireNonNull(endpoint));online.put(member.worldId,member);solo(member);return member;
+        var member=new Member(oid,knight,profile,Objects.requireNonNull(endpoint));online.put(member.worldId,member);
+        var prior=detached.remove(member.worldId);
+        if(prior!=null&&prior.party().members.size()<CAPACITY){
+            var party=prior.party();member.party=party;member.order=party.nextOrder++;party.members.add(member);party.revision++;publish(party);
+        }else solo(member);
+        return member;
     }
+    private void purge(){long now=clock.getAsLong();detached.values().removeIf(claim->now>=claim.expires());}
     private void solo(Member member){if(nextOid==Integer.MAX_VALUE)throw new IllegalStateException("Party identity space exhausted");var p=new Party(nextOid++);p.members.add(member);member.party=p;member.order=p.nextOrder++;member.endpoint.accept(new Refresh());}
     /** Public Training groups have no player-controlled leader or invitation rights. */
     public synchronized void enterTraining(Member member)throws IOException {
@@ -53,7 +76,7 @@ public final class PartyRegistry {
         remove(member,true);
     }
     private void require(Member member)throws IOException{if(member==null||online.get(member.worldId)!=member)throw new IOException("Party session is no longer current");}
-    public synchronized View view(Member member)throws IOException{require(member);return view(member.party);}
+    public synchronized View view(Member member)throws IOException{purge();require(member);return view(member.party);}
     private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic);}
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}

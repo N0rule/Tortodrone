@@ -77,7 +77,8 @@ final class ClientSession {
                                 subscription = characters.subscribe(
                                     roster -> {
                                         output.send(() -> outgoing.player(request.messageId(), clientOid,
-                                            characters.accountId(), characters.username(), receivers, roster,gameMaster));
+                                            characters.accountId(), characters.username(), receivers, roster,gameMaster,
+                                            world.externalSecret(),world.lookingForGroup()));
                                     },
                                     roster -> output.send(() -> outgoing.rosterChanged(clientOid, roster)));
                                 world.refresh();

@@ -116,6 +116,11 @@ public final class SessionCodec {
     }
     public byte[] player(short messageId, int oid, int playerId, String username,
             Map<String, Short> receivers, List<CharacterStore.RosterEntry> knights, boolean gameMaster) throws IOException {
+        return player(messageId,oid,playerId,username,receivers,knights,gameMaster,0,false);
+    }
+    public byte[] player(short messageId, int oid, int playerId, String username,
+            Map<String, Short> receivers, List<CharacterStore.RosterEntry> knights, boolean gameMaster,
+            long externalSecret, boolean lookingForGroup) throws IOException {
         return frame(out -> {
             objectHeader(out, messageId, "com.threerings.projectx.data.PlayerObject", oid);
             type(out, "com.threerings.util.Name"); string(out, username);
@@ -150,10 +155,10 @@ public final class SessionCodec {
             out.writeShort(0); out.writeShort(0); out.writeShort(0); // PvP signup/game, equip policy
             out.writeBoolean(false); out.writeInt(0); emptyCollection(out); // outbid, progress, promotions
             emptyDSet(out); emptyDSet(out); out.writeShort(0); // objectives, memories, stats
-            out.writeBoolean(false); out.writeLong(0); emptyCollection(out); // Steam voice, external secret, rewards
+            out.writeBoolean(false); out.writeLong(externalSecret); emptyCollection(out); // Steam voice, external secret, rewards
             out.writeShort(0); emptyDSet(out); // whereabouts, mission completions
             emptyCollection(out); emptyCollection(out); out.writeShort(0); // expansions, mission tests, rank
-            out.writeInt(0); out.writeBoolean(false); emptyCollection(out); // prestige, LFG, saved colors
+            out.writeInt(0); out.writeBoolean(lookingForGroup); emptyCollection(out); // prestige, LFG, saved colors
             emptyObjectArray(out, "com.threerings.projectx.data.ProjectXCodes$EyeType", true);
             emptyObjectArray(out, "com.threerings.projectx.data.ProjectXCodes$KnightHeight", true);
             out.writeInt(0); // item acquisition delay
@@ -276,7 +281,9 @@ public final class SessionCodec {
             out.writeShort(requestId); out.writeByte(0);
             out.writeBoolean(true); out.writeInt(1);
             // MessageBundle treats a leading tilde as literal text; known stock keys translate.
-            type(out, "java.lang.String"); out.writeUTF(reason != null && (reason.matches("m\\.[a-z0-9_]+")||reason.equals("e.not_use_busy")) ? reason : "~" + reason);
+            // Qualified keys (%bundle:key|~arg) resolve through MessageUtil.qualify and must
+            // keep their prefix or the client would print the whole compound key literally.
+            type(out, "java.lang.String"); out.writeUTF(reason != null && (reason.startsWith("%")||reason.matches("m\\.[a-z0-9_]+")||reason.equals("e.not_use_busy")) ? reason : "~" + reason);
         });
     }
 
@@ -344,6 +351,11 @@ public final class SessionCodec {
             attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt(32|(enabled?256:0)|(inspectionHidden?1024:0));});
             attribute(out,clientOid,"tokens",o->{type(o,"com.threerings.projectx.data.ProjectXTokenRing");o.writeInt(enabled?8:0);});
         });
+    }
+
+    /** The native HUD redraws its party-finder toggle from this attribute, never from the request. */
+    public byte[] lookingForGroup(int oid,boolean lookingForGroup)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"lfg");value(out,lookingForGroup);});
     }
 
     /** Stock ResultListener payload; only equipped items or their visible appearance leave the owner. */
@@ -559,7 +571,9 @@ public final class SessionCodec {
             type(out,"com.threerings.projectx.social.data.Notification$TradeRequest");name(out,sender);
         }else {eventHeader(out,"EntryRemovedEvent",playerOid);string(out,"notifications");value(out,"TRADE_REQ:"+sender);}});
     }
-    public record FriendView(int world,String name,int color,String location,long lastSession) { }
+    public record FriendView(int world,String name,int color,String location,long lastSession,int zone,int instance) {
+        public FriendView(int world,String name,int color,String location,long lastSession){this(world,name,color,location,lastSession,0,0);}
+    }
     /** Native social UI observes entry events, including online/offline changes and renames. */
     public byte[] friends(int oid,List<FriendView> before,List<FriendView> after)throws IOException {
         var previous=new java.util.TreeMap<String,FriendView>(String.CASE_INSENSITIVE_ORDER);for(var friend:before)previous.put(friend.name(),friend);
@@ -569,7 +583,7 @@ public final class SessionCodec {
         for(var friend:after)if(!friend.equals(previous.get(friend.name())))events.add(out->{partyEntry(out,oid,"friends",previous.containsKey(friend.name())?"EntryUpdatedEvent":"EntryAddedEvent");
             type(out,"com.threerings.projectx.social.data.FriendEntry");name(out,friend.name());out.writeInt(friend.world());
             if(friend.location()==null){type(out,"com.threerings.projectx.social.data.Whereabouts$Offline");out.writeLong(friend.lastSession());}
-            else {type(out,"com.threerings.projectx.social.data.Whereabouts$Online");string(out,friend.location());out.writeInt(0);out.writeInt(0);}
+            else {type(out,"com.threerings.projectx.social.data.Whereabouts$Online");string(out,friend.location());out.writeInt(friend.zone());out.writeInt(friend.instance());}
             out.writeInt(friend.color());
         });
         return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(events.size());for(var event:events)event.write(out);});
@@ -818,9 +832,10 @@ public final class SessionCodec {
     }
     public byte[] sceneLocation(int oid,SceneRegistry.Instance scene)throws IOException{return sceneLocation(oid,scene,0,0);}
     public byte[] sceneLocation(int oid,SceneRegistry.Instance scene,int general,int trade) throws IOException {
-        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?5:4);
+        return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?6:5);
             if(scene.map().town())attribute(out,oid,"lastTownSceneId",o->value(o,scene.map().id()));
             attribute(out,oid,"zoneId",o->value(o,scene.map().zone()));
+            attribute(out,oid,"instanceId",o->value(o,scene.map().town()?scene.oid():0));
             attribute(out,oid,"zoneGeneralOid",o->value(o,general));attribute(out,oid,"zoneTradeOid",o->value(o,trade));
             attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(scene.oid());o.writeInt(scene.map().id());}); });
     }

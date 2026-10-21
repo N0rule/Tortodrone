@@ -19,6 +19,27 @@ public class PartyRegistryTest {
             parties.invite(a,"Knight-C");c.close();try(var reconnect=member(parties,3)){refused(()->parties.respond(reconnect,"PARTY_INV:"+party,1));}
             a.close();check(parties.view(b).members().size()==1&&parties.owner(b,2)==party,"leader disconnect preserves the remaining member's party and ownership");
         }
+        long[] grace={0};var persistent=new PartyRegistry(()->grace[0]);
+        try(var a=member(persistent,1);var b=member(persistent,2)){
+            persistent.invite(a,"Knight-B");persistent.respond(b,"PARTY_INV:"+persistent.view(a).oid(),1);int party=persistent.view(a).oid();
+            a.close();check(persistent.view(b).members().size()==1&&persistent.owner(b,2)==party,"a disconnected seat leaves the active party intact");
+            try(var again=member(persistent,1)){
+                check(persistent.view(again).oid()==party&&persistent.view(again).members().size()==2,"reconnect inside the grace window rejoins the same party");
+                refused(()->persistent.boot(again,"Knight-B"));persistent.boot(b,"Knight-A");
+                check(persistent.view(b).members().size()==1,"the reconnected member does not displace the active leader");
+            }
+        }
+        long[] late={0};var expiring=new PartyRegistry(()->late[0]);
+        try(var a=member(expiring,1);var b=member(expiring,2)){
+            expiring.invite(a,"Knight-B");expiring.respond(b,"PARTY_INV:"+expiring.view(a).oid(),1);int party=expiring.view(a).oid();
+            b.close();late[0]=120_000_000_000L;
+            try(var again=member(expiring,2)){check(expiring.view(again).oid()!=party,"an expired reconnect starts a fresh party");}
+        }
+        var automatic=new PartyRegistry();
+        try(var a=member(automatic,1)){
+            automatic.enterTraining(a);int group=automatic.view(a).oid();a.close();
+            try(var again=member(automatic,1)){check(automatic.view(again).oid()!=group,"Training groups never hold a disconnected seat");}
+        }
         var capacity=new PartyRegistry();var members=new ArrayList<PartyRegistry.Member>();
         try{
             for(int id=1;id<=9;id++)members.add(member(capacity,id));var leader=members.getFirst();int oid=capacity.view(leader).oid();
@@ -55,7 +76,7 @@ public class PartyRegistryTest {
             var labA=publicScenes.destination(30893,1,visitors.get(0));var labB=publicScenes.destination(30893,2,visitors.get(1));
             check(labA!=labB,"Laboratory allocation stays per knight");publicScenes.release(labA,1);publicScenes.release(labB,2);
         }finally{visitors.forEach(PartyRegistry.Member::close);}
-        System.out.println("PASS: invite authorization/decline/expiry, reconnect invalidation, leader succession, shared/private ownership and lease cleanup");
+        System.out.println("PASS: invite authorization/decline/expiry, reconnect invalidation, disconnected-party grace/expiry, Training seat release, leader succession, shared/private ownership and lease cleanup");
     }
     private static PartyRegistry.Member member(PartyRegistry p,int id)throws IOException{return p.join(1000+id,new Knight(1,"Knight-"+(char)('A'+id-1),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),new WorldProfile(id,id,1,0,0,1,List.of()),e->{});}
     @FunctionalInterface private interface Operation{void run()throws Exception;}
