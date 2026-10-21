@@ -404,6 +404,19 @@ not claim to replace every native animation or implement missing game logic.
 Lockboxes and Prize Boxes retain their current indexed/grant support and opening
 limitations: this refactor adds no opening, loot selection or reward behavior.
 
+Item status damage also applies to scene enemies, including status-only hits.
+The 33 chemical bomb variants retain their separate blast and repeating cloud
+areas, recovered from the stock actor parameters corroborated by reference inputs's
+`actor.xml`; their damage areas are independent of the point-shaped actor.
+Enemy stun scales attack land, duration and rearm using the speed captured when
+the attack starts; freeze prevents turning, and poison suppresses regeneration.
+`EnemyItemStatusTest` exercises the actual bomb, sword and handgun graphs against
+enemies, including cloud edges, damage masks and expiry; `SceneStatusTest` covers
+thrown vials. Production status probabilities and powers remain authored values.
+These checks establish simulation behavior, without new graphical verification.
+Fixed server-only areas without surviving bindings, including some ghost-sword
+and shard opening blasts, remain unrecovered; no radius is guessed for them.
+
 For older unified YAML with native-path keys, migrate the **effective customized**
 content offline into a fresh candidate, never regenerate over your deployment:
 

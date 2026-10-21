@@ -21,7 +21,7 @@ public final class FireCatalogExport {
     private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 4 || args.length==4&&!args[3].equals("--vortex")) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex]]");
+        if (args.length < 2 || args.length > 4 || args.length==4&&!Set.of("--vortex","--status-bombs").contains(args[3])) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex|--status-bombs]]");
         Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
         if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
@@ -33,7 +33,7 @@ public final class FireCatalogExport {
 
         var entries = new ArrayList<AttackFire>();
         var previous=args.length>=3?FireCatalog.load(Path.of(args[2])):null;
-        boolean vortex=args.length==4;
+        boolean vortex=args.length==4&&args[3].equals("--vortex"),statusBombs=args.length==4&&args[3].equals("--status-bombs");
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
@@ -41,7 +41,7 @@ public final class FireCatalogExport {
             if(previous!=null){
                 if(item instanceof ItemConfig.Weapon weapon){
                     var charged=previous.find(config.getName(),290);
-                    if(charged!=null&&(vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
+                    if(charged!=null&&(vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):statusBombs?charged.fireRefs().stream().anyMatch(ref->chemicalCloud(ref.action())):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
                 }
                 continue;
             }
@@ -105,6 +105,12 @@ public final class FireCatalogExport {
 
     private static boolean fragmentation(Action action){
         return action!=null&&(action.actor()!=null&&action.actor().config().name().startsWith("Bomb/Parts/Shard/Bomb (Timer)")||action.children().stream().anyMatch(FireCatalogExport::fragmentation));
+    }
+    private static boolean chemicalCloud(Action action){
+        return action!=null&&(action.actor()!=null&&action.actor().config().name().equals("Bomb/Parts/Chemical (Cloud)")
+            ||action.actor()!=null&&(action.actor().detonation()!=null&&chemicalCloud(action.actor().detonation())
+                ||action.actor().timers().stream().anyMatch(timer->chemicalCloud(timer.action())))
+            ||action.children().stream().anyMatch(FireCatalogExport::chemicalCloud));
     }
 
     private static void addWeapon(ConfigManager manager, String name, ItemConfig.Weapon weapon, List<AttackFire> entries) throws Exception {
@@ -532,6 +538,12 @@ public final class FireCatalogExport {
             if(handler instanceof HandlerConfig.Timer timer&& !refName.equals("Bullet/Sword/Burst Bullet")
                 && !refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")&&!refName.startsWith("Bullet/Handgun/Pulsar/")){
                 Action action=readAction(manager,timer.action);
+                // The chemical bomb clouds keep their pulse damage action, but the
+                // retail client strips the authored region radius from that handler.
+                // Recover it from the actor's existing Radius parameter just as we
+                // do for the one-shot detonation region below.
+                int handlerIndex=Arrays.asList(actor.handlers).indexOf(handler);
+                action=restoreHandlerDamageShape(manager,reference,handlerIndex,action);
                 if(action!=null&&containsDamage(action)){
                     int interval=Math.max(1,(int)(timer.interval*1000)),delay=Math.max(0,interval+(int)(timer.offset*1000));
                     if(refName.equals("Bullet/Sword/Spur (Charged)")){
@@ -620,11 +632,28 @@ public final class FireCatalogExport {
         }
         return action;
     }
+    private static Action restoreHandlerDamageShape(ConfigManager manager,ConfigReference<ActorConfig> reference,int handlerIndex,Action action)throws Exception {
+        if(action==null||handlerIndex<0)return action;
+        var seen=new HashSet<String>();
+        while(reference!=null&&seen.add(reference.getName())){
+            var config=manager.a(ActorConfig.class,reference);if(config==null)break;
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
+                String path="implementation.handlers["+handlerIndex+"].action.region.shape.radius";
+                if(Arrays.asList(direct.paths).contains(path)&&reference.kW().get(direct.name) instanceof Number radius)
+                    action=withShape(action,circle(radius.floatValue()));
+            }
+            reference=config.implementation instanceof ActorConfig.Derived derived?derived.actor:null;
+        }
+        return action;
+    }
+    private static Object circle(float radius)throws IOException {
+        if(!Float.isFinite(radius)||radius<=0)throw new IOException("Invalid configured damage radius: "+radius);
+        var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=radius;return argumentValue(shape);
+    }
     private static Action restoreDetonationCircle(Action action,String path,Object value)throws Exception {
         if(!path.matches("implementation\\.detonation_action(?:\\.actions\\[\\d+\\])?\\.region\\.shape\\.radius")||!(value instanceof Number radius))return action;
         if(!Float.isFinite(radius.floatValue())||radius.floatValue()<=0)throw new IOException("Invalid detonation radius: "+path);
-        var circle=new com.threerings.tudey.shape.config.ShapeConfig.Circle();circle.radius=radius.floatValue();
-        Object shape=argumentValue(circle);
+        Object shape=circle(radius.floatValue());
         var index=java.util.regex.Pattern.compile(".*\\.actions\\[(\\d+)\\].*").matcher(path);
         if(index.matches()){
             int at=Integer.parseInt(index.group(1));

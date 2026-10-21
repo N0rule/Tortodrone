@@ -10,7 +10,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
-        float x,y,rotation,direction,health,speed;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
+        float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
         boolean claimTaken;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         SceneLiftState.Point dropPoint;
@@ -299,7 +299,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             if(e.kind.equals("Pickup")&&e.claim==0)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
-                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.spec.number("health",0),e.health+(float)amount);});
+                e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
                 if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
             }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
@@ -430,20 +430,22 @@ public final class SceneEntities implements SceneWeapons.Targets {
             for(String fire:e.spec.text(prefix+"fires","").split(",")){
                 if(fire.isBlank()||e.fired.contains(fire))continue;
                 String fp=prefix+"fire."+fire+".";
-                int due=e.activityStarted+e.spec.integer(prefix+"land",0)+Math.round(e.spec.integer(fp+"delay",0)/e.spec.number(prefix+"fire-speed",1));
+                int due=e.activityStarted+Math.round((e.spec.integer(prefix+"land",0)+e.spec.integer(fp+"delay",0)/e.spec.number(prefix+"fire-speed",1))/e.attackSpeed);
                 if(stamp>=due){
                     try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text(fp+"action","")));}
                     catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared monster attack",invalid);}
                     e.fired.add(fire);
                 }
             }
-            if(stamp-e.activityStarted>=e.spec.integer(prefix+"clear",0))e.activity=0;
+            if(stamp-e.activityStarted>=Math.round(e.spec.integer(prefix+"clear",0)/e.attackSpeed))e.activity=0;
             return;
         }
-        if(target!=null&&e.activity==0&&slot>=0&&stamp>=e.nextAttack&&nearest<=e.spec.number("attack-distance",0)){
+        if(target!=null&&e.activity==0&&slot>=0&&stamp>=e.nextAttack&&nearest<=e.spec.number("attack-distance",0)&&modifiers.attackSpeed()>0){
             float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return;}
-            e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
-            e.activity=4+slot;e.activityStarted=stamp;e.nextAttack=stamp+e.spec.integer("attack-interval",0);e.fired.clear();return;
+            if(modifiers.canRotate())e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
+            // Native monsters retain the attack's speed until that activity finishes.
+            e.attackSpeed=modifiers.attackSpeed();
+            e.activity=4+slot;e.activityStarted=stamp;e.nextAttack=stamp+Math.round(e.spec.integer("attack-interval",0)/e.attackSpeed);e.fired.clear();return;
         }
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
         e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
