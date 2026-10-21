@@ -55,7 +55,20 @@ public final class SceneItemUseTest {
             fixture.await(s->s.timestamp()>=started+capsule.integer("delay",0)+150);
             check(fixture.member.health().current()==40&&fixture.member.takeUsedItems().isEmpty(),"shock interrupts the pending heal without consuming the capsule");
         }
-        System.out.println("PASS: delayed capsule heal/consumption, duplicate refusal, hurt/shock cancellation and retry");
+        try(var fixture=new Fixture(map)) {
+            String config="Usable/Jar O Fireflies";var baseline=fixture.simulation.snapshot();
+            check(fixture.member.animatedAction(config),"fireflies start their native animation");
+            check(fixture.simulation.snapshot().effectsSince(baseline).isEmpty(),"effect waits for animation land time");
+            fixture.hit(damage(5,true));
+            fixture.await(s->s.timestamp()-s.players().getFirst().activityStarted()>AnimatedItems.land(config));
+            check(fixture.simulation.snapshot().effectsSince(baseline).isEmpty(),"hurt interrupts the delayed cosmetic effect");
+            fixture.member.resetInput();check(fixture.member.animatedAction(config),"cosmetic use can restart after interruption");
+            fixture.await(s->!s.effectsSince(baseline).isEmpty());
+            check(fixture.simulation.snapshot().effectsSince(baseline).size()==1,"one native firefly effect fires after its delay");
+            fixture.await(s->s.players().getFirst().activity()==0);
+            check(fixture.simulation.snapshot().effectsSince(baseline).size()==1,"completed animation cannot repeat its effect");
+        }
+        System.out.println("PASS: delayed capsule heal/consumption, duplicate refusal, hurt/shock cancellation, animated-item delay and interruption");
     }
     private static Object damage(int amount,boolean react) {
         return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",1,"amount",(float)amount,"shouldReact",react));

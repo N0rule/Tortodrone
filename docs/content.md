@@ -678,6 +678,27 @@ using the same seeded selection as the stock client. Busy use returns native
 one SQLite write; failures roll back, and replayed listener receipts cannot spend
 again. Scene presentation follows commit and clears on departure.
 
+All 81 player fireworks and Jar O' Fireflies now use that owned consumable
+workflow and native activity `267`. Fireworks launch after 300 ms and clear
+their animation 500 ms later; fireflies release after 800 ms and clear 1,600 ms
+later. Fireworks retain their configured size/color and six-second detached
+effect; fireflies choose among the five equally weighted native colors. Damage,
+shock and departure interrupt a pending release. An accepted use consumes once
+before presentation; interruption does not refund it. This consumption policy
+follows confetti; the archive's old non-consuming fallback did not establish
+live firework consumption semantics.
+
+`AnimatedItemSessionTest` and `SceneItemUseTest` cover ownership, revision,
+rollback, replay, busy use, timing and interruption. The read-only
+`scripts/StockTools.java animated-items-check` oracle compares all 82 definitions
+with the installed client and reads timed bonus selection/expiry events.
+`CheckCombatRendering.java --items-only` exercises the unchanged Arsenal Use
+menu and captures all three firework sizes, fireflies and confetti in an isolated
+Haven session. These checks establish local behavior and rendering, not current
+live-server parity. Compatible plain gift/shop/crafting stacks merge up to 9,999;
+timed/customized items retain their own state, and unwrap failures roll back the
+box deletion and delivery together.
+
 The Haven Auction House opens at its public counter through the captured
 `forceClientAction` message: `ControllerAction("auction", "")` and placed entry
 key `3733`. It uses the existing auction search/listing service. Its interaction
@@ -692,9 +713,8 @@ and 1583–1586, the captured placed entry transform, and read-only installed
 counter reachability; `scripts/compat/ConfettiCompatibility.java` checks all
 variant timings and the native actor/controller-action layouts without launching
 a graphical client. Captures and client assets are not distributed.
-Focused confetti, scene entity/item-use, Town service and movement checks passed,
-as did the stock-reader check and a narrow Haven fingerprint comparison. The
-full suite and graphical acceptance were skipped for this lightweight check.
+Confetti's original focused coverage also includes the public Auction counter;
+the item graphical scenario does not exercise auction rendering.
 
 ## Lockboxes and Prize Boxes
 
@@ -729,16 +749,21 @@ explicitly `custom` distributions.
 `UpgradingItem` inventory records and persist with their correct identity and
 binding. Weapon-slot and trinket-slot tickets now support native Use activation,
 Extend, absolute deadlines, temporary slots and return-to-bag on slot expiry.
-Opening does not activate them. Other boost/upgrade Use handlers remain unavailable;
+Opening does not activate them. Heat Amplifiers now use the same activation/extension
+workflow (1, 2, 7 or 30 days), double awarded equipment heat, and allow one active
+amplifier. Krogmo Coin Boosters activate for one day, stack up to six, and publish
+the native bonus; Coliseum reward delivery remains unavailable.
 Weapon-slot and standard trinket-slot tickets last 30 days after activation;
 the short trinket ticket lasts two days. Each enables one slot, up to two extra
-weapon slots and two trinket slots. Mirrored appearance
-modifiers similarly retain their existing separate Use-workflow limitations.
-Color/eye/height changes, Guild Bonds and decorative Usable actions also retain
-the unavailable Use handlers identified in `item-support.csv`; opening grants
-their ordinary native inventory records without claiming those workflows work.
-Furniture rewards use native undeployed `FurniItem` inventory records; placement
-is not implemented. Four disguise prizes use verified 30-day `LevelItem` expiry.
+weapon slots and two trinket slots. Personal color, eye and height kits support
+their separate Use workflow, durable saved styles and paid reapplication.
+Guild Bonds still require guild services. The item support report excludes
+abstract/internal definitions and distinguishes tickets consumed by existing
+services from items needing a direct Use handler.
+Furniture rewards use native undeployed `FurniItem` inventory records. Placement
+and removal require the native design-room subsystem; none of the supported
+non-guild scenes is a design room, so placement remains unavailable.
+Four disguise prizes use verified 30-day `LevelItem` expiry.
 Their absolute deadline persists through reconnect/restart, trade, gifts and
 auction/mail escrow. Unwrap/claim never restarts it. Expired attachments are
 removed on claim; active inventory expiry advances the world revision before

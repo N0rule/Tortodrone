@@ -1,0 +1,89 @@
+# Shipped AnimatedAction references, extracted from the native item catalogue.
+# config	effect	size	color (size "-" means the reference carries no size)
+Usable/Fireworks/Parts/Firework	Basic	Medium	257
+Usable/Fireworks/Large/Large Fireworks, Amber	Basic	Large	264
+Usable/Fireworks/Large/Large Fireworks, Aquamarine	Basic	Large	270
+Usable/Fireworks/Large/Large Fireworks, Beast	Basic	Large	2050
+Usable/Fireworks/Large/Large Fireworks, Blue	Basic	Large	277
+Usable/Fireworks/Large/Large Fireworks, Chartreuse	Basic	Large	266
+Usable/Fireworks/Large/Large Fireworks, Cobalt	Basic	Large	275
+Usable/Fireworks/Large/Large Fireworks, Crimson	Basic	Large	259
+Usable/Fireworks/Large/Large Fireworks, Cyan	Basic	Large	273
+Usable/Fireworks/Large/Large Fireworks, Emerald	Basic	Large	268
+Usable/Fireworks/Large/Large Fireworks, Green	Basic	Large	269
+Usable/Fireworks/Large/Large Fireworks, Indigo	Basic	Large	278
+Usable/Fireworks/Large/Large Fireworks, Lake	Basic	Large	260
+Usable/Fireworks/Large/Large Fireworks, Lavender	Basic	Large	258
+Usable/Fireworks/Large/Large Fireworks, Lime	Basic	Large	267
+Usable/Fireworks/Large/Large Fireworks, Magenta	Basic	Large	257
+Usable/Fireworks/Large/Large Fireworks, Orange	Basic	Large	263
+Usable/Fireworks/Large/Large Fireworks, Purple	Basic	Large	280
+Usable/Fireworks/Large/Large Fireworks, Red	Basic	Large	261
+Usable/Fireworks/Large/Large Fireworks, Silver	Basic	Large	281
+Usable/Fireworks/Large/Large Fireworks, Sky	Basic	Large	274
+Usable/Fireworks/Large/Large Fireworks, Slime	Basic	Large	2052
+Usable/Fireworks/Large/Large Fireworks, Turquoise	Basic	Large	271
+Usable/Fireworks/Large/Large Fireworks, Ultramarine	Basic	Large	276
+Usable/Fireworks/Large/Large Fireworks, Vermillion	Basic	Large	262
+Usable/Fireworks/Large/Large Fireworks, Violet	Basic	Large	279
+Usable/Fireworks/Large/Large Fireworks, Viridian	Basic	Large	272
+Usable/Fireworks/Large/Large Fireworks, Yellow	Basic	Large	265
+Usable/Fireworks/Medium/Medium Fireworks, Amber	Basic	Medium	264
+Usable/Fireworks/Medium/Medium Fireworks, Aquamarine	Basic	Medium	270
+Usable/Fireworks/Medium/Medium Fireworks, Beast	Basic	Medium	2050
+Usable/Fireworks/Medium/Medium Fireworks, Blue	Basic	Medium	277
+Usable/Fireworks/Medium/Medium Fireworks, Chartreuse	Basic	Medium	266
+Usable/Fireworks/Medium/Medium Fireworks, Cobalt	Basic	Medium	275
+Usable/Fireworks/Medium/Medium Fireworks, Crimson	Basic	Medium	259
+Usable/Fireworks/Medium/Medium Fireworks, Cyan	Basic	Medium	273
+Usable/Fireworks/Medium/Medium Fireworks, Emerald	Basic	Medium	268
+Usable/Fireworks/Medium/Medium Fireworks, Green	Basic	Medium	269
+Usable/Fireworks/Medium/Medium Fireworks, Indigo	Basic	Medium	278
+Usable/Fireworks/Medium/Medium Fireworks, Lake	Basic	Medium	260
+Usable/Fireworks/Medium/Medium Fireworks, Lavender	Basic	Medium	258
+Usable/Fireworks/Medium/Medium Fireworks, Lime	Basic	Medium	267
+Usable/Fireworks/Medium/Medium Fireworks, Magenta	Basic	Medium	257
+Usable/Fireworks/Medium/Medium Fireworks, Orange	Basic	Medium	263
+Usable/Fireworks/Medium/Medium Fireworks, Purple	Basic	Medium	280
+Usable/Fireworks/Medium/Medium Fireworks, Red	Basic	Medium	261
+Usable/Fireworks/Medium/Medium Fireworks, Silver	Basic	Medium	281
+Usable/Fireworks/Medium/Medium Fireworks, Sky	Basic	Medium	274
+Usable/Fireworks/Medium/Medium Fireworks, Slime	Basic	Medium	2052
+Usable/Fireworks/Medium/Medium Fireworks, Turquoise	Basic	Medium	271
+Usable/Fireworks/Medium/Medium Fireworks, Ultramarine	Basic	Medium	276
+Usable/Fireworks/Medium/Medium Fireworks, Vermillion	Basic	Medium	262
+Usable/Fireworks/Medium/Medium Fireworks, Violet	Basic	Medium	279
+Usable/Fireworks/Medium/Medium Fireworks, Viridian	Basic	Medium	272
+Usable/Fireworks/Medium/Medium Fireworks, Yellow	Basic	Medium	265
+Usable/Fireworks/Small/Small Fireworks, Amber	Basic	Small	264
+Usable/Fireworks/Small/Small Fireworks, Aquamarine	Basic	Small	270
+Usable/Fireworks/Small/Small Fireworks, Beast	Basic	Small	2050
+Usable/Fireworks/Small/Small Fireworks, Blue	Basic	Small	277
+Usable/Fireworks/Small/Small Fireworks, Chartreuse	Basic	Small	266
+Usable/Fireworks/Small/Small Fireworks, Cobalt	Basic	Small	275
+Usable/Fireworks/Small/Small Fireworks, Crimson	Basic	Small	259
+Usable/Fireworks/Small/Small Fireworks, Cyan	Basic	Small	273
+Usable/Fireworks/Small/Small Fireworks, Emerald	Basic	Small	268
+Usable/Fireworks/Small/Small Fireworks, Green	Basic	Small	269
+Usable/Fireworks/Small/Small Fireworks, Indigo	Basic	Small	278
+Usable/Fireworks/Small/Small Fireworks, Lake	Basic	Small	260
+Usable/Fireworks/Small/Small Fireworks, Lavender	Basic	Small	258
+Usable/Fireworks/Small/Small Fireworks, Lime	Basic	Small	267
+Usable/Fireworks/Small/Small Fireworks, Magenta	Basic	Small	257
+Usable/Fireworks/Small/Small Fireworks, Orange	Basic	Small	263
+Usable/Fireworks/Small/Small Fireworks, Purple	Basic	Small	280
+Usable/Fireworks/Small/Small Fireworks, Red	Basic	Small	261
+Usable/Fireworks/Small/Small Fireworks, Silver	Basic	Small	281
+Usable/Fireworks/Small/Small Fireworks, Sky	Basic	Small	274
+Usable/Fireworks/Small/Small Fireworks, Slime	Basic	Small	2052
+Usable/Fireworks/Small/Small Fireworks, Turquoise	Basic	Small	271
+Usable/Fireworks/Small/Small Fireworks, Ultramarine	Basic	Small	276
+Usable/Fireworks/Small/Small Fireworks, Vermillion	Basic	Small	262
+Usable/Fireworks/Small/Small Fireworks, Violet	Basic	Small	279
+Usable/Fireworks/Small/Small Fireworks, Viridian	Basic	Small	272
+Usable/Fireworks/Small/Small Fireworks, Yellow	Basic	Small	265
+Usable/Jar O Fireflies	Player/Release Fireflies	-	257
+Usable/Jar O Fireflies	Player/Release Fireflies	-	263
+Usable/Jar O Fireflies	Player/Release Fireflies	-	268
+Usable/Jar O Fireflies	Player/Release Fireflies	-	273
+Usable/Jar O Fireflies	Player/Release Fireflies	-	278

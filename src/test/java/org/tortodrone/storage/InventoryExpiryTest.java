@@ -22,6 +22,7 @@ public final class InventoryExpiryTest {
             Path roundtrip=home.resolve("catalog.json");ItemCatalog.write(roundtrip,representations);
             check(new HashSet<>(ItemCatalog.load(roundtrip).entries()).equals(new HashSet<>(representations)),"duration, furniture variant and custom color arguments survive catalog round trip");
             upgrades(db,a,items);
+            bonuses(db,a,b,items);
             var stackEntry=items.require("Material/Brimstone");
             var stackOwner=db.grantItems("ExpireAlice","Expire-Alice",-1,-1,stackEntry,7,-1,-1,ItemModifiers.NONE,TownCatalog.empty(),false,1);
             var stack=find(stackOwner,stackEntry.config());
@@ -84,5 +85,24 @@ public final class InventoryExpiryTest {
         check(expired.items().stream().anyMatch(i->i.id()==extra.id()&&i.equippedSlot()==null),"slot expiry preserves the weapon in inventory");
     }
     private static WorldProfile.Item find(WorldProfile p,String config){return p.items().stream().filter(i->i.config().equals(config)).findFirst().orElseThrow();}
+    private static void bonuses(Database db,int account,int other,ItemCatalog items)throws Exception {
+        var rules=TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json"));var town=new TownStore(db,items,rules);
+        for(String config:List.of("Upgrade/Heat Bonus","Upgrade/Coin Bonus")){
+            var granted=db.grantItems("ExpireAlice","Expire-Alice",-1,-1,items.require(config),1,-1,-1);
+            town.activateUpgrade(account,1,1,find(granted,config).id());
+        }
+        var active=db.worldProfile(account,1,1);
+        check(SlotUpgrades.heatBonusActive(active)&&SlotUpgrades.pvpTokenBonus(active)==1,"timed bonuses activate together");
+        try{db.trade(active,1,Map.of(find(active,"Upgrade/Heat Bonus").id(),1),0,0,db.worldProfile(other,1,1),1,Map.of(),0,0,items);throw new AssertionError("active bonus traded");}catch(IOException expected){}
+        var eligible=active.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot()))
+            .filter(i->{var gear=rules.gear().gear(i.config());return gear!=null&&!gear.maximum(i.level())&&i.heatProgress()<1;}).toList();
+        check(!eligible.isEmpty(),"heat bonus fixture has equipped gear");
+        var heated=town.addHeat(account,1,1,1).profile();
+        for(var item:eligible){var actual=heated.items().stream().filter(i->i.id()==item.id()).findFirst().orElseThrow();
+            check(actual.heatProgress()==rules.gear().gear(item.config()).addHeat(item.level(),item.heatProgress(),2f/eligible.size()),"heat amplifier doubles the split award");}
+        db.write(c->{InventoryExpiry.save(c,find(active,"Upgrade/Heat Bonus").id(),System.currentTimeMillis()-1);InventoryExpiry.save(c,find(active,"Upgrade/Coin Bonus").id(),System.currentTimeMillis()-1);return null;});
+        db.worldStates();var expired=db.worldProfile(account,1,1);
+        check(!SlotUpgrades.heatBonusActive(expired)&&SlotUpgrades.pvpTokenBonus(expired)==0&&expired.revision()>heated.revision(),"expiry clears both bonuses and publishes a revision");
+    }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
 }

@@ -466,7 +466,7 @@ public final class SessionCodec {
     public byte[] selected(int oid, Knight knight, WorldProfile profile) throws IOException {
         return frame(out -> {
             eventHeader(out,"CompoundEvent",oid);
-            type(out,"com.threerings.util.StreamableArrayList"); out.writeInt(21);
+            type(out,"com.threerings.util.StreamableArrayList"); out.writeInt(23);
             attribute(out,oid,"knight",o -> name(o,knight.name()));
             attribute(out,oid,"color",o -> value(o,256 | knight.color()));
             attribute(out,oid,"eye",o -> { type(o,"com.threerings.projectx.data.ProjectXCodes$EyeType");o.writeByte(knight.eye()); });
@@ -478,6 +478,8 @@ public final class SessionCodec {
             attribute(out,oid,"quickbar",o -> longs(o,new long[4]));
             attribute(out,oid,"weaponSlots",o -> value(o,SlotUpgrades.weapons(profile)));
             attribute(out,oid,"trinketSlots",o -> value(o,SlotUpgrades.trinkets(profile)));
+            attribute(out,oid,"heatBonus",o -> value(o,SlotUpgrades.heatBonusActive(profile)));
+            attribute(out,oid,"pvpTokenBonus",o -> value(o,SlotUpgrades.pvpTokenBonus(profile)));
             attribute(out,oid,"crowns",o -> value(o,profile.crowns()));
             attribute(out,oid,"energy",o -> value(o,profile.energy()));
             attribute(out,oid,"showEnergy",o -> value(o,true));
@@ -535,9 +537,11 @@ public final class SessionCodec {
         var slots=new ArrayList<Integer>();
         for(int slot=0;slot<equipment.length;slot++)if(oldEquipment[slot]!=equipment[slot])slots.add(slot);
         return frame(out->{
-            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+removed.size()+slots.size()+(slots.isEmpty()?0:1)+2);
+            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(changed.size()+removed.size()+slots.size()+(slots.isEmpty()?0:1)+4);
             attribute(out,oid,"weaponSlots",o->value(o,SlotUpgrades.weapons(after)));
             attribute(out,oid,"trinketSlots",o->value(o,SlotUpgrades.trinkets(after)));
+            attribute(out,oid,"heatBonus",o->value(o,SlotUpgrades.heatBonusActive(after)));
+            attribute(out,oid,"pvpTokenBonus",o->value(o,SlotUpgrades.pvpTokenBonus(after)));
             for(var item:removed)entryRemoved(out,oid,"items",item.id());
             for(var item:changed) {
                 type(out,"com.threerings.presents.dobj."+(old.containsKey(item.id())?"EntryUpdatedEvent":"EntryAddedEvent"));

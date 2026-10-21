@@ -3,10 +3,11 @@
 import csv,json,pathlib,argparse,collections,re
 import yaml
 p=argparse.ArgumentParser();p.add_argument('--content',type=pathlib.Path,default=pathlib.Path('content'));p.add_argument('--output',type=pathlib.Path,default=pathlib.Path('docs/item-support.csv'));a=p.parse_args()
+bindings=json.loads((a.content/'_internal/item-bindings.json').read_text())['items']
 items=[]
 for file in sorted((a.content/'items').glob('*.yml')):
-    for config,row in yaml.safe_load(file.read_text())['items'].items():items.append(dict(row,config=config))
-town={}
+    for item_id,row in yaml.safe_load(file.read_text())['items'].items():items.append(dict(row,**bindings[item_id]))
+town=json.loads((a.content/'_internal/town-definitions.json').read_text())
 for file in sorted((a.content/'town').glob('*.yml')):town.update(yaml.safe_load(file.read_text()))
 fires=json.loads((a.content/'_internal/fires.json').read_text())['entries']
 metadata={x['config']:x for x in town['items']};recipes={x['config'] for x in town['recipes']};accessories={x['config'] for x in town['accessories']};sprites={x['config'] for x in town['sprites']};weapons=collections.defaultdict(set)
@@ -29,8 +30,17 @@ for scene in (a.content/'maps').glob('*/native/bindings.json'):
         if re.fullmatch(r'item\.\d+\.config',key):prepared[name]=float(props.get(key[:-6]+'heal','0'))
 rows=[];equipment={'Sword','Handgun','SwingingHandgun','Bomb','BlastNetworkBomb','Helm','Armor','Shield','HelmCostume','ArmorCostume','ShieldCostume','Trinket'}
 resources={'Craft','Token','Mineral','MetaMineral','Artifact','TokenArtifact','SanctuaryArtifact'}
+seeds=pathlib.Path(__file__).resolve().parents[2]/'src/main/resources/seeds'
+def mapped(file):return {line.split('\t')[0] for line in (seeds/file).read_text().splitlines() if line and not line.startswith('#')}
+animated=mapped('animated-items.tsv');styles=mapped('style-kits.tsv')
+boxes={}
+for file in sorted((a.content/'loot/boxes').rglob('*.yml')):
+    for item_id,box in yaml.safe_load(file.read_text())['boxes'].items():boxes[bindings[item_id]['config']]=box
+upgrades={'Upgrade/Weapon Slot','Upgrade/Trinket Slot','Upgrade/Trinket Slot (2 days)','Upgrade/Heat Bonus','Upgrade/Heat Bonus (1 day)','Upgrade/Heat Bonus (7 days)','Upgrade/Heat Bonus (30 days)','Upgrade/Coin Bonus'}
 for item in items:
     name=item['config'];kind=item['type'];data=metadata.get(name,{});reasons=[];state='unusable'
+    # Abstract authoring bases and scene-only configurations are not missing bag actions.
+    if not item.get('nameKey') or not item.get('stockId') or '/Parts/' in name:continue
     if kind in equipment:
         reasons=sorted(weapons.get(name,set()));state='partial'
         if kind in {'Sword','Handgun','SwingingHandgun','Bomb','BlastNetworkBomb'} and name not in weapons:reasons.append('no attack graph')
@@ -42,6 +52,26 @@ for item in items:
         if data.get('sprite') not in sprites:reasons.append('no resolved sprite')
         else:state='partial';reasons.append('quill attachments, advanced pet triggers and some perk effects remain incomplete')
     elif kind=='Harness':pass
+    elif name in styles:pass
+    elif kind=='Upgrade' and name in upgrades:
+        if name=='Upgrade/Coin Bonus':state='partial';reasons.append('native timed activation/extension and bonus synchronization; Coliseum rewards unavailable')
+    elif kind=='RenameKnight':pass
+    elif kind=='WrappingPaper':
+        if not data.get('giftBox'):reasons.append('no resolved gift box')
+    elif kind=='GiftBox':pass  # Filled boxes are created by wrapping, then transferred/unwrapped natively.
+    elif kind=='Lockbox':
+        state='partial' if boxes.get(name,{}).get('status')=='approximate' else 'disabled'
+        reasons.append('native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md' if state=='partial' else 'native method 12 supported; reward pool unavailable or incomplete; see box-support.csv')
+    elif kind=='VariantTicket':
+        if not data.get('variant'):reasons.append('no resolved variant')
+    elif kind=='Ticket':
+        if name.startswith('Ticket/Guild/'):reasons.append('requires guild services')
+        elif not name.startswith(('Ticket/Keys/','Ticket/Variants/','Ticket/Unbind/','Rarity/')):reasons.append('no supported ticket consumer')
+    elif kind in {'Prop','Actor','SpecialProp','ModelProp','KnightStatue','Placeable'}:
+        if item['variant']=='FURNITURE_ITEM' and item['slot']=='OTHER':
+            state='partial';reasons.append('native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene')
+        else:reasons.append('no supported furniture inventory/design-room representation')
+    elif kind=='AnimatedAction' and name in animated:pass
     elif kind=='AnimatedAction' and re.fullmatch(r'Usable/Confetti(?:, (?:Bubbles|Dark Harvest|Equinox|Fall Equinox|Flare Popper|Frenzy|Leaf|Rage|Silver|Slime|Storm|Summer|Winter))?',name):pass
     elif kind in resources:pass  # Materials/tokens are consumed by crafting/shops, not used directly.
     elif kind in {'Vial','Capsule'}:

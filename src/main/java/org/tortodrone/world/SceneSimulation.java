@@ -203,8 +203,8 @@ public final class SceneSimulation {
             publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
             entered=true;start();}}
-        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
-        public void resetInput(){synchronized(SceneSimulation.this){check();weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
+        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
+        public void resetInput(){synchronized(SceneSimulation.this){check();pendingAnimated=null;weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
             check();if(!entered||portal!=null||lift!=0||pendingItem!=0||!health.alive())return false;
             if(!movement.teleport(x,y,rotation,SceneClock.now()))return false;
@@ -242,13 +242,23 @@ public final class SceneSimulation {
         /** Animate an already-committed persistent consumable in this scene only. */
         public void confetti(String config){synchronized(SceneSimulation.this){check();if(!canOpenBox())return;
             weapons.cancelAttacks(appearance.id());movement.confetti(config,SceneClock.now());}}
+        private String pendingAnimated;
+        /** Animate a committed consumable; the scene owns its delayed effect and interruption. */
+        public boolean animatedAction(String config){synchronized(SceneSimulation.this){
+            check();if(!canOpenBox())return false;
+            int stamp=SceneClock.now();
+            if(!movement.animatedItem(config,stamp))return false;
+            weapons.cancelAttacks(appearance.id());
+            pendingAnimated=config;
+            return true;
+        }}
         private void updateLife(int stamp){
             if(health.alive()){if(movement.dead()){movement.resurrect(stamp);weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);}return;}
             if(movement.dead())return;
             weapons.cancelAttacks(appearance.id());
             entities.cancelClaims(appearance.id());
             if(lift!=0)entities.dropLift(lift,actor(),stamp);
-            lift=dropAt=interactionTarget=0;pendingItem=0;itemSpec=null;
+            lift=dropAt=interactionTarget=0;pendingItem=0;itemSpec=null;pendingAnimated=null;
             movement.die(stamp);
             if((health.state().reviveFlags()&8)!=0)weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Pre Emergency Rez",Map.of()),actor(),stamp);
         }
@@ -376,6 +386,14 @@ public final class SceneSimulation {
                 }
                 // Resolve the delayed action before natural animation completion on a late tick.
                 member.movement.preparePublication(stamp);
+                if(member.pendingAnimated!=null){
+                    String config=member.pendingAnimated;
+                    if(member.movement.activity()!=TownMovement.ANIMATED_ITEM)member.pendingAnimated=null;
+                    else if(stamp-member.movement.activityStarted()>=org.tortodrone.character.AnimatedItems.land(config)){
+                        for(var effect:org.tortodrone.character.AnimatedItems.effects(config))weapons.effect(effect,member.actor(),stamp);
+                        member.pendingAnimated=null;
+                    }
+                }
                 member.movement.advance(stamp,now);
                 if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 member.portal=member.movement.portal();member.advancePet(stamp);

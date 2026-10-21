@@ -13,6 +13,7 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "animated-items-check" -> {if(args.length!=2)throw new IllegalArgumentException("animated-items-check expects game-directory");fixture="AnimatedItemsCompatibility";}
             case "dialogue-check" -> {if(args.length!=2)throw new IllegalArgumentException("dialogue-check expects game-directory");fixture="DialogueCompatibility";}
             case "exchange-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("exchange-check expects game-directory");fixture="ExchangeCompatibility";
@@ -128,7 +129,7 @@ public final class StockTools {
         Path scratch = Files.createTempDirectory("tortodrone-stock-tool-");
         try {
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*")
-                + File.pathSeparator + project.resolve("build/tortodrone.jar");
+                + File.pathSeparator + Path.of(System.getProperty("tortodrone.deployment",project.resolve("build").toString())).resolve("tortodrone.jar");
             var compile=new ArrayList<>(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString()));
             for(Path source:sources)compile.add(source.toString());
             run(compile);

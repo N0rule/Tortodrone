@@ -1008,14 +1008,18 @@ final class WorldSession implements AutoCloseable {
                 else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
             }
             var held=profile.items().stream().filter(i->i.id()==id).findFirst().orElse(null);
-            if(held!=null&&Confetti.supports(held.config())){
+            if(held!=null&&(Confetti.supports(held.config())||org.tortodrone.character.AnimatedItems.supports(held.config()))){
                 try{
                     var current=characters.worldProfile(knight.name(),authRevision,profile);
                     if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
                     if(!membership.canOpenBox())throw new IOException("e.not_use_busy");
-                    var result=characters.town(scenes.town()).confetti(characters.accountId(),knight.id(),authRevision,current.revision(),id);
+                    var store=characters.town(scenes.town());
+                    var result=Confetti.supports(held.config())?store.confetti(characters.accountId(),knight.id(),authRevision,current.revision(),id)
+                        :store.animatedItem(characters.accountId(),knight.id(),authRevision,current.revision(),id);
                     confettiReplies.put(token,new ConfettiReply(id,null));
-                    membership.confetti((String)result.result());townChanged(result,false);
+                    String config=(String)result.result();
+                    if(Confetti.supports(config))membership.confetti(config);else membership.animatedAction(config);
+                    townChanged(result,false);
                     output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
                 }catch(CharacterStore.Refused|IOException failure){
                     confettiReplies.putIfAbsent(token,new ConfettiReply(id,failure.getMessage()));

@@ -1,315 +1,253 @@
 config,type,support,remaining_behavior
-"Accessory/Armor/Front/Lite/Holo Chest, Wolver",AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Front/Monster Pocket/Parts/Base,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Ankle,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Arms,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Aura,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Back,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Footstep Aura,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Front,AccessoryTicket,unusable,no resolved accessory
-Accessory/Armor/Parts/Rear,AccessoryTicket,unusable,no resolved accessory
-"Accessory/Dev/Hood, Brown",AccessoryTicket,unusable,no resolved accessory
-"Accessory/Dev/Plume, Blonde",AccessoryTicket,unusable,no resolved accessory
-"Accessory/Dev/Scarf, Brown",AccessoryTicket,unusable,no resolved accessory
-"Accessory/Dev/Wings, White",AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Parts/Back,AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Parts/Brow,AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Parts/Front,AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Parts/Side,AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Parts/Top,AccessoryTicket,unusable,no resolved accessory
-Accessory/Helm/Top/Snipe Perch/Parts/Base,AccessoryTicket,unusable,no resolved accessory
-Accessory/Parts/Base,AccessoryTicket,unusable,no resolved accessory
-"Accessory/Parts/Base, Custom Colors",AccessoryTicket,unusable,no resolved accessory
-"Furni/Bed/Spiral Order/Military, 2x3/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bed/Spiral Order/Military, 2x3/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bed/Spiral Order/Military, 2x3/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bed/Spiral Order/Military, 2x3/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Cool",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Warm",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Bed/Spiral Order/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Almire/Bench, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bench/Almire/Bench, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Bench/Almire/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Bench/Manor/Divan, green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Bench/Manor/Divan, violet",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Bench/Manor/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Block/Ice Block,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Almire/Chair, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Almire/Chair, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Chair/Almire/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Manor/Chair, green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Manor/Chair, violet",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Chair/Manor/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Spiral Order/Field/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Chair/Spiral Order/Field/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Chair/Spiral Order/Field/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Spiral Order/Field/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Spiral Order/Field/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chair/Spiral Order/Field/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Almire/Tapestry Stand, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Almire/Tapestry Stand, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Apocrea/Obsidian Obelisk,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken Floating",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Apocrea/Obsidian Obelisk, Floating",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Bone Fragments/Bone Pile, Skulls",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Bone Fragments/Bone Pile, Stack",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Holiday Presents/Holiday Presents, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Holiday Presents/Holiday Presents, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Holiday Presents/Holiday Presents, White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Luggage/Luggage Pile A,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Luggage/Luggage Pile B,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Plants and Foliage/Houseplants/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Blue",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Yellow",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Spiral Order/Bedroll/Bedroll 01,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Clutter/Spiral Order/Escape Pod/Escape Pod, Shut",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Spiral Order/Field Sensor,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Clutter/Spiral Order/Sundries 01,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Counter/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Counter/Spiral Order/Corner/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Counter/Spiral Order/Parts/1unit, Base",Prop,unusable,no item-use handler for Prop
-"Furni/Counter/Spiral Order/Parts/Corner, Base",Prop,unusable,no item-use handler for Prop
-"Furni/Crate/Spiral Order/1unit, Toughbox/Shut",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Crate/Spiral Order/1unit, Toughbox/Weapons Crate",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Drawer/Spiral Order/1unit/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Drawer/Spiral Order/1unit/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Drawer/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Bishop, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Bishop, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Bishop, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Bishop, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/King, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/King, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/King, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/King, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Knight, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Knight, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Knight, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Knight, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Feature/Chess Minis/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Feature/Chess Minis/Pawn, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Pawn, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Pawn, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Pawn, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Queen, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Queen, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Queen, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Queen, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Rook, Black",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Rook, White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Rook, Winterfest Red",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Feature/Chess Minis/Rook, Winterfest White",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Feature/Knight Statue,KnightStatue,unusable,no item-use handler for KnightStatue
-Furni/Feature/Knight Statue - Relaxed,KnightStatue,unusable,no item-use handler for KnightStatue
-"Furni/Feature/Knight Statue - Relaxed, Large",KnightStatue,unusable,no item-use handler for KnightStatue
-"Furni/Feature/Knight Statue, Large",KnightStatue,unusable,no item-use handler for KnightStatue
-"Furni/Feature/Knight Statue, Medium",KnightStatue,unusable,no item-use handler for KnightStatue
-Furni/Feature/Mist Well/Mist Well,Placeable,unusable,no item-use handler for Placeable
-"Furni/Floor/Almire/Rug, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Floor/Almire/Rug, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Floor/Monitors/Monitors, Prismatic",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Floor/Monitors/Monitors, Small, Prismatic",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Library/Lectern/Manor/Ancient Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Library/Lectern/Manor/Cursed Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Library/Lectern/Manor/Mystical Tome,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Library/Loose Books/Manor/1unit Stack A,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Library/Loose Books/Manor/1unit Stack B,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Short/Blue Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Short/Green Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Short/Orange Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Short/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Short/Violet Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Tall/Blue Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Tall/Green Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Tall/Orange Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Braziers/Castle/Tall/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Braziers/Castle/Tall/Violet Flame,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Candles/Candle Platter, Xmas Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Candles/Candle Platter, Xmas Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Candles/Candle Platter, Xmas White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Candles/Platter/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Lighting/Floor Beacons/Floor Beacon, Blue",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Floor Beacons/Floor Beacon, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Floor Beacons/Floor Beacon, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Lighting/Floor Beacons/Floor Beacon, Yellow",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Short/Blue Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Short/Green Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Short/Orange Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Short/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Short/Violet Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Tall/Blue Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Tall/Green Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Tall/Orange Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Gaslamps/Tall/Parts/Base,Prop,unusable,no item-use handler for Prop
-Furni/Lighting/Gaslamps/Tall/Violet Lamp,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Lighting/Rainbow,SpecialProp,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Parts/Base (Actor),Actor,unusable,no item-use handler for Actor
-Furni/Parts/Base (Knight statue),KnightStatue,unusable,no item-use handler for KnightStatue
-Furni/Parts/Base (ModelProp),ModelProp,unusable,no item-use handler for ModelProp
-Furni/Parts/Base (Placeable),Placeable,unusable,no item-use handler for Placeable
-Furni/Parts/Base (Prop),Prop,unusable,no item-use handler for Prop
-Furni/Parts/Base (SpecialProp),SpecialProp,unusable,no item-use handler for SpecialProp
-Furni/Pet/Chromalisk/Chromalisk,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Black Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Brown Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Gold Gobble Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Black Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Brown Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Gold Gobble Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Black Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Brown Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Gold Gobble Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Nature Sprite/Cursed Nature Sprite,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Nature Sprite/Nature Sprite,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Black Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Brown Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Fiery Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Gold Rooster Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Black Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Brown Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Fiery Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Gold Rooster Snipe, Plump",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Black Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Brown Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Fiery Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Gold Rooster Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Slime/Companion Cube,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Black Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Blue Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Cherry Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Green Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Lime Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Mint Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Orange Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Snipe/Flying Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Flying Snipe/Plum Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Purple Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Red Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Sage Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Sea Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Wheat Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/White Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Flying Snipe/Yellow Snipe, Flying",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Black Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Blue Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Cherry Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Green Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Lime Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Mint Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Orange Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Snipe/Lazy Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Lazy Snipe/Plum Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Purple Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Red Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Sage Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Sea Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Wheat Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/White Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Lazy Snipe/Yellow Snipe, Lazy",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Black Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Blue Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Cherry Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Green Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Lime Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Mint Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Orange Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Snipe/Wandering Snipe/Parts/Base,Actor,unusable,no item-use handler for Actor
-"Furni/Pet/Snipe/Wandering Snipe/Plum Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Purple Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Red Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Sage Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Sea Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Wheat Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/White Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Pet/Snipe/Wandering Snipe/Yellow Snipe, Wandering",Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Spookat/Mewkat,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Pet/Spookat/Parts/Base,Actor,unusable,no item-use handler for Actor
-Furni/Pet/Zombie/Zombie Bellhop,Actor,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Manor/2unit, Bookcase/Antique",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Almire/Table, Charred",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Almire/Table, Restored",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Manor/1unit/Wood, Default",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Table/Spiral Order/1unit/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Table/Spiral Order/1unit/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Table/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Table/Winterfest/1unit/Winterfest Table,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 1,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 2,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 3,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 4,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Roarmulus/1 - Blueprints,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Trophy/Boss Trophy/Roarmulus/2 - Replica Roarmulus, small",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Trophy/Boss Trophy/Roarmulus/3 - Replica Roarmulus, large",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Royal Jelly/1 - Jelly Gem,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Royal Jelly/2 - Jelly Crown,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Royal Jelly/3 - Royal Jelly,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Snarbolax/1 - Frumious Fang,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Snarbolax/2 - Miniature Snarbolax,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Trophy/Boss Trophy/Snarbolax/3 - Stuffed Snarbolax, Invuln",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Vanaduke/1 - Almirian Seal,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Vanaduke/2 - Mask of Vanaduke,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Furni/Trophy/Parts/Base,Prop,unusable,no item-use handler for Prop
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, Green",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, Red",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Trophy/Winterfest Tree/Winterfest Tree, White",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Parts/Base",Prop,unusable,no item-use handler for Prop
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,partial,native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable
-Gear/Dungeon/Event/Winterfest/Large Present,Present,unusable,no item-use handler for Present
-Gear/Dungeon/Event/Winterfest/Present/Base,Present,unusable,no item-use handler for Present
-Gear/Dungeon/Event/Winterfest/Small Present,Present,unusable,no item-use handler for Present
+"Furni/Bed/Spiral Order/Military, 2x3/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bed/Spiral Order/Military, 2x3/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bed/Spiral Order/Military, 2x3/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bed/Spiral Order/Military, 2x3/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Cool",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bed/Spiral Order/Military, 2x3/Spiral Order, Warm",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bench/Almire/Bench, Charred",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bench/Almire/Bench, Restored",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bench/Manor/Divan, green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Bench/Manor/Divan, violet",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Block/Ice Block,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Almire/Chair, Charred",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Almire/Chair, Restored",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Manor/Chair, green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Manor/Chair, violet",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chair/Spiral Order/Field/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Chest/Spiral Order/1unit, Footlocker/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Almire/Tapestry Stand, Charred",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Almire/Tapestry Stand, Restored",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Apocrea/Obsidian Obelisk,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Broken Floating",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Apocrea/Obsidian Obelisk, Floating",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Bone Fragments/Bone Pile, Skulls",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Bone Fragments/Bone Pile, Stack",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Holiday Presents/Holiday Presents, Green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Holiday Presents/Holiday Presents, Red",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Holiday Presents/Holiday Presents, White",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Luggage/Luggage Pile A,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Luggage/Luggage Pile B,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Blue",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Red",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Plants and Foliage/Houseplants/Potted Shrub, Yellow",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Spiral Order/Bedroll/Bedroll 01,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Clutter/Spiral Order/Escape Pod/Escape Pod, Shut",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Spiral Order/Field Sensor,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Clutter/Spiral Order/Sundries 01,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Counter/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Counter/Spiral Order/Corner/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Crate/Spiral Order/1unit, Toughbox/Shut",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Crate/Spiral Order/1unit, Toughbox/Weapons Crate",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Drawer/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Bishop, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Bishop, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Bishop, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Bishop, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/King, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/King, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/King, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/King, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Knight, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Knight, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Knight, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Knight, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Pawn, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Pawn, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Pawn, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Pawn, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Queen, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Queen, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Queen, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Queen, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Rook, Black",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Rook, White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Rook, Winterfest Red",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Feature/Chess Minis/Rook, Winterfest White",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Feature/Knight Statue,KnightStatue,unusable,no supported furniture inventory/design-room representation
+Furni/Feature/Knight Statue - Relaxed,KnightStatue,unusable,no supported furniture inventory/design-room representation
+"Furni/Feature/Knight Statue - Relaxed, Large",KnightStatue,unusable,no supported furniture inventory/design-room representation
+"Furni/Feature/Knight Statue, Large",KnightStatue,unusable,no supported furniture inventory/design-room representation
+Furni/Feature/Mist Well/Mist Well,Placeable,unusable,no supported furniture inventory/design-room representation
+"Furni/Floor/Almire/Rug, Charred",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Floor/Almire/Rug, Restored",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Floor/Monitors/Monitors, Prismatic",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Floor/Monitors/Monitors, Small, Prismatic",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Library/Lectern/Manor/Ancient Tome,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Library/Lectern/Manor/Cursed Tome,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Library/Lectern/Manor/Mystical Tome,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Library/Loose Books/Manor/1unit Stack A,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Library/Loose Books/Manor/1unit Stack B,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Short/Blue Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Short/Green Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Short/Orange Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Short/Violet Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Tall/Blue Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Tall/Green Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Tall/Orange Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Braziers/Castle/Tall/Violet Flame,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Candles/Candle Platter, Xmas Green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Candles/Candle Platter, Xmas Red",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Candles/Candle Platter, Xmas White",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Floor Beacons/Floor Beacon, Blue",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Floor Beacons/Floor Beacon, Green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Floor Beacons/Floor Beacon, Red",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Lighting/Floor Beacons/Floor Beacon, Yellow",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Short/Blue Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Short/Green Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Short/Orange Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Short/Violet Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Tall/Blue Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Tall/Green Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Tall/Orange Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Gaslamps/Tall/Violet Lamp,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Lighting/Rainbow,SpecialProp,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Chromalisk/Chromalisk,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Black Gobble Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Brown Gobble Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Lazy Gobble Snipe/Gold Gobble Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Black Gobble Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Brown Gobble Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Plump Gobble Snipe/Gold Gobble Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Black Gobble Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Brown Gobble Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Gobble Snipe/Wandering Gobble Snipe/Gold Gobble Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Nature Sprite/Cursed Nature Sprite,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Nature Sprite/Nature Sprite,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Black Rooster Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Brown Rooster Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Fiery Rooster Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Lazy Rooster Snipe/Gold Rooster Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Black Rooster Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Brown Rooster Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Fiery Rooster Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Plump Rooster Snipe/Gold Rooster Snipe, Plump",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Black Rooster Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Brown Rooster Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Fiery Rooster Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Rooster Snipe/Wandering Rooster Snipe/Gold Rooster Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Slime/Companion Cube,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Black Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Blue Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Cherry Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Green Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Lime Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Mint Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Orange Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Plum Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Purple Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Red Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Sage Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Sea Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Wheat Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/White Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Flying Snipe/Yellow Snipe, Flying",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Black Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Blue Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Cherry Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Green Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Lime Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Mint Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Orange Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Plum Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Purple Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Red Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Sage Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Sea Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Wheat Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/White Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Lazy Snipe/Yellow Snipe, Lazy",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Black Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Blue Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Cherry Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Green Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Lime Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Mint Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Orange Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Plum Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Purple Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Red Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Sage Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Sea Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Wheat Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/White Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Pet/Snipe/Wandering Snipe/Yellow Snipe, Wandering",Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Spookat/Mewkat,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Pet/Zombie/Zombie Bellhop,Actor,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Manor/2unit, Bookcase/Antique",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Shelf/Spiral Order/2unit, Random clutter/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Almire/Table, Charred",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Almire/Table, Restored",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Manor/1unit/Wood, Default",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Pale, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Rust, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Table/Spiral Order/1unit/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Table/Winterfest/1unit/Winterfest Table,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 1,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 2,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 3,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Battle Stand/Promo/Guildhall Launch/Rank 4,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Roarmulus/1 - Blueprints,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Boss Trophy/Roarmulus/2 - Replica Roarmulus, small",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Boss Trophy/Roarmulus/3 - Replica Roarmulus, large",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Royal Jelly/1 - Jelly Gem,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Royal Jelly/2 - Jelly Crown,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Royal Jelly/3 - Royal Jelly,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Snarbolax/1 - Frumious Fang,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Snarbolax/2 - Miniature Snarbolax,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Boss Trophy/Snarbolax/3 - Stuffed Snarbolax, Invuln",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Vanaduke/1 - Almirian Seal,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Vanaduke/2 - Mask of Vanaduke,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+Furni/Trophy/Boss Trophy/Vanaduke/3 - Scepter of Vanaduke,Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, Green",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, Red",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Trophy/Winterfest Tree/Winterfest Tree, White",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Pale, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Rust, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Cool tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Neutral tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
+"Furni/Wardrobe/Spiral Order/2 unit, Locker/Spiral Order, Warm tone",Prop,partial,"native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene"
 Gear/Dungeon/Vitapod/Health +01,Dungeon,unusable,no item-use handler for Dungeon
 Gear/Dungeon/Vitapod/Health +02,Dungeon,unusable,no item-use handler for Dungeon
 Gear/Dungeon/Vitapod/Health +03,Dungeon,unusable,no item-use handler for Dungeon
@@ -334,20 +272,17 @@ Gear/Dungeon/Vitapod/Health +27,Dungeon,unusable,no item-use handler for Dungeon
 Gear/Dungeon/Vitapod/Health +28,Dungeon,unusable,no item-use handler for Dungeon
 Gear/Dungeon/Vitapod/Health +29,Dungeon,unusable,no item-use handler for Dungeon
 Gear/Dungeon/Vitapod/Health +30,Dungeon,unusable,no item-use handler for Dungeon
-Gear/Dungeon/Vitapod/Parts/Base,Dungeon,unusable,no item-use handler for Dungeon
 Gear/PvP/Lockdown/Guardian,LockdownShield,unusable,no item-use handler for LockdownShield
 Gear/PvP/Lockdown/Recon,LockdownShield,unusable,no item-use handler for LockdownShield
 Gear/PvP/Lockdown/Striker,LockdownShield,unusable,no item-use handler for LockdownShield
 Gear/Shield/(Dev) Nuke-Pave,Shield,partial,unimplemented action Delayed
 Gear/Shield/(Dev) Translocator,Shield,partial,unimplemented action Delayed; unrestored action condition
 Instant/Arena Autotarget Off,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Crown/Base/Base Crown,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Crown/Copper Crown,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Crown/Copper-Silver Crown,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Crown/Gold Crown,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Crown/Silver Crown,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Crown/Silver-Gold Crown,InstantAction,unusable,no item-use handler for InstantAction
-Instant/Heart/Base/Base Heart,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Heart/Heart 1,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Heart/Heart 2,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Heart/Heart 3,InstantAction,unusable,no item-use handler for InstantAction
@@ -355,7 +290,6 @@ Instant/Heart/Heart Full,InstantAction,unusable,no item-use handler for InstantA
 Instant/Lethal Damage,InstantAction,unusable,no item-use handler for InstantAction
 Pickup/Capsule/Artillery Beacon,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Auto Turret Kit,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Base,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Blazing Speed,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Buffs/Attack Booster,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Buffs/Defense Booster,Capsule,partial,only healing capsules have an item-use handler
@@ -371,62 +305,24 @@ Pickup/Capsule/Buffs/Test/Speed Up,Capsule,partial,only healing capsules have an
 Pickup/Capsule/Cursed Idol,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Mecha Knight Kit,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Ocarina of Slime,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Orbital Barrier/Fire Barrier,Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Fire Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Fire Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Orbital Barrier/Freeze Barrier,Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Freeze Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Freeze Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Barrier/Parts/Base,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Orbital Barrier/Poison Barrier,Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Poison Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Poison Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Orbital Barrier/Shock Barrier,Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Shock Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
 "Pickup/Capsule/Orbital Barrier/Shock Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Line,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Ranger Signal Flare,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Remedy Capsule,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Shadow Espresso,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Slime/Luck Base,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Slime/Luck Potion,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Slime/Luck Potion 2,Capsule,partial,only healing capsules have an item-use handler
 Pickup/Capsule/Slime/Luck Potion 3,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Cloak,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Curse,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Fire,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Freeze,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Poison,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Sleep,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Test/Stun,Capsule,partial,only healing capsules have an item-use handler
-Rarity/Evo Catalyst/Advanced Evo Catalyst,Ticket,unusable,no item-use handler for Ticket
-Rarity/Evo Catalyst/Evo Catalyst,Ticket,unusable,no item-use handler for Ticket
-Rarity/Evo Catalyst/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Rarity/Evo Catalyst/Ultimate Evo Catalyst,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Cracked,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Dim,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Glowing,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Radiant,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Shining,Ticket,unusable,no item-use handler for Ticket
-Rarity/Fire Crystal/Warm,Ticket,unusable,no item-use handler for Ticket
-Rarity/Golden Slime Coin,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Advanced,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Elite,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Eternal,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Flawed,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Rarity/Orb of Alchemy/Simple,Ticket,unusable,no item-use handler for Ticket
-Rarity/Spark of Life,Ticket,unusable,no item-use handler for Ticket
-Recipe/Base/Armor,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Bomb,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Event Handgun,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Handgun,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Helm,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Rarity,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Shield,Recipe,unusable,no resolved crafting recipe
-Recipe/Base/Sword,Recipe,unusable,no resolved crafting recipe
 Sprite/Drakon Egg,SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Drakon Egg, Divine",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Drakon Egg, Grey",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
@@ -441,60 +337,53 @@ Sprite/Maskerraith Egg,SpriteEgg,partial,"quill attachments, advanced pet trigge
 "Sprite/Maskerraith Egg, Snarblepup",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Maskerraith Egg, Spiralhorn",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Maskerraith Egg, Volcanic",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
-Sprite/Parts/Base,SpriteEgg,unusable,no resolved sprite
 Sprite/Seraphynx Egg,SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Seraphynx Egg, Black",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Seraphynx Egg, Grey",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Seraphynx Egg, Grey (gry)",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Seraphynx Egg, Love Puppy",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Seraphynx Egg, Tan",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
-Story/Tutorial Artifact,Dungeon,unusable,no item-use handler for Dungeon
 Ticket/Guild/Bond/1000,GuildBond,unusable,no item-use handler for GuildBond
 Ticket/Guild/Bond/10000,GuildBond,unusable,no item-use handler for GuildBond
 Ticket/Guild/Bond/2000,GuildBond,unusable,no item-use handler for GuildBond
 Ticket/Guild/Bond/20000,GuildBond,unusable,no item-use handler for GuildBond
 Ticket/Guild/Bond/5000,GuildBond,unusable,no item-use handler for GuildBond
 Ticket/Guild/Bond/50000,GuildBond,unusable,no item-use handler for GuildBond
-Ticket/Guild/Bond/Parts/Base,GuildBond,unusable,no item-use handler for GuildBond
-Ticket/Guild/Door/GuildMaster,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Door/Member,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Door/None,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Door/Officer,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Door/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Door/Veteran,Ticket,unusable,no item-use handler for Ticket
+Ticket/Guild/Door/GuildMaster,Ticket,unusable,requires guild services
+Ticket/Guild/Door/Member,Ticket,unusable,requires guild services
+Ticket/Guild/Door/None,Ticket,unusable,requires guild services
+Ticket/Guild/Door/Officer,Ticket,unusable,requires guild services
+Ticket/Guild/Door/Veteran,Ticket,unusable,requires guild services
 Ticket/Guild/Environment/Default,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 Ticket/Guild/Environment/Embers,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
-Ticket/Guild/Environment/Parts/Base,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 Ticket/Guild/Environment/Rain (Shower),GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 Ticket/Guild/Environment/Rain (Torrent),GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 Ticket/Guild/Environment/Snowing,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
-Ticket/Guild/Expansion/Center2f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/Center4f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/East1f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/East2f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/East3f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/East4f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/East5f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/West1f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/West2f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/West3f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/West4f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Expansion/West5f,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Alchemy,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Auction,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Bechamel,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Coliseum,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Empty,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/EmptyCatwalk,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/EmptyCheckerLarge,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/EmptyCheckerSmall,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/EmptyChess,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/GardenSnipes,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/HuntersLodge,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/PunchNVise,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Room/Training,Ticket,unusable,no item-use handler for Ticket
+Ticket/Guild/Expansion/Center2f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/Center4f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/East1f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/East2f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/East3f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/East4f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/East5f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/West1f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/West2f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/West3f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/West4f,Ticket,unusable,requires guild services
+Ticket/Guild/Expansion/West5f,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Alchemy,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Auction,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Bechamel,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Coliseum,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Empty,Ticket,unusable,requires guild services
+Ticket/Guild/Room/EmptyCatwalk,Ticket,unusable,requires guild services
+Ticket/Guild/Room/EmptyCheckerLarge,Ticket,unusable,requires guild services
+Ticket/Guild/Room/EmptyCheckerSmall,Ticket,unusable,requires guild services
+Ticket/Guild/Room/EmptyChess,Ticket,unusable,requires guild services
+Ticket/Guild/Room/GardenSnipes,Ticket,unusable,requires guild services
+Ticket/Guild/Room/HuntersLodge,Ticket,unusable,requires guild services
+Ticket/Guild/Room/PunchNVise,Ticket,unusable,requires guild services
+Ticket/Guild/Room/Training,Ticket,unusable,requires guild services
 Ticket/Guild/Theme/Default,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Fire/Fire, Default Lighting",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Fire/Fire, Extra",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
@@ -502,7 +391,6 @@ Ticket/Guild/Theme/Default,GuildHallGlobalTicket,unusable,no item-use handler fo
 "Ticket/Guild/Theme/Freeze/Freeze, Default Lighting",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Freeze/Freeze, Extra",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Freeze/Freeze, Standard",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
-Ticket/Guild/Theme/Parts/Base,GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Poison/Poison, Default Lighting",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Poison/Poison, Extra",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Poison/Poison, Standard",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
@@ -512,123 +400,13 @@ Ticket/Guild/Theme/Parts/Base,GuildHallGlobalTicket,unusable,no item-use handler
 "Ticket/Guild/Theme/Spooky/Spooky, Extra",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/Spooky/Spooky, Standard",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
 "Ticket/Guild/Theme/White/White, Default",GuildHallGlobalTicket,unusable,no item-use handler for GuildHallGlobalTicket
-Ticket/Guild/Upgrade/Members 100,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Members 150,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Members 200,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Members 250,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Members 300,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Parts/Base,Ticket,unusable,no item-use handler for Ticket
-Ticket/Guild/Upgrade/Storage,Ticket,unusable,no item-use handler for Ticket
-Ticket/Keys/Shadow Key,Ticket,unusable,no item-use handler for Ticket
-Ticket/Keys/Silver Key,Ticket,unusable,no item-use handler for Ticket
-Ticket/Keys/Slime Key,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 0,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 1,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 2,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 3,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 4,Ticket,unusable,no item-use handler for Ticket
-Ticket/Unbind/Unbind 5,Ticket,unusable,no item-use handler for Ticket
-Ticket/Variants/Custom/Gear/Curse Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Curse Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Curse Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Curse Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Elemental Defense 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Elemental Defense 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Elemental Defense 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Elemental Defense 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Fire Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Fire Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Fire Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Fire Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Freeze Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Freeze Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Freeze Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Freeze Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Normal Defense 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Normal Defense 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Normal Defense 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Normal Defense 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Pierce Defense 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Pierce Defense 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Pierce Defense 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Pierce Defense 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Poison Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Poison Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Poison Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Poison Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shadow Defense 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shadow Defense 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shadow Defense 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shadow Defense 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shock Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shock Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shock Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Shock Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Sleep Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Sleep Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Sleep Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Sleep Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Stun Resist 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Stun Resist 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Stun Resist 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Gear/Stun Resist 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Parts/Gear Base,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Parts/Sword Gun Base,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Parts/Weapon Base,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Attack Speed 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Attack Speed 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Attack Speed 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Attack Speed 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Beast Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Beast Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Beast Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Beast Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Charge Time 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Charge Time 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Charge Time 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Charge Time 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Construct Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Construct Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Construct Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Construct Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Fiend Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Fiend Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Fiend Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Fiend Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Gremlin Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Gremlin Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Gremlin Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Gremlin Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Slime Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Slime Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Slime Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Slime Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Undead Damage 1,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Undead Damage 2,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Undead Damage 3,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Custom/Weapon/Undead Damage 4,VariantTicket,unusable,no item-use handler for VariantTicket
-Ticket/Variants/Variants 1,Ticket,unusable,no item-use handler for Ticket
-Ticket/Variants/Variants 2,Ticket,unusable,no item-use handler for Ticket
-Ticket/Variants/Variants 3,Ticket,unusable,no item-use handler for Ticket
-Upgrade/Coin Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Color/Parts/Base,Color,unusable,no item-use handler for Color
-Upgrade/Eye/Parts/Base,Eye,unusable,no item-use handler for Eye
-Upgrade/Gift Box/Checker Gift Box (Blue),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Checker Gift Box (Red),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Checker Gift Box (Yellow),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Heart Gift Box (Lovely),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Heart Gift Box (Pure),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Heart Gift Box (Sweet),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Parts/Base,GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Slime Gift Box (Pink),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Winter Gift Box (Green),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Winter Gift Box (Red),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Gift Box/Winter Gift Box (White),GiftBox,unusable,no item-use handler for GiftBox
-Upgrade/Heat Bonus,Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Heat Bonus (1 day),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Heat Bonus (30 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Heat Bonus (7 days),Upgrade,partial,native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable
-Upgrade/Height/Parts/Base,Height,unusable,no item-use handler for Height
+Ticket/Guild/Upgrade/Members 100,Ticket,unusable,requires guild services
+Ticket/Guild/Upgrade/Members 150,Ticket,unusable,requires guild services
+Ticket/Guild/Upgrade/Members 200,Ticket,unusable,requires guild services
+Ticket/Guild/Upgrade/Members 250,Ticket,unusable,requires guild services
+Ticket/Guild/Upgrade/Members 300,Ticket,unusable,requires guild services
+Ticket/Guild/Upgrade/Storage,Ticket,unusable,requires guild services
+Upgrade/Coin Bonus,Upgrade,partial,native timed activation/extension and bonus synchronization; Coliseum rewards unavailable
 Upgrade/Lockbox,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Lockbox, Copper",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 "Upgrade/Lockbox, Gold",Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -687,8 +465,6 @@ Upgrade/Lockboxes/Slime/Glacial,Lockbox,partial,native opening with documented c
 Upgrade/Lockboxes/Slime/Hazardous,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Hunter,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Opal,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Lockboxes/Slime/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Lockboxes/Slime/Parts/Variant Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Lockboxes/Slime/Pearl,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/Peridot,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Lockboxes/Slime/QQQ,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -700,7 +476,6 @@ Upgrade/Lockboxes/Slime/Turquoise,Lockbox,partial,native opening with documented
 "Upgrade/Pack/Eyes, Bedazzling",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Shapely",Pack,unusable,no item-use handler for Pack
 "Upgrade/Pack/Eyes, Suited",Pack,unusable,no item-use handler for Pack
-Upgrade/Parts/Heat Bonus,Upgrade,unusable,no item-use handler for Upgrade
 Upgrade/Prize Box/AeroTech Mk II Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/AeroTech Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Aerodynamic Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -711,7 +486,6 @@ Upgrade/Prize Box/Anniversary 2014/2014 Prize Box,Lockbox,partial,native opening
 Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Anniversary 2014/2014 Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Prize Box/Anniversary 2014/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Anniversary 2015/2015 Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 2,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Anniversary 2015/2015 Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -759,7 +533,6 @@ Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 2,Lockbox,partial,nati
 Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 3,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 4,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Companion Prize Box/Companion Prize Box 5,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Prize Box/Companion Prize Box/Parts/Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Confection Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Construct Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Cozy Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -821,8 +594,6 @@ Upgrade/Prize Box/Nemesis Prize Box,Lockbox,partial,native opening with document
 Upgrade/Prize Box/Obsidian Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Opal Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Owlite Archaeology Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
-Upgrade/Prize Box/Parts/Anniversary Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
-Upgrade/Prize Box/Parts/Equinox Base,Lockbox,disabled,native method 12 supported; reward pool unavailable or incomplete; see box-support.csv
 Upgrade/Prize Box/Pearl Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Peridot Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Plunge Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
@@ -885,168 +656,14 @@ Upgrade/Prize Box/Winterfest Present,Lockbox,partial,native opening with documen
 Upgrade/Prize Box/Winterfest Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Prize Box/Wizard Prize Box,Lockbox,partial,native opening with documented candidates and explicit estimated odds; see box-support.csv and content.md
 Upgrade/Rename Guild,RenameGuild,unusable,no item-use handler for RenameGuild
-Upgrade/Rename Knight,RenameKnight,unusable,no item-use handler for RenameKnight
-Upgrade/Trinket Slot,Upgrade,partial,"native activation/extension, persistent expiry and temporary equipment slots; see commands.md"
-Upgrade/Trinket Slot (2 days),Upgrade,partial,"native activation/extension, persistent expiry and temporary equipment slots; see commands.md"
-Upgrade/Weapon Slot,Upgrade,partial,"native activation/extension, persistent expiry and temporary equipment slots; see commands.md"
-Upgrade/Wrapping Paper/Checker Wrapping (Blue),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Checker Wrapping (Red),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Checker Wrapping (Yellow),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Heart Wrapping (Lovely),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Heart Wrapping (Pure),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Heart Wrapping (Sweet),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Parts/Base,WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Slime Wrapping (Pink),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Winter Wrapping (Green),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Winter Wrapping (Red),WrappingPaper,unusable,no item-use handler for WrappingPaper
-Upgrade/Wrapping Paper/Winter Wrapping (White),WrappingPaper,unusable,no item-use handler for WrappingPaper
 Usable/Bloon Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
-"Usable/Fireworks/Large/Large Fireworks, Amber",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Aquamarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Beast",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Blue",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Chartreuse",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Cobalt",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Crimson",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Cyan",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Emerald",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Green",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Indigo",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Lake",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Lavender",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Lime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Magenta",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Orange",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Purple",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Red",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Silver",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Sky",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Slime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Turquoise",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Ultramarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Vermillion",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Violet",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Viridian",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Large/Large Fireworks, Yellow",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Amber",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Aquamarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Beast",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Blue",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Chartreuse",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Cobalt",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Crimson",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Cyan",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Emerald",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Green",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Indigo",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Lake",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Lavender",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Lime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Magenta",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Orange",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Purple",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Red",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Silver",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Sky",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Slime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Turquoise",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Ultramarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Vermillion",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Violet",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Viridian",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Medium/Medium Fireworks, Yellow",AnimatedAction,unusable,no item-use handler for AnimatedAction
-Usable/Fireworks/Parts/Firework,AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Amber",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Aquamarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Beast",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Blue",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Chartreuse",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Cobalt",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Crimson",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Cyan",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Emerald",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Green",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Indigo",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Lake",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Lavender",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Lime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Magenta",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Orange",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Purple",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Red",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Silver",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Sky",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Slime",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Turquoise",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Ultramarine",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Vermillion",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Violet",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Viridian",AnimatedAction,unusable,no item-use handler for AnimatedAction
-"Usable/Fireworks/Small/Small Fireworks, Yellow",AnimatedAction,unusable,no item-use handler for AnimatedAction
 Usable/Flawed Snowball,Lift,unusable,no item-use handler for Lift
 "Usable/Flawed Snowball, Yellow",Lift,unusable,no item-use handler for Lift
-Usable/Jar O Fireflies,AnimatedAction,unusable,no item-use handler for AnimatedAction
 Usable/Pile O Pillows,SpawnActor,unusable,no item-use handler for SpawnActor
 Usable/Punkin Pie Pan,SpawnActor,unusable,no item-use handler for SpawnActor
 Usable/Snow Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
-Weapon/Bomb/Parts/Base,Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (ChargeOnly),Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (Chemical),Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (Deadly Charcoaler),Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (Relic),Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (Shard),Bomb,partial,no attack graph
-Weapon/Bomb/Parts/Base (Shard) (Promo),Bomb,partial,no attack graph
-"Weapon/Bomb/Parts/Virulent Seedling, Base",Bomb,partial,no attack graph
-"Weapon/Bomb/Piggy Banker/Parts/Piggy Banker, Base",Bomb,partial,no attack graph
 Weapon/Handgun/Celestial Orbitgun (OLD),Handgun,partial,unimplemented summoned actor
 Weapon/Handgun/Fiery Diskgun,Handgun,partial,unimplemented summoned actor
 Weapon/Handgun/Overcharged Mixmaster (OLD),Handgun,partial,unimplemented summoned actor
-"Weapon/Handgun/Owlite Wand/Parts/Owlite Wand, Base",SwingingHandgun,partial,no attack graph
-Weapon/Handgun/Parts/Base,Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Alchemer),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Alchemer) (Wand),SwingingHandgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Auto Shell),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Auto Shell) (1 Shot),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Catalyzer Gun),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Catalyzer Gun) (Arg Modify),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Heavy Shell),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Heavy Shell) (1 Shot),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Heavy Shell) (Animated),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Pulse Gun),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Pulse Gun) (Charged Attack),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Revolver Shell),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Simple),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Simple) (Bladed),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Spiral Soaker),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Twin Diskgun),Handgun,partial,no attack graph
-Weapon/Handgun/Parts/Base (Twin Mixer),Handgun,partial,no attack graph
-"Weapon/Handgun/Parts/Pollinator, Base",Handgun,partial,no attack graph
 Weapon/Handgun/Static Diskgun,Handgun,partial,unimplemented summoned actor
-Weapon/Handgun/Tortafist/Parts/Base (Tortafist),Handgun,partial,no attack graph
-Weapon/Handgun/Tortafist/Parts/Tortafist (Rank3),Handgun,partial,no attack graph
-Weapon/Handgun/Tortafist/Parts/Tortafist (Rank4),Handgun,partial,no attack graph
-Weapon/Handgun/Tortafist/Parts/Tortafist (Rank5),Handgun,partial,no attack graph
-"Weapon/Handgun/WizardWand/Parts/Wanderer's Wand, Base",SwingingHandgun,partial,no attack graph
-"Weapon/Handgun/WizardWand/Parts/Wanderer's Wand, Recolor",SwingingHandgun,partial,no attack graph
-Weapon/PvP/Blast Network/Default,BlastNetworkBomb,partial,no attack graph
-Weapon/PvP/Blast Network/Parts/Base,BlastNetworkBomb,partial,no attack graph
-Weapon/Sword/Fang of Vog,Sword,partial,unimplemented action ApplyStatus
-Weapon/Sword/Faust,Sword,partial,unimplemented action ApplyStatus
-Weapon/Sword/Gran Faust,Sword,partial,unimplemented action ApplyStatus
-"Weapon/Sword/Node Slime/Parts/Node Slime, Base",Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (2 Hit Slow),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (3 Hit),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (3 Hit) (Icon),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (5 Hit),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Ascended Calibur),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Calibur),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Furious Fork),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Leviathan Blade),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Rocket Ham),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Saber),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Spur),Sword,partial,no attack graph
-Weapon/Sword/Parts/Base (Tempered Calibur),Sword,partial,no attack graph
-"Weapon/Sword/Parts/Ice Axe, Base",Sword,partial,no attack graph
 Weapon/Sword/Sealed Sword,Sword,partial,unimplemented action TableSpawn; unrestored action condition
-"Weapon/Sword/Sweet Dreams, Tech/Parts/Sweet Dreams, Base Tech",Sword,partial,no attack graph
-"Weapon/Sword/Untimely Scythe/Parts/Untimely Scythe, Base (Leviathan Blade)",Sword,partial,no attack graph

@@ -52,7 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
-    private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly;
+    private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly,itemsOnly;
     private boolean hazardsOnly;
     private boolean healthOnly,arsenalBlinkOnly;
     private boolean movementOnly;
@@ -97,8 +97,11 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&(args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
+            if(args[0].equals("--seed-items"))try(var store=new AccountStore(Path.of(args[1]))){
+                for(String config:ITEM_ACTIONS)store.grantItems("LanPlayer","Town-Knight",config,2,-1,-1);
+            }
             if(args[0].equals("--seed-multiplayer"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.grantItems("LanPlayer","Town-Knight","Upgrade/Prize Box/Surge Prize Box",1,-1,-1);
                 store.grantItems("PeerPlayer","Peer-Knight","Usable/Confetti",2,-1,-1);
@@ -117,7 +120,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -135,6 +138,7 @@ public final class CombatRenderingCheck {
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
+        probe.itemsOnly=Arrays.asList(args).contains("--items-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
         probe.arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
@@ -247,6 +251,41 @@ public final class CombatRenderingCheck {
     private Map<Long,Integer> boxInventory(){
         var result=new HashMap<Long,Integer>();for(var item:app.CT().items)result.put(item.Mw(),item.getCount());return result;
     }
+    private static final String[] ITEM_ACTIONS={"Usable/Fireworks/Small/Small Fireworks, Amber","Usable/Fireworks/Medium/Medium Fireworks, Amber","Usable/Fireworks/Large/Large Fireworks, Amber","Usable/Jar O Fireflies","Usable/Confetti"};
+    private int itemActionIndex,itemBefore;
+    private boolean itemAnimationSeen,itemEffectSeen,itemCaptured,itemWindowClosed;
+    private void itemsTick(View view,long now)throws Exception {
+        if(stage==0){GLFW.glfwFocusWindow(app.getWindow());started=now;stage=90;return;}
+        String config=ITEM_ACTIONS[itemActionIndex];
+        if(stage==90&&now-started>1_000_000_000L){
+            var arsenal=new com.threerings.projectx.item.client.ArsenalPanel(app);boxArsenal=new com.threerings.opengl.gui.aD(app,null);
+            boxArsenal.getClass().getMethod("setLayoutManager",Class.forName("com.threerings.opengl.gui.d.g")).invoke(boxArsenal,Class.forName("com.threerings.opengl.gui.d.c").getConstructor().newInstance());
+            boxArsenal.add(arsenal,Class.forName("com.threerings.opengl.gui.d.c").getField("CENTER").get(null));
+            app.GG().addWindow(boxArsenal,false);boxArsenal.pack();boxArsenal.center();arsenal.e(com.threerings.projectx.item.data.ItemCodes.Group.UPGRADE);
+            flags(view,2);started=now;stage=91;return;
+        }
+        if(stage==91&&now-started>500_000_000L){
+            var item=app.CT().items.f(findItemId(config));itemBefore=itemCount(config);
+            boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
+            capture("item-"+itemActionIndex+"-arsenal-use");itemAnimationSeen=itemEffectSeen=itemCaptured=itemWindowClosed=false;
+            boxMenu.n("use",null);flags(view,0);started=now;stage=92;return;
+        }
+        if(stage==92){
+            if(!itemWindowClosed&&now-started>150_000_000L){boxArsenal.dismiss();itemWindowClosed=true;return;}
+            var own=authoritative.get(app.CT().pawnId);
+            if(own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adU()==267){
+                itemAnimationSeen=true;
+                if(itemWindowClosed&&!itemCaptured&&activityPlaying(view.gk(own.vw()),267)){capture("item-"+itemActionIndex+"-animation");itemCaptured=true;}
+            }
+            if(now-started>3_000_000_000L){
+                if(!itemAnimationSeen||!itemCaptured||itemActionIndex<4&&!itemEffectSeen||itemCount(config)!=itemBefore-1)
+                    throw new AssertionError("Native item use failed: "+config+" animation="+itemAnimationSeen+" captured="+itemCaptured+" effect="+itemEffectSeen+" count="+itemCount(config));
+                capture("item-"+itemActionIndex+"-effect");
+                if(++itemActionIndex==ITEM_ACTIONS.length){finishImages();passed=done=true;System.out.println("PASS: unchanged Arsenal Use, three firework sizes, fireflies and confetti; native animations/effects and single inventory consumption");app.shutdown();return;}
+                stage=90;started=now;
+            }
+        }
+    }
     private void tick(){
         if(done)return;
         try{
@@ -268,6 +307,7 @@ public final class CombatRenderingCheck {
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
+            if(itemsOnly){itemsTick(view,now);return;}
             if(multiplayerOnly){if(sharedWorldOnly)sharedWorldTick(view,now);else multiplayerTick(view,now);return;}
             if(peer){peerTick(view);return;}
             if(townDialogsOnly){townDialogsTick(view,now);return;}
@@ -1064,6 +1104,9 @@ public final class CombatRenderingCheck {
     }
     private void receive(SceneDeltaEvent event){
         lastStamp=event.QY();
+        if(itemsOnly&&event.aem()!=null)for(var effect:event.aem()){
+            String ref=effect.Mv().toString();if(ref.contains("fx_fire.dat")||ref.contains("Player/Release Fireflies"))itemEffectSeen=true;
+        }
         if(vortexShieldOnly&&event.aem()!=null)for(var effect:event.aem())if(effect.Mv().toString().contains("fx_shieldpush.dat")){
             try{if(field(effect,"_clientOid").getInt(effect)!=0||field(effect,"_target").get(effect)==null)throw new AssertionError("Shield bump is predicted away or has no source actor target");}
             catch(Exception error){throw new AssertionError(error);}sawShieldBump=true;

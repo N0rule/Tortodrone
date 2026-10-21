@@ -69,7 +69,7 @@ public final class TownMovement {
         if(activityData==null)return;
         activityStarted=stamp;
         if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.character.StarterCatalog.Model item)
-            animatedItemMillis=org.tortodrone.character.Confetti.duration(item.name(),stamp);
+            animatedItemMillis=animatedDuration(item.name(),stamp);
     }
     public Object activityData(){return activityData;}
     public boolean canOpenBox(){
@@ -87,6 +87,16 @@ public final class TownMovement {
         if(combat!=null)combat.reset(stamp);
         setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=org.tortodrone.character.Confetti.duration(config,stamp);
         activityData=new org.tortodrone.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+    }
+    public boolean animatedItem(String config,int stamp){
+        if(!canOpenBox()||!org.tortodrone.character.AnimatedItems.supports(config))return false;
+        if(combat!=null)combat.reset(stamp);
+        setActivity(ANIMATED_ITEM,stamp);animatedItemMillis=animatedDuration(config,stamp);
+        activityData=new org.tortodrone.character.StarterCatalog.Model(config,java.util.Map.of());updateFlags();return true;
+    }
+    private static int animatedDuration(String config,int stamp){
+        return org.tortodrone.character.Confetti.supports(config)?org.tortodrone.character.Confetti.duration(config,stamp)
+            :org.tortodrone.character.AnimatedItems.duration(config);
     }
     public boolean useItem(org.tortodrone.character.StarterCatalog.Model item,int stamp){
         if(activity!=0&&activity!=INVENTORY&&activity!=INVENTORY_END||combat!=null&&!combat.canOverride())return false;

@@ -38,10 +38,10 @@ public final class GearProgressionCompatibility {
         variant.a(22L,24L,1,(A.c)null);check(1,List.of(22L,24L,1),"ResultMarshaller");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,Path.of(args[0]).resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        for(String config:List.of("Upgrade/Weapon Slot","Upgrade/Trinket Slot","Upgrade/Trinket Slot (2 days)")) {
+        for(String config:List.of("Upgrade/Weapon Slot","Upgrade/Trinket Slot","Upgrade/Trinket Slot (2 days)","Upgrade/Heat Bonus","Upgrade/Heat Bonus (1 day)","Upgrade/Heat Bonus (7 days)","Upgrade/Heat Bonus (30 days)","Upgrade/Coin Bonus")) {
             var nativeDef=(ItemConfig.Upgrade)manager.d(ItemConfig.class,config).w(manager);
             var def=org.tortodrone.character.SlotUpgrades.find(config);
-            if(nativeDef.days!=def.days()||nativeDef.weaponSlotBonus!=def.weapons()||nativeDef.trinketSlotBonus!=def.trinkets())throw new AssertionError("Upgrade config differs: "+config);
+            if(nativeDef.days!=def.days()||nativeDef.weaponSlotBonus!=def.weapons()||nativeDef.trinketSlotBonus!=def.trinkets()||nativeDef.heatBonus!=def.heatBonus()||nativeDef.pvpToken!=def.pvpTokens())throw new AssertionError("Upgrade config differs: "+config);
         }
         var rules=org.tortodrone.resources.ContentManager.load(Path.of(".")).town();
         for(String config:List.of("Weapon/Sword/Proto Sword","Weapon/Sword/Calibur","Gear/Armor/Padded Armor")){

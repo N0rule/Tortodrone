@@ -92,10 +92,16 @@ public final class TownStore {
     }
     /** Only verified cosmetic AnimatedAction items; revision/ownership checked in the same write. */
     public Result confetti(int account,int knight,long auth,long revision,long item)throws IOException {
+        return animatedItem(account,knight,auth,revision,item,true);
+    }
+    public Result animatedItem(int account,int knight,long auth,long revision,long item)throws IOException {
+        return animatedItem(account,knight,auth,revision,item,false);
+    }
+    private Result animatedItem(int account,int knight,long auth,long revision,long item,boolean confetti)throws IOException {
         return change(account,knight,auth,(c,p)->{
             if(p.revision()!=revision)throw new IOException("Your inventory changed. Please try again.");
             var held=owned(p,item);
-            if(!Confetti.supports(held.config())||!items.require(held.config()).type().equals("AnimatedAction")
+            if(!(confetti?Confetti.supports(held.config()):AnimatedItems.supports(held.config()))||!items.require(held.config()).type().equals("AnimatedAction")
                     ||held.gift()!=null||held.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
             consume(c,p,item,1);return held.config();
         });
@@ -138,7 +144,27 @@ public final class TownStore {
         for(var delta:Map.of("crowns",crowns,"energy",energy).entrySet())if(delta.getValue()!=0)try(var s=c.prepareStatement("INSERT INTO currency_events(world_id,currency,delta,balance,created_at) SELECT world_id,?,?,"+delta.getKey()+",? FROM world_characters WHERE world_id=?")){s.setString(1,delta.getKey());s.setInt(2,delta.getValue());s.setLong(3,System.currentTimeMillis());s.setInt(4,world);s.executeUpdate();}
     }
     long create(Connection c,WorldProfile p,String config,int count,boolean locked,int level,float heat,List<StarterCatalog.Model> variants)throws SQLException,IOException{
+        return create(c,p,config,count,locked,level,heat,variants,true);
+    }
+    private long create(Connection c,WorldProfile p,String config,int count,boolean locked,int level,float heat,List<StarterCatalog.Model> variants,boolean merge)throws SQLException,IOException{
         var def=items.require(config);if(count<1||count>9999)throw new IOException("Invalid item count");
+        Long stack=null;
+        if(merge&&def.stackable()&&def.expireDays()==0&&def.slot()==WorldProfile.Slot.OTHER&&level==0&&heat==0&&variants.isEmpty()){
+            var current=WorldProfiles.load(c,p.accountId(),p.knightId(),-1);
+            stack=current.items().stream().filter(i->i.config().equals(config)&&i.slot()==def.slot()&&i.bound()==(locked||def.locked())
+                &&i.bindOnEquip()==def.bindOnEquip()&&i.permanent()==def.permanent()&&!i.starter()&&!i.cursed()&&i.equippedSlot()==null
+                &&i.expiresAt()==null&&i.gift()==null&&i.heat()==0&&i.level()==0&&i.heatProgress()==0&&i.variants().isEmpty()
+                &&i.accessory()==null&&i.additionalAccessories().isEmpty()&&i.count()+count<=9999).map(WorldProfile.Item::id).findFirst().orElse(null);
+        }
+        if(stack!=null){
+            try(var s=c.prepareStatement("UPDATE inventory_items SET count=count+? WHERE world_id=? AND item_id=?")){
+                s.setInt(1,count);s.setInt(2,p.worldId());s.setLong(3,stack);if(s.executeUpdate()!=1)throw new IOException("Item changed");
+            }
+            try(var s=c.prepareStatement("INSERT INTO item_events(world_id,config,quantity,first_item_id,created_at) VALUES(?,?,?,?,?)")){
+                s.setInt(1,p.worldId());s.setString(2,config);s.setInt(3,count);s.setLong(4,stack);s.setLong(5,System.currentTimeMillis());s.executeUpdate();
+            }
+            return stack;
+        }
         int size;try(var s=c.prepareStatement("SELECT count(*) FROM inventory_items WHERE world_id=?")){s.setInt(1,p.worldId());try(var r=s.executeQuery()){r.next();size=r.getInt(1);}}
         if(size+(def.stackable()?1:count)>ItemCatalog.INVENTORY_LIMIT)throw new IOException("m.inventory_full");
         long first=0;
@@ -224,8 +250,9 @@ public final class TownStore {
     public Result addHeat(int account,int knight,long auth,float amount)throws IOException{
         if(!Float.isFinite(amount)||amount<=0||amount>1_000_000)throw new IOException("Invalid heat award");
         return change(account,knight,auth,(c,p)->{
+            float awarded=SlotUpgrades.heatBonusActive(p)?amount*2:amount;
             var eligible=p.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot())).filter(i->{var g=rules.gear().gear(i.config());return g!=null&&!g.maximum(i.level())&&i.heatProgress()<1;}).toList();
-            for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),amount/eligible.size()));}return null;
+            for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),awarded/eligible.size()));}return null;
         });
     }
     private static void setGearProgress(Connection c,int world,long item,int level,float heat)throws SQLException,IOException{
@@ -316,7 +343,8 @@ public final class TownStore {
     public Result extendUpgrade(int account,int knight,long auth,long active,long unused)throws IOException {
         return change(account,knight,auth,(c,p)->{
             var target=owned(p,active);var source=owned(p,unused);var a=SlotUpgrades.find(target.config());var b=SlotUpgrades.find(source.config());
-            if(active==unused||a==null||b==null||a.weapons()!=b.weapons()||a.trinkets()!=b.trinkets()||target.expiresAt()==null||source.expiresAt()!=null||source.count()!=1)throw new IOException("These upgrades cannot be combined");
+            if(active==unused||a==null||b==null||a.weapons()!=b.weapons()||a.trinkets()!=b.trinkets()
+                    ||a.heatBonus()!=b.heatBonus()||a.pvpTokens()!=b.pvpTokens()||target.expiresAt()==null||source.expiresAt()!=null||source.count()!=1)throw new IOException("These upgrades cannot be combined");
             long deadline;
             try{deadline=Math.addExact(target.expiresAt(),Math.multiplyExact((long)b.days(),86_400_000L));}
             catch(ArithmeticException overflow){throw new IOException("Upgrade duration exceeds supported limits");}
@@ -327,8 +355,9 @@ public final class TownStore {
         return change(account,knight,auth,(c,p)->{
             var item=owned(p,id);var def=SlotUpgrades.find(item.config());
             if(def==null||item.expiresAt()!=null||item.count()!=1||item.equippedSlot()!=null||item.gift()!=null)throw new IOException("This upgrade cannot be activated");
-            int used=def.weapons()>0?SlotUpgrades.weapons(p)-2:SlotUpgrades.trinkets(p);
-            if(used>=2)throw new IOException("All slots of this type are already unlocked");
+            if(def.weapons()>0&&SlotUpgrades.weapons(p)-2>=2||def.trinkets()>0&&SlotUpgrades.trinkets(p)>=2)throw new IOException("All slots of this type are already unlocked");
+            if(def.heatBonus()&&SlotUpgrades.heatBonusActive(p))throw new IOException("A Heat Bonus is already active");
+            if(def.pvpTokens()>0&&SlotUpgrades.pvpTokenBonus(p)+def.pvpTokens()>6)throw new IOException("The Krogmo Coin Bonus is already at its maximum");
             InventoryExpiry.save(c,id,InventoryExpiry.deadline(def.days()));
             try(var st=c.prepareStatement("UPDATE inventory_items SET bound=1 WHERE world_id=? AND item_id=?")){st.setInt(1,p.worldId());st.setLong(2,id);st.executeUpdate();}
             return null;
@@ -349,7 +378,7 @@ public final class TownStore {
             var gifts=new ArrayList<WorldProfile.Item>();int total=0;
             for(var entry:selected.entrySet()){
                 var item=owned(p,entry.getKey());var def=items.require(item.config());int count=entry.getValue();
-                if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
+                if(item.id()==paperId||item.bound()||def.locked()||item.permanent()||item.starter()||item.cursed()||item.expired(System.currentTimeMillis())||item.equippedSlot()!=null||def.type().equals("GiftBox")||count<1||count>item.count()||(total+=count)>9999)throw new IOException("e.not_wrapable");
                 gifts.add(new WorldProfile.Item(0,item.slot(),item.config(),null,item.heat(),null,false,item.bindOnEquip(),false,count,false,item.level(),item.heatProgress(),item.variants(),item.nativeAccessories(costume)).withExpiration(item.expiresAt()));
             }
             String name;try(var st=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){st.setInt(1,account);st.setInt(2,knight);try(var row=st.executeQuery()){if(!row.next())throw new IOException("m.internal_error");name=row.getString(1);}}
@@ -363,10 +392,12 @@ public final class TownStore {
             var contents=box.gift().contents();consume(c,p,boxId,1);var result=new LinkedHashMap<Object,Integer>();
             for(var item:contents){
                 if(item.expired(System.currentTimeMillis()))continue;
-                long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants());
+                boolean plain=item.expiresAt()==null&&item.heat()==0&&item.accessory()==null&&item.additionalAccessories().isEmpty()
+                    &&item.bindOnEquip()==items.require(item.config()).bindOnEquip();
+                long id=create(c,p,item.config(),item.count(),item.bound(),item.level(),item.heatProgress(),item.variants(),plain);
                 InventoryExpiry.save(c,id,item.expiresAt());
                 try(var st=c.prepareStatement("UPDATE inventory_items SET heat=?,accessory=?,accessories=?,bind_on_equip=? WHERE world_id=? AND item_id=?")){st.setInt(1,item.heat());st.setString(2,item.accessory());st.setString(3,Json.stringify(item.additionalAccessories()));st.setBoolean(4,item.bindOnEquip());st.setInt(5,p.worldId());st.setLong(6,id);st.executeUpdate();}
-                result.put(id,item.count());
+                result.merge(id,item.count(),Math::addExact);
             }
             return new org.tortodrone.protocol.SessionDecoder.Multiset(result);
         });

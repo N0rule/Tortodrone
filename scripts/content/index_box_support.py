@@ -62,15 +62,11 @@ for row in rows:
                    if configs[row[0]]['status'] == 'approximate' else
                    ['disabled', 'native method 12 supported; reward pool unavailable or incomplete; see box-support.csv'])
     elif by_config[row[0]]['variant'] == 'FURNITURE_ITEM' and by_config[row[0]]['slot'] == 'OTHER':
-        row[2:] = ['partial', 'native undeployed FurniItem inventory/grant/persistence; furniture placement unavailable']
+        row[2:] = ['partial', 'native inventory/transfer; requires design-room placement/removal, no supported non-guild design scene']
     elif by_config[row[0]].get('expireDays', 0) > 0 and by_config[row[0]]['slot'] is not None:
         row[2:] = ['partial', 'native timed costume with persistent absolute expiry, inventory/equip/trade; see content.md']
     elif row[1] == 'Sword' and row[0] == bindings['untimely_scythe']['config']:
         row[2:] = ['partial', 'native inventory/equip/custom color model and existing sword combat; see content.md']
-    elif row[0] in {'Upgrade/Weapon Slot', 'Upgrade/Trinket Slot', 'Upgrade/Trinket Slot (2 days)'}:
-        row[2:] = ['partial', 'native activation/extension, persistent expiry and temporary equipment slots; see commands.md']
-    elif row[1] == 'Upgrade' and by_config[row[0]]['slot'] == 'OTHER' and by_config[row[0]]['variant'] == 'UPGRADE_ITEM':
-        row[2:] = ['partial', 'native inactive UpgradingItem inventory/grant/persistence; timed activation unavailable']
 with index.open('w', newline='') as output:
     writer = csv.writer(output, lineterminator='\n')
     writer.writerow(header)
