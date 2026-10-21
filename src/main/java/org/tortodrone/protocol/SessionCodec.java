@@ -832,7 +832,8 @@ public final class SessionCodec {
         return frame(out -> {
             objectHeader(out,id,scene.map().town()?"com.threerings.projectx.town.data.TownSceneObject":"com.threerings.projectx.data.ProjectXSceneObject",scene.oid());
             type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(actors.size());for(var a:actors)out.writeInt(a.clientOid());out.writeInt(actors.size());
-            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(actors.size());for(var a:actors)occupant(out,a);
+            // DSet.readObject retains wire order; its key lookup requires ascending bodyOid.
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(actors.size());for(var a:actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList())occupant(out,a);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(scene.oid());out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
             type(out,"com.threerings.tudey.data.TudeySceneMarshaller");out.writeInt(scene.oid());out.writeInt(10);
             type(out,"com.threerings.projectx.data.ProjectXSceneMarshaller");out.writeInt(scene.oid());out.writeInt(6);
@@ -843,7 +844,7 @@ public final class SessionCodec {
         });
     }
 
-    /** Connection-local single-member transport required by stock level controllers. */
+    /** Compatibility transport for explicitly constructed single-member interior fixtures. */
     public static int interiorPartyOid(SceneRegistry.Instance scene){return 500+scene.oid();}
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene)throws IOException {
         return interiorParty(message,partyOid,playerOid,knight,profile,scene,new org.tortodrone.world.SceneHealth.State(1,1,0));
@@ -854,19 +855,23 @@ public final class SessionCodec {
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException {
         return party(message,partyOid,List.of(new PartyRegistry.Participant(playerOid,profile.worldId(),0,knight,profile,health,status)),scene,false);
     }
-    public byte[] party(short message,PartyRegistry.View view,SceneRegistry.Instance scene)throws IOException{return party(message,view.oid(),view.members(),scene,true);}
+    public byte[] party(short message,PartyRegistry.View view,SceneRegistry.Instance scene)throws IOException{return party(message,view.oid(),view.members(),scene,!view.automatic(),view.automatic());}
     private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed)throws IOException {
+        return party(message,partyOid,members,scene,managed,false);
+    }
+    private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed,boolean automatic)throws IOException {
         return frame(out->{
             boolean training=scene.map().kind().equals("training");
-            objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
+            objectHeader(out,message,automatic?"com.threerings.projectx.dungeon.data.DungeonPartyObject":"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
-            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members)partyMember(out,member);
-            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members)partyHealth(out,member);
-            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members)partyStatus(out,member);
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyMember(out,member);
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHealth(out,member);
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(0);out.writeBoolean(managed||!scene.map().content().items().isEmpty());out.writeLong(0);
             out.writeShort(0);out.writeInt(managed?PartyRegistry.CAPACITY:training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
+            if(automatic)return; // Stock public Training HUD has no LevelParty leader or dungeon settings.
             out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
@@ -881,8 +886,20 @@ public final class SessionCodec {
     }
     private void partyMember(DataOutputStream out,PartyRegistry.Participant member)throws IOException {
         var knight=member.knight();type(out,"com.threerings.projectx.dungeon.data.PartyMember");out.writeInt(member.playerOid());out.writeInt(member.order());
-        name(out,knight.name());out.writeInt(256|knight.color());value(out,new StarterCatalog.Model(knight.helm(),Map.of()));
-        out.writeShort(0);type(out,"[Lcom.threerings.config.ConfigReference;");out.writeInt(0);out.writeLong(0);
+        var portrait=StarterCatalog.portrait(knight,member.profile(),itemCatalog);
+        name(out,knight.name());out.writeInt(256|knight.color());value(out,portrait.arguments().get("Helm"));
+        value(out,portrait);type(out,"[Lcom.threerings.config.ConfigReference;");out.writeInt(4);
+        for(String weapon:partyWeapons(member.profile()))value(out,weapon==null?null:new StarterCatalog.Model(weapon,Map.of()));
+        out.writeLong(0);
+    }
+    private String[] partyWeapons(WorldProfile profile){
+        var result=new String[4];int[] slots={6,7,10,11};
+        for(var item:profile.items())if(item.equippedSlot()!=null)for(int i=0;i<slots.length;i++)if(item.equippedSlot()==slots[i])result[i]=item.config();
+        return result;
+    }
+    private boolean partyAppearanceChanged(PartyRegistry.Participant before,PartyRegistry.Participant after){
+        return !StarterCatalog.portrait(before.knight(),before.profile(),itemCatalog).equals(StarterCatalog.portrait(after.knight(),after.profile(),itemCatalog))
+            ||!java.util.Arrays.equals(partyWeapons(before.profile()),partyWeapons(after.profile()));
     }
     private void partyHealth(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var health=member.health();type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(member.playerOid());out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());}
     private void partyStatus(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var status=member.status();type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(member.playerOid());conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(member.health().reviveFlags());}
@@ -890,9 +907,10 @@ public final class SessionCodec {
         var events=new ArrayList<Writer>();var old=new HashMap<Integer,PartyRegistry.Participant>();for(var m:before.members())old.put(m.playerOid(),m);
         var current=new java.util.HashSet<Integer>();for(var member:after.members()){
             current.add(member.playerOid());var previous=old.get(member.playerOid());
-            if(previous==null||!previous.knight().equals(member.knight())||previous.order()!=member.order())events.add(out->{partyEntry(out,after.oid(),"members",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyMember(out,member);});
             if(previous==null||!previous.health().equals(member.health()))events.add(out->{partyEntry(out,after.oid(),"health",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyHealth(out,member);});
             if(previous==null||!previous.status().equals(member.status())||previous.health().reviveFlags()!=member.health().reviveFlags())events.add(out->{partyEntry(out,after.oid(),"status",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyStatus(out,member);});
+            // Member listeners construct HUD rows synchronously and require both vitals entries.
+            if(previous==null||!previous.knight().equals(member.knight())||previous.order()!=member.order()||partyAppearanceChanged(previous,member))events.add(out->{partyEntry(out,after.oid(),"members",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyMember(out,member);});
         }
         for(var member:before.members())if(!current.contains(member.playerOid()))for(String field:List.of("members","health","status"))events.add(out->{partyEntry(out,after.oid(),field,"EntryRemovedEvent");value(out,member.playerOid());});
         return frame(out->{eventHeader(out,"CompoundEvent",after.oid());type(out,"com.threerings.util.StreamableArrayList");out.writeInt(events.size());for(var event:events)event.write(out);});
@@ -969,8 +987,28 @@ public final class SessionCodec {
             });
             attribute(out, sceneOid, "occupantInfo", o -> {
                 type(o, "com.threerings.presents.dobj.DSet"); o.writeInt(actors.size());
-                for (var actor : actors) occupant(o, actor);
+                for (var actor : actors.stream().sorted(java.util.Comparator.comparingInt(ActorState::clientOid)).toList()) occupant(o, actor);
             });
+        });
+    }
+
+    /** Publish native membership events in the same order as PlaceManager. */
+    public byte[] occupantChanges(int sceneOid,Map<Integer,Integer> previous,List<ActorState> actors)throws IOException {
+        var current=new java.util.LinkedHashMap<Integer,ActorState>();
+        for(var actor:actors)current.put(actor.id(),actor);
+        return frame(out->{
+            eventHeader(out,"CompoundEvent",sceneOid);
+            type(out,"com.threerings.util.StreamableArrayList");
+            out.writeInt(2*((int)previous.keySet().stream().filter(id->(!current.containsKey(id)||current.get(id).clientOid()!=previous.get(id))).count()
+                +(int)current.keySet().stream().filter(id->(!previous.containsKey(id)||previous.get(id)!=current.get(id).clientOid())).count()));
+            for(var old:previous.entrySet())if(!current.containsKey(old.getKey())||current.get(old.getKey()).clientOid()!=old.getValue()){
+                type(out,"com.threerings.presents.dobj.EntryRemovedEvent");out.writeInt(sceneOid);string(out,"occupantInfo");value(out,old.getValue());
+                type(out,"com.threerings.presents.dobj.ObjectRemovedEvent");out.writeInt(sceneOid);string(out,"occupants");out.writeInt(old.getValue());
+            }
+            for(var actor:actors)if(!previous.containsKey(actor.id())||previous.get(actor.id())!=actor.clientOid()){
+                type(out,"com.threerings.presents.dobj.EntryAddedEvent");out.writeInt(sceneOid);string(out,"occupantInfo");occupant(out,actor);
+                type(out,"com.threerings.presents.dobj.ObjectAddedEvent");out.writeInt(sceneOid);string(out,"occupants");out.writeInt(actor.clientOid());
+            }
         });
     }
 
@@ -1010,8 +1048,8 @@ public final class SessionCodec {
         return frame(out -> {
             type(out,PREFIX+"EventNotification");out.writeShort(-1);type(out,"com.threerings.tudey.dobj.SceneDeltaEvent");out.writeInt(oid);
             out.writeInt(sceneOid);out.writeInt(acknowledge);out.writeShort(ping);out.writeInt(reference);out.writeInt(timestamp);out.writeShort(elapsed);
-            if(added.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.data.actor.Actor;");out.writeInt(added.size());for(var a:added)actor(out,a,interior);}
-            if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior);}
+            if(added.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.data.actor.Actor;");out.writeInt(added.size());for(var a:added)actor(out,a,interior,oid);}
+            if(updated.isEmpty())out.writeShort(0);else{type(out,"[Lcom.threerings.tudey.dobj.ActorDelta;");out.writeInt(updated.size());out.writeShort((updated.size()+7)/8);for(int i=0;i<updated.size();i+=8)out.writeByte((1<<Math.min(8,updated.size()-i))-1);for(var a:updated)actorDelta(out,a,baseline.get(a.id()),interior,oid);}
             out.writeBoolean(true);out.writeInt(removed.length);for(int id:removed)out.writeInt(id);
             if(effects.isEmpty())out.writeShort(0);else {type(out,"[Lcom.threerings.tudey.data.effect.Effect;");out.writeInt(effects.size());for(var effect:effects)effect(out,effect);}
         });
@@ -1130,13 +1168,22 @@ public final class SessionCodec {
     private void actorSprite(DataOutputStream out,ActorState actor)throws IOException{
         var state=actor.sceneKnight();if(state==null||state.sprite()==null)out.writeShort(0);else sprite(out,actor.id(),state.sprite(),state.harness());
     }
-    private void actor(DataOutputStream out,ActorState a,boolean interior)throws IOException {
+    private Object activityData(ActorState actor,int observer) {
+        Object data=actor.sceneKnight()==null?null:actor.sceneKnight().activityData();
+        if(actor.activity()==TownMovement.OPEN_BOX&&actor.clientOid()!=observer&&data instanceof List<?> references&&!references.isEmpty()){
+            // The stock animation requires two references. Observers see the box icon;
+            // actual reward references and item identities remain on the owner's connection.
+            return List.of(references.getFirst(),references.getFirst());
+        }
+        return data;
+    }
+    private void actor(DataOutputStream out,ActorState a,boolean interior,int observer)throws IOException {
         if(a.pet()!=null){petActor(out,a);return;}
         if(a.projectile()!=null){projectile(out,a);return;}
         if(a.entity()!=null){sceneEntity(out,a);return;}
         type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");value(out,a.config());out.writeInt(a.id());out.writeInt(a.created());out.writeInt(Integer.MAX_VALUE);
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(TownMovement.MAX_STEP);out.writeFloat(a.direction());out.writeInt(a.activity());out.writeInt(a.activityStarted());
-        value(out,a.sceneKnight()==null?null:a.sceneKnight().activityData());interaction(out,a.interaction());string(out,null);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());actorSprite(out,a);
+        value(out,activityData(a,observer));interaction(out,a.interaction());string(out,null);out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());actorSprite(out,a);
         if(interior) {
             var combat=a.combat();
             weapon(out,a.id(),combat);string(out,combat==null?null:combat.shield());string(out,combat==null?null:combat.shieldCostume());conditions(out,a.sceneKnight()==null?org.tortodrone.world.SceneStatus.State.NORMAL:a.sceneKnight().status());
@@ -1148,7 +1195,7 @@ public final class SessionCodec {
             equipmentModifiers(out,combat==null?null:combat.equipmentModifiers());equipmentModifiers(out,combat==null?null:combat.weaponModifiers());
         }
     }
-    private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline,boolean interior)throws IOException {
+    private void actorDelta(DataOutputStream out,ActorState a,ActorState baseline,boolean interior,int observer)throws IOException {
         // ActorDelta is final: its typed array omits a per-element type header.
         if(a.pet()!=null){petDelta(out,a);return;}
         if(a.projectile()!=null){projectileDelta(out,a);return;}
@@ -1169,7 +1216,7 @@ public final class SessionCodec {
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
         out.writeInt(a.activity());out.writeInt(a.activityStarted());
-        if(sceneData)value(out,a.sceneKnight()==null?null:a.sceneKnight().activityData());
+        if(sceneData)value(out,activityData(a,observer));
         if(a.interaction()!=null||baseline!=null&&baseline.interaction()!=null)interaction(out,a.interaction());
         if(sceneData)out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());
         if(spriteChanged)actorSprite(out,a);

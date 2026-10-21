@@ -36,6 +36,25 @@ public class PartyRegistryTest {
             scenes.release(shared,1);check(scenes.statuses().stream().noneMatch(s->s.instanceId()==shared.oid()),"last lease releases the shared instance");
             scenes.release(privateRoom,3);
         }
+        var publicScenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
+        var publicParties=publicScenes.parties();var visitors=new ArrayList<PartyRegistry.Member>();
+        try {
+            for(int id=1;id<=9;id++)visitors.add(member(publicParties,id));
+            var room=publicScenes.destination(294,1,visitors.get(0));
+            for(int i=1;i<8;i++)check(publicScenes.destination(294,i+1,visitors.get(i))==room,"independent players reuse the public Training simulation");
+            var overflow=publicScenes.destination(294,9,visitors.get(8));
+            check(overflow!=room&&publicParties.view(visitors.get(0)).automatic(),"ninth player gets a new public group and instance");
+            refused(()->publicParties.boot(visitors.get(0),"Knight-B"));
+            refused(()->publicParties.invite(visitors.get(0),"Knight-I"));
+            check(!publicScenes.authorized(room,9,visitors.get(8)),"public matching still authorizes the exact assigned group");
+            publicScenes.release(room,2);publicParties.leaveTraining(visitors.get(1));
+            check(publicScenes.destination(294,2,visitors.get(1))==room,"leaving and returning reuses a compatible vacancy");
+            for(int i=0;i<8;i++){publicScenes.release(room,i+1);publicParties.leaveTraining(visitors.get(i));}
+            publicScenes.release(overflow,9);publicParties.leaveTraining(visitors.get(8));
+            check(publicScenes.statuses().stream().noneMatch(status->status.templateId()==294),"empty public instances release all reservations");
+            var labA=publicScenes.destination(30893,1,visitors.get(0));var labB=publicScenes.destination(30893,2,visitors.get(1));
+            check(labA!=labB,"Laboratory allocation stays per knight");publicScenes.release(labA,1);publicScenes.release(labB,2);
+        }finally{visitors.forEach(PartyRegistry.Member::close);}
         System.out.println("PASS: invite authorization/decline/expiry, reconnect invalidation, leader succession, shared/private ownership and lease cleanup");
     }
     private static PartyRegistry.Member member(PartyRegistry p,int id)throws IOException{return p.join(1000+id,new Knight(1,"Knight-"+(char)('A'+id-1),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),new WorldProfile(id,id,1,0,0,1,List.of()),e->{});}

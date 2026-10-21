@@ -75,6 +75,9 @@ public final class SceneItemUseTest {
             member=simulation.join(new ActorState(219,1001,"Fixture",256,stamp,5.5f,-12.5f,0,0,0,0,stamp,model,false),publications::add);
             member.combat(WeaponCatalog.empty(),new WorldProfile(219,1,1,0,0,1,List.of()));
             member.enter();
+            // This fixture tests damage/use interruption, outside the entry protection window.
+            var healthField=SceneSimulation.Membership.class.getDeclaredField("health");healthField.setAccessible(true);
+            var immunity=SceneHealth.class.getDeclaredField("invulnerableUntil");immunity.setAccessible(true);immunity.setInt(healthField.get(member),0);
             try{await(s->true);}catch(Exception|Error failure){close();throw failure;}
         }
         void hit(Object damage) {

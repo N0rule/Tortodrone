@@ -13,8 +13,10 @@ public final class CheckCombatRendering {
 
     public static void main(String[] args) throws Exception {
         if (args.length < 1 || args.length > 3) {
-            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only]");
+            throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only]");
         }
+        boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
+        boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
         boolean arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
         boolean boxesOnly=Arrays.asList(args).contains("--boxes-only");
         boolean dialogueOnly=Arrays.asList(args).contains("--dialogue-only");
@@ -24,7 +26,7 @@ public final class CheckCombatRendering {
         boolean depotOnly=Arrays.asList(args).contains("--depot-only");
         boolean healthOnly=Arrays.asList(args).contains("--health-only");
         boolean movementOnly=Arrays.asList(args).contains("--movement-only");
-        boolean trainingOnly=arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
+        boolean trainingOnly=multiplayerOnly||arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly||Arrays.asList(args).contains("--training-only");
         String outputArgument=Arrays.stream(args).skip(1).filter(arg->!arg.startsWith("--")).findFirst().orElse(null);
         Path project = Path.of("").toRealPath();
         Path game = Path.of(args[0]).toRealPath();
@@ -63,6 +65,7 @@ public final class CheckCombatRendering {
             requireMaps(maps);
             if(arsenalBlinkOnly)arsenalBlinkFixture(maps);
             if(healthOnly)healthFixture(maps);
+            if(sharedWorldOnly)vortexShieldFixture(maps,true);
             if(hazardsOnly)hazardFixture(maps);
             if(vortexShieldOnly)vortexShieldFixture(maps);
             Files.createDirectories(scratch.resolve("data"));
@@ -85,7 +88,7 @@ public final class CheckCombatRendering {
             Files.createDirectories(outputDir);
             var base = graphicsBase(game, app, scratch);
             var seed = new ArrayList<>(base);
-            seed.addAll(List.of("CombatRenderingCheck", boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":"--seed", scratch.resolve("data").toString()));
+            seed.addAll(List.of("CombatRenderingCheck", multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":"--seed", scratch.resolve("data").toString()));
             run(seed, "seed", 45, scratch);
 
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog, scratch);
@@ -105,6 +108,7 @@ public final class CheckCombatRendering {
                 arg.startsWith("-Djava.util.prefs.systemRoot=")?"-Djava.util.prefs.systemRoot="+peerHome.resolve("system-prefs"):
                 arg.startsWith("-Djava.io.tmpdir=")?"-Djava.io.tmpdir="+peerTemp:arg);
             peerCommand.addAll(List.of("CombatRenderingCheck","--peer",port,publicKey.toString(),peerOutput.toString()));
+            if(multiplayerOnly)peerCommand.add(sharedWorldOnly?"--multiplayer-world-only":"--multiplayer-only");
             Path peerLog=output.resolve("peer-client.log");Process peer=arsenalBlinkOnly||boxesOnly||townDialogsOnly||dialogueOnly||vortexShieldOnly||hazardsOnly||depotOnly||healthOnly||movementOnly?null:start(peerCommand,peerLog,scratch);
             long peerDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(90);
             while(peer!=null&&peer.isAlive()&&!Files.isRegularFile(peerOutput.resolve("peer-ready"))&&System.nanoTime()<peerDeadline)Thread.sleep(50);
@@ -113,9 +117,15 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(arsenalBlinkOnly?"--arsenal-blink-only":boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?"--arsenal-blink-only":boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
+            if(multiplayerOnly&&!sharedWorldOnly){
+                long mpDeadline=System.nanoTime()+TimeUnit.SECONDS.toNanos(180);
+                while(peer.isAlive()&&client.isAlive()&&System.nanoTime()<mpDeadline)Thread.sleep(50);
+                if(peer.isAlive()||peer.exitValue()!=0||!Files.isRegularFile(outputDir.resolve("mp-disconnected")))throw new IOException("Multiplayer failed: "+tail(peerLog)+"\nPrimary: "+tail(clientLog));
+                peerLog=output.resolve("peer-reconnect.log");peer=start(peerCommand,peerLog,scratch);
+            }
             if (!client.waitFor(trainingOnly?440:400, TimeUnit.SECONDS)) {
                 throw new IOException("Graphical combat probe timed out:\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
             }
@@ -126,6 +136,11 @@ public final class CheckCombatRendering {
             if(peer!=null&&(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
                     ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:"))))
                 throw new IOException("Graphical peer did not pass:\n"+tail(peerLog));
+            if(multiplayerOnly)for(Path nativeLog:List.of(clientLog,output.resolve("peer-client.log"),peerLog)){
+                String nativeText=Files.readString(nativeLog);
+                if(nativeText.contains("NullPointerException")||nativeText.contains("ClassCastException"))
+                    throw new IOException("Native multiplayer HUD/controller error: "+tail(nativeLog));
+            }
             System.out.println(log.lines().filter(line -> line.startsWith("PASS:")).findFirst().orElseThrow());
             System.out.println("Combat screenshots and logs retained at " + output);
         } finally {
@@ -186,7 +201,8 @@ public final class CheckCombatRendering {
         if(kind.equals("hazards")&&pot!=2)throw new IOException("Expected original Fire and Oil Pot pads");
         Files.delete(file);Yaml.write(file,yaml);
     }
-    private static void vortexShieldFixture(Path content)throws Exception {
+    private static void vortexShieldFixture(Path content)throws Exception { vortexShieldFixture(content,false); }
+    private static void vortexShieldFixture(Path content,boolean multiplayer)throws Exception {
         Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml"),bindingFile=map.resolve("native/bindings.json");
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var props=prepared.content();
         String prefix=Arrays.stream(props.getProperty("entries").split(",")).map(id->"entry."+id+".child.")
@@ -196,7 +212,7 @@ public final class CheckCombatRendering {
         bindings.remove("actorDefaults");bindings.remove("actorOrder");bindings.remove("actorAliases");
         var fixedActors=Yaml.map(bindings.get("actors"),"actors");var fields=Yaml.map(bindings.get("actorFields"),"actor fields");var types=Yaml.map(bindings.get("actorTypes"),"actor types");
         float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"))+3;
-        for(int i=0;i<2;i++) {
+        for(int i=0;i<(multiplayer?1:2);i++) {
             String id="vortex_shield_"+i;var fixed=new LinkedHashMap<String,Object>();var editable=new LinkedHashMap<String,Object>();var schema=new LinkedHashMap<String,Object>();
             for(String key:props.stringPropertyNames())if(key.startsWith(prefix)) {
                 String name=key.substring(prefix.length()),value=props.getProperty(key);
@@ -204,7 +220,7 @@ public final class CheckCombatRendering {
                 else if(name.equals("rotation"))editable.put("facing",Math.toDegrees(Float.parseFloat(value)));
                 else {Object scalar=value;if(value.equals("true")||value.equals("false"))scalar=Boolean.parseBoolean(value);else try{scalar=new java.math.BigDecimal(value);}catch(NumberFormatException text){ }editable.put(name,scalar);}
             }
-            fixed.put("source-key","vortex-shield-"+i);editable.put("x",x);editable.put("y",y+(i==0?-1.2f:2.3f));editable.put("facing",0);editable.put("health",10000);editable.put("acquire-distance",0);
+            fixed.put("source-key","vortex-shield-"+i);editable.put("x",x);editable.put("y",y+(multiplayer?2.3f:i==0?-1.2f:2.3f));editable.put("facing",0);editable.put("health",multiplayer?1000:10000);editable.put("acquire-distance",0);
             editable.forEach((key,value)->schema.put(key,value instanceof Number?"number":value instanceof Boolean?"boolean":"text"));fixedActors.put(id,fixed);actors.put(id,editable);fields.put(id,new ArrayList<>(editable.keySet()));types.put(id,schema);
         }
         Files.delete(file);Yaml.write(file,yaml);Files.writeString(bindingFile,Json.stringify(bindings));

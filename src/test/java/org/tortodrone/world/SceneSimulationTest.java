@@ -41,6 +41,9 @@ public final class SceneSimulationTest {
             var opening=a.snapshot();
             check(opening.players().getFirst().activity()==265&&opening.players().getFirst().sceneKnight().activityData().equals(references)
                 &&opening.players().get(1).activity()==0&&b.snapshot().players().getFirst().activity()==0,"committed reveal belongs only to the actor in its scene instance");
+            SceneSimulation.Snapshot firstOpening;
+            do{firstOpening=next(first);}while(firstOpening.players().getFirst().activity()!=265);
+            check(firstOpening.players().getFirst().activityStarted()==firstOpening.timestamp(),"data-dependent activity starts at its first observer snapshot boundary");
             // Pause clears movement; resuming after an idle interval cannot integrate it.
             one.pause();float frozen=a.snapshot().actors().getFirst().x();Thread.sleep(160);
             check(a.snapshot().players().getFirst().sceneKnight().activityData()==null&&!one.canOpenBox(),"pause clears reveal and prevents stale scene opening");
@@ -56,11 +59,14 @@ public final class SceneSimulationTest {
             check(removed.delta(current).removed()[0]==2,"removal arrays cannot mutate a shared publication");
             check(removed.delta(current).removed().length==1,"coalesced recipient baselines still remove departed actors");
             check(a.playerCount()==1&&b.playerCount()==1,"closing membership cannot remove another instance's actor");
+            var beforeReconnect=a.snapshot();
             one.close();long count=a.tickCount();Thread.sleep(160);
             check(a.tickCount()==count&&a.snapshot().players().isEmpty(),"empty scene releases its timer and player actors");
             check(b.tickCount()>1,"other scene continues while first is idle");
             try(var rejoin=a.join(actor(1,SceneClock.now(),map,model),first::add)) {
                 rejoin.enter();Thread.sleep(80);check(a.tickCount()>count,"idle scene restarts on entry");
+                var rebound=a.snapshot().delta(beforeReconnect);
+                check(rebound.added().stream().anyMatch(actor->actor.id()==1)&&rebound.updated().stream().noneMatch(actor->actor.id()==1),"reconnect replaces DeltaFinal birth fields with a full actor");
                 one.close();check(a.playerCount()==1,"late close cannot detach a replacement membership");
             }
         }finally{one.close();two.close();isolated.close();}

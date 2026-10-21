@@ -53,6 +53,7 @@ public final class TownMovement {
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
     private Object activityData;
+    private boolean publicationPending;
     private int animatedItemMillis;
     private java.util.function.IntPredicate throwing=stamp->false;
     public void throwing(java.util.function.IntPredicate handler){throwing=java.util.Objects.requireNonNull(handler);}
@@ -61,6 +62,15 @@ public final class TownMovement {
         if(combat!=null)combat.reset(stamp);setActivity(268,stamp);updateFlags();return true;
     }
     public void thrown(boolean drop,int stamp){if(combat!=null)combat.reset(stamp);setActivity(drop?271:270,stamp);updateFlags();}
+    /** Active.interpolate switches activity at its start stamp but copies data from the older
+     * record. Data-dependent activities must start at their first publication boundary. */
+    public void preparePublication(int stamp){
+        if(!publicationPending)return;publicationPending=false;
+        if(activityData==null)return;
+        activityStarted=stamp;
+        if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.character.StarterCatalog.Model item)
+            animatedItemMillis=org.tortodrone.character.Confetti.duration(item.name(),stamp);
+    }
     public Object activityData(){return activityData;}
     public boolean canOpenBox(){
         return portal==null&&(activity==0||activity==INVENTORY||activity==INVENTORY_END)
@@ -300,7 +310,7 @@ public final class TownMovement {
     public int activity() { return combat!=null&&combat.activity()!=0?combat.activity():activity; }
     public int activityStarted() { return combat!=null&&(combat.activity()!=0||activity==0&&combat.started()-activityStarted>0)?combat.started():activityStarted; }
     private void setActivity(int value, int started) {
-        activityData=null;
+        activityData=null;publicationPending=true;
         activity = value;
         activityStarted = started;
     }

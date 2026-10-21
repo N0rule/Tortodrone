@@ -13,7 +13,7 @@ public final class PartyRegistry {
     public record Invitation(int partyOid,List<String> names,int inviter,boolean add) implements Event { }
     public record Chat(int partyOid,SceneChat.Message message) implements Event { }
     public record Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status) { }
-    public record View(int oid,long revision,List<Participant> members) { public View{members=List.copyOf(members);} }
+    public record View(int oid,long revision,List<Participant> members,boolean automatic) { public View{members=List.copyOf(members);} }
     public final class Member implements AutoCloseable {
         public final int playerOid,worldId;
         private Knight knight;private WorldProfile profile;
@@ -24,9 +24,10 @@ public final class PartyRegistry {
         private Member(int oid,Knight knight,WorldProfile profile,Consumer<Event> endpoint){playerOid=oid;worldId=profile.worldId();this.knight=knight;this.profile=profile;this.endpoint=endpoint;}
         @Override public void close(){synchronized(PartyRegistry.this){if(online.remove(worldId,this)){invalidate(this);remove(this,false);}}}
     }
-    private static final class Party {final int oid;long revision;int nextOrder;boolean shared;final LinkedHashSet<Member> members=new LinkedHashSet<>();Party(int oid){this.oid=oid;} }
+    private static final class Party {final int oid;long revision;int nextOrder;boolean shared,automatic;final LinkedHashSet<Member> members=new LinkedHashSet<>();Party(int oid){this.oid=oid;} }
     private record Invite(Member target,Member sender,Party party,long expires) { }
     private final Map<Integer,Member> online=new HashMap<>();
+    private final LinkedHashSet<Party> training=new LinkedHashSet<>();
     private final Map<Member,Map<Integer,Invite>> invitations=new HashMap<>();
     private final LongSupplier clock;
     private int nextOid=1_600_000_000;
@@ -37,9 +38,23 @@ public final class PartyRegistry {
         var member=new Member(oid,knight,profile,Objects.requireNonNull(endpoint));online.put(member.worldId,member);solo(member);return member;
     }
     private void solo(Member member){if(nextOid==Integer.MAX_VALUE)throw new IllegalStateException("Party identity space exhausted");var p=new Party(nextOid++);p.members.add(member);member.party=p;member.order=p.nextOrder++;member.endpoint.accept(new Refresh());}
+    /** Public Training groups have no player-controlled leader or invitation rights. */
+    public synchronized void enterTraining(Member member)throws IOException {
+        require(member);
+        if(member.party.shared)return;
+        var target=training.stream().filter(p->p.members.size()<CAPACITY).findFirst().orElse(null);
+        invalidate(member);remove(member,false);
+        if(target==null){solo(member);target=member.party;target.shared=target.automatic=true;training.add(target);}
+        else{member.party=target;member.order=target.nextOrder++;target.members.add(member);target.revision++;}
+        publish(target);
+    }
+    public synchronized void leaveTraining(Member member)throws IOException {
+        require(member);if(!member.party.automatic)return;
+        remove(member,true);
+    }
     private void require(Member member)throws IOException{if(member==null||online.get(member.worldId)!=member)throw new IOException("Party session is no longer current");}
     public synchronized View view(Member member)throws IOException{require(member);return view(member.party);}
-    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList());}
+    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic);}
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}
     @FunctionalInterface public interface ReviveTransaction<T>{T commit(int targetWorld)throws IOException;}
@@ -54,7 +69,7 @@ public final class PartyRegistry {
         member.knight=knight;member.profile=profile;member.health=health;member.status=status;member.town=town;if(changed)publish(member.party);
     }
     public synchronized void invite(Member sender,String name)throws IOException {
-        require(sender);var party=sender.party;if(party.members.iterator().next()!=sender)throw new IOException("Only the party leader can invite");
+        require(sender);var party=sender.party;if(party.automatic)throw new IOException("Training groups do not allow invitations");if(party.members.iterator().next()!=sender)throw new IOException("Only the party leader can invite");
         if(party.members.size()>=CAPACITY)throw new IOException("The party is full");
         var target=online.values().stream().filter(m->m.knight.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("That knight is not online"));
         if(target.party==party)throw new IOException("That knight is already in your party");
@@ -76,11 +91,11 @@ public final class PartyRegistry {
         invalidate(target);remove(target,false);target.party=invite.party;target.order=invite.party.nextOrder++;invite.party.members.add(target);invite.party.shared=true;invite.party.revision++;publish(invite.party);
     }
     public synchronized void boot(Member caller,String name)throws IOException {
-        require(caller);var party=caller.party;var target=party.members.stream().filter(m->m.knight.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("That knight is not in your party"));
+        require(caller);var party=caller.party;if(party.automatic){if(!caller.knight.name().equalsIgnoreCase(name))throw new IOException("Training groups have no player leader");remove(caller,true);return;}var target=party.members.stream().filter(m->m.knight.name().equalsIgnoreCase(name)).findFirst().orElseThrow(()->new IOException("That knight is not in your party"));
         if(target!=caller&&party.members.iterator().next()!=caller)throw new IOException("Only the party leader can remove members");
         invalidate(target);remove(target,true);
     }
-    private void remove(Member member,boolean replace){var old=member.party;if(old==null)return;old.members.remove(member);old.revision++;member.party=null;if(!old.members.isEmpty())publish(old);if(replace)solo(member);}
+    private void remove(Member member,boolean replace){var old=member.party;if(old==null)return;old.members.remove(member);old.revision++;if(old.members.isEmpty())training.remove(old);member.party=null;if(!old.members.isEmpty())publish(old);if(replace)solo(member);}
     private void invalidate(Member member){
         for(var iterator=invitations.entrySet().iterator();iterator.hasNext();){var entry=iterator.next();entry.getValue().values().removeIf(i->{if(i.target==member||i.sender==member){i.target.endpoint.accept(new Invitation(i.party.oid,List.of(),0,false));return true;}return false;});if(entry.getValue().isEmpty())iterator.remove();}
     }

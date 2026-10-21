@@ -97,10 +97,12 @@ public final class SceneRegistry {
         var map=catalog.scene(scene);
         if(!map.town()) {
             if(worldId<1)throw new IOException("Invalid interior owner");
+            boolean assigned=map.kind().equals("training")&&member!=null&&parties.owner(member,worldId)==0;
+            if(map.kind().equals("training")&&member!=null)parties.enterTraining(member);
             int owner=map.kind().equals("training")&&member!=null?parties.owner(member,worldId):0;
             var key=new InteriorKey(scene,owner==0?worldId:-owner);var existing=interiors.get(key);
             if(existing!=null){interiorLeases.get(existing).add(worldId);return existing;}
-            var oid=interiorOids.pollFirst();if(oid==null)throw new IOException("Interior capacity is full; try again later");
+            var oid=interiorOids.pollFirst();if(oid==null){if(assigned)parties.leaveTraining(member);throw new IOException("Interior capacity is full; try again later");}
             var created=new Instance(oid,0,map,owner);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));

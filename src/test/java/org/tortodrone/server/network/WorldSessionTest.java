@@ -79,6 +79,17 @@ public final class WorldSessionTest {
                 // Re-entry starts a new baseline, then resumes the same reliable stream policy.
                 first.subscribe((short)2);
                 first.entered();
+                synchronized(first){
+                    var generation=WorldSession.class.getDeclaredField("sceneGeneration");generation.setAccessible(true);
+                    var stamp=WorldSession.class.getDeclaredField("lastStamp");stamp.setAccessible(true);
+                    int before=stamp.getInt(first);Thread.sleep(80);
+                    var place=org.tortodrone.world.SceneRegistry.system().entry();
+                    var publication=Class.forName(WorldSession.class.getName()+"$Publication");
+                    var constructor=publication.getDeclaredConstructors()[0];constructor.setAccessible(true);
+                    var stalePublication=constructor.newInstance(place,generation.getInt(first)-2,place.simulation().snapshot());
+                    var publish=WorldSession.class.getDeclaredMethod("publish",publication);publish.setAccessible(true);publish.invoke(first,stalePublication);
+                    check(stamp.getInt(first)==before,"old subscription callback cannot advance a replacement baseline in the same instance");
+                }
                 first.refreshState(oldRegistration,null);
                 first.refreshFailed(oldRegistration,new IOException("late old subscription read"));
                 check(WorldSession.active(1,knight.id())&&!one.isClosed(),"stale poll results/errors cannot close a replacement subscription");
@@ -87,6 +98,7 @@ public final class WorldSessionTest {
                 var afterReentry = reader.next();
                 check(afterReentry.reference()==reentry.timestamp() && afterReentry.added()==0,
                     "re-entry retains actor after its initial snapshot");
+                publicationBoundaries(first);
                 long helm=characters.worldProfile(knight.name(),1).equipment()[0];
                 var confirm=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)9);
                 first.invocation(new SessionDecoder.Invocation(3,9,9,List.of(helm,
@@ -111,6 +123,25 @@ public final class WorldSessionTest {
             check(!WorldSession.active(1,knight.id()),"reconnect cleanup releases controller");
             System.out.println("PASS: town ownership, auth revisions, input readiness, delayed/invalid acknowledgements, reliable deltas, re-entry and reconnect cleanup");
         } finally {try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
+    }
+    private static void publicationBoundaries(WorldSession session)throws Exception {
+        var lockField=WorldSession.class.getDeclaredField("publications");lockField.setAccessible(true);
+        var membershipField=WorldSession.class.getDeclaredField("membership");membershipField.setAccessible(true);
+        var generationField=WorldSession.class.getDeclaredField("sceneGeneration");generationField.setAccessible(true);
+        var queueField=WorldSession.class.getDeclaredField("activityPublications");queueField.setAccessible(true);
+        var offer=WorldSession.class.getDeclaredMethod("offer",org.tortodrone.world.SceneRegistry.Instance.class,int.class,org.tortodrone.world.SceneSimulation.Snapshot.class);offer.setAccessible(true);
+        var publication=Class.forName(WorldSession.class.getName()+"$Publication");var snapshot=publication.getDeclaredMethod("snapshot");snapshot.setAccessible(true);
+        synchronized(session){synchronized(lockField.get(session)){
+            var place=org.tortodrone.world.SceneRegistry.system().entry();int generation=generationField.getInt(session);
+            var member=(org.tortodrone.world.SceneSimulation.Membership)membershipField.get(session);
+            Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
+            member.openBox(List.of(new StarterCatalog.Model("Upgrade/Prize Box/Lucky Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of())));
+            Thread.sleep(2);var boundary=place.simulation().snapshot();offer.invoke(session,place,generation,boundary);
+            Thread.sleep(2);offer.invoke(session,place,generation,place.simulation().snapshot());
+            boolean retained=false;for(Object queued:(java.util.Deque<?>)queueField.get(session))if(snapshot.invoke(queued)==boundary)retained=true;
+            check(retained,"slow delivery preserves the first data-bearing activity record while coalescing later movement");
+            member.resetInput();
+        }}
     }
     private static WorldStatePoller.Registration persistence(WorldSession session)throws ReflectiveOperationException {
         var field=WorldSession.class.getDeclaredField("persistence");field.setAccessible(true);

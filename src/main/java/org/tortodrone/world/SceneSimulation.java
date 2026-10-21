@@ -67,6 +67,17 @@ public final class SceneSimulation {
         public Set<Integer> occupants(){return occupants;}
         public Map<Integer,Boolean> roles(){return roles;}
         public ScenePortals.Trigger portal(int actorId){return portals.get(actorId);}
+        /** Preserve these records when a recipient coalesces ordinary movement snapshots. */
+        public boolean startsDataActivity(Snapshot previous){
+            if(previous==null)return false;
+            for(var actor:players){
+                var data=actor.sceneKnight()==null?null:actor.sceneKnight().activityData();
+                var old=previous.byId.get(actor.id());
+                if(data!=null&&old!=null&&(actor.activity()!=old.activity()||actor.activityStarted()!=old.activityStarted()
+                        ||!Objects.equals(data,old.sceneKnight()==null?null:old.sceneKnight().activityData())))return true;
+            }
+            return false;
+        }
         public Delta delta(Snapshot previous) {
             if(previous==null)return initial;
             return previous.identity==predecessor?common:calculate(previous);
@@ -76,7 +87,7 @@ public final class SceneSimulation {
             var changed=new ArrayList<ActorState>();
             for(var actor:actors) {
                 var old=previous.byId.get(actor.id());
-                if(old==null)added.add(actor);else {
+                if(old==null||actor.player()&&(old.clientOid()!=actor.clientOid()||old.created()!=actor.created()))added.add(actor);else {
                     // Stock prediction mutates activity on its reference: transmit every actor.
                     if(actor.player()||!actor.equals(old))updated.add(actor);if(actor.player()&&(!old.name().equals(actor.name())||old.gameMaster()!=actor.gameMaster()||!Objects.equals(old.sceneKnight()==null?null:old.sceneKnight().progress(),actor.sceneKnight()==null?null:actor.sceneKnight().progress())))changed.add(actor);
                 }
@@ -89,7 +100,8 @@ public final class SceneSimulation {
         private ActorState appearance;
         private final TownMovement movement;
         private KnightCombat combat;
-        private final Consumer<Snapshot> publish;
+        private final Consumer<Snapshot> initialPublish;
+        private Consumer<Snapshot> publish;
         private boolean entered, detached, arrived;
         private ScenePortals.Trigger portal;
         private int interactionTarget;
@@ -167,7 +179,7 @@ public final class SceneSimulation {
         public List<SceneEntities.Pickup> takePickups(){synchronized(SceneSimulation.this){check();return entities.takePickups(appearance.id());}}
         public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){check();entities.completePickup(appearance.id(),entity,success);}}
         private Membership(ActorState actor,Consumer<Snapshot> publish) {
-            appearance=actor;this.publish=publish;
+            appearance=actor;this.initialPublish=this.publish=publish;
             health.spriteShield(amount->{var shield=auraOwner==0?this:members.get(auraOwner);if(shield==null||!shield.entered||shield.petShield<=0)return amount;int absorbed=Math.min(amount,shield.petShield);shield.petShield-=absorbed;return amount-absorbed;});
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
@@ -186,7 +198,9 @@ public final class SceneSimulation {
                 boolean drop=!entities.canThrow(lift)||snap;
                 movement.thrown(drop,stamp);if(drop)dropAt=stamp+400;else{entities.throwLift(lift,actor(),stamp);lift=0;}return true;});
         }
-        public void enter(){synchronized(SceneSimulation.this){check();
+        public void enter(){enter(initialPublish);}
+        public void enter(Consumer<Snapshot> publication){synchronized(SceneSimulation.this){check();
+            publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
             entered=true;start();}}
         public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
@@ -314,6 +328,7 @@ public final class SceneSimulation {
     public synchronized ActorState station(String kind){return entities.station(kind);}
     public synchronized Membership join(ActorState actor,Consumer<Snapshot> publish) {
         if(members.containsKey(actor.id()))throw new IllegalStateException("Actor is already in this scene");
+        if(members.values().stream().anyMatch(m->m.appearance.clientOid()==actor.clientOid()))throw new IllegalStateException("Connection already owns a scene actor");
         var membership=new Membership(actor,Objects.requireNonNull(publish));members.put(actor.id(),membership);return membership;
     }
     /** Selection/subscription sees the same scene-owned entities without advancing movement. */
@@ -339,7 +354,7 @@ public final class SceneSimulation {
         previous=null;
     }
     private void tick() {
-        Snapshot publication;List<Membership> recipients;
+        Snapshot publication;List<Consumer<Snapshot>> recipients;
         synchronized(this) {
             if(timer==null)return;
             int stamp=SceneClock.now();long now=System.nanoTime()/1_000_000L;
@@ -360,6 +375,7 @@ public final class SceneSimulation {
                     }
                 }
                 // Resolve the delayed action before natural animation completion on a late tick.
+                member.movement.preparePublication(stamp);
                 member.movement.advance(stamp,now);
                 if(member.dropAt>0&&stamp>=member.dropAt){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
                 member.portal=member.movement.portal();member.advancePet(stamp);
@@ -370,9 +386,9 @@ public final class SceneSimulation {
             entities.advance(stamp,players);var sources=new ArrayList<>(players);for(var member:members.values()){var pet=member.petActor();if(pet!=null)sources.add(pet);}weapons.advance(stamp,sources);
             combatEvents.removeIf(event->stamp-event.timestamp()>5000);
             publication=capture(stamp,previous);previous=publication;tickCount++;
-            recipients=members.values().stream().filter(m->m.entered).toList();
+            recipients=members.values().stream().filter(m->m.entered).map(m->m.publish).toList();
         }
         // No simulation lock is held across callbacks, including detach/travel races.
-        for(var recipient:recipients)recipient.publish.accept(publication);
+        for(var recipient:recipients)recipient.accept(publication);
     }
 }

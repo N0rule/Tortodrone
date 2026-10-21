@@ -71,6 +71,11 @@ public final class StarterCatalog {
     public static Model interior(Knight knight,WorldProfile profile,ItemCatalog catalog) {
         return equipped(knight,profile,catalog,View.INTERIOR);
     }
+    /** Native PartyMember portrait: the non-level PC model, without held equipment. */
+    public static Model portrait(Knight knight,WorldProfile profile,ItemCatalog catalog){
+        return new Model("character/pc/model.dat",equipped(knight,profile,catalog,View.INTERIOR).arguments());
+    }
+
     private enum View { EQUIPPED, TOWN, INTERIOR }
 
     private static Model equipped(Knight knight,WorldProfile profile,ItemCatalog catalog,View view) {

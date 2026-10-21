@@ -29,7 +29,7 @@ public class PartyCompatibility {
             var nativeInvite=(com.threerings.projectx.social.data.Notification.PartyInvite)player.notifications.iterator().next();
             if(nativeInvite.key.partyOid!=before.oid()||nativeInvite.key.node!=null||!nativeInvite.getKey().equals("PARTY_INV:"+before.oid())||nativeInvite.members.length!=1||nativeInvite.inviterIndex!=0)throw new AssertionError("Native invite layout/key differs");
             var party=(LevelPartyObject)((ObjectResponse<?>)input.qe()).yk();
-            if(party.memberLimit!=8||party.restricted||!party.OD()||party.members.size()!=1||party.QN().Qu()!=1001)throw new AssertionError("Native party subtype/capacity/leader/invite controls differ");
+            if(party.members.iterator().next().portrait==null||party.members.iterator().next().weapons.length!=4||party.memberLimit!=8||party.restricted||!party.OD()||party.members.size()!=1||party.QN().Qu()!=1001)throw new AssertionError("Native party subtype/capacity/leader/invite controls differ");
             apply(input,party);if(party.members.size()!=2||party.health.size()!=2||party.status.size()!=2)throw new AssertionError("Native join HUD sets differ");
             apply(input,party);if(party.D(new com.threerings.util.Name(bob.name())).current!=17)throw new AssertionError("Native peer health not updated");
             apply(input,party);if(party.members.size()!=1||party.health.size()!=1||party.status.size()!=1||party.QN().Qu()!=1002)throw new AssertionError("Native leave/leader succession differs");
@@ -40,5 +40,10 @@ public class PartyCompatibility {
     private static Knight knight(String name){return new Knight(1,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static WorldProfile profile(int id){return new WorldProfile(id,id,1,0,0,1,List.of());}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
-    private static void apply(com.threerings.io.v input,com.threerings.presents.dobj.DObject object)throws Exception{var event=((EventNotification)input.qe()).yj();if(event instanceof com.threerings.presents.dobj.CompoundEvent compound)for(var child:compound.xE())child.b(object);else event.b(object);}
+    private static void apply(com.threerings.io.v input,com.threerings.presents.dobj.DObject object)throws Exception{var event=((EventNotification)input.qe()).yj();if(event instanceof com.threerings.presents.dobj.CompoundEvent compound)for(var child:compound.xE()){
+            if(object instanceof PartyObject party&&child instanceof com.threerings.presents.dobj.EntryAddedEvent<?> added&&added.getName().equals("members")){
+                if(party.health.f((Integer)added.lj())==null||party.status.f((Integer)added.lj())==null)throw new AssertionError("Member HUD notified before health/status entries");
+            }
+            child.b(object);
+        }else event.b(object);}
 }

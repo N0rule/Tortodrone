@@ -80,6 +80,26 @@ public class CooperativeTrainingTest {
                 b.operation(3,null);b.world.subscribeInteriorParty((short)10);b.travel(1);
                 await(()->scenes.statuses().stream().noneMatch(s->s.instanceId()==retained.oid()));
             }
+            try(var a=new Player(db,items,scenes,"Dave",1004);var b=new Player(db,items,scenes,"Eve",1005)){
+                a.travel(294);b.travel(294);var shared=a.place();
+                check(shared==b.place()&&a.party().oid()==b.party().oid()&&a.party().automatic(),"independent entry shares Training scene and public HUD identity");
+                await(()->a.publishedMembers()==2&&b.publishedMembers()==2);
+                int party=a.party().oid();a.operation(1,b.name);
+                check(a.party().oid()==party&&b.party().oid()==party,"first public entrant cannot boot another player");
+                var references=List.of(new StarterCatalog.Model("Upgrade/Prize Box/Surge Prize Box",Map.of()),new StarterCatalog.Model("Material/Brimstone",Map.of()));
+                a.membership().openBox(references);
+                await(()->shared.simulation().snapshot().players().stream().anyMatch(actor->actor.id()==a.member().worldId&&actor.activity()==265));
+                check(shared.simulation().snapshot().players().stream().filter(actor->actor.id()==b.member().worldId).findFirst().orElseThrow().activity()==0,"shared reveal never changes the other pawn's activity");
+                b.travel(1);await(()->a.publishedMembers()==1);
+                check(a.place()==shared&&shared.simulation().playerCount()==1,"independent departure keeps the survivor active");
+                b.travel(294);check(b.place()==shared,"independent re-entry reuses the live public room");
+                b.close();await(()->a.publishedMembers()==1&&shared.simulation().playerCount()==1);
+                a.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("lab",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)12))));
+                a.travel(30893);
+                check(!a.party().automatic()&&a.place().map().id()==30893,"leaving public Training for Laboratory restores the private interior HUD without forcing Haven");
+                await(()->scenes.statuses().stream().noneMatch(status->status.instanceId()==shared.oid()));
+                a.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("haven",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)13))));a.travel(1);
+            }
             System.out.println("PASS: native invite/accept, co-op travel/movement/enemy state/health/chat, outsider isolation, independent exit, leader disconnect and cleanup");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
@@ -105,7 +125,7 @@ public class CooperativeTrainingTest {
             synchronized(world){
                 if(field(world,"portalMove")==null){var trigger=place().map().portals().triggers().stream().filter(p->p.destination()==template).findFirst().orElseThrow();var begin=WorldSession.class.getDeclaredMethod("beginPortal",ScenePortals.Trigger.class);begin.setAccessible(true);begin.invoke(world,trigger);}
                 world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(scenes.catalog().scene(template).zone(),template,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)3))));
-                world.subscribe((short)4);world.entered();
+                world.subscribeInteriorParty((short)11);world.subscribe((short)4);world.entered();
             }
         }
         public void close(){world.close();output.close();}

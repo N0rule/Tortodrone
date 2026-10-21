@@ -52,7 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
-    private boolean depotOnly,boxesOnly;
+    private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly;
     private boolean hazardsOnly;
     private boolean healthOnly,arsenalBlinkOnly;
     private boolean movementOnly;
@@ -97,8 +97,12 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&(args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
+            if(args[0].equals("--seed-multiplayer"))try(var store=new AccountStore(Path.of(args[1]))){
+                store.grantItems("LanPlayer","Town-Knight","Upgrade/Prize Box/Surge Prize Box",1,-1,-1);
+                store.grantItems("PeerPlayer","Peer-Knight","Usable/Confetti",2,-1,-1);
+            }
             if(args[0].equals("--seed-boxes"))seedBoxes(Path.of(args[1]));
             if(args[0].equals("--seed-depot"))try(var store=new AccountStore(Path.of(args[1]))){
                 store.setCurrency("LanPlayer","Town-Knight",org.tortodrone.character.Currency.CROWNS,100000,-1,-1);
@@ -111,7 +115,9 @@ public final class CombatRenderingCheck {
         }
         boolean peer=args.length>=4&&args[0].equals("--peer");
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
-        boolean trainingOnly=!peer&&args.length==4&&(args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
+        boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
+        boolean trainingOnly=multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -126,6 +132,7 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
+        probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
@@ -261,6 +268,7 @@ public final class CombatRenderingCheck {
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
+            if(multiplayerOnly){if(sharedWorldOnly)sharedWorldTick(view,now);else multiplayerTick(view,now);return;}
             if(peer){peerTick(view);return;}
             if(townDialogsOnly){townDialogsTick(view,now);return;}
             if(boxesOnly){boxesTick(now);return;}
@@ -763,6 +771,119 @@ public final class CombatRenderingCheck {
             }
         }
     }
+    private Path mpRoot(){return peer?output.getParent():output;}
+    private void mpMark(String name)throws Exception{Files.writeString(mpRoot().resolve(name),"");}
+    private boolean mpHas(String name){return Files.isRegularFile(mpRoot().resolve(name));}
+    private void mpFinish(String message)throws Exception{capture("multiplayer-final");finishImages();passed=done=true;System.out.println("PASS: "+message);app.shutdown();}
+    private int mpTour;
+    private Result mpBox;
+    private Confirm mpUse;
+    private void multiplayerTick(View view,long now)throws Exception {
+        // PO is the stock camera target sprite. It must remain the authenticated pawn.
+        if(view.PO().acU().vw()!=app.CT().pawnId){
+            Object controller=view.acn();var scene=(com.threerings.tudey.data.TudeySceneObject)field(controller,"bJl").get(controller);
+            throw new AssertionError("Camera owns another pawn: expected "+app.CT().pawnId+" got "+view.PO().acU().vw()+" scene "+view.sceneId()+" client="+app.CT().xL()+" mapped="+scene.gE(app.CT().xL())+" controlled="+field(controller,"bOy").getInt(controller)+" target="+field(controller,"bOx").getInt(controller)+" occupants="+scene.occupantInfo);
+        }
+        if(!authoritative.containsKey(app.CT().pawnId))return;
+        var remote=authoritative.values().stream().filter(a->a.vw()!=app.CT().pawnId&&a instanceof com.threerings.projectx.data.actor.Knight).map(com.threerings.projectx.data.actor.Knight.class::cast).findFirst().orElse(null);
+        if(peer){
+            if(!Files.exists(output.resolve("peer-ready"))){capture("multiplayer-haven");Files.writeString(output.resolve("peer-ready"),"");}
+            if(mpHas("mp-disconnected")){
+                if(stage==0){app.GF().bl(294);stage=90;return;}
+                if(stage==90&&view.sceneId()==294&&remote!=null){mpMark("mp-reconnected");stage=91;}
+                if(stage==91&&mpHas("mp-complete"))mpFinish("reconnected stock peer shares Training with correct camera and no duplicate knights");
+                return;
+            }
+            if(stage==0&&mpHas("mp-a-travel")){app.GF().bl(2);stage=1;mpTour=0;return;}
+            if(stage==1&&view.sceneId()==(mpTour%2==0?2:1)){
+                if(++mpTour==4){mpMark("mp-b-travel");stage=2;}else app.GF().bl(mpTour%2==0?2:1);return;
+            }
+            if(stage==2&&remote!=null&&remote.adU()==265){
+                System.out.println("CHECK: remote box activity "+remote.adV()+" rendered="+(view.gk(remote.vw())==null?"missing":((com.threerings.projectx.data.actor.Knight)view.gk(remote.vw()).acU()).adU()));
+                var sprite=view.gk(remote.vw());
+                if(sprite!=null&&activityPlaying(sprite,265)){
+                    var data=(List<?>)field(remote,"_activityData").get(remote);
+                    if(data.size()!=2||!data.get(0).equals(data.get(1)))throw new AssertionError("Peer received private box reward references");
+                    capture("multiplayer-remote-box");mpMark("mp-box-seen");stage=3;
+                }
+            }
+            if(stage==3&&mpHas("mp-confetti-go")){mpUse=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId("Usable/Confetti"),(Object)null,mpUse);stage=4;}
+            if(stage==4&&mpUse.done){if(mpUse.reason!=null)throw new AssertionError(mpUse.reason);if(mpHas("mp-training")){app.GF().bl(294);stage=5;}}
+            if(stage==5&&view.sceneId()==294&&remote!=null){mpMark("mp-shared");capture("multiplayer-training");stage=6;}
+            if(stage==6&&remote!=null&&remote.adU()>=292){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,remote.adU())){capture("multiplayer-remote-combat");mpMark("mp-combat-seen");stage=7;}}
+            if(stage==7&&mpHas("mp-disconnect-go")){mpMark("mp-disconnected");mpFinish("stock peer retains its camera during travel and renders remote Prize Box and combat; Confetti use confirmed");}
+            return;
+        }
+        if(stage==0&&remote!=null){capture("multiplayer-haven");app.GF().bl(2);stage=1;mpTour=0;return;}
+        if(stage==1&&view.sceneId()==(mpTour%2==0?2:1)){
+            if(++mpTour==4){mpMark("mp-a-travel");stage=2;}else app.GF().bl(mpTour%2==0?2:1);return;
+        }
+        if(stage==2&&mpHas("mp-b-travel")&&remote!=null){mpBox=new Result();app.zr().bU(com.threerings.projectx.item.client.L.class).b(findItemId("Upgrade/Prize Box/Surge Prize Box"),-1,mpBox);stage=3;started=now;}
+        if(stage==3&&now-started>25_000_000_000L&&!mpHas("mp-box-seen"))throw new AssertionError("Remote box animation did not render");
+        if(stage==3&&mpBox.done){if(mpBox.reason!=null)throw new AssertionError(mpBox.reason);if(mpHas("mp-box-seen")&&now-started>9_000_000_000L){mpMark("mp-confetti-go");stage=4;}}
+        if(stage==4&&remote!=null&&remote.adU()==267){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,267)){capture("multiplayer-remote-confetti");mpMark("mp-training");app.GF().bl(294);stage=5;}}
+        if(stage==5&&view.sceneId()==294&&remote!=null&&mpHas("mp-shared")){
+            if(authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()!=2)throw new AssertionError("Shared Training has duplicate/missing players");
+            // Native attack intent; the peer must render the resulting activity.
+            GLFW.glfwFocusWindow(app.getWindow());flags(view,4);started=now;stage=6;
+        }
+        if(stage==6&&now-started>250_000_000L){flags(view,0);if(mpHas("mp-combat-seen")){mpMark("mp-disconnect-go");stage=7;}}
+        if(stage==7&&mpHas("mp-disconnected")&&remote==null){mpMark("mp-survivor");capture("multiplayer-survivor");stage=8;}
+        if(stage==8&&mpHas("mp-reconnected")&&remote!=null){
+            if(authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()!=2)throw new AssertionError("Reconnect duplicated actors");
+            mpMark("mp-complete");mpFinish("two stock clients: Haven, independent repeated travel/camera ownership, remote Prize Box/Confetti/combat, shared Training, disconnect survival and reconnect");
+        }
+    }
+    private int sharedEnemy;
+    private float sharedEnemyHealth;
+    private float monsterHealth(Actor actor)throws Exception{return actor==null?0:field(actor,"_healthPct").getFloat(actor);}
+    /** A native training cube is placed in front of the disposable spawn by the parent fixture. */
+    private void sharedWorldTick(View view,long now)throws Exception {
+        if(view.PO().acU().vw()!=app.CT().pawnId)throw new AssertionError("Shared-world camera changed ownership");
+        var own=authoritative.get(app.CT().pawnId);if(own==null)return;
+        if(stage==0){if(peer)Files.writeString(output.resolve("peer-ready"),"");app.GF().bl(294);stage=1;started=now;return;}
+        if(view.sceneId()!=294)return;
+        if(stage==1&&authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()==2){
+            mpUse=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId(GUN),6,mpUse);stage=18;started=now;
+        }
+        if(stage==18&&mpUse.done){
+            if(mpUse.reason!=null)throw new AssertionError(mpUse.reason);
+            var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
+            if(weapon==null||!weapon.Vx().getName().equals(GUN))return;
+            var target=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Monster")&&monsterAlive(a))
+                .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
+            if(Math.hypot(target.tz().x-own.tz().x,target.tz().y-own.tz().y)>4)throw new AssertionError("Missing nearby disposable target");
+            sharedEnemy=target.vw();sharedEnemyHealth=monsterHealth(target);
+            moveToward(view,target.tz().x-own.tz().x,target.tz().y-own.tz().y,false);
+            mpMark(peer?"world-shooter-b":"world-shooter-a");stage=2;started=now;
+        }
+        if(stage==2&&mpHas("world-shooter-a")&&mpHas("world-shooter-b")){
+            stage=peer?10:3;started=now;
+        }
+        if(stage==3){
+            flags(view,(now-started)%3_000_000_000L<160_000_000L?4:0);
+            if(monsterHealth(authoritative.get(sharedEnemy))<sharedEnemyHealth){
+                flags(view,0);sharedEnemyHealth=monsterHealth(authoritative.get(sharedEnemy));
+                capture("shared-enemy-primary-hit");mpMark("world-hit-a");stage=4;started=now;
+            }
+        }
+        if(stage==10&&mpHas("world-hit-a")&&monsterHealth(authoritative.get(sharedEnemy))<sharedEnemyHealth){
+            sharedEnemyHealth=monsterHealth(authoritative.get(sharedEnemy));capture("shared-enemy-observed-primary-hit");stage=11;started=now;
+        }
+        if(stage==11){
+            flags(view,(now-started)%3_000_000_000L<160_000_000L?4:0);
+            if(monsterHealth(authoritative.get(sharedEnemy))<sharedEnemyHealth){
+                flags(view,0);capture("shared-enemy-peer-hit");mpMark("world-hit-b");stage=12;started=now;
+            }
+        }
+        if(stage==4&&mpHas("world-hit-b")&&monsterHealth(authoritative.get(sharedEnemy))<sharedEnemyHealth){
+            capture("shared-enemy-observed-peer-hit");mpMark("world-complete");
+            mpFinish("two stock players independently damage the same nearby Training enemy and both observe each other's damage");
+        }
+        if(stage==12&&mpHas("world-complete"))mpFinish("stock peer independently damages the same Training enemy and observes the other player's hit");
+        if(now-started>60_000_000_000L)throw new AssertionError("Shared-world stage "+stage+" stalled at "+own.tz());
+    }
+    private boolean monsterAlive(Actor actor){try{return monsterHealth(actor)>0;}catch(Exception error){throw new AssertionError(error);}}
     private void peerTick(View view)throws Exception {
         if(!Files.exists(output.resolve("peer-ready"))){capture("town-peer");Files.writeString(output.resolve("peer-ready"),"");}
         for(var actor:authoritative.values())if(actor.vw()!=app.CT().pawnId&&actor instanceof com.threerings.projectx.data.actor.Knight){
@@ -982,7 +1103,7 @@ public final class CombatRenderingCheck {
         float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());Arrays.fill(axes,0);
         float length=(float)Math.hypot(dx,dy);if(length>0){dx/=length;dy/=length;
             if(dy>0)axes[0]=dy;else axes[1]=-dy;if(dx>0)axes[3]=dx;else axes[2]=-dx;}
-        if(length>0)face(view,axes);flags(view,moving?1:0);
+        if(length>0)face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
     }
     private static void face(View view,float[] axes)throws Exception{
         Object controller=view.acn();for(Class<?> type=controller.getClass();type!=null;type=type.getSuperclass())try{

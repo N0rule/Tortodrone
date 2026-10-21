@@ -74,7 +74,13 @@ public final class SlashCommandsSessionTest {
                 target.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(target,scenes.catalog().entry());
                 check(announcedParty.getInt(target.world)==0,"returning to town clears the solo mission party so /training does not ask to abandon it");
                 target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("training",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,training);
-                gm.world.adminPeople(admin(27,"Target"));gm.socket.awaitText("private instance belongs");check(gm.world.ownsScene(scenes.entry().oid()),"GM travel cannot enter another knight's private instance");
+                gm.world.adminPeople(admin(27,"Target"));move(gm,training);
+                var sceneField=WorldSession.class.getDeclaredField("scene");sceneField.setAccessible(true);
+                check(sceneField.get(gm.world)==sceneField.get(target.world),"GM travel uses ordinary public Training assignment");
+                gm.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(gm,scenes.catalog().entry());
+                target.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("lab",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)8))));move(target,scenes.catalog().scene(30893));
+                Thread.sleep(1100);
+                gm.world.adminPeople(admin(27,"Target"));gm.socket.awaitText("private instance belongs");check(gm.world.ownsScene(scenes.entry().oid()),"GM travel cannot enter another knight's private Laboratory instance");
                 try{gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,13,List.of("Target",new SessionDecoder.Listener("bad",(short)8))));throw new AssertionError("Malformed admin listener accepted");}catch(SessionDecoder.Rejected expected){}
                 check(!target.socket.isClosed(),"malformed listener does not mutate peer state");
                 // /sgo 1 targets Haven (the knight's current scene). The stock client refuses
