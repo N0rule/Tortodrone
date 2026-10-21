@@ -36,7 +36,20 @@ public final class AdminApplication {
                 DesktopTheme.installDefault();
                 Path data = directory;
                 SwingUtilities.invokeLater(() -> new AdminWindow(data).setVisible(true));
-            } else try (AccountStore accounts = new AccountStore(directory)) { command(accounts,args); }
+            } else {
+                // Short-lived account/knight commands operate on SQLite, not the game world.
+                // The full content loader fingerprints maps and parses large fire catalogs twice;
+                // doing that for every CLI invocation can exceed subprocess timeouts.
+                // Item commands still load the deployment's actual item definitions and IDs.
+                boolean items = args[0].equals("--items") || args[0].equals("--give-item");
+                var catalog = items
+                    ? org.tortodrone.resources.ItemYaml.load(directory.toAbsolutePath().normalize()
+                        .getParent().resolve("content/items"))
+                    : org.tortodrone.character.ItemCatalog.starter();
+                try (AccountStore accounts = new AccountStore(directory,false,catalog)) {
+                    command(accounts,args);
+                }
+            }
         } catch (Exception failure) {
             System.err.println("Account manager: " + failure.getMessage()); System.exit(1);
         }

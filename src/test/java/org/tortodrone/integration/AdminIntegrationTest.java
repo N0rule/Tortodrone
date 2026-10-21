@@ -27,6 +27,17 @@ public final class AdminIntegrationTest {
             org.tortodrone.support.TestDeployment.copyServer(Path.of(args[0]),server); Files.copy(Path.of(args[1]),admin);
             command(admin,directory,"",true,"Tortodrone Game Master", "--version"); check(!Files.exists(directory.resolve("data")),"version command creates no runtime state");
             command(admin,directory,"",true,"ID\tUsername", "--list-accounts");
+            // Account maintenance must also work with only the distributed admin JAR and SQLite:
+            // installing/copying the game's expensive map and fire content is unnecessary.
+            Path minimal = directory.resolve("admin-without-content");
+            Files.createDirectories(minimal);
+            Path minimalJar = minimal.resolve("tortodrone-admin.jar");
+            Files.copy(admin,minimalJar);
+            command(minimalJar,minimal,"",true,"ID\tUsername","--list-accounts");
+            command(minimalJar,minimal,"separate-password\nseparate-password\n",true,
+                "Account created.","--create-account","Standalone");
+            command(minimalJar,minimal,"",true,"1\tStandalone\tfalse\t","--list-accounts");
+            check(!Files.exists(minimal.resolve("content")),"account CLI needs no game content");
             command(admin,directory,"owner-password\nowner-password\n",true,"Account created.","--create-account","Owner","--gm");
             command(admin,directory,"",false,"Use --help","--set-admin","Owner","false");
             command(admin,directory,"",false,"Use --help","--create-account","OldAlias","--admin");
@@ -106,10 +117,22 @@ public final class AdminIntegrationTest {
     private static void command(Path jar,Path cwd,String input,boolean success,String expected,String... args) throws Exception {
         var argv = new ArrayList<String>(List.of(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-jar",jar.toString())); argv.addAll(List.of(args));
         Process process = new ProcessBuilder(argv).directory(cwd.toFile()).redirectErrorStream(true).start();
+        var captured = new ByteArrayOutputStream();
+        // Drain while the child runs, or a large response can fill the OS pipe and deadlock
+        // waitFor before its output is ever inspected.
+        Thread reader = Thread.ofVirtual().start(() -> {
+            try (InputStream stream = process.getInputStream()) { stream.transferTo(captured); }
+            catch (IOException error) { /* Forced termination may close the pipe. */ }
+        });
         try {
             try (var stream = process.getOutputStream()) { stream.write(input.getBytes(StandardCharsets.UTF_8)); }
-            check(process.waitFor(15,TimeUnit.SECONDS),"admin command timeout");
-            String output = new String(process.getInputStream().readAllBytes(),StandardCharsets.UTF_8);
+            long timeout = args[0].equals("--items") || args[0].equals("--give-item") ? 60 : 30;
+            boolean finished = process.waitFor(timeout,TimeUnit.SECONDS);
+            if (!finished) process.destroyForcibly();
+            process.waitFor();
+            reader.join();
+            String output = captured.toString(StandardCharsets.UTF_8);
+            check(finished,"admin command timeout [" + String.join(" ",args) + "]: " + output);
             check((process.exitValue() == 0) == success && output.contains(expected),"admin result: "+output);
             check(!output.contains("owner-password") && !output.contains("player-password") && !output.contains("changed-password"),"CLI never echoes stdin passwords");
         } finally { process.destroyForcibly(); process.waitFor(); }
