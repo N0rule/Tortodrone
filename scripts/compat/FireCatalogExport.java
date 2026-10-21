@@ -148,7 +148,7 @@ public final class FireCatalogExport {
             var args=new TreeMap<String,Object>();args.put("damage",resolvedDamage(manager,hit.damage));
             var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=.67f;args.put("shape",argumentValue(shape));
             args.put("impulse",argumentValue(hit.impulseDealt));args.put("impulse-origin",argumentValue(new Vector2f(hit.impulseTranslation.x-.6f,hit.impulseTranslation.y)));
-            Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,handler.mask,false,List.of(),"");
+            Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,hit.collisionMask,false,List.of(),"");
             refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.Qh()),50,false,0,0,0,sweep,null));
         }
         if (attack.fireRefs != null) for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {

@@ -32,7 +32,10 @@ public final class MultiplayerCompatibility {
             append(bytes,codec.occupantChanges(registry.entry().oid(),Map.of(a.id(),a.clientOid(),b.id(),b.clientOid()),List.of(b)));
             var knight=new org.tortodrone.character.Knight(1,"Fixture-A","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);
             var participant=new PartyRegistry.Participant(1002,42,0,knight,new WorldProfile(42,1,1,0,0,1,List.of()),new SceneHealth.State(200,200,0),SceneStatus.State.NORMAL);
-            append(bytes,codec.party((short)4,new PartyRegistry.View(1600000000,1,List.of(participant),true),registry.destination(294,42)));
+            // A public Training party can be subscribed while the client still displays Haven.
+            // Its one-time HUD inputs must already describe the destination party.
+            append(bytes,codec.party((short)4,new PartyRegistry.View(1600000000,1,List.of(participant),true),registry.entry()));
+            append(bytes,codec.sceneDelta(observer,140,0,(short)0,0,1050,(short)50,List.of(opening),List.of(),new int[0],Map.of(),true));
             var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
             var scene=(TudeySceneObject)((ObjectResponse<?>)in.qe()).yk();
             check(scene.gE(1002)==42&&scene.gE(1004)==43,"snapshot DSet sorts by native key instead of join order");
@@ -54,16 +57,19 @@ public final class MultiplayerCompatibility {
             check(own.vw()==42&&own.adU()==265,"activity delta retains source actor identity");
             var data=(List<?>)field(own,"_activityData");
             check(data.size()==2,"native opening always has two config references");
-            check(data.get(0).equals(data.get(1))==(observer!=1002),"only owner receives actual reward appearance");
+            check(!data.get(0).equals(data.get(1)),"owner and observer receive actual reward appearance");
             apply(in,scene);
             check(scene.occupantInfo.size()==1&&scene.occupants.size()==1,"native departure removes info and OID together");
             var party=(com.threerings.projectx.dungeon.data.DungeonPartyObject)((ObjectResponse<?>)in.qe()).yk();
-            check(party.getClass()==com.threerings.projectx.dungeon.data.DungeonPartyObject.class&&party.memberLimit==8&&party.QN()==null,"stock public Training HUD has capacity eight and no player leader");
+            check(party.getClass()==com.threerings.projectx.dungeon.data.LevelPartyObject.class&&party.memberLimit==8&&party.hasPickups,"public Training enables the native quickbar and revive-capable level HUD");
             var nativeMember=party.members.iterator().next();
             check(nativeMember.portrait!=null&&nativeMember.portrait.getName().equals("character/pc/model.dat")&&nativeMember.weapons.length==4,"native HUD portrait and four equipped weapon references");
+            var revealed=(SceneDeltaEvent)((EventNotification)in.qe()).yj();
+            var initialReferences=(List<?>)field(revealed.aej()[0],"_activityData");
+            check(initialReferences.equals(data),"initial subscription and deltas share the same actual reward icons");
             check(in.available()==0,"complete framing");
         }
-        System.out.println("PASS: stock two-player occupant mapping/add/remove, activity delta source and owner-only Prize Box rewards");
+        System.out.println("PASS: stock two-player occupant mapping, public Training quickbar/level party and shared Prize Box reward appearances");
     }
     private static Object field(Object object,String name)throws Exception{for(Class<?> type=object.getClass();type!=null;type=type.getSuperclass())try{var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(object);}catch(NoSuchFieldException ignored){}throw new NoSuchFieldException(name);}
     private static void apply(com.threerings.io.v in,DObject object)throws Exception{var event=((EventNotification)in.qe()).yj();if(event instanceof CompoundEvent compound)for(var child:compound.xE())child.b(object);else event.b(object);}

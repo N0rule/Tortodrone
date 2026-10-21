@@ -96,7 +96,7 @@ public final class SceneEntitiesTest {
     /** The served gym pot chain: thrown fire pots smash with their Blast Radius depth damage and
      *  Fire ailment (ULTRA status chance, so ignition repeats across spare pots), flip a
      *  damage-toggle lever, and leave a ScorcherTorch hazard retained past its 4 second
-     *  damage/flame limit until the served 6 Second cleanup fuse expires; oil pots leave nine inert
+     *  damage/flame limit until the served 6 Second cleanup fuse expires; oil pots leave nine separate
      *  slick patches; closed Lift Barriers, native lift-collision bit included, catch
      *  thrown pots before they cross. */
     private static void pots(SceneCatalog.MapScene map)throws java.io.IOException {
@@ -174,8 +174,8 @@ public final class SceneEntitiesTest {
         world.throwLift(oil.id(),players.getLast(),stamp+7000);
         world.advance(stamp+7120,players);
         var slicks=world.actors().stream().filter(a->a.config().name().equals("Bomb/Monster/Oil Slick")).toList();
-        check(slicks.size()==9,"oil pot leaves the served nine inert Oil Slick patches");
-        check(slicks.stream().allMatch(s->s.x()<21.6f),
+        check(slicks.size()==9,"oil pot leaves nine Oil Slick patches");
+        check(world.actors().stream().filter(a->a.id()==oil.id()).findFirst().orElseThrow().x()<21.6f,
             "thrown pot stopped west of the closed Lift Barrier instead of crossing it");
         // The served SubjectiveDoor rule server-side: a knight holding a lift is stopped by a
         // closed Lift Barrier, a knight with nothing in hand passes it, and putting the lift

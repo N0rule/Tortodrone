@@ -21,7 +21,9 @@ public final class SceneCatalog {
         public boolean town(){return kind.equals("town");}
         /** TownSummary names a town-bundle key; ZoneSummary carries a qualified Name. */
         public String townName(){return zoneName.startsWith("%town:")?zoneName.substring(6):zoneName;}
-        public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":kind.equals("training")?"dungeon.data.TrainingSceneConfig":"dungeon.data.LevelSceneConfig");}
+        // The retail Training controller has no Spark panel. Use the existing level HUD
+        // for our once-per-entry Emergency Revive and subsequent paid revival flow.
+        public String configType(){return "com.threerings.projectx."+(town()?"town.data.TownSceneConfig":"dungeon.data.LevelSceneConfig");}
     }
     private final NavigableMap<Integer,MapScene> scenes;
     private final int entry;

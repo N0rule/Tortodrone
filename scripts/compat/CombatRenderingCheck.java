@@ -959,6 +959,16 @@ public final class CombatRenderingCheck {
     private void mpMark(String name)throws Exception{Files.writeString(mpRoot().resolve(name),"");}
     private boolean mpHas(String name){return Files.isRegularFile(mpRoot().resolve(name));}
     private void mpFinish(String message)throws Exception{capture("multiplayer-final");finishImages();passed=done=true;System.out.println("PASS: "+message);app.shutdown();}
+    private void checkTrainingHud()throws Exception{
+        var view=new View(app.Gu());
+        Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
+        Object panel=field(hud,"aSM").get(hud);
+        var party=app.GQ().CW();
+        if(!(party instanceof com.threerings.projectx.dungeon.data.LevelPartyObject level)||!level.hasPickups||!app.GQ().Px()
+                ||!(panel instanceof com.threerings.projectx.dungeon.client.QuickbarPanel bar)||!bar.isVisible()||bar.getParent()==null)
+            throw new AssertionError("Shared Training must attach the native item/sprite quickbar and revive-capable HUD");
+        System.out.println("CHECK: shared Training quickbar is visible with native level HUD for "+app.CT().knight);
+    }
     private int mpTour;
     private Result mpBox;
     private Confirm mpUse;
@@ -987,13 +997,13 @@ public final class CombatRenderingCheck {
                 var sprite=view.gk(remote.vw());
                 if(sprite!=null&&activityPlaying(sprite,265)){
                     var data=(List<?>)field(remote,"_activityData").get(remote);
-                    if(data.size()!=2||!data.get(0).equals(data.get(1)))throw new AssertionError("Peer received private box reward references");
+                    if(data.size()<2||data.get(0).equals(data.get(1)))throw new AssertionError("Peer reveal substituted the box for its actual reward");
                     capture("multiplayer-remote-box");mpMark("mp-box-seen");stage=3;
                 }
             }
             if(stage==3&&mpHas("mp-confetti-go")){mpUse=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId("Usable/Confetti"),(Object)null,mpUse);stage=4;}
             if(stage==4&&mpUse.done){if(mpUse.reason!=null)throw new AssertionError(mpUse.reason);if(mpHas("mp-training")){app.GF().bl(294);stage=5;}}
-            if(stage==5&&view.sceneId()==294&&remote!=null){mpMark("mp-shared");capture("multiplayer-training");stage=6;}
+            if(stage==5&&view.sceneId()==294&&remote!=null){checkTrainingHud();mpMark("mp-shared");capture("multiplayer-training");stage=6;}
             if(stage==6&&remote!=null&&remote.adU()>=292){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,remote.adU())){capture("multiplayer-remote-combat");mpMark("mp-combat-seen");stage=7;}}
             if(stage==7&&mpHas("mp-disconnect-go")){mpMark("mp-disconnected");mpFinish("stock peer retains its camera during travel and renders remote Prize Box and combat; Confetti use confirmed");}
             return;
@@ -1007,6 +1017,7 @@ public final class CombatRenderingCheck {
         if(stage==3&&mpBox.done){if(mpBox.reason!=null)throw new AssertionError(mpBox.reason);if(mpHas("mp-box-seen")&&now-started>9_000_000_000L){mpMark("mp-confetti-go");stage=4;}}
         if(stage==4&&remote!=null&&remote.adU()==267){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,267)){capture("multiplayer-remote-confetti");mpMark("mp-training");app.GF().bl(294);stage=5;}}
         if(stage==5&&view.sceneId()==294&&remote!=null&&mpHas("mp-shared")){
+            checkTrainingHud();
             if(authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()!=2)throw new AssertionError("Shared Training has duplicate/missing players");
             // Native attack intent; the peer must render the resulting activity.
             GLFW.glfwFocusWindow(app.getWindow());flags(view,4);started=now;stage=6;
@@ -1028,6 +1039,7 @@ public final class CombatRenderingCheck {
         if(stage==0){if(peer)Files.writeString(output.resolve("peer-ready"),"");app.GF().bl(294);stage=1;started=now;return;}
         if(view.sceneId()!=294)return;
         if(stage==1&&authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()==2){
+            checkTrainingHud();
             mpUse=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId(GUN),6,mpUse);stage=18;started=now;
         }
         if(stage==18&&mpUse.done){

@@ -881,16 +881,15 @@ public final class SessionCodec {
     private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed,boolean automatic)throws IOException {
         return frame(out->{
             boolean training=scene.map().kind().equals("training");
-            objectHeader(out,message,automatic?"com.threerings.projectx.dungeon.data.DungeonPartyObject":"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
+            objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyMember(out,member);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHealth(out,member);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
-            out.writeInt(0);out.writeBoolean(managed||!scene.map().content().items().isEmpty());out.writeLong(0);
-            out.writeShort(0);out.writeInt(managed?PartyRegistry.CAPACITY:training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
-            if(automatic)return; // Stock public Training HUD has no LevelParty leader or dungeon settings.
+            out.writeInt(0);out.writeBoolean(automatic||managed||training||!scene.map().content().items().isEmpty());out.writeLong(0);
+            out.writeShort(0);out.writeInt(managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
             out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
@@ -1188,13 +1187,9 @@ public final class SessionCodec {
         var state=actor.sceneKnight();if(state==null||state.sprite()==null)out.writeShort(0);else sprite(out,actor.id(),state.sprite(),state.harness());
     }
     private Object activityData(ActorState actor,int observer) {
-        Object data=actor.sceneKnight()==null?null:actor.sceneKnight().activityData();
-        if(actor.activity()==TownMovement.OPEN_BOX&&actor.clientOid()!=observer&&data instanceof List<?> references&&!references.isEmpty()){
-            // The stock animation requires two references. Observers see the box icon;
-            // actual reward references and item identities remain on the owner's connection.
-            return List.of(references.getFirst(),references.getFirst());
-        }
-        return data;
+        // Appearance references are shared animation data. Inventory IDs and the reward
+        // callback still belong exclusively to the authenticated opening connection.
+        return actor.sceneKnight()==null?null:actor.sceneKnight().activityData();
     }
     private void actor(DataOutputStream out,ActorState a,boolean interior,int observer)throws IOException {
         if(a.pet()!=null){petActor(out,a);return;}

@@ -126,7 +126,10 @@ public final class SceneLifeTest {
     private static void training(SceneCatalog.MapScene map)throws Exception {
         var spike=map.content().entries().stream().filter(e->e.spec().text("config","").endsWith("/Spikes")).findFirst().orElseThrow();
         var fields=new HashMap<>(spike.spec().fields());fields.put("cycle","UP");
-        var content=new SceneContent(List.of(new SceneContent.Entry("trap",5.5f,-12.5f,0,new SceneContent.Spec(fields))),
+        var monster=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture",
+            "radius",".2","health","1000","damage-mask","2","collision-flags","8","collision-mask","79"));
+        var content=new SceneContent(List.of(new SceneContent.Entry("trap",5.5f,-12.5f,0,new SceneContent.Spec(fields)),
+                new SceneContent.Entry("monster",6.3f,-12.5f,0,monster)),
             map.content().scales(),Map.of(),Map.of("player.base-health",1f),Map.of(),Map.of(),Map.of());
         var fixture=new SceneCatalog.MapScene(map.id(),map.zone(),map.zoneName(),map.name(),map.image(),"training",map.version(),
             5.5f,-12.5f,0,1,map.collision(),map.layout(),ScenePortals.EMPTY,content);
@@ -147,6 +150,8 @@ public final class SceneLifeTest {
             check(revived.actors().getFirst().activity()==TownMovement.RESURRECT&&(revived.actors().getFirst().flags()&64)!=0,"Training revival restores health and streams the native protection flag");
             check(revived.actors().getFirst().interaction()==null,"revival clears the corpse prompt");
             check(revived.health(219).reviveFlags()==0,"the pending automatic charge is consumed exactly once");
+            var knocked=await(queue,s->s.actors().stream().anyMatch(a->a.entity()!=null&&a.entity().key().equals("monster")&&a.x()>6.4f));
+            check(knocked.actors().stream().anyMatch(a->a.entity()!=null&&a.entity().key().equals("monster")&&a.x()>6.4f),"automatic revival dispatches knockback through the live scene lifecycle");
         }
     }
     private static SceneSimulation.Snapshot await(BlockingQueue<SceneSimulation.Snapshot> queue,java.util.function.Predicate<SceneSimulation.Snapshot> ready)throws Exception {

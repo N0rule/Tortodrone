@@ -11,7 +11,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
-        boolean claimTaken;
+        boolean claimTaken,ignited;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         SceneLiftState.Point dropPoint;
         SceneContent.Spec vial;String cycle;Set<String> fired=new HashSet<>();
@@ -72,6 +72,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
      *  in {@link #penetration}, because the raw mask test alone never blocks them: the pawn mask
      *  lacks the bit and a carried lift's own collision drops to 0 in 2026. */
     private static final int LIFT_COLLISION=8192;
+    private static final Object POINT=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Point",Map.of());
 
     /** Served {@code Dynamic/Lift Objects} pot arguments, condensed to what the land handler
      *  executes: {@code Pot (Base)} {@code land} runs DamageRegionFromPoint with damage
@@ -362,21 +363,61 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var prepared=e.spec.model("source-shape");
         if(prepared!=null)args.put("shape",prepared.arguments().get("value"));
         damage(new StarterCatalog.Model("DamageRegionFromPoint",args),e.x,e.y,e.rotation,stamp,e.id,null);
-        if(pot.hazardConfig()!=null)ignite(pot,e.x,e.y,stamp,e.owner);
+        if(pot.hazardConfig()!=null)ignite(pot,e.x,e.y,stamp,e.owner,e.id);
     }
     /** Extra Action ground hazard: a native Bomb patch whose hazard applies native status
      *  damage on the Floor trap cadence (hazard-refractory 500), expiring at its Lifetime. */
-    private void ignite(Pot pot,float x,float y,int stamp,int owner){
+    private void ignite(Pot pot,float x,float y,int stamp,int owner,int source){
         if(pot.hazardDamage()==null){
-            // Oil Pot: nine slick patches at the landing point (the served Extra Action
-            // spawns them without scatter offsets); their stripped signal handler does not establish an ignition trigger.
-            for(int i=0;i<9;i++)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),Map.of(),x,y,stamp).owner=owner;
+            for(int i=0;i<9;i++){
+                float[] position=oilSpawn(x,y,pot.hazardRadius(),source);
+                if(position!=null)hazard(pot.hazardConfig(),null,pot.hazardRadius(),pot.hazardLifetime(),Map.of(),position[0],position[1],stamp).owner=owner;
+            }
             return;
         }
         // The Fire Pot spawns its torch with served arguments: the Lifetime argument selects
         // the "4 Seconds" choice, whose Creation Life renders the client flame for 4 seconds.
         hazard(pot.hazardConfig(),pot.hazardDamage(),pot.hazardRadius(),pot.hazardLifetime(),
             Map.of("config.argument.Lifetime","string|4 Seconds","hazard-active-lifetime","4000"),x,y,stamp).owner=owner;
+    }
+    /** Clyde's bounded perimeter search, using the slick diameter plus its .01 clearance.
+     * Unlike an unadjusted SpawnActor, each patch must occupy a separate supported pose. */
+    private float[] oilSpawn(float x,float y,float radius,int source){
+        if(oilSpawnClear(x,y,radius,source))return new float[]{x,y};
+        float step=radius*2+.01f;
+        for(int distance=1;distance<=4;distance++){
+            for(int dx=-distance;dx<=distance;dx++)if(oilSpawnClear(x+dx*step,y-distance*step,radius,source))return new float[]{x+dx*step,y-distance*step};
+            for(int dy=1-distance;dy<distance;dy++)if(oilSpawnClear(x+distance*step,y+dy*step,radius,source))return new float[]{x+distance*step,y+dy*step};
+            for(int dx=distance;dx>=-distance;dx--)if(oilSpawnClear(x+dx*step,y+distance*step,radius,source))return new float[]{x+dx*step,y+distance*step};
+            for(int dy=distance-1;dy>-distance;dy--)if(oilSpawnClear(x-distance*step,y+dy*step,radius,source))return new float[]{x-distance*step,y+dy*step};
+        }
+        return null;
+    }
+    private boolean oilSpawnClear(float x,float y,float radius,int source){
+        var circle=new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",radius));
+        if(staticCollision.isEmpty()?!terrain.walkable(x,y):!staticCollision.floorSupported(x,y)||!staticCollision.clear(3,circle,x,y,0))return false;
+        for(var e:entities.values())if(e.id!=source&&e.destroyed==Integer.MAX_VALUE&&e.carrier==0
+                &&(e.config.name().equals("Bomb/Monster/Oil Slick")||(e.collisionFlags&3)!=0)
+                &&e.spec.contains(e.x,e.y,e.rotation,x,y,radius))return false;
+        return true;
+    }
+    private void lightOil(Entity oil,int stamp){
+        if(oil.ignited)return;
+        oil.ignited=true;
+        var fire=new StarterCatalog.Model("Fire (Scaled)",Map.of(
+            "Status Chance",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusChance","ULTRA",5),
+            "Status Power",new FireCatalog.EnumValue("com.threerings.projectx.dungeon.data.StatusCodes$StatusPower","MODERATE",2)));
+        var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",fire,"flags",7));
+        hazard("Bomb/Monster/ScorcherTorch",damage,1f,4000,
+            Map.of("config.argument.Lifetime","string|2 Seconds","config.argument.Nature","string|Neutral","hazard-active-lifetime","2000"),oil.x,oil.y,stamp).owner=oil.owner;
+    }
+    private boolean lightsOil(Object damage){
+        if(SceneDamage.field(damage,"statusCondition") instanceof StarterCatalog.Model status){
+            var spec=content.statuses().get(status.name());
+            if(status.name().equals("Fire")||status.name().equals("Fire (Scaled)")||spec!=null&&spec.text("class","").equals("Fire"))return true;
+        }
+        if(SceneDamage.field(damage,"damages") instanceof FireCatalog.ListValue parts)for(var part:parts.values())if(lightsOil(part))return true;
+        return false;
     }
     private Entity hazard(String config,Object hazard,float radius,int lifetime,Map<String,String> arguments,float x,float y,int stamp){
         var fields=new TreeMap<String,String>();
@@ -469,6 +510,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(mover.shape!=null&&obstacle.shape!=null
                         ?SceneCollision.overlaps(mover.shape,nx,ny,mover.rotation,obstacle.shape,obstacle.x,obstacle.y,obstacle.rotation,0)
                         :obstacle.containsPawn(nx,ny)){clear=false;break;}
+            }
+            if(clear&&(mask&Math.round(content.stats().getOrDefault("player.collision-flags",2f)))!=0){
+                for(var player:players)if(playerActive.test(player.id())){
+                    float radius=mover.spec.number("radius",0)+ScenePortals.PAWN_RADIUS;
+                    // Permit separation if an earlier pose already overlapped a knight.
+                    if(Math.hypot(nx-player.x(),ny-player.y())<radius
+                            &&Math.hypot(nx-player.x(),ny-player.y())<Math.hypot(mover.x-player.x(),mover.y-player.y())){clear=false;break;}
+                }
             }
             if(!clear)break;mover.x=nx;mover.y=ny;moved=true;
         }
@@ -601,7 +650,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             for(var player:players){float dx=player.x()-x,dy=player.y()-y;
                 boolean hit=defined instanceof FireCatalog.DataValue?SceneShape.intersects(defined,dx*c+dy*s,-dx*s+dy*c,ScenePortals.PAWN_RADIUS+expansion):Math.hypot(dx,dy)<=ScenePortals.PAWN_RADIUS+expansion;
                 int sourceId=source==null?owner:source.kind.equals("Monster")?owner:(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:0;
-                if(hit&&(hitOnce==null||hitOnce.add(player.id()))){
+                if(hit&&damageClear(region,x,y,player.x(),player.y(),owner,player.id())&&(hitOnce==null||hitOnce.add(player.id()))){
                     // One trap action can cover several occupants. Record each
                     // hit here so the next sensor cannot damage them again on
                     // the same tick or before the authored refractory deadline.
@@ -613,7 +662,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 }
             }
         }
-        for(var e:entities.values()){
+        for(var e:List.copyOf(entities.values())){
             if(e.destroyed!=Integer.MAX_VALUE)continue;
             float dx=e.x-x,dy=e.y-y,c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             boolean hit;
@@ -622,8 +671,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 hit=e.shape==null||geometry.type().endsWith("$Segment")?SceneShape.intersects(geometry,tx,ty,r+Math.max(0,expansion)):
                     SceneCollision.overlaps(geometry,x,y,rotation,e.shape,e.x,e.y,e.rotation,Math.max(0,expansion));
             }else hit=e.spec.contains(e.x,e.y,e.rotation,x,y,Math.max(0,expansion));
-            if(!hit)continue;
+            if(!hit||!damageClear(region,x,y,e.x,e.y,owner,e.id))continue;
             if(hitOnce!=null&&!hitOnce.add(e.id))continue;
+            if(e.config.name().equals("Bomb/Monster/Oil Slick")&&lightsOil(damage)){lightOil(e,stamp);continue;}
             if(e.kind.equals("Switch")){
                 String mode=e.spec.text("switch-mode","");
                 Object switchDamage=SceneDamage.prune(damage,e.spec.integer("switch-damage-mask",255));
@@ -649,6 +699,26 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 }
             }else if(amount>0&&(e.kind.startsWith("Block")||e.spec.text("damage-action","").equals("destroy")))blockHit(e,stamp);
         }
+    }
+    private boolean damageClear(StarterCatalog.Model region,float x,float y,float tx,float ty,int owner,int target){
+        int mask=region.arguments().get("collision-mask") instanceof Number n?n.intValue():0;
+        if(mask==0)return true;
+        if(!staticCollision.clearSegment(mask,POINT,x,y,tx,ty,0))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
+        for(var obstacle:entities.values()){
+            if(obstacle.id==owner||obstacle.id==target||obstacle.destroyed!=Integer.MAX_VALUE||obstacle.carrier!=0
+                    ||(obstacle.collisionFlags&mask)==0||obstacle.kind.equals("Door")&&(obstacle.flags&6)==2)continue;
+            for(int i=0;i<=steps;i++)if(obstacle.spec.contains(obstacle.x,obstacle.y,obstacle.rotation,x+(tx-x)*i/steps,y+(ty-y)*i/steps,0))return false;
+        }
+        return true;
+    }
+    /** Retail Bomb/Revive/Revive: radius 2, level 13, five-unit radial impulse over 400 ms. */
+    public void reviveImpulse(ActorState player,int stamp){
+        var region=new FireCatalog.DataValue("com.threerings.tudey.config.RegionConfig$Default",Map.of("shape",
+            new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",2f))));
+        var impulse=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse",Map.of("level",13,"duration",400,
+            "translation",new FireCatalog.DataValue("com.threerings.math.Vector2f",Map.of("x",5f,"y",0f))));
+        impulse(new StarterCatalog.Model("ImpartImpulse",Map.of("region",region,"impulse",impulse,"flags",2)),player.x(),player.y(),0,stamp,player.id());
     }
     @Override public void impulse(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
         Object raw=region.arguments().get("region"),shape=region.arguments().getOrDefault("shape",SceneDamage.field(raw,"shape"));

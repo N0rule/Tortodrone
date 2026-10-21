@@ -250,7 +250,11 @@ public final class SceneSimulation {
             return true;
         }}
         private void updateLife(int stamp){
-            if(health.alive()){if(movement.dead()){movement.resurrect(stamp);weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);}return;}
+            if(health.alive()){if(movement.dead()){
+                movement.resurrect(stamp);
+                weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
+                entities.reviveImpulse(actor(),stamp);
+            }return;}
             if(movement.dead())return;
             weapons.cancelAttacks(appearance.id());
             entities.cancelClaims(appearance.id());

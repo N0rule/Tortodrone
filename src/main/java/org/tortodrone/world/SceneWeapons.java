@@ -28,6 +28,15 @@ public final class SceneWeapons {
             if(damage==GearStats.Damage.NONE)return model;
             var args=new HashMap<>(model.arguments());args.put("equipment-damage",damage);return new org.tortodrone.character.StarterCatalog.Model(model.name(),args);
         }
+        org.tortodrone.character.StarterCatalog.Model region(FireCatalog.Action action){
+            var model=region(action.config());
+            // Older prepared ShieldBash sweeps stored the sensor's damage mask here.
+            // The native DamageTargetFromPoint uses the ordinary 1|128 occlusion mask.
+            int mask=model.name().equals("ShieldBash")?129:action.collisionMask();
+            if(mask==0)return model;
+            var args=new HashMap<>(model.arguments());args.put("collision-mask",mask);
+            return new org.tortodrone.character.StarterCatalog.Model(model.name(),args);
+        }
     }
     private static final class Run {
         final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;final GearStats.Damage damage;
@@ -120,7 +129,7 @@ public final class SceneWeapons {
                     if(fired>=cutoff){run.done[i]=true;continue;}
                     if(ref.action().kind()==FireCatalog.Kind.SWEEP_DAMAGE){
                         float c=(float)Math.cos(pose.rotation),s=(float)Math.sin(pose.rotation);
-                        if(stamp<cutoff&&targets!=null)targets.sweep(pose.region(ref.action().config()),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
+                        if(stamp<cutoff&&targets!=null)targets.sweep(pose.region(ref.action()),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
                     }else execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
                     run.loops[i]++;
                     if(refractory<=0)run.done[i]=true;
@@ -247,13 +256,13 @@ public final class SceneWeapons {
         if(action.kind()==FireCatalog.Kind.DESTROY_SOURCE){var shot=shots.get(source.actorId);if(shot==null)return false;destroy(shot,stamp,false);return true;}
         if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
             if(targets!=null){float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
-                targets.damage(source.region(action.config()),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
+                targets.damage(source.region(action),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
             return true;
         }
         if(action.kind()==FireCatalog.Kind.SWEEP_DAMAGE){
             var shot=shots.get(source.actorId);if(shot==null||targets==null)return false;
             float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
-            targets.sweep(source.region(action.config()),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape,shot.hits.computeIfAbsent(action,key->new HashSet<>()));
+            targets.sweep(source.region(action),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape,shot.hits.computeIfAbsent(action,key->new HashSet<>()));
             return true;
         }
         if(action.kind()==FireCatalog.Kind.IMPULSE_REGION){if(targets!=null)targets.impulse(action.config(),source.x,source.y,source.rotation,stamp,source.ownerId);return true;}
