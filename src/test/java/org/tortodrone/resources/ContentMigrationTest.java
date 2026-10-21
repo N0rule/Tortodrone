@@ -18,6 +18,10 @@ public final class ContentMigrationTest {
             try(var channel=FileChannel.open(data.resolve("server.lock"),StandardOpenOption.WRITE);var lock=channel.lock()){failure(()->ContentMigration.migrate(root,candidate,null));check(!Files.exists(candidate),"locked source cannot publish a candidate");}
             ContentMigration.migrate(root,candidate,null);unchanged(original,root);
             var converted=ContentManager.load(candidate);
+            var oldStats=old.scenes().scene(294).content().stats();
+            var migratedStats=converted.scenes().scene(294).content().stats();
+            for(var stat:oldStats.entrySet())if(stat.getKey().startsWith("gear."))
+                check(stat.getValue().equals(migratedStats.getOrDefault(stat.getKey(),0f)),"migration preserves imported equipment stat: "+stat.getKey());
             check(converted.items().entries().equals(old.items().entries())&&converted.weapons().weapons().equals(old.weapons().weapons())&&converted.fires().entries().equals(old.fires().entries()),"migration preserves every item and weapon graph");
             check(converted.town().recipes().size()==old.town().recipes().size()&&converted.petFires().entries().equals(old.petFires().entries()),"Town and pet data are never dropped from legacy layouts");
             check(!Files.exists(candidate.resolve("data"))&&Files.readString(candidate.resolve("config/server.yml")).contains("47699"),"candidate contains config/content only and preserves listener settings");

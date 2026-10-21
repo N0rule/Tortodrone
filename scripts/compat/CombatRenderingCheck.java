@@ -57,6 +57,7 @@ public final class CombatRenderingCheck {
     private boolean healthOnly,arsenalBlinkOnly;
     private boolean movementOnly;
     private boolean vortexShieldOnly;
+    private boolean equipmentGroups;
     private List<Action> actions=ACTIONS;
     private int healthMaximum;
     private float hazardX,hazardY;
@@ -97,8 +98,9 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
-        if(args.length==2&&(args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
+        if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
+            if(args[0].equals("--seed-equipment"))seedEquipment(Path.of(args[1]));
             if(args[0].equals("--seed-items"))try(var store=new AccountStore(Path.of(args[1]))){
                 for(String config:ITEM_ACTIONS)store.grantItems("LanPlayer","Town-Knight",config,2,-1,-1);
             }
@@ -120,7 +122,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -145,6 +147,7 @@ public final class CombatRenderingCheck {
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
+        probe.equipmentGroups=Arrays.asList(args).contains("--equipment-groups");
         if(probe.movementOnly)probe.actions=List.of(ACTIONS.getFirst(),ACTIONS.get(8));
         var timer=new Timer(true);
         var pending=new AtomicBoolean();
@@ -166,6 +169,146 @@ public final class CombatRenderingCheck {
             store.grantItems("LanPlayer","Town-Knight","Rarity/Spark of Life",2,-1,-1);
             store.grantItems("LanPlayer","Town-Knight","Weapon/Bomb/Graviton Vortex",1,-1,-1);
             for(String item:ACTIONS.stream().map(Action::weapon).distinct().toList())store.grantItems("LanPlayer","Town-Knight",item,1,-1,-1);
+        }
+    }
+    private record EquipmentGroup(String name,String item,int slot,int flags,int held,int activity,boolean projectile) { }
+    private static final List<EquipmentGroup> EQUIPMENT_GROUPS=List.of(
+        new EquipmentGroup("armor-normal","Gear/Armor/Spiral Culet (Blue)",1,0,300,0,false),
+        new EquipmentGroup("armor-dual","Gear/Armor/Wolver Coat",1,0,300,0,false),
+        new EquipmentGroup("armor-status","Gear/Armor/Vog Cub Coat",1,0,300,0,false),
+        new EquipmentGroup("shield-defense","Gear/Shield/Proto Shield",2,64,700,284,false),
+        new EquipmentGroup("shield-bash","Gear/Shield/Defender",2,2048,120,287,false),
+        new EquipmentGroup("shield-buckler","Gear/Shield/Swiftstrike Buckler",2,2048,120,287,false),
+        new EquipmentGroup("sword-three-hit-charge",SWORD,6,4,4000,290,false),
+        new EquipmentGroup("sword-heavy-charge","Weapon/Sword/Troika",6,4,4000,290,false),
+        // Cutter's ghost damage actors have a one-millisecond fuse, like the
+        // native Dud. Their visible charge is an animation, not projectile flight.
+        new EquipmentGroup("sword-five-hit-charge","Weapon/Sword/Cutter",6,4,4000,290,false),
+        new EquipmentGroup("sword-saber-charge","Weapon/Sword/Flourish",6,4,4000,290,false),
+        new EquipmentGroup("sword-rocket-charge","Weapon/Sword/Rocket Hammer 3",6,4,4000,290,false),
+        new EquipmentGroup("sword-status-charge","Weapon/Sword/Combuster",6,4,4000,290,true),
+        new EquipmentGroup("gun-simple",GUN,6,4,120,292,true),
+        new EquipmentGroup("gun-heavy-charge","Weapon/Handgun/Magnus",6,4,4000,290,true),
+        new EquipmentGroup("gun-needle-charge",NEEDLE,6,4,4000,290,true),
+        new EquipmentGroup("gun-pulse-charge","Weapon/Handgun/Pulsar",6,4,4000,290,true),
+        new EquipmentGroup("gun-alchemer-charge","Weapon/Handgun/Voltech Alchemer Mk II",6,4,4000,290,true),
+        new EquipmentGroup("gun-tortofist-charge","Weapon/Handgun/Tortafist/Grand Tortofist",6,4,4000,290,true),
+        new EquipmentGroup("bomb-charge-only",BOMB,6,4,4000,290,true),
+        new EquipmentGroup("bomb-shard","Weapon/Bomb/Crystal Bomb",6,4,4000,290,true),
+        new EquipmentGroup("bomb-chemical","Weapon/Bomb/Fiery Vaporizer",6,4,4000,290,true),
+        new EquipmentGroup("bomb-relic","Weapon/Bomb/Electron Bomb",6,4,4000,290,true),
+        new EquipmentGroup("bomb-vortex","Weapon/Bomb/Graviton Vortex",6,4,4000,290,true),
+        new EquipmentGroup("sprite-drakon","Drakon",-1,128,120,288,true),
+        new EquipmentGroup("sprite-maskeraith","Maskeraith",-1,128,120,288,true),
+        new EquipmentGroup("sprite-seraphynx-aura","Seraphynx",-1,384,120,288,false));
+    private static void seedEquipment(Path data)throws Exception {
+        try(var store=new AccountStore(data)){
+            store.setGameMaster("LanPlayer",true);
+            for(var group:EQUIPMENT_GROUPS)if(group.slot>=0){
+                if(store.worldProfile("LanPlayer","Town-Knight").items().stream().noneMatch(i->i.config().equals(group.item)))
+                    store.grantItems("LanPlayer","Town-Knight",group.item,1,-1,-1);
+                var profile=store.worldProfile("LanPlayer","Town-Knight");var item=profile.items().stream().filter(i->i.config().equals(group.item)).findFirst().orElseThrow();
+                int levels=store.townRules().gear().gear(item.config()).levels();
+                store.itemModifiers("LanPlayer","Town-Knight",item.id(),new org.tortodrone.character.ItemModifiers(Math.max(0,levels-1),0,List.of()),-1,-1,profile.revision());
+            }
+            char[] password=AccountStore.transform("lan-test-password".toCharArray());
+            try{
+                var account=store.authenticate("LanPlayer",password);var town=account.characters().town(store.townRules());int knight=account.characters().roster().getFirst().id();
+                for(String config:List.of("Drakon","Maskeraith","Seraphynx")){
+                    var created=town.adminSprite(account.id(),knight,account.authRevision(),8,List.of(new org.tortodrone.protocol.SessionDecoder.ConfigReference(config,Map.of()))).profile();
+                    int id=created.town().sprites().stream().filter(s->s.config().equals(config)).findFirst().orElseThrow().id();
+                    town.sprite(account.id(),knight,account.authRevision(),4,List.of(id),true);
+                    town.adminSprite(account.id(),knight,account.authRevision(),45,List.of(99));
+                }
+            }finally{Arrays.fill(password,'\0');}
+        }
+    }
+    private Path groupRoot(){return peer?output.getParent():output;}
+    private boolean groupActivity,groupProjectile,groupOwnCaptured;
+    private boolean groupOrigin;
+    private float groupOriginX,groupOriginY;
+    private int groupPeerIndex=-1;
+    private void equipmentGroupsTick(View view,long now)throws Exception {
+        Path root=groupRoot();
+        if(peer&&!Files.exists(output.resolve("peer-ready")))Files.writeString(output.resolve("peer-ready"),"");
+        if(stage==0){GLFW.glfwSetWindowSize(app.getWindow(),960,720);app.GF().bl(294);stage=1;started=now;return;}
+        if(view.sceneId()!=294)return;
+        var remote=authoritative.values().stream().filter(a->a instanceof Dungeoneer&&a.vw()!=app.CT().pawnId).findFirst().orElse(null);
+        if(remote==null){if(stage>1&&now-started>10_000_000_000L)throw new AssertionError("Second knight left the grouped Training scenario");return;}
+        if(view.PO().acU().vw()!=app.CT().pawnId)throw new AssertionError("Camera ownership changed to the second knight");
+        if(peer){
+            var own=view.PO().acU();float dx=remote.tz().x-own.tz().x,dy=remote.tz().y-own.tz().y;
+            moveToward(view,dx,dy,Math.hypot(dx,dy)>3);
+            if(Files.exists(root.resolve("groups-complete"))){finishImages();passed=done=true;System.out.println("PASS: second stock knight observed every equipment group in the shared Training Hall");app.shutdown();return;}
+            if(!Files.exists(root.resolve("group-current")))return;
+            int current=Integer.parseInt(Files.readString(root.resolve("group-current")).trim());
+            if(current!=groupPeerIndex){groupPeerIndex=current;groupActivity=groupProjectile=false;previousActors.clear();previousActors.addAll(authoritative.keySet());}
+            var group=EQUIPMENT_GROUPS.get(current);var sprite=view.gk(remote.vw());
+            if(((Dungeoneer)remote).adU()==group.activity&&sprite!=null&&sprite.acL().isVisible()&&(group.activity==0||activityPlaying(sprite,group.activity))){
+                if(!groupActivity)System.out.println("OBSERVED ACTIVITY: "+current+" "+group.name+" "+group.activity);groupActivity=true;
+            }
+            for(var actor:authoritative.values())if(!previousActors.contains(actor.vw())&&!(actor instanceof Dungeoneer)&&(actor.Mv().getName().startsWith("Bullet/")||actor.Mv().getName().startsWith("Bomb/"))){
+                var rendered=view.gk(actor.vw());if(rendered!=null&&rendered.acL().isVisible()&&rendered.acL().getConfig()!=null)groupProjectile=true;
+            }
+            if(group.slot==-1){
+                var pet=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor p&&p.adU()==(group.flags>>>7)).findFirst().orElse(null);
+                if(pet==null||view.gk(pet.vw())==null||view.gk(pet.vw()).acL().getConfig()==null)return;
+                int[] recharge=(int[])field(pet,"_nextSkill").get(pet);
+                if(recharge[0]!=recharge[1]||recharge[1]!=recharge[2])throw new AssertionError("Sprite shared cooldown differs between slots");
+            }
+            if(groupActivity&&(!group.projectile||groupProjectile)&&!Files.exists(root.resolve("group-seen-"+current))){
+                capture("group-"+current+"-"+group.name);Files.writeString(root.resolve("group-seen-"+current),"");
+                System.out.println("CHECK: remote group "+current+" "+group.name+" activity="+group.activity+" projectile="+groupProjectile);
+            }
+            return;
+        }
+        if(index==EQUIPMENT_GROUPS.size()){
+            capture("groups-complete");finishImages();Files.writeString(root.resolve("groups-complete"),"");passed=done=true;
+            System.out.println("PASS: two stock knights in Training Hall; "+index+" armor/shield/sword/gun/bomb/sprite groups, leveled equipment, native animations and replicated projectiles");app.shutdown();return;
+        }
+        var group=EQUIPMENT_GROUPS.get(index);
+        if(stage==1){
+            var position=view.PO().acU().tz();
+            if(!groupOrigin){groupOrigin=true;groupOriginX=position.x;groupOriginY=position.y+2;}
+            float dx=groupOriginX-position.x,dy=groupOriginY-position.y;
+            moveToward(view,dx,dy,Math.hypot(dx,dy)>.4);
+            if(Math.hypot(dx,dy)>.4)return;
+            equip=new Confirm();
+            if(group.slot<0){
+                int id=0;for(var sprite:app.CT().sprites)if(sprite.Mv().getName().equals(group.item))id=sprite.vw();
+                if(id==0)throw new AssertionError("Missing seeded sprite "+group.item);
+                app.zr().bU(com.threerings.projectx.sprites.a.a.class).o(id,equip);
+            }else{
+                long id=0;for(var item:app.CT().items)if(item.Vx().getName().equals(group.item))id=item.VA();
+                if(id==0)throw new AssertionError("Missing seeded item "+group.item);
+                app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,group.slot,equip);
+            }
+            started=now;stage=2;return;
+        }
+        if(stage==2){
+            if(!equip.done)return;if(equip.reason!=null)throw new AssertionError(group.name+": "+equip.reason);
+            var own=(Dungeoneer)view.PO().acU();if(own.adU()!=0)return;
+            if(group.slot==6){var weapon=(Item)field(own,"_weapon").get(own);var rendered=(Item)field(view.PO().implementation(),"_weapon").get(view.PO().implementation());if(weapon==null||rendered==null||!weapon.Vx().getName().equals(group.item)||!rendered.Vx().getName().equals(group.item))return;}
+            if(group.slot<0){
+                var pet=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor).findFirst().orElse(null);
+                if(pet==null)return;int[] cooldown=(int[])field(pet,"_nextSkill").get(pet);if(cooldown[0]>lastStamp)return;
+            }
+            Files.writeString(root.resolve("group-current.tmp"),Integer.toString(index));
+            Files.move(root.resolve("group-current.tmp"),root.resolve("group-current"),StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+            previousActors.clear();previousActors.addAll(authoritative.keySet());
+            moveNorth(view,false);groupOwnCaptured=false;released=false;started=now;flags(view,group.flags);stage=3;System.out.println("GROUP: "+index+" "+group.name);return;
+        }
+        if(stage==3){
+            int elapsed=(int)((now-started)/1_000_000);
+            if(!released&&elapsed>=group.held){flags(view,0);released=true;}
+            // The controlling advancer predicts and reconciles its activity before
+            // the sprite tick. Its transient actor value can miss an animation
+            // sample; the peer separately asserts the exact native activity/animation.
+            if(!groupOwnCaptured&&elapsed>=200&&view.PO().acL().isVisible()&&view.PO().acL().getConfig()!=null){
+                capture("group-"+index+"-"+group.name);groupOwnCaptured=true;
+            }
+            if(elapsed>group.held+2200&&released&&groupOwnCaptured&&Files.exists(root.resolve("group-seen-"+index))){flags(view,0);index++;stage=1;started=now;return;}
+            if(elapsed>group.held+10000)throw new AssertionError("Equipment group was not rendered by both knights: "+group.name+" local="+groupOwnCaptured+" peer="+Files.exists(root.resolve("group-seen-"+index)));
         }
     }
     private static void seedBoxes(Path data)throws Exception {
@@ -307,6 +450,7 @@ public final class CombatRenderingCheck {
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
+            if(equipmentGroups){equipmentGroupsTick(view,now);return;}
             if(itemsOnly){itemsTick(view,now);return;}
             if(multiplayerOnly){if(sharedWorldOnly)sharedWorldTick(view,now);else multiplayerTick(view,now);return;}
             if(peer){peerTick(view);return;}

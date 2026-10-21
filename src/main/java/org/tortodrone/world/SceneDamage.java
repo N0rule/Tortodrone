@@ -57,6 +57,15 @@ public final class SceneDamage {
         var parts=new java.util.HashMap<String,Float>();components(damage,content,target,parts,multiplier,blockableScale);
         float total=0;for(float part:parts.values())total+=part;return total;
     }
+    public static float amount(Object damage,SceneContent content,SceneContent.Spec target,float multiplier,GearStats.Damage gear){
+        if(gear==GearStats.Damage.NONE)return amount(damage,content,target,multiplier);
+        var raw=new java.util.HashMap<String,Float>();rawParts(damage,content,raw,multiplier,1);
+        float total=0;for(var part:raw.entrySet()){
+            float value=gear.apply(part.getValue(),target.text("tags",""));
+            total+=part.getKey().equals("unblockable")?value:mitigate(value,target.number("defense."+part.getKey(),0));
+        }
+        return total;
+    }
     /** The native knight HUD packs four damage-type pip counts below the HP total. */
     public static int playerFeedback(Object damage,SceneContent content,SceneContent.Spec defense,int amount) {
         return playerFeedback(damage,content,defense,amount,1);
@@ -115,7 +124,7 @@ public final class SceneDamage {
         }
         return value.type().endsWith("$Unblockable")==unblockable?value:FireCatalog.NullValue.INSTANCE;
     }
-    private static float modified(float amount,float multiplier){
+    public static float modified(float amount,float multiplier){
         if(amount<=0||multiplier<=0)return 0;if(multiplier==1)return amount;
         if(multiplier>1)return amount*(multiplier+1)/2;
         int goal=(int)(amount*multiplier/2);float step=amount/2,current=amount-step;

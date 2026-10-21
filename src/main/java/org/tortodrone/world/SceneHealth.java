@@ -36,15 +36,15 @@ public final class SceneHealth {
     public void breakCloak(){status.breakCloak();}
     public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.town.TownCatalog.empty());}
     public void equipment(WorldProfile profile,org.tortodrone.town.TownCatalog town){
+        status.town(town);
         status.equipment(profile);
         int next=town.equipmentBonuses(profile,"").health();var defenses=new HashMap<String,String>();var shield=new HashMap<String,String>();
         for(var item:profile.items())if(item.equippedSlot()!=null&&GEAR.contains(item.equippedSlot())){
-            String prefix="gear."+item.config()+".";
-            next+=Math.round(content.stats().getOrDefault(prefix+"health-bonus",0f));
+            next+=Math.round(GearStats.value(content.stats(),item,"health-bonus"));
             for(String type:List.of("normal","piercing","elemental","shadow")){
                 var target=item.equippedSlot()==2?shield:defenses;
                 String key="defense."+type;float value=Float.parseFloat(target.getOrDefault(key,"0"));
-                target.put(key,Float.toString(value+content.stats().getOrDefault(prefix+key,0f)));
+                target.put(key,Float.toString(value+GearStats.defense(content.stats(),item,type,town)));
             }
         }
         int difference=next-bonus;maximum=Math.min(3200,Math.round(content.stats().getOrDefault("player.base-health",1f))+next);current=Math.min(maximum,current+(current>0?Math.max(0,difference):0));bonus=next;

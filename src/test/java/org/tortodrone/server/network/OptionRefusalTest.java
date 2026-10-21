@@ -7,7 +7,7 @@ import org.tortodrone.protocol.HandshakeCodec;
 import org.tortodrone.support.TestWire;
 import static org.tortodrone.support.TestWire.check;
 
-/** Unsupported stock options must answer their listener without losing the session. */
+/** Unavailable stock options must answer their listener without losing the session. */
 public final class OptionRefusalTest {
     private static final String LOOT = "com.threerings.projectx.data.LootReportLevel";
     private static final String DIFFICULTY = "com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty";
@@ -53,9 +53,13 @@ public final class OptionRefusalTest {
                         check(wire.type(response).equals(TestWire.DOB + "InvocationResponseEvent")
                             && response.readInt() == playerOid && response.readShort() == id
                             && response.readUnsignedByte() == 0, "correlated failure callback");
+                        // Friend method 4 now implements the party-finder toggle. Without
+                        // a selected knight it must return its readiness refusal, whereas
+                        // the unimplemented loot preference still returns the placeholder.
+                        String expected=type.equals(DIFFICULTY)?"~Select a knight first":"~Placeholder: this server operation is not implemented yet";
                         check(response.readBoolean() && response.readInt() == 1
-                            && wire.object(response).equals("~Placeholder: this server operation is not implemented yet")
-                            && response.available() == 0, "unsupported option refused");
+                            && wire.object(response).equals(expected)
+                            && response.available() == 0, "unavailable option refused");
                         writer.send(socket.getOutputStream(), out -> writer.message(out, "PingRequest", id));
                         var pong = wire.frame(socket.getInputStream());
                         check(wire.type(pong).equals(TestWire.NET + "PongResponse")

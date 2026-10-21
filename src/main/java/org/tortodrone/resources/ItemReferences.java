@@ -44,7 +44,7 @@ final class ItemReferences {
         }
     }
     static Map<String,Object> gear(Map<String,Object> rows,ItemCatalog items,boolean out,String at)throws IOException {
-        var result=new LinkedHashMap<String,Object>();for(var e:rows.entrySet()) {String key=e.getKey().startsWith("variant.")?e.getKey():resolve(e.getKey(),items,out,at);if(result.putIfAbsent(key,e.getValue())!=null)throw new IOException(at+": duplicate item reference "+key);}return result;
+        var result=new LinkedHashMap<String,Object>();for(var e:rows.entrySet()) {String key=e.getKey().startsWith("variant.")||e.getKey().matches("table\\.[1-9][0-9]{0,5}")?e.getKey():resolve(e.getKey(),items,out,at);if(result.putIfAbsent(key,e.getValue())!=null)throw new IOException(at+": duplicate item reference "+key);}return result;
     }
     static void exportGear(Path content,ItemCatalog items)throws IOException {
         Path file=content.resolve("shared/combat.yml");var root=Yaml.read(file);var properties=map(root.get("properties"),file.toString());

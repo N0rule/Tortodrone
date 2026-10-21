@@ -32,6 +32,8 @@ public final class SceneStatus {
     private final Map<String,Active> active=new LinkedHashMap<>();
     private final Map<Integer,Integer> shieldCooloff=new HashMap<>();
     private org.tortodrone.character.WorldProfile equipment;
+    private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    public void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
     public void equipment(org.tortodrone.character.WorldProfile profile){equipment=profile;}
     public record Pulse(Object damage,float radius,int mask) { }
     private final ArrayDeque<Pulse> pulses=new ArrayDeque<>();
@@ -125,13 +127,18 @@ public final class SceneStatus {
         for(var a:active.values())if(a.spec.text("class","").equals("Resist")&&(a.spec.integer("mask",0)&flags)!=0)resist+=(int)parameter(a.reference,"Power",SceneDamage.number(a.data,"power",0),"Status Power","status-power.");
         // Shield resistance belongs to active blocking, never passive knight defense.
         if(equipment!=null)for(var item:equipment.items())if(item.equippedSlot()!=null&&Set.of(0,1,5,10,11,12).contains(item.equippedSlot())){
-            int base=Math.round(content.stats().getOrDefault("gear."+item.config()+".status-resist."+flags,0f)),extra=0;
+            int base=Math.round(GearStats.value(content.stats(),item,"status-resist."+flags)),extra=0;
             for(var variant:item.variants()){
                 String prefix="gear.variant."+variant.name()+".status-resist.";
                 if((Math.round(content.stats().getOrDefault(prefix+"mask",0f))&flags)==0)continue;
                 float value=content.stats().getOrDefault(prefix+"value",0f);extra+=(int)Math.ceil(value*(content.stats().getOrDefault(prefix+"relative",0f)!=0?Math.min(1,1-base/100f):1));
             }
             resist+=base+extra;
+        }
+        if(equipment!=null)for(String variant:town.spriteVariants(equipment)){
+            String prefix="gear.variant."+variant+".status-resist.";
+            if((Math.round(content.stats().getOrDefault(prefix+"mask",0f))&flags)!=0)
+                resist+=(int)Math.ceil(content.stats().getOrDefault(prefix+"value",0f)*(content.stats().getOrDefault(prefix+"relative",0f)!=0?Math.max(0,1-resist/100f):1));
         }
         float strength=relativePower(power,resist);if(strength<=0)return;
         String kind=spec.text("class","");String key=kind.equals("Buff")?kind+":"+reference.arguments().getOrDefault("Source",SceneDamage.field(data,"source")):kind;

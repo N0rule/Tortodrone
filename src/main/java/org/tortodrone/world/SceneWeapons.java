@@ -20,14 +20,19 @@ public final class SceneWeapons {
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId) {
+    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage) {
+        Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId){this(x,y,rotation,ownerId,ownerOid,shape,actorId,GearStats.Damage.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape){this(x,y,rotation,ownerId,ownerOid,shape,ownerId);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid){this(x,y,rotation,ownerId,ownerOid,null);}
+        org.tortodrone.character.StarterCatalog.Model region(org.tortodrone.character.StarterCatalog.Model model){
+            if(damage==GearStats.Damage.NONE)return model;
+            var args=new HashMap<>(model.arguments());args.put("equipment-damage",damage);return new org.tortodrone.character.StarterCatalog.Model(model.name(),args);
+        }
     }
     private static final class Run {
-        final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;
+        final KnightCombat.AttackStart start;final FireCatalog.AttackFire attack;final int[] loops;final boolean[] done;final GearStats.Damage damage;
         final Set<Integer> hit=new HashSet<>();
-        Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack){this.start=start;this.attack=attack;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
+        Run(KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage){this.start=start;this.attack=attack;this.damage=damage;loops=new int[attack.fireRefs().size()];done=new boolean[loops.length];}
     }
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
@@ -59,13 +64,18 @@ public final class SceneWeapons {
     private final PriorityQueue<Delayed> delayed=new PriorityQueue<>(Comparator.comparingInt(Delayed::stamp));
     public SceneWeapons(CollisionMap terrain){this.terrain=Objects.requireNonNull(terrain);}
     public void catalog(FireCatalog catalog){this.catalog=Objects.requireNonNull(catalog);}
+    private java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> damageModifiers=(owner,attack)->GearStats.Damage.NONE;
+    public void damageModifiers(java.util.function.BiFunction<Integer,KnightCombat.AttackStart,GearStats.Damage> source){damageModifiers=Objects.requireNonNull(source);}
     public void attack(int owner,KnightCombat.AttackStart start){
-        var attack=catalog.find(start.config(),start.activity());attack(owner,start,attack);
+        var attack=catalog.find(start.config(),start.activity());attack(owner,start,attack,damageModifiers.apply(owner,start));
     }
     public void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack){
+        attack(owner,start,attack,GearStats.Damage.NONE);
+    }
+    private void attack(int owner,KnightCombat.AttackStart start,FireCatalog.AttackFire attack,GearStats.Damage damage){
         if(attack==null)return;
         var list=runs.computeIfAbsent(owner,k->new ArrayList<>());
-        if(list.size()<MAX_RUNS)list.add(new Run(start,attack));
+        if(list.size()<MAX_RUNS)list.add(new Run(start,attack,damage));
     }
     public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);delayed.removeIf(d->d.source().ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
@@ -93,7 +103,7 @@ public final class SceneWeapons {
                 // Shield actions execute on the server; the client does not prefire
                 // their guarded effects. A prediction owner would hide the bump VFX.
                 var pose=new Pose(actor.x(),actor.y(),actor.rotation(),actor.pet()==null?actor.id():actor.pet().knight(),
-                    run.start.activity()==KnightCombat.DEFENSE?0:actor.clientOid(),null,actor.id());
+                    run.start.activity()==KnightCombat.DEFENSE?0:actor.clientOid(),null,actor.id(),run.damage);
                 int cutoff=run.start.started()+run.start.clear();
                 if(actor.activityStarted()>run.start.started())cutoff=Math.min(cutoff,actor.activityStarted());
                 for(int i=0;i<run.loops.length;i++){
@@ -110,7 +120,7 @@ public final class SceneWeapons {
                     if(fired>=cutoff){run.done[i]=true;continue;}
                     if(ref.action().kind()==FireCatalog.Kind.SWEEP_DAMAGE){
                         float c=(float)Math.cos(pose.rotation),s=(float)Math.sin(pose.rotation);
-                        if(stamp<cutoff&&targets!=null)targets.sweep(ref.action().config(),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
+                        if(stamp<cutoff&&targets!=null)targets.sweep(pose.region(ref.action().config()),pose.x+ref.action().x()*c-ref.action().y()*s,pose.y+ref.action().x()*s+ref.action().y()*c,pose.rotation,stamp,pose.ownerId,run.hit);
                     }else execute(ref.action(),pose,ref.advance()?Math.max(fired,lastStamp):fired,0,fired);
                     run.loops[i]++;
                     if(refractory<=0)run.done[i]=true;
@@ -143,7 +153,7 @@ public final class SceneWeapons {
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
     }
-    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id);}
+    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage);}
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
         if(shot.spec.nativeType().equals("ORBITAL")){
@@ -237,13 +247,13 @@ public final class SceneWeapons {
         if(action.kind()==FireCatalog.Kind.DESTROY_SOURCE){var shot=shots.get(source.actorId);if(shot==null)return false;destroy(shot,stamp,false);return true;}
         if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
             if(targets!=null){float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
-                targets.damage(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
+                targets.damage(source.region(action.config()),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape);}
             return true;
         }
         if(action.kind()==FireCatalog.Kind.SWEEP_DAMAGE){
             var shot=shots.get(source.actorId);if(shot==null||targets==null)return false;
             float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
-            targets.sweep(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape,shot.hits.computeIfAbsent(action,key->new HashSet<>()));
+            targets.sweep(source.region(action.config()),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,source.rotation,stamp,source.ownerId,source.shape,shot.hits.computeIfAbsent(action,key->new HashSet<>()));
             return true;
         }
         if(action.kind()==FireCatalog.Kind.IMPULSE_REGION){if(targets!=null)targets.impulse(action.config(),source.x,source.y,source.rotation,stamp,source.ownerId);return true;}
@@ -274,7 +284,7 @@ public final class SceneWeapons {
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
             if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
             while(shots.containsKey(nextId))nextId++;
-            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId):source;
+            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage):source;
             var shot=new Shot(nextId++,spec,controller,stamp,x,y,rotation);
             shots.put(shot.id,shot);
             // Actor-born projectiles use the native offset directly. Sweeping

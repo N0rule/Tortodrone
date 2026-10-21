@@ -88,7 +88,9 @@ final class UnifiedExport {
             else if(key.startsWith("status.")||key.equals("statuses")){Object v=original.getProperty(key);if(statuses.containsKey(key)&&!same(statuses.get(key),v))editableMechanics.put(key,v);else statuses.putIfAbsent(key,v);}
             else if(key.startsWith("gear.")||key.startsWith("player.")||key.startsWith("scale.")||key.startsWith("status-power.")||key.startsWith("status-chance.")) {
                 Object value=scalar(original.getProperty(key));
-                if(key.startsWith("gear.")&&value instanceof Number n&&n.doubleValue()==0)continue;
+                // Sparse legacy bases can omit zero. Level tables must retain it:
+                // zero is an explicit override and level-zero health marks a valid table.
+                if(key.startsWith("gear.")&&!key.startsWith("gear.table.")&&!key.endsWith(".rarity")&&value instanceof Number n&&n.doubleValue()==0)continue;
                 if(combat.containsKey(key)&&!same(combat.get(key),value))editableMechanics.put(key,value);else combat.putIfAbsent(key,value);
             }
             else if(key.equals("items")||original.getProperty(key).startsWith("{")||key.startsWith("item."))mechanics.put(key,original.getProperty(key));
@@ -149,7 +151,9 @@ final class UnifiedExport {
         for(var e:flat.entrySet()) {
             int dot=e.getKey().indexOf('.');String root=e.getKey().substring(0,dot),rest=e.getKey().substring(dot+1);var fields=map(result.computeIfAbsent(root,k->new LinkedHashMap<>()),root);
             if(root.equals("gear")) {
-                int split=rest.indexOf(".defense.");if(split<0)split=rest.indexOf(".status-resist.");if(split<0)split=rest.lastIndexOf(".health-bonus");
+                int split=rest.indexOf(".levels.");if(split<0)split=rest.indexOf(".defense.");if(split<0)split=rest.indexOf(".status-resist.");if(split<0)split=rest.indexOf(".tagged.");if(split<0)split=rest.lastIndexOf(".health-bonus");
+                if(split<0&&rest.endsWith(".table"))split=rest.length()-6;
+                if(split<0&&rest.endsWith(".rarity"))split=rest.length()-7;
                 if(split<0)throw new IOException("Unknown gear stat: "+e.getKey());String config=rest.substring(0,split),field=rest.substring(split+1);var gear=map(fields.computeIfAbsent(config,k->new LinkedHashMap<>()),config);
                 int sub=field.indexOf('.');if(sub<0)gear.put(field,e.getValue());else map(gear.computeIfAbsent(field.substring(0,sub),k->new LinkedHashMap<>()),field).put(field.substring(sub+1),e.getValue());
             }else fields.put(rest,e.getValue());

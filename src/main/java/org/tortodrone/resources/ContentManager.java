@@ -45,6 +45,7 @@ public final class ContentManager {
             var townData=TownYaml.data(content.resolve("town"),definitions.items());TownYaml.references(townData,definitions.items());
             var town=org.tortodrone.town.TownCatalog.fromData(townData);
             var catalog=loadMaps(content.resolve("maps"),settings.startupMap(),town,definitions.items());
+            GearStats.validate(catalog.entry().content().stats());
             var controls=new HashSet<String>();
             for(var weapon:definitions.weapons().weapons()){requireItem(definitions.items(),weapon.config());controls.add(weapon.config().toLowerCase(Locale.ROOT));}
             for(var shield:definitions.weapons().shields()){requireItem(definitions.items(),shield.config());controls.add(shield.config().toLowerCase(Locale.ROOT));}

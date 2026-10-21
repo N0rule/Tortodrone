@@ -634,7 +634,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             Object accepted=SceneDamage.prune(damage,e.spec.integer("damage-mask",0));
             var defense=new HashMap<>(e.spec.fields());
             defense.replaceAll((key,value)->key.startsWith("defense.")?Float.toString(Float.parseFloat(value)*e.status.state().modifiers().defense()):value);
-            float amount=SceneDamage.amount(accepted,content,new SceneContent.Spec(defense),multiplier);
+            var gear=region.arguments().get("equipment-damage") instanceof GearStats.Damage bonus?bonus:GearStats.Damage.NONE;
+            float amount=SceneDamage.amount(accepted,content,new SceneContent.Spec(defense),multiplier,gear);
             if(e.kind.equals("Monster")){
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);

@@ -478,8 +478,60 @@ changes fail validation. Do not edit internal bindings to create new gameplay.
 Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in
 `portals.yml`. The retained markers are scene metadata, not a second travel control.
-`shared/combat.yml` owns global player/scaling/status parameters and sparse gear
-defenses; omitted gear values default to zero. Shared `trap-cycles.yml` owns
+`shared/combat.yml` owns global player/scaling/status parameters and gear stats.
+The archive/stat-reader import covers 1,012 grantable equipment definitions,
+295 shared level tables and 116 defense, resistance and family-damage variants.
+An item's numeric `table` selects `gear.table.<number>.levels.<zero-based-level>`;
+identical tables are shared, and missing table references fail startup. These
+tables supply health, four defenses, status resistance, weapon-class damage and
+charge/attack/movement changes. Defense variants use the item's rarity; costume
+slots contribute no combat stats. Weapon level damage retains native depth gates,
+uncapped relative arithmetic and the separate capped class/family bonuses.
+Attack damage modifiers are captured when an attack starts and retained through
+projectiles and their children. Companion skills use their own authored damage.
+Existing sparse base values remain the fallback for deployments without a level
+table; omitted values default to zero.
+
+The sprite/harness tables and all 27 base/ultimate attacks (1,728 power/damage
+combinations) are retained from the archive/native reader. A successful skill
+uses native knight activity 288 for 750 ms and writes the **used skill's**
+harness-adjusted, minimum-clamped recharge to all three pet cooldown slots,
+matching the archive's streamed live observations. Selected sprite resistance
+and family-damage perks now contribute to combat, alongside existing health,
+charge and speed perks.
+
+Reproduce the numeric import with a separate read-only stock installation:
+
+```sh
+java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
+  gear-stats "/path/to/Spiral Knights" content /tmp/gear-stats-fresh.json
+python3 scripts/content/import_combat_stats.py /path/to/reference-inputs \
+  /tmp/gear-stats-fresh.json content
+java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
+  gear-stats-check "/path/to/Spiral Knights"
+java --enable-native-access=ALL-UNNAMED -Dtortodrone.deployment=/tmp/tortodrone-check \
+  -cp /tmp/tortodrone-check/tortodrone.jar scripts/compat/CheckCombatRendering.java \
+  "/path/to/Spiral Knights" /tmp/equipment-groups-fresh --equipment-groups
+```
+
+The focused stock-reader check compares 24 family/level combinations. The
+graphical fixture uses two disposable knights in the same Training Hall and
+samples armor, shields, sword families, handgun families, bomb families and all
+three sprite species. It checks native animation/model initialization and remote
+projectiles rather than launching every indexed item. Depth-scaled base damage,
+defenses and shield health remain exported for depth zero/MEDIUM; importing
+level bonuses does not establish dungeon-depth progression. Arbitrary stripped
+conditions, sprite defense perks, obsolete Mixer Agent carriers, Sealed Sword
+table summons and delayed developer shield actions remain unsupported. No client
+assets or archive server implementation are copied.
+
+The isolated two-client `--equipment-groups` acceptance passed all 26 groups.
+Observer captures were reviewed for armor, shield bash, the Cutter charge,
+charged Needle effects, the Vortex bomb and Seraphynx's aura. Actor/projectile
+assertions supplement these samples; a passing group does not establish every
+frame, item variant or original action.
+
+Shared `trap-cycles.yml` owns
 stock presets A/B/A2/B2, slow/cross variants and their inverse references.
 `up`, `down`, `warn` and `offset` are **seconds**. An actor references its preset
 by name. The engine's switch/signal transitions, offsets, collision and inverse

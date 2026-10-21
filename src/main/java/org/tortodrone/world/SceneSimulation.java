@@ -100,6 +100,7 @@ public final class SceneSimulation {
         private ActorState appearance;
         private final TownMovement movement;
         private KnightCombat combat;
+        private org.tortodrone.character.WorldProfile combatProfile;
         private final Consumer<Snapshot> initialPublish;
         private Consumer<Snapshot> publish;
         private boolean entered, detached, arrived;
@@ -112,7 +113,7 @@ public final class SceneSimulation {
         private org.tortodrone.town.TownState.Harness harness;
         private final int petId=nextPetId++;
         private final int[] nextSkill=new int[3];
-        private int petSkill,petStarted,petClear,lastSkillInput,petShield,petShieldMaximum;
+        private int petSkill,knightSkill,petStarted,petClear,lastSkillInput,petShield,petShieldMaximum;
         private String petShieldPower;
         private float petX,petY,petRotation;
         private boolean petFollow;
@@ -135,15 +136,11 @@ public final class SceneSimulation {
             String damage=town.harnessDamage(harness==null?"Iron Harness":harness.config());if(damage==null)damage="NORMAL";
             var attack=petFires.find(name+"|"+sprite.powers().get(skill*3+1)+"|"+sprite.powers().get(skill*3+2)+"|"+damage,292);if(attack==null)return;
             int power=sprite.powers().get(skill*3),recharge=(int)(ability.recharge().get(power)*1000*town.harnessRecharge(harness==null?"Iron Harness":harness.config()));
-            // Retail uses each skill's minimum recharge for the shared lockout. A zero
-            // minimum means its harness-adjusted recharge, not an absent lockout.
-            for(int i=0;i<def.skills().size()&&i<nextSkill.length;i++){
-                var other=def.skills().get(i);int otherPower=sprite.powers().get(i*3);
-                int otherRecharge=(int)(other.recharge().get(otherPower)*1000*town.harnessRecharge(harness==null?"Iron Harness":harness.config()));
-                int minimum=other.minimum().get(otherPower)*1000;
-                nextSkill[i]=Math.max(nextSkill[i],stamp+(i==skill?Math.max(minimum,recharge):minimum==0?otherRecharge:minimum));
-            }
-            petSkill=input;petStarted=stamp;petClear=stamp+Math.max(1,((Number)attack.attack().arguments().getOrDefault("clear",1000)).intValue());petFollow=ability.follow();petX=movement.x();petY=movement.y();petRotation=movement.rotation();
+            if(!movement.spriteCommand(stamp))return;
+            // Archive live observations write the USED skill's recharge to all three slots.
+            recharge=Math.max(recharge,ability.minimum().get(power)*1000);
+            java.util.Arrays.fill(nextSkill,stamp+recharge);
+            knightSkill=skill;petSkill=input;petStarted=stamp;petClear=stamp+Math.max(1,((Number)attack.attack().arguments().getOrDefault("clear",1000)).intValue());petFollow=ability.follow();petX=movement.x();petY=movement.y();petRotation=movement.rotation();
             int land=((Number)attack.attack().arguments().getOrDefault("land",0)).intValue();
             weapons.attack(petId,new KnightCombat.AttackStart(attack.weaponConfig(),292,stamp,land,petClear-stamp),attack);
         }
@@ -217,7 +214,7 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
-            synchronized(SceneSimulation.this){check();progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+            synchronized(SceneSimulation.this){check();combatProfile=profile;progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
                 if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile,town);}
         }
         public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
@@ -225,7 +222,7 @@ public final class SceneSimulation {
         }
         public void combat(WeaponCatalog catalog,EquipmentCatalog modifiers,org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();if(instance.map().town())throw new IllegalStateException("Town Knights are peaceful");
-                progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();if(attack.activity()>=KnightCombat.INCOMPLETE&&combat.state().weapon()!=null)health.curseItem(combat.state().weapon().id(),attack.started());if(health.alive())weapons.attack(appearance.id(),attack);});movement.combat(combat);}
+                combatProfile=profile;progress=profile.progress();combat=new KnightCombat(catalog,modifiers);combat.equipment(profile);health.equipment(profile,town);combat.attacks(attack->{health.breakCloak();if(attack.activity()>=KnightCombat.INCOMPLETE&&combat.state().weapon()!=null)health.curseItem(combat.state().weapon().id(),attack.started());if(health.alive())weapons.attack(appearance.id(),attack);});movement.combat(combat);}
         }
         public boolean sit(int sceneTime,long now) {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.sit(sceneTime,now);}
@@ -269,7 +266,7 @@ public final class SceneSimulation {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
                 movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
-                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,petSkill,health.hitTime()));
+                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
         @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
@@ -304,6 +301,10 @@ public final class SceneSimulation {
         arsenalZones=instance.map().content().entries().stream().filter(e->e.spec().flag("arsenal-zone",false)).toList();
         entities=new SceneEntities(instance.map().content(),instance.map().collision(),instance.map().staticCollision());
         weapons=new SceneWeapons(instance.map().collision());weapons.staticCollision(instance.map().staticCollision());weapons.targets(entities);
+        var gearTags=GearStats.damageTags(instance.map().content().stats());
+        weapons.damageModifiers((owner,attack)->{var member=members.get(owner);
+            return member==null||member.combat==null||attack.activity()<KnightCombat.INCOMPLETE?GearStats.Damage.NONE:
+                GearStats.damage(instance.map().content().stats(),member.combatProfile,member.combat.state().weapon(),town,gearTags);});
         entities.feedback(this::feedback);
         entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
         entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});

@@ -30,7 +30,7 @@ public final class RenameMigrationTest {
                 refused(()->new Database(home,false));
                 check(version(db)==13,"locked predecessor is untouched");
             }
-            db=org.tortodrone.support.SchemaFixture.upgrade(home);check(version(db)==15&&db.worldProfile(a,1,1).equals(before),"schema 13 upgrades without losing items or identity");
+            db=org.tortodrone.support.SchemaFixture.upgrade(home);check(version(db)==Database.SCHEMA_VERSION&&db.worldProfile(a,1,1).equals(before),"schema 13 upgrades without losing items or identity");
             var store=new TownStore(db,items,rules);store.canRename(a,1,1);
             refused(()->store.rename(a,1,1,"Bob-Knight"));
             refused(()->store.rename(a,1,1,"Alice-Knight"));

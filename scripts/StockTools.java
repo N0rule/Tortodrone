@@ -13,6 +13,13 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "gear-stats-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("gear-stats-check expects game-directory");fixture="GearStatsCompatibility";
+            }
+            case "gear-stats" -> {
+                if(args.length!=4)throw new IllegalArgumentException("gear-stats expects game-directory content-directory fresh-output-file");
+                fixture="GearStatsExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+            }
             case "animated-items-check" -> {if(args.length!=2)throw new IllegalArgumentException("animated-items-check expects game-directory");fixture="AnimatedItemsCompatibility";}
             case "dialogue-check" -> {if(args.length!=2)throw new IllegalArgumentException("dialogue-check expects game-directory");fixture="DialogueCompatibility";}
             case "exchange-check" -> {

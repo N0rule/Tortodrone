@@ -82,6 +82,10 @@ public final class TownCatalog {
     public float harnessRecharge(String name){return harnessRecharge.getOrDefault(name,1f);}
     private Map<String,Catalog> catalogs=Map.of();
     private Map<String,Bonus> bonuses=Map.of();
+    public List<String> spriteVariants(org.tortodrone.character.WorldProfile profile){
+        var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
+        return sprite!=null&&sprite.perk()!=null&&sprite.perk()>=0&&sprite.perk()<perks.size()?List.of("Sprite/"+perks.get(sprite.perk()).variant()):List.of();
+    }
     public Bonus equipmentBonuses(org.tortodrone.character.WorldProfile profile,String weapon){
         var refs=new ArrayList<String>();for(var item:profile.items())if(item.equippedSlot()!=null&&Set.of(0,1,2,5,10,11,12).contains(item.equippedSlot()))for(var variant:item.variants())refs.add(variant.name());
         var sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);if(sprite!=null&&sprite.perk()!=null&&sprite.perk()>=0&&sprite.perk()<perks.size())refs.add("Sprite/"+perks.get(sprite.perk()).variant());

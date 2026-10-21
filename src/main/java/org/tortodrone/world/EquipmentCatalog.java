@@ -45,6 +45,8 @@ public final class EquipmentCatalog {
     public record Pair(Modifiers equipment, Modifiers weapon) { }
 
     private final Map<String, Entry> entries;
+    private Map<String,Float> stats=Map.of();
+    public void stats(Map<String,Float> values){stats=Map.copyOf(values);}
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
     public void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
 
@@ -116,7 +118,7 @@ public final class EquipmentCatalog {
         for (int slot : GEAR_SLOTS) {
             for (WorldProfile.Item item : profile.items()) {
                 if (item.equippedSlot() != null && item.equippedSlot() == slot)
-                    total = total.plus(require(item.config()).forClass(weaponClass));
+                    total = total.plus(require(item.config()).forClass(weaponClass)).plus(GearStats.modifiers(stats,item,weaponClass));
             }
         }
         var bonus=town.equipmentBonuses(profile,weaponClass.name());
@@ -132,7 +134,7 @@ public final class EquipmentCatalog {
             case BOMB -> WeaponClass.BOMB;
             default -> throw new IOException("Selected item is not a stock weapon");
         };
-        return require(item.config()).forClass(weaponClass);
+        return require(item.config()).forClass(weaponClass).plus(GearStats.modifiers(stats,item,weaponClass));
     }
 
     public Pair forKnight(WorldProfile profile, WorldProfile.Item selectedWeapon) throws IOException {

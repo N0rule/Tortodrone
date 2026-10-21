@@ -19,6 +19,11 @@ public final class SparseContentTest {
             for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
                 var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());
                 var historical=new Properties();historical.putAll(prepared.content());
+                // Leveled combat/variant stats are an explicit additive import. Keep
+                // the 0078b50 scene/actor baseline independent of these new tables.
+                historical.keySet().removeIf(raw->{String key=raw.toString();return key.startsWith("gear.table.")
+                    ||key.startsWith("gear.")&&(key.endsWith(".table")||key.endsWith(".rarity"))
+                    ||key.startsWith("gear.variant.")&&(key.contains(".defense.")||key.contains(".tagged."));});
                 // One deliberate correction to the old exporter: placed entry 3733 has no
                 // native rotation. Check it separately before comparing the historical snapshot.
                 if(map.getKey().toString().equals("1")){

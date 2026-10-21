@@ -52,6 +52,11 @@ public final class TownMovement {
     }
     public void die(int stamp){if(dead())return;resetInput(stamp);setActivity(DYING,stamp);}
     public void resurrect(int stamp){resetInput(stamp);setActivity(RESURRECT,stamp);updateFlags();}
+    /** Retail sprite command: activity 288, movement allowed, 750 ms. */
+    public boolean spriteCommand(int stamp){
+        if(activity!=0||!status.canAttack()||combat!=null&&!combat.canOverride())return false;
+        if(combat!=null)combat.reset(stamp);setActivity(288,stamp);updateFlags();return true;
+    }
     private Object activityData;
     private boolean publicationPending;
     private int animatedItemMillis;
@@ -250,7 +255,7 @@ public final class TownMovement {
     private void moveTo(int target) {
         if(activity==DYING&&target-activityStarted>=DYING_MILLIS)setActivity(DEAD,activityStarted+DYING_MILLIS);
         if(activity==268&&target-activityStarted>=277)setActivity(269,activityStarted+277);
-        int duration = activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
+        int duration = activity==288?750:activity==ANIMATED_ITEM?animatedItemMillis:activity==OPEN_BOX?OPEN_BOX_MILLIS:activity==HURT?HURT_MILLIS:activity==RESURRECT?RESURRECT_MILLIS:activity==270||activity==271?767:activity == USE_ITEM ? USE_ITEM_MILLIS : activity == 2 ? interactionMillis : activity == INVENTORY_END ? INVENTORY_END_MILLIS
             : activity == SIT_END ? SIT_END_MILLIS : 0;
         var emote = PlayerEmotes.byActivity(activity);
         boolean movingEmote=emote!=null&&emote.allowsMovement();
@@ -325,7 +330,7 @@ public final class TownMovement {
         activityStarted = started;
     }
     private boolean activityAllowsMovement() {
-        if(activity==269||activity==HURT||activity==USE_ITEM)return true;
+        if(activity==269||activity==HURT||activity==USE_ITEM||activity==288)return true;
         var emote=PlayerEmotes.byActivity(activity);
         return emote!=null&&emote.allowsMovement();
     }
