@@ -97,11 +97,6 @@ val validateContent = tasks.register<JavaExec>("validateContent") {
     args(projectDir.absolutePath)
 }
 val prepareContent = preparation("prepareContent", "content").apply { configure { dependsOn(validateContent) } }
-val prepareDefaults = tasks.register("prepareDefaults") {
-    group = "build setup"
-    description = "Deprecated alias for prepareContent; -PdefaultsOutput remains supported."
-    dependsOn(prepareContent)
-}
 preparation("prepareMaps", "maps")
 // Rebuild modern packs only from local hash-verified captured binaries. Publication is
 // explicit; neither a normal build nor a failed export may restore historical scenes.
@@ -133,16 +128,10 @@ val buildAdmin = tasks.register("buildAdmin") {
 tasks.assemble { dependsOn(buildServer, buildAdmin) }
 // Keep the conventional build task focused on deliverables. Regression programs are
 // explicit opt-in tasks, so `build` must not pull in test/check dependencies.
-tasks.named("build") { setDependsOn(listOf(tasks.assemble)) }
-// `build` is the normal minimal distribution: both executables plus prepared content.
-// Regression programs are opt-in through testUnit, testIntegration or testAll.
-// Keep the old task name as a compatibility alias for existing scripts.
-tasks.register("buildWithoutTests") {
-    group = "build"
-    description = "Deprecated alias for build; regression programs are never run by default."
-    dependsOn(tasks.named("build"))
+tasks.named("build") {
+    description = "Assemble both JARs and prepared content; no tests."
+    setDependsOn(listOf(tasks.assemble))
 }
-
 fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, prerequisite: TaskProvider<Task>, workingDirectory: java.io.File) =
     tasks.register<JavaExec>(name) {
         group = "application"
@@ -193,9 +182,9 @@ val selectedUnitPrograms = requestedUnitTests?.split(',')?.map { requested ->
         throw GradleException("Unknown or ambiguous unit test '$name'; use a test class name, separated by commas")
     matches.single()
 }?.distinct() ?: unitProgramNames
-val runUnitSuite = tasks.register<JavaExec>("runUnitSuite") {
+val testUnit = tasks.register<JavaExec>("testUnit") {
     group = "verification"
-    description = "Run standalone unit programs; optionally select classes with -PunitTests=A,B."
+    description = "Run standalone unit programs; select classes with -PunitTests=A,B."
     usesService(regressionExecution)
     dependsOn(buildServer, tasks.testClasses)
     javaLauncher.set(launcher25)
@@ -204,11 +193,6 @@ val runUnitSuite = tasks.register<JavaExec>("runUnitSuite") {
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     workingDir = projectDir
     args(selectedUnitPrograms)
-}
-val testUnit = tasks.register("testUnit") {
-    group = "verification"
-    description = "Run all standalone unit test programs."
-    dependsOn(runUnitSuite)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val adminPath = publicOutput.file("tortodrone-admin.jar").asFile.absolutePath

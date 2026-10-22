@@ -64,12 +64,12 @@ Actual supported scope is determined by source and tests, not by how much data e
 ./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest  # focused
 ./gradlew testIntegration # packaged integration tests
 ./gradlew testAll        # unit + integration tests
-./gradlew prepareContent # offline source validation/copy (prepareDefaults is deprecated)
+./gradlew prepareContent # offline source validation/copy
 ./gradlew prepareMaps    # maps only
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
 ```
 
-`buildWithoutTests` remains as a deprecated alias for `build`. Tests have explicit names: `testUnit`, `testIntegration` and `testAll`; `build` never runs them. For focused unit runs, pass `-PunitTests=...`; see [Fast focused testing](docs/development.md#running-just-the-affected-tests).
+Tests have explicit names: `testUnit`, `testIntegration` and `testAll`; `build` never runs them. For focused unit runs, pass `-PunitTests=...`; see [Fast focused testing](docs/development.md#running-just-the-affected-tests).
 
 First use downloads the Gradle distribution and verified dependencies. Cached dependencies support `--offline` builds. Benchmarks are opt-in and synthetic; they are not proof of live-client performance.
 

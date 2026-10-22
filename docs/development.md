@@ -24,7 +24,7 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ./gradlew testIntegration        # all packaged integration tests
 ./gradlew testAll                # complete unit + integration suite; milestone/release verification
 ./gradlew testProcessCleanup     # focused cleanup integration task
-./gradlew prepareContent         # offline source validation/copy (prepareDefaults is deprecated)
+./gradlew prepareContent         # offline source validation/copy
 ./gradlew prepareMaps
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300" # explicit performance work only
 ```
