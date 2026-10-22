@@ -22,6 +22,7 @@ public class CooperativeTrainingTest {
             var db=new Database(home,true);
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));
+            scenes.town(org.tortodrone.town.TownCatalog.load(org.tortodrone.support.ContentFixture.path("town/catalog.json")));
             scenes.weapons(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")));
             scenes.fires(FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json")));
             try(var a=new Player(db,items,scenes,"Alice",1001);var b=new Player(db,items,scenes,"Bob",1002);var c=new Player(db,items,scenes,"Carol",1003)){
@@ -34,6 +35,19 @@ public class CooperativeTrainingTest {
                 a.travel(294);b.travel(294);c.travel(294);
                 var shared=a.place();check(shared==b.place()&&shared!=c.place(),"party shares one Training simulation while an unrelated knight stays private");
                 check(shared.simulation().snapshot().players().size()==2&&!c.world.ownsScene(shared.oid())&&!c.world.ownsInteriorParty(party),"scene and party object IDs do not authorize an outsider");
+                check(a.membership().teleport(19.5f,-.45f,(float)Math.PI/2)&&b.membership().teleport(19f,-.45f,(float)Math.PI/2),"two knights enter the Arsenal mat");
+                await(()->a.membership().arsenalZone()&&b.membership().arsenalZone());
+                a.socket.frames.clear();b.socket.frames.clear();c.socket.frames.clear();
+                int actionStamp=SceneClock.now()+1;
+                a.world.input(new SessionDecoder.Input(shared.oid(),0,actionStamp,List.of(new SessionDecoder.InputFrame(actionStamp,(float)Math.PI/2,(float)Math.PI/2,4,actionStamp))));
+                a.socket.await("show_arsenal_station");
+                check(!b.socket.contains("show_arsenal_station")&&!c.socket.contains("show_arsenal_station"),"station opens only the interacting knight's UI");
+                check(a.membership().teleport(shared.map().spawnX(),shared.map().spawnY(),0),"first user leaves the station");
+                check(b.membership().arsenalZone(),"second knight retains station equipment access");
+                int peerStamp=SceneClock.now()+1;
+                b.world.input(new SessionDecoder.Input(shared.oid(),0,peerStamp,List.of(new SessionDecoder.InputFrame(peerStamp,(float)Math.PI/2,(float)Math.PI/2,4,peerStamp))));
+                b.socket.await("show_arsenal_station");
+                check(b.membership().teleport(shared.map().spawnX()+1,shared.map().spawnY(),0),"second user leaves the station");
                 int stamp=SceneClock.now();float start=shared.simulation().snapshot().players().stream().filter(p->p.id()==a.member().worldId).findFirst().orElseThrow().y();
                 a.world.input(new SessionDecoder.Input(shared.oid(),0,stamp,List.of(new SessionDecoder.InputFrame(stamp,(float)Math.PI/2,(float)Math.PI/2,1))));
                 await(()->shared.simulation().snapshot().players().stream().anyMatch(p->p.id()==a.member().worldId&&p.y()>start+.05));

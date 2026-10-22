@@ -6,7 +6,7 @@ import java.util.*;
 
 /** Offline references/metadata, never executable client classes or game assets. */
 public final class ItemCatalog {
-    public static final int INVENTORY_LIMIT = 256, GRANT_LIMIT = 20;
+    public static final int GRANT_LIMIT = 20;
     public enum PlayerColor { VALUE }
     /** Stock Item subclasses which carry state beyond the common Item fields. */
     public enum Variant { ITEM, LEVEL_ITEM, SEED_ITEM, UPGRADE_ITEM, FURNITURE_ITEM }

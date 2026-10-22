@@ -10,19 +10,25 @@ for file in sorted((a.content/'items').glob('*.yml')):
 town=json.loads((a.content/'_internal/town-definitions.json').read_text())
 for file in sorted((a.content/'town').glob('*.yml')):town.update(yaml.safe_load(file.read_text()))
 fires=json.loads((a.content/'_internal/fires.json').read_text())['entries']
-metadata={x['config']:x for x in town['items']};recipes={x['config'] for x in town['recipes']};accessories={x['config'] for x in town['accessories']};sprites={x['config'] for x in town['sprites']};weapons=collections.defaultdict(set)
-def unsupported(action,reasons):
+metadata={x['config']:x for x in town['items']};recipes={x['config'] for x in town['recipes']};accessories={x['config'] for x in town['accessories']};sprites={x['config'] for x in town['sprites']};weapons=collections.defaultdict(set);reconstructions=collections.defaultdict(set)
+def unsupported(action,reasons,reconstructed):
     if not action:return
     if action['kind']=='UNSUPPORTED':reasons.add('unimplemented action '+action['unsupportedType'].split('$')[-1])
     if action['kind'] in ['SPAWN_ACTOR','SPAWN_FACING','RANDOM_TRANSLATED']:reasons.add('unimplemented summoned actor')
     if action['kind']=='CONDITIONAL' and 'ConditionConfig$Tagged' in str(action.get('config')):reasons.add('unrestored action condition')
     if action['kind']=='EMIT_PROJECTILE' and action['facingType']:reasons.add('unresolved projectile target')
-    for child in action['children']:unsupported(child,reasons)
+    for child in action['children']:unsupported(child,reasons,reconstructed)
     if action.get('actor'):
-        actor=action['actor'];unsupported(actor.get('detonation'),reasons);unsupported(actor.get('shutdown'),reasons)
-        for timer in actor.get('timers',[]):unsupported(timer['action'],reasons);unsupported(timer.get('endAction'),reasons)
+        actor=action['actor'];unsupported(actor.get('detonation'),reasons,reconstructed);unsupported(actor.get('shutdown'),reasons,reconstructed)
+        unsupported(actor.get('startup'),reasons,reconstructed);unsupported(actor.get('activation'),reasons,reconstructed)
+        if actor.get('attachment'):
+            unsupported({'kind':'EMIT_PROJECTILE','actor':actor['attachment'],'children':[],'facingType':''},reasons,reconstructed)
+        if actor['nativeType']=='AGENT':reconstructed.add('native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified')
+        if actor.get('activation') or actor.get('activatesAttachments'):reconstructed.add('tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md')
+        if actor['nativeType'] in {'ORBITAL_BULLET','COMPOUND_ORBITAL_BULLET'} and actor.get('shutdown'):reconstructed.add('disk shutdown guards and swept damage region reconstructed; see research.md')
+        for timer in actor.get('timers',[]):unsupported(timer['action'],reasons,reconstructed);unsupported(timer.get('endAction'),reasons,reconstructed)
 for attack in fires:
-    for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']])
+    for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']],reconstructions[attack['weapon']])
 prepared={}
 action_file=a.content/'_internal/item-actions.json'
 capsule_actions=set(json.loads(action_file.read_text())['actions']) if action_file.exists() else set()
@@ -45,6 +51,9 @@ for item in items:
     if not item.get('nameKey') or not item.get('stockId') or '/Parts/' in name:continue
     if kind in equipment:
         reasons=sorted(weapons.get(name,set()));state='partial'
+        if reconstructions.get(name):
+            if not reasons:state='reconstructed'
+            reasons.extend(sorted(reconstructions[name]))
         if kind in {'Sword','Handgun','SwingingHandgun','Bomb','BlastNetworkBomb'} and name not in weapons:reasons.append('no attack graph')
     elif kind=='Recipe':
         if data.get('recipe') not in recipes:reasons.append('no resolved crafting recipe')

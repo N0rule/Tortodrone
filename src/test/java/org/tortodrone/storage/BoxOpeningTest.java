@@ -82,10 +82,10 @@ public final class BoxOpeningTest {
             }
             check(count(racing.profile(),IRON)==1&&count(racing.profile(),SILVER)==1&&count(racing.profile(),"Weapon/Sword/Calibur")==1,"race awards once and consumes once");
             var full=player();full.grant(PRIZE,1);full.grant(IRON,1);full.grant(SILVER,1);
-            while(full.profile().items().size()<ItemCatalog.INVENTORY_LIMIT){int n=Math.min(20,ItemCatalog.INVENTORY_LIMIT-full.profile().items().size());full.grant("Weapon/Sword/Calibur",n);}
-            var packed=full.profile();refused(()->full.open(PRIZE,-1));check(full.profile().equals(packed),"full inventory rejects the complete bundle without loss");
-            refused(()->full.open(IRON,0));check(full.profile().equals(packed),"full inventory preserves the keyed box and Silver Key");
-            // Complete delivery can reuse matching existing stacks even at the inventory limit.
+            while(full.profile().items().size()<300){int n=Math.min(20,300-full.profile().items().size());full.grant("Weapon/Sword/Calibur",n);}
+            var packed=full.profile();full.open(PRIZE,-1);full.open(IRON,0);
+            check(full.profile().items().size()>packed.items().size(),"keyed and keyless box bundles can grow a large arsenal");
+            // Complete delivery still reuses matching stacks in a large inventory.
             Path stacked=home.resolve("stacked");BoxFixture.write(stacked);
             Path loot=stacked.resolve("loot/boxes/test.yml");var data=Yaml.read(loot);
             var definition=Yaml.map(Yaml.map(data.get("boxes"),"boxes").get("lucky_prize_box"),"box");
@@ -95,10 +95,10 @@ public final class BoxOpeningTest {
             var merging=player();merging.grant(PRIZE,1);merging.grant("Material/Brimstone",2);
             long material=id(merging.profile(),"Material/Brimstone");
             db.write(c->{try(var st=c.prepareStatement("UPDATE inventory_items SET bound=1 WHERE item_id=?")){st.setLong(1,material);st.executeUpdate();}return null;});
-            while(merging.profile().items().size()<ItemCatalog.INVENTORY_LIMIT)merging.grant("Weapon/Sword/Calibur",Math.min(20,ItemCatalog.INVENTORY_LIMIT-merging.profile().items().size()));
+            while(merging.profile().items().size()<300)merging.grant("Weapon/Sword/Calibur",Math.min(20,300-merging.profile().items().size()));
             var mergedBefore=merging.profile();var merged=merger.open(merging.account,1,1,mergedBefore.revision(),id(mergedBefore,PRIZE),-1);
             check(id(merged.profile(),"Material/Brimstone")==material&&count(merged.profile(),"Material/Brimstone")==7,"main and guaranteed rewards merge into the matching bound stack");
-            check(merged.profile().items().size()==ItemCatalog.INVENTORY_LIMIT-1&&((SessionDecoder.Multiset)merged.result()).counts().equals(Map.of(material,5)),"full inventory uses stack capacity and callback reports only awarded quantity");
+            check(merged.profile().items().size()==300-1&&((SessionDecoder.Multiset)merged.result()).counts().equals(Map.of(material,5)),"full inventory uses stack capacity and callback reports only awarded quantity");
             var unsupported=player();unsupported.grant("Upgrade/Prize Box/Solstice Prize Box",1);var saved=unsupported.profile();refused(()->unsupported.open("Upgrade/Prize Box/Solstice Prize Box",-1));check(unsupported.profile().equals(saved),"missing pool never awards fallback prizes");
             System.out.println("PASS: keyed/keyless/Slime options, ownership/auth, stack replay/race, atomic rollback, inventory capacity, quantities/binding and reconnect/reopen persistence");
         }finally{org.tortodrone.support.ContentFixture.delete(home);}

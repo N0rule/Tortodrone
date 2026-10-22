@@ -190,8 +190,12 @@ final class WorldSession implements AutoCloseable {
                         updateAppearance();
                     }else {
                     var existing=temporaryItems.values().stream().filter(item->item.config().equals(pickup.item())).findFirst().orElse(null);
+                    // One carried stack per consumable, three uses per stack, four carried types.
+                    // Refusal leaves the shared pickup available to another knight.
+                    if(existing!=null&&existing.count()>=3||existing==null&&temporaryItems.values().stream().filter(item->item.equippedSlot()==null).count()>=quickbar.length)
+                        throw new IOException("Consumable capacity reached");
                     long id=existing==null?nextTemporaryItem--:existing.id();
-                    int count=existing==null?1:Math.addExact(existing.count(),1);
+                    int count=existing==null?1:existing.count()+1;
                     temporaryItems.put(id,new WorldProfile.Item(id,WorldProfile.Slot.OTHER,pickup.item(),null,0,null,false,false,false,count,false));
                     if(Arrays.stream(quickbar).noneMatch(value->value==id))for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}
                     }
@@ -215,6 +219,12 @@ final class WorldSession implements AutoCloseable {
     private void openTownDialog(org.tortodrone.town.TownCatalog.Station station,ActorState source)throws IOException {
         if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade before using a town station");
         if(station.kind().equals("OpenArsenal")||station.kind().equals("OpenAuction")){
+            if(station.kind().equals("OpenArsenal")){
+                // The window reads equipPolicy while opening; publish the policy on this
+                // same ordered output stream even if the scene publication was coalesced.
+                boolean inZone=membership!=null&&membership.arsenalZone();
+                output.send(()->codec.equipPolicy(oid,inZone));publishedArsenal=inZone;
+            }
             String command=station.kind().equals("OpenAuction")?"auction":"show_arsenal_station";
             closeConversation();closeTownDialog();output.send(()->codec.controllerAction(oid,command,source));return;
         }
@@ -238,6 +248,9 @@ final class WorldSession implements AutoCloseable {
     }
     private void townChanged(org.tortodrone.storage.TownStore.Result result,boolean publishTown)throws IOException {
         var before=visibleProfile();profile=result.profile();updateAppearance();var after=visibleProfile();
+        // The durable operation already committed. A failed buyer connection must
+        // not suppress its shared scene effect for remaining observers.
+        if(before.energy()>after.energy()&&membership!=null)membership.effect(new StarterCatalog.Model("Energy Spent",Map.of()));
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
         if(publishTown)output.send(()->codec.townState(oid,after));
         if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
@@ -716,6 +729,7 @@ final class WorldSession implements AutoCloseable {
             }
             // Learning publishes its committed recipe through EntryAddedEvent below. Replacing
             // recipes first makes the stock DSet reject that addition and suppress its observer.
+            if(learn)membership.effect(new StarterCatalog.Model("Player/Learn Recipe",Map.of()));
             townChanged(result,!learn);if(operation&&townDialog!=null&&Set.of("OpenShop","OpenHarnessInstaller").contains(townDialog.kind()))publishShop();Object payload=result.result();
             if(learn){
                 var fresh=result.profile().town().recipes().stream()
@@ -1813,6 +1827,7 @@ final class WorldSession implements AutoCloseable {
     }
     private void attach() {
         if(!scene.map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
+        publishedArsenal=null;
         membership=null; // The old scene membership is closed before rebuilding its replacement.
         rebuildAppearance();var place=scene;
         membership=place.simulation().join(actorAppearance(),snapshot->{});

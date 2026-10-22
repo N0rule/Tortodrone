@@ -72,6 +72,18 @@ public final class StockTools {
                 if(args[0].equals("status-bombs"))fixtureArgs.add("--status-bombs");
                 if(args[0].equals("sealed-fires"))fixtureArgs.add("--sealed");
             }
+            case "gameplay-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("gameplay-check expects game-directory");fixture="GameplayCompatibility";
+            }
+            case "restoration-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("restoration-check expects game-directory");fixture="RestorationCompatibility";
+                for(String source:List.of("RestorationCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "restoration" -> {
+                if(args.length!=3)throw new IllegalArgumentException("restoration expects game-directory fresh-output-file");
+                fixture="RestorationExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("RestorationExport","FireCatalogExport","SceneStatusExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "fires" -> {
                 if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
                 fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java")); fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
@@ -161,7 +173,7 @@ public final class StockTools {
             for(Path source:sources)compile.add(source.toString());
             run(compile);
             var command = new ArrayList<>(List.of(executable("java"), "--add-opens=java.base/java.lang=ALL-UNNAMED",
-                "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true",
+                "--add-opens=java.base/java.util=ALL-UNNAMED", "-Djava.awt.headless=true", "-Dno_unpack_resources=true", "-Dtortodrone.deployment="+System.getProperty("tortodrone.deployment",project.resolve("build").toString()),
                 "-Duser.home=" + scratch.resolve("home"), "-Djava.util.prefs.userRoot=" + scratch.resolve("prefs"),
                 "-Djava.util.prefs.systemRoot=" + scratch.resolve("system-prefs"), "-cp", scratch + File.pathSeparator + cp, fixture));
             command.addAll(fixtureArgs);

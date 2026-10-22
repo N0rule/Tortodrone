@@ -17,7 +17,8 @@ public final class CheckCombatRendering {
         }
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
+        boolean arsenalStationOnly=Arrays.asList(args).contains("--arsenal-station-only");
+        boolean arsenalBlinkOnly=arsenalStationOnly||Arrays.asList(args).contains("--arsenal-blink-only");
         boolean itemsOnly=Arrays.asList(args).contains("--items-only");
         boolean boxesOnly=Arrays.asList(args).contains("--boxes-only");
         boolean dialogueOnly=Arrays.asList(args).contains("--dialogue-only");
@@ -120,7 +121,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?"--arsenal-blink-only":boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if(multiplayerOnly&&!sharedWorldOnly){

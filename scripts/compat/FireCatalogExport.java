@@ -502,6 +502,11 @@ public final class FireCatalogExport {
             type = "ORBITAL_BULLET"; orbit = orbital(actor, false); fuse = orbit.lifespan(); speed = orbit.angularSpeed(); height = floatField(actor,"height");
         }
         else if(actor instanceof DungeonActorConfig.Orbital o){type="ORBITAL";fuse=600000;speed=o.speed;height=o.height;orbit=new OrbitSpec(o.orbitRadius,o.speed,o.startingRotation,0,0,600000,o.follow.name(),false,null,null,null);}
+        else if(actor instanceof ActorConfig.Agent agent&&refName.startsWith("Bullet/")){
+            // Legacy mixer carrier: retained speed/startMoving/startup; cleanup time was stripped.
+            // The 1700 ms bound is a reconstruction from its replacement disk family, not a live capture.
+            type="AGENT";fuse=1700;speed=agent.speed;maxStep=.1f;
+        }
         else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
         else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
         else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
@@ -518,8 +523,27 @@ public final class FireCatalogExport {
         int flags=intField(nativeActor,"_flags");
         if(nativeActor instanceof com.threerings.tudey.data.actor.Mobile)maxStep=floatField(nativeActor,"_maxStep");
         var timers=new ArrayList<ActorTimer>();var shutdown=new ArrayList<Action>();
+        var startupActions=new ArrayList<Action>();Action activation=null;ActorSpec attachment=null;
+        boolean catalyst=refName.startsWith("Bullet/Handgun/Catalyzer/");
+        for(var handler:actor.handlers){
+            if(handler instanceof HandlerConfig.Startup start)startupActions.add(readAction(manager,start.action));
+            if(catalyst&&type.equals("ORBITAL")&&handler instanceof HandlerConfig.SignalStart signal)activation=readAction(manager,signal.action);
+        }
+        if(catalyst&&type.equals("ORBITAL")){
+            // Archived Catalyzer combat description: attached tags expire after 20 seconds.
+            fuse=20000;activation=activationShape(activation,1.5f);
+        }else if(type.equals("ORBITAL")&&refName.startsWith("Bullet/Handgun/Parts/Mixer/"))fuse=1700;
+        if(catalyst&&actor instanceof DungeonActorConfig.Bullet bullet){
+            var orbital=statusAttachment(bullet.detonationAction);
+            if(orbital!=null){var definition=manager.a(ActorConfig.class,orbital);
+                if(definition==null)throw new IOException("Missing retained Catalyzer orbital");
+                attachment=actor(manager,orbital,definition.ai(manager));
+            }
+        }
         for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Shutdown ended){
-            Action action=readAction(manager,ended.action);if(action!=null)shutdown.add(action);
+            Action action=readAction(manager,ended.action);
+            if(type.equals("ORBITAL_BULLET")||type.equals("COMPOUND_ORBITAL_BULLET"))action=orbitalShutdown(action);
+            if(action!=null)shutdown.add(action);
         }
         if(refName.equals("Bullet/Sword/Burst Bullet")||refName.equals("Bullet/Sword/Burst Bullet (Obsidian)")) {
             // The stock Timer retains the trail reference/arguments but strips its
@@ -635,7 +659,45 @@ public final class FireCatalogExport {
         if(type.equals("ACTOR")&&!timers.isEmpty())fuse=timers.stream().filter(t->t.action().kind()!=Kind.COMPOUND||!t.action().children().isEmpty()).mapToInt(t->t.delay()+t.interval()*(t.limit()-1)+1).max().orElse(1);
         detonation=restoreDamageShape(manager,reference,detonation);
         return new ActorSpec(type,model(reference),fuse,speed,maxStep,flags,ox,oy,height,detonation,orbit,actor.collisionMask,argumentValue(actor.shape),timers,
-            shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""));
+            shutdown.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,shutdown,""),
+            startupActions.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,startupActions,""),
+            attachment,activation,catalyst&&type.equals("BULLET")&&refName.contains("(Charged)"));
+    }
+    private static ConfigReference<ActorConfig> statusAttachment(ActionConfig action){
+        if(action instanceof ActionConfig.Compound compound)for(var child:compound.actions){var found=statusAttachment(child);if(found!=null)return found;}
+        if(action instanceof DungeonActionConfig.DamageRegion region)return statusAttachment(region.damage);
+        return null;
+    }
+    private static ConfigReference<ActorConfig> statusAttachment(DamageConfig damage){
+        if(damage instanceof DamageConfig.Compound compound)for(var child:compound.damages){var found=statusAttachment(child);if(found!=null)return found;}
+        if(damage instanceof DamageConfig.Status status&&status.statusCondition!=null&&status.statusCondition.kW().get("Actor") instanceof ConfigReference<?> actor){
+            @SuppressWarnings("unchecked") var ref=(ConfigReference<ActorConfig>)actor;return ref;
+        }
+        return null;
+    }
+    /** Reconstructed stripped disk guards: discard fizzle damage, then select return damage.
+     *  RETURNING on the outer gate incorrectly made every outbound object collision harmless. */
+    private static Action orbitalShutdown(Action action)throws Exception {
+        if(action==null||action.kind()!=Kind.CONDITIONAL)return action;
+        var children=new ArrayList<Action>();
+        for(var branch:action.children()){
+            var nested=new ArrayList<Action>();for(var child:branch.children())nested.add(child.kind()==Kind.CONDITIONAL?withCondition(child,"RETURNING",true):child);
+            children.add(new Action(branch.kind(),branch.config(),branch.actor(),branch.targetType(),branch.facingType(),branch.collisionSourceType(),branch.x(),branch.y(),branch.rotation(),branch.rotationVariance(),branch.relative(),branch.count(),branch.stepSize(),branch.steps(),branch.collisionMask(),branch.stopOnFailure(),nested,branch.unsupportedType(),branch.parameter(),branch.values()));
+        }
+        var fixed=withCondition(action,"FIZZLE",false);
+        return new Action(fixed.kind(),fixed.config(),fixed.actor(),fixed.targetType(),fixed.facingType(),fixed.collisionSourceType(),fixed.x(),fixed.y(),fixed.rotation(),fixed.rotationVariance(),fixed.relative(),fixed.count(),fixed.stepSize(),fixed.steps(),fixed.collisionMask(),fixed.stopOnFailure(),children,fixed.unsupportedType(),fixed.parameter(),fixed.values());
+    }
+    private static Action withCondition(Action action,String name,boolean set)throws Exception {
+        var condition=new ConditionConfig.FlagSet();condition.flagName=name;condition.set=set;
+        return new Action(action.kind(),new StarterCatalog.Model("Condition",Map.of("condition",argumentValue(condition))),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),action.children(),action.unsupportedType(),action.parameter(),action.values());
+    }
+    /** The orbital explosion's retained VFX explicitly carries Radius=1.5.
+     *  Applying that radius to the stripped damage region is a documented reconstruction. */
+    private static Action activationShape(Action action,float radius)throws Exception {
+        if(action==null)return null;
+        if(action.kind()==Kind.DAMAGE_REGION)return withShape(action,circle(radius));
+        var children=new ArrayList<Action>();for(var child:action.children())children.add(activationShape(child,radius));
+        return new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
     }
     /** Retail's Shard Damage path has an extra closing bracket on one branch. Bind
      *  the surviving shared arguments to every retained child instead of default damage. */
@@ -738,7 +800,7 @@ public final class FireCatalogExport {
         if(action.kind()!=Kind.DAMAGE_REGION&&action.kind()!=Kind.IMPULSE_REGION)throw new IOException("Detonation circle has no matching region action: "+path);
         return withShape(action,shape);
     }
-    private static boolean isProjectile(String type) { return type.equals("ORBITAL") || type.equals("LASER") || type.equals("ACTOR") || type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
+    private static boolean isProjectile(String type) { return type.equals("ORBITAL") || type.equals("LASER") || type.equals("ACTOR") || type.equals("AGENT") || type.equals("BULLET") || type.equals("BOMB") || type.equals("ORBITAL_BULLET") || type.equals("COMPOUND_ORBITAL_BULLET"); }
     private static boolean isNamedSubtype(Class<?> type,String name) { for(Class<?> c=type;c!=null;c=c.getSuperclass())if(c.getName().equals(name))return true;return false; }
     private static OrbitSpec orbital(Object config,boolean compound)throws IOException {
         Object follow=field(config,"follow");

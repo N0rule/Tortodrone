@@ -54,7 +54,7 @@ public final class GameplayCompatibility {
         append(bytes,codec.conversationDialog(1001,10,conversation,conversation.initial(),station,123));
         var def=items.require("Usable/Confetti, Leaf");
         // Existing persisted auction mail is normalized on publication as well as new mail.
-        var mail=new AuctionState.Mail(1,42,1,"%auction:s.auction_cancelled|%item:"+def.nameKey(),"%auction:m.auction_cancelled",0,null,false,false);
+        var mail=new AuctionState.Mail(1,42,1,"%auction:s.auction_cancelled|%item:"+def.nameKey(),"%auction:m.auction_cancelled",0,null,false,false,0,"");
         append(bytes,codec.townResult(1001,(short)3,mail,empty));
         var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
         var player=new PlayerObject();player.loadouts=new DSet<>(List.of(new com.threerings.projectx.data.Loadout("")));
@@ -63,6 +63,8 @@ public final class GameplayCompatibility {
         apply(in,player);check(player.loadouts.size()==1,"native entry remove retains the active loadout");
         apply(in,player);check(player.equipPolicy==PlayerObject.EquipPolicy.ANY,"station grants native ANY equipment policy first");
         var action=(MessageEvent)((EventNotification)in.qe()).yj();
+        var controller=(com.threerings.tudey.config.ClientActionConfig.ControllerAction)action.yd()[0];
+        check("show_arsenal_station".equals(controller.command)&&"".equals(controller.argument),"native controller receives the command in command, not argument");
         check(action.yd()[1] instanceof EntityKey.Entry e&&e.getKey().equals(Integer.valueOf(station.entity().key())),"arsenal action uses its actual placed entry");
         apply(in,player);check(player.equipPolicy==PlayerObject.EquipPolicy.NORMAL,"leaving station restores NORMAL");
         var initial=(SceneDeltaEvent)((EventNotification)in.qe()).yj();

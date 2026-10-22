@@ -104,6 +104,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
+    private final Map<Entity,List<Entity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
@@ -132,6 +133,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
         for(var binding:content.entries())spawn(binding,binding.spec(),null,stamp);
+        // A placed station's interaction region and animated switch share an entry key.
+        for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
+            arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
     }
     private Entity spawn(SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,int stamp){
         String nativeType=spec.text("native-type","");String kind=nativeType.substring(nativeType.lastIndexOf('.')+1);
@@ -255,6 +259,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public void advance(int stamp,List<ActorState> occupants){
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
         this.players=players;
+        for(var station:arsenalProps.entrySet()){
+            var zone=station.getKey();int state=players.stream().anyMatch(p->zone.spec.contains(zone.x,zone.y,zone.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))?1:0;
+            for(var prop:station.getValue())if(prop.state!=state)setSwitch(prop,state,stamp);
+        }
         while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();clearLinks(link.entity(),stamp,link.ghost());}
         float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;
         for(var e:List.copyOf(entities.values())){
@@ -665,17 +673,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @Override public boolean contact(float x,float y,int owner){
         return contact(x,y,0,owner,null,-1);
     }
+    @Override public boolean attachable(int id){var e=entities.get(id);return e!=null&&e.kind.equals("Monster")&&e.health>0&&e.destroyed==Integer.MAX_VALUE;}
+    @Override public int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){
+        for(var e:entities.values())if(e.id!=owner&&e.carrier==0&&e.destroyed==Integer.MAX_VALUE
+            &&(e.collisionFlags&mask)!=0&&!(e.kind.equals("Door")&&(e.flags&2)!=0)
+            &&(shape==null||e.shape==null?e.spec.contains(e.x,e.y,e.rotation,x,y,0):SceneCollision.overlaps(shape,x,y,rotation,e.shape,e.x,e.y,e.rotation,0)))return e.id;
+        return 0;
+    }
     @Override public boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){
         var source=entities.get(owner);
         if(source!=null&&(source.kind.equals("Monster")||source.kind.equals("Trap"))&&(mask&4)!=0&&players.stream().anyMatch(p->shape==null?
             Math.hypot(p.x()-x,p.y()-y)<=ScenePortals.PAWN_RADIUS:SceneShape.intersects(shape,
                 (p.x()-x)*(float)Math.cos(rotation)+(p.y()-y)*(float)Math.sin(rotation),
                 -(p.x()-x)*(float)Math.sin(rotation)+(p.y()-y)*(float)Math.cos(rotation),ScenePortals.PAWN_RADIUS)))return true;
-        for(var e:entities.values())if(e.id!=owner&&e.carrier==0&&e.destroyed==Integer.MAX_VALUE
-            &&(e.spec.integer("collision-flags",0)&mask)!=0
-            &&!(e.kind.equals("Door")&&(e.flags&2)!=0)
-            &&(shape==null||e.shape==null?e.spec.contains(e.x,e.y,e.rotation,x,y,0):SceneCollision.overlaps(shape,x,y,rotation,e.shape,e.x,e.y,e.rotation,0)))return true;
-        return false;
+        return contactActor(x,y,rotation,owner,shape,mask)!=0;
     }
     @Override public void damage(StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){
         damage(region,x,y,rotation,stamp,owner,null);

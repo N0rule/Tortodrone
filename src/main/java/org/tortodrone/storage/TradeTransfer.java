@@ -15,7 +15,6 @@ final class TradeTransfer {
         if(first.accountId()==second.accountId()||first.worldId()==second.worldId())throw new IOException("Cannot trade with yourself");
         var a=current(c,first,firstAuth);var b=current(c,second,secondAuth);
         validate(a,firstItems,firstCrowns,firstEnergy,catalog);validate(b,secondItems,secondCrowns,secondEnergy,catalog);
-        capacity(a,firstItems,secondItems.size());capacity(b,secondItems,firstItems.size());
         int ac=balance(a.crowns(),firstCrowns,secondCrowns),ae=balance(a.energy(),firstEnergy,secondEnergy);
         int bc=balance(b.crowns(),secondCrowns,firstCrowns),be=balance(b.energy(),secondEnergy,firstEnergy);
         transfer(c,a,b,firstItems);transfer(c,b,a,secondItems);
@@ -39,10 +38,6 @@ final class TradeTransfer {
                 throw new IOException("Bound, starter and equipped items cannot be traded");
             if(entry.getValue()==null||entry.getValue()<1||entry.getValue()>item.count())throw new IOException("Invalid trade item quantity");
         }
-    }
-    private static void capacity(WorldProfile owner,Map<Long,Integer> outgoing,int incoming)throws IOException {
-        long removed=owner.items().stream().filter(i->outgoing.getOrDefault(i.id(),0)==i.count()).count();
-        if(owner.items().size()-removed+incoming>ItemCatalog.INVENTORY_LIMIT)throw new IOException("Trade would exceed the inventory limit");
     }
     private static int balance(int original,int sent,int received)throws IOException {
         long result=(long)original-sent+received;

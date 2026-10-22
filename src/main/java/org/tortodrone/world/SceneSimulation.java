@@ -167,6 +167,10 @@ public final class SceneSimulation {
             health.curseItem(id,stamp);if(!health.alive()){usedItems.add(id);updateLife(stamp);return true;}
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
+        /** Server-only notification after a committed item/economy operation. */
+        public void effect(org.tortodrone.character.StarterCatalog.Model effect){synchronized(SceneSimulation.this){
+            check();if(entered&&portal==null)weapons.effect(effect,actor(),SceneClock.now());
+        }}
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
         public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
         public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}

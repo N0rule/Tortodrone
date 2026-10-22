@@ -496,7 +496,6 @@ public final class Database {
                 &&i.slot()==org.tortodrone.character.WorldProfile.Slot.OTHER&&i.expiresAt()==null&&i.bound()==(locked||entry.locked()||entry.permanent())&&i.permanent()==entry.permanent()
                 &&i.equippedSlot()==null&&i.level()==0&&i.heatProgress()==0&&i.variants().isEmpty()&&i.count()+quantity<=9999).findFirst().orElse(null):null;
             int instances=stack!=null?0:entry.stackable()?1:quantity;
-            if(profile.items().size()+instances>org.tortodrone.character.ItemCatalog.INVENTORY_LIMIT)throw new IOException("Inventory limit is 256 item instances");
             long first=0;
             if(stack!=null) {
                 first=stack.id();

@@ -193,8 +193,6 @@ public final class TownStore {
             }
             return stack;
         }
-        int size;try(var s=c.prepareStatement("SELECT count(*) FROM inventory_items WHERE world_id=?")){s.setInt(1,p.worldId());try(var r=s.executeQuery()){r.next();size=r.getInt(1);}}
-        if(size+(def.stackable()?1:count)>ItemCatalog.INVENTORY_LIMIT)throw new IOException("m.inventory_full");
         long first=0;
         for(int n=0;n<(def.stackable()?1:count);n++){
             long id=WorldProfiles.allocate(c,"next-item-id",Long.MAX_VALUE);if(first==0)first=id;

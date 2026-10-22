@@ -48,10 +48,9 @@ public final class ItemGrantTest {
             characters.update(knight.name(),choices("Edited-Knight"),1);
             var edited=characters.worldProfile("Edited-Knight",1);
             check(edited.items().stream().filter(i->!i.starter()).toList().equals(saved.items().stream().filter(i->!i.starter()).toList()),"picker edits only change original starter cosmetics");
-            while(edited.items().size()<ItemCatalog.INVENTORY_LIMIT)edited=accounts.grantItems("Alice","Edited-Knight",entry.config(),Math.min(20,ItemCatalog.INVENTORY_LIMIT-edited.items().size()),-1,-1);
-            final var full=edited;long fullCounter=counter(db);
-            refused(()->accounts.grantItems("Alice","Edited-Knight",entry.config(),1,-1,-1));
-            check(db.worldProfile(2,1,1).equals(full)&&counter(db)==fullCounter,"capacity rejection preserves items/IDs");
+            while(edited.items().size()<300)edited=accounts.grantItems("Alice","Edited-Knight",entry.config(),Math.min(20,300-edited.items().size()),-1,-1);
+            final var full=accounts.grantItems("Alice","Edited-Knight",entry.config(),1,-1,-1);
+            check(full.items().size()==301,"arsenal grows beyond 256 instances");
             accounts.deleteKnight("Alice","Edited-Knight",2,full.worldId());
             check(db.read(c->{try(var s=c.createStatement();var r=s.executeQuery("SELECT count(*) FROM item_events")){r.next();return r.getInt(1);}})==0,"knight deletion cascades item audit records");
             characters.refresh();characters.create(choices("Edited-Knight"),2);

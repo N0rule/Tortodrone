@@ -21,6 +21,7 @@ public final class TownServicesSessionTest {
             var items=ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json"));
             var characters=new CharacterStore(db,account,"Alice",items);
             var knight=characters.create(new Knight(0,"Service-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+            db.setCurrency("Alice",knight.name(),account,-1,org.tortodrone.character.Currency.ENERGY,1_000_000);
             String recipe="Recipe/Armor/Padded Armor Recipe";
             db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),2,-1,-1);
             db.grantItems("Alice",knight.name(),-1,-1,items.require("Upgrade/Rename Knight"),1,-1,-1);
@@ -52,10 +53,26 @@ public final class TownServicesSessionTest {
                 db.grantItems("Alice",knight.name(),-1,-1,items.require(recipe),1,-1,-1);
                 id=db.worldProfile(account,knight.id(),1).items().stream().filter(i->i.config().equals(recipe)).findFirst().orElseThrow().id();
                 var use=new SessionDecoder.Invocation(3,9,14,Arrays.asList(id,null,confirm));
+                var sceneField=WorldSession.class.getDeclaredField("scene");sceneField.setAccessible(true);
+                var simulation=((SceneRegistry.Instance)sceneField.get(world)).simulation();var baseline=simulation.snapshot();
                 check(world.townInvocation(use),"stock inventory Use reaches the recipe handler");
+                var learnedEffects=simulation.snapshot().effectsSince(baseline);
+                check(learnedEffects.size()==1&&learnedEffects.getFirst().config().name().equals("Player/Learn Recipe")&&learnedEffects.getFirst().ownerOid()==0,
+                    "committed recipe effect reaches learner and observers");
                 var learned=db.worldProfile(account,knight.id(),1);
                 check(learned.town().recipes().size()==1&&learned.items().stream().filter(i->i.config().equals(recipe)).mapToInt(WorldProfile.Item::count).sum()==1,"native Use consumes one recipe and publishes the learned book");
-                world.townInvocation(use);check(db.worldProfile(account,knight.id(),1).equals(learned),"duplicate Use preserves recipes, currency, revision and remaining item");
+                world.townInvocation(use);check(simulation.snapshot().effectsSince(baseline).size()==1,"failed duplicate recipe Use cannot replay its effect");check(db.worldProfile(account,knight.id(),1).equals(learned),"duplicate Use preserves recipes, currency, revision and remaining item");
+                var energyOffer=characters.depot(scenes.town()).catalog().offers().stream().filter(o->o.enabled()&&o.good().energy()>0&&o.good().limit()==0&&items.find(o.good().item()).grantable()).findFirst().orElseThrow();
+                var offerReply=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller",(short)19);
+                world.townInvocation(new SessionDecoder.Invocation(3,16,4,List.of(offerReply)));
+                var energyBaseline=simulation.snapshot();var beforePurchase=db.worldProfile(account,knight.id(),1);
+                world.townInvocation(new SessionDecoder.Invocation(3,16,10,List.of(energyOffer.id(),-1,confirm)));
+                check(db.worldProfile(account,knight.id(),1).equals(beforePurchase)&&simulation.snapshot().effectsSince(energyBaseline).isEmpty(),"refused purchase preserves balance, inventory and effects");
+                world.townInvocation(new SessionDecoder.Invocation(3,16,10,List.of(energyOffer.id(),energyOffer.good().energy(),confirm)));
+                check(db.worldProfile(account,knight.id(),1).energy()==beforePurchase.energy()-energyOffer.good().energy(),"native purchase commits Energy debit");
+                var energyEffects=simulation.snapshot().effectsSince(energyBaseline);
+                check(energyEffects.size()==1&&energyEffects.getFirst().config().name().equals("Energy Spent")&&energyEffects.getFirst().ownerOid()==0,"committed Energy purchase effect reaches buyer and observers");
+                learned=db.worldProfile(account,knight.id(),1);
                 var temporaryField=WorldSession.class.getDeclaredField("temporaryItems");temporaryField.setAccessible(true);
                 @SuppressWarnings("unchecked") var temporary=(Map<Long,WorldProfile.Item>)temporaryField.get(world);
                 temporary.put(-1L,new WorldProfile.Item(-1,WorldProfile.Slot.OTHER,"Gear/Dungeon/Vitapod/Health +01",null,0,0,false,false,false,1,false));
@@ -86,7 +103,7 @@ public final class TownServicesSessionTest {
                 world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second)));check(dialog.get(world)==null,"matching close releases the native modal dialog");
                 check(world.townInvocation(new SessionDecoder.Invocation(oid,6,1,List.of(second))),"repeated close is idempotently acknowledged");
             }
-            System.out.println("PASS: native recipe Use, duplicate rollback, rename dispatch and Depot dialog ownership/close lifecycle");
+            System.out.println("PASS: native recipe/Energy effects, purchase refusal/rollback, rename dispatch and Depot dialog ownership/close lifecycle");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static void drain(SessionOutput output,java.util.concurrent.BlockingQueue<byte[]> frames)throws Exception {

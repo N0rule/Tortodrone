@@ -88,7 +88,6 @@ public final class BoxOpeningService {
     }
     /** Project consumption and compatible stack merges before changing any inventory row. */
     private List<Grant> plan(WorldProfile profile,WorldProfile.Item box,WorldProfile.Item key,List<BoxRewardSelector.Prize> prizes)throws IOException {
-        int slots=profile.items().size()-(box!=null&&box.count()==1?1:0)-(key!=null&&key.count()==1?1:0);
         var delivery=new ArrayList<Grant>();
         for(var held:profile.items()) {
             int remaining=held.count()-(box!=null&&held.id()==box.id()||key!=null&&held.id()==key.id()?1:0);
@@ -106,11 +105,10 @@ public final class BoxOpeningService {
             Grant merge=null;
             if(entry.stackable())for(var candidate:delivery)if(candidate.item.config().equals(entry.config())&&candidate.bound==bound&&candidate.count+prize.count()<=9999){merge=candidate;break;}
             if(merge==null) {
-                merge=new Grant(entry,0,bound,0);delivery.add(merge);slots+=entry.stackable()?1:prize.count();
+                merge=new Grant(entry,0,bound,0);delivery.add(merge);
             }
             merge.count+=prize.count();merge.granted+=prize.count();
         }
-        if(slots>ItemCatalog.INVENTORY_LIMIT)throw new IOException("Your inventory is full. Make room for all box rewards.");
         return delivery;
     }
 

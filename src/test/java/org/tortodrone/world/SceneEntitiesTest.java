@@ -17,6 +17,12 @@ public final class SceneEntitiesTest {
         var arsenalPrompt=trainingEntities.interaction(19.5f,-2.3f,(float)Math.PI/2);
         check(arsenalPrompt!=null&&"1955".equals(arsenalPrompt.entryKey()),"facing the front of the actual arsenal floor mat offers its placed interaction");
         check(trainingEntities.interaction(16.5f,1.5f,0)==null,"old sideways arsenal approach cannot trigger interaction");
+        var prop=trainingEntities.actors().stream().filter(actor->actor.entity().kind().equals("Switch")&&actor.entity().key().equals("1955")).findFirst().orElseThrow();
+        var user=new ActorState(10,1001,"User",0,1,19.5f,-.45f,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));
+        var peer=new ActorState(11,1002,"Peer",0,1,19.5f,-.45f,0,0,0,user.config());
+        trainingEntities.advance(100,List.of(user,peer));check(trainingEntities.actor(prop.id()).entity().state()==1,"station opens for shared occupants");
+        trainingEntities.advance(150,List.of(peer));check(trainingEntities.actor(prop.id()).entity().state()==1,"station stays open when one of two occupants leaves");
+        trainingEntities.advance(200,List.of());check(trainingEntities.actor(prop.id()).entity().state()==0,"last occupant closes the shared station");
         var haven=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(1);
         var townEntities=new SceneEntities(haven.content(),haven.collision());
         var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();

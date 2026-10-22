@@ -6,6 +6,9 @@ import java.util.*;
 public final class SceneWeapons {
     public interface Targets {
         boolean contact(float x,float y,int owner);
+        default int contactActor(float x,float y,float rotation,int owner,Object shape,int mask){return 0;}
+        default ActorState actor(int id){return null;}
+        default boolean attachable(int id){return false;}
         default boolean contact(float x,float y,float rotation,int owner,Object shape,int mask){return contact(x,y,owner);}
         void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner);
         default void damage(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object sourceShape){damage(region,x,y,rotation,stamp,owner);}
@@ -47,9 +50,12 @@ public final class SceneWeapons {
     private static final class Shot {
         final int id;final FireCatalog.ActorSpec spec;final Pose source;final int created;final float originX,originY,rotation;
         final IdentityHashMap<FireCatalog.Action,Set<Integer>> hits=new IdentityHashMap<>();
-        final int[] timers;float x,y,relativeX,relativeY;Object contactShape;int advanced;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
-        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];}
-        ActorState snapshot(){var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),spec.nativeType().equals("ORBITAL")?source.ownerId:0,relativeX,relativeY,collided,rotation,source.ownerId);
+        final int[] timers;float x,y,relativeX,relativeY;Object contactShape;int advanced,followId;int destroyed=Integer.MAX_VALUE,collided;boolean fizzle,returning;
+        Shot(int id,FireCatalog.ActorSpec spec,Pose pose,int created,float x,float y,float rotation){this.id=id;this.spec=spec;source=pose;this.created=created;originX=this.x=x;originY=this.y=y;this.rotation=rotation;advanced=created;timers=new int[spec.timers().size()];followId=spec.orbit()!=null&&spec.orbit().follow().equals("SOURCE")?pose.actorId:pose.ownerId;}
+        ActorState snapshot(){
+            if(spec.nativeType().equals("AGENT"))return new ActorState(id,0,"",0,created,x,y,rotation,rotation,spec.flags(),0,created,spec.config(),false,null,null,
+                new SceneEntityState("Agent",destroyed,spec.speed(),spec.maxStep(),0,0,0,0,0,Integer.toString(id)));
+            var orbit=spec.orbit()==null?null:new ProjectileState.Orbit(spec.orbit().radius(),spec.nativeType().equals("ORBITAL")?followId:0,relativeX,relativeY,collided,rotation,source.ownerId);
             // Native _z is the source's floor elevation, not the authored bullet
             // height. Knights have no explicit Z; their client resolves the floor.
             var p=new ProjectileState(spec.nativeType(),spec.config(),source.ownerOid,created,destroyed,originX,originY,ProjectileState.UNSPECIFIED_Z,spec.speed(),spec.maxStep(),source.ownerId,fizzle,orbit);
@@ -197,10 +203,15 @@ public final class SceneWeapons {
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
         if(shot.spec.nativeType().equals("ORBITAL")){
+            var followed=shots.get(shot.followId);
+            home=followed!=null&&followed.destroyed==Integer.MAX_VALUE?followed.snapshot():currentOwners.get(shot.followId);
+            if(home==null&&targets!=null)home=targets.actor(shot.followId);
             if(home==null){destroy(shot,end,true);return;}var orbit=shot.spec.orbit();float angle=orbit.startingRotation()+spin(end-shot.created,orbit.angularSpeed(),false);
-            shot.relativeX=orbit.radius()*(float)Math.cos(angle);shot.relativeY=orbit.radius()*(float)Math.sin(angle);shot.x=home.x()+shot.relativeX;shot.y=home.y()+shot.relativeY;shot.advanced=end;return;
+            shot.relativeX=orbit.radius()*(float)Math.cos(angle);shot.relativeY=orbit.radius()*(float)Math.sin(angle);shot.x=home.x()+shot.relativeX;shot.y=home.y()+shot.relativeY;shot.advanced=end;
+            if(shot.spec.collisionMask()!=0&&targets!=null&&targets.contact(shot.x,shot.y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask()))destroy(shot,end,false);
+            return;
         }
-        if(shot.spec.nativeType().equals("BULLET")){
+        if(shot.spec.nativeType().equals("BULLET")||shot.spec.nativeType().equals("AGENT")){
             int from=shot.advanced;float distance=shot.spec.speed()*(end-from)/1000f;
             int steps=Math.max(1,(int)Math.ceil(Math.abs(distance)/Math.max(.05f,shot.spec.maxStep())));
             for(int n=0;n<steps;n++){
@@ -214,6 +225,22 @@ public final class SceneWeapons {
         shot.advanced=end;
     }
     private void impact(Shot shot,float x,float y,int stamp){
+        int target=targets==null?0:targets.contactActor(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask());
+        if(target!=0&&targets.attachable(target)){
+            if(shot.spec.attachment()!=null&&shots.size()<MAX_ACTORS){
+                var victim=targets.actor(target);var spec=shot.spec.attachment();
+                var attached=new Shot(allocateId(),spec,shot.source,stamp,victim.x(),victim.y(),shot.rotation);
+                attached.followId=target;shots.put(attached.id,attached);
+                if(spec.startup()!=null)execute(spec.startup(),shotPose(attached),stamp,0);
+            }
+            if(shot.spec.activatesAttachments())for(var attached:List.copyOf(shots.values()))
+                if(attached.followId==target&&attached.destroyed==Integer.MAX_VALUE&&attached.spec.activation()!=null){
+                    var victim=targets.actor(target);attached.x=victim.x();attached.y=victim.y();
+                    // An orb keeps its original owner's damage and credit even when another knight triggers it.
+                    var action=attached.spec.activation();attached.destroyed=stamp;
+                    execute(action,shotPose(attached),stamp,0);
+                }
+        }
         // Keep the carrier outside its victim so its backward shards can escape.
         // Archive BulletLogic retains the colliding substep's shape for damage;
         // otherwise a tangent impact can miss the victim through rounding.
@@ -249,8 +276,12 @@ public final class SceneWeapons {
                 rx+=orbit.secondOrbitRadius()*(float)Math.cos(second);ry+=orbit.secondOrbitRadius()*(float)Math.sin(second);}
             float x=cx+rx,y=cy+ry;
             if((shot.spec.flags()&2)==0&&!clear(shot.spec,shot.x,shot.y,x,y,shot.rotation)){shot.collided=next;destroy(shot,next,false);break;}
+            // Preserve the colliding substep for shutdown damage, as for ordinary bullets.
+            // Merely publishing the tangent endpoint can miss a destructible's hit shape.
+            if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){
+                shot.collided=next;impact(shot,x,y,next);break;
+            }
             shot.relativeX=rx;shot.relativeY=ry;shot.x=x;shot.y=y;from=next;
-            if(targets!=null&&targets.contact(x,y,shot.rotation,shot.source.ownerId,shot.spec.collisionShape(),shot.spec.collisionMask())){shot.collided=next;destroy(shot,next,false);}
         }
     }
     private static float spin(int elapsed,float speed,boolean reverse){int rate=speed==0?0:(int)(1000/speed);return rate==0?0:(reverse?-1:1)*(float)(2*Math.PI)*(elapsed%rate)/rate;}
@@ -337,15 +368,14 @@ public final class SceneWeapons {
             if(!action.parameter().isEmpty()&&!action.values().isEmpty()){
                 var arguments=new HashMap<>(spec.config().arguments());arguments.put(action.parameter(),action.values().get(Math.floorMod(seed,action.values().size())));
                 var config=new org.tortodrone.character.StarterCatalog.Model(spec.config().name(),arguments);
-                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown());
+                spec=new FireCatalog.ActorSpec(spec.nativeType(),config,spec.fuse(),spec.speed(),spec.maxStep(),spec.flags(),spec.offsetX(),spec.offsetY(),spec.height(),spec.detonation(),spec.orbit(),spec.collisionMask(),spec.collisionShape(),spec.timers(),spec.shutdown(),spec.startup(),spec.attachment(),spec.activation(),spec.activatesAttachments());
             }
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
-            if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
-            while(shots.containsKey(nextId))nextId++;
             var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage):source;
-            var shot=new Shot(nextId++,spec,controller,stamp,x,y,rotation);
+            var shot=new Shot(allocateId(),spec,controller,stamp,x,y,rotation);
             shots.put(shot.id,shot);
+            if(spec.startup()!=null)execute(spec.startup(),shotPose(shot),stamp,depth+1,seed);
             // Actor-born projectiles use the native offset directly. Sweeping
             // their muzzle from the parent impact would collide with the same
             // target and exhaust every ricochet before a shard could travel.
@@ -361,6 +391,11 @@ public final class SceneWeapons {
             }
             result=true;
         }return result;
+    }
+    private int allocateId(){
+        if(nextId==Integer.MAX_VALUE)nextId=1_500_000_000;
+        while(shots.containsKey(nextId))nextId++;
+        return nextId++;
     }
     private static boolean nonTargetAction(String type){return type.endsWith("$DamageRegionFromPoint")||type.endsWith("$ApplyStatus")||type.endsWith("$ImpartImpulse");}
     private Boolean condition(Object raw,Pose source,int stamp,int depth){

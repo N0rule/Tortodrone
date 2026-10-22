@@ -54,7 +54,7 @@ public final class CombatRenderingCheck {
     private boolean townDialogsOnly;
     private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly,itemsOnly;
     private boolean hazardsOnly;
-    private boolean healthOnly,arsenalBlinkOnly;
+    private boolean healthOnly,arsenalBlinkOnly,arsenalStationOnly;
     private boolean movementOnly;
     private boolean vortexShieldOnly;
     private boolean equipmentGroups;
@@ -122,7 +122,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||args[3].equals("--arsenal-blink-only")||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -143,7 +143,8 @@ public final class CombatRenderingCheck {
         probe.itemsOnly=Arrays.asList(args).contains("--items-only");
         probe.depotOnly=Arrays.asList(args).contains("--depot-only");
         probe.townDialogsOnly=Arrays.asList(args).contains("--town-dialogs-only");
-        probe.arsenalBlinkOnly=Arrays.asList(args).contains("--arsenal-blink-only");
+        probe.arsenalStationOnly=Arrays.asList(args).contains("--arsenal-station-only");
+        probe.arsenalBlinkOnly=probe.arsenalStationOnly||Arrays.asList(args).contains("--arsenal-blink-only");
         probe.healthOnly=Arrays.asList(args).contains("--health-only");
         probe.movementOnly=Arrays.asList(args).contains("--movement-only");
         probe.vortexShieldOnly=Arrays.asList(args).contains("--vortex-shield-only");
@@ -867,6 +868,7 @@ public final class CombatRenderingCheck {
         if(protectedHit){boolean visible=view.PO().acL().isVisible();blinkHidden|=!visible;blinkVisible|=visible;}
         if(now-started>25_000_000_000L)throw new AssertionError("Arsenal/blink timeout: prompt="+own.Ns()+" policy="+app.CT().equipPolicy+" flags="+own.bR(64)+" visible="+blinkVisible+" hidden="+blinkHidden+" position="+own.tz());
         if(stage==2){
+            if(arsenalStationOnly&&now-started<1_000_000_000L)return; // Let the native entry HUD finish being added.
             moveEast(view,false);
             if(own.Ns() instanceof com.threerings.tudey.data.EntityKey.Entry entry&&Integer.valueOf(1955).equals(entry.getKey())){
                 flags(view,4);arsenalPressed=now;stage=42;return;
@@ -883,6 +885,7 @@ public final class CombatRenderingCheck {
                 Object equipment=field(hud,"aDX").get(hud);if(!(equipment instanceof com.threerings.opengl.gui.aD equipmentWindow)||!equipmentWindow.isAdded())throw new AssertionError("Native equipment window did not open");
                 capture("native-arsenal-open");capture("native-entry-blink");
                 ((com.threerings.opengl.gui.aD)inventory).dismiss();equipmentWindow.dismiss();
+                if(arsenalStationOnly){finishImages();passed=done=true;System.out.println("PASS: native Arsenal Station interaction opens inventory and equipment windows with ANY policy");app.shutdown();return;}
                 app.nk().a(null,"/haven",false);started=now;stage=43;}
         }
     }
