@@ -13,6 +13,15 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "action-graphs-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("action-graphs-check expects game-directory");fixture="ActionGraphCompatibility";
+                for(String source:List.of("ActionGraphCompatibility","FireCatalogExport","SceneStatusExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "item-actions" -> {
+                if(args.length!=3)throw new IllegalArgumentException("item-actions expects game-directory fresh-output-file");
+                fixture="SceneItemExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("SceneItemExport","SceneContentExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "gear-stats-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("gear-stats-check expects game-directory");fixture="GearStatsCompatibility";
             }
@@ -50,12 +59,18 @@ public final class StockTools {
                 fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/PetCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));
             }
-            case "fragmentation-fires", "vortex-fires", "status-bombs" -> {
+            case "pet-timings" -> {
+                if(args.length!=4)throw new IllegalArgumentException("pet-timings expects game-directory existing-catalogue fresh-output-directory");
+                fixture="PetCatalogExport";fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                for(String source:List.of("PetCatalogExport","SceneStatusExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "fragmentation-fires", "vortex-fires", "status-bombs", "sealed-fires" -> {
                 if(args.length!=4)throw new IllegalArgumentException(args[0]+" expects game-directory existing-catalogue fresh-output-directory");
                 fixture="FireCatalogExport";sources.add(project.resolve("scripts/compat/FireCatalogExport.java"));sources.add(project.resolve("scripts/compat/SceneStatusExport.java"));
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 if(args[0].equals("vortex-fires"))fixtureArgs.add("--vortex");
                 if(args[0].equals("status-bombs"))fixtureArgs.add("--status-bombs");
+                if(args[0].equals("sealed-fires"))fixtureArgs.add("--sealed");
             }
             case "fires" -> {
                 if(args.length!=3)throw new IllegalArgumentException("fires expects game-directory fresh-output-directory");
@@ -83,6 +98,10 @@ public final class StockTools {
                 if(args.length!=3)throw new IllegalArgumentException("recipes expects game-directory fresh-output-directory");
                 fixture="RecipeCatalogExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/RecipeCatalogExport.java"));
+            }
+            case "recipes-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("recipes-check expects game-directory");
+                fixture="RecipeCatalogExport";fixtureArgs.add("--verify-content");sources.add(project.resolve("scripts/compat/RecipeCatalogExport.java"));
             }
             case "craft-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("craft-check expects game-directory");fixture="CraftCompatibility";

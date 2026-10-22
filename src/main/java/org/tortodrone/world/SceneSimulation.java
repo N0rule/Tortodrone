@@ -26,6 +26,7 @@ public final class SceneSimulation {
         }finally{target.revivePending=false;}
     }
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
+    private final String pickupEpoch=UUID.randomUUID().toString();
     public synchronized void town(org.tortodrone.town.TownCatalog rules){town=Objects.requireNonNull(rules);}
     public record Delta(List<ActorState> added, List<ActorState> updated, int[] removed,
             List<ActorState> changedRoles, Map<Integer,ActorState> baseline) {
@@ -113,8 +114,9 @@ public final class SceneSimulation {
         private org.tortodrone.town.TownState.Harness harness;
         private final int petId=nextPetId++;
         private final int[] nextSkill=new int[3];
-        private int petSkill,knightSkill,petStarted,petClear,lastSkillInput,petShield,petShieldMaximum;
+        private int petSkill,knightSkill,petStarted,petRearm,petClear,lastSkillInput,petShield,petShieldMaximum;
         private String petShieldPower;
+        private SceneContent.Spec petShieldDefense=new SceneContent.Spec(Map.of());
         private float petX,petY,petRotation;
         private boolean petFollow;
         private int auraOwner;
@@ -126,6 +128,7 @@ public final class SceneSimulation {
         private void advancePet(int stamp){
             if(sprite==null||instance.map().town())return;
             if(petSkill!=0&&stamp>=petClear){petSkill=0;petStarted=petClear;}
+            else if(petSkill!=0&&stamp>=petRearm)petFollow=true;
             int input=(movement.inputFlags()&384)>>>7;
             if(input==0){lastSkillInput=0;return;}
             if(input==lastSkillInput||petSkill!=0||!health.alive())return;
@@ -141,6 +144,7 @@ public final class SceneSimulation {
             recharge=Math.max(recharge,ability.minimum().get(power)*1000);
             java.util.Arrays.fill(nextSkill,stamp+recharge);
             knightSkill=skill;petSkill=input;petStarted=stamp;petClear=stamp+Math.max(1,((Number)attack.attack().arguments().getOrDefault("clear",1000)).intValue());petFollow=ability.follow();petX=movement.x();petY=movement.y();petRotation=movement.rotation();
+            petRearm=stamp+((Number)attack.attack().arguments().getOrDefault("rearm",petClear-stamp)).intValue();
             int land=((Number)attack.attack().arguments().getOrDefault("land",0)).intValue();
             weapons.attack(petId,new KnightCombat.AttackStart(attack.weaponConfig(),292,stamp,land,petClear-stamp),attack);
         }
@@ -150,12 +154,15 @@ public final class SceneSimulation {
         private final ArrayDeque<Long> usedItems=new ArrayDeque<>();
         public List<Long> takeUsedItems(){synchronized(SceneSimulation.this){check();var used=List.copyOf(usedItems);usedItems.clear();return used;}}
         public boolean useItem(long id,SceneContent.Spec spec){synchronized(SceneSimulation.this){
-            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0)return false;
+            check();if(!entered||portal!=null||!health.alive()||pendingItem!=0||lift!=0||usedItems.contains(id))return false;
             if(spec.text("kind","").equals("vial")){
                 int stamp=SceneClock.now();if(!movement.lift(stamp))return false;lift=entities.vial(actor(),spec,stamp);
                 if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);health.curseItem(id,stamp);updateLife(stamp);return true;
             }
-            if(!spec.text("kind","").equals("capsule")||health.state().current()>=health.state().maximum())return false;
+            if(!spec.text("kind","").equals("capsule"))return false;
+            if(spec.integer("heal",0)>0){if(health.state().current()>=health.state().maximum())return false;}
+            else try{if(!SceneWeapons.usable(FireCatalog.actionJson(spec.text("use-action",""))))return false;}
+            catch(java.io.IOException invalid){return false;}
             int stamp=SceneClock.now();if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))return false;
             health.curseItem(id,stamp);if(!health.alive()){usedItems.add(id);updateLife(stamp);return true;}
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
@@ -174,10 +181,17 @@ public final class SceneSimulation {
         }
         public int takeInteraction(){synchronized(SceneSimulation.this){check();int target=interactionTarget;interactionTarget=0;return target;}}
         public List<SceneEntities.Pickup> takePickups(){synchronized(SceneSimulation.this){check();return entities.takePickups(appearance.id());}}
-        public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){check();entities.completePickup(appearance.id(),entity,success);}}
+        public String pickupReceipt(int entity){return pickupEpoch+":"+entity;}
+        public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){entities.completePickup(appearance.id(),entity,success);}}
         private Membership(ActorState actor,Consumer<Snapshot> publish) {
             appearance=actor;this.initialPublish=this.publish=publish;
-            health.spriteShield(amount->{var shield=auraOwner==0?this:members.get(auraOwner);if(shield==null||!shield.entered||shield.petShield<=0)return amount;int absorbed=Math.min(amount,shield.petShield);shield.petShield-=absorbed;return amount-absorbed;});
+            health.spriteShield((damage,stamp,multiplier)->{
+                var shield=auraOwner==0?this:members.get(auraOwner);
+                if(shield==null||!shield.entered||!shield.health.alive()||shield.sprite==null||shield.petShield<=0)return SceneHealth.SpriteBlock.NONE;
+                int amount=(int)Math.ceil(SceneDamage.amount(SceneDamage.select(damage,false),instance.map().content(),shield.petShieldDefense,multiplier));
+                int remaining=shield.petShield;shield.petShield=Math.max(0,remaining-amount);
+                return new SceneHealth.SpriteBlock(amount==0?0:Math.max(0,(amount-remaining)/(float)amount),remaining>amount);
+            });
             movement=new TownMovement(instance.map().collision(),actor.x(),actor.y(),actor.rotation(),instance.map().portals());
             movement.resetInput(actor.created());
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
@@ -214,7 +228,14 @@ public final class SceneSimulation {
             synchronized(SceneSimulation.this){check();return entered&&portal==null&&movement.accept(stamp,facing,heading,flags,actionChanged,sceneTime,now);}
         }
         public void equipment(org.tortodrone.character.WorldProfile profile) {
-            synchronized(SceneSimulation.this){check();combatProfile=profile;progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
+            synchronized(SceneSimulation.this){check();
+                int priorSprite=sprite==null?0:sprite.id();
+                combatProfile=profile;progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
+                if(priorSprite!=(sprite==null?0:sprite.id())){
+                    weapons.cancel(petId);petSkill=petShield=petShieldMaximum=0;petShieldPower=null;petFollow=false;
+                    // Preserve the recharge deadlines: swapping sprites cannot bypass cooldowns.
+                }
+                harness=sprite==null?null:profile.town().harnesses().stream().filter(h->h.id()==sprite.harness()).findFirst().orElse(new org.tortodrone.town.TownState.Harness(0,"Iron Harness"));if(combat!=null){var before=combat.state().weapon();combat.equipment(profile);
                 if(!Objects.equals(before,combat.state().weapon()))weapons.cancelAttacks(appearance.id());}health.equipment(profile,town);}
         }
         public void combat(WeaponCatalog catalog,org.tortodrone.character.WorldProfile profile) {
@@ -311,6 +332,7 @@ public final class SceneSimulation {
                 GearStats.damage(instance.map().content().stats(),member.combatProfile,member.combat.state().weapon(),town,gearTags);});
         entities.feedback(this::feedback);
         entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
+        entities.playerTargetable(id->{var member=members.get(id);return member!=null&&member.health.status().modifiers().canBeTargeted();});
         entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){
             var result=member.health.hit(hit.damage(),hit.timestamp(),hit.multiplier(),member.combat);
@@ -326,13 +348,24 @@ public final class SceneSimulation {
         entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.heal(amount,SceneClock.now());});
         weapons.petActions(action->{var member=members.get(action.owner());if(member==null||!member.entered)return;
             switch(action.kind()){
+                case HEAL->member.health.heal(((Number)action.config().arguments().getOrDefault("current",0)).intValue());
+                case CLEAR_STATUS->member.health.clearStatus(((Number)action.config().arguments().getOrDefault("mask",0)).intValue());
                 case APPLY_STATUS->{if(action.config()!=null&&action.config().arguments().get("reference") instanceof org.tortodrone.character.StarterCatalog.Model ref){
                     Object data=action.config().arguments().get("data");float radius=((Number)action.config().arguments().getOrDefault("radius",0)).floatValue();
                     for(var target:members.values())if(target.entered&&(target==member||radius>0&&Math.hypot(target.movement.x()-member.movement.x(),target.movement.y()-member.movement.y())<=radius)){
                         target.health.condition(ref,data,action.timestamp());if(data instanceof FireCatalog.DataValue value&&value.type().endsWith("$SpriteShield"))target.auraOwner=member.appearance.id();
                     }
                 }}
-                case START_SPRITE_SHIELD->{member.petShield=member.petShieldMaximum=((Number)action.config().arguments().getOrDefault("health",0)).intValue();member.petShieldPower=(String)action.config().arguments().get("power");}
+                case START_SPRITE_SHIELD->{
+                    member.petShield=member.petShieldMaximum=((Number)action.config().arguments().getOrDefault("health",0)).intValue();member.petShieldPower=(String)action.config().arguments().get("power");
+                    var defenses=new HashMap<String,String>();Object defense=action.config().arguments().get("defense");
+                    for(String type:List.of("normal","piercing","elemental","shadow")){
+                        Object scale=SceneDamage.field(defense,type);
+                        if(scale instanceof org.tortodrone.character.StarterCatalog.Model model)defenses.put("defense."+type,Float.toString(instance.map().content().scales().getOrDefault(model.name(),0f)));
+                        else if(scale instanceof Number n)defenses.put("defense."+type,n.toString());
+                    }
+                    member.petShieldDefense=new SceneContent.Spec(defenses);
+                }
                 case END_SPRITE_SHIELD->{member.petShield=member.petShieldMaximum=0;member.petShieldPower=null;}
                 default->{}
             }
@@ -385,7 +418,13 @@ public final class SceneSimulation {
                 if(member.pendingItem!=0){
                     if(member.movement.activity()!=TownMovement.USE_ITEM){member.pendingItem=0;member.itemSpec=null;}
                     else if(stamp>=member.itemLand){
-                        if(member.health.heal(member.itemSpec.integer("heal",0))){member.usedItems.add(member.pendingItem);weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);}
+                        boolean used;
+                        if(member.itemSpec.integer("heal",0)>0){
+                            used=member.health.heal(member.itemSpec.integer("heal",0));
+                            if(used)weapons.effect(member.itemSpec.model("use-effect"),member.actor(),member.itemLand);
+                        }else try{used=weapons.fire(FireCatalog.actionJson(member.itemSpec.text("use-action","")),member.actor(),member.itemLand);}
+                        catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared item action",invalid);}
+                        if(used)member.usedItems.add(member.pendingItem);
                         member.pendingItem=0;member.itemSpec=null;
                     }
                 }

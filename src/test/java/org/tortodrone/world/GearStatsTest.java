@@ -39,9 +39,25 @@ public final class GearStatsTest {
         var health=new SceneHealth(scene);health.equipment(profile,town);
         check(health.state().maximum()==240,"native level health changes the HUD maximum");
         var incoming=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("amount",100f,"flags",4));
+        check(Math.abs(SceneDamage.amount(incoming,scene,new SceneContent.Spec(Map.of()),1,GearStats.Damage.NONE,1.2f)-110)<.001,"Attack Booster relative bonus changes authoritative damage using native relative arithmetic");
         check(health.hit(incoming,100).amount()==83,"leveled normal defense participates in damage mitigation");
+        authoritativeHit(scene,damage);
         projectileSnapshot(content.scenes().scene(294),damage);
         System.out.println("PASS: imported levels, health, defenses/UVs, class/tag/depth damage, costume exclusion and charge readiness");
+    }
+    private static void authoritativeHit(SceneContent scene,GearStats.Damage gear)throws Exception {
+        var status=new SceneStatus(scene,false);
+        var capsule=FireCatalog.actionJson(scene.items().get("Pickup/Capsule/Buffs/Attack Booster").text("use-action",""));
+        var buff=capsule.children().stream().filter(a->a.kind()==FireCatalog.Kind.APPLY_STATUS).findFirst().orElseThrow();
+        status.applyResolved((StarterCatalog.Model)buff.config().arguments().get("reference"),buff.config().arguments().get("data"),100);
+        var spec=new SceneContent.Spec(Map.of("native-type","Monster","config","Damage fixture","health","1000","damage-mask","2","radius",".4"));
+        var world=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("enemy",0,0,0,spec)),scene.scales(),Map.of(),scene.stats(),scene.items(),Map.of(),scene.statuses()),SceneWeaponsTest.openTerrain());
+        var owner=new ActorState(10,1001,"Owner",0,100,0,0,0,0,0,0,100,new StarterCatalog.Model("Player",Map.of()),false,null,null,null,null,new SceneKnightState(null,0,status.state()));
+        world.advance(100,List.of(owner));
+        var damage=new FireCatalog.DataValue("Damage$Normal",Map.of("amount",100f,"flags",2));
+        world.damage(new StarterCatalog.Model("Hit",Map.of("damage",damage,"equipment-damage",gear)),0,0,0,101,owner.id());
+        float expected=(float)Math.ceil(SceneDamage.modified(gear.apply(100,""),status.state().modifiers().relativeDamage()));
+        check(Math.abs(world.actors().getFirst().entity().health()-(1000-expected)/1000)<.00001,"native capsule buff and level/class modifiers combine in actual server-owned monster health");
     }
     private static void projectileSnapshot(SceneCatalog.MapScene map,GearStats.Damage damage){
         var region=new StarterCatalog.Model("Fixture",Map.of());

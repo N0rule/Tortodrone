@@ -186,7 +186,13 @@ final class WorldSession implements AutoCloseable {
                     temporaryItems.put(id,new WorldProfile.Item(id,WorldProfile.Slot.OTHER,pickup.item(),null,0,null,false,false,false,count,false));
                     if(Arrays.stream(quickbar).noneMatch(value->value==id))for(int slot=0;slot<quickbar.length;slot++)if(quickbar[slot]==0){quickbar[slot]=id;break;}
                     }
-                }else throw new IOException("Persistent scene pickups are not supported");
+                }else{
+                    var reward=characters.town(scenes.town()).pickup(characters.accountId(),knight.id(),authRevision,membership.pickupReceipt(pickup.entityId()),pickup.item());
+                    // A notification failure must not reopen a durably awarded actor.
+                    success=true;
+                    townChanged(reward,false);
+                    continue;
+                }
                 var after=visibleProfile();output.send(()->codec.itemChanges(oid,knight,before,after));publishQuickbar();success=true;
             }catch(IOException failure){log.debug("Scene pickup refused: "+failure.getMessage());}
             finally{membership.completePickup(pickup.entityId(),success);}

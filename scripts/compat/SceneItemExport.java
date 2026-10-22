@@ -24,6 +24,31 @@ import org.tortodrone.world.FireCatalog;
 public final class SceneItemExport {
     private SceneItemExport() { }
 
+    /** Refresh executable numeric capsule graphs without reimporting scene geometry. */
+    public static void main(String[] args)throws Exception {
+        java.nio.file.Path game=java.nio.file.Path.of(args[0]).toRealPath(),out=java.nio.file.Path.of(args[1]).toAbsolutePath();
+        if(out.startsWith(game)||java.nio.file.Files.exists(out))throw new IOException("Choose a fresh output outside the client");
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
+        resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
+        var actions=new TreeMap<String,Object>();
+        for(var config:itemGroup(manager).kK()){
+            var original=config.w(manager);
+            if(!(original instanceof DungeonItemConfig.Capsule)||config.getConfigId()==0||original.name==null||original.name.isBlank()
+                    ||config.getName().contains("/Parts/")||config.getName().contains("/Test/")||config.getName().contains("/Slime/")||config.getName().endsWith("/Base")||config.getName().endsWith(" Base"))continue;
+            var action=gameplay(readAction(manager,((ItemConfig.ActionItem)original).action));
+            if(org.tortodrone.world.SceneWeapons.usable(action))actions.put(config.getName(),FireCatalog.actionJson(action));
+        }
+        java.nio.file.Files.writeString(out,org.tortodrone.resources.Json.stringify(Map.of("format",1,"actions",actions)),java.nio.file.StandardOpenOption.CREATE_NEW);
+        System.out.println("Exported "+actions.size()+" executable capsule actions to "+out);
+    }
+    /** Mission/statistic counters are outside this gameplay graph; never omit gameplay actions. */
+    private static FireCatalog.Action gameplay(FireCatalog.Action action){
+        if(action==null)return null;
+        var children=action.children().stream().filter(a->!a.unsupportedType().equals("com.threerings.projectx.config.ProjectXActionConfig$IncrementStat")).map(SceneItemExport::gameplay).toList();
+        return new FireCatalog.Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+    }
+
     /** Adds bounded native item data to the caller's deterministic properties map. */
     public static void export(ConfigManager cm, Map<String, String> out) throws Exception {
         if (cm == null || out == null) throw new NullPointerException();

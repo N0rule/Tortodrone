@@ -58,10 +58,14 @@ public final class SceneDamage {
         float total=0;for(float part:parts.values())total+=part;return total;
     }
     public static float amount(Object damage,SceneContent content,SceneContent.Spec target,float multiplier,GearStats.Damage gear){
-        if(gear==GearStats.Damage.NONE)return amount(damage,content,target,multiplier);
+        return amount(damage,content,target,multiplier,gear,1);
+    }
+    /** Buff.relativeDamageModifier uses the same native relative arithmetic as gear bonuses. */
+    public static float amount(Object damage,SceneContent content,SceneContent.Spec target,float multiplier,GearStats.Damage gear,float relative){
+        if(gear==GearStats.Damage.NONE&&relative==1)return amount(damage,content,target,multiplier);
         var raw=new java.util.HashMap<String,Float>();rawParts(damage,content,raw,multiplier,1);
         float total=0;for(var part:raw.entrySet()){
-            float value=gear.apply(part.getValue(),target.text("tags",""));
+            float value=modified(gear.apply(part.getValue(),target.text("tags","")),relative);
             total+=part.getKey().equals("unblockable")?value:mitigate(value,target.number("defense."+part.getKey(),0));
         }
         return total;

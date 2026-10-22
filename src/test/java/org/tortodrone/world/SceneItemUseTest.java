@@ -68,7 +68,27 @@ public final class SceneItemUseTest {
             fixture.await(s->s.players().getFirst().activity()==0);
             check(fixture.simulation.snapshot().effectsSince(baseline).size()==1,"completed animation cannot repeat its effect");
         }
-        System.out.println("PASS: delayed capsule heal/consumption, duplicate refusal, hurt/shock cancellation, animated-item delay and interruption");
+        for(String config:List.of("Pickup/Capsule/Buffs/Attack Booster","Pickup/Capsule/Buffs/Defense Booster","Pickup/Capsule/Shadow Espresso"))try(var fixture=new Fixture(map)){
+            var spec=map.content().items().get(config);
+            check(SceneWeapons.usable(FireCatalog.actionJson(spec.text("use-action",""))),"native gameplay graph is executable: "+config);
+            check(fixture.member.useItem(-4,spec),"a buff capsule can be used at full health");
+            fixture.await(s->!fixture.member.status().conditions().isEmpty());
+            check(fixture.member.takeUsedItems().equals(List.of(-4L)),"buff action consumes one unit at land");
+            check(!fixture.member.status().conditions().isEmpty(),"native capsule status reaches the knight");
+        }
+        try(var fixture=new Fixture(map)){
+            fixture.hit(SceneLifeTest.condition(map.content(),"Poison"));
+            check(!fixture.member.status().conditions().isEmpty(),"poison applied before Remedy");
+            check(fixture.member.useItem(-5,map.content().items().get("Pickup/Capsule/Remedy Capsule")),"Remedy starts its native cleansing action");
+            fixture.await(s->fixture.member.status().conditions().isEmpty());
+            check(fixture.member.takeUsedItems().equals(List.of(-5L)),"Remedy removes native status and consumes exactly once");
+        }
+        try(var fixture=new Fixture(map)){
+            for(String name:List.of("Pickup/Capsule/Artillery Beacon","Pickup/Capsule/Orbital Barrier/Fire Barrier","Pickup/Capsule/Slime/Luck Potion"))
+                check(!fixture.member.useItem(-6,map.content().items().get(name)),"stripped or unsupported gameplay graph is refused before consumption: "+name);
+            check(fixture.member.takeUsedItems().isEmpty(),"unsupported capsule actions consume no items");
+        }
+        System.out.println("PASS: delayed healing/buffs/Remedy consumption, duplicate refusal, hurt/shock cancellation and animated-item interruption");
     }
     private static Object damage(int amount,boolean react) {
         return new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",1,"amount",(float)amount,"shouldReact",react));

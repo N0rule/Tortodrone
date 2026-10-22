@@ -80,6 +80,34 @@ public final class TownStore {
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}
     static List<StarterCatalog.Model> variants(String json)throws IOException{var result=new ArrayList<StarterCatalog.Model>();for(var v:(List<?>)Json.parse(json))result.add(new StarterCatalog.Model((String)v,Map.of()));return List.copyOf(result);}
     public record Result(WorldProfile profile,Object result) { }
+    /** Scene-issued receipt, never accepted from a client invocation. Commit before actor removal.
+     * The receipt is global to the pickup, so a reconnect/competing account cannot claim it twice. */
+    public Result pickup(int account,int knight,long auth,String receipt,String config)throws IOException {
+        if(receipt==null||!receipt.matches("[0-9a-f-]{36}:[0-9]{1,10}"))throw new IOException("Invalid scene reward receipt");
+        return database.write(c->{
+            var profile=WorldProfiles.load(c,account,knight,auth);String key="scene-pickup:"+receipt;
+            try(var st=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
+                st.setString(1,key);try(var row=st.executeQuery()){if(row.next()){
+                    if(!row.getString(1).equals(Integer.toString(profile.worldId())))throw new IOException("Pickup already claimed");
+                    return new Result(profile,null);
+                }}
+            }
+            int crowns=switch(config){
+                // Original Treasure/Crowns/Value/Base denominations, also item.xml's Crowns argument.
+                case "Instant/Crown/Copper Crown"->1;case "Instant/Crown/Copper-Silver Crown"->5;
+                case "Instant/Crown/Silver Crown"->10;case "Instant/Crown/Silver-Gold Crown"->25;
+                case "Instant/Crown/Gold Crown"->50;default->0;
+            };
+            if(crowns>0)credit(c,profile.worldId(),crowns,0);
+            else{
+                var definition=items.require(config);
+                if(!definition.grantable()||definition.permanent()||definition.type().equals("InstantAction"))throw new IOException("Unsupported persistent scene reward");
+                create(c,profile,config,1,false,0,0,List.of());
+            }
+            try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,key);st.setInt(2,profile.worldId());st.executeUpdate();}
+            touch(c,profile.worldId());return new Result(WorldProfiles.load(c,account,knight,auth),null);
+        });
+    }
     public static final int SPARK_COST=50;
     /** Official ItemMarshaller.deleteItem: one owned, non-permanent, unequipped item goes whole. */
     public Result trash(int account,int knight,long auth,long item)throws IOException {
@@ -243,7 +271,10 @@ public final class TownStore {
             for(var consume:consumes.entrySet())consume(c,p,consume.getKey(),consume.getValue());
             // Like the archive, failed attempts spend crystals but preserve the full heat bar.
             if(java.util.concurrent.ThreadLocalRandom.current().nextFloat()>=chance)return null;
-            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);return "m.forge_success";
+            // Live ForgeAnswerProbe: a qualified localization key followed by a tainted
+            // displayed level (stored levels are zero based), in this exact order.
+            setGearProgress(c,p.worldId(),item.id(),item.level()+1,0);
+            return GearRules.forgeMessage(definition.nameKey(),item.level()+1);
         });
     }
     /** Trusted heat awards split only across equipped gear still able to receive heat. */
@@ -414,20 +445,48 @@ public final class TownStore {
             var learned=p.town().recipes().stream().filter(v->v.config().equals(recipe)).findFirst().orElse(null);long now=System.currentTimeMillis();
             if(!catalogue&&learned==null||learned!=null&&(learned.expires()!=0&&learned.expires()<=now||r.oneTime()&&learned.crafted()>0))throw new IOException("Recipe is not available");
             var output=items.require(r.item());var ingredients=new ArrayList<>(r.ingredients());
-            if(r.orbs(output.rarity())&&output.rarity()>0&&output.rarity()<=5){String orb=new String[]{"","Flawed","Simple","Advanced","Elite","Eternal"}[output.rarity()];ingredients.add(new TownCatalog.Ingredient("Item","Rarity/Orb of Alchemy/"+orb,3,-1,"",1,"NEVER",false,List.of()));}
+            if(r.orbs(output.rarity())&&output.rarity()>0&&output.rarity()<=5){String orb="Rarity/Orb of Alchemy/"+new String[]{"","Flawed","Simple","Advanced","Elite","Eternal"}[output.rarity()];
+                if(ingredients.stream().noneMatch(i->i.item().equals(orb)))ingredients.add(new TownCatalog.Ingredient("Item",orb,3,-1,"",1,"NEVER",false,List.of()));}
             // Specific items first, then groups, so a generic food material cannot steal an exact ingredient.
             ingredients.sort(Comparator.comparingInt(i->i.item().isEmpty()?1:0));
             var ids=new LinkedHashSet<Long>();for(long id:selected)if(!ids.add(id))throw new IOException("Duplicate ingredient");
-            var remaining=new LinkedHashMap<Long,Integer>();for(long id:ids){var i=owned(p,id);if(i.equippedSlot()!=null||i.permanent())throw new IOException("Ingredient must be unequipped");remaining.put(id,i.count());}
-            var used=new LinkedHashMap<Long,Integer>();int level=0;float heat=0;List<StarterCatalog.Model> variants=List.of();boolean retainVariants=false;
+            var remaining=new LinkedHashMap<Long,Integer>();for(long id:ids){var i=owned(p,id);if(i.equippedSlot()!=null||i.permanent()||i.gift()!=null||i.expired(now))throw new IOException("Ingredient must be available and unequipped");remaining.put(id,i.count());}
+            var used=new LinkedHashMap<Long,Integer>();int level=0;float heat=0;List<StarterCatalog.Model> variants=List.of();boolean retainVariants=false,bound=r.locked();
+            var accessories=new ArrayList<String>();
             for(var ingredient:ingredients){int needed=ingredient.count();for(long id:ids){var item=owned(p,id);int available=remaining.get(id);if(available==0||!matches(ingredient,item))continue;int n=Math.min(needed,available);remaining.put(id,available-n);used.merge(id,n,Integer::sum);needed-=n;
-                    if(ingredient.kind().endsWith("LevelItem")){if(ingredient.keepHeat()){level=item.level();heat=item.heatProgress();}if(ingredient.upgrade().equals("ALWAYS")||ingredient.upgrade().equals("CHOICE")&&upgrade){variants=item.variants();retainVariants=true;}}
+                    if(ingredient.kind().endsWith("LevelItem")){
+                        bound|=item.bound();
+                        if(ingredient.keepHeat()){level=item.level();heat=item.heatProgress();}
+                        if(ingredient.upgrade().equals("ALWAYS")||ingredient.upgrade().equals("CHOICE")&&upgrade){variants=item.variants();retainVariants=true;}
+                        if(item.slot()==output.slot()){
+                            var blocked=new HashSet<>(rules.blockers(output.config()));
+                            String costume="";
+                            if(item.accessory()!=null)try(var st=c.prepareStatement("SELECT costume FROM knights WHERE account_id=? AND id=?")){
+                                st.setInt(1,p.accountId());st.setInt(2,p.knightId());try(var row=st.executeQuery()){if(!row.next())throw new IOException("Missing knight");costume=row.getString(1);}
+                            }
+                            for(String accessory:item.nativeAccessories(costume)){
+                                var definition=rules.accessory(accessory);
+                                if(definition!=null&&Collections.disjoint(definition.blocks(),blocked)){
+                                    accessories.add(accessory);blocked.addAll(definition.blocks());
+                                }
+                            }
+                        }
+                    }
                     if(needed==0)break;}
                 if(needed!=0)throw new IOException("Missing recipe ingredients");}
             if(used.size()!=ids.size())throw new IOException("Unexpected recipe ingredient");
             pay(c,p,r.cost(output.rarity()),0);for(var use:used.entrySet())consume(c,p,use.getKey(),use.getValue());
             if(!retainVariants)variants=rules.roll(r.variantTable(),group(output));
-            long result=create(c,p,r.item(),r.count(),r.locked(),level,heat,variants);
+            var progression=rules.gear().gear(output.config());
+            if(progression==null||progression.levels()<1){level=0;heat=0;}
+            else if(progression.maximum(level)){level=progression.levels()-1;heat=0;}
+            long result=create(c,p,r.item(),r.count(),bound,level,heat,variants);
+            if(!accessories.isEmpty()){
+                if(r.count()!=1)throw new IOException("Accessory transfer requires one equipment output");
+                try(var st=c.prepareStatement("UPDATE inventory_items SET accessories=? WHERE world_id=? AND item_id=?")){
+                    st.setString(1,Json.stringify(accessories));st.setInt(2,p.worldId());st.setLong(3,result);if(st.executeUpdate()!=1)throw new IOException("Crafted item changed");
+                }
+            }
             if(learned!=null)try(var s=c.prepareStatement("UPDATE town_recipes SET crafted=crafted+1 WHERE id=? AND world_id=?")){s.setLong(1,learned.id());s.setInt(2,p.worldId());s.executeUpdate();}
             return result;
         });
@@ -579,11 +638,14 @@ public final class TownStore {
             }return null;
         });
     }
-    /** Archive HarnessManager.installFromKit keeps the kit and persists a newly allocated harness. */
+    /** Current archive harness installation consumes one kit and persists one owned harness. */
     public Result installHarness(int account,int knight,long auth,long kit)throws IOException{
         return change(account,knight,auth,(c,p)->{
-            String config=rules.item(owned(p,kit).config()).get("harness");
+            var item=owned(p,kit);String config=rules.item(item.config()).get("harness");
             if(config==null||rules.harnessDamage(config)==null)throw new IOException("m.internal_error");
+            if(item.gift()!=null||item.expired(System.currentTimeMillis()))throw new IOException("m.internal_error");
+            // Archive security-fixes S8: one kit buys one harness, atomically.
+            consume(c,p,kit,1);
             try(var s=c.prepareStatement("INSERT INTO town_harnesses(world_id,config) VALUES(?,?)",Statement.RETURN_GENERATED_KEYS)){
                 s.setInt(1,p.worldId());s.setString(2,config);s.executeUpdate();
                 try(var keys=s.getGeneratedKeys()){if(!keys.next())throw new SQLException("Missing installed harness ID");return keys.getLong(1);}

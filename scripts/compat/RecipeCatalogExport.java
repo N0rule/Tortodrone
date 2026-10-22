@@ -8,9 +8,12 @@ import com.threerings.projectx.craft.config.*;
 public final class RecipeCatalogExport {
     public static void main(String[] args)throws Exception {
         if(args.length!=2)throw new IllegalArgumentException("Usage: RecipeCatalogExport game-directory fresh-output-directory");
-        Path game=Path.of(args[0]).toRealPath(),out=Path.of(args[1]).toAbsolutePath().normalize();
+        boolean verify=args[1].equals("--verify-content");
+        Path game=Path.of(args[0]).toRealPath(),out=verify?null:Path.of(args[1]).toAbsolutePath().normalize();
+        if(!verify){
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(ancestor.toRealPath().startsWith(game)||Files.exists(out))throw new IOException("Choose a fresh output directory outside the installation");
+        }
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
@@ -35,10 +38,36 @@ public final class RecipeCatalogExport {
             recipes.add(record);
         }
         recipes.sort(Comparator.comparing(r->String.valueOf(r.get("config"))));
+        if(verify){verify(recipes);return;}
         Files.createDirectories(out);
         Files.writeString(out.resolve("recipes.json"),json(recipes));
         System.out.println("Exported "+recipes.size()+" recipes to "+out.resolve("recipes.json"));
     }
+    private static void verify(List<Map<String,Object>> nativeRecipes)throws Exception {
+        var content=org.tortodrone.resources.ContentManager.load(Path.of("."));
+        var nativeByName=new HashMap<String,Map<String,Object>>();for(var row:nativeRecipes)nativeByName.put((String)row.get("config"),row);
+        int compared=0;var additional=new ArrayList<String>();
+        for(var recipe:content.town().recipes()){
+            var nativeRow=nativeByName.get(recipe.config());if(nativeRow==null){additional.add(recipe.config());continue;}
+            require(recipe.item().equals(nativeRow.get("item"))&&recipe.count()==(Integer)nativeRow.get("count")&&recipe.locked()==(Boolean)nativeRow.get("locked")&&recipe.variantTable().equals(nativeRow.get("variantTable")),recipe.config()+" output/count/binding/variant table");
+            @SuppressWarnings("unchecked") var ingredients=(List<Map<String,Object>>)nativeRow.get("ingredients");
+            require(ingredients.size()==recipe.ingredients().size(),recipe.config()+" ingredient count");
+            for(int i=0;i<ingredients.size();i++){
+                var expected=ingredients.get(i);var actual=recipe.ingredients().get(i);
+                require(expected.get("kind").equals(actual.kind())&&(Integer)expected.get("count")==actual.count(),recipe.config()+" ingredient kind/quantity "+i);
+                require(!expected.containsKey("item")||expected.get("item").equals(actual.item()),recipe.config()+" material/precursor "+i);
+                require(!expected.containsKey("rarity")||(Integer)expected.get("rarity")==actual.rarity(),recipe.config()+" rarity "+i);
+                require(!expected.containsKey("group")||expected.get("group").equals(actual.group()),recipe.config()+" group "+i);
+                require(!expected.containsKey("level")||(Integer)expected.get("level")==actual.level()&&expected.get("upgrade").equals(actual.upgrade())&&(Boolean)expected.get("keepHeat")==actual.keepHeat(),recipe.config()+" precursor level/transfer "+i);
+                require(!expected.containsKey("options")||expected.get("options").equals(actual.options()),recipe.config()+" precursor choices "+i);
+            }
+            @SuppressWarnings("unchecked") var props=(List<Map<String,Object>>)nativeRow.get("props");
+            for(int i=0;i<props.size();i++)require(recipe.cost(i)==(Integer)props.get(i).get("crowns")&&recipe.orbs(i)==(Boolean)props.get(i).get("useOrbs"),recipe.config()+" crowns/orbs at rarity "+i);
+            compared++;
+        }
+        System.out.println("PASS: "+compared+" recipes match native output/count/binding, ingredients, precursor rules, costs and orb flags; archive-only definitions: "+additional);
+    }
+    private static void require(boolean condition,String field){if(!condition)throw new AssertionError("Native recipe mismatch: "+field);}
     private static String json(Object value){
         if(value==null)return "null";
         if(value instanceof Boolean||value instanceof Integer||value instanceof Float)return String.valueOf(value);

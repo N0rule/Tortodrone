@@ -25,7 +25,7 @@ public final class AdminServiceTest {
             accounts.create("Alice", "alice-password".toCharArray());
             accounts.create("Master", "master-password".toCharArray(), true);
             var players = new CharacterStore(database, 1, "Alice");
-            var staff = new CharacterStore(database, 2, "Master");
+            var staff = new CharacterStore(database, 2, "Master",ItemCatalog.load(org.tortodrone.support.ContentFixture.path("items/catalog.json")));
             var player = players.create(new Knight(0, "Player-Knight", "Gear/Helm/Spiral Sallet (Blue)",
                 "Gear/Armor/Spiral Culet (Blue)", null, null, "Blue", 1, 2, 0, 0));
             var knight = staff.create(new Knight(0, "Staff-Knight", "Gear/Helm/Spiral Sallet (Blue)",
@@ -133,7 +133,7 @@ public final class AdminServiceTest {
         database.grantItems("Master",knight.name(),2,-1,items.require("Rarity/Fire Crystal/Cracked"),1,-1,-1);
         var result=new SessionDecoder.Listener(TestWire.INV+"ResultMarshaller",(short)54);
         check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,9,8,List.of(gear.id(),1,0,result))),"stock forge request reaches the Town item handler");
-        response(frames,socket,(short)54,(byte)1,"m.forge_success");
+        response(frames,socket,(short)54,(byte)1,"m.forge_new_level|%item:m.proto_sword|~2");
         check(staff.worldProfile(knight.name(),1).items().stream().anyMatch(i->i.id()==gear.id()&&i.level()==1&&i.heatProgress()==0),"forge commits its level before publishing the callback");
         check(world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,9,8,List.of(gear.id(),1,0,result))),"stale forge request is handled");response(frames,socket,(short)54,(byte)0,"m.costupdate");
     }
@@ -225,7 +225,7 @@ public final class AdminServiceTest {
             if (in.readBoolean()) {
                 in.readInt(); reader.type(in);
                 String text = in.readUTF();
-                check(reason != null && text.equals(method==0&&!reason.startsWith("m.")?"~"+reason:reason), "admin failure reason");
+                check(reason != null && text.equals(method==0&&!reason.startsWith("m.")?"~"+reason:reason), "admin response reason: "+text+" expected "+reason);
             } else {
                 check(reason == null, "successful admin operation reports no reason");
             }

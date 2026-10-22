@@ -13,6 +13,7 @@ public final class SceneWeapons {
         default void sweep(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner,Object shape,Set<Integer> hit){sweep(region,x,y,rotation,stamp,owner,hit);}
         default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
         default boolean monsters(Object region,float x,float y,float rotation){return false;}
+        default boolean spawnPickup(org.tortodrone.character.StarterCatalog.Model specification,float x,float y,float rotation,int stamp){return false;}
     }
     public record PetAction(FireCatalog.Kind kind,org.tortodrone.character.StarterCatalog.Model config,int owner,int timestamp) { }
     private java.util.function.Consumer<PetAction> petActions=ignored->{};
@@ -89,6 +90,36 @@ public final class SceneWeapons {
     public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);delayed.removeIf(d->d.source().ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
     public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0),stamp,0);}
+    /** Refuse an unusable consumable before animation or consumption, including nested actions. */
+    public static boolean usable(FireCatalog.Action action){
+        return supportedItemAction(action)&&meaningfulItemAction(action);
+    }
+    private static boolean supportedItemAction(FireCatalog.Action action){
+        if(action==null||!sourceTarget(action.targetType())||!action.facingType().isEmpty())return false;
+        return switch(action.kind()){
+            case COMPOUND,MULTI_PRESPAWNED,RANDOM_EQUAL->action.children().stream().allMatch(SceneWeapons::supportedItemAction);
+            case HEAL,CLEAR_STATUS,APPLY_STATUS,FIRE_EFFECT,DAMAGE_REGION,SWEEP_DAMAGE,IMPULSE_REGION,DESTROY_SOURCE->true;
+            case EMIT_PROJECTILE->supportedItemProjectile(action.actor());
+            default->false;
+        };
+    }
+    private static boolean supportedItemProjectile(FireCatalog.ActorSpec actor){
+        if(actor==null||!Set.of("BULLET","BOMB","LASER","ORBITAL","ORBITAL_BULLET","COMPOUND_ORBITAL_BULLET").contains(actor.nativeType()))return false;
+        // A retained visual without its stripped server handlers is not a usable weapon.
+        // In particular an ORBITAL's fallback cleanup fuse is not an authored lifetime.
+        if(actor.nativeType().equals("ORBITAL")&&actor.fuse()==600000)return false;
+        if(actor.detonation()!=null&&!supportedItemAction(actor.detonation())||actor.shutdown()!=null&&!supportedItemAction(actor.shutdown()))return false;
+        for(var timer:actor.timers())if(!supportedItemAction(timer.action())||timer.endAction()!=null&&!supportedItemAction(timer.endAction()))return false;
+        return actor.detonation()!=null&&meaningfulItemAction(actor.detonation())
+            ||actor.timers().stream().anyMatch(t->meaningfulItemAction(t.action()));
+    }
+    private static boolean meaningfulItemAction(FireCatalog.Action action){
+        return switch(action.kind()){
+            case COMPOUND,MULTI_PRESPAWNED,RANDOM_EQUAL->action.children().stream().anyMatch(SceneWeapons::meaningfulItemAction);
+            case FIRE_EFFECT->action.config()!=null;
+            default->true;
+        };
+    }
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
         if(config==null)return;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();
         // These server-fired effects must reach the controlling client too;
@@ -248,11 +279,30 @@ public final class SceneWeapons {
             return result!=null&&action.children().size()==2&&execute(action.children().get(result?0:1),source,stamp,depth+1,seed);
         }
         if(action.kind()==FireCatalog.Kind.RANDOM_EQUAL){return action.children().isEmpty()||execute(action.children().get(java.util.concurrent.ThreadLocalRandom.current().nextInt(action.children().size())),source,stamp,depth+1,seed);}
+        if(action.kind()==FireCatalog.Kind.RANDOM_WEIGHTED){
+            Object weights=action.config()==null?null:action.config().arguments().get("weights");
+            if(!(weights instanceof FireCatalog.ListValue list)||list.values().size()!=action.children().size())return false;
+            double total=0;for(Object raw:list.values()){
+                if(!(raw instanceof Number n)||!Double.isFinite(n.doubleValue())||n.doubleValue()<0)return false;total+=n.doubleValue();
+            }
+            if(total<=0||!Double.isFinite(total))return false;
+            double pick=java.util.concurrent.ThreadLocalRandom.current().nextDouble(total);
+            for(int i=0;i<list.values().size();i++){pick-=((Number)list.values().get(i)).doubleValue();if(pick<0)return execute(action.children().get(i),source,stamp,depth+1,seed);}
+            return false;
+        }
         if(action.kind()==FireCatalog.Kind.COMPOUND||action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED){boolean result=true;int index=0;
             for(var child:action.children()){boolean success=execute(child,source,stamp,depth+1,seed+(action.kind()==FireCatalog.Kind.MULTI_PRESPAWNED?index++:0));result&=success;if(!success&&action.stopOnFailure())break;}return result;}
         if(action.kind()==FireCatalog.Kind.FAIL)return false;
-        if(action.kind()==FireCatalog.Kind.APPLY_STATUS||action.kind()==FireCatalog.Kind.START_SPRITE_SHIELD||action.kind()==FireCatalog.Kind.END_SPRITE_SHIELD){petActions.accept(new PetAction(action.kind(),action.config(),source.ownerId,stamp));return true;}
+        if(action.kind()==FireCatalog.Kind.HEAL||action.kind()==FireCatalog.Kind.CLEAR_STATUS||action.kind()==FireCatalog.Kind.APPLY_STATUS||action.kind()==FireCatalog.Kind.START_SPRITE_SHIELD||action.kind()==FireCatalog.Kind.END_SPRITE_SHIELD){
+            if(!sourceTarget(action.targetType()))return false;
+            petActions.accept(new PetAction(action.kind(),action.config(),source.ownerId,stamp));return true;}
         if(!sourceTarget(action.targetType()))return false;
+        if(action.kind()==FireCatalog.Kind.SPAWN_PICKUP){
+            float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
+            float rotation=(action.relative()?source.rotation:0)+action.rotation();
+            if(action.rotationVariance()!=0)rotation+=(float)(Math.random()-.5)*action.rotationVariance();
+            return targets!=null&&targets.spawnPickup(action.config(),source.x+action.x()*c-action.y()*s,source.y+action.x()*s+action.y()*c,rotation,stamp);
+        }
         if(action.kind()==FireCatalog.Kind.DESTROY_SOURCE){var shot=shots.get(source.actorId);if(shot==null)return false;destroy(shot,stamp,false);return true;}
         if(action.kind()==FireCatalog.Kind.DAMAGE_REGION){
             if(targets!=null){float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
@@ -317,6 +367,7 @@ public final class SceneWeapons {
         if(depth>16||!(raw instanceof FireCatalog.DataValue value))return null;
         String type=value.type().substring(value.type().lastIndexOf('$')+1);
         if(type.equals("Always"))return true;if(type.equals("Never"))return false;
+        if(type.equals("Random"))return Math.random()<SceneDamage.number(raw,"probability",1);
         if(type.equals("All")||type.equals("Any")){
             Object children=SceneDamage.field(raw,"conditions");if(!(children instanceof FireCatalog.ListValue list))return null;
             for(Object child:list.values()){Boolean result=condition(child,source,stamp,depth+1);if(result==null)return null;if(type.equals("All")&&!result)return false;if(type.equals("Any")&&result)return true;}

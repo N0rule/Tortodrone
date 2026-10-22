@@ -21,7 +21,7 @@ public final class FireCatalogExport {
     private static int damageRarity;
 
     public static void main(String[] args) throws Exception {
-        if (args.length < 2 || args.length > 4 || args.length==4&&!Set.of("--vortex","--status-bombs").contains(args[3])) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex|--status-bombs]]");
+        if (args.length < 2 || args.length > 4 || args.length==4&&!Set.of("--vortex","--status-bombs","--sealed").contains(args[3])) throw new IllegalArgumentException("Usage: FireCatalogExport game-directory fresh-output-directory [existing-catalogue [--vortex|--status-bombs|--sealed]]");
         Path game = Path.of(args[0]).toRealPath(), out = Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor = out; while (!Files.exists(ancestor)) ancestor = ancestor.getParent();
         if (ancestor.toRealPath().startsWith(game) || Files.exists(out)) throw new IOException("Choose a fresh output directory outside the installation");
@@ -33,7 +33,7 @@ public final class FireCatalogExport {
 
         var entries = new ArrayList<AttackFire>();
         var previous=args.length>=3?FireCatalog.load(Path.of(args[2])):null;
-        boolean vortex=args.length==4&&args[3].equals("--vortex"),statusBombs=args.length==4&&args[3].equals("--status-bombs");
+        boolean vortex=args.length==4&&args[3].equals("--vortex"),statusBombs=args.length==4&&args[3].equals("--status-bombs"),sealed=args.length==4&&args[3].equals("--sealed");
         for (ItemConfig config : manager.bd(ItemConfig.class).kK()) {
             ItemConfig.Original item = config.w(manager);
             if (!playerDefinition(config.getConfigId(), item)) continue;
@@ -41,7 +41,7 @@ public final class FireCatalogExport {
             if(previous!=null){
                 if(item instanceof ItemConfig.Weapon weapon){
                     var charged=previous.find(config.getName(),290);
-                    if(charged!=null&&(vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):statusBombs?charged.fireRefs().stream().anyMatch(ref->chemicalCloud(ref.action())):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
+                    if(charged!=null&&(sealed?config.getName().equals("Weapon/Sword/Sealed Sword"):vortex?Set.of("Weapon/Bomb/Graviton Vortex","Weapon/Bomb/Electron Vortex","Weapon/Bomb/Celestial Vortex").contains(config.getName()):statusBombs?charged.fireRefs().stream().anyMatch(ref->chemicalCloud(ref.action())):charged.fireRefs().stream().anyMatch(ref->fragmentation(ref.action()))))addAttack(manager,config.getName(),290,weapon.chargedAttack,entries);
                 }
                 continue;
             }
@@ -100,7 +100,12 @@ public final class FireCatalogExport {
             actor=new ActorSpec(actor.nativeType(),actor.config(),actor.fuse(),actor.speed(),actor.maxStep(),actor.flags(),actor.offsetX(),actor.offsetY(),actor.height(),actor.detonation(),actor.orbit(),actor.collisionMask(),actor.collisionShape(),timers,actor.shutdown());
         }
         boolean repairedFan=fresh.actor()!=null&&fresh.actor().config().name().equals("Bomb/Parts/Shard/Shard Base (Distance Check)")&&fresh.relative()&&!old.relative()&&old.rotation()==0;
-        return new Action(fresh.kind(),fresh.config(),actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),repairedFan?fresh.rotation():old.rotation(),old.rotationVariance(),repairedFan||old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
+        var config=fresh.config();
+        if(fresh.kind()==Kind.CONDITIONAL&&config!=null&&old.config()!=null
+                &&config.arguments().get("condition") instanceof DataValue current&&current.type().endsWith("$Tagged")
+                &&Objects.equals(org.tortodrone.world.SceneDamage.field(current,"tag"),"")
+                &&old.config().arguments().get("condition") instanceof DataValue prior&&!prior.type().endsWith("$Tagged"))config=old.config();
+        return new Action(fresh.kind(),config,actor,fresh.targetType(),fresh.facingType(),fresh.collisionSourceType(),fresh.x(),fresh.y(),repairedFan?fresh.rotation():old.rotation(),old.rotationVariance(),repairedFan||old.relative(),fresh.count(),fresh.stepSize(),fresh.steps(),fresh.collisionMask(),fresh.stopOnFailure(),children,fresh.unsupportedType(),fresh.parameter(),fresh.values());
     }
 
     private static boolean fragmentation(Action action){
@@ -139,7 +144,7 @@ public final class FireCatalogExport {
         AttackConfig.Original attack = AttackConfig.b(manager, reference);
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
-        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qh());metadata.put("clear",attack.Qf());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
+        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qh());metadata.put("rearm",attack.Qg());metadata.put("clear",attack.Qf());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
         var refs = new ArrayList<FireRef>();
         if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
             &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
@@ -188,8 +193,23 @@ public final class FireCatalogExport {
         if(action instanceof ActionConfig.Delayed delayed){
             return new Action(Kind.DELAYED,new StarterCatalog.Model("Delayed",Map.of("delay",delayed.delay,"variance",delayed.variance)),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(delayed.action==null?noop():readAction(manager,delayed.action)),"");
         }
+        if(action instanceof DungeonActionConfig.TableSpawn spawn){
+            if(spawn.getClass()!=DungeonActionConfig.TableSpawn.class&&spawn.getClass()!=DungeonActionConfig.TableSpawnRotated.class)return unsupported(action);
+            var table=spawn.spawnTable==null?null:manager.a(SpawnTableConfig.class,spawn.spawnTable);
+            if(!(table instanceof SpawnTableConfig.Original original))return unsupported(action);
+            return tableEntry(manager,original.root,spawn,0);
+        }
         if(action.getClass().getSimpleName().equals("DestroyActor"))return destroySource();
         if(action instanceof ActionConfig.Fail)return new Action(Kind.FAIL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
+        if(action instanceof DungeonActionConfig.ClearStatus clear)
+            return new Action(Kind.CLEAR_STATUS,new StarterCatalog.Model("ClearStatus",Map.of("mask",clear.mask)),null,target(clear.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if(action instanceof DungeonActionConfig.Heal heal&&heal.getClass()==DungeonActionConfig.Heal.class&&heal.maximum==0)
+            return new Action(Kind.HEAL,new StarterCatalog.Model("Heal",Map.of("current",heal.current)),null,target(heal.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        if(action instanceof DungeonActionConfig.DepthScaleHeal heal){
+            var scale=manager.a(DepthScaleConfig.class,heal.depthScale);
+            if(scale==null)return unsupported(action);
+            return new Action(Kind.HEAL,new StarterCatalog.Model("Heal",Map.of("current",(int)scale.a(manager,0,0,com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM))),null,target(heal.target),"","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+        }
         if(action instanceof DungeonActionConfig.ApplyStatus status){
             if(status.condition==null)return noop();
             var values=new TreeMap<String,Object>();values.put("reference",model(status.condition));
@@ -254,17 +274,18 @@ public final class FireCatalogExport {
             return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,compound.stopOnFailure,children,"");
         }
         if (action instanceof ActionConfig.Random random) {
-            // Equal positive weights retain the stock uniform draw (Wrench Wand's
-            // two sounds and a null spawn); other weighted graphs stay explicit.
             if (random.actions != null && random.actions.length == 0) return noop();
             if (random.actions == null) return unsupported(action);
-            if (random.actions.length == 1 && random.actions[0] != null
-                    && Float.isFinite(random.actions[0].weight) && random.actions[0].weight > 0f)
-                return readAction(manager, random.actions[0].action);
-            var choices=new ArrayList<Action>();float weight=-1;
-            for(var entry:random.actions){if(entry==null||!Float.isFinite(entry.weight)||entry.weight<=0f||weight>=0&&entry.weight!=weight)return unsupported(action);
-                weight=entry.weight;var child=readAction(manager,entry.action);choices.add(child==null?noop():child);}
-            return new Action(Kind.RANDOM_EQUAL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,choices,"");
+            var choices=new ArrayList<Action>();var weights=new ArrayList<Object>();float weight=-1;double total=0;boolean equal=true;
+            for(var entry:random.actions){
+                if(entry==null||!Float.isFinite(entry.weight)||entry.weight<0f)return unsupported(action);
+                if(weight>=0&&entry.weight!=weight)equal=false;
+                weight=entry.weight;total+=weight;weights.add(weight);
+                var child=readAction(manager,entry.action);choices.add(child==null?noop():child);
+            }
+            if(total<=0)return unsupported(action);
+            if(choices.size()==1)return choices.getFirst();
+            return new Action(equal?Kind.RANDOM_EQUAL:Kind.RANDOM_WEIGHTED,equal?null:new StarterCatalog.Model("Weighted",Map.of("weights",new ListValue("float",weights))),null,"","","",0,0,0,0,false,0,0,0,0,false,choices,"");
         }
         if (action instanceof ActionConfig.FireEffect effect) {
             return new Action(Kind.FIRE_EFFECT,model(effect.effect),null,target(effect.location),"","",0,0,0,0,false,0,0,0,0,false,List.of(),"");
@@ -274,6 +295,7 @@ public final class FireCatalogExport {
             ActorConfig config = manager.a(ActorConfig.class,spawn.actor);
             ActorConfig.Original actor = config == null ? null : config.ai(manager);
             if (actor == null) throw new IOException("Unresolved actor reference " + spawn.actor.getName());
+            if(actor instanceof DungeonActorConfig.Pickup pickup)return pickupSpawn(manager,spawn,pickup);
             ActorSpec spec = actor(manager,spawn.actor,actor);
             Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE
                 : action instanceof ActionConfig.SpawnRandomTranslatedActor ? Kind.RANDOM_TRANSLATED
@@ -288,6 +310,56 @@ public final class FireCatalogExport {
             return new Action(kind,kind==Kind.EMIT_PROJECTILE?new StarterCatalog.Model("ServerSpawned",Map.of()):null,spec,target(spawn.location),facing,collision,x,y,rotation,rotationVariance,relative,count,step,steps,mask,false,List.of(),"");
         }
         return unsupported(action);
+    }
+    private static Action pickupSpawn(ConfigManager manager,ActionConfig.SpawnActor spawn,DungeonActorConfig.Pickup pickup)throws Exception {
+        // Party-per-member grants require a party reward transaction, rather than one claimant.
+        if(pickup.party||spawn instanceof ActionConfig.SpawnRandomTranslatedActor||spawn instanceof ActionConfig.SpawnFacingActor
+                ||!(pickup.shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Circle circle))return unsupported(spawn);
+        Object tooltip=field(pickup.sprite,"tooltipItem");
+        if(!(tooltip instanceof ConfigReference<?> item))return unsupported(spawn);
+        var itemConfig=manager.a(ItemConfig.class,new ConfigReference<ItemConfig>(item.getName()));
+        if(itemConfig==null)return unsupported(spawn);
+        var fields=new TreeMap<String,String>();fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Pickup");
+        fields.put("config-json",FireCatalog.modelJson(model(spawn.actor)));fields.put("shape","Circle");fields.put("radius",Float.toString(circle.radius));
+        fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qm()));
+        fields.put("vacuum-expansion",Float.toString(pickup.vacuumExpansion));fields.put("vacuum-speed",Float.toString(pickup.vacuumSpeed));fields.put("lifespan",Integer.toString(pickup.lifespan));
+        float x=0,y=0,rotation=0,variance=0;boolean relative=true;
+        if(spawn instanceof ActionConfig.SpawnTransformedActor transformed){x=transformed.translation.x;y=transformed.translation.y;}
+        if(spawn instanceof ActionConfig.SpawnRotatedActor rotated){rotation=rotated.rotation;variance=rotated.rotationVariance;relative=rotated.relative;}
+        return new Action(Kind.SPAWN_PICKUP,new StarterCatalog.Model("Pickup",Map.of("fields",org.tortodrone.resources.Json.stringify(fields))),null,target(spawn.location),"","",x,y,rotation,variance,relative,0,0,0,0,false,List.of(),"");
+    }
+    /** Preserve source table weights and bound actor arguments; never sample a table at export time. */
+    private static Action tableEntry(ConfigManager manager,SpawnTableConfig.Entry entry,DungeonActionConfig.TableSpawn spawn,int depth)throws Exception {
+        if(entry==null)return noop();if(depth>16)return unsupported(spawn);
+        if(entry.getClass()==SpawnTableConfig.ActorEntry.class){
+            var leaf=(SpawnTableConfig.ActorEntry)entry;
+            var action=new ActionConfig.SpawnTransformedActor();action.actor=leaf.actor;action.location=spawn.location;
+            action.translation=spawn.translation;action.rotation=spawn.rotation;action.relative=spawn.relative;
+            if(spawn instanceof DungeonActionConfig.TableSpawnRotated rotated)action.rotationVariance=rotated.rotationVariance;
+            return readAction(manager,action);
+        }
+        if(entry.getClass()==SpawnTableConfig.CompoundEntry.class){
+            var children=new ArrayList<Action>();for(var child:((SpawnTableConfig.CompoundEntry)entry).entries)children.add(tableEntry(manager,child,spawn,depth+1));
+            return new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+        }
+        if(entry.getClass()==SpawnTableConfig.RandomEntry.class){
+            var children=new ArrayList<Action>();var weights=new ArrayList<Object>();
+            for(var child:((SpawnTableConfig.RandomEntry)entry).entries){
+                if(!Float.isFinite(child.weight)||child.weight<0||!child.dropModifierTag.isEmpty())return unsupported(spawn);
+                weights.add(child.weight);children.add(tableEntry(manager,child.entry,spawn,depth+1));
+            }
+            return new Action(Kind.RANDOM_WEIGHTED,new StarterCatalog.Model("Weighted",Map.of("weights",new ListValue("float",weights))),null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+        }
+        if(entry.getClass()==SpawnTableConfig.SimpleRandomEntry.class){
+            var children=new ArrayList<Action>();for(var child:((SpawnTableConfig.SimpleRandomEntry)entry).entries)children.add(tableEntry(manager,child,spawn,depth+1));
+            return new Action(Kind.RANDOM_EQUAL,null,null,"","","",0,0,0,0,false,0,0,0,0,false,children,"");
+        }
+        if(entry.getClass()==SpawnTableConfig.TableEntry.class){
+            var reference=((SpawnTableConfig.TableEntry)entry).spawnTable;
+            var table=reference==null?null:manager.a(SpawnTableConfig.class,reference);
+            if(table instanceof SpawnTableConfig.Original original)return tableEntry(manager,original.root,spawn,depth+1);
+        }
+        return unsupported(spawn);
     }
     private static Action readPrespawned(ConfigManager manager, DungeonActionConfig.SpawnPrespawned spawn) throws Exception {
         // SpawnPrespawned.shouldPreExecute() is exactly actor != null in the stock archive.

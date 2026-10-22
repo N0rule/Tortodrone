@@ -5,6 +5,10 @@ import java.util.*;
 
 /** Numeric rules read from the unchanged client's resolved item/forge properties. */
 public final class GearRules {
+    /** MessageBundle.compose(qualify("item", name), taint(displayed level)), including nested keys. */
+    public static String forgeMessage(String name,int storedLevel){
+        return "m.forge_new_level|"+("%item:"+name).replace("\\","\\\\").replace("|","\\!")+"|~"+(storedLevel+1);
+    }
     public record Gear(int levels,int baseHeat,int maxHeat,String forge) {
         public Gear{if(levels<0||levels>100||baseHeat<0||maxHeat<0)throw new IllegalArgumentException("Invalid gear heat rules");Objects.requireNonNull(forge);}
         public boolean maximum(int level){return levels<2||level>=levels-1;}

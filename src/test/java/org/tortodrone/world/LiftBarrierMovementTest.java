@@ -50,7 +50,12 @@ public final class LiftBarrierMovementTest {
             fields.put("collision-flags","8");fields.put("collision-mask","79");fields.put("radius",".4");fields.put("health","40");
             fields.put("speed","10");fields.put("acquire-distance","20");fields.put("attack-count","0");
             fields.put("source-shape",FireCatalog.modelJson(new StarterCatalog.Model("shape",Map.of("value",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",.4f))))));
-            var entities=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("door",0,0,0,door),new SceneContent.Entry("monster",-2,0,0,new SceneContent.Spec(fields))),Map.of()),terrain);
+            // Bound the corridor so pursuit cannot legitimately walk around the eight-unit door in the open test grid.
+            var wall=new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Block","config","Fixture",
+                "collision-flags","1","shape","Rectangle","width","1","height","8"));
+            var entities=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("door",0,0,0,door),
+                new SceneContent.Entry("upper-wall",0,8,0,wall),new SceneContent.Entry("lower-wall",0,-8,0,wall),
+                new SceneContent.Entry("monster",-2,0,0,new SceneContent.Spec(fields))),Map.of()),terrain);
             int stamp=SceneClock.now();for(int i=1;i<=20;i++)entities.advance(stamp+i*50,List.of(actor(7,3,0)));
             float x=entities.actors().stream().filter(a->a.entity().kind().equals("Monster")).findFirst().orElseThrow().x();
             check(open||barrierMask==8192?x>0:x<=-.899f,"monster uses native mask/shape for live barrier: mask="+barrierMask+", open="+open+", x="+x);

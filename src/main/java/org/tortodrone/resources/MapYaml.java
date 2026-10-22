@@ -117,6 +117,19 @@ public final class MapYaml {
             }
             properties(content,section.equals("trap-cycles")?"cycle.":"",sharedValues);
         }
+        Path itemActions=shared.getParent().resolve("_internal/item-actions.json");
+        if(Files.exists(itemActions)){
+            var actionRoot=ItemYaml.json(itemActions);fields(actionRoot,itemActions.toString(),"format","actions");
+            if(integer(actionRoot.get("format"),"item action format")!=1)throw new IOException("Unknown item action format");
+            var actions=map(actionRoot.get("actions"),"item actions");
+            for(String index:content.getProperty("items","").split(",")){
+                Object action=actions.get(content.getProperty("item."+index+".config"));
+                if(action!=null){String graph=text(action,"item action");
+                    if(!SceneWeapons.usable(FireCatalog.actionJson(graph)))throw new IOException("Unsupported executable capsule graph");
+                    content.setProperty("item."+index+".use-action",graph);
+                }
+            }
+        }
         var mechanics=Files.exists(folder.resolve("mechanics.yml"))?read(folder.resolve("mechanics.yml")):Map.<String,Object>of("properties",Map.of());fields(mechanics,folder+" mechanics","properties");
         var local=map(mechanics.get("properties"),"mechanics");var allowedMechanics=list(bindings.get("mechanicFields"),"mechanic fields");
         for(String field:local.keySet())if(!allowedMechanics.contains(field))throw new IOException(folder+": unknown mechanic field "+field);

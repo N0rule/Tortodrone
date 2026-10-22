@@ -32,10 +32,23 @@ public final class PetCombatTest {
             check(command&&fired&&knightCommand,"native knight command produces an owned firebolt and publishes its cooldown");
             var cooldown=instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).findFirst().orElseThrow().pet().nextSkill();
             check(new HashSet<>(cooldown).size()==1,"all three slots receive the used skill's cooldown, rather than each skill's own recharge");
+            synchronized(instance.simulation()){
+                var running=instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).findFirst().orElseThrow();
+                var attack=FireCatalog.load(org.tortodrone.support.ContentFixture.path("town/pet-fires.json")).find("Sprite/Drakon/Firebolt|0|0|NORMAL",292);
+                int rearm=((Number)attack.attack().arguments().get("rearm")).intValue(),clear=((Number)attack.attack().arguments().get("clear")).intValue();
+                check(rearm<clear,"native Firebolt has a follow window before its animation clears");
+                var advance=SceneSimulation.Membership.class.getDeclaredMethod("advancePet",int.class);advance.setAccessible(true);
+                advance.invoke(member,running.activityStarted()+rearm-1);
+                var pet=SceneSimulation.Membership.class.getDeclaredMethod("petActor");pet.setAccessible(true);
+                check(!((ActorState)pet.invoke(member)).pet().follow(),"stationary skill holds the Sprite until its rearm time");
+                advance.invoke(member,running.activityStarted()+rearm);
+                var following=(ActorState)pet.invoke(member);
+                check(following.activity()==1&&following.pet().follow(),"Sprite resumes following at native rearm while the skill animation continues");
+            }
             stamp=SceneClock.now();member.input(stamp,0,0,256,stamp,stamp,System.nanoTime()/1_000_000);Thread.sleep(100);
             check(instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).allMatch(a->a.pet().nextSkill().get(1)>SceneClock.now()),"locked skill cannot start or consume a cooldown");
         }finally{member.close();}
         check(instance.simulation().snapshot().actors().stream().noneMatch(a->a.pet()!=null||a.projectile()!=null&&a.projectile().faction()==10),"departure removes companion and its projectiles");scenes.release(instance,10);
-        System.out.println("PASS: dungeon companion, skill command, cooldown, locked skill and owned cleanup");
+        System.out.println("PASS: dungeon companion, skill command, native rearm/follow timing, cooldown, locked skill and owned cleanup");
     }
 }

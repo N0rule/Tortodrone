@@ -42,6 +42,8 @@ public final class SceneStatus {
     public List<Pulse> takePulses(){var result=List.copyOf(pulses);pulses.clear();return result;}
     public SceneStatus(SceneContent content,boolean monster){this.content=content;this.monster=monster;}
     public void clear(){active.clear();pulses.clear();actions.clear();}
+    /** ClearStatus removes only conditions whose flags intersect its authored mask. */
+    public boolean clear(int mask){return active.values().removeIf(a->(a.spec.integer("flags",0)&mask)!=0);}
     /** Native status hits charge shield health at most once per flag each second. */
     public int shieldDamage(Object damage,int stamp){
         if(!(damage instanceof FireCatalog.DataValue value))return 0;

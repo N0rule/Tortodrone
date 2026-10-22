@@ -59,7 +59,8 @@ public final class TownEconomyTest {
             town.sprite(a,1,1,4,List.of(sprite),false);town.sprite(a,1,1,8,List.of(sprite,"Sparky"),false);
             String kit="Harness/Crystal Harness Kit";grant(db,items,"Alice","Alice-Knight",kit,1);long kitId=id(db.worldProfile(a,1,1),kit);
             refused(()->town.installHarness(b,1,1,kitId));var installed=town.installHarness(a,1,1,kitId);long harness=(Long)installed.result();
-            check(installed.profile().items().stream().anyMatch(i->i.id()==kitId),"archive harness kit is retained");
+            check(installed.profile().items().stream().noneMatch(i->i.id()==kitId),"one harness consumes one kit in the same transaction");
+            refused(()->town.installHarness(a,1,1,kitId));check(db.worldProfile(a,1,1).equals(installed.profile()),"replayed harness installation cannot duplicate a harness");
             town.sprite(a,1,1,5,List.of(sprite,harness),false);
             check(new Database(home,true).worldProfile(a,1,1).town().sprites().getFirst().harness()==harness,"installed harness and sprite selection persist");
             grant(db,items,"Alice","Alice-Knight","Weapon/Sword/Calibur",1);long sword=id(db.worldProfile(a,1,1),"Weapon/Sword/Calibur");

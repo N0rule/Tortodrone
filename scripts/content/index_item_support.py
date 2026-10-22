@@ -24,6 +24,8 @@ def unsupported(action,reasons):
 for attack in fires:
     for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']])
 prepared={}
+action_file=a.content/'_internal/item-actions.json'
+capsule_actions=set(json.loads(action_file.read_text())['actions']) if action_file.exists() else set()
 for scene in (a.content/'maps').glob('*/native/bindings.json'):
     props=json.loads(scene.read_text())['mechanics']
     for key,name in props.items():
@@ -76,7 +78,7 @@ for item in items:
     elif kind in resources:pass  # Materials/tokens are consumed by crafting/shops, not used directly.
     elif kind in {'Vial','Capsule'}:
         if name not in prepared:reasons.append('no prepared scene item-use definition')
-        elif kind=='Capsule' and prepared[name]<=0:state='partial';reasons.append('only healing capsules have an item-use handler')
+        elif kind=='Capsule' and prepared[name]<=0 and name not in capsule_actions:state='partial';reasons.append('native action graph is incomplete or unsupported in the supported scenes')
     else:reasons.append('no item-use handler for '+kind)
     if reasons:rows.append([name,kind,state,'; '.join(reasons)])
 a.output.parent.mkdir(parents=True,exist_ok=True)

@@ -186,7 +186,7 @@ public final class SceneContentExport {
         addOptionalNumber(out, prefix + "speed", field(original, "speed"));
         addOptionalNumber(out, prefix + "collision-flags", field(original, "collisionFlags"));
         addOptionalNumber(out, prefix + "collision-mask", field(original, "collisionMask"));
-        for(String name:List.of("damageMask","blockDamage","vacuumExpansion","vacuumSpeed","targetedSpeed"))addOptional(out,prefix+kebab(name),field(original,name));
+        for(String name:List.of("damageMask","blockDamage","vacuumExpansion","vacuumSpeed","targetedSpeed","lifespan"))addOptional(out,prefix+kebab(name),field(original,name));
         Object sprite=field(original,"sprite");Object description=field(sprite,"description");
         if(description instanceof ConfigReference<?> r)put(out,prefix+"description",r.getName());
         if(original instanceof com.threerings.projectx.config.ProjectXActorConfig.Stranger){
@@ -211,6 +211,14 @@ public final class SceneContentExport {
             out.put(prefix+"pickup-equip-slot",Integer.toString(slot));
         }
         writeTags(out, prefix, field(original, "tags"));
+        if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster){
+            var death=new ArrayList<org.tortodrone.world.FireCatalog.Action>();
+            deathActions(cm,monster.handlers,death,0);
+            if(!death.isEmpty()){
+                var action=new org.tortodrone.world.FireCatalog.Action(org.tortodrone.world.FireCatalog.Kind.COMPOUND,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,death,"");
+                put(out,prefix+"death-action",org.tortodrone.world.FireCatalog.actionJson(action));
+            }
+        }
         if(reference.kW().get("Tag") instanceof String tag&&!tag.isBlank()&&!tag.startsWith("("))out.put(prefix+"tags",tag);
         writeArguments(out, prefix + "config.argument.", reference);
 
@@ -240,6 +248,20 @@ public final class SceneContentExport {
         String appended=out.get(prefix+"append-tags");
         if(appended!=null)out.put(prefix+"tags",out.getOrDefault(prefix+"tags","")+(out.getOrDefault(prefix+"tags","").isBlank()?"":",")+appended);
         writeMechanism(cm,out,prefix,reference,original);
+    }
+
+    private static void deathActions(ConfigManager cm,HandlerConfig[] handlers,
+            List<org.tortodrone.world.FireCatalog.Action> actions,int depth)throws Exception {
+        if(handlers==null)return;
+        if(depth>16)throw new IOException("Cyclic monster death handler references");
+        for(var handler:handlers){
+            if(handler instanceof HandlerConfig.Shutdown shutdown)actions.add(FireCatalogExport.readAction(cm,shutdown.action));
+            else if(handler instanceof HandlerConfig.Reference reference&&reference.handler!=null){
+                var config=cm.a(com.threerings.tudey.config.ParameterizedHandlerConfig.class,reference.handler);
+                if(config==null)throw new IOException("Unresolved monster death handler: "+reference.handler.getName());
+                deathActions(cm,config.handlers,actions,depth+1);
+            }
+        }
     }
 
     static void writeLift(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,

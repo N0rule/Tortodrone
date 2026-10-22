@@ -23,8 +23,10 @@ public final class SceneHealth {
     public int hitTime(){return hitTime;}
     private boolean emergencyRevive=true;
     private int emergencyAt;
-    private java.util.function.IntUnaryOperator spriteShield=amount->amount;
-    public void spriteShield(java.util.function.IntUnaryOperator shield){spriteShield=java.util.Objects.requireNonNull(shield);}
+    public record SpriteBlock(float scale,boolean held){public static final SpriteBlock NONE=new SpriteBlock(1,false);}
+    @FunctionalInterface public interface SpriteShield{SpriteBlock absorb(Object damage,int stamp,float multiplier);}
+    private SpriteShield spriteShield=(damage,stamp,multiplier)->SpriteBlock.NONE;
+    public void spriteShield(SpriteShield shield){spriteShield=java.util.Objects.requireNonNull(shield);}
     public SceneHealth(SceneContent content){this.content=content;status=new SceneStatus(content,false);current=maximum=Math.round(content.stats().getOrDefault("player.base-health",1f));}
     public SceneStatus.State status(){return status.state();}
     public List<SceneStatus.Pulse> takePulses(){return status.takePulses();}
@@ -32,6 +34,7 @@ public final class SceneHealth {
     public void inventory(WorldProfile profile){status.equipment(profile);}
     public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)),stamp);died(stamp);}}
     public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
+    public boolean clearStatus(int mask){return status.clear(mask);}
     public boolean cloaked(){return status.cloaked();}
     public void breakCloak(){status.breakCloak();}
     public void equipment(WorldProfile profile){equipment(profile,org.tortodrone.town.TownCatalog.empty());}
@@ -75,18 +78,19 @@ public final class SceneHealth {
     public Hit hit(Object damage,int stamp,float multiplier,KnightCombat combat){
         if(current==0||invulnerable(stamp)||combat!=null&&combat.activity()==KnightCombat.HURT_DEFENSE)return new Hit(0,0);
         damage=SceneDamage.prune(damage,Math.round(content.stats().getOrDefault("player.damage-mask",13f)));
-        var fields=new HashMap<>(defense.fields());float blockableScale=1;
-        if(combat!=null&&combat.defending(stamp)){
-            int shieldDamage=(int)Math.ceil(SceneDamage.amount(SceneDamage.select(damage,false),content,shieldDefense,multiplier));
+        var spriteBlock=spriteShield.absorb(damage,stamp,multiplier);
+        if(spriteBlock.held())damage=SceneDamage.select(damage,true);
+        var fields=new HashMap<>(defense.fields());float blockableScale=spriteBlock.scale();
+        if(!spriteBlock.held()&&combat!=null&&combat.defending(stamp)){
+            int shieldDamage=(int)Math.ceil(SceneDamage.amount(SceneDamage.select(damage,false),content,shieldDefense,multiplier,blockableScale));
             int statusDamage=combat.shieldHealth(stamp)>shieldDamage?status.shieldDamage(damage,stamp):0;
-            if(shieldDamage>0||SceneDamage.hasStatus(damage))blockableScale=combat.block(shieldDamage,statusDamage,stamp);
+            if(shieldDamage>0||SceneDamage.hasStatus(damage))blockableScale*=combat.block(shieldDamage,statusDamage,stamp);
             shieldDefense.fields().forEach((key,value)->fields.merge(key,value,(a,b)->Float.toString(Float.parseFloat(a)+Float.parseFloat(b))));
             if(combat.activity()==KnightCombat.HURT_DEFENSE)damage=SceneDamage.select(damage,true);
         }
         fields.replaceAll((key,value)->Float.toString(Float.parseFloat(value)*status.state().modifiers().defense()));
         var mitigation=new SceneContent.Spec(fields);
         int amount=(int)Math.ceil(SceneDamage.amount(damage,content,mitigation,multiplier,blockableScale));
-        amount=Math.max(0,spriteShield.applyAsInt(amount));
         amount+=(int)Math.ceil(status.damaged(amount,stamp));
         if(blockableScale>0)status.apply(damage,stamp);rawDamage(amount,stamp);died(stamp);
         boolean react=amount>0&&SceneDamage.reacts(damage);

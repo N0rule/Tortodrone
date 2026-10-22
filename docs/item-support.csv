@@ -288,41 +288,35 @@ Instant/Heart/Heart 2,InstantAction,unusable,no item-use handler for InstantActi
 Instant/Heart/Heart 3,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Heart/Heart Full,InstantAction,unusable,no item-use handler for InstantAction
 Instant/Lethal Damage,InstantAction,unusable,no item-use handler for InstantAction
-Pickup/Capsule/Artillery Beacon,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Auto Turret Kit,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Blazing Speed,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Buffs/Attack Booster,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Buffs/Defense Booster,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Buffs/Test/Attack Up,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Attack Up, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Attack Up, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Buffs/Test/Defense Up,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Defense Up, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Defense Up, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Buffs/Test/Speed Up,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Speed Up, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Buffs/Test/Speed Up, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Cursed Idol,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Mecha Knight Kit,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Ocarina of Slime,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Barrier/Fire Barrier,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Fire Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Fire Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Barrier/Freeze Barrier,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Freeze Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Freeze Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Barrier/Poison Barrier,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Poison Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Poison Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Orbital Barrier/Shock Barrier,Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Shock Barrier, Super",Capsule,partial,only healing capsules have an item-use handler
-"Pickup/Capsule/Orbital Barrier/Shock Barrier, Ultra",Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Ranger Signal Flare,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Remedy Capsule,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Shadow Espresso,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Slime/Luck Potion,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Slime/Luck Potion 2,Capsule,partial,only healing capsules have an item-use handler
-Pickup/Capsule/Slime/Luck Potion 3,Capsule,partial,only healing capsules have an item-use handler
+Pickup/Capsule/Artillery Beacon,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Auto Turret Kit,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Blazing Speed,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Buffs/Test/Attack Up,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Attack Up, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Attack Up, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Buffs/Test/Defense Up,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Defense Up, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Defense Up, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Buffs/Test/Speed Up,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Speed Up, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Buffs/Test/Speed Up, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Mecha Knight Kit,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Ocarina of Slime,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Orbital Barrier/Fire Barrier,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Fire Barrier, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Fire Barrier, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Orbital Barrier/Freeze Barrier,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Freeze Barrier, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Freeze Barrier, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Orbital Barrier/Poison Barrier,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Poison Barrier, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Poison Barrier, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Orbital Barrier/Shock Barrier,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Shock Barrier, Super",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+"Pickup/Capsule/Orbital Barrier/Shock Barrier, Ultra",Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Slime/Luck Potion,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Slime/Luck Potion 2,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
+Pickup/Capsule/Slime/Luck Potion 3,Capsule,partial,native action graph is incomplete or unsupported in the supported scenes
 Sprite/Drakon Egg,SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Drakon Egg, Divine",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
 "Sprite/Drakon Egg, Grey",SpriteEgg,partial,"quill attachments, advanced pet triggers and some perk effects remain incomplete"
@@ -666,4 +660,3 @@ Weapon/Handgun/Celestial Orbitgun (OLD),Handgun,partial,unimplemented summoned a
 Weapon/Handgun/Fiery Diskgun,Handgun,partial,unimplemented summoned actor
 Weapon/Handgun/Overcharged Mixmaster (OLD),Handgun,partial,unimplemented summoned actor
 Weapon/Handgun/Static Diskgun,Handgun,partial,unimplemented summoned actor
-Weapon/Sword/Sealed Sword,Sword,partial,unimplemented action TableSpawn; unrestored action condition

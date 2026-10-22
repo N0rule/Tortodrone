@@ -19,6 +19,19 @@ public final class SparseContentTest {
             for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
                 var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());
                 var historical=new Properties();historical.putAll(prepared.content());
+                // Executable capsule graphs are a deliberate additive import. Verify the
+                // exact replacement before comparing the rest with the historical scene.
+                var actionRoot=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/item-actions.json"))),"capsule actions");
+                var actions=Yaml.map(actionRoot.get("actions"),"capsule graphs");
+                var binding=Yaml.map(Json.parseCatalog(Files.readString(map.getValue().resolve("native/bindings.json"))),"bindings");
+                var mechanics=Yaml.map(binding.get("mechanics"),"native mechanics");
+                for(String index:historical.getProperty("items","").split(",")){
+                    String key="item."+index+".use-action",config=historical.getProperty("item."+index+".config");
+                    if(actions.containsKey(config)){
+                        check(historical.getProperty(key).equals(actions.get(config)),"native capsule graph replacement: "+config);
+                        historical.setProperty(key,(String)mechanics.get(key));
+                    }
+                }
                 // Leveled combat/variant stats are an explicit additive import. Keep
                 // the 0078b50 scene/actor baseline independent of these new tables.
                 historical.keySet().removeIf(raw->{String key=raw.toString();return key.startsWith("gear.table.")
