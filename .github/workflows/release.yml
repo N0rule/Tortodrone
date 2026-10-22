@@ -67,8 +67,8 @@ jobs:
           test -d build/config
           test -d build/plugins
 
-          cp build/tortodrone.jar build/tortodrone-admin.jar "$root/"
-          cp -a build/content build/config build/plugins "$root/"
+          # Include every file and directory produced under build/.
+          cp -a build/. "$root/"
           cp -a docs "$root/docs"
           cp VERSION README.md "$root/"
 
