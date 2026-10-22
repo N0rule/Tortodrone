@@ -45,7 +45,7 @@ data/                        private runtime state, keys and logs; never in Git
 ```
 
 The checkout and portable deployment use the same content/configuration layout.
-`./gradlew buildWithoutTests` prepares `build/content`, `build/config` and
+`./gradlew build` prepares `build/content`, `build/config` and
 `build/plugins` beside both executable JARs. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 

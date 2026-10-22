@@ -131,10 +131,16 @@ val buildAdmin = tasks.register("buildAdmin") {
     dependsOn(adminJar, prepareContent)
 }
 tasks.assemble { dependsOn(buildServer, buildAdmin) }
+// Keep the conventional build task focused on deliverables. Regression programs are
+// explicit opt-in tasks, so `build` must not pull in test/check dependencies.
+tasks.named("build") { setDependsOn(listOf(tasks.assemble)) }
+// `build` is the normal minimal distribution: both executables plus prepared content.
+// Regression programs are opt-in through testUnit, testIntegration or testAll.
+// Keep the old task name as a compatibility alias for existing scripts.
 tasks.register("buildWithoutTests") {
     group = "build"
-    description = "Compile and package the server and admin without running regression programs."
-    dependsOn(tasks.assemble, tasks.testClasses, tasks.named("buildToolsClasses"))
+    description = "Deprecated alias for build; regression programs are never run by default."
+    dependsOn(tasks.named("build"))
 }
 
 fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, prerequisite: TaskProvider<Task>, workingDirectory: java.io.File) =
@@ -235,9 +241,14 @@ val testIntegration = tasks.register("testIntegration") {
     dependsOn(integrationPrograms, testBuildTools, testProcessCleanup)
     mustRunAfter(testUnit)
 }
-// There are no JUnit classes. Keep Gradle's conventional test/check/build entry points useful.
+// There are no JUnit classes. `build` must stay test-free; tests use explicit task names.
 tasks.test {
     enabled = false
+    description = "Disabled. Use testUnit, testIntegration or testAll."
+}
+tasks.register("testAll") {
+    group = "verification"
+    description = "Run all standalone unit and packaged integration test suites."
     dependsOn(testUnit, testIntegration)
 }
 tasks.register<JavaExec>("benchmark") {

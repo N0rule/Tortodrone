@@ -7,24 +7,24 @@ Start with [AGENTS.md](../AGENTS.md), then the files relevant to your task. Sour
 Choose the **least expensive check that proves the requested change**. Do not run the full test suite or launch the stock graphical client after every edit.
 
 1. Check the specific source and add/update a focused regression for behavior changes.
-2. For code changes use `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` to compile/package and run only directly relevant programs. Use `buildWithoutTests` when checking compilation/packaging alone. For docs-only changes, review links and diffs instead.
+2. For code changes use `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` to compile/package and run only directly relevant programs. Use `./gradlew build` when checking compilation/packaging alone. For docs-only changes, review links and diffs instead.
 3. Escalate to focused integration for auth, storage, trades, protocol, cross-client synchronization and other high-risk paths. Include negative cases, ownership and rollback.
 4. Run one isolated stock-client/graphical acceptance scenario only when the change affects behavior that cannot be verified otherwise (rendering, animations, HUD, live scene transitions). Do **not** start repeated graphical sessions for backend-only changes. If graphical acceptance is necessary but unavailable, report it as **not verified**, not passed.
-5. Reserve a complete `./gradlew build` for significant cross-cutting changes, explicit release readiness or a requested full regression, **once at the final checkpoint**. A routine patch `VERSION` bump alone does not trigger the full suite. Benchmarks and other expensive checks are opt-in.
+5. Reserve a complete `./gradlew testAll` for significant cross-cutting changes, explicit release readiness or a requested full regression, **once at the final checkpoint**. A routine patch `VERSION` bump alone does not trigger the full suite. Benchmarks and other expensive checks are opt-in.
 
 Stop when the task's acceptance criteria pass. Avoid repeated successful suites, unrelated test coverage, speculative bug hunts and `clean` unless rebuilding from scratch is necessary.
 
 ## Build and test (JDK 25)
 
 ```sh
-./gradlew buildWithoutTests      # DEFAULT: compile/package main, tests and tools; execute no tests
+./gradlew build                  # DEFAULT: both JARs + prepared content; no tests
 ./gradlew buildServer buildAdmin # package both apps and unified content
 ./gradlew testUnit               # all standalone unit tests (not a focused filter)
 ./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest # focused compile/package + tests
 ./gradlew testIntegration        # all packaged integration tests
-./gradlew build                  # full suite; milestone/release verification
+./gradlew testAll                # complete unit + integration suite; milestone/release verification
 ./gradlew testProcessCleanup     # focused cleanup integration task
-./gradlew prepareDefaults
+./gradlew prepareContent         # offline source validation/copy (prepareDefaults is deprecated)
 ./gradlew prepareMaps
 ./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300" # explicit performance work only
 ```
@@ -33,14 +33,14 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. Prefer `-PunitTests=SceneSimulationTest,MovementCollisionTest`; fully qualified names also work. Unknown, empty or ambiguous names fail instead of silently running zero tests. Without the property, `testUnit` still runs every unit program. Programs run sequentially, report elapsed time and list the five slowest programs; authentication, storage and rollback coverage is retained.
 
-Unit/server checks build only the server JAR; admin integration and `buildWithoutTests` also package the admin app. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
+`build` packages both apps and prepared content. Unit tests build only the server JAR; admin integration also packages the admin app. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
 To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. Both JARs and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
 
 The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
 ```sh
-./gradlew buildWithoutTests
+./gradlew build testClasses
 java --enable-native-access=ALL-UNNAMED \
   -cp 'build/tortodrone.jar:.build/classes/java/test' \
   org.tortodrone.support.StandaloneTestSuite \
@@ -51,14 +51,14 @@ java --enable-native-access=ALL-UNNAMED \
 Windows PowerShell/CMD (classpath uses `;`):
 
 ```powershell
-.\gradlew.bat buildWithoutTests
+.\gradlew.bat build testClasses
 java --enable-native-access=ALL-UNNAMED -cp "build/tortodrone.jar;.build/classes/java/test" org.tortodrone.support.StandaloneTestSuite org.tortodrone.world.SceneCatalogTest org.tortodrone.world.SceneSimulationTest
 ```
 
 Replace the example classes with the specific tests for your change; do not run them all by default. This uses the same packaged JAR and compiled test output as the Gradle unit suite. Tests which need arguments or packaged servers have their own named Gradle integration tasks.
 
 
-Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. The normal `build`/`test` suites **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
+Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
 `runServer` and `runAdmin` operate on **real `build/data/`** and are not disposable tests. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 
@@ -67,13 +67,13 @@ Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml`
 | Change | Default checks | Escalate only when needed |
 | --- | --- | --- |
 | Docs/comments/refactor with no behavior change | Link/diff checks; compile only if code was touched | None |
-| Ordinary Java/content change | `buildWithoutTests` + affected standalone tests | Related integration if behavior crosses services |
+| Ordinary Java/content change | `build` + affected standalone tests | Related integration if behavior crosses services |
 | Protocol, auth, storage, trades | Targeted positive/negative/ownership/rollback tests | Relevant packaged integration or stock-reader check |
 | Scene or portal logic | Map/simulation tests | Stock scene enter/return or two-client check for changed transitions |
 | Items/combat | Targeted catalog, damage/equipment tests | One isolated graphical test if modifying actual client-visible effects |
 | Server GUI | Focused UI tests | One isolated desktop fixture when visual behavior changed |
 | Performance/concurrency | Focused correctness/race checks | Benchmark only for explicit performance questions |
-| Major cross-cutting change / release | `./gradlew build` once at the end | Relevant stock-client acceptance |
+| Major cross-cutting change / release | `./gradlew testAll` once at the end | Relevant stock-client acceptance |
 | Documentation only | Diff and link/source review | No Java tests |
 
 Stop **only test processes you started**, and report which checks were skipped, failed or unavailable. Use `git diff --check` before completion. Never claim graphical parity from a passing network fixture.
@@ -83,7 +83,7 @@ Stop **only test processes you started**, and report which checks were skipped, 
 Useful checked-in Java tools (from repository root with a separate read-only game installation):
 
 ```sh
-./gradlew buildWithoutTests
+./gradlew build
 java -cp build/tortodrone.jar scripts/compat/CheckClientWorld.java "/path/to/Spiral Knights"
 java -cp build/tortodrone.jar scripts/compat/CheckCombatRendering.java "/path/to/Spiral Knights" /tmp/tortodrone-combat-check
 java scripts/StockTools.java previews "/path/to/Spiral Knights"
