@@ -35,7 +35,13 @@ accepts it in mail, or deletes the request to decline. Accepted friends appear
 in both knights’ lists, with online/offline status and their current scene;
 the lists survive reconnects and server restarts. Choose **Unfriend** from a
 friend’s menu to remove the friendship from both lists. The limit is 250 friends
-per knight. Joining a friend’s scene is not available yet.
+per knight.
+
+Choose **Join** from a friend’s menu, or type `/joinknight <knight>`, to follow
+that knight. Town scenes are directly joinable. A friend in Training can be
+joined when the group is public or open to friends; private or full groups
+return the stock refusal. On success the server moves you into the same scene
+and, for Training, the same party instance.
 
 ### Party, inspection, and equipment
 
@@ -152,7 +158,6 @@ These depend on systems the server does not currently provide. They return an un
 | `/game message` | `/game Ready to start` | PvP game chat. |
 | `/guild message (/g, /guildchat)` | `/guild Hello everyone` | Guild membership and guild chat. |
 | `/guildhall (/gh)` | `/guildhall` | Guild-owned halls. |
-| `/joinknight [player name]` | `/joinknight Jane` | Social whereabouts and join permissions. |
 | `/officer message (/o)` | `/officer Meeting in Haven` | Guild officer permissions and officer chat. |
 | `/readyroom (/rr)` | `/readyroom` | Ready-room and dungeon matchmaking. |
 | `/recharge [player name]` | `/recharge Jane` | Legacy client command without a current server handler. |

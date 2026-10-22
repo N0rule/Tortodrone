@@ -136,7 +136,7 @@ This uses disposable accounts/preferences and performs twelve rapid native craft
 - Bump `VERSION` only for deliberate behavioral releases. Release workflow tags must match `v<VERSION>`; CI tests/builds do not substitute for native graphical verification. See [Operations](operations.md).
 - Third-party runtime/license metadata: `src/main/resources/THIRD-PARTY.md`, `licenses/` and `gradle/verification-metadata.xml`. Inspect changes to pinned hashes carefully.
 
-Recent scene and Training Hall validation details are retained in [Modern captures](modern-captures.md) and [Training Hall](training-hall.md). Detailed prior investigations and their original commands stay accessible via Git history (for example `git show <commit>:docs/protocol-audit.md`); [Research](research.md) points to the relevant sources and caveats.
+Current Training Hall behavior and verification are in [Training Hall](training-hall.md); bundled scene provenance and evidence standards are in [Research](research.md). Detailed prior investigations and their original commands stay accessible via Git history (for example `git show <commit>:docs/protocol-audit.md`).
 
 Unified content regressions are `resources.ContentManagerTest` and `resources.PackContentTest`; fixtures are generated in temporary directories from the unified defaults, never maintained as a second checked-in catalog. The focused graphical `--dialogue-only` mode selects another verified localized Konway line through disposable YAML, enters Training, captures both nodes and closes the native dialog. Arbitrary literal messages and responses are rejected after the stock graphical scenario showed the client appending the knight name instead of decoding literals.
 

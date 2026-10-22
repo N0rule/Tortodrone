@@ -4,9 +4,9 @@ A **Java 25 clean-room Spiral Knights server emulator** and local account manage
 
 ## What works today
 
-The currently implemented subset includes local login/accounts and GM roles, knight creation/selection/editing/deletion, persistent inventory and currencies, equipment/costumes, item grants, character preview, trading, inspection/privacy, chat/tells/emotes/sitting, and four connected Haven towns (Town Square, Bazaar, Arcade and Garrison). Three additional solo interiors (Advanced Training Hall, Laboratory, Hall of Heroes) have movement and limited stock-derived weapon/defense/projectile systems. Training Hall now also supports prepared scene actors and bounded interactions (test cubes, switches/doors, traps, pickups, blocks and conversation). The seven bundled scenes use verified modern stock-capture layouts, including Laboratory scene 30893 and Hall of Heroes scene 318. Scenes use external validated layouts/collision and server-authoritative movement.
+The currently implemented subset includes local login/accounts and GM roles, knight creation/selection/editing/deletion, persistent inventory and currencies, equipment/costumes, item grants, character preview, trading, inspection/privacy, chat/tells/emotes/sitting, parties with open/private controls, friend travel into eligible Town and shared Training scenes, and four connected Haven towns (Town Square, Bazaar, Arcade and Garrison). Three additional solo interiors (Advanced Training Hall, Laboratory, Hall of Heroes) have movement and limited stock-derived weapon/defense/projectile systems. Training Hall now also supports public shared instances, prepared scene actors and bounded interactions (test cubes, switches/doors, traps, pickups, blocks and conversation). The seven bundled scenes use verified modern stock-capture layouts, including Laboratory scene 30893 and Hall of Heroes scene 318. Scenes use external validated layouts/collision and server-authoritative movement.
 
-**Not full vanilla parity:** general dungeon/gate gameplay, broadly reusable monster AI and NPC services, missions, complete shop/crafting coverage, full party/guild/social systems, world-position persistence and much of combat are not implemented. The intro is bypassed without granting fictional mission progress. Actual supported scope is determined by source/tests, not by how much data exists in content definitions. Supported Town services include merchant purchases, recipe learning/crafting, sprite progression, auctions and the Energy Exchange; available stock catalogs and behaviors remain incomplete.
+**Not full vanilla parity:** general dungeon/gate gameplay, broadly reusable monster AI and NPC services, missions, complete shop/crafting coverage, guilds, PvP, party matchmaking, world-position persistence and much of combat are not implemented. The intro is bypassed without granting fictional mission progress. Actual supported scope is determined by source/tests, not by how much data exists in content definitions. Supported Town services include merchant purchases, recipe learning/crafting, sprite progression, auctions and the Energy Exchange; available stock catalogs and behaviors remain incomplete.
 
 ## Quick start
 
@@ -96,16 +96,15 @@ Back up the whole stopped `data/`, `config/` and `content/` before changing the 
 
 ## Documentation
 
-- [Commands](commands.md): player/GM slash commands, examples, console syntax and explicit placeholders.
+- [Commands](docs/commands.md): player/GM slash commands, examples, console syntax and explicit placeholders.
 
-- [Parity](docs/parity.md): estimated official parity by system, with an explicit scope and evidence basis.
-- [Parity roadmap](docs/parity-roadmap.md): prioritized now/later work and out-of-scope decisions.
+- [Parity](docs/parity.md): estimated official parity by system plus the prioritized now/later roadmap.
 - [Operations](docs/operations.md): deployment, accounts, commands, client troubleshooting, backup and releases.
 - [Content](docs/content.md): maps, items, combat defaults, verified imports and current extension limits.
 - [Architecture](docs/architecture.md): identity/storage, protocol, simulation and security invariants.
 - [Development](docs/development.md): build/tests, isolated stock-client and GUI checks.
-- [Research](docs/research.md): reference sources, protocol evidence and historical investigation pointers.
-- [Modern captured scenes](docs/modern-captures.md) and [Training Hall evidence](docs/training-hall.md): version-specific validation retained from newer gameplay commits.
+- [Research](docs/research.md): reference sources, protocol evidence, bundled scene provenance and historical investigation pointers.
+- [Training Hall](docs/training-hall.md): current scene behavior, verification and limits.
 - [AGENTS.md](AGENTS.md): short rules for coding agents.
 
 Older milestone reports and investigations remain in Git history; they are not maintained product documentation. Licenses and third-party notices are bundled in the JARs.
