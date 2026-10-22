@@ -79,6 +79,9 @@ public final class StockTools {
                 if(args.length!=2)throw new IllegalArgumentException("restoration-check expects game-directory");fixture="RestorationCompatibility";
                 for(String source:List.of("RestorationCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
+            case "custom-weapon-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("custom-weapon-check expects game-directory");fixture="CustomWeaponCompatibility";
+            }
             case "restoration" -> {
                 if(args.length!=3)throw new IllegalArgumentException("restoration expects game-directory fresh-output-file");
                 fixture="RestorationExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
