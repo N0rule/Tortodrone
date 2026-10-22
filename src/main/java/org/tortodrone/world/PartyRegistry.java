@@ -13,7 +13,7 @@ public final class PartyRegistry {
     public record Invitation(int partyOid,List<String> names,int inviter,boolean add) implements Event { }
     public record Chat(int partyOid,SceneChat.Message message) implements Event { }
     public record Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status) { }
-    public record View(int oid,long revision,List<Participant> members,boolean automatic) { public View{members=List.copyOf(members);} }
+    public record View(int oid,long revision,List<Participant> members,boolean automatic,boolean inviteOnly,boolean allowFriends,boolean allowGuild) { public View{members=List.copyOf(members);} }
     public final class Member implements AutoCloseable {
         public final int playerOid,worldId;
         private Knight knight;private WorldProfile profile;
@@ -37,7 +37,7 @@ public final class PartyRegistry {
             if(!old.members.isEmpty())publish(old);
         }}
     }
-    private static final class Party {final int oid;long revision;int nextOrder;boolean shared,automatic;final LinkedHashSet<Member> members=new LinkedHashSet<>();Party(int oid){this.oid=oid;} }
+    private static final class Party {final int oid;long revision;int nextOrder;boolean shared,automatic;boolean inviteOnly,allowFriends,allowGuild;final LinkedHashSet<Member> members=new LinkedHashSet<>();Party(int oid){this.oid=oid;} }
     private record Invite(Member target,Member sender,Party party,long expires) { }
     private record Detached(Party party,long expires) { }
     private static final long RECONNECT_GRACE_NANOS=120_000_000_000L;
@@ -77,7 +77,7 @@ public final class PartyRegistry {
     }
     private void require(Member member)throws IOException{if(member==null||online.get(member.worldId)!=member)throw new IOException("Party session is no longer current");}
     public synchronized View view(Member member)throws IOException{purge();require(member);return view(member.party);}
-    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic);}
+    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic,party.inviteOnly,party.allowFriends,party.allowGuild);}
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}
     @FunctionalInterface public interface ReviveTransaction<T>{T commit(int targetWorld)throws IOException;}
@@ -118,6 +118,25 @@ public final class PartyRegistry {
         if(target!=caller&&party.members.iterator().next()!=caller)throw new IOException("Only the party leader can remove members");
         invalidate(target);remove(target,true);
     }
+    /** Method 2 on the walk-in party service: a friend follows a party member into a shared party room. */
+    public synchronized boolean joinParty(Member joiner,Member target,boolean friend)throws IOException {
+        require(joiner);require(target);var party=target.party;
+        if(party==joiner.party)return false;
+        if(!party.shared)throw new IOException("That knight is not in a joinable party");
+        if(party.members.size()>=CAPACITY)throw new IOException("The party is full");
+        if(party.inviteOnly&&(!party.allowFriends||!friend))throw new IOException("That party is invite only");
+        var current=joiner.party;if(current.members.size()>1&&!current.automatic)throw new IOException("Leave your current party first");
+        invalidate(joiner);remove(joiner,false);
+        joiner.party=party;joiner.order=party.nextOrder++;party.members.add(joiner);party.revision++;publish(party);
+        return true;
+    }
+    /** Roll back a follow that could not complete its travel. */
+    public synchronized void abandon(Member member)throws IOException{require(member);remove(member,true);}
+    /** Open/private party controls; only the player leader owns them. */
+    public synchronized void setInviteOnly(Member caller,boolean inviteOnly)throws IOException{requireLeader(caller);caller.party.inviteOnly=inviteOnly;caller.party.revision++;publish(caller.party);}
+    public synchronized void setAllowFriends(Member caller,boolean allowFriends)throws IOException{requireLeader(caller);caller.party.allowFriends=allowFriends;caller.party.revision++;publish(caller.party);}
+    public synchronized void setAllowGuild(Member caller,boolean allowGuild)throws IOException{requireLeader(caller);caller.party.allowGuild=allowGuild;caller.party.revision++;publish(caller.party);}
+    private void requireLeader(Member caller)throws IOException{require(caller);var party=caller.party;if(party.automatic)throw new IOException("Training groups do not have party settings");if(party.members.iterator().next()!=caller)throw new IOException("Only the party leader can change party settings");}
     private void remove(Member member,boolean replace){var old=member.party;if(old==null)return;old.members.remove(member);old.revision++;if(old.members.isEmpty())training.remove(old);member.party=null;if(!old.members.isEmpty())publish(old);if(replace)solo(member);}
     private void invalidate(Member member){
         for(var iterator=invitations.entrySet().iterator();iterator.hasNext();){var entry=iterator.next();entry.getValue().values().removeIf(i->{if(i.target==member||i.sender==member){i.target.endpoint.accept(new Invitation(i.party.oid,List.of(),0,false));return true;}return false;});if(entry.getValue().isEmpty())iterator.remove();}

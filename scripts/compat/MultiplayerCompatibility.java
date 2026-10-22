@@ -34,7 +34,7 @@ public final class MultiplayerCompatibility {
             var participant=new PartyRegistry.Participant(1002,42,0,knight,new WorldProfile(42,1,1,0,0,1,List.of()),new SceneHealth.State(200,200,0),SceneStatus.State.NORMAL);
             // A public Training party can be subscribed while the client still displays Haven.
             // Its one-time HUD inputs must already describe the destination party.
-            append(bytes,codec.party((short)4,new PartyRegistry.View(1600000000,1,List.of(participant),true),registry.entry()));
+            append(bytes,codec.party((short)4,new PartyRegistry.View(1600000000,1,List.of(participant),true,false,false,false),registry.entry()));
             append(bytes,codec.sceneDelta(observer,140,0,(short)0,0,1050,(short)50,List.of(opening),List.of(),new int[0],Map.of(),true));
             var in=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));in.qe();in.qe();
             var scene=(TudeySceneObject)((ObjectResponse<?>)in.qe()).yk();

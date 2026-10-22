@@ -95,6 +95,7 @@ final class WorldSession implements AutoCloseable {
     private void refreshParty()throws IOException {refreshParty(false);}
     private void refreshParty(boolean traveling)throws IOException {
         var view=scenes.parties().view(partyMember);
+        if(entered)friendLocation=presence(view);
         // A private solo bookkeeping party is not an active dungeon party in Haven.
         // Publishing it there makes the stock command handler ask to abandon a mission.
         int visibleParty=scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
@@ -105,6 +106,14 @@ final class WorldSession implements AutoCloseable {
         }else if(subscribedPartyOid==view.oid()&&publishedParty!=null&&!publishedParty.equals(view)){
             var before=publishedParty;output.send(()->codec.partyChanges(before,view));publishedParty=view;
         }
+    }
+    /** The native friend list's Join affordance is driven by this presence. */
+    private FriendPresence presence(PartyRegistry.View view)throws IOException {
+        if(scene.map().town())return new FriendPresence(scene.map().name(),scene.map().zone(),scene.oid());
+        // Only Training rooms are party-shared; Laboratory and Hall of Heroes stay per-world.
+        boolean shared=scene.map().kind().equals("training")&&scenes.parties().owner(partyMember,profile.worldId())!=0;
+        boolean joinable=shared&&(view.automatic()||!view.inviteOnly()||view.allowFriends());
+        return new FriendPresence(scene.map().name(),scene.map().zone(),joinable?scene.oid():0);
     }
     private void forcePartyExit()throws IOException {
         if(scene.map().town()&&portalMove==null)return;
@@ -346,10 +355,12 @@ final class WorldSession implements AutoCloseable {
         // Like archive joinPlayerInstance: capture the ready target, then transfer on the
         // caller. Never acquire both session monitors; recheck presence before departure.
         var location=peer.adminLocation();var presence=peer.friendLocation;
+        var peerMember=peer.partyMemberSnapshot();
         synchronized(this){
             requireFriendReady();if(friendNamed(name)!=target||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
-                    ||!location.scene().map().town()||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
-            if(scene!=location.scene())adminTravel(location);
+                    ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
+            if(location.scene().map().town()){if(scene!=location.scene())adminTravel(location);return;}
+            followIntoInterior(location,peerMember,true);
         }
     }
     /** Native method 3: the per-session join secret authorizes travel without a friendship. */
@@ -377,11 +388,33 @@ final class WorldSession implements AutoCloseable {
         // joinability anyway, so the flag is carried and has no separate destination here.
         if(spectate&&log.debugEnabled())log.debug("joinOrSpectate arrived with spectate=true; joining as usual");
         var location=peer.adminLocation();var presence=peer.friendLocation;
+        var peerMember=peer.partyMemberSnapshot();
         synchronized(this){
             requireFriendReady();
             if(peer!=ACTIVE.get(target)||!peer.friendOnline||peer.socket.isClosed()||presence!=peer.friendLocation
-                    ||!location.scene().map().town()||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
+                    ||location.scene().oid()!=presence.instance())throw new IOException(friendUnjoinable(name));
+            if(location.scene().map().town()){if(scene!=location.scene())adminTravel(location);return;}
+            followIntoInterior(location,peerMember,friendsWithParty(peerMember));
+        }
+    }
+    /** A secret proves consent to travel, not friendship; private parties still admit friends of a member. */
+    private boolean friendsWithParty(PartyRegistry.Member member)throws IOException {
+        var view=scenes.parties().view(member);
+        var friends=characters.friends().list(characters.accountId(),knight.id(),authRevision);
+        return view.members().stream().anyMatch(p->p.worldId()!=profile.worldId()
+            &&friends.stream().anyMatch(f->f.world()==p.worldId()));
+    }
+    /** Follows a friend into a shared Training party room, rolling the party seat back if travel fails. */
+    private void followIntoInterior(AdminLocation location,PartyRegistry.Member peerMember,boolean friend)throws IOException {
+        boolean joined=false;
+        try{
+            joined=scenes.parties().joinParty(partyMember,peerMember,friend);
+            refreshParty(true);
             if(scene!=location.scene())adminTravel(location);
+        }catch(IOException|RuntimeException failed){
+            if(joined)try{scenes.parties().abandon(partyMember);}catch(IOException ignored){}
+            if(failed instanceof IOException io)throw io;
+            throw new IOException("m.internal_error",failed);
         }
     }
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
@@ -752,6 +785,8 @@ final class WorldSession implements AutoCloseable {
     boolean hasInteriors(){return scenes.catalog().scenes().stream().anyMatch(map->!map.town());}
     synchronized boolean ownsScene(int oid) { return selected() && scene.oid()==oid; }
     synchronized boolean ownsInteriorParty(int target){return selected()&&scenes.parties().owns(partyMember,target);}
+    /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
+    synchronized PartyRegistry.Member partyMemberSnapshot(){return partyMember;}
     synchronized void subscribeInteriorParty(short message)throws IOException {
         profile=loadProfile(profile);
         partyState();var view=scenes.parties().view(partyMember);
@@ -777,6 +812,20 @@ final class WorldSession implements AutoCloseable {
                 townChanged(result);
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.reviveFailure(oid,listener.requestId(),refused.getMessage()));}
+            return true;
+        }
+        if(request.service()==SessionCodec.LEVEL_PARTY_SERVICE&&request.method()>=4&&request.method()<=6){
+            if(args.size()!=2||!(args.get(0) instanceof Boolean flag)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid party settings request");
+            try{
+                if(closed||!subscribed||!entered)throw new IOException("m.internal_error");
+                switch(request.method()){
+                    case 4->scenes.parties().setAllowFriends(partyMember,flag);
+                    case 5->scenes.parties().setAllowGuild(partyMember,flag);
+                    default->scenes.parties().setInviteOnly(partyMember,flag);
+                }
+                refreshParty();
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
         throw new SessionDecoder.Rejected("Unsupported interior party operation");
@@ -1369,7 +1418,7 @@ final class WorldSession implements AutoCloseable {
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
         entered = true;
-        friendLocation=new FriendPresence(scene.map().name(),scene.map().zone(),scene.map().town()?scene.oid():0);
+        friendLocation=presence(scenes.parties().view(partyMember));
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);

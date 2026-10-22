@@ -603,6 +603,8 @@ public final class SessionCodec {
             });});
     }
     public static final int CRAFT_SERVICE=22, UNBIND_SERVICE=23, ACCESSORY_SERVICE=24, VARIANT_SERVICE=25;
+    /** The stock party panel resolves this handle from LevelPartyObject to toggle open/private. */
+    public static final int LEVEL_PARTY_SERVICE=26;
     /** The announced BillingMarshaller slot; the depot purchase tab resolves it at window build. */
     public static final int BILLING_SERVICE=SERVICES.size();
     public byte[] townDialog(int playerOid,int sceneOid,org.tortodrone.town.TownCatalog.Station station,ActorState source,long created,int service)throws IOException {
@@ -874,11 +876,11 @@ public final class SessionCodec {
     public byte[] interiorParty(short message,int partyOid,int playerOid,Knight knight,WorldProfile profile,SceneRegistry.Instance scene,org.tortodrone.world.SceneHealth.State health,org.tortodrone.world.SceneStatus.State status)throws IOException {
         return party(message,partyOid,List.of(new PartyRegistry.Participant(playerOid,profile.worldId(),0,knight,profile,health,status)),scene,false);
     }
-    public byte[] party(short message,PartyRegistry.View view,SceneRegistry.Instance scene)throws IOException{return party(message,view.oid(),view.members(),scene,!view.automatic(),view.automatic());}
+    public byte[] party(short message,PartyRegistry.View view,SceneRegistry.Instance scene)throws IOException{return party(message,view.oid(),view.members(),scene,!view.automatic(),view.automatic(),view.inviteOnly(),view.allowFriends(),view.allowGuild());}
     private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed)throws IOException {
-        return party(message,partyOid,members,scene,managed,false);
+        return party(message,partyOid,members,scene,managed,false,false,false,false);
     }
-    private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed,boolean automatic)throws IOException {
+    private byte[] party(short message,int partyOid,List<PartyRegistry.Participant> members,SceneRegistry.Instance scene,boolean managed,boolean automatic,boolean inviteOnly,boolean allowFriends,boolean allowGuild)throws IOException {
         return frame(out->{
             boolean training=scene.map().kind().equals("training");
             objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
@@ -890,10 +892,11 @@ public final class SessionCodec {
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
             out.writeInt(0);out.writeBoolean(automatic||managed||training||!scene.map().content().items().isEmpty());out.writeLong(0);
             out.writeShort(0);out.writeInt(managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(0); // No dungeon matchmaking service or gate.
-            out.writeShort(0);type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
+            type(out,"com.threerings.projectx.dungeon.data.LevelPartyMarshaller");out.writeInt(partyOid);out.writeInt(LEVEL_PARTY_SERVICE);
+            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(0);
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
-            primitiveInts(out,new int[]{0});out.writeBoolean(true);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(!managed);
+            primitiveInts(out,new int[]{0});out.writeBoolean(inviteOnly);out.writeBoolean(allowFriends);out.writeBoolean(allowGuild);out.writeBoolean(!managed);
             emptyDSet(out);string(out,null);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(4);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(4);
@@ -923,6 +926,10 @@ public final class SessionCodec {
     private void partyStatus(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var status=member.status();type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(member.playerOid());conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(member.health().reviveFlags());}
     public byte[] partyChanges(PartyRegistry.View before,PartyRegistry.View after)throws IOException {
         var events=new ArrayList<Writer>();var old=new HashMap<Integer,PartyRegistry.Participant>();for(var m:before.members())old.put(m.playerOid(),m);
+        // The stock party panel redraws its open/private controls from these attributes alone.
+        if(before.inviteOnly()!=after.inviteOnly())events.add(out->attribute(out,after.oid(),"inviteOnly",o->o.writeBoolean(after.inviteOnly())));
+        if(before.allowFriends()!=after.allowFriends())events.add(out->attribute(out,after.oid(),"allowFriends",o->o.writeBoolean(after.allowFriends())));
+        if(before.allowGuild()!=after.allowGuild())events.add(out->attribute(out,after.oid(),"allowGuild",o->o.writeBoolean(after.allowGuild())));
         var current=new java.util.HashSet<Integer>();for(var member:after.members()){
             current.add(member.playerOid());var previous=old.get(member.playerOid());
             if(previous==null||!previous.health().equals(member.health()))events.add(out->{partyEntry(out,after.oid(),"health",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyHealth(out,member);});

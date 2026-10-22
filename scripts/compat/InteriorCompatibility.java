@@ -173,7 +173,7 @@ public final class InteriorCompatibility {
     }
 
     private static void checkLevelParty(LevelPartyObject party,String kind) {
-        if (party.levelPartyService != null) throw new AssertionError("Unsupported level party service advertised");
+        if (party.levelPartyService == null) throw new AssertionError("Level party service missing for native open/private controls");
         if (party.memberLimit != (kind.equals("training")?8:1) || party.gateId != 0 || party.depth != 0 || party.floor != 0)
             throw new AssertionError("LevelPartyObject initial party metadata mismatch");
         if (party.pendingFloorName != null || party.pendingFloorDepth != 0 || party.actualGateId != 0 ||
@@ -183,7 +183,7 @@ public final class InteriorCompatibility {
                 " returnFloor=" + party.returnFloor + " wedges=" + Arrays.toString(party.wedgeIndices));
         if (!"EASY".equals(party.difficulty.name()) || !(kind.equals("training")?"SUBTOWN":"LEVEL").equals(party.levelType.name()) ||
             !"NO_DEPTH".equals(party.floorType.name()) || !"NO_DEPTH".equals(party.pendingFloorType.name()) ||
-            !party.inviteOnly || party.allowFriends || party.allowGuild || !party.restricted || party.hasPickups || party.dismissStamp != 0)
+            party.inviteOnly || party.allowFriends || party.allowGuild || !party.restricted || party.hasPickups || party.dismissStamp != 0)
             throw new AssertionError("LevelPartyObject enum/default flags mismatch: difficulty="+party.difficulty+" level="+party.levelType+
                 " floor="+party.floorType+" pending="+party.pendingFloorType+" flags="+party.inviteOnly+","+party.allowFriends+","+party.allowGuild+","+party.restricted+
                 " pickups="+party.hasPickups+" dismiss="+party.dismissStamp);

@@ -45,7 +45,7 @@ public class PartyRegistryTest {
             for(int id=1;id<=9;id++)members.add(member(capacity,id));var leader=members.getFirst();int oid=capacity.view(leader).oid();
             for(int i=1;i<8;i++){capacity.invite(leader,"Knight-"+(char)('A'+i));capacity.respond(members.get(i),"PARTY_INV:"+oid,1);}
             check(capacity.view(leader).members().size()==8,"additional invitations support the native eight-player capacity");
-            refused(()->capacity.invite(leader,"Knight-I"));capacity.boot(leader,"Knight-D");
+            refused(()->capacity.invite(leader,"Knight-I"));refused(()->capacity.joinParty(members.get(8),leader,true));capacity.boot(leader,"Knight-D");
             check(capacity.view(leader).members().size()==7&&capacity.view(members.get(3)).oid()!=oid,"leader removal splits only the authorized target");
         }finally{members.forEach(PartyRegistry.Member::close);}
         var scenes=new SceneRegistry(SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")));var p=scenes.parties();
@@ -76,7 +76,32 @@ public class PartyRegistryTest {
             var labA=publicScenes.destination(30893,1,visitors.get(0));var labB=publicScenes.destination(30893,2,visitors.get(1));
             check(labA!=labB,"Laboratory allocation stays per knight");publicScenes.release(labA,1);publicScenes.release(labB,2);
         }finally{visitors.forEach(PartyRegistry.Member::close);}
-        System.out.println("PASS: invite authorization/decline/expiry, reconnect invalidation, disconnected-party grace/expiry, Training seat release, leader succession, shared/private ownership and lease cleanup");
+        // Native open/private controls and direct friend follows into a shared room.
+        var social=new PartyRegistry();
+        try(var leader=member(social,1);var friend=member(social,2);var follower=member(social,3);var outsider=member(social,4)){
+            social.invite(leader,"Knight-B");social.respond(friend,"PARTY_INV:"+social.view(leader).oid(),1);
+            int room=social.view(leader).oid();
+            check(!social.view(leader).inviteOnly()&&!social.view(leader).allowFriends(),"new explicit parties publish an open native party");
+            social.joinParty(follower,friend,true);check(social.owner(follower,3)==room,"a friend follows an open party into its room identity");
+            check(!social.joinParty(follower,friend,true),"following the party already held is a no-op");
+            refused(()->social.setInviteOnly(friend,true));
+            social.setInviteOnly(leader,true);check(social.view(leader).inviteOnly(),"the leader makes the party private");
+            try(var newcomer=member(social,5)){
+                refused(()->social.joinParty(newcomer,friend,true));
+                social.setAllowFriends(leader,true);social.joinParty(newcomer,friend,true);
+                check(social.owner(newcomer,5)==room,"private parties accept friends only after the leader opts in");
+            }
+            try(var stranger=member(social,7)){refused(()->social.joinParty(stranger,friend,false));}
+            try(var solo=member(social,6)){refused(()->social.joinParty(outsider,solo,true));}
+        }
+        var publicGroups=new PartyRegistry();
+        try(var a=member(publicGroups,1);var b=member(publicGroups,2)){
+            publicGroups.enterTraining(a);
+            check(publicGroups.view(a).automatic()&&!publicGroups.view(a).inviteOnly(),"public Training groups are open");
+            publicGroups.joinParty(b,a,true);check(publicGroups.view(b).oid()==publicGroups.view(a).oid(),"a friend follows a public Training group");
+            refused(()->publicGroups.setInviteOnly(a,true));
+        }
+        System.out.println("PASS: invite authorization/decline/expiry, reconnect invalidation, disconnected-party grace/expiry, Training seat release, leader succession, shared/private ownership, open/private controls, direct friend follows and lease cleanup");
     }
     private static PartyRegistry.Member member(PartyRegistry p,int id)throws IOException{return p.join(1000+id,new Knight(1,"Knight-"+(char)('A'+id-1),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),new WorldProfile(id,id,1,0,0,1,List.of()),e->{});}
     @FunctionalInterface private interface Operation{void run()throws Exception;}
