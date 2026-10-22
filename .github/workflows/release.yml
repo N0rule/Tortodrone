@@ -89,6 +89,17 @@ jobs:
           test ! -d "$root/data"
           test ! -d "$root/content-updates"
 
+          cat > "$root/START-HERE.txt" <<'EOF'
+          Tortodrone - portable Java 25 distribution
+
+          Install Java 25 and make sure 'java' is on your PATH.
+          Run the local account manager:
+              java -jar tortodrone-admin.jar
+          Run the game server:
+              java -jar tortodrone.jar
+          For headless hosting:
+              java -jar tortodrone.jar --nogui
+
           Keep the JARs and config/, content/, plugins/ together.
           Edit config/server.yml before starting.
           Persistent data/ is created beside the JARs and is never bundled.
