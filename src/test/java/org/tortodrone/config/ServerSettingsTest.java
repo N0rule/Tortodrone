@@ -33,6 +33,12 @@ public final class ServerSettingsTest {
             var defaults=ServerSettings.read(yaml);
             check(defaults.bind().equals("0.0.0.0")&&defaults.httpPort()==8080&&defaults.webui().enabled()&&defaults.webui().directHttp()&&defaults.webui().automaticHost(),"defaults start HTTP WebUI on all interfaces at shared port 8080");
             check(defaults.webui().publicUrl().equals("http://0.0.0.0:8080"),"default public URL resolves the shared port");
+            var loopback=java.net.InetAddress.ofLiteral("127.0.0.1");
+            check(defaults.webui().browserAddresses(loopback,8080).equals(java.util.List.of("http://127.0.0.1:8080")),"browser URL uses concrete bind address and nonstandard port");
+            check(defaults.webui().browserAddresses(loopback,80).equals(java.util.List.of("http://127.0.0.1")),"browser URL omits standard HTTP port");
+            check(defaults.webui().browserAddresses(java.net.InetAddress.ofLiteral("0.0.0.0"),8080).contains("http://127.0.0.1:8080"),"wildcard binding advertises a usable loopback URL");
+            check(new org.tortodrone.web.WebSettings(true,"https://admin.example:443","reverse-proxy").publicUrl().equals("https://admin.example"),"standard HTTPS port uses browser origin normalization");
+            check(new org.tortodrone.web.WebSettings(true,"http://127.0.0.1:80","http").publicUrl().equals("http://127.0.0.1"),"standard HTTP port uses browser origin normalization");
             Path generated=home.resolve("generated/server.yml");var bundled=ServerSettings.load(generated);
             check(bundled.webui().enabled()&&bundled.webui().automaticHost()&&bundled.httpPort()==8080,"fresh bundled YAML enables HTTP administration");
             Files.writeString(yaml,"webui-public-url: 192.168.1.50\nwebui/content_url-port: 8091\n");

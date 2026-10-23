@@ -25,7 +25,11 @@ public final class WebUiSetupIntegrationTest {
             TestDeployment.copyServer(source,root.resolve("tortodrone.jar"));
             Files.writeString(root.resolve("config/server.yml"),"server-port: 0\nwebui/content_url-port: 0\n");
             try(var server=new Running(root)) {
-                server.ready();String code=server.setupCode();check(code!=null,"first-run code appears only in local console output");
+                server.ready();server.await("WebUI first-run setup code: ");String code=server.setupCode();check(code!=null,"first-run code appears only in local console output");
+                String output=server.output();
+                check(output.indexOf("Done! Listening on")<output.indexOf("WebUI Ready ")&&output.indexOf("WebUI Ready ")<output.indexOf("Server ready (")&&output.indexOf("Type help for server commands.")<output.indexOf("WebUI first-run setup code:"),"usable WebUI URL and private setup code follow startup messages in order");
+                var rootPage=HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create("http://127.0.0.1:"+server.port()+"/")).GET().build(),HttpResponse.BodyHandlers.ofString());
+                check(rootPage.statusCode()==302&&rootPage.headers().firstValue("Location").orElse("").equals("/admin/"),"bare IP redirects to WebUI on the same listener");
                 var admin=new Client(server.port());
                 check(Boolean.TRUE.equals(admin.get("setup").get("required")),"default configuration serves first-run WebUI without explicit enable, URL or transport settings");
                 var html=HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(admin.origin+"/admin/")).GET().build(),HttpResponse.BodyHandlers.ofString());
@@ -76,9 +80,9 @@ public final class WebUiSetupIntegrationTest {
             process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"--enable-native-access=ALL-UNNAMED","-jar",root.resolve("tortodrone.jar").toString(),"--nogui").directory(root.toFile()).redirectErrorStream(true).redirectOutput(output.toFile()).start();
         }
         String output(){try{return Files.readString(output);}catch(IOException e){return "";}}
-        void ready()throws Exception{WebUiSetupIntegrationTest.await(()->output().contains("Done! Listening on"),"packaged server ready");check(process.isAlive(),"server remains running");}
-        int port(){var m=Pattern.compile("Shared HTTP listener: ([0-9]+)").matcher(output());check(m.find(),"shared HTTP port printed");return Integer.parseInt(m.group(1));}
-        String setupCode(){var m=Pattern.compile("WebUI first-run setup code: ([A-Za-z0-9_-]{43})").matcher(output());return m.find()?m.group(1):null;}
+        void ready()throws Exception{WebUiSetupIntegrationTest.await(()->output().contains("Type help for server commands.")&&output().contains("WebUI Ready "),"packaged server ready");check(process.isAlive(),"server remains running");}
+        int port(){var m=Pattern.compile("WebUI Ready http://127\\.0\\.0\\.1:([0-9]+)").matcher(output());check(m.find(),"shared HTTP port printed");return Integer.parseInt(m.group(1));}
+        String setupCode(){var m=Pattern.compile("WebUI first-run setup code: ([0-9]{8})").matcher(output());return m.find()?m.group(1):null;}
         void send(String text)throws IOException{process.getOutputStream().write(text.getBytes(StandardCharsets.UTF_8));process.getOutputStream().flush();}
         void await(String message)throws Exception{WebUiSetupIntegrationTest.await(()->output().contains(message),message);}
         public void close()throws Exception{if(process.isAlive()){process.destroy();if(!process.waitFor(15,TimeUnit.SECONDS)){process.destroyForcibly();process.waitFor(10,TimeUnit.SECONDS);}}}

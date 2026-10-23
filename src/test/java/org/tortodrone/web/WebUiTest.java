@@ -95,6 +95,10 @@ public final class WebUiTest {
         var settings=new WebSettings(true,"http://0.0.0.0","http");
         var old=new WebSecurity(settings,identities,data);String expiredCode=old.setupCode();
         var security=new WebSecurity(settings,identities,data);String code=security.setupCode();
+        check(code!=null&&code.matches("[0-9]{8}"),"short cryptographically random numeric setup code");
+        var locked=new WebSecurity(settings,identities,data);
+        for(int attempt=0;attempt<10;attempt++)check(locked.setup("invalid","LockedAdmin",PASSWORD.toCharArray())==null,"wrong setup attempt rejected");
+        check(locked.setup(locked.setupCode(),"LockedAdmin",PASSWORD.toCharArray())==null&&identities.list().isEmpty(),"ten incorrect guesses lock setup until process restart without creating an account");
         check(code!=null&&!code.equals(expiredCode),"setup capability changes on process restart");
         try(var accounts=new AccountStore(data,false,ItemCatalog.starter());var log=new ServerLog(data.resolve("logs"));var service=new AdminService(accounts,new ServerControl("setup",data),log,root);
             var http=NewsServer.start(InetAddress.getLoopbackAddress(),0,news,x->{},new AdminHandler(security,identities,service,frontend))){
@@ -181,9 +185,15 @@ public final class WebUiTest {
             port=http.port();String authority="127.0.0.1:"+port;
             var headers=new HashMap<String,String>();headers.put("Host",authority);headers.put("Origin","http://"+authority);
             check(request("GET","/admin/",null,headers).status==200,"automatic mode accepts concrete connection address");
+            var redirect=request("GET","/",null,headers);
+            check(redirect.status==302&&"/admin/".equals(redirect.headers.get("location")),"root redirects with a relative location on the same listener");
+            check(request("GET","/admin",null,headers).status==302,"admin without trailing slash redirects");
+            check(request("POST","/",form(Map.of()),headers).status==405,"root accepts navigation only");
+            check(request("GET","/missing",null,headers).status==404,"root context does not expose other files");
             check(request("GET","/news/public.png",null,Map.of()).status==200,"automatic WebUI and News share one port");
             var bad=new HashMap<>(headers);bad.put("Host","attacker.example:"+port);bad.put("Origin","http://attacker.example:"+port);
             check(request("GET","/admin/",null,bad).status==403,"automatic mode rejects arbitrary matching Host/Origin pairs");
+            check(request("GET","/",null,bad).status==403,"root redirect preserves Host validation");
             bad=new HashMap<>(headers);bad.put("Host","0.0.0.0:"+port);bad.put("Origin","http://0.0.0.0:"+port);
             check(request("GET","/admin/",null,bad).status==403,"wildcard is configuration, never a browser Host");
             bad=new HashMap<>(headers);bad.put("Host","127.0.0.1:"+(port==65535?65534:port+1));

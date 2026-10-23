@@ -19,6 +19,7 @@ public final class WebSecurity {
     private final Map<String,Session> sessions=new HashMap<>();
     private final java.util.function.LongSupplier clock;
     private String setupCode;
+    private int setupFailures;
     private long loginWindow;
     private int loginAttempts;
     public WebSecurity(WebSettings settings,WebIdentityStore identities,Path data)throws IOException {
@@ -26,7 +27,7 @@ public final class WebSecurity {
     }
     WebSecurity(WebSettings settings,WebIdentityStore identities,Path data,java.util.function.LongSupplier clock)throws IOException {
         this.settings=settings;this.identities=identities;this.clock=clock;
-        setupCode=identities.bootstrapAvailable()?WebIdentityStore.token():null;
+        setupCode=identities.bootstrapAvailable()?String.format(Locale.ROOT,"%08d",new java.security.SecureRandom().nextInt(100_000_000)):null;
         if(settings.directHttp()){proxySecret=null;return;}
         Path secret=data.resolve("webui-proxy.key");
         if(Files.notExists(secret,LinkOption.NOFOLLOW_LINKS))try{WebIdentityStore.createProxyKey(secret);}catch(FileAlreadyExistsException raced){/* Validate the winner below. */}
@@ -77,7 +78,8 @@ public final class WebSecurity {
     /** Local console only. Never serialize this capability or write it to operational logs. */
     public synchronized String setupCode()throws IOException {return setupRequired()?setupCode:null;}
     public synchronized Session setup(String code,String username,char[] password)throws IOException {
-        if(!setupRequired()||!equal(setupCode,code))return null;
+        if(!setupRequired()||setupFailures>=10)return null;
+        if(!equal(setupCode,code)){setupFailures++;return null;}
         var identity=identities.bootstrap(username,password);
         setupCode=null;
         return newSession(identity);

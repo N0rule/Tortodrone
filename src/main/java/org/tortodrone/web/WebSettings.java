@@ -15,10 +15,27 @@ public record WebSettings(boolean enabled, String publicUrl, String tlsMode) {
             if(!scheme.equals(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null||uri.getQuery()!=null||uri.getFragment()!=null||!uri.getPath().isEmpty()||uri.getPort()>65535||uri.getPort()==0)
                 throw new IllegalArgumentException("webui-public-url must be an "+scheme.toUpperCase(java.util.Locale.ROOT)+" origin without a trailing slash");
             if(!tlsMode.equals("http")&&uri.getHost().equals("0.0.0.0"))throw new IllegalArgumentException("Automatic WebUI addresses require http mode");
+            if(uri.getPort()==(scheme.equals("http")?80:443))publicUrl=scheme+"://"+uri.getHost();
         }
     }
     public boolean directHttp(){return tlsMode.equals("http");}
     public boolean automaticHost(){return directHttp()&&"0.0.0.0".equals(URI.create(publicUrl).getHost());}
+    /** Browser destinations, never the wildcard bind address. No external address lookup or DNS is needed. */
+    public java.util.List<String> browserAddresses(java.net.InetAddress bind,int port) {
+        if(!automaticHost())return java.util.List.of(publicUrl);
+        var hosts=new java.util.LinkedHashSet<String>();
+        if(!bind.isAnyLocalAddress())hosts.add(bind.getHostAddress());
+        else {
+            hosts.add("127.0.0.1");
+            try {
+                for(var network:java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces()))
+                    if(network.isUp()&&!network.isLoopback())
+                        network.inetAddresses().filter(a->a instanceof java.net.Inet4Address&&!a.isLinkLocalAddress()&&!a.isLoopbackAddress())
+                            .map(java.net.InetAddress::getHostAddress).sorted().forEach(hosts::add);
+            }catch(java.net.SocketException unavailable){/* The local URL remains usable. */}
+        }
+        return hosts.stream().map(host->"http://"+(host.contains(":")?"["+host+"]":host)+(port==80?"":":"+port)).toList();
+    }
     public static WebSettings read(java.util.Properties p)throws IOException {
         return read(p,org.tortodrone.config.ServerSettings.DEFAULT_HTTP_PORT);
     }

@@ -28,15 +28,21 @@ public final class NewsServer implements AutoCloseable {
         System.setProperty("sun.net.httpserver.maxReqHeaders","64");
         System.setProperty("sun.net.httpserver.maxReqHeaderSize","16384");
         System.setProperty("jdk.httpserver.maxConnections","128");
-        var server=HttpServer.create(new InetSocketAddress(address,port),16);
+        HttpServer server;
+        try{server=HttpServer.create(new InetSocketAddress(address,port),16);}
+        catch(java.net.BindException denied){
+            String hint=port>0&&port<1024?"; ports below 1024 may require CAP_NET_BIND_SERVICE on Linux (or use port 8080)":"";
+            throw new IOException("Cannot bind shared HTTP listener on "+address.getHostAddress()+":"+port+": "+denied.getMessage()+hint,denied);
+        }
         var executor=new java.util.concurrent.ThreadPoolExecutor(4,16,30,java.util.concurrent.TimeUnit.SECONDS,
             new java.util.concurrent.ArrayBlockingQueue<>(64),Thread.ofPlatform().name("HTTP-",0).factory(),new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         server.createContext("/news/",exchange->serve(exchange,root,debug));
-        if(admin!=null)server.createContext("/admin/",admin);
+        if(admin!=null){server.createContext("/admin/",admin);server.createContext("/",admin);}
         server.setExecutor(executor);
         server.start();
         return new NewsServer(server,executor);
     }
+    public InetAddress address(){return server.getAddress().getAddress();}
     public int port(){return server.getAddress().getPort();}
     /** Only GET/HEAD reach a stored PNG/JPEG; traversal, other extensions and missing files return 404. */
     private static void serve(HttpExchange exchange,Path root,Consumer<String> debug)throws IOException {

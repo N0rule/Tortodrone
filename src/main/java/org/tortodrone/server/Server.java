@@ -69,13 +69,16 @@ public final class Server {
                     }
                     // Finish identity schema initialization before the console can issue recovery commands.
                     console.start();
-                    if(setupCode!=null)log.localNotice("WebUI first-run setup code: "+setupCode);
                     try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
-                        String webAddress=settings.webui().automaticHost()?"http://<server-ip>:"+http.port():settings.webui().publicUrl();
-                        log.info("Shared HTTP listener: "+http.port()+"; WebUI "+(handler==null?"disabled":webAddress+"/admin/"));
+                        ServerLog startupLog=log;
+                        String code=setupCode;
+                        var codePrinted=new java.util.concurrent.atomic.AtomicBoolean();
+                        Runnable webReady=handler==null?()->{}:()->startupLog.info("WebUI Ready "+String.join(", ",settings.webui().browserAddresses(http.address(),http.port())));
+                        Runnable setupNotice=()->{if(code!=null&&codePrinted.compareAndSet(false,true))startupLog.localNotice("WebUI first-run setup code: "+code);};
+                        if(handler==null)log.info("Shared HTTP listener: "+http.port()+"; WebUI disabled");
                         while(control.awaitStart(settings.webui().enabled())) {
-                            try {run(settings,dataDirectory,log,control,console,content);content=null;}
-                            catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!settings.webui().enabled())throw failed;}
+                            try {run(settings,dataDirectory,log,control,console,content,webReady,setupNotice);content=null;}
+                            catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());webReady.run();setupNotice.run();if(!settings.webui().enabled())throw failed;}
                             finally{control.stopped();}
                         }
                     }
@@ -101,7 +104,7 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent) throws Exception {
+    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent,Runnable webReady,Runnable setupNotice) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
         var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
@@ -132,13 +135,13 @@ public final class Server {
                 log.debug("Public key: " + keys.resolve("public.txt"));
                 log.debug("Account database: " + accounts.databaseFile());
                 control.resources(scenes,catalog.entries().size());
-                accept(listener,key,log,accounts,settings.maxClients(),control,console,startup);
+                accept(listener,key,log,accounts,settings.maxClients(),control,console,startup,webReady,setupNotice);
             }
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts,int maxClients,ServerControl control,ServerConsole console,long startup)
+            AccountStore accounts,int maxClients,ServerControl control,ServerConsole console,long startup,Runnable webReady,Runnable setupNotice)
             throws IOException {
         ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
@@ -158,8 +161,10 @@ public final class Server {
         try (var expiry=new AuctionExpiry(accounts.auctions(),log)) {
             log.debug("Limits: "+maxClients+" clients; 64 KiB upstream / 1 MiB downstream frame; 15 s handshake / 60 s session idle timeout");
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
+            webReady.run();
             log.info("Server ready ("+String.format(java.util.Locale.ROOT,"%.3fs",(System.nanoTime()-startup)/1e9)+")");
             log.info("Type help for server commands.");
+            setupNotice.run();
             while (!listener.isClosed()) {
                 Socket client;
                 try {

@@ -33,6 +33,11 @@ public final class AdminHandler implements HttpHandler {
         if(path.contains("%")||path.contains("..")||path.contains("\\")||path.contains("//")){send(e,404,Map.of("error","Not found"));return;}
         boolean post=e.getRequestMethod().equals("POST");
         if(!post&&!e.getRequestMethod().equals("GET")){send(e,405,Map.of("error","Method not allowed"));return;}
+        if(path.equals("/")||path.equals("/admin")){
+            if(post){send(e,405,Map.of("error","Method not allowed"));return;}
+            e.getResponseHeaders().set("Location","/admin/");e.sendResponseHeaders(302,-1);return;
+        }
+        if(!path.startsWith("/admin/")){send(e,404,Map.of("error","Not found"));return;}
         if(!path.startsWith("/admin/api/")) {if(post){send(e,405,Map.of("error","Method not allowed"));return;}staticFile(e,path);return;}
         String route=path.substring("/admin/api/".length());
         var p=parameters(post?body(e):Objects.requireNonNullElse(e.getRequestURI().getRawQuery(),""));

@@ -10,7 +10,7 @@
 <label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
 <div id="setup-fields" hidden>
 <label>Confirm password<input name="passwordConfirmation" type="password" autocomplete="new-password" maxlength="128" disabled></label>
-<label>Setup code<input name="setupCode" autocomplete="off" maxlength="43" spellcheck="false" disabled></label>
+<label>Setup code<input name="setupCode" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" spellcheck="false" disabled></label>
 </div>
 <button type="submit" disabled>Sign in</button><p id="login-error" role="alert"></p>
 <small id="login-help">Recover access from the server console with <code>webui password &lt;username&gt;</code>.</small>
