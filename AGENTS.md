@@ -14,13 +14,6 @@ Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; no
 - Scene instances own simulation state; client input is intent, not position. Guard travel/subscription generations; keep network I/O outside simulation/storage locks.
 - Unified YAML content and a migration-only legacy pack reader are implemented; imported definitions alone do not prove gameplay support.
 
-## Subagents 
-
-- Prefer **DeepSeek V4.1 Flash Free** through OpenCode with **high reasoning** and **Full Access** for bounded repository exploration, protocol research, documentation, focused tests, isolated features, simple fixes and independent reviews—even if the primary agent must wait. Start with one; use up to **3** only for independent scopes.
-- Give each subagent one deliverable, acceptance criteria, source pointers, exact verification and non-overlapping file ownership. Research/review is read-only unless specified; no nested delegation or commits unless assigned.
-- Primary agent coordinates builds and shared processes (no concurrent builds in one checkout), verifies `file:line` evidence and all diffs, reproduces bugs, integrates and runs final checks. Retain architecture, concurrency, authentication/storage invariants and wire protocol changes with the primary agent. Full Access never overrides data or file boundaries.
-
-
 ## Verification — fast by default
 - **Docs/minor cleanup:** inspect diff/links; no Java tests.
 - **Normal Java/content change:** `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` compiles/packages and runs only the selected standalone programs (see `docs/development.md`). Use `./gradlew build` for compilation/package checks without execution. Add a focused regression if behavior changed.
