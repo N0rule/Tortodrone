@@ -15,14 +15,14 @@ public final class CheckClientWorld {
             throw new IllegalArgumentException("Usage: java scripts/compat/CheckClientWorld.java \"/path/to/Spiral Knights\" [prepared-seven-scene-maps]");
         }
         Path game = Path.of(args[0]).toAbsolutePath();
-        for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) {
+        for (String jar : List.of("tortodrone.jar")) {
             if (!Files.isRegularFile(project.resolve("build/" + jar))) throw new IOException("Build first with ./gradlew build");
         }
         scratch = Files.createTempDirectory("tortodrone-installed-client-");
         Thread cleanup = new Thread(CheckClientWorld::stopChildren, "check-cleanup");
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
-            for (String jar : List.of("tortodrone.jar", "tortodrone-admin.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
+            for (String jar : List.of("tortodrone.jar")) Files.copy(project.resolve("build/" + jar), scratch.resolve(jar));
             Path maps=project.resolve("build/content");
             try(var paths=Files.walk(maps)) {
                 for(var path:paths.toList()) {
@@ -79,7 +79,11 @@ public final class CheckClientWorld {
             var catalogCheck=new ArrayList<>(base);catalogCheck.addAll(List.of("ItemCatalogCompatibility",game.toString(),scratch.resolve("exports/items/catalog.json").toString()));
             run(catalogCheck,"item-catalog","",60);
             Files.writeString(scratch.resolve("data/server.properties"), "server-ip=127.0.0.1\nserver-port=0\nlog-mode=debug\ncontent-packs=vanilla\nlegacy-content=disabled\n");
-            for (String user : List.of("LanPlayer", "PeerPlayer")) run(List.of(executable("java"), "-jar", scratch.resolve("tortodrone-admin.jar").toString(), "--create-account", user), "account-" + user, "lan-test-password\nlan-test-password\n", 15);
+            try(var accounts=new org.tortodrone.account.AccountStore(scratch.resolve("data"))) {
+                char[] password="lan-test-password".toCharArray();
+                try{for(String user:List.of("LanPlayer","PeerPlayer"))accounts.create(user,password);}
+                finally{Arrays.fill(password,'\0');}
+            }
             Path serverLog = scratch.resolve("server.log");
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog);
             server.getOutputStream().close();

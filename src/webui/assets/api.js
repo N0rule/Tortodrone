@@ -25,6 +25,10 @@ export class Api {
     /** @returns {Promise<Session>} */ async restore() { return this.session = await this.request('session'); }
     /** @param {string} username @param {string} password @returns {Promise<Session>} */
     async login(username, password) { return this.session = await this.request('login', { username, password }, true); }
+    /** @param {string} username @param {string} password @param {string} passwordConfirmation @param {string} setupCode @returns {Promise<Session>} */
+    async setup(username,password,passwordConfirmation,setupCode) {
+        return this.session = await this.request('setup',{username,password,passwordConfirmation,setupCode},true);
+    }
     async logout() { await this.request('logout', {}, true); this.session = null; }
     /** @param {string} route @param {Record<string,string|number|boolean>} values */
     async change(route, values) { return this.request(route, { ...values, confirmation: route }, true); }

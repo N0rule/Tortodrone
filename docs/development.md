@@ -17,8 +17,8 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ## Build and test (JDK 25)
 
 ```sh
-./gradlew build                  # DEFAULT: both JARs + prepared content; no tests
-./gradlew buildServer buildAdmin # package both apps and unified content
+./gradlew build                  # DEFAULT: server JAR, WebUI + prepared content; no tests
+./gradlew buildServer            # package the server, WebUI and unified content
 ./gradlew testUnit               # all standalone unit tests (not a focused filter)
 ./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest # focused compile/package + tests
 ./gradlew testIntegration        # all packaged integration tests
@@ -33,9 +33,9 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 
 Tortodrone's unit tests are standalone `main` programs, **not JUnit**. `./gradlew testUnit --tests ...` is not supported. Prefer `-PunitTests=SceneSimulationTest,MovementCollisionTest`; fully qualified names also work. Unknown, empty or ambiguous names fail instead of silently running zero tests. Without the property, `testUnit` still runs every unit program. Programs run sequentially, report elapsed time and list the five slowest programs; authentication, storage and rollback coverage is retained.
 
-`build` packages both apps and prepared content. Unit tests build only the server JAR; admin integration also packages the admin app. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
+`build` packages the single server JAR, WebUI and prepared content. Unit and packaged WebUI/console integration tests use that same executable. Map preparation integration reuses compiled `BuildTools` instead of invoking Java's source compiler for each fixture operation.
 
-To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. Both JARs and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
+To keep an existing deployment untouched, use `-PdeploymentOutput=/tmp/tortodrone-check` with build/test tasks. The JAR, frontend and prepared configuration/content go there, while Gradle compilation stays in `.build/`. Test output redirection does not upgrade an existing `build/content/packs` deployment.
 
 The bundled `StandaloneTestSuite` also accepts fully-qualified test classes directly. From the repository root (Linux/macOS):
 
@@ -60,7 +60,7 @@ Replace the example classes with the specific tests for your change; do not run 
 
 Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
-`runServer` and `runAdmin` operate on **real `build/data/`** and are not disposable tests. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
+`runServer` operates on **real `build/data/`** and are not disposable tests. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 
 ## Test by change type
 
@@ -97,7 +97,7 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 ## WebUI verification
 
-`./gradlew testUnit -PunitTests=WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest` exercises disposable HTTP, credential and domain fixtures. For browser acceptance, use a disposable deployment and same-host TLS proxy configured as in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
+`./gradlew testUnit -PunitTests=WebIdentityStoreTest,WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest` exercises disposable HTTP, credential and domain fixtures. `./gradlew integrationWebUi integrationConsole` verifies packaged first-run setup, WebUI identity management, console recovery while the listener is stopped and ordinary local administration. For browser acceptance, use a disposable deployment and same-host TLS proxy configured as in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
 
 ## Load testing
 

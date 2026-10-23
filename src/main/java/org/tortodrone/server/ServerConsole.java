@@ -20,6 +20,7 @@ final class ServerConsole implements AutoCloseable {
     private final ServerControl control;
     private final Object executionLock=new Object();
     private final Prompts prompts;
+    private org.tortodrone.web.WebIdentityStore webIdentities;
     interface Prompts { char[] password(String prompt) throws IOException; String confirmation(int limit) throws IOException; }
 
     ServerConsole(AccountStore accounts, ServerLog log, Runnable stop, BooleanSupplier running) {
@@ -30,11 +31,11 @@ final class ServerConsole implements AutoCloseable {
         input=terminal?new ConsoleInput(log):null;
         prompts=new Prompts() {
             public char[] password(String prompt) throws IOException {
-                if(input==null)throw new IOException("Open the account manager to enter passwords in graphical mode");
+                if(input==null)throw new IOException("Password entry requires the local server terminal");
                 return input.password(prompt,log);
             }
             public String confirmation(int limit) throws IOException {
-                if(input==null)throw new IOException("Open the account manager for confirmed deletion in graphical mode");
+                if(input==null)throw new IOException("Confirmation requires the local server terminal");
                 return input.confirmation(limit);
             }
         };
@@ -61,7 +62,7 @@ final class ServerConsole implements AutoCloseable {
                 }
             }
         } catch (UserInterruptException interrupted) {
-            log.info("Stopping server…"); stop.run();
+            log.info("Stopping server…"); if(control!=null)control.exit();else stop.run();
         } catch (EndOfFileException ended) {
             log.debug("Terminal input closed; server remains running");
         } catch (IOError failed) {
@@ -99,9 +100,10 @@ final class ServerConsole implements AutoCloseable {
             else showHelp(ConsoleHelp.topic("help",""));
             return;
         }
-        boolean group=command.equals("account")||command.equals("knight")||command.equals("currency");
+        boolean group=command.equals("account")||command.equals("knight")||command.equals("currency")||command.equals("webui");
         if(ConsoleHelp.known(command) && words.length==1 && !command.equals("items")
-                && !command.equals("status") && !command.equals("stop") && !command.equals("players")) {
+                && !command.equals("status") && !command.equals("stop") && !command.equals("players")
+                && !command.equals("start") && !command.equals("restart") && !command.equals("shutdown")) {
             showHelp(ConsoleHelp.topic(command,""));return;
         }
         if(ConsoleHelp.known(command)&&words.length==2&&words[1].equalsIgnoreCase("--help")) {
@@ -138,6 +140,17 @@ final class ServerConsole implements AutoCloseable {
                 log.info("Sessions: "+status.sessions().size()+" | Players: "+status.sessions().stream().filter(p->p.knightId()!=null).count()+" | Maps: "+status.maps()+" | Items: "+status.items()+" | Instances: "+status.scenes().size());
                 log.info("Heap: "+RuntimeMetrics.mib(metrics.heapUsed())+" / "+RuntimeMetrics.mib(metrics.heapMax())+" MiB | Accounts: "+accounts.list().size());
             }
+        } else if(command.equals("webui")) {
+            webui(words);
+        } else if(words.length==1&&(command.equals("start")||command.equals("restart"))) {
+            if(control==null)throw new IOException("Lifecycle control unavailable");
+            if(command.equals("start"))control.start();else control.restart();
+            log.info("Game listener "+command+" requested.");
+        } else if(words.length==1&&command.equals("shutdown")) {
+            if(control==null)throw new IOException("Lifecycle control unavailable");
+            log.info("Type SHUT DOWN PROCESS to confirm full process shutdown:");
+            if(!"SHUT DOWN PROCESS".equals(prompts.confirmation(32)))throw new IOException("Shutdown confirmation did not match");
+            control.exit();
         } else if (words.length == 1 && command.equals("stop")) {
             log.info("Stopping server…"); stop.run();
         } else if(command.equals("grant")||command.equals("set")) {
@@ -175,6 +188,38 @@ final class ServerConsole implements AutoCloseable {
             account(words);
         } else if(ConsoleHelp.known(command))throw new IOException(ConsoleHelp.usage(words));
         else throw new IOException("Unknown command. Type help to see commands, or press Up to correct your input.");
+    }
+
+    private void webui(String[] words)throws IOException {
+        boolean list=words.length==2&&words[1].equals("list");
+        boolean user=words.length==4&&words[1].equals("user");
+        boolean password=words.length==3&&words[1].equals("password");
+        boolean revoke=words.length==3&&words[1].equals("revoke");
+        if(!list&&!user&&!password&&!revoke)throw new IOException(ConsoleHelp.usage(words));
+        if(webIdentities==null){
+            var data=control!=null?control.dataDirectory():accounts.databaseFile()==null?null:accounts.databaseFile().getParent();
+            if(data==null)throw new IOException("WebUI accounts require persistent server storage");
+            webIdentities=new org.tortodrone.web.WebIdentityStore(data);
+        }
+        if(list){for(var id:webIdentities.list())log.info(id.username()+" | "+id.role());return;}
+        String name=words[2];
+        if(revoke){
+            log.info("Type the exact WebUI username to revoke access: "+name);
+            if(!name.equals(prompts.confirmation(64)))throw new IOException("Revocation confirmation did not match");
+            if(running.getAsBoolean()){webIdentities.revoke(name);log.info("WebUI account revoked: "+name);}return;
+        }
+        org.tortodrone.web.WebIdentityStore.Role role=null;
+        if(user)try{role=org.tortodrone.web.WebIdentityStore.Role.valueOf(words[3].toUpperCase(Locale.ROOT));}
+        catch(IllegalArgumentException invalid){throw new IOException("WebUI role must be VIEWER, MODERATOR or ADMINISTRATOR");}
+        var before=password?webIdentities.find(name):null;
+        char[] first=prompts.password("WebUI password (14–128 characters): "),second=null;
+        try {
+            second=prompts.password("Confirm WebUI password: ");
+            if(!Arrays.equals(first,second))throw new IOException("Passwords do not match");
+            if(!running.getAsBoolean())return;
+            if(user)webIdentities.put(name,first,role);else webIdentities.password(name,first,before.revision());
+            log.info((user?"WebUI account saved: ":"WebUI password changed: ")+name+"; existing sessions revoked.");
+        }finally{Arrays.fill(first,'\0');if(second!=null)Arrays.fill(second,'\0');}
     }
 
     private void knight(String[] words) throws IOException {

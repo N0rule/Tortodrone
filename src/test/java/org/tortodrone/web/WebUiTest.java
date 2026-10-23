@@ -27,6 +27,7 @@ public final class WebUiTest {
             if(Files.getFileStore(data).supportsFileAttributeView("posix"))check(Files.getPosixFilePermissions(data.resolve("webui-proxy.key")).equals(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------")),"proxy secret private from creation");
             try{WebIdentityStore.createProxyKey(data.resolve("webui-proxy.key"));throw new AssertionError("Existing proxy key overwritten");}catch(FileAlreadyExistsException expected){}
             check(secret.equals(Files.readString(data.resolve("webui-proxy.key")).strip()),"existing secret preserved");
+            firstRunSetup(root,news,frontend);
             var identities=new WebIdentityStore(data);
             identities.put("administrator",PASSWORD.toCharArray(),WebIdentityStore.Role.ADMINISTRATOR);
             identities.put("viewer",PASSWORD.toCharArray(),WebIdentityStore.Role.VIEWER);
@@ -89,6 +90,40 @@ public final class WebUiTest {
             System.out.println("PASS: shared News, opt-in direct HTTP and default HTTPS proxy, Host/Origin/CSRF, roles, cookies, revocation, expiration, audit and rollback");
         }finally{try(var walk=Files.walk(root)){for(var p:walk.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
     }
+    private static void firstRunSetup(Path root,Path news,Path frontend)throws Exception {
+        Path data=root.resolve("setup-data");var identities=new WebIdentityStore(data);
+        var settings=new WebSettings(true,"http://0.0.0.0","http");
+        var old=new WebSecurity(settings,identities,data);String expiredCode=old.setupCode();
+        var security=new WebSecurity(settings,identities,data);String code=security.setupCode();
+        check(code!=null&&!code.equals(expiredCode),"setup capability changes on process restart");
+        try(var accounts=new AccountStore(data,false,ItemCatalog.starter());var log=new ServerLog(data.resolve("logs"));var service=new AdminService(accounts,new ServerControl("setup",data),log,root);
+            var http=NewsServer.start(InetAddress.getLoopbackAddress(),0,news,x->{},new AdminHandler(security,identities,service,frontend))){
+            port=http.port();var h=new HashMap<String,String>();h.put("Host","127.0.0.1:"+port);h.put("Origin","http://127.0.0.1:"+port);
+            var state=request("GET","/admin/api/setup",null,h);
+            check(state.status==200&&state.body.contains("true")&&!state.body.contains(code),"first-run state is public but never reveals the code");
+            var fields=new HashMap<String,Object>(Map.of("username","FirstAdmin","password",PASSWORD,"passwordConfirmation",PASSWORD,"setupCode",expiredCode));
+            check(request("POST","/admin/api/setup",form(fields),h).status==403,"old setup capability rejected");
+            fields.put("setupCode",code);var cross=new HashMap<>(h);cross.put("Origin","http://evil.example");
+            check(request("POST","/admin/api/setup",form(fields),cross).status==403,"setup requires same Origin");
+            fields.put("passwordConfirmation","mismatch");check(request("POST","/admin/api/setup",form(fields),h).status==400,"setup password confirmation");fields.put("passwordConfirmation",PASSWORD);
+            var created=request("POST","/admin/api/setup",form(fields),h);check(created.status==200,"browser creates first administrator");
+            check(identities.list().size()==1&&identities.list().getFirst().role()==WebIdentityStore.Role.ADMINISTRATOR,"first-run role fixed on backend");
+            h.put("Cookie",created.headers.get("set-cookie").split(";")[0]);h.put("X-CSRF-Token",(String)((Map<?,?>)Json.parse(created.body)).get("csrf"));
+            check(request("GET","/admin/api/session",null,h).status==200,"first-run account signs in after commit");
+            check(request("POST","/admin/api/setup",form(fields),h).status==403&&!security.setupRequired(),"setup is one-time");
+            var users=request("GET","/admin/api/webui-users",null,h);var row=(Map<?,?>)((List<?>)Json.parse(users.body)).getFirst();
+            check(row.get("revision") instanceof String&&!users.body.contains("verifier")&&!users.body.contains("salt"),"exact revisions without credential disclosure");
+            var create=Map.of("username","WebViewer","password",PASSWORD,"passwordConfirmation",PASSWORD,"role","VIEWER","confirmation","webui-user-create");
+            check(request("POST","/admin/api/webui-user-create",form(create),h).status==200,"administrator creates more WebUI accounts");
+            check(request("POST","/admin/api/webui-user-delete",form(Map.of("username","FirstAdmin","revision",row.get("revision"),"nameConfirmation","FirstAdmin","confirmation","webui-user-delete")),h).status==409,"cannot revoke last administrator remotely");
+            var viewer=request("POST","/admin/api/login",form(Map.of("username","WebViewer","password",PASSWORD)),Map.of("Host","127.0.0.1:"+port,"Origin","http://127.0.0.1:"+port));
+            var vh=new HashMap<>(h);vh.put("Cookie",viewer.headers.get("set-cookie").split(";")[0]);vh.put("X-CSRF-Token",(String)((Map<?,?>)Json.parse(viewer.body)).get("csrf"));
+            check(request("GET","/admin/api/webui-users",null,vh).status==403&&request("POST","/admin/api/webui-user-create",form(create),vh).status==403,"viewer cannot inspect or manage WebUI identities");
+            identities.revoke("FirstAdmin");identities.revoke("WebViewer");
+            check(!security.setupRequired()&&!new WebSecurity(settings,identities,data).setupRequired(),"empty accounts after revocation never reopen first-run setup");
+        }
+        cookie=null;csrf=null;
+    }
     private static void httpMode(Path root,Path news,Path frontend,WebIdentityStore identities,AdminService service)throws Exception {
         String origin="http://192.168.1.50:8080";
         Path noProxyKey=root.resolve("http-without-proxy-key");
@@ -115,6 +150,13 @@ public final class WebUiTest {
             var authenticated=new HashMap<>(headers);authenticated.put("Cookie",set.split(";")[0]);
             String csrf=(String)((Map<?,?>)Json.parse(login.body)).get("csrf");
             check(request("GET","/admin/api/status",null,authenticated).status==200,"HTTP session round trip");
+            var quoted=new HashMap<>(authenticated);String pair=authenticated.get("Cookie");int equals=pair.indexOf('=');
+            quoted.put("Cookie",pair.substring(0,equals+1)+"\""+pair.substring(equals+1)+"\"");
+            check(request("GET","/admin/api/status",null,quoted).status==200,"quoted session cookie accepted");
+            quoted.put("Cookie","$Version=\"1\"\r\nCookie: "+quoted.get("Cookie"));
+            check(request("GET","/admin/api/status",null,quoted).status==200,"split Cookie headers preserve the unique session");
+            var duplicate=new HashMap<>(authenticated);duplicate.put("Cookie",pair+"\r\nCookie: "+pair);
+            check(request("GET","/admin/api/status",null,duplicate).status==401,"duplicate session cookies remain rejected");
             check(request("POST","/admin/api/logout","",authenticated).status==403,"HTTP session still requires CSRF");
             var wrongName=new HashMap<>(authenticated);wrongName.put("Cookie",authenticated.get("Cookie").replace("tortodrone-http=","__Secure-tortodrone="));
             check(request("GET","/admin/api/status",null,wrongName).status==401,"HTTP and HTTPS cookie names remain separate");

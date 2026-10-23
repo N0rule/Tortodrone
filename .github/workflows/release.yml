@@ -61,7 +61,6 @@ jobs:
           mkdir -p "$root" dist
 
           test -s build/tortodrone.jar
-          test -s build/tortodrone-admin.jar
           test -s build/webui/index.html
           test -s build/webui/assets/app.js
           test -s build/webui/assets/api.js
@@ -73,6 +72,8 @@ jobs:
 
           # Include every file and directory produced under build/.
           cp -a build/. "$root/"
+          # Exclude obsolete generated artifacts from an older checkout.
+          rm -f "$root/tortodrone-admin.jar"
           cp -a docs "$root/docs"
           cp VERSION README.md "$root/"
 

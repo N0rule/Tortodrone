@@ -36,6 +36,18 @@ public final class AdminHandler implements HttpHandler {
         if(!path.startsWith("/admin/api/")) {if(post){send(e,405,Map.of("error","Method not allowed"));return;}staticFile(e,path);return;}
         String route=path.substring("/admin/api/".length());
         var p=parameters(post?body(e):Objects.requireNonNullElse(e.getRequestURI().getRawQuery(),""));
+        if(route.equals("setup")&&!post){send(e,200,Map.of("required",security.setupRequired()));return;}
+        if(route.equals("setup")&&post){
+            if(!security.allowLogin()||!logins.tryAcquire()){send(e,429,Map.of("error","Setup rate limit; wait one minute"));return;}
+            try {
+                if(!p.text("password").equals(p.text("passwordConfirmation")))throw new IllegalArgumentException("Passwords do not match");
+                char[] password=p.text("password").toCharArray();
+                WebSecurity.Session created;
+                try{created=security.setup(p.text("setupCode"),p.text("username"),password);}finally{Arrays.fill(password,'\0');}
+                if(created==null){identities.audit("anonymous","setup","","denied");send(e,403,Map.of("error","Setup code is incorrect or first-run setup has already completed"));return;}
+                security.cookie(e,created);send(e,200,session(created));return;
+            }finally{logins.release();}
+        }
         if(route.equals("login")&&post){
             if(!security.allowLogin()||!logins.tryAcquire()){send(e,429,Map.of("error","Login rate limit; wait one minute"));return;}
             try{
@@ -53,15 +65,45 @@ public final class AdminHandler implements HttpHandler {
         if(route.equals("logout")&&post){security.logout(s);security.cookie(e,null);send(e,200,Map.of("ok",true));return;}
         var permission=AdminService.permission(route,post);
         if(s.identity().role().ordinal()<permission.ordinal()){identities.audit(s.identity().username(),route,"","denied");send(e,403,Map.of("error","Role does not permit this operation"));return;}
-        if(!post){send(e,200,route.equals("audit")?identities.audit():service.read(route,p));return;}
+        if(!post){
+            Object result=switch(route){
+                case "audit"->identities.audit();
+                // Preserve all 64 revision bits across the JavaScript JSON boundary.
+                case "webui-users"->identities.list().stream().map(id->Map.of("username",id.username(),"role",id.role(),"revision",Long.toString(id.revision()))).toList();
+                default->service.read(route,p);
+            };
+            send(e,200,result);return;
+        }
         String target=p.optional("username")+":"+p.optional("knight")+":"+p.optional("id");
         identities.audit(s.identity().username(),route,target,"requested");
         Object result;
-        try{result=service.write(route,p);}catch(Exception failure){identities.audit(s.identity().username(),route,target,"refused");throw failure;}
+        try{result=route.startsWith("webui-user-")?identityChange(route,p,s.identity()):service.write(route,p);}
+        catch(Exception failure){identities.audit(s.identity().username(),route,target,"refused");throw failure;}
         try{identities.audit(s.identity().username(),route,target,"committed");}
         catch(IOException auditFailure){send(e,503,Map.of("error","Action completed but final audit recording failed. Refresh before retrying."));return;}
         send(e,200,result);
     }
+    private Object identityChange(String route,AdminService.Input p,WebIdentityStore.Identity actor)throws IOException {
+        if(!p.text("confirmation").equals(route))throw new IllegalArgumentException("Confirmation did not match");
+        switch(route){
+            case "webui-user-create","webui-user-password"->{
+                if(!p.text("password").equals(p.text("passwordConfirmation")))throw new IllegalArgumentException("Passwords do not match");
+                char[] password=p.text("password").toCharArray();
+                try {
+                    if(route.equals("webui-user-create"))identities.create(actor,p.text("username"),password,WebIdentityStore.Role.valueOf(p.text("role")));
+                    else identities.password(actor,p.text("username"),password,positiveRevision(p));
+                }finally{Arrays.fill(password,'\0');}
+            }
+            case "webui-user-role"->identities.role(actor,p.text("username"),WebIdentityStore.Role.valueOf(p.text("role")),positiveRevision(p));
+            case "webui-user-delete"->{
+                if(!p.text("username").equals(p.text("nameConfirmation")))throw new IllegalArgumentException("Username confirmation required");
+                identities.remove(actor,p.text("username"),positiveRevision(p));
+            }
+            default->throw new IllegalArgumentException("Unknown WebUI account action");
+        }
+        return Map.of("ok",true);
+    }
+    private static long positiveRevision(AdminService.Input p){long revision=p.number("revision");if(revision<1)throw new IllegalArgumentException("Invalid revision");return revision;}
     private static Object session(WebSecurity.Session s){return Map.of("username",s.identity().username(),"role",s.identity().role(),"csrf",s.csrf(),"expires",s.expires());}
     private static String body(HttpExchange e)throws IOException {
         if(!"application/x-www-form-urlencoded;charset=UTF-8".equalsIgnoreCase(e.getRequestHeaders().getFirst("Content-Type")))throw new IllegalArgumentException();

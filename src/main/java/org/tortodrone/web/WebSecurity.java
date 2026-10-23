@@ -18,6 +18,7 @@ public final class WebSecurity {
     private final String proxySecret;
     private final Map<String,Session> sessions=new HashMap<>();
     private final java.util.function.LongSupplier clock;
+    private String setupCode;
     private long loginWindow;
     private int loginAttempts;
     public WebSecurity(WebSettings settings,WebIdentityStore identities,Path data)throws IOException {
@@ -25,11 +26,14 @@ public final class WebSecurity {
     }
     WebSecurity(WebSettings settings,WebIdentityStore identities,Path data,java.util.function.LongSupplier clock)throws IOException {
         this.settings=settings;this.identities=identities;this.clock=clock;
+        setupCode=identities.bootstrapAvailable()?WebIdentityStore.token():null;
         if(settings.directHttp()){proxySecret=null;return;}
-        Path secret=data.resolve("webui-proxy.key");ContentFiles.regular(secret);
+        Path secret=data.resolve("webui-proxy.key");
+        if(Files.notExists(secret,LinkOption.NOFOLLOW_LINKS))try{WebIdentityStore.createProxyKey(secret);}catch(FileAlreadyExistsException raced){/* Validate the winner below. */}
+        ContentFiles.regular(secret);
         if(Files.size(secret)>128)throw new IOException("Invalid proxy secret file");
         proxySecret=Files.readString(secret).strip();
-        if(!proxySecret.matches("[A-Za-z0-9_-]{43}"))throw new IOException("Invalid WebUI proxy secret; use local --webui-proxy-key");
+        if(!proxySecret.matches("[A-Za-z0-9_-]{43}"))throw new IOException("Invalid WebUI proxy secret file");
     }
     public boolean trusted(HttpExchange e){
         var h=e.getRequestHeaders();
@@ -67,13 +71,31 @@ public final class WebSecurity {
     }
     public synchronized Session login(String username,char[] password)throws IOException {
         var id=identities.authenticate(username,password);if(id==null)return null;
+        return newSession(id);
+    }
+    public synchronized boolean setupRequired()throws IOException {return setupCode!=null&&identities.bootstrapAvailable();}
+    /** Local console only. Never serialize this capability or write it to operational logs. */
+    public synchronized String setupCode()throws IOException {return setupRequired()?setupCode:null;}
+    public synchronized Session setup(String code,String username,char[] password)throws IOException {
+        if(!setupRequired()||!equal(setupCode,code))return null;
+        var identity=identities.bootstrap(username,password);
+        setupCode=null;
+        return newSession(identity);
+    }
+    private Session newSession(WebIdentityStore.Identity id)throws IOException {
         prune();if(sessions.size()>=256)throw new IOException("Session limit reached");
         long now=clock.getAsLong();var s=new Session(WebIdentityStore.token(),WebIdentityStore.token(),id,now+8*60*60_000,now);sessions.put(s.token(),s);return s;
     }
     public synchronized Session session(HttpExchange e)throws IOException {
-        prune();String cookie=single(e,"Cookie");if(cookie==null)return null;
+        prune();var cookies=e.getRequestHeaders().get("Cookie");if(cookies==null)return null;
         String prefix=cookieName()+"=";
-        String token=null;for(String part:cookie.split(";")){String p=part.strip();if(p.startsWith(prefix)){if(token!=null)return null;token=p.substring(prefix.length());}}
+        String token=null;
+        for(String cookie:cookies)for(String part:cookie.split(";")){
+            String p=part.strip();if(!p.startsWith(prefix))continue;
+            if(token!=null)return null;
+            token=p.substring(prefix.length());
+            if(token.length()>=2&&token.startsWith("\"")&&token.endsWith("\""))token=token.substring(1,token.length()-1);
+        }
         var s=sessions.get(token);if(s==null)return null;
         if(!identities.current(s.identity())){sessions.remove(token);return null;}
         var updated=new Session(s.token(),s.csrf(),s.identity(),s.expires(),clock.getAsLong());sessions.put(token,updated);return updated;

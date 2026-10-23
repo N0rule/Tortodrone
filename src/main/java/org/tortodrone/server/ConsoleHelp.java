@@ -16,7 +16,14 @@ final class ConsoleHelp {
         new Entry("inspect", "", "inspect <knight-name>", "Inspect persistent identity, balances and inventory count.", "inspect Jane"),
         new Entry("grant", "", "grant <knight-name> <crowns|energy> <signed-amount>", "Add/subtract atomically; insufficient funds and overflow are refused.", "grant Jane crowns -25"),
         new Entry("set", "", "set <knight-name> <crowns|energy> <balance>", "Set an absolute balance atomically, from 0 to 2147483647.", "set Jane crowns 5000"),
-        new Entry("stop", "", "stop", "Shut down the server cleanly.", "stop"),
+        new Entry("stop", "", "stop", "Stop the game listener; without WebUI, end the process.", "stop"),
+        new Entry("start", "", "start", "Start the stopped game listener.", "start"),
+        new Entry("restart", "", "restart", "Restart the game listener and disconnect its clients.", "restart"),
+        new Entry("shutdown", "", "shutdown", "Shut down the process after confirmation.", "shutdown"),
+        new Entry("webui", "list", "webui list", "List separate WebUI accounts and roles.", "webui list"),
+        new Entry("webui", "user", "webui user <username> <VIEWER|MODERATOR|ADMINISTRATOR>", "Create/recover a WebUI account; passwords are prompted.", "webui user operator ADMINISTRATOR"),
+        new Entry("webui", "password", "webui password <username>", "Reset a WebUI password and revoke sessions.", "webui password operator"),
+        new Entry("webui", "revoke", "webui revoke <username>", "Revoke WebUI access after username confirmation.", "webui revoke operator"),
         new Entry("account", "list", "account list", "List accounts and Game Master roles.", "ac list"),
         new Entry("account", "create", "account create <username> [gm]", "Create an account; enter its password at the prompts.", "account create Alice"),
         new Entry("account", "password", "account password <username>", "Change a password; existing sessions disconnect.", "ac password Alice"),
@@ -49,6 +56,8 @@ final class ConsoleHelp {
         lines.add("  help [command] [action]  Show detailed usage and an example.");
         lines.add("  status | stop           Show status or shut down cleanly.");
         lines.add("  account (alias: ac)     List, create, check, reset or delete accounts; manage GM roles.");
+        lines.add("  webui                   List, create, recover or revoke WebUI accounts.");
+        lines.add("  start | restart | shutdown   Control the game listener or confirm full shutdown.");
         lines.add("  gm                      Toggle or set an account's Game Master role.");
         lines.add("  knight                  List, inspect or delete saved knights.");
         lines.add("  players | session | inspect   Inspect live connections and saved knights.");

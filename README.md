@@ -4,7 +4,7 @@
 
 # Tortodrone
 
-**A Java 25 clean-room Spiral Knights server emulator and local account manager for the unmodified stock client.**
+**A Java 25 clean-room Spiral Knights server emulator with WebUI and console administration for the unmodified stock client.**
 
 Tortodrone is under active development. It is **not** a complete vanilla server. Normal username/password accounts work; Steam and guest login do not.
 
@@ -20,22 +20,23 @@ Install **JDK 25** and make sure `java` is on `PATH`. The Gradle 9.5.1 wrapper i
 
 `build` creates a working distribution without running tests. On Windows, use `.\gradlew.bat build`.
 
-### 2. Create an account
-
-```sh
-java -jar build/tortodrone-admin.jar --create-account Alice
-```
-
-### 3. Start the server
+### 2. Start the server
 
 ```sh
 java -jar build/tortodrone.jar
-
-# Headless hosting:
-java -jar build/tortodrone.jar --nogui
 ```
 
-The CLI creates normal username/password accounts. Hosting is headless. Optional HTTPS administration shares News port 8080 and replaces both desktop windows; see [secure WebUI setup](docs/operations.md#secure-webui-setup).
+Hosting is always headless; `--nogui` remains accepted. Optional WebUI administration shares the News HTTP listener; see [WebUI setup](docs/operations.md#secure-webui-setup). Its first-run page creates your administrator account using a one-time code shown in the server console. Additional WebUI accounts are managed inside **WebUI access**.
+
+### 3. Create a player account
+
+In the running server console:
+
+```text
+account create Alice
+```
+
+Enter and confirm the password at the prompts, or create a player account in the WebUI. Game accounts are separate from WebUI administrator accounts.
 
 ## What works today
 
@@ -57,9 +58,8 @@ Actual supported scope is determined by source and tests, not by how much data e
 ## Everyday Gradle tasks
 
 ```sh
-./gradlew build          # both JARs + prepared content; no tests
+./gradlew build          # server JAR, WebUI + prepared content; no tests
 ./gradlew buildServer    # server JAR + unified content
-./gradlew buildAdmin     # account-manager JAR
 ./gradlew testUnit       # all standalone unit tests
 ./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest  # focused
 ./gradlew testIntegration # packaged integration tests
@@ -80,14 +80,14 @@ Place these **beside one another**:
 ```text
 Tortodrone/
   tortodrone.jar
-  tortodrone-admin.jar
   config/                # server.yml and combat.yml
   content/               # maps/, items/, town/, shared/, _internal/
+  webui/                 # compiled frontend
   plugins/README.md      # future API placeholder
   data/                  # keep across updates
 ```
 
-The build prepares `build/{config,content,plugins}/` beside both JARs. Deploy these complete directories. Release archives include defaults and omit private `data/`.
+The build prepares `build/{config,content,plugins,webui}/` beside the server JAR. Deploy these complete directories. Release archives include defaults and omit private `data/`.
 
 Existing schemas 9–15 require an explicit offline economy upgrade candidate; see [Upgrading](docs/content.md#upgrading). Keep the original Depot YAML until export.
 

@@ -28,7 +28,7 @@ public final class Server {
         try {
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] | --version | --help");
-                System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for local account and WebUI credential management.");
+                System.out.println("Type help in the server terminal for commands. Manage accounts through WebUI or the server console.");
                 return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
@@ -56,18 +56,25 @@ public final class Server {
                 ServerControl control=new ServerControl(version(),dataDirectory);
                 var content=org.tortodrone.resources.ContentManager.load(directory,settings);
                 try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());
-                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content):null) {
+                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content):null;
+                    var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
                     com.sun.net.httpserver.HttpHandler handler=null;
+                    String setupCode=null;
                     if(settings.webui().enabled()) {
                         var identities=new org.tortodrone.web.WebIdentityStore(dataDirectory);
                         var security=new org.tortodrone.web.WebSecurity(settings.webui(),identities,dataDirectory);
+                        setupCode=security.setupCode();
+                        if(!settings.webui().directHttp())log.info("WebUI proxy secret file: "+dataDirectory.resolve("webui-proxy.key"));
                         handler=new org.tortodrone.web.AdminHandler(security,identities,adminService,directory.resolve("webui"));
                     }
+                    // Finish identity schema initialization before the console can issue recovery commands.
+                    console.start();
+                    if(setupCode!=null)log.localNotice("WebUI first-run setup code: "+setupCode);
                     try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
                         String webAddress=settings.webui().automaticHost()?"http://<server-ip>:"+http.port():settings.webui().publicUrl();
                         log.info("Shared HTTP listener: "+http.port()+"; WebUI "+(handler==null?"disabled":webAddress+"/admin/"));
                         while(control.awaitStart(settings.webui().enabled())) {
-                            try {run(settings,dataDirectory,log,control,false,content);content=null;}
+                            try {run(settings,dataDirectory,log,control,console,content);content=null;}
                             catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!settings.webui().enabled())throw failed;}
                             finally{control.stopped();}
                         }
@@ -94,7 +101,7 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop,org.tortodrone.resources.ContentRegistry initialContent) throws Exception {
+    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,ServerConsole console,org.tortodrone.resources.ContentRegistry initialContent) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
         var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
@@ -125,19 +132,18 @@ public final class Server {
                 log.debug("Public key: " + keys.resolve("public.txt"));
                 log.debug("Account database: " + accounts.databaseFile());
                 control.resources(scenes,catalog.entries().size());
-                accept(listener,key,log,accounts,settings.maxClients(),control,desktop,startup);
+                accept(listener,key,log,accounts,settings.maxClients(),control,console,startup);
             }
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts,int maxClients,ServerControl control,boolean desktop,long startup)
+            AccountStore accounts,int maxClients,ServerControl control,ServerConsole console,long startup)
             throws IOException {
         ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
-        ServerConsole console = new ServerConsole(accounts,log,control::stop,()->!listener.isClosed(),control,!desktop);
         control.listening(listener,console);
-        if(listener.isClosed()){console.close();log.info("Server stopped; startup cancelled.");return;}
+        if(listener.isClosed()){log.info("Server stopped; startup cancelled.");return;}
         Thread shutdown = new Thread(() -> {
             console.close();
             try { listener.close(); } catch (IOException ignored) { }
@@ -154,7 +160,6 @@ public final class Server {
             log.info("Done! Listening on " + listener.getInetAddress().getHostAddress() + ":" + listener.getLocalPort() + " (TCP)");
             log.info("Server ready ("+String.format(java.util.Locale.ROOT,"%.3fs",(System.nanoTime()-startup)/1e9)+")");
             log.info("Type help for server commands.");
-            console.start();
             while (!listener.isClosed()) {
                 Socket client;
                 try {
@@ -180,7 +185,6 @@ public final class Server {
                 });
             }
         } finally {
-            console.close();
             clients.close();
             try {
                 Runtime.getRuntime().removeShutdownHook(shutdown);

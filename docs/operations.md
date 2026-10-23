@@ -4,13 +4,13 @@ This is the operator reference for the **current implementation**, not a promise
 
 ## Deployment and lifecycle
 
-Install Java 25. Run `java -jar tortodrone-admin.jar --create-account Alice` to create accounts, then `java -jar tortodrone.jar` to host; deploy both JARs beside `config/`, `content/` and `plugins/`. Server settings live in `config/server.yml`. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/{config,content,plugins,webui}/`.
+Install Java 25 and run `java -jar tortodrone.jar`. Create player accounts with `account create Alice` in its console or through the WebUI. Deploy the single JAR beside `config/`, `content/`, `plugins/` and `webui/`. Server settings live in `config/server.yml`. Persistent state stays in **`data/` beside the JAR**, regardless of the current working directory. `./gradlew build` produces `build/tortodrone.jar` and `build/{config,content,plugins,webui}/`; there is no separate admin application.
 
 - Hosting is always headless; `--nogui` remains accepted and `--gui` is rejected.
 - `--config path/to/server.yml` selects settings without moving `data/`. Restart the process to apply settings changes.
 - One shared HTTP listener uses `webui/content_url-port` (8080 by default; legacy `news-port` is still accepted). `/news/` is public; `/admin/` and `/admin/api/` exist only when enabled.
 - With WebUI enabled, stopping the game listener disconnects its clients but keeps HTTP available for restart. Full process shutdown is a separate confirmed WebUI action. With WebUI disabled, terminal `stop` ends the process.
-- The admin JAR remains a local CLI. Use `--help` or `--data /path/to/server/data` before a command; it never starts another HTTP service.
+- The server console remains available while the game listener is stopped. Use `start` or `restart` for the listener, and `shutdown` plus confirmation to end the process. WebUI recovery commands work in either listener state.
 
 Edit `config/server.yml` while stopped:
 
@@ -34,11 +34,11 @@ startup-map: haven
 
 The default `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Explicit `webui-tls-mode: http` permits direct HTTP access for local or LAN testing. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
 
-Create credentials locally (passwords are prompted, never command arguments):
+When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, a 14–128 character password twice, and the one-time setup code printed in the local server console. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
 
-```sh
-java -jar tortodrone-admin.jar --webui-user operator ADMINISTRATOR
-```
+Setup creates exactly one administrator, signs that account in, and permanently closes public registration. Competing setup submissions cannot create a second administrator. Existing WebUI identities show the ordinary sign-in page. Revoking every account does not reopen setup; recover access through the local console instead.
+
+Administrators create additional accounts in **WebUI access**, where they can also reset passwords, change roles and revoke access. Account changes require the selected revision and revoke affected sessions. The WebUI refuses removal or demotion of the last administrator.
 
 For direct local/LAN access with automatic server addresses:
 
@@ -52,11 +52,7 @@ webui-tls-mode: http
 
 Restart the server process and open `http://YOUR_SERVER_IP:8080/admin/` (for example `http://192.168.1.50:8080/admin/`), or `http://localhost:8080/admin/` on the server PC. Here `http://0.0.0.0` is an automatic-address configuration value, not a browser destination: Host must match the connection's concrete local IP and actual listening port; localhost is also accepted for loopback connections. Origin must match that validated Host. Arbitrary DNS hostnames are rejected in automatic mode. Set a concrete `webui-public-url`, such as `http://192.168.1.50`, if you want one fixed allowed address. No domain, certificate, proxy or proxy key is needed. HTTP does not encrypt passwords or session traffic; choose it only on a network you trust. If a browser previously received HSTS for the same hostname, use an IP address or clear that hostname's HSTS setting before testing HTTP.
 
-For the default HTTPS proxy mode, also create a proxy key:
-
-```sh
-java -jar tortodrone-admin.jar --webui-proxy-key
-```
+For the default HTTPS proxy mode, the server creates `data/webui-proxy.key` automatically if it is missing and prints its path. Existing keys are preserved.
 
 Protect `data/webui-proxy.key` and the proxy configuration with owner/service-only filesystem permissions; on Windows set equivalent ACLs. Copy that secret into the proxy's `X-Tortodrone-Proxy` header configuration. Do not place it in frontend assets or client configuration. The server validates the loopback peer, proxy secret, public Host, HTTPS assertion and request Origin. The proxy must overwrite incoming authentication/forwarding headers, preserve Origin, and clear unsupported forwarded headers.
 
@@ -80,11 +76,24 @@ location /news/ {
 
 Then set `webui-enabled: true` and `webui-public-url: https://admin.example.org`, restart the process, and visit `https://admin.example.org/admin/`. Public `/news/` remains available directly on 8080 without login; proxy mode rejects direct administrative requests. The reverse proxy is external infrastructure, not another Tortodrone listener. Deploy the generated `webui/` directory beside the server JAR; no Node runtime, CDN or client installation is needed.
 
-WebUI identities are independent of game accounts and GM status. `VIEWER` can monitor status, sessions and logs; `MODERATOR` can also inspect accounts/knights and kick sessions; `ADMINISTRATOR` can mutate accounts/economy/content and control lifecycle. Re-run `--webui-user NAME ROLE` to change credentials/role and revoke existing sessions, or use `--webui-revoke NAME` to remove access. There are no default credentials. Passwords use independently salted PBKDF2-HMAC-SHA256 with 600,000 iterations; sessions expire after 30 minutes idle or eight hours absolute and are revoked on logout, identity changes or process restart.
+WebUI identities are independent of game accounts and GM status. `VIEWER` can monitor status, sessions and logs; `MODERATOR` can also inspect accounts/knights and kick sessions; `ADMINISTRATOR` can mutate accounts/economy/content and control lifecycle. Use **WebUI access** for normal account management, or the recovery commands below from the local server console. There are no default credentials. Passwords use independently salted PBKDF2-HMAC-SHA256 with 600,000 iterations; sessions expire after 30 minutes idle or eight hours absolute and are revoked on logout, identity changes or process restart.
 
 The browser uses HttpOnly SameSite cookies and a session-bound CSRF token. HTTPS proxy mode adds the Secure cookie flag and HSTS; direct HTTP uses a separate cookie name without the Secure flag so LAN browsers can send it over HTTP. APIs enforce role, Origin, Host, size and concurrency limits. Login is globally limited to ten attempts per minute; HTTP request deadlines bound stalled requests. Privileged action attempts/outcomes are stored in `data/webui.sqlite`, separately from game data. A requested action without a final outcome indicates interruption and must be inspected before retrying. Audit failure prevents starting an action; the game services keep their own transactional ledgers. Do not delete either database to clear logs.
 
 The UI includes monitoring charts, players/scenes, accounts and knights, inventory/modifiers/accessories, binding/expiry on grants, Depot offers/promotions/effective catalogue, auction escrow/deliveries, searchable logs/export, content validation and News preview/editing. News editing only replaces validated `news.yml`, using existing images; listener restart publishes changed pack selection. The native protocol selects a random pack, so array order is preserved without promising a rotation order. Item support remains constrained by the authoritative catalogue and services.
+
+### Console recovery for WebUI accounts
+
+These are commands entered in the running server console; passwords are prompted and never command arguments:
+
+```text
+webui list
+webui user operator ADMINISTRATOR
+webui password operator
+webui revoke operator
+```
+
+`webui user` creates or recovers an account with the chosen `VIEWER`, `MODERATOR` or `ADMINISTRATOR` role. `webui password` resets an existing account's password. Both revoke previous sessions. `webui revoke` requires exact username confirmation; the local console can revoke even the final administrator, so it can also recover deliberately locked-out deployments. Identity changes and their audit records commit atomically in `data/webui.sqlite`; first-run closure survives restart and account revocation.
 
 ## Connecting the unchanged client
 
@@ -110,13 +119,13 @@ Run `help` or `help account create` in the server terminal for exact current syn
 | Knights | `knight list Alice`, `knight info Alice Jane`, `knight delete Alice Jane` |
 | Balances | `grant Jane crowns 100`, `set Jane energy 500` |
 | Item lookup/grant | `items Calibur`, `items info Weapon/Sword/Calibur`, `giveitem Jane 2 Weapon/Sword/Calibur` |
-| Shutdown | `stop` |
+| Listener / process lifecycle | `start`, `stop`, `restart`, `shutdown` (confirmation required) |
 
 Account create/password and destructive deletion require interactive password/confirmation input. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
 
-The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless account administration use `java -jar tortodrone-admin.jar --help`; `--data` must appear before its command. Examples: `--create-account Alice` and `--set-gm Alice true`.
+The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless administration, enter `help` or `help account create` in the running server console. Game accounts remain separate from WebUI accounts.
 
-A saved GM can use the original client's F3 dashboard **ItemCreator** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the account manager, `tortodrone-admin.jar` or the server console.
+A saved GM can use the original client's F3 dashboard **ItemCreator** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the WebUI or the server console.
 
 ## Data safety, updates and release builds
 

@@ -56,9 +56,7 @@ fun ShadowJar.executableJar(filename: String, entryPoint: String) {
 val serverJar = tasks.named<ShadowJar>("shadowJar") {
     executableJar("tortodrone.jar", "org.tortodrone.server.Server")
 }
-val adminJar = tasks.register<ShadowJar>("adminJar") {
-    executableJar("tortodrone-admin.jar", "org.tortodrone.admin.AdminApplication")
-}
+
 
 // Compile the existing Java preparation tool and its standalone regression together.
 val buildTools = sourceSets.create("buildTools") {
@@ -121,16 +119,11 @@ val buildServer = tasks.register("buildServer") {
     description = "Build the executable server JAR and prepare unified content."
     dependsOn(serverJar, prepareContent, buildWebui)
 }
-val buildAdmin = tasks.register("buildAdmin") {
-    group = "build"
-    description = "Build the executable local admin JAR."
-    dependsOn(adminJar, prepareContent)
-}
-tasks.assemble { dependsOn(buildServer, buildAdmin) }
+tasks.assemble { dependsOn(buildServer) }
 // Keep the conventional build task focused on deliverables. Regression programs are
 // explicit opt-in tasks, so `build` must not pull in test/check dependencies.
 tasks.named("build") {
-    description = "Assemble both JARs and prepared content; no tests."
+    description = "Assemble the server, WebUI and prepared content; no tests."
     setDependsOn(listOf(tasks.assemble))
 }
 fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, prerequisite: TaskProvider<Task>, workingDirectory: java.io.File) =
@@ -146,7 +139,6 @@ fun packagedRun(name: String, jar: TaskProvider<ShadowJar>, entryPoint: String, 
         standardInput = System.`in`
     }
 packagedRun("runServer", serverJar, "org.tortodrone.server.Server", buildServer, publicOutput.asFile)
-packagedRun("runAdmin", adminJar, "org.tortodrone.admin.AdminApplication", buildAdmin, projectDir)
 
 // Bound regression JVMs, whose RSA/PBKDF2 work otherwise crowds out local socket deadlines.
 // A shared service also enforces this limit when the configuration cache is reused.
@@ -196,10 +188,9 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
     args(selectedUnitPrograms)
 }
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
-val adminPath = publicOutput.file("tortodrone-admin.jar").asFile.absolutePath
 val integrationPrograms = listOf(
     standalone("integrationServer", "org.tortodrone.integration.ServerIntegrationTest", listOf(serverPath)),
-    standalone("integrationAdmin", "org.tortodrone.integration.AdminIntegrationTest", listOf(serverPath, adminPath)).apply { configure { dependsOn(buildAdmin) } },
+    standalone("integrationWebUi", "org.tortodrone.integration.WebUiSetupIntegrationTest", listOf(serverPath)),
     standalone("integrationConsole", "org.tortodrone.integration.ConsoleIntegrationTest", listOf(serverPath)),
     standalone("integrationMaps", "org.tortodrone.integration.MapPreparationIntegrationTest").apply { configure {
         dependsOn(tasks.named("buildToolsClasses"))
@@ -239,7 +230,7 @@ tasks.register("testAll") {
 tasks.register<JavaExec>("benchmark") {
     group = "benchmark"
     description = "Run the standalone load benchmark; pass options with --args."
-    dependsOn(buildServer, buildAdmin, tasks.testClasses)
+    dependsOn(buildServer, tasks.testClasses)
     javaLauncher.set(launcher25)
     classpath = files(serverJar.flatMap { it.archiveFile }, sourceSets.test.get().output)
     mainClass.set("org.tortodrone.benchmark.LoadBenchmark")
@@ -258,7 +249,7 @@ tasks.register<JavaExec>("benchmarkScenes") {
 }
 
 tasks.clean {
-    delete(serverJar.flatMap { it.archiveFile }, adminJar.flatMap { it.archiveFile })
+    delete(serverJar.flatMap { it.archiveFile }, publicOutput.file("tortodrone-admin.jar"))
     delete(publicOutput.file("tortodrone.jar.tmp"), publicOutput.file("tortodrone-admin.jar.tmp"))
     // Preserve runtime data, versioned content, dependencies and unknown files.
     delete(publicOutput.dir(".build"))
@@ -276,11 +267,11 @@ tasks.wrapper {
 // Explicit portable packaging includes deliverables only, never runtime databases or keys.
 tasks.register<Zip>("portableZip") {
     group = "distribution"
-    dependsOn(buildServer, buildAdmin)
+    dependsOn(buildServer)
     archiveFileName.set("Tortodrone-v${project.version}.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
     from(publicOutput) {
-        include("tortodrone.jar", "tortodrone-admin.jar", "webui/**", "config/**", "content/**", "plugins/**")
+        include("tortodrone.jar", "webui/**", "config/**", "content/**", "plugins/**")
         exclude("**/*.key", "**/*.pk8", "**/*.pem", "**/*.db*", "**/*.sqlite*")
     }
     from("README.md", "VERSION")
