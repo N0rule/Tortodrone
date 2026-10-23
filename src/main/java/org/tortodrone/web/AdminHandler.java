@@ -79,7 +79,7 @@ public final class AdminHandler implements HttpHandler {
             };
             send(e,200,result);return;
         }
-        String target=p.optional("username")+":"+p.optional("knight")+":"+p.optional("id");
+        String target=route.equals("console")?AdminConsole.auditTarget(p.optional("command")):p.optional("username")+":"+p.optional("knight")+":"+p.optional("id");
         identities.audit(s.identity().username(),route,target,"requested");
         Object result;
         try{result=route.startsWith("webui-user-")?identityChange(route,p,s.identity()):service.write(route,p);}

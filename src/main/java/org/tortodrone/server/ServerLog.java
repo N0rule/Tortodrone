@@ -25,7 +25,7 @@ public final class ServerLog implements AutoCloseable {
 
     synchronized void setConsoleOutput(Consumer<String> output) { consoleOutput=output; }
     /** Local-only setup notices bypass log files and WebUI observers. */
-    synchronized void localNotice(String message) {if(consoleOutput==null)System.out.println(safe(message));else consoleOutput.accept(safe(message));}
+    synchronized void localNotice(String message) {String line=format("INFO",Thread.currentThread().getName(),safe(message));if(consoleOutput==null)System.out.println(line);else consoleOutput.accept(line);}
     public AutoCloseable subscribe(Consumer<Event> observer) { observers.add(observer);return ()->observers.remove(observer); }
     public Event recentFailure() { return recentFailure; }
     public Path directory() { return directory; }

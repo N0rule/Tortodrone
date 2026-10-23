@@ -36,7 +36,8 @@ public final class ServerSettingsTest {
             var loopback=java.net.InetAddress.ofLiteral("127.0.0.1");
             check(defaults.webui().browserAddresses(loopback,8080).equals(java.util.List.of("http://127.0.0.1:8080")),"browser URL uses concrete bind address and nonstandard port");
             check(defaults.webui().browserAddresses(loopback,80).equals(java.util.List.of("http://127.0.0.1")),"browser URL omits standard HTTP port");
-            check(defaults.webui().browserAddresses(java.net.InetAddress.ofLiteral("0.0.0.0"),8080).contains("http://127.0.0.1:8080"),"wildcard binding advertises a usable loopback URL");
+            var addresses=defaults.webui().browserAddresses(java.net.InetAddress.ofLiteral("0.0.0.0"),8080);
+            check(!addresses.isEmpty()&&addresses.stream().noneMatch(url->url.contains("0.0.0.0"))&&(addresses.size()==1||!addresses.contains("http://127.0.0.1:8080")),"wildcard binding advertises concrete LAN addresses with loopback only as a fallback");
             check(new org.tortodrone.web.WebSettings(true,"https://admin.example:443","reverse-proxy").publicUrl().equals("https://admin.example"),"standard HTTPS port uses browser origin normalization");
             check(new org.tortodrone.web.WebSettings(true,"http://127.0.0.1:80","http").publicUrl().equals("http://127.0.0.1"),"standard HTTP port uses browser origin normalization");
             Path generated=home.resolve("generated/server.yml");var bundled=ServerSettings.load(generated);

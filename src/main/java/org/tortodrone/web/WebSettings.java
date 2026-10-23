@@ -26,7 +26,6 @@ public record WebSettings(boolean enabled, String publicUrl, String tlsMode) {
         var hosts=new java.util.LinkedHashSet<String>();
         if(!bind.isAnyLocalAddress())hosts.add(bind.getHostAddress());
         else {
-            hosts.add("127.0.0.1");
             try {
                 for(var network:java.util.Collections.list(java.net.NetworkInterface.getNetworkInterfaces()))
                     if(network.isUp()&&!network.isLoopback())
@@ -34,6 +33,7 @@ public record WebSettings(boolean enabled, String publicUrl, String tlsMode) {
                             .map(java.net.InetAddress::getHostAddress).sorted().forEach(hosts::add);
             }catch(java.net.SocketException unavailable){/* The local URL remains usable. */}
         }
+        if(hosts.isEmpty())hosts.add("127.0.0.1");
         return hosts.stream().map(host->"http://"+(host.contains(":")?"["+host+"]":host)+(port==80?"":":"+port)).toList();
     }
     public static WebSettings read(java.util.Properties p)throws IOException {

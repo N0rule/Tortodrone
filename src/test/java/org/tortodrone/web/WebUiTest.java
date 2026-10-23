@@ -51,6 +51,12 @@ public final class WebUiTest {
                     bad=headers();bad.put("Origin","https://evil.example");check(request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),bad).status==403,"cross-origin login rejected");
                     login("administrator");
                     check(get("session").status==200,"server-side session");check(get("status").status==200,"dashboard DTO serialization");
+                    check(get("console").status==200&&post("console",Map.of("command","help","confirmation","console")).body.contains("kick <session-id>"),"administrator console help uses the allowed vocabulary");
+                    check(post("console",Map.of("command","status","confirmation","console")).status==200,"console reads typed server status");
+                    check(post("console",Map.of("command","stop","confirmation","console")).status==400,"console actions require explicit command confirmation");
+                    check(post("console",Map.of("command","shutdown","commandConfirmation","shutdown","confirmation","console")).status==400,"console full shutdown requires its own phrase");
+                    for(String command:List.of("help; stop","status\nstop","account password operator secret","../secret","kick -1"))
+                        check(post("console",Map.of("command",command,"commandConfirmation",command,"confirmation","console")).status==400,"console refuses unsupported syntax and unsafe arguments");
                     var create=Map.of("username","Alice","password","game-password","gm","true","confirmation","account-create");
                     bad=headers();bad.put("Cookie",cookie);check(request("POST","/admin/api/account-create",form(create),bad).status==403,"CSRF required");
                     check(post("account-create",create).status==200,"authorized account creation");
@@ -63,8 +69,8 @@ public final class WebUiTest {
                     check(request("GET","/admin/assets/secret.key",null,authenticated()).status==404,"static allowlist");
                     check(post("account-create",Map.of("padding","x".repeat(66000))).status==400,"request size bounded");
                     check(post("logout",Map.of()).status==200&&get("status").status==401,"logout revokes session");
-                    login("viewer");check(get("status").status==200&&get("accounts").status==403,"viewer monitoring only");check(post("stop",Map.of("confirmation","stop")).status==403,"viewer cannot stop listener");
-                    login("moderator");check(get("accounts").status==200&&get("depot").status==403,"moderator scope");check(post("account-create",create).status==403,"moderator cannot create account");
+                    login("viewer");check(get("console").status==403&&post("console",Map.of("command","status","confirmation","console")).status==403,"viewer cannot access console");check(get("status").status==200&&get("accounts").status==403,"viewer monitoring only");check(post("stop",Map.of("confirmation","stop")).status==403,"viewer cannot stop listener");
+                    login("moderator");check(get("console").status==403&&post("console",Map.of("command","help","confirmation","console")).status==403,"moderator cannot access console");check(get("accounts").status==200&&get("depot").status==403,"moderator scope");check(post("account-create",create).status==403,"moderator cannot create account");
                     clock.addAndGet(31*60_000);check(get("status").status==401,"idle session expires");
                     login("administrator");identities.put("administrator",PASSWORD.toCharArray(),WebIdentityStore.Role.ADMINISTRATOR);check(get("status").status==401,"credential reset revokes sessions");
                     login("administrator");identities.revoke("administrator");identities.put("administrator",PASSWORD.toCharArray(),WebIdentityStore.Role.ADMINISTRATOR);check(get("status").status==401,"delete and recreate cannot resurrect old sessions");

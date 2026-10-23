@@ -34,7 +34,7 @@ startup-map: haven
 
 Defaults enable WebUI with `webui-tls-mode: http`, `webui-public-url: 0.0.0.0` and the shared port 8080, bound to all interfaces. Set `webui-enabled: false` to disable administration routes. Optional `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to that existing HTTP port. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
 
-When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, a 14–128 character password twice, and the eight-digit one-time setup code printed after the startup messages in the local server console. Ten incorrect code guesses lock setup until process restart; the existing per-minute rate limit also applies. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
+When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, a 8–128 character password twice, and the eight-digit one-time setup code printed after the startup messages in the local server console. Ten incorrect code guesses lock setup until process restart; the existing per-minute rate limit also applies. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
 
 Setup creates exactly one administrator, signs that account in, and permanently closes public registration. Competing setup submissions cannot create a second administrator. Existing WebUI identities show the ordinary sign-in page. Revoking every account does not reopen setup; recover access through the local console instead.
 
@@ -50,7 +50,7 @@ webui/content_url-port: 8080
 webui-tls-mode: http
 ```
 
-Startup prints `WebUI Ready` with usable local and LAN addresses. Opening the address root redirects to `/admin/`; port 80 is omitted from HTTP URLs and other ports remain explicit.
+Startup prints `WebUI Ready` with LAN addresses (loopback is a fallback when no LAN address is available). Opening the address root redirects to `/admin/`; port 80 is omitted from HTTP URLs and other ports remain explicit.
 
 The public address may omit `http://` or `https://`; the scheme follows `webui-tls-mode`. Explicit URLs remain supported and must match the mode.
 
@@ -158,3 +158,5 @@ When the unchanged client sends its existing hardware report, one `Client hardwa
 | Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
 
 The CLI is a local trusted surface. The WebUI exposes only typed, authorized operations; arbitrary terminal commands are never available remotely.
+
+The Administrator-only **Console** page provides `help`, `status`, `players`, `scenes`, `accounts`, `start`, `stop`, `restart`, `kick <session-id>` and `shutdown`, alongside live operational logs. Actions require repeating the command; full shutdown also requires `SHUT DOWN PROCESS`. Commands use the existing typed services, enforce CSRF/role checks and are audited. Setup codes remain console-only and use the normal timestamp prefix.

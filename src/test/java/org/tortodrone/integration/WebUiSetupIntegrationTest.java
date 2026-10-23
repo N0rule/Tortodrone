@@ -17,7 +17,7 @@ import static org.tortodrone.support.TestWire.check;
 
 /** One packaged executable: first-run page, local recovery while stopped, and persistent setup closure. */
 public final class WebUiSetupIntegrationTest {
-    private static final String FIRST="first-admin", PASSWORD="disposable-first-password", RECOVERED="disposable-recovered-password";
+    private static final String FIRST="first-admin", PASSWORD="testpass", RECOVERED="disposable-recovered-password";
     public static void main(String[] args)throws Exception {
         Path source=Path.of(args[0]).toAbsolutePath(),root=Files.createTempDirectory("tortodrone-webui-setup-integration-");
         try {
@@ -47,7 +47,7 @@ public final class WebUiSetupIntegrationTest {
                 viewer.request("webui-users",null,403);viewer.post("webui-user-create",Map.of("username","forbidden","password",PASSWORD,"passwordConfirmation",PASSWORD,"role","ADMINISTRATOR"),403);
                 check(!Files.readString(root.resolve("data/logs/latest.log")).contains(code),"setup code is never written to operational logs");
                 check(!Json.stringify(admin.request("logs",null,200)).contains(code),"setup code is not exposed through WebUI logs");
-                admin.post("stop",Map.of(),200);await(()->{try{return admin.get("status").get("state").equals("STOPPED");}catch(Exception e){return false;}},"game listener stop");
+                admin.post("console",Map.of("command","stop","commandConfirmation","stop"),200);await(()->{try{return admin.get("status").get("state").equals("STOPPED");}catch(Exception e){return false;}},"game listener stop");
                 server.send("webui password "+FIRST+"\n"+RECOVERED+"\n"+RECOVERED+"\n");server.await("WebUI password changed: "+FIRST);
                 admin.request("session",null,401);check(viewer.get("status").get("state").equals("STOPPED"),"console recovery works while HTTP stays up and game listener is stopped");
                 server.send("webui user rescue ADMINISTRATOR\n"+PASSWORD+"\n"+PASSWORD+"\n");server.await("WebUI account saved: rescue");
@@ -81,7 +81,7 @@ public final class WebUiSetupIntegrationTest {
         }
         String output(){try{return Files.readString(output);}catch(IOException e){return "";}}
         void ready()throws Exception{WebUiSetupIntegrationTest.await(()->output().contains("Type help for server commands.")&&output().contains("WebUI Ready "),"packaged server ready");check(process.isAlive(),"server remains running");}
-        int port(){var m=Pattern.compile("WebUI Ready http://127\\.0\\.0\\.1:([0-9]+)").matcher(output());check(m.find(),"shared HTTP port printed");return Integer.parseInt(m.group(1));}
+        int port(){var m=Pattern.compile("WebUI Ready http://[^\\s/:]+:([0-9]+)").matcher(output());check(m.find(),"shared HTTP port printed");return Integer.parseInt(m.group(1));}
         String setupCode(){var m=Pattern.compile("WebUI first-run setup code: ([0-9]{8})").matcher(output());return m.find()?m.group(1):null;}
         void send(String text)throws IOException{process.getOutputStream().write(text.getBytes(StandardCharsets.UTF_8));process.getOutputStream().flush();}
         void await(String message)throws Exception{WebUiSetupIntegrationTest.await(()->output().contains(message),message);}

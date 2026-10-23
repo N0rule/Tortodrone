@@ -36,6 +36,7 @@ public final class AdminService implements AutoCloseable {
             case "depot"->Map.of("snapshot",accounts.depot().snapshot(),"promotions",accounts.depot().promotions(),"effective",accounts.depot().catalog());
             case "auctions"->accounts.auctions().overview();
             case "deliveries"->accounts.auctions().deliveries(p.number("id"));
+            case "console"->AdminConsole.commands();
             case "logs"->{synchronized(logs){yield List.copyOf(logs);}}
             case "news"->news.read();
             case "content"->{var c=validatedContent==null?org.tortodrone.resources.ContentManager.load(deployment):validatedContent;yield Map.of("warnings",c.warnings(),"maps",c.scenes().scenes().size(),"items",c.items().entries().size(),"news",c.news(),"merchants",c.town().stations());}
@@ -50,6 +51,7 @@ public final class AdminService implements AutoCloseable {
         // Browser confirmation is repeated server-side for every mutation.
         if(!p.text("confirmation").equals(route))throw new IllegalArgumentException("Confirmation did not match the action");
         switch(route){
+            case "console"->{return AdminConsole.execute(this,p);}
             case "start"->control.start();
             case "stop"->control.stop();
             case "restart"->control.restart();

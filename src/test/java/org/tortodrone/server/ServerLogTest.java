@@ -11,6 +11,8 @@ public final class ServerLogTest {
             try(var log=new ServerLog(root)) {
                 log.setConsoleOutput(line->{});log.configure(1024,2);
                 var observed=new ArrayList<ServerLog.Event>();try(var subscription=log.subscribe(observed::add)){
+                    var local=new ArrayList<String>();log.setConsoleOutput(local::add);log.localNotice("Private setup notice");
+                    check(local.size()==1&&local.getFirst().matches("\\[.*\\] \\[.*?/INFO\\]: Private setup notice")&&observed.isEmpty()&&!Files.readString(root.resolve("latest.log")).contains("Private setup notice"),"private notices use standard console formatting without persistence or remote observers");
                     log.info("Normal 雪");log.debug("hidden diagnostic");check(observed.size()==1,"normal suppresses debug for file and observers");
                     log.setDebugEnabled(true);log.debug("debug diagnostic");log.warn("one\ntwo\rthree");
                     check(observed.get(1).level().equals("DEBUG")&&observed.get(2).message().equals("one two three"),"typed severity and newline sanitization");

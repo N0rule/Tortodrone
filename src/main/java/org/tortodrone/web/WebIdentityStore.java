@@ -125,7 +125,7 @@ public final class WebIdentityStore {
     private record Protection(byte[] salt,byte[] verifier){void clear(){Arrays.fill(verifier,(byte)0);}}
     private static Protection protect(String username,char[] password)throws IOException {
         if(!username.matches("[a-zA-Z0-9_-]{3,64}"))throw new IOException("WebUI username needs 3–64 letters, digits, underscores or hyphens");
-        if(password.length<14||password.length>128)throw new IOException("WebUI passwords need 14–128 characters");
+        if(password.length<8||password.length>128)throw new IOException("WebUI passwords need 8–128 characters");
         byte[] salt=new byte[32];new SecureRandom().nextBytes(salt);return new Protection(salt,derive(password,salt));
     }
     private static long revision(){return new SecureRandom().nextLong(1,Long.MAX_VALUE);}

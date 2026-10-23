@@ -212,7 +212,7 @@ final class ServerConsole implements AutoCloseable {
         if(user)try{role=org.tortodrone.web.WebIdentityStore.Role.valueOf(words[3].toUpperCase(Locale.ROOT));}
         catch(IllegalArgumentException invalid){throw new IOException("WebUI role must be VIEWER, MODERATOR or ADMINISTRATOR");}
         var before=password?webIdentities.find(name):null;
-        char[] first=prompts.password("WebUI password (14–128 characters): "),second=null;
+        char[] first=prompts.password("WebUI password (8–128 characters): "),second=null;
         try {
             second=prompts.password("Confirm WebUI password: ");
             if(!Arrays.equals(first,second))throw new IOException("Passwords do not match");

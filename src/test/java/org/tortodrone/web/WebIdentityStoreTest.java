@@ -9,7 +9,7 @@ import static org.tortodrone.support.TestWire.check;
 
 /** Atomic setup, authorization, last-administrator protection, recovery and audit rollback. */
 public final class WebIdentityStoreTest {
-    private static final char[] PASSWORD="disposable-identity-password".toCharArray();
+    private static final char[] PASSWORD="testpass".toCharArray();
     public static void main(String[] args)throws Exception {
         Path root=Files.createTempDirectory("tortodrone-identities-");
         try {
@@ -28,6 +28,7 @@ public final class WebIdentityStoreTest {
             refused(()->store.remove(first,first.username(),first.revision()));
             refused(()->store.role(first,first.username(),WebIdentityStore.Role.VIEWER,first.revision()));
             var before=store.find("Viewer");
+            refused(()->store.put("TooShort","seven77".toCharArray(),WebIdentityStore.Role.VIEWER));
             store.password(first,"Viewer","changed-viewer-password".toCharArray(),before.revision());
             check(!store.current(before)&&store.authenticate("Viewer",PASSWORD)==null,"password change revokes credentials and sessions");
             refused(()->store.role(first,"Viewer",WebIdentityStore.Role.MODERATOR,before.revision()));

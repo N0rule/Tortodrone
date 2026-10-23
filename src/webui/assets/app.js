@@ -1,7 +1,7 @@
 import { Api } from './api.js';
 const api = new Api(), $ = s => document.querySelector(s), page = $('#page');
 let generation = 0, busy = false, paused = false, autoScroll = true, samples = [], current = 'dashboard', pollTimer, setupRequired = false;
-const pages = [['dashboard', 'Overview', 'Your server, at a glance.', 0], ['players', 'Online players', 'Connections, knights and active scenes.', 0], ['accounts', 'Accounts & knights', 'Manage identities and their inventory.', 1], ['webui-users', 'WebUI access', 'Manage WebUI accounts independently of game accounts.', 2], ['depot', 'Supply Depot', 'Offers, Specials and scheduled promotions.', 2], ['auctions', 'Auction House', 'Listings, escrow and authoritative settlement.', 2], ['news', 'Uplink News', 'Manage the banners your players see.', 2], ['content', 'Content catalogue', 'Validated definitions and supported items.', 2], ['logs', 'Logs', 'A bounded live view of server activity.', 0], ['audit', 'Audit trail', 'Privileged actions and their outcomes.', 2]];
+const pages = [['dashboard', 'Overview', 'Your server, at a glance.', 0], ['players', 'Online players', 'Connections, knights and active scenes.', 0], ['accounts', 'Accounts & knights', 'Manage identities and their inventory.', 1], ['webui-users', 'WebUI access', 'Manage WebUI accounts independently of game accounts.', 2], ['depot', 'Supply Depot', 'Offers, Specials and scheduled promotions.', 2], ['auctions', 'Auction House', 'Listings, escrow and authoritative settlement.', 2], ['news', 'Uplink News', 'Manage the banners your players see.', 2], ['content', 'Content catalogue', 'Validated definitions and supported items.', 2], ['console', 'Console', 'Server commands and live operational output.', 2], ['logs', 'Logs', 'A bounded live view of server activity.', 0], ['audit', 'Audit trail', 'Privileged actions and their outcomes.', 2]];
 const rank = () => ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'].indexOf(api.session?.role);
 function el(tag, text, cls) { const n = document.createElement(tag); if (text !== undefined)
     n.textContent = String(text ?? '—'); if (cls)
@@ -82,7 +82,7 @@ function edit(title, route, fields, fixed = {}, description = 'Review this chang
             input.value = String(f.value ?? '');
         if (f.type === 'password') {
             input.autocomplete = 'new-password';
-            if(route.startsWith('webui-user-')) { input.minLength=14; input.maxLength=128; }
+            if(route.startsWith('webui-user-')) { input.minLength=8; input.maxLength=128; }
         }
         input.required = !['variants', 'referencePrice', 'sprite', 'accessory'].includes(f.key) && f.type !== 'checkbox';
         label.append(input);
@@ -96,6 +96,7 @@ function edit(title, route, fields, fixed = {}, description = 'Review this chang
         }
         if('passwordConfirmation' in values && values.password!==values.passwordConfirmation)throw new Error('Passwords do not match.');
         const result = await api.change(route, values);
+        if(route==='console')recordConsole(values.command,result.output);
         dialog.close();
         $('#notice').textContent = route === 'account-check-password' ? (result.matches ? 'Password matches.' : 'Password does not match.') : 'Change saved.';
         await render();
@@ -161,9 +162,41 @@ let logQuery = '', logSeverity = 'All';
 async function logs(host) { const rows = await api.request('logs'), search = el('input'), severity = el('select'); search.value = logQuery; search.placeholder = 'Search logs'; search.setAttribute('aria-label', 'Search logs'); for (const v of ['All', 'INFO', 'WARN', 'ERROR', 'DEBUG'])
     severity.append(el('option', v)); severity.value = logSeverity; severity.setAttribute('aria-label', 'Severity'); const output = el('div', undefined, 'log panel'); function display() { const filtered = rows.filter(r => (logSeverity === 'All' || r.level === logSeverity) && r.line.toLowerCase().includes(logQuery.toLowerCase())); output.replaceChildren(...filtered.map(r => el('div', r.line, r.level))); if (autoScroll)
     output.scrollTop = output.scrollHeight; } search.oninput = () => { logQuery = search.value; display(); }; severity.onchange = () => { logSeverity = severity.value; display(); }; host.append(toolbar(search, severity, button(paused ? 'Resume' : 'Pause', () => { paused = !paused; render(); }), button(autoScroll ? 'Auto-scroll on' : 'Auto-scroll off', () => { autoScroll = !autoScroll; render(); }), button('Export visible', () => { const text = rows.filter(r => (logSeverity === 'All' || r.level === logSeverity) && r.line.toLowerCase().includes(logQuery.toLowerCase())).map(r => r.line).join('\n'); const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' })), a = el('a'); a.href = url; a.download = 'tortodrone-log.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); })), output); display(); }
+const consoleHistory=[];
+function recordConsole(command,output) {
+    consoleHistory.push({command,output});if(consoleHistory.length>50)consoleHistory.shift();
+}
+async function refreshConsoleLogs() {
+    const target=$('#console-logs');
+    if(target&&!paused&&!target.contains(document.activeElement)) {target.replaceChildren();await logs(target);}
+}
+async function consolePage(host) {
+    const metadata=await api.consoleCommands(),terminal=el('div',undefined,'console-terminal panel');
+    terminal.setAttribute('role','log');terminal.setAttribute('aria-label','Command output');
+    for(const entry of consoleHistory) {terminal.append(el('div','> '+entry.command,'console-prompt'),el('pre',entry.output));}
+    if(!consoleHistory.length)terminal.append(el('p','Enter help to see available commands.'));
+    const form=el('form',undefined,'toolbar'),label=el('label','Command'),input=el('input'),submit=el('button','Run command');
+    input.name='command';input.required=true;input.maxLength=128;input.placeholder='help';input.autocomplete='off';input.spellcheck=false;
+    label.append(input);submit.type='submit';form.append(label,submit);
+    form.onsubmit=async event=>{
+        event.preventDefault();const command=input.value.trim();if(!command)return;submit.disabled=true;
+        try {
+            if(metadata.actions.includes(command.split(/\s+/)[0])) {
+                const fields=[field('commandConfirmation','Repeat the command to confirm')];
+                if(command==='shutdown')fields.push(field('shutdown','Type SHUT DOWN PROCESS'));
+                edit('Confirm server command','console',fields,{command});
+            }else {
+                const result=await api.consoleCommand(command);recordConsole(command,result.output);await render();
+            }
+        }catch(error){showError(error);}finally{submit.disabled=false;}
+    };
+    const live=el('div');live.id='console-logs';
+    host.append(el('p',metadata.help),terminal,form,heading('Live server log'),live);await logs(live);
+    terminal.scrollTop=terminal.scrollHeight;
+}
 async function webuiUsers(host) {
     const rows=await api.request('webui-users');
-    const passwords=()=>[field('password','New password (14–128 characters)','','password'),field('passwordConfirmation','Confirm password','','password')];
+    const passwords=()=>[field('password','New password (8–128 characters)','','password'),field('passwordConfirmation','Confirm password','','password')];
     const role=value=>field('role','Role',value,'text',['VIEWER','MODERATOR','ADMINISTRATOR']);
     host.append(toolbar(button('Create WebUI account',()=>edit('Create WebUI account','webui-user-create',[field('username','Username'),...passwords(),role('VIEWER')]))));
     host.append(el('p','At least one administrator must remain. Password, role and access changes revoke the affected account’s sessions.'));
@@ -175,7 +208,7 @@ async function webuiUsers(host) {
     }));
 }
 async function audit(host) { const rows = await api.request('audit'); host.append(searchable([['Time', r => date(r.time)], ['Actor', r => r.actor], ['Action', r => r.action], ['Target', r => r.target], ['Outcome', r => r.outcome]], rows)); }
-const renderers = { dashboard, players, accounts: accountsPage, 'webui-users': webuiUsers, depot, auctions, news, content, logs, audit };
+const renderers = { console: consolePage, dashboard, players, accounts: accountsPage, 'webui-users': webuiUsers, depot, auctions, news, content, logs, audit };
 async function render() { if (!api.session)
     return; const id = ++generation; current = location.hash.slice(1) || 'dashboard'; const spec = pages.find(p => p[0] === current && p[3] <= rank()); if (!spec) {
     location.hash = 'dashboard';
@@ -203,7 +236,7 @@ async function signedOut() {
         $('#login-description').textContent=setupRequired?'First-run setup. Enter the one-time setup code shown in the server console.':'Sign in with your WebUI identity.';
         $('#setup-fields').hidden=!setupRequired;
         for(const name of ['passwordConfirmation','setupCode']) {form.elements[name].disabled=!setupRequired;form.elements[name].required=setupRequired;}
-        form.elements.password.minLength=setupRequired?14:0;
+        form.elements.password.minLength=setupRequired?8:0;
         form.elements.password.autocomplete=setupRequired?'new-password':'current-password';
         submit.textContent=setupRequired?'Create administrator account':'Sign in';
         $('#login-help').textContent=setupRequired?'You can create additional WebUI accounts after signing in.':'Recover access from the server console: webui password <username>.';
@@ -211,6 +244,7 @@ async function signedOut() {
     finally{submit.disabled=false;}
 }
 async function poll() { pollTimer = setTimeout(async () => { try {
+    if(api.session&&!document.hidden&&!busy&&!$('#dialog').open&&current==='console')await refreshConsoleLogs();
     if (api.session && !document.hidden && !busy && !$('#dialog').open && ['dashboard', 'players', 'logs'].includes(current) && !(current === 'logs' && paused) && !page.contains(document.activeElement))
         await render();
 }
