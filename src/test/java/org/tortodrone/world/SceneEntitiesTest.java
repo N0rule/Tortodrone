@@ -20,9 +20,15 @@ public final class SceneEntitiesTest {
         var prop=trainingEntities.actors().stream().filter(actor->actor.entity().kind().equals("Switch")&&actor.entity().key().equals("1955")).findFirst().orElseThrow();
         var user=new ActorState(10,1001,"User",0,1,19.5f,-.45f,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));
         var peer=new ActorState(11,1002,"Peer",0,1,19.5f,-.45f,0,0,0,user.config());
-        trainingEntities.advance(100,List.of(user,peer));check(trainingEntities.actor(prop.id()).entity().state()==1,"station opens for shared occupants");
+        trainingEntities.advance(90,List.of(user,peer));check(trainingEntities.actor(prop.id()).entity().state()==0,"proximity leaves the station closed initially");
+        trainingEntities.openArsenal(arsenal.id(),100);
+        trainingEntities.advance(100,List.of(user,peer));check(trainingEntities.actor(prop.id()).entity().state()==1,"interaction opens the shared station");
         trainingEntities.advance(150,List.of(peer));check(trainingEntities.actor(prop.id()).entity().state()==1,"station stays open when one of two occupants leaves");
         trainingEntities.advance(200,List.of());check(trainingEntities.actor(prop.id()).entity().state()==0,"last occupant closes the shared station");
+        trainingEntities.advance(250,List.of(user));check(trainingEntities.actor(prop.id()).entity().state()==0,"returning requires another interaction");
+        trainingEntities.openArsenal(arsenal.id(),300);
+        var edge=new ActorState(10,1001,"User",0,1,19.5f,-2.3f,(float)Math.PI/2,0,0,user.config());
+        trainingEntities.advance(300,List.of(edge));check(trainingEntities.actor(prop.id()).entity().state()==1,"the front interaction edge retains an opened station");
         var haven=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(1);
         var townEntities=new SceneEntities(haven.content(),haven.collision());
         var clock=townEntities.actors().stream().filter(a->a.config().name().equals("Character/NPC/Haven/Stranger/Clockworks")).findFirst().orElseThrow();

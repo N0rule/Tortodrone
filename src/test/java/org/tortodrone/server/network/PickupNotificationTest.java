@@ -34,7 +34,7 @@ public final class PickupNotificationTest {
                         var entered=SceneSimulation.Membership.class.getDeclaredField("entered");entered.setAccessible(true);entered.setBoolean(member,true);
                         var player=simulation.snapshot().players().getFirst();
                         var fields=Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Pickup","config","Item/Consumable/Crowns/Copper Crown","radius",".2","pickup-item","Instant/Crown/Copper Crown");
-                        check(entities.spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",Json.stringify(fields))),player.x(),player.y(),0,SceneClock.now()),"native shared coin spawned");
+                        check(entities.spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",Json.stringify(fields))),player.x(),player.y(),0,SceneClock.now()-1000),"native shared coin spawned past its activation delay");
                         entities.advance(SceneClock.now(),List.of(player));
                         int coin=entities.actors().stream().filter(a->a.entity().kind().equals("Pickup")&&a.config().name().equals("Item/Consumable/Crowns/Copper Crown")).findFirst().orElseThrow().id();
                         output.close(); // Inventory publication will throw, after the SQLite reward has committed.

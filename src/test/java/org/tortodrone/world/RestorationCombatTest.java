@@ -26,6 +26,7 @@ public final class RestorationCombatTest {
         }
         check(types.contains("TimedBlock")&&types.contains("Block"),"test exercised bombs and boxes");
         catalysts(fires);
+        lethalCatalysts(fires);
         legacy(fires);
         System.out.println("PASS: Mandolin destructibles, eight Catalyzer families/cross-owner tags/expiry, four legacy guns/charges "+types);
     }
@@ -71,6 +72,22 @@ public final class RestorationCombatTest {
             check(entities.actors().getFirst().entity().health()<1,"legacy startup orbitals shoot and damage: "+name+"/"+activity);
             advance(weapons,entities,1611,4001,List.of(owner));check(weapons.actors().isEmpty(),"legacy actors clean up with their carrier");
         }
+    }
+
+    private static void lethalCatalysts(FireCatalog fires)throws Exception {
+        var spec=new SceneContent.Spec(Map.of("native-type","Monster","config","Fixture","health","3","radius",".5","collision-flags","8","damage-mask","2"));
+        var entities=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("target",0,0,0,spec)),Map.of()),SceneWeaponsTest.openTerrain());
+        var weapons=new SceneWeapons(SceneWeaponsTest.openTerrain());weapons.catalog(fires);weapons.targets(entities);
+        var owner=owner(10);var normal=fires.find("Weapon/Handgun/Catalyzer",292).fireRefs().getFirst().action();
+        weapons.fire(normal,owner,100);weapons.fire(normal,owner,100);
+        advance(weapons,entities,101,1501,List.of(owner));
+        check(weapons.actors().stream().filter(a->a.projectile().nativeType().equals("ORBITAL")).count()==2,"lethal regression has two live tags");
+        weapons.fire(fires.find("Weapon/Handgun/Catalyzer",290).fireRefs().getFirst().action(),owner,1600);
+        advance(weapons,entities,1601,3001,List.of(owner));
+        check(weapons.actors().isEmpty(),"a lethal first tag does not strand remaining tags or the charged projectile");
+        check(weapons.fire(normal,owner,3100),"weapon remains usable after lethal detonation");
+        advance(weapons,entities,3101,6001,List.of(owner));
+        check(weapons.actors().isEmpty(),"subsequent shots still advance and clean up");
     }
 
 }

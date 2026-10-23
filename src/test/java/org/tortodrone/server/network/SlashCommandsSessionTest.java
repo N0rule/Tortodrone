@@ -120,11 +120,14 @@ public final class SlashCommandsSessionTest {
                     var first=machines.get(0);var second=machines.get(1);
                     float x=first.x()+(float)Math.cos(first.rotation())*3,y=first.y()+(float)Math.sin(first.rotation())*3;
                     check(((SceneSimulation.Membership)currentMember.get(gm.world)).teleport(x,y,0),"fixture approaches an authored alchemy machine");
-                    for(var expected:List.of(first,second,first)){
+                    String previousMachine=null;
+                    for(int use=0;use<5;use++){
                         gm.world.invocation(new SessionDecoder.Invocation(3,1,7,List.of("move_alchemy_machine",result)));gm.drain();
                         var atMachine=place.simulation().snapshot().players().stream().filter(a->a.name().equals("Staff")).findFirst().orElseThrow();
-                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&Math.hypot(atMachine.x()-expected.x(),atMachine.y()-expected.y())<3,
-                            "/alchemy starts at the nearest machine, cycles through the others and stays in the current instance");
+                        var selected=machines.stream().filter(e->Math.hypot(atMachine.x()-e.x(),atMachine.y()-e.y())<3).findFirst().orElseThrow();
+                        check(currentScene.get(gm.world)==place&&pending.get(gm.world)==null&&!selected.key().equals(previousMachine),
+                            "/alchemy picks an authored machine without repeating the last successful destination or replacing the instance");
+                        previousMachine=selected.key();
                     }
                 }
                 var bazaar=scenes.catalog().scenes().stream().filter(m->m.content().stats().containsKey("destination.move_bechamel.x")).findFirst().orElseThrow();

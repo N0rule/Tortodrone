@@ -22,6 +22,7 @@ public final class SceneSimulation {
             T result=payment.commit();int stamp=SceneClock.now();
             target.health.revive(stamp);target.movement.resurrect(stamp);
             weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Spark Rez",Map.of()),target.actor(),stamp);
+            entities.reviveImpulse(target.actor(),stamp);
             return result;
         }finally{target.revivePending=false;}
     }
@@ -207,6 +208,7 @@ public final class SceneSimulation {
                     if(!entities.carry(prompt.actorId(),actor(),stamp)){movement.resetInput(stamp);return false;}
                     lift=prompt.actorId();return true;
                 }
+                entities.openArsenal(prompt.actorId(),stamp);
                 movement.interactionDuration(entities.interactionDuration(prompt.actorId()));interactionTarget=prompt.actorId();return true;});
             movement.throwing(stamp->{if(lift==0)return false;
                 boolean snap=entities.prepareDrop(lift,actor());

@@ -233,9 +233,12 @@ public final class SceneWeapons {
                 attached.followId=target;shots.put(attached.id,attached);
                 if(spec.startup()!=null)execute(spec.startup(),shotPose(attached),stamp,0);
             }
-            if(shot.spec.activatesAttachments())for(var attached:List.copyOf(shots.values()))
+            // Capture the impact pose before any explosion can kill/remove the victim.
+            // Later tags still detonate at that pose, retaining their original owner.
+            var victim=targets.actor(target);
+            if(shot.spec.activatesAttachments()&&victim!=null)for(var attached:List.copyOf(shots.values()))
                 if(attached.followId==target&&attached.destroyed==Integer.MAX_VALUE&&attached.spec.activation()!=null){
-                    var victim=targets.actor(target);attached.x=victim.x();attached.y=victim.y();
+                    attached.x=victim.x();attached.y=victim.y();
                     // An orb keeps its original owner's damage and credit even when another knight triggers it.
                     var action=attached.spec.activation();attached.destroyed=stamp;
                     execute(action,shotPose(attached),stamp,0);

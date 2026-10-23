@@ -176,6 +176,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public ActorState actor(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.snapshot();}
     public SceneContent.Spec specification(int id){var e=entities.get(id);return e==null||e.destroyed!=Integer.MAX_VALUE?null:e.spec;}
     public ActorState station(String kind){return entities.values().stream().filter(e->e.spec.text("town-kind","").equals(kind)&&e.destroyed==Integer.MAX_VALUE).map(Entity::snapshot).findFirst().orElse(null);}
+    /** Called only after the scene validates the knight's interaction intent. */
+    public void openArsenal(int id,int stamp){
+        var props=arsenalProps.get(entities.get(id));
+        if(props!=null)for(var prop:props)if(prop.state==0)setSwitch(prop,1,stamp);
+    }
     public boolean carry(int id,ActorState player,int stamp){
         var e=entities.get(id);if(e==null||!e.kind.equals("DungeonLift")||e.destroyed!=Integer.MAX_VALUE||(e.flags&6)!=0)return false;
         e.carrier=e.owner=player.id();e.ownerOid=player.clientOid();e.dropPoint=null;e.flags|=4;return true;
@@ -260,8 +265,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
         this.players=players;
         for(var station:arsenalProps.entrySet()){
-            var zone=station.getKey();int state=players.stream().anyMatch(p->zone.spec.contains(zone.x,zone.y,zone.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))?1:0;
-            for(var prop:station.getValue())if(prop.state!=state)setSwitch(prop,state,stamp);
+            var zone=station.getKey();
+            // Proximity retains an interacted station; it must not open a closed one.
+            // Include the prompt's forward reach so opening from the edge cannot
+            // immediately close it again on the next simulation tick.
+            float reach=Math.max(ScenePortals.PAWN_RADIUS,zone.spec.number("interaction-radius",.4f)
+                +zone.spec.number("interaction-expansion",0)+(float)Math.hypot(zone.spec.number("interaction-offset-x",.7f),zone.spec.number("interaction-offset-y",0)));
+            if(players.stream().noneMatch(p->zone.spec.contains(zone.x,zone.y,zone.rotation,p.x(),p.y(),reach)))
+                for(var prop:station.getValue())if(prop.state!=0)setSwitch(prop,0,stamp);
         }
         while(!links.isEmpty()&&links.peekFirst().stamp()<=stamp){var link=links.removeFirst();clearLinks(link.entity(),stamp,link.ghost());}
         float elapsed=lastStamp==0?0:Math.min(.25f,(stamp-lastStamp)/1000f);lastStamp=stamp;
@@ -271,13 +282,15 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Retain one short publication grace, rather than counting it twice.
                 if(stamp-e.destroyed>=100){
                     entities.remove(e.id);
-                    if(e.pad!=null)e.pad.nextGeneration=stamp+e.pad.spec.integer("delay",0);
+                    if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
                 }
                 continue;
             }
             if(e.kind.equals("Pickup")&&!e.claimTaken&&e.spec.integer("lifespan",0)>0&&stamp-e.created>=e.spec.integer("lifespan",0)){
                 e.destroyed=stamp;e.claim=0;continue;
             }
+            // Native PickupLogic flashes expiring pickups during their last five seconds.
+            if(e.kind.equals("Pickup")&&e.spec.integer("lifespan",0)>0&&stamp-e.created>e.spec.integer("lifespan",0)-5000)e.flags|=2;
             if(e.kind.equals("Generator")&&e.nextGeneration>0){
                 e.flags=stamp+e.spec.integer("warning",0)>=e.nextGeneration?2:0;
                 if(stamp>=e.nextGeneration){e.flags&=~2;generate(e,e.nextGeneration);}
@@ -325,7 +338,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 }
                 e.hazardHits.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id));
             }
-            if(e.kind.equals("Pickup")&&e.claim==0)collect(e,elapsed,players);
+            // PickupLogic's minimum activation time lets the spawn visual complete
+            // before a knight standing on the pad can collect its replacement.
+            if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
                 e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
                 if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}

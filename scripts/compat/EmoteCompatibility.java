@@ -7,6 +7,8 @@ import com.threerings.opengl.model.config.ActionConfig;
 import com.threerings.opengl.model.config.AnimationConfig;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.io.*;
 import org.tortodrone.world.PlayerEmotes;
 
@@ -59,7 +61,30 @@ public final class EmoteCompatibility {
         if (ProjectXUserMessage.c((byte) 5) == false || ProjectXUserMessage.c((byte) 6) == false ||
             ProjectXUserMessage.c((byte) 2)) throw new AssertionError("Installed ProjectX chat modes changed");
         messages();
+        activities();
         System.out.println("PASS: 68 descriptors match installed configs; 20 animated; ProjectX message modes 5/6 are special.");
+    }
+    private static void activities()throws Exception {
+        for(boolean interior:new boolean[]{false,true})for(String name:List.of("Attack","Helpme","Follow","Fallback","Wave")){
+            var descriptor=PlayerEmotes.find(name);var model=new org.tortodrone.character.StarterCatalog.Model("Fixture",Map.of());
+            var first=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,0,0,0,0,0,descriptor.activity(),1000,model);
+            var moved=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,2,descriptor.activity(),1000,model);
+            var initial=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,0,(short)0,0,1000,(short)50,List.of(first),List.of(),new int[0],Map.of(),interior));
+            var nativeActor=(com.threerings.tudey.data.actor.Active)initial.aej()[0];
+            // The controlling client advances its baseline independently. A passive
+            // movement/status update must preserve its local emote activity clock.
+            FireCompatibility.find(nativeActor.getClass(),"_activity").setInt(nativeActor,0);
+            FireCompatibility.find(nativeActor.getClass(),"_activityStarted").setInt(nativeActor,1000+descriptor.duration());
+            var update=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,1000,(short)0,1000,1050,(short)50,List.of(),List.of(moved),new int[0],Map.of(42,first),interior));
+            var applied=(com.threerings.tudey.data.actor.Active)update.aek()[0].apply(nativeActor);
+            if((int)FireCompatibility.field(applied,"_activity")!=0||(int)FireCompatibility.field(applied,"_activityStarted")!=1000+descriptor.duration()||applied.tz().x!=1)
+                throw new AssertionError("Passive update reapplied emote activity: "+name);
+            var ended=new org.tortodrone.world.ActorState(42,1001,"Fixture",0,1,1,0,0,0,0,0,1800,model);
+            var end=FireCompatibility.read(new org.tortodrone.protocol.SessionCodec().sceneDelta(1001,140,1050,(short)0,1050,1800,(short)50,List.of(),List.of(ended),new int[0],Map.of(42,moved),interior));
+            applied=(com.threerings.tudey.data.actor.Active)end.aek()[0].apply(applied);
+            if((int)FireCompatibility.field(applied,"_activity")!=0||(int)FireCompatibility.field(applied,"_activityStarted")!=1800)throw new AssertionError("Real activity transition lost: "+name);
+        }
+        System.out.println("PASS: native town/dungeon deltas preserve predicted emote clocks and deliver real activity transitions");
     }
     private static void messages()throws Exception {
         var routing=new org.tortodrone.world.SceneChat();

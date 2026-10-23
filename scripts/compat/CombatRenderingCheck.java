@@ -847,6 +847,16 @@ public final class CombatRenderingCheck {
     private long arsenalPressed,arsenalOpenedAt;
     private void arsenalBlinkTick(View view,long now)throws Exception {
         var pawn=authoritative.get(app.CT().pawnId);if(!(pawn instanceof Dungeoneer own))return;
+        if(arsenalStationOnly&&stage==46){
+            if(now-started<1_500_000_000L){moveToward(view,-1,0,true);return;}
+            flags(view,0);
+            if(arsenalStationState()==0){
+                capture("native-arsenal-closed");finishImages();passed=done=true;
+                System.out.println("PASS: native Arsenal opens on interaction, retains its shared state while in range and closes after departure");app.shutdown();return;
+            }
+            if(now-started>5_000_000_000L)throw new AssertionError("Arsenal remained open after leaving its range");
+            return;
+        }
         if(stage==43)return;
         if(stage==45){
             if(own.bR(Dungeoneer.INVULNERABLE)){blinkVisible|=view.PO().acL().isVisible();blinkHidden|=!view.PO().acL().isVisible();}
@@ -869,6 +879,7 @@ public final class CombatRenderingCheck {
         if(now-started>25_000_000_000L)throw new AssertionError("Arsenal/blink timeout: prompt="+own.Ns()+" policy="+app.CT().equipPolicy+" flags="+own.bR(64)+" visible="+blinkVisible+" hidden="+blinkHidden+" position="+own.tz());
         if(stage==2){
             if(arsenalStationOnly&&now-started<1_000_000_000L)return; // Let the native entry HUD finish being added.
+            if(arsenalStationOnly&&arsenalStationState()!=0)throw new AssertionError("Arsenal opened before interaction");
             moveEast(view,false);
             if(own.Ns() instanceof com.threerings.tudey.data.EntityKey.Entry entry&&Integer.valueOf(1955).equals(entry.getKey())){
                 flags(view,4);arsenalPressed=now;stage=42;return;
@@ -885,9 +896,17 @@ public final class CombatRenderingCheck {
                 Object equipment=field(hud,"aDX").get(hud);if(!(equipment instanceof com.threerings.opengl.gui.aD equipmentWindow)||!equipmentWindow.isAdded())throw new AssertionError("Native equipment window did not open");
                 capture("native-arsenal-open");capture("native-entry-blink");
                 ((com.threerings.opengl.gui.aD)inventory).dismiss();equipmentWindow.dismiss();
-                if(arsenalStationOnly){finishImages();passed=done=true;System.out.println("PASS: native Arsenal Station interaction opens inventory and equipment windows with ANY policy");app.shutdown();return;}
+                if(arsenalStationOnly){
+                    if(arsenalStationState()!=1)throw new AssertionError("Arsenal did not retain its opening state while in range");
+                    started=now;stage=46;return;
+                }
                 app.nk().a(null,"/haven",false);started=now;stage=43;}
         }
+    }
+    private int arsenalStationState()throws Exception {
+        for(var actor:authoritative.values())if(actor.Mv().getName().startsWith("Dynamic/Misc/Arsenal/")&&actor instanceof com.threerings.projectx.dungeon.data.actor.Switch)
+            return field(actor,"_state").getInt(actor);
+        throw new AssertionError("Missing native Arsenal switch");
     }
     private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;
     private Confirm sparkReply;

@@ -230,6 +230,17 @@ public final class TownMovementTest {
             "emote cannot replace active inventory pose");
         var forged=new PlayerEmotes.Descriptor("forged",264,0,0,0,true,false,true,false,0);
         check(!movement().emote(forged,5000,5000),"uncatalogued activity descriptors rejected");
+        for(String name:new String[]{"Attack","Helpme","Follow","Fallback","Wave"}){
+            var pose=movement();var descriptor=PlayerEmotes.find(name);pose.resetInput(6000);
+            check(pose.emote(descriptor,6000,6000),"command emote starts: "+name);
+            pose.preparePublication(6050);
+            for(int time=6050;time<6050+descriptor.duration();time+=50){
+                pose.status(SceneStatus.Modifiers.NORMAL);pose.preparePublication(time);pose.advance(time,time);
+                check(pose.activity()==descriptor.activity()&&pose.activityStarted()==6050,"passive publications retain full original emote and start time: "+name);
+            }
+            pose.advance(6050+descriptor.duration(),6050+descriptor.duration());
+            check(pose.activity()==0,"command ends at its original duration from publication: "+name);
+        }
         System.out.println("PASS: archived scene, spawn, movement, facing, replay limits, timeout, timestamped batches, scheduler jitter and town collision");
     }
 }

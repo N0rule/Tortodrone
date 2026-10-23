@@ -71,7 +71,9 @@ public final class TownMovement {
      * record. Data-dependent activities must start at their first publication boundary. */
     public void preparePublication(int stamp){
         if(!publicationPending)return;publicationPending=false;
-        if(activityData==null)return;
+        // RPC emotes start between ticks, too. Give the stock animation its entire
+        // configured duration from the first scene publication, just as item poses.
+        if(activityData==null&&PlayerEmotes.byActivity(activity)==null)return;
         activityStarted=stamp;
         if(activity==ANIMATED_ITEM&&activityData instanceof org.tortodrone.character.StarterCatalog.Model item)
             animatedItemMillis=animatedDuration(item.name(),stamp);

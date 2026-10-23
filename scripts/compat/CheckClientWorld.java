@@ -44,6 +44,7 @@ public final class CheckClientWorld {
                 project.resolve("scripts/compat/HavenConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/HavenCompatibility.java").toString(),
                 project.resolve("scripts/compat/EmoteCompatibility.java").toString(),
+                project.resolve("scripts/compat/FireCompatibility.java").toString(),
                 project.resolve("scripts/compat/EmoteConnectionCheck.java").toString(),
                 project.resolve("scripts/compat/TradeCompatibility.java").toString(),
                 project.resolve("scripts/compat/TradeConnectionCheck.java").toString(),

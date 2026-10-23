@@ -55,7 +55,8 @@ public final class DungeonConsumablesTest {
     private static Object field(Object value,String name)throws Exception{var f=value.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(value);}
     private static int pickup(WorldSession session,SceneEntities entities,ActorState player,String item)throws Exception{
         var fields=Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Pickup","config","Item/Pickups/Vial/Fire Vial","radius",".2","pickup-item",item,"pickup-transient","true");
-        entities.spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",Json.stringify(fields))),player.x(),player.y(),0,SceneClock.now());
+        // Capacity tests use an already activated pickup; spawn timing has its own regression.
+        entities.spawnPickup(new StarterCatalog.Model("Pickup",Map.of("fields",Json.stringify(fields))),player.x(),player.y(),0,SceneClock.now()-1000);
         int id=entities.actors().getLast().id();entities.advance(SceneClock.now(),List.of(player));
         var collect=WorldSession.class.getDeclaredMethod("collectPickups");collect.setAccessible(true);collect.invoke(session);return id;
     }

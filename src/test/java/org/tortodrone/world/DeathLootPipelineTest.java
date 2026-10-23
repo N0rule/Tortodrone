@@ -30,7 +30,8 @@ public final class DeathLootPipelineTest {
             var damage=new StarterCatalog.Model("DamageRegion",Map.of("damage",new FireCatalog.DataValue("Damage$Normal",Map.of("amount",10f,"flags",2))));
             world.damage(damage,0,0,0,now,player.id());world.damage(damage,0,0,0,now,player.id());
             check(world.actors().stream().filter(a->a.entity().kind().equals("Pickup")).count()==1,"one killing blow evaluates the loot graph exactly once");
-            world.advance(now+1,List.of(player));var claims=world.takePickups(player.id());check(claims.size()==1,"the spawned native actor can be picked up");
+            world.advance(now+999,List.of(player));check(world.takePickups(player.id()).isEmpty(),"death loot retains the native activation delay");
+            world.advance(now+1000,List.of(player));var claims=world.takePickups(player.id());check(claims.size()==1,"the spawned native actor can be picked up after one second");
             var claim=claims.getFirst();String receipt=UUID.randomUUID()+":"+claim.entityId();
             var store=new TownStore(db,items,TownCatalog.empty());var paid=store.pickup(account,1,1,receipt,claim.item());
             check(paid.profile().crowns()==profile.crowns()+1,"the death reward awards the original Copper Crown denomination");

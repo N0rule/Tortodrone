@@ -961,9 +961,9 @@ final class WorldSession implements AutoCloseable {
             if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
             try{
                 if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
-                SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;
+                SceneCatalog.MapScene map=null;ScenePortals.Entrance entrance=null;AlchemyDestination alchemy=null;
                 if(destination.equals("move_alchemy_machine")){
-                    entrance=nearestAlchemy();if(entrance!=null)map=scene.map();
+                    alchemy=selectAlchemy();if(alchemy!=null){entrance=alchemy.entrance();map=scene.map();}
                 }
                 if(destination.equals("haven"))map=scenes.catalog().entry();
                 if(map==null)for(var candidate:scenes.catalog().scenes())if(candidate.name().equals("%town:m."+destination)||candidate.id()==switch(destination){case "training"->294;case "lab"->30893;case "hoh"->318;default->-1;}){map=candidate;break;}
@@ -980,6 +980,7 @@ final class WorldSession implements AutoCloseable {
                 if(destination.equals("move_auction"))auctionSource(next);
                 if(next==scene){
                     if(!membership.teleport(entrance.x(),entrance.y(),entrance.rotation()))throw new IOException("Destination is blocked or the knight is busy");
+                    if(alchemy!=null)alchemyTarget=alchemy.key();
                     closeConversation();closeTownDialog();
                     if(destination.equals("move_auction"))openAuction();
                     output.send(()->codec.townResult(oid,listener.requestId(),"",profile));return true;
@@ -1446,22 +1447,16 @@ final class WorldSession implements AutoCloseable {
         if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
     }
 
-    /**
-     * Relocate to this scene's nearest general-purpose alchemy machine. Repeated use alternates
-     * through every machine, matching the stock command's usefulness in a crowded town, while
-     * preserving the scene's instance lease.
-     */
-    private ScenePortals.Entrance nearestAlchemy()throws IOException {
-        var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst()
-            .orElseThrow(()->new IOException("Knight left scene"));
+    private record AlchemyDestination(String key,ScenePortals.Entrance entrance) { }
+    /** Archive TudeySceneManager.getPortalTransform picks a random tagged destination.
+     * Avoid the last successful station when another usable station is available. */
+    private AlchemyDestination selectAlchemy()throws IOException {
         var machines=scene.map().content().entries().stream()
             .filter(e->e.spec().text("town-kind","").equals("OpenCrafter")&&e.spec().config().name().equals("Shop/Haven/Alchemy"))
-            .sorted(Comparator.comparingDouble(e->Math.hypot(e.x()-own.x(),e.y()-own.y()))).toList();
+            .toList();
         if(machines.isEmpty())return null;
-        // Start from the nearest machine, but skip the one used last so a second command reaches
-        // the next station instead of staying put. If it is blocked, the remaining machines and
-        // the previous one are still tried in distance order.
         var candidates=new ArrayList<>(machines);
+        Collections.shuffle(candidates);
         if(machines.size()>1&&alchemyTarget!=null){
             var previous=candidates.stream().filter(e->e.key().equals(alchemyTarget)).findFirst().orElse(null);
             if(previous!=null){candidates.remove(previous);candidates.add(previous);}
@@ -1473,8 +1468,7 @@ final class WorldSession implements AutoCloseable {
                 float x=machine.x()+(float)Math.cos(machine.rotation())*distance;
                 float y=machine.y()+(float)Math.sin(machine.rotation())*distance;
                 if(scene.simulation().placement(x,y)){
-                    alchemyTarget=machine.key();
-                    return new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI));
+                    return new AlchemyDestination(machine.key(),new ScenePortals.Entrance(1,x,y,(float)(machine.rotation()+Math.PI)));
                 }
             }
         }

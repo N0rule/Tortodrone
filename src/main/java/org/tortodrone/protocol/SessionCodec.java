@@ -14,6 +14,7 @@ import org.tortodrone.character.WorldProfile;
 import org.tortodrone.character.ItemCatalog;
 import org.tortodrone.character.SlotUpgrades;
 import org.tortodrone.world.KnightCombat;
+import org.tortodrone.world.PlayerEmotes;
 import org.tortodrone.world.TownMovement;
 import org.tortodrone.world.ActorState;
 import org.tortodrone.world.SceneRegistry;
@@ -1224,19 +1225,25 @@ public final class SessionCodec {
         out.writeInt(a.id());type(out,interior?"com.threerings.projectx.dungeon.data.actor.Dungeoneer":"com.threerings.projectx.data.actor.Knight");
         boolean configChanged = baseline == null || !a.config().equals(baseline.config());
         // Preserve the reference's config object on ordinary movement; update it for actual gear changes.
-        // The stock controller predicts directly on its first snapshot. Always replace activity
-        // fields so that local inventory prediction cannot leak into subsequent delta baselines.
+        // The stock controller predicts directly on its first snapshot. Inventory
+        // corrections below must not leak local prediction into later baselines.
         boolean combatChanged=interior&&(a.combat()!=null||baseline!=null&&baseline.combat()!=null);
         boolean sceneData=a.sceneKnight()!=null||baseline!=null&&baseline.sceneKnight()!=null;
         boolean spriteChanged=baseline==null||!java.util.Objects.equals(a.sceneKnight()==null?null:a.sceneKnight().sprite(),baseline.sceneKnight()==null?null:baseline.sceneKnight().sprite())||!java.util.Objects.equals(a.sceneKnight()==null?null:a.sceneKnight().harness(),baseline.sceneKnight()==null?null:baseline.sceneKnight().harness());
+        // The stock advancer owns an emote's clock after its initial publication.
+        // Passive movement/status updates must not reapply its activity to a locally
+        // advanced baseline. Real activity transitions still replace both fields.
+        boolean stableEmote=baseline!=null&&a.activity()>=PlayerEmotes.FIRST_ACTIVITY
+            &&a.activity()<PlayerEmotes.FIRST_ACTIVITY+PlayerEmotes.ANIMATED_COUNT
+            &&a.activity()==baseline.activity()&&a.activityStarted()==baseline.activityStarted();
         int second=a.interaction()!=null||baseline!=null&&baseline.interaction()!=null?0x1d:1;
-        out.writeByte(configChanged ? 0xdd : 0xdc);out.writeByte(second|(sceneData?0x42:0)|(spriteChanged?0x80:0));
+        out.writeByte((configChanged ? 0xdd : 0xdc)&(stableEmote?0x7f:0xff));out.writeByte((second|(sceneData?0x42:0)|(spriteChanged?0x80:0))&(stableEmote?0xfe:0xff));
         // Mutable Dungeoneer fields: weapon 16, shields 17/18, health 22/23,
         // impulse 24, hit time 26, chain 27/28, dodge deadline 31 and modifiers 33/34. Id/created are DeltaFinal.
         if(interior){out.writeByte((combatChanged?0xf7:0)|(sceneData?8:0));out.writeByte((combatChanged?0x99:0)|(sceneData?0x64:0));out.writeByte((combatChanged?6:0)|(sceneData?1:0));}
         if (configChanged) value(out,a.config());
         vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());out.writeFloat(a.direction());
-        out.writeInt(a.activity());out.writeInt(a.activityStarted());
+        if(!stableEmote){out.writeInt(a.activity());out.writeInt(a.activityStarted());}
         if(sceneData)value(out,activityData(a,observer));
         if(a.interaction()!=null||baseline!=null&&baseline.interaction()!=null)interaction(out,a.interaction());
         if(sceneData)out.writeInt(a.sceneKnight()==null?0:a.sceneKnight().lift());

@@ -71,7 +71,41 @@ public final class SceneSimulationTest {
             }
         }finally{one.close();two.close();isolated.close();}
         portals(map,model);
+        stations(model);
         System.out.println("PASS: shared scene ticks/snapshots/deltas, cached appearance, movement readiness, portals, pause/re-entry, instance isolation and idle lifecycle");
+    }
+    private static void stations(StarterCatalog.Model model)throws Exception {
+        var original=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var entries=original.content().entries().stream().filter(e->e.key().equals("1955")).toList();
+        var content=new SceneContent(entries,original.content().scales());
+        var map=new SceneCatalog.MapScene(294,1,"Fixture","Fixture","","training",1,19.5f,-.45f,(float)Math.PI/2,1,SceneWeaponsTest.openTerrain(),new byte[0],ScenePortals.EMPTY,content);
+        var simulation=new SceneRegistry.Instance(703,0,map).simulation();
+        var first=new LinkedBlockingQueue<SceneSimulation.Snapshot>();var second=new LinkedBlockingQueue<SceneSimulation.Snapshot>();
+        int stamp=SceneClock.now();
+        try(var one=simulation.join(new ActorState(41,1041,"One",0,stamp,19.5f,-.45f,(float)Math.PI/2,0,0,model),first::add);
+                var two=simulation.join(new ActorState(42,1042,"Two",0,stamp,19.6f,-.45f,(float)Math.PI/2,0,0,model),second::add)){
+            one.enter();two.enter();
+            check(stationState(next(first))==0&&stationState(next(second))==0,"nearby clients initially see the same closed Arsenal");
+            stamp=SceneClock.now();check(one.input(stamp,(float)Math.PI/2,0,4,stamp,stamp,System.nanoTime()/1_000_000L),"station interaction intent accepted");
+            var opened=awaitStation(first,1);
+            SceneSimulation.Snapshot peer=next(second);
+            for(int n=0;n<60&&peer.timestamp()<opened.timestamp();n++)peer=next(second);
+            check(opened==peer,"opening uses one shared publication for both clients");
+            try(var late=simulation.join(new ActorState(43,1043,"Late",0,stamp,0,0,0,0,0,model),s->{})){
+                check(stationState(simulation.snapshot())==1,"late subscriptions see the current open state");
+            }
+            check(one.teleport(0,0,0),"first occupant leaves the station range");
+            check(stationState(next(first))==1,"remaining occupant retains the shared open state");
+            two.close();var closed=awaitStation(first,0);
+            check(stationState(closed)==0,"disconnect of the last nearby occupant closes the shared station");
+        }
+    }
+    private static int stationState(SceneSimulation.Snapshot snapshot){
+        return snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("Switch")&&a.entity().key().equals("1955")).findFirst().orElseThrow().entity().state();
+    }
+    private static SceneSimulation.Snapshot awaitStation(BlockingQueue<SceneSimulation.Snapshot> queue,int state)throws Exception {
+        for(int n=0;n<60;n++){var snapshot=next(queue);if(stationState(snapshot)==state)return snapshot;}
+        throw new AssertionError("Station did not reach state "+state);
     }
     private static void portals(SceneCatalog.MapScene map,StarterCatalog.Model model)throws Exception {
         var simulation=new SceneRegistry.Instance(702,0,map).simulation();
