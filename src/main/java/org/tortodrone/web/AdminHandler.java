@@ -19,8 +19,8 @@ public final class AdminHandler implements HttpHandler {
     public AdminHandler(WebSecurity security,WebIdentityStore identities,AdminService service,Path frontend){this.security=security;this.identities=identities;this.service=service;this.frontend=frontend;}
     @Override public void handle(HttpExchange e)throws IOException {
         try(e){
-            WebSecurity.headers(e);
-            if(!security.trusted(e)){send(e,403,Map.of("error","Trusted HTTPS proxy required"));return;}
+            security.headers(e);
+            if(!security.trusted(e)){send(e,403,Map.of("error","Request does not match the configured WebUI transport and origin"));return;}
             if(!requests.tryAcquire()){send(e,503,Map.of("error","Busy; retry shortly"));return;}
             try{handleTrusted(e);}catch(IllegalArgumentException invalid){send(e,400,Map.of("error","Invalid request fields"));}
             catch(IOException invalid){send(e,409,Map.of("error","Operation refused; refresh and verify the selection and values"));}
@@ -44,13 +44,13 @@ public final class AdminHandler implements HttpHandler {
                 identities.audit(s==null?"anonymous":s.identity().username(),"login","",s==null?"denied":"authenticated");
                 if(s==null){send(e,401,Map.of("error","Invalid credentials"));return;}
                 var old=security.session(e);if(old!=null)security.logout(old);
-                WebSecurity.cookie(e,s);send(e,200,session(s));return;
+                security.cookie(e,s);send(e,200,session(s));return;
             }finally{logins.release();}
         }
         var s=security.session(e);if(s==null){send(e,401,Map.of("error","Sign in required"));return;}
         if(post&&!WebSecurity.equal(s.csrf(),e.getRequestHeaders().getFirst("X-CSRF-Token"))){send(e,403,Map.of("error","CSRF validation failed"));return;}
         if(route.equals("session")&&!post){send(e,200,session(s));return;}
-        if(route.equals("logout")&&post){security.logout(s);WebSecurity.cookie(e,null);send(e,200,Map.of("ok",true));return;}
+        if(route.equals("logout")&&post){security.logout(s);security.cookie(e,null);send(e,200,Map.of("ok",true));return;}
         var permission=AdminService.permission(route,post);
         if(s.identity().role().ordinal()<permission.ordinal()){identities.audit(s.identity().username(),route,"","denied");send(e,403,Map.of("error","Role does not permit this operation"));return;}
         if(!post){send(e,200,route.equals("audit")?identities.audit():service.read(route,p));return;}

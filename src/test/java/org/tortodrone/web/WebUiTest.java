@@ -73,6 +73,7 @@ public final class WebUiTest {
                     check(!identities.audit().isEmpty(),"persistent action audit");
                     for(int i=0;i<12;i++)security.allowLogin();check(!security.allowLogin(),"bounded global login rate");
                 }
+                httpMode(root,news,frontend,identities,service);
                 cookie=null;csrf=null;
                 try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),org.tortodrone.config.ServerSettings.DEFAULT_NEWS_PORT,news,x->{})){
                     port=http.port();check(port==8080&&request("GET","/news/public.png",null,Map.of()).status==200,"public News on default port 8080");
@@ -84,8 +85,49 @@ public final class WebUiTest {
             try{new WebSettings(true,"http://remote.example","reverse-proxy");throw new AssertionError("plaintext origin accepted");}catch(IllegalArgumentException expected){}
             try(var c=java.sql.DriverManager.getConnection("jdbc:sqlite:"+data.resolve("webui.sqlite"));var s=c.createStatement()){s.execute("PRAGMA user_version=999");}
             try{new WebIdentityStore(data);throw new AssertionError("unknown schema accepted");}catch(IOException expected){}
-            System.out.println("PASS: shared HTTP, public News, proxy/Host/Origin/CSRF, roles, credentials, revocation, expiration, audit, rollback and safe assets");
+            System.out.println("PASS: shared News, opt-in direct HTTP and default HTTPS proxy, Host/Origin/CSRF, roles, cookies, revocation, expiration, audit and rollback");
         }finally{try(var walk=Files.walk(root)){for(var p:walk.sorted(Comparator.reverseOrder()).toList())Files.delete(p);}}
+    }
+    private static void httpMode(Path root,Path news,Path frontend,WebIdentityStore identities,AdminService service)throws Exception {
+        String origin="http://192.168.1.50:8080";
+        Path noProxyKey=root.resolve("http-without-proxy-key");
+        var clock=new AtomicLong(System.currentTimeMillis());
+        var security=new WebSecurity(new WebSettings(true,origin,"http"),identities,noProxyKey,clock::get);
+        check(!Files.exists(noProxyKey),"direct HTTP needs no proxy key or proxy configuration");
+        var headers=new HashMap<String,String>();headers.put("Host","192.168.1.50:8080");headers.put("Origin",origin);
+        try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),0,news,x->{},new AdminHandler(security,identities,service,frontend))){
+            port=http.port();
+            var front=request("GET","/admin/",null,headers);
+            check(front.status==200&&!front.headers.containsKey("strict-transport-security")&&front.headers.containsKey("content-security-policy"),"HTTP frontend keeps CSP without HSTS");
+            check(request("GET","/news/public.png",null,Map.of()).status==200,"HTTP mode shares the public News listener");
+            check(request("GET","/admin/api/status",null,headers).status==401,"HTTP API still requires authentication");
+            var bad=new HashMap<>(headers);bad.put("Host","attacker.example");check(request("GET","/admin/",null,bad).status==403,"HTTP Host allowlist");
+            bad=new HashMap<>(headers);bad.put("Origin","http://attacker.example");check(request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),bad).status==403,"HTTP cross-origin login rejected");
+            bad=new HashMap<>(headers);bad.remove("Origin");check(request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),bad).status==403,"HTTP login requires Origin");
+            for(String header:List.of("Forwarded","X-Forwarded-For","X-Forwarded-Host","X-Forwarded-Proto","X-Tortodrone-Proxy")){
+                bad=new HashMap<>(headers);bad.put(header,"spoofed");check(request("GET","/admin/",null,bad).status==403,"HTTP rejects proxy assertions: "+header);
+            }
+            var login=request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),headers);
+            check(login.status==200,"direct HTTP administrator login");
+            String set=login.headers.get("set-cookie");
+            check(set.startsWith("tortodrone-http=")&&set.contains("HttpOnly")&&set.contains("SameSite=Strict")&&!set.contains("Secure")&&!set.contains("Domain="),"HTTP-compatible host-only session cookie");
+            var authenticated=new HashMap<>(headers);authenticated.put("Cookie",set.split(";")[0]);
+            String csrf=(String)((Map<?,?>)Json.parse(login.body)).get("csrf");
+            check(request("GET","/admin/api/status",null,authenticated).status==200,"HTTP session round trip");
+            check(request("POST","/admin/api/logout","",authenticated).status==403,"HTTP session still requires CSRF");
+            var wrongName=new HashMap<>(authenticated);wrongName.put("Cookie",authenticated.get("Cookie").replace("tortodrone-http=","__Secure-tortodrone="));
+            check(request("GET","/admin/api/status",null,wrongName).status==401,"HTTP and HTTPS cookie names remain separate");
+            authenticated.put("X-CSRF-Token",csrf);
+            var logout=request("POST","/admin/api/logout","",authenticated);
+            check(logout.status==200&&logout.headers.get("set-cookie").contains("Max-Age=0"),"HTTP logout clears cookie");
+            check(request("GET","/admin/api/status",null,authenticated).status==401,"HTTP logout revokes server session");
+            login=request("POST","/admin/api/login",form(Map.of("username","viewer","password",PASSWORD)),headers);
+            check(login.status==200,"HTTP viewer login");
+            authenticated.put("Cookie",login.headers.get("set-cookie").split(";")[0]);authenticated.put("X-CSRF-Token",(String)((Map<?,?>)Json.parse(login.body)).get("csrf"));
+            check(request("GET","/admin/api/status",null,authenticated).status==200,"HTTP viewer monitoring");
+            check(request("POST","/admin/api/stop",form(Map.of("confirmation","stop")),authenticated).status==403,"HTTP role authorization remains enforced");
+            clock.addAndGet(31*60_000);check(request("GET","/admin/api/status",null,authenticated).status==401,"HTTP idle expiration");
+        }
     }
     private static HashMap<String,String> headers(){var h=new HashMap<String,String>();h.put("Host","admin.example");h.put("X-Tortodrone-Proxy",secret);h.put("X-Forwarded-Proto","https");h.put("Origin","https://admin.example");return h;}
     private static HashMap<String,String> authenticated(){var h=headers();if(cookie!=null)h.put("Cookie",cookie);if(csrf!=null)h.put("X-CSRF-Token",csrf);return h;}

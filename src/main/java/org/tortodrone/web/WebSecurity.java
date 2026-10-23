@@ -9,7 +9,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import org.tortodrone.resources.ContentFiles;
 
-/** Fail-closed proxy authentication, origin checks and bounded in-memory sessions. */
+/** Transport-specific ingress validation, origin checks and bounded in-memory sessions. */
 public final class WebSecurity {
     public record Session(String token,String csrf,WebIdentityStore.Identity identity,long expires,long lastUsed){}
     private final WebSettings settings;
@@ -24,19 +24,22 @@ public final class WebSecurity {
     }
     WebSecurity(WebSettings settings,WebIdentityStore identities,Path data,java.util.function.LongSupplier clock)throws IOException {
         this.settings=settings;this.identities=identities;this.clock=clock;
+        if(settings.directHttp()){proxySecret=null;return;}
         Path secret=data.resolve("webui-proxy.key");ContentFiles.regular(secret);
         if(Files.size(secret)>128)throw new IOException("Invalid proxy secret file");
         proxySecret=Files.readString(secret).strip();
         if(!proxySecret.matches("[A-Za-z0-9_-]{43}"))throw new IOException("Invalid WebUI proxy secret; use local --webui-proxy-key");
     }
     public boolean trusted(HttpExchange e){
-        if(!e.getRemoteAddress().getAddress().isLoopbackAddress())return false;
         var h=e.getRequestHeaders();
         if(h.containsKey("Forwarded")||h.containsKey("X-Forwarded-Host")||h.containsKey("X-Forwarded-For"))return false;
         String host=URI.create(settings.publicUrl()).getRawAuthority();
-        if(!host.equals(single(e,"Host"))||!"https".equals(single(e,"X-Forwarded-Proto"))||!equal(proxySecret,single(e,"X-Tortodrone-Proxy")))return false;
+        if(!host.equals(single(e,"Host")))return false;
+        if(settings.directHttp()) {
+            if(h.containsKey("X-Forwarded-Proto")||h.containsKey("X-Tortodrone-Proxy"))return false;
+        } else if(!e.getRemoteAddress().getAddress().isLoopbackAddress()||!"https".equals(single(e,"X-Forwarded-Proto"))||!equal(proxySecret,single(e,"X-Tortodrone-Proxy")))return false;
         String origin=single(e,"Origin");
-        return (origin==null||origin.equals(settings.publicUrl()))&&(!e.getRequestMethod().equals("POST")||settings.publicUrl().equals(origin));
+        return (!h.containsKey("Origin")||settings.publicUrl().equals(origin))&&(!e.getRequestMethod().equals("POST")||settings.publicUrl().equals(origin));
     }
     private static String single(HttpExchange e,String name){var values=e.getRequestHeaders().get(name);return values==null||values.size()!=1?null:values.getFirst();}
     public static boolean equal(String a,String b){return a!=null&&b!=null&&MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8),b.getBytes(StandardCharsets.UTF_8));}
@@ -51,13 +54,15 @@ public final class WebSecurity {
     }
     public synchronized Session session(HttpExchange e)throws IOException {
         prune();String cookie=single(e,"Cookie");if(cookie==null)return null;
-        String token=null;for(String part:cookie.split(";")){String p=part.strip();if(p.startsWith("__Secure-tortodrone=")){if(token!=null)return null;token=p.substring("__Secure-tortodrone=".length());}}
+        String prefix=cookieName()+"=";
+        String token=null;for(String part:cookie.split(";")){String p=part.strip();if(p.startsWith(prefix)){if(token!=null)return null;token=p.substring(prefix.length());}}
         var s=sessions.get(token);if(s==null)return null;
         if(!identities.current(s.identity())){sessions.remove(token);return null;}
         var updated=new Session(s.token(),s.csrf(),s.identity(),s.expires(),clock.getAsLong());sessions.put(token,updated);return updated;
     }
     public synchronized void logout(Session s){sessions.remove(s.token());}
     private void prune(){long now=clock.getAsLong();sessions.values().removeIf(s->s.expires()<=now||now-s.lastUsed()>30*60_000);}
-    public static void cookie(HttpExchange e,Session s){e.getResponseHeaders().set("Set-Cookie","__Secure-tortodrone="+(s==null?"":s.token())+"; Path=/admin/; HttpOnly; Secure; SameSite=Strict; Max-Age="+(s==null?0:28800));}
-    public static void headers(HttpExchange e){var h=e.getResponseHeaders();h.set("Cache-Control","no-store");h.set("X-Content-Type-Options","nosniff");h.set("X-Frame-Options","DENY");h.set("Referrer-Policy","no-referrer");h.set("Permissions-Policy","camera=(), microphone=(), geolocation=()");h.set("Strict-Transport-Security","max-age=31536000");h.set("Content-Security-Policy","default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");}
+    private String cookieName(){return settings.directHttp()?"tortodrone-http":"__Secure-tortodrone";}
+    public void cookie(HttpExchange e,Session s){e.getResponseHeaders().set("Set-Cookie",cookieName()+"="+(s==null?"":s.token())+"; Path=/admin/; HttpOnly; "+(settings.directHttp()?"":"Secure; ")+"SameSite=Strict; Max-Age="+(s==null?0:28800));}
+    public void headers(HttpExchange e){var h=e.getResponseHeaders();h.set("Cache-Control","no-store");h.set("X-Content-Type-Options","nosniff");h.set("X-Frame-Options","DENY");h.set("Referrer-Policy","no-referrer");h.set("Permissions-Policy","camera=(), microphone=(), geolocation=()");if(!settings.directHttp())h.set("Strict-Transport-Security","max-age=31536000");h.set("Content-Security-Policy","default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");}
 }

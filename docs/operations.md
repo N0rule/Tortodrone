@@ -32,12 +32,29 @@ startup-map: haven
 
 ## Secure WebUI setup
 
-The WebUI requires an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Native TLS is intentionally not used so the unchanged client's HTTP News URLs remain compatible. No plaintext administration mode exists, even on localhost. `webui-public-url` must be the exact HTTPS origin, without a trailing slash.
+The default `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Explicit `webui-tls-mode: http` permits direct HTTP access for local or LAN testing. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. `webui-public-url` must be the exact browser origin, without a trailing slash; use an HTTPS URL for proxy mode or an HTTP URL for direct mode.
 
 Create credentials locally (passwords are prompted, never command arguments):
 
 ```sh
 java -jar tortodrone-admin.jar --webui-user operator ADMINISTRATOR
+```
+
+For direct LAN access, set the server PC's actual LAN address (example `192.168.1.50`):
+
+```yaml
+server-ip: 0.0.0.0
+news-port: 8080
+webui-enabled: true
+webui-public-url: http://192.168.1.50:8080
+webui-tls-mode: http
+```
+
+Restart the server process and open `http://192.168.1.50:8080/admin/`. No domain, certificate, proxy or proxy key is needed. Use that exact address on the server PC too, or configure a different origin such as `http://localhost:8080` for local-only browsing. HTTP does not encrypt passwords or session traffic; choose it only on a network you trust. If a browser previously received HSTS for the same hostname, use an IP address or clear that hostname's HSTS setting before testing HTTP.
+
+For the default HTTPS proxy mode, also create a proxy key:
+
+```sh
 java -jar tortodrone-admin.jar --webui-proxy-key
 ```
 
@@ -61,11 +78,11 @@ location /news/ {
 }
 ```
 
-Then set `webui-enabled: true` and `webui-public-url: https://admin.example.org`, restart the process, and visit `https://admin.example.org/admin/`. Public `/news/` remains available directly on 8080 without login; direct administrative requests are rejected. The reverse proxy is external infrastructure, not another Tortodrone listener. Deploy the generated `webui/` directory beside the server JAR; no Node runtime, CDN or client installation is needed.
+Then set `webui-enabled: true` and `webui-public-url: https://admin.example.org`, restart the process, and visit `https://admin.example.org/admin/`. Public `/news/` remains available directly on 8080 without login; proxy mode rejects direct administrative requests. The reverse proxy is external infrastructure, not another Tortodrone listener. Deploy the generated `webui/` directory beside the server JAR; no Node runtime, CDN or client installation is needed.
 
 WebUI identities are independent of game accounts and GM status. `VIEWER` can monitor status, sessions and logs; `MODERATOR` can also inspect accounts/knights and kick sessions; `ADMINISTRATOR` can mutate accounts/economy/content and control lifecycle. Re-run `--webui-user NAME ROLE` to change credentials/role and revoke existing sessions, or use `--webui-revoke NAME` to remove access. There are no default credentials. Passwords use independently salted PBKDF2-HMAC-SHA256 with 600,000 iterations; sessions expire after 30 minutes idle or eight hours absolute and are revoked on logout, identity changes or process restart.
 
-The browser uses secure HttpOnly SameSite cookies and a session-bound CSRF token. APIs enforce role, Origin, Host, size and concurrency limits. Login is globally limited to ten attempts per minute; HTTP request deadlines bound stalled requests. Privileged action attempts/outcomes are stored in `data/webui.sqlite`, separately from game data. A requested action without a final outcome indicates interruption and must be inspected before retrying. Audit failure prevents starting an action; the game services keep their own transactional ledgers. Do not delete either database to clear logs.
+The browser uses HttpOnly SameSite cookies and a session-bound CSRF token. HTTPS proxy mode adds the Secure cookie flag and HSTS; direct HTTP uses a separate cookie name without the Secure flag so LAN browsers can send it over HTTP. APIs enforce role, Origin, Host, size and concurrency limits. Login is globally limited to ten attempts per minute; HTTP request deadlines bound stalled requests. Privileged action attempts/outcomes are stored in `data/webui.sqlite`, separately from game data. A requested action without a final outcome indicates interruption and must be inspected before retrying. Audit failure prevents starting an action; the game services keep their own transactional ledgers. Do not delete either database to clear logs.
 
 The UI includes monitoring charts, players/scenes, accounts and knights, inventory/modifiers/accessories, binding/expiry on grants, Depot offers/promotions/effective catalogue, auction escrow/deliveries, searchable logs/export, content validation and News preview/editing. News editing only replaces validated `news.yml`, using existing images; listener restart publishes changed pack selection. The native protocol selects a random pack, so array order is preserved without promising a rotation order. Item support remains constrained by the authoritative catalogue and services.
 

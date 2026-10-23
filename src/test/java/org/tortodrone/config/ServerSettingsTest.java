@@ -35,6 +35,14 @@ public final class ServerSettingsTest {
             check(ServerSettings.read(yaml).webui().enabled(),"YAML boolean WebUI setting");
             Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://admin.example\n");
             try{ServerSettings.read(yaml);throw new AssertionError("Plaintext administration allowed");}catch(IOException expected){}
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://192.168.1.50:8080\nwebui-tls-mode: http\n");
+            check(ServerSettings.read(yaml).webui().directHttp(),"direct HTTP requires an explicit transport opt-in");
+            Files.writeString(file,"webui-enabled=true\nwebui-public-url=http://192.168.1.50:8080\nwebui-tls-mode=http\n");
+            check(ServerSettings.read(file).webui().directHttp(),"legacy properties support explicit HTTP mode");
+            for(String url:new String[]{"https://192.168.1.50:8080","http://192.168.1.50:8080/admin/","http://user@192.168.1.50:8080","http://192.168.1.50:8080?bad=1","http://192.168.1.50:70000"}){
+                Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: "+url+"\nwebui-tls-mode: http\n");
+                try{ServerSettings.read(yaml);throw new AssertionError("Invalid direct HTTP origin accepted: "+url);}catch(IOException expected){}
+            }
             System.out.println("PASS: bounded client capacity, default and existing configuration compatibility");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }

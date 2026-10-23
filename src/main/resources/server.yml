@@ -13,4 +13,5 @@ startup-map: haven
 # Optional administration, served by the shared News HTTP listener.
 webui-enabled: false
 webui-public-url: ""
+# reverse-proxy uses HTTPS; http explicitly permits direct plaintext access.
 webui-tls-mode: reverse-proxy
