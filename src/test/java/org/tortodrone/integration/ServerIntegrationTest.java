@@ -436,7 +436,7 @@ public final class ServerIntegrationTest {
         org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
         Path config = directory.resolve("data/server.properties");
         Files.createDirectories(config.getParent());
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nwebui-enabled=false\nlog-mode=debug\n");
         try (Running server = new Running(jar, config, directory);
              Socket unfinished = new Socket("127.0.0.1", server.ready())) {
             unfinished.setSoTimeout(10000);
@@ -523,7 +523,7 @@ public final class ServerIntegrationTest {
 
             boolean gracefulRequested = false;
             try {
-                send("stop\n");
+                send("shutdown\nSHUT DOWN PROCESS\n");
                 gracefulRequested = true;
             } catch (IOException closedInput) {
                 // ConsoleIntegrationTest intentionally closes stdin to test EOF.
@@ -543,7 +543,7 @@ public final class ServerIntegrationTest {
                 process.waitFor();
             }
             if (gracefulRequested) {
-                throw new AssertionError("Server did not shut down gracefully after stop command");
+                throw new AssertionError("Server did not shut down gracefully after confirmed shutdown");
             }
         }
     }

@@ -11,7 +11,7 @@ public final class ServerSettingsTest {
         try {
             check(ServerSettings.defaultPath(home).equals(home.resolve("config/server.yml")),"settings default to config/server.yml");
             check(ServerSettings.read(home.resolve("data/server.properties")).contentPacks().equals("vanilla")&&!Files.exists(home.resolve("data")),"reading content defaults creates no data or config directory");
-            check(ServerSettings.load(file).maxClients()==16,"existing connection limit remains the default");
+            check(ServerSettings.load(file).maxClients()==16&&ServerSettings.load(file).webui().enabled()&&ServerSettings.load(file).webui().automaticHost(),"bundled properties enable HTTP administration with the existing client limit");
             check(Files.readString(file).contains("content-packs=vanilla")&&Files.readString(file).contains("legacy-content=auto"),"new settings include content selection defaults");
             Files.writeString(file,"content-packs=vanilla,addon\nlegacy-content=disabled\n");
             check(ServerSettings.load(file).contentPacks().equals("vanilla,addon")&&ServerSettings.load(file).legacyContent().equals("disabled"),"content selection uses the same settings file");
@@ -30,13 +30,26 @@ public final class ServerSettingsTest {
             }
             Path yaml=home.resolve("server.yml");
             Files.writeString(yaml,"server-port: 0\n");
-            check(ServerSettings.read(yaml).newsPort()==8080&&!ServerSettings.read(yaml).webui().enabled(),"shared default port and opt-in administration");
+            var defaults=ServerSettings.read(yaml);
+            check(defaults.bind().equals("0.0.0.0")&&defaults.httpPort()==8080&&defaults.webui().enabled()&&defaults.webui().directHttp()&&defaults.webui().automaticHost(),"defaults start HTTP WebUI on all interfaces at shared port 8080");
+            check(defaults.webui().publicUrl().equals("http://0.0.0.0:8080"),"default public URL resolves the shared port");
+            Path generated=home.resolve("generated/server.yml");var bundled=ServerSettings.load(generated);
+            check(bundled.webui().enabled()&&bundled.webui().automaticHost()&&bundled.httpPort()==8080,"fresh bundled YAML enables HTTP administration");
+            Files.writeString(yaml,"webui-public-url: 192.168.1.50\nwebui/content_url-port: 8091\n");
+            check(ServerSettings.read(yaml).webui().publicUrl().equals("http://192.168.1.50:8091"),"bare HTTP host inherits scheme and shared port");
+            Files.writeString(yaml,"webui-public-url: admin.example:8443\nwebui-tls-mode: reverse-proxy\n");
+            check(ServerSettings.read(yaml).webui().publicUrl().equals("https://admin.example:8443"),"bare proxy host inherits HTTPS and retains external port");
+            for(String host:new String[]{"admin.example/admin", "user@admin.example", "admin.example?bad=1", "admin.example#bad", ""}) {
+                Files.writeString(yaml,"webui-public-url: \""+host+"\"\n");
+                try{ServerSettings.read(yaml);throw new AssertionError("Invalid bare origin accepted: "+host);}catch(IOException expected){}
+            }
+            Files.writeString(yaml,"webui-enabled: false\n");check(!ServerSettings.read(yaml).webui().enabled(),"explicit disable remains supported");
             Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: https://admin.example\nwebui-tls-mode: reverse-proxy\n");
             check(ServerSettings.read(yaml).webui().enabled(),"YAML boolean WebUI setting");
-            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://admin.example\n");
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://admin.example\nwebui-tls-mode: reverse-proxy\n");
             try{ServerSettings.read(yaml);throw new AssertionError("Plaintext administration allowed");}catch(IOException expected){}
             Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://192.168.1.50:8080\nwebui-tls-mode: http\n");
-            check(ServerSettings.read(yaml).webui().directHttp(),"direct HTTP requires an explicit transport opt-in");
+            check(ServerSettings.read(yaml).webui().directHttp(),"explicit HTTP settings remain compatible");
             Files.writeString(file,"webui-enabled=true\nwebui-public-url=http://192.168.1.50:8080\nwebui-tls-mode=http\n");
             check(ServerSettings.read(file).webui().directHttp(),"legacy properties support explicit HTTP mode");
             for(String url:new String[]{"https://192.168.1.50:8080","http://192.168.1.50:8080/admin/","http://user@192.168.1.50:8080","http://192.168.1.50:8080?bad=1","http://192.168.1.50:70000"}){

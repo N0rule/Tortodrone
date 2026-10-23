@@ -3,7 +3,7 @@ package org.tortodrone.web;
 import java.io.IOException;
 import java.net.URI;
 
-/** Explicit transport selection; HTTPS through a trusted proxy remains the default. */
+/** Transport and browser-origin settings for shared HTTP administration. */
 public record WebSettings(boolean enabled, String publicUrl, String tlsMode) {
     public static final WebSettings DISABLED=new WebSettings(false,"","reverse-proxy");
     public WebSettings {
@@ -27,6 +27,8 @@ public record WebSettings(boolean enabled, String publicUrl, String tlsMode) {
         if(!enabled.equals("true")&&!enabled.equals("false"))throw new IOException("webui-enabled must be true or false");
         try{
             String url=p.getProperty("webui-public-url",""),mode=p.getProperty("webui-tls-mode","reverse-proxy");
+            if(Boolean.parseBoolean(enabled)&&!url.contains("://"))
+                url=(mode.equals("http")?"http://":"https://")+url;
             if(Boolean.parseBoolean(enabled)&&mode.equals("http")) {
                 URI uri=URI.create(url);
                 if(uri.getHost()!=null&&uri.getPort()==-1&&httpPort!=80&&httpPort!=0)

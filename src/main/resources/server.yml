@@ -8,10 +8,10 @@ log-retention: 5
 # Folder name under content/maps; the existing startup flow requires a town.
 startup-map: haven
 
-# Optional administration, served by the shared News HTTP listener.
-webui-enabled: false
-webui-public-url: ""
+# Administration starts on the shared HTTP listener by default.
+webui-enabled: true
+webui-public-url: 0.0.0.0
 # One shared HTTP port for WebUI and public News, even when WebUI is disabled.
 webui/content_url-port: 8080
-# reverse-proxy uses HTTPS; http explicitly permits direct plaintext access.
-webui-tls-mode: reverse-proxy
+# http serves direct local/LAN access; reverse-proxy enables an HTTPS proxy.
+webui-tls-mode: http

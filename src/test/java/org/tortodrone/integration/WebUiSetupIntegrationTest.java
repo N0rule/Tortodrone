@@ -23,11 +23,11 @@ public final class WebUiSetupIntegrationTest {
         try {
             try(var jar=new JarFile(source.toFile())){check(jar.getEntry("org/tortodrone/admin/AdminApplication.class")==null,"obsolete admin application is absent from server JAR");}
             TestDeployment.copyServer(source,root.resolve("tortodrone.jar"));
-            Files.writeString(root.resolve("config/server.yml"),"server-ip: 0.0.0.0\nserver-port: 0\nwebui-enabled: true\nwebui-public-url: http://0.0.0.0\nwebui/content_url-port: 0\nwebui-tls-mode: http\n");
+            Files.writeString(root.resolve("config/server.yml"),"server-port: 0\nwebui/content_url-port: 0\n");
             try(var server=new Running(root)) {
                 server.ready();String code=server.setupCode();check(code!=null,"first-run code appears only in local console output");
                 var admin=new Client(server.port());
-                check(Boolean.TRUE.equals(admin.get("setup").get("required")),"first-run page is offered without a CLI command");
+                check(Boolean.TRUE.equals(admin.get("setup").get("required")),"default configuration serves first-run WebUI without explicit enable, URL or transport settings");
                 var html=HttpClient.newHttpClient().send(HttpRequest.newBuilder(URI.create(admin.origin+"/admin/")).GET().build(),HttpResponse.BodyHandlers.ofString());
                 check(html.statusCode()==200&&html.body().contains("setup-fields"),"frontend assets shipped beside the single JAR");
                 var setup=new HashMap<String,Object>(Map.of("username",FIRST,"password",PASSWORD,"passwordConfirmation",PASSWORD,"setupCode","incorrect"));
@@ -62,7 +62,7 @@ public final class WebUiSetupIntegrationTest {
             try(var server=new Running(root)) {
                 server.ready();check(server.setupCode()==null,"setup never reopens on restart");
                 var client=new Client(server.port());check(Boolean.FALSE.equals(client.get("setup").get("required")),"existing accounts show sign-in instead");
-                client.login("rescue",PASSWORD);client.post("shutdown",Map.of("shutdown","SHUT DOWN PROCESS"),200);
+                client.login("rescue",PASSWORD);server.send("shutdown\nSHUT DOWN PROCESS\n");
                 check(server.process.waitFor(15,TimeUnit.SECONDS)&&server.process.exitValue()==0,"existing WebUI credentials survive restart");
             }
             System.out.println("PASS: single packaged JAR, first-run setup, private one-time console code, WebUI account CRUD, console recovery while stopped and persistent setup closure");

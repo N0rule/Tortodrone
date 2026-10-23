@@ -18,9 +18,9 @@ Edit `config/server.yml` while stopped:
 server-ip: 0.0.0.0
 server-port: 47624
 webui/content_url-port: 8080
-webui-enabled: false
-webui-public-url: ""
-webui-tls-mode: reverse-proxy
+webui-enabled: true
+webui-public-url: 0.0.0.0
+webui-tls-mode: http
 max-clients: 16
 log-mode: normal
 log-max-mib: 10
@@ -32,7 +32,7 @@ startup-map: haven
 
 ## Secure WebUI setup
 
-The default `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Explicit `webui-tls-mode: http` permits direct HTTP access for local or LAN testing. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
+Defaults enable WebUI with `webui-tls-mode: http`, `webui-public-url: 0.0.0.0` and the shared port 8080, bound to all interfaces. Set `webui-enabled: false` to disable administration routes. Optional `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to that existing HTTP port. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
 
 When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, a 14–128 character password twice, and the one-time setup code printed in the local server console. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
 
@@ -45,14 +45,16 @@ For direct local/LAN access with automatic server addresses:
 ```yaml
 server-ip: 0.0.0.0
 webui-enabled: true
-webui-public-url: http://0.0.0.0
+webui-public-url: 0.0.0.0
 webui/content_url-port: 8080
 webui-tls-mode: http
 ```
 
+The public address may omit `http://` or `https://`; the scheme follows `webui-tls-mode`. Explicit URLs remain supported and must match the mode.
+
 Restart the server process and open `http://YOUR_SERVER_IP:8080/admin/` (for example `http://192.168.1.50:8080/admin/`), or `http://localhost:8080/admin/` on the server PC. Here `http://0.0.0.0` is an automatic-address configuration value, not a browser destination: Host must match the connection's concrete local IP and actual listening port; localhost is also accepted for loopback connections. Origin must match that validated Host. Arbitrary DNS hostnames are rejected in automatic mode. Set a concrete `webui-public-url`, such as `http://192.168.1.50`, if you want one fixed allowed address. No domain, certificate, proxy or proxy key is needed. HTTP does not encrypt passwords or session traffic; choose it only on a network you trust. If a browser previously received HSTS for the same hostname, use an IP address or clear that hostname's HSTS setting before testing HTTP.
 
-For the default HTTPS proxy mode, the server creates `data/webui-proxy.key` automatically if it is missing and prints its path. Existing keys are preserved.
+For optional HTTPS proxy mode, the server creates `data/webui-proxy.key` automatically if it is missing and prints its path. Existing keys are preserved.
 
 Protect `data/webui-proxy.key` and the proxy configuration with owner/service-only filesystem permissions; on Windows set equivalent ACLs. Copy that secret into the proxy's `X-Tortodrone-Proxy` header configuration. Do not place it in frontend assets or client configuration. The server validates the loopback peer, proxy secret, public Host, HTTPS assertion and request Origin. The proxy must overwrite incoming authentication/forwarding headers, preserve Origin, and clear unsupported forwarded headers.
 
