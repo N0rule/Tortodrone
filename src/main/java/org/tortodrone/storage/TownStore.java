@@ -303,6 +303,11 @@ public final class TownStore {
         return change(account,knight,auth,(c,p)->{
             requireGameMaster(c,account,auth);
             var gear=p.items().stream().filter(i->i.equippedSlot()!=null&&i.equippedSlot()==slot).findFirst().orElseThrow(()->new IOException("Equip an item in that slot first"));
+            editAccessory(c,p,gear,name,costume,rules);
+            return null;
+        });
+    }
+    static void editAccessory(Connection c,WorldProfile p,WorldProfile.Item gear,String name,String costume,TownCatalog rules)throws IOException,SQLException {
             boolean helm=gear.slot()==WorldProfile.Slot.HELM||gear.slot()==WorldProfile.Slot.HELM_COSTUME;
             if(!helm&&gear.slot()!=WorldProfile.Slot.ARMOR&&gear.slot()!=WorldProfile.Slot.ARMOR_COSTUME)throw new IOException("e.cant_use_accessory");
             var accessories=new ArrayList<>(gear.nativeAccessories(costume));
@@ -319,8 +324,6 @@ public final class TownStore {
             try(var st=c.prepareStatement("UPDATE inventory_items SET accessory=NULL,accessories=? WHERE world_id=? AND item_id=?")) {
                 st.setString(1,Json.stringify(accessories));st.setInt(2,p.worldId());st.setLong(3,gear.id());if(st.executeUpdate()!=1)throw new IOException("Item changed");
             }
-            return null;
-        });
     }
     /** Native /grant and /set_rank: role and ownership checked inside the write transaction. */
     public Result adminProgress(int account,int knight,long auth,int method,List<Object> args)throws IOException {

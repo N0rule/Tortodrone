@@ -4,12 +4,13 @@ This is the operator reference for the **current implementation**, not a promise
 
 ## Deployment and lifecycle
 
-Install Java 25. Run `java -jar tortodrone-admin.jar` to create accounts, then `java -jar tortodrone.jar` to host; deploy both JARs beside `config/`, `content/` and `plugins/`. Server settings live in `config/server.yml`. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/{config,content,plugins}/`.
+Install Java 25. Run `java -jar tortodrone-admin.jar --create-account Alice` to create accounts, then `java -jar tortodrone.jar` to host; deploy both JARs beside `config/`, `content/` and `plugins/`. Server settings live in `config/server.yml`. The server stores persistent state in **`data/` beside its own JAR**, regardless of your current working directory. For a source checkout, `./gradlew build` produces `build/tortodrone.jar`, `build/tortodrone-admin.jar` and `build/{config,content,plugins,webui}/`.
 
-- `--nogui`: terminal hosting; `--gui`: require desktop; otherwise GUI when available, terminal fallback. Stop via the GUI or `stop` / Ctrl+C in terminal mode.
-- `--config path/to/server.yml`: select a config file; **does not move `data/`**. Settings are read at process startup; stop/restart to apply changes.
-- Server GUI: Start/Stop/Restart, sessions, scene templates and instances, performance and logs. Command field shares local terminal commands; commands requiring password/confirmation prompts belong in the account manager.
-- Account manager: `java -jar tortodrone-admin.jar`; if separate from the deployed server, add `--data /path/to/server/data`. It has GUI/CLI, uses the same SQLite data and does not open a remote admin port.
+- Hosting is always headless; `--nogui` remains accepted and `--gui` is rejected.
+- `--config path/to/server.yml` selects settings without moving `data/`. Restart the process to apply settings changes.
+- One shared HTTP listener uses `news-port` (8080 by default). `/news/` is public; `/admin/` and `/admin/api/` exist only when enabled.
+- With WebUI enabled, stopping the game listener disconnects its clients but keeps HTTP available for restart. Full process shutdown is a separate confirmed WebUI action. With WebUI disabled, terminal `stop` ends the process.
+- The admin JAR remains a local CLI. Use `--help` or `--data /path/to/server/data` before a command; it never starts another HTTP service.
 
 Edit `config/server.yml` while stopped:
 
@@ -17,6 +18,9 @@ Edit `config/server.yml` while stopped:
 server-ip: 0.0.0.0
 server-port: 47624
 news-port: 8080
+webui-enabled: false
+webui-public-url: ""
+webui-tls-mode: reverse-proxy
 max-clients: 16
 log-mode: normal
 log-max-mib: 10
@@ -25,6 +29,45 @@ startup-map: haven
 ```
 
 `max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files. Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
+
+## Secure WebUI setup
+
+The WebUI requires an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Native TLS is intentionally not used so the unchanged client's HTTP News URLs remain compatible. No plaintext administration mode exists, even on localhost. `webui-public-url` must be the exact HTTPS origin, without a trailing slash.
+
+Create credentials locally (passwords are prompted, never command arguments):
+
+```sh
+java -jar tortodrone-admin.jar --webui-user operator ADMINISTRATOR
+java -jar tortodrone-admin.jar --webui-proxy-key
+```
+
+Protect `data/webui-proxy.key` and the proxy configuration with owner/service-only filesystem permissions; on Windows set equivalent ACLs. Copy that secret into the proxy's `X-Tortodrone-Proxy` header configuration. Do not place it in frontend assets or client configuration. The server validates the loopback peer, proxy secret, public Host, HTTPS assertion and request Origin. The proxy must overwrite incoming authentication/forwarding headers, preserve Origin, and clear unsupported forwarded headers.
+
+Example nginx location inside an existing TLS virtual host (configure certificates and `server_name` for your domain separately):
+
+```nginx
+location /admin/ {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host admin.example.org;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Tortodrone-Proxy "VALUE_FROM_LOCAL_SECRET_FILE";
+    proxy_set_header Forwarded "";
+    proxy_set_header X-Forwarded-For "";
+    proxy_set_header X-Forwarded-Host "";
+    client_max_body_size 64k;
+}
+location /news/ {
+    proxy_pass http://127.0.0.1:8080;
+}
+```
+
+Then set `webui-enabled: true` and `webui-public-url: https://admin.example.org`, restart the process, and visit `https://admin.example.org/admin/`. Public `/news/` remains available directly on 8080 without login; direct administrative requests are rejected. The reverse proxy is external infrastructure, not another Tortodrone listener. Deploy the generated `webui/` directory beside the server JAR; no Node runtime, CDN or client installation is needed.
+
+WebUI identities are independent of game accounts and GM status. `VIEWER` can monitor status, sessions and logs; `MODERATOR` can also inspect accounts/knights and kick sessions; `ADMINISTRATOR` can mutate accounts/economy/content and control lifecycle. Re-run `--webui-user NAME ROLE` to change credentials/role and revoke existing sessions, or use `--webui-revoke NAME` to remove access. There are no default credentials. Passwords use independently salted PBKDF2-HMAC-SHA256 with 600,000 iterations; sessions expire after 30 minutes idle or eight hours absolute and are revoked on logout, identity changes or process restart.
+
+The browser uses secure HttpOnly SameSite cookies and a session-bound CSRF token. APIs enforce role, Origin, Host, size and concurrency limits. Login is globally limited to ten attempts per minute; HTTP request deadlines bound stalled requests. Privileged action attempts/outcomes are stored in `data/webui.sqlite`, separately from game data. A requested action without a final outcome indicates interruption and must be inspected before retrying. Audit failure prevents starting an action; the game services keep their own transactional ledgers. Do not delete either database to clear logs.
+
+The UI includes monitoring charts, players/scenes, accounts and knights, inventory/modifiers/accessories, binding/expiry on grants, Depot offers/promotions/effective catalogue, auction escrow/deliveries, searchable logs/export, content validation and News preview/editing. News editing only replaces validated `news.yml`, using existing images; listener restart publishes changed pack selection. The native protocol selects a random pack, so array order is preserved without promising a rotation order. Item support remains constrained by the authoritative catalogue and services.
 
 ## Connecting the unchanged client
 
@@ -40,7 +83,7 @@ The public key is a hexadecimal modulus and exponent separated by `#`; paste the
 
 ## Local administration
 
-Run `help` or `help account create` in the server terminal/GUI command field for exact current syntax. Terminal commands are **not** in-game slash commands, and do not require a GM login; restrict access to the host.
+Run `help` or `help account create` in the server terminal for exact current syntax. Terminal commands are **not** in-game slash commands, and do not require a GM login; restrict access to the host.
 
 | Purpose | Example |
 | --- | --- |
@@ -52,9 +95,9 @@ Run `help` or `help account create` in the server terminal/GUI command field for
 | Item lookup/grant | `items Calibur`, `items info Weapon/Sword/Calibur`, `giveitem Jane 2 Weapon/Sword/Calibur` |
 | Shutdown | `stop` |
 
-Account create/password and destructive deletion require interactive password/confirmation input; use the account manager GUI when the server window can't prompt. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
+Account create/password and destructive deletion require interactive password/confirmation input. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
 
-The account manager supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless account administration use `java -jar tortodrone-admin.jar --help`; `--data` must appear before its command. Examples: `--create-account Alice` and `--set-gm Alice true`.
+The WebUI supports account/knight browsing and searchable inventory, item grants, quantity/removal confirmation and balance changes; equipped, starter and permanent item protections apply. For headless account administration use `java -jar tortodrone-admin.jar --help`; `--data` must appear before its command. Examples: `--create-account Alice` and `--set-gm Alice true`.
 
 A saved GM can use the original client's F3 dashboard **ItemCreator** (other tools unsupported); server-side role checks still apply. Tortodrone adds no GM chat commands, so ordinary players' leading `!` stays normal chat. Do not assume local admin commands also work inside the game; item grants run through the account manager, `tortodrone-admin.jar` or the server console.
 
@@ -84,4 +127,4 @@ When the unchanged client sends its existing hardware report, one `Client hardwa
 | Startup rejects settings/schema | Restore supported settings or backup; do not hand-edit saved state to force startup |
 | Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
 
-CLI and GUI are local trusted surfaces. Do not expose them as an unauthenticated web admin interface.
+The CLI is a local trusted surface. The WebUI exposes only typed, authorized operations; arbitrary terminal commands are never available remotely.

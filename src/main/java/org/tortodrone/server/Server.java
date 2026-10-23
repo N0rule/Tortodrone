@@ -27,8 +27,8 @@ public final class Server {
         int exitCode = 0;
         try {
             if (args.length == 1 && args[0].equals("--help")) {
-                System.out.println("Usage: java -jar tortodrone.jar [--gui | --nogui] [--config path/to/server.yml] | --version | --help");
-                System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for desktop account management.");
+                System.out.println("Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] | --version | --help");
+                System.out.println("Type help in the running server terminal for commands. Use tortodrone-admin.jar for local account and WebUI credential management.");
                 return;
             }
             if (args.length == 1 && args[0].equals("--version")) {
@@ -39,11 +39,6 @@ public final class Server {
             Path directory = Files.isDirectory(location) ? location : location.getParent();
             Path dataDirectory = directory.resolve("data").toAbsolutePath().normalize();
             ServerOptions options=ServerOptions.parse(args,ServerSettings.defaultPath(directory));
-            boolean desktop=options.desktopRequested();
-            if(desktop) {
-                Integer desktopExit=org.tortodrone.admin.DesktopBootstrap.relaunchIfNeeded(location,args,Server.class.getName());
-                if(desktopExit!=null){if(desktopExit!=0)System.exit(desktopExit);return;}
-            }
             Path config=options.config();
             Files.createDirectories(dataDirectory);
             try (FileChannel channel = FileChannel.open(dataDirectory.resolve("server.lock"),
@@ -59,21 +54,24 @@ public final class Server {
                 log.debug("Data directory: " + dataDirectory);
                 log.configure(settings.logMaxMiB()*1048576L,settings.logRetention());
                 ServerControl control=new ServerControl(version(),dataDirectory);
-                AutoCloseable window=null;
-                if(desktop) {
-                    try {window=ServerWindow.open(control,log);}
-                    catch(Exception | java.awt.AWTError failed) {
-                        log.warn("Graphical interface unavailable: "+failed.getClass().getSimpleName()+"; starting terminal mode");
-                        desktop=false;
+                var content=org.tortodrone.resources.ContentManager.load(directory,settings);
+                try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());
+                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content):null) {
+                    com.sun.net.httpserver.HttpHandler handler=null;
+                    if(settings.webui().enabled()) {
+                        var identities=new org.tortodrone.web.WebIdentityStore(dataDirectory);
+                        var security=new org.tortodrone.web.WebSecurity(settings.webui(),identities,dataDirectory);
+                        handler=new org.tortodrone.web.AdminHandler(security,identities,adminService,directory.resolve("webui"));
+                    }
+                    try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.newsPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
+                        log.info("Shared HTTP listener: "+http.port()+"; WebUI "+(handler==null?"disabled":settings.webui().publicUrl()+"/admin/"));
+                        while(control.awaitStart(settings.webui().enabled())) {
+                            try {run(settings,dataDirectory,log,control,false,content);content=null;}
+                            catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!settings.webui().enabled())throw failed;}
+                            finally{control.stopped();}
+                        }
                     }
                 }
-                try {
-                    while(control.awaitStart(desktop)) {
-                        try {run(settings,dataDirectory,log,control,desktop);}
-                        catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!desktop)throw failed;}
-                        finally{control.stopped();}
-                    }
-                } finally {if(window!=null)window.close();}
             }
         } catch (Exception e) {
             String message = "Server startup failed: " + e.getMessage();
@@ -95,10 +93,10 @@ public final class Server {
         }
     }
 
-    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop) throws Exception {
+    private static void run(ServerSettings settings, Path dataDirectory, ServerLog log,ServerControl control,boolean desktop,org.tortodrone.resources.ContentRegistry initialContent) throws Exception {
         long startup=System.nanoTime();
         hostDiagnostics(log);
-        var content=org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings);
+        var content=initialContent==null?org.tortodrone.resources.ContentManager.load(dataDirectory.getParent(),settings):initialContent;
         var scenes=content.createScenes();
         org.tortodrone.world.SceneRegistry.install(scenes);
         var catalog=content.items();
@@ -106,12 +104,6 @@ public final class Server {
         log.info("Unified content: "+content.scenes().scenes().size()+" maps, "+content.items().entries().size()+" items");
         content.resources().forEach((name,resource)->log.debug("Content "+name+": "+resource.pack()+" / "+resource.path()));
         InetAddress address = InetAddress.getByName(settings.bind());
-        // Uplink News images are outside the game protocol; an unavailable port never blocks hosting.
-        NewsServer news=null;
-        try {
-            news=NewsServer.start(address,settings.newsPort(),dataDirectory.getParent().resolve("content/shared/news"),log::debug);
-            log.info("Uplink News images: http://"+address.getHostAddress()+":"+news.port()+"/news/");
-        } catch(IOException unavailable){log.warn("Uplink News server unavailable on port "+settings.newsPort()+": "+unavailable.getMessage());}
         try (ServerSocket listener = new ServerSocket()) {
             Path keys = dataDirectory.resolve("keys");
             boolean generate=!Files.exists(keys.resolve("private.pk8"));
@@ -134,8 +126,6 @@ public final class Server {
                 control.resources(scenes,catalog.entries().size());
                 accept(listener,key,log,accounts,settings.maxClients(),control,desktop,startup);
             }
-        } finally {
-            if(news!=null)news.close();
         }
     }
 
@@ -178,10 +168,12 @@ public final class Server {
                     continue;
                 }
                 long id = control.nextSessionId();
+                control.connection(id,client);
                 clients.start(client, "Client-" + id, () -> {
                     try {
                         receive(client, id, key, listener.getLocalPort(), log, accounts,control.sessions());
                     } finally {
+                        control.disconnected(id);
                         slots.release();
                     }
                 });

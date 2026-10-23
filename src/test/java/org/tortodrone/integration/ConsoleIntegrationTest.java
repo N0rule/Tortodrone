@@ -21,7 +21,7 @@ public final class ConsoleIntegrationTest {
         try {
             Path jar = directory.resolve("tortodrone.jar"); org.tortodrone.support.TestDeployment.copyServer(Path.of(args[0]),jar);
             Path config = directory.resolve("data/server.properties"); Files.createDirectories(config.getParent());
-            Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+            Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
             try (var server = new ServerIntegrationTest.Running(jar,config,directory)) {
                 int port = server.ready(); Database db = new Database(directory.resolve("data"),false);
                 check(db.list().isEmpty(),"fresh server does not seed a default account");

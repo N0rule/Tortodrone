@@ -28,6 +28,13 @@ public final class ServerSettingsTest {
                 try{ServerSettings.load(file);throw new AssertionError("Unbounded connection limit accepted");}
                 catch(IOException expected){check(expected.getMessage().startsWith("max-clients"),"clear limit error");}
             }
+            Path yaml=home.resolve("server.yml");
+            Files.writeString(yaml,"server-port: 0\n");
+            check(ServerSettings.read(yaml).newsPort()==8080&&!ServerSettings.read(yaml).webui().enabled(),"shared default port and opt-in administration");
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: https://admin.example\nwebui-tls-mode: reverse-proxy\n");
+            check(ServerSettings.read(yaml).webui().enabled(),"YAML boolean WebUI setting");
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://admin.example\n");
+            try{ServerSettings.read(yaml);throw new AssertionError("Plaintext administration allowed");}catch(IOException expected){}
             System.out.println("PASS: bounded client capacity, default and existing configuration compatibility");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }

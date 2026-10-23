@@ -47,7 +47,7 @@ public final class AdminIntegrationTest {
             command(admin,directory,"invalid\n",false,"did not match","--delete-account","Owner");
             command(admin,directory,"bad\nbad\n",false,"8-128","--set-password","Owner");
             Path data = directory.resolve("data"), config = data.resolve("server.properties");
-            Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+            Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
             try (var running = new ServerIntegrationTest.Running(server,config,directory)) {
                 int port = running.ready(); PublicKey key = key(Files.readString(data.resolve("keys/public.txt")).trim());
                 command(admin,directory,"player-password\nplayer-password\n",true,"Account created.","--create-account","Player");

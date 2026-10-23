@@ -24,8 +24,6 @@ dependencies {
     implementation("org.yaml:snakeyaml:2.5")
     // JLine's aggregate classifier already contains its providers/native libraries.
     implementation("org.jline:jline:4.4.7:jdk11") { isTransitive = false }
-    implementation("com.formdev:flatlaf:3.7.2")
-    implementation("org.jfree:jfreechart:1.5.6")
     // Production uses java.sql and loads the driver at runtime.
     runtimeOnly("org.xerial:sqlite-jdbc:3.53.4.0") { isTransitive = false }
 }
@@ -50,7 +48,6 @@ fun ShadowJar.executableJar(filename: String, entryPoint: String) {
     // Ordinary duplicates keep the first resource; providers must all reach the merger.
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     filesMatching("META-INF/services/**") { duplicatesStrategy = DuplicatesStrategy.INCLUDE }
-    from("licenses/JFreeChart-LGPL-2.1-or-later.txt") { into("META-INF/licenses") }
     mergeServiceFiles()
     exclude("META-INF/*.SF", "META-INF/*.RSA", "META-INF/*.DSA", "META-INF/INDEX.LIST",
         "module-info.class", "META-INF/versions/**/module-info.class")
@@ -115,10 +112,14 @@ val prepareHaven = tasks.register<Exec>("prepareHaven") {
             throw GradleException("Specify -PgameDir and -PcapturedScenes (verified local <scene-id>.dat files); output must be fresh")
     }
 }
+val buildWebui = tasks.register<Sync>("buildWebui") {
+    from("src/webui")
+    into(publicOutput.dir("webui"))
+}
 val buildServer = tasks.register("buildServer") {
     group = "build"
     description = "Build the executable server JAR and prepare unified content."
-    dependsOn(serverJar, prepareContent)
+    dependsOn(serverJar, prepareContent, buildWebui)
 }
 val buildAdmin = tasks.register("buildAdmin") {
     group = "build"
@@ -270,4 +271,18 @@ tasks.wrapper {
     retries.set(2)
     distributionType = Wrapper.DistributionType.BIN
     distributionSha256Sum = "bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f"
+}
+
+// Explicit portable packaging includes deliverables only, never runtime databases or keys.
+tasks.register<Zip>("portableZip") {
+    group = "distribution"
+    dependsOn(buildServer, buildAdmin)
+    archiveFileName.set("Tortodrone-v${project.version}.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+    from(publicOutput) {
+        include("tortodrone.jar", "tortodrone-admin.jar", "webui/**", "config/**", "content/**", "plugins/**")
+        exclude("**/*.key", "**/*.pk8", "**/*.pem", "**/*.db*", "**/*.sqlite*")
+    }
+    from("README.md", "VERSION")
+    from("docs") { into("docs") }
 }

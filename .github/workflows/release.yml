@@ -62,6 +62,10 @@ jobs:
 
           test -s build/tortodrone.jar
           test -s build/tortodrone-admin.jar
+          test -s build/webui/index.html
+          test -s build/webui/assets/app.js
+          test -s build/webui/assets/api.js
+          test -s build/webui/assets/app.css
           test -f build/content/maps/haven/map.yml
           test -f build/content/items/weapons.yml
           test -d build/config

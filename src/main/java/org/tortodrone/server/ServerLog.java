@@ -27,7 +27,7 @@ public final class ServerLog implements AutoCloseable {
     public AutoCloseable subscribe(Consumer<Event> observer) { observers.add(observer);return ()->observers.remove(observer); }
     public Event recentFailure() { return recentFailure; }
     public Path directory() { return directory; }
-    ServerLog(Path directory) throws IOException {
+    public ServerLog(Path directory) throws IOException {
         this.directory=directory;
         Files.createDirectories(directory);
         if(Files.getFileStore(directory).supportsFileAttributeView("posix"))Files.setPosixFilePermissions(directory,PosixFilePermissions.fromString("rwx------"));

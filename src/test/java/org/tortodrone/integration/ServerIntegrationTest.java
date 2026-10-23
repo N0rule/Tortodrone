@@ -62,7 +62,7 @@ public final class ServerIntegrationTest {
             billingWorkflow(jar, directory.resolve("billing-start"));
             Path config = directory.resolve("external-settings/server.properties");
             Files.createDirectories(config.getParent());
-            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+            Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
             Path state = directory.resolve("data");
             seed(jar,directory);
             byte[] identity;
@@ -159,7 +159,7 @@ public final class ServerIntegrationTest {
     private static void missingDefaultsWorkflow(Path sourceJar,Path directory)throws Exception {
         Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");Files.copy(sourceJar,jar);
         Path config=directory.resolve("data/server.properties");Files.createDirectories(config.getParent());
-        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=normal\n");
         rejected(jar,config,directory,"Unified content/maps is missing", "incomplete deployment fails before account/key initialization");
         check(!Files.exists(directory.resolve("data/keys"))&&!Files.exists(directory.resolve("data/tortodrone.db")),
             "missing content never creates a fallback database or identity");
@@ -170,7 +170,7 @@ public final class ServerIntegrationTest {
         Files.createDirectories(root);Path jar=root.resolve("tortodrone.jar");
         org.tortodrone.support.TestDeployment.copyServer(source,jar);seed(jar,root);
         Path data=root.resolve("data");Path config=data.resolve("server.properties");
-        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=normal\n");
         var files=java.util.List.of(data.resolve("tortodrone.db"),data.resolve("keys/private.pk8"),data.resolve("keys/public.txt"),config);
         // Seed creates the account database; isolated first startup prepares its identity.
         try(var server=new Running(jar,null,root)){server.ready();}
@@ -202,7 +202,7 @@ public final class ServerIntegrationTest {
         check(defaults.logMode() == ServerSettings.LogMode.NORMAL, "default logs use normal mode");
         check(!properties(config).containsKey("data-directory"), "generated settings omit data-directory");
         // Use an ephemeral port so this scenario can run alongside a real server.
-        String settings = Files.readString(config).replace("server-port=47624", "server-port=0");
+        String settings = Files.readString(config).replace("server-port=47624", "server-port=0").replace("news-port=8080","news-port=0");
         Files.writeString(config, settings);
         byte[] identity;
         // Start from outside the deployment: state must follow the JAR, not the shell.
@@ -250,7 +250,7 @@ public final class ServerIntegrationTest {
         Path data = directory.resolve("data");
         Files.createDirectories(data);
         Path config = data.resolve("server.properties");
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\n");
         for (boolean create : new boolean[] {true, false}) {
             try (Running server = new Running(deployed, null, directory)) {
                 int port = server.ready();
@@ -276,7 +276,7 @@ public final class ServerIntegrationTest {
         String password = "billing-test-password";
         accountCommand(jar, directory, "--create-account", "Billing", password + "\n" + password + "\n", true, "Account created.");
         Path config = data.resolve("server.properties");
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready();
             try (Socket peer = new Socket("127.0.0.1", port)) {
@@ -304,7 +304,7 @@ public final class ServerIntegrationTest {
         accountCommand(jar, directory, "--set-password", "Alice", "", false, "Password input ended");
         check(before.equals(database(data).list()), "failed account commands preserve accounts");
         Path config = data.resolve("server.properties");
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
         java.util.List<org.tortodrone.character.Knight> profile;
         byte[] keyBytes;
         try (Running server = new Running(jar, config, directory)) {
@@ -352,7 +352,7 @@ public final class ServerIntegrationTest {
         accountCommand(jar, directory, "--create-account", "Alice", "alice-password\nalice-password\n", true, "Account created.");
         accountCommand(jar, directory, "--create-account", "Bob", "bob-password\nbob-password\n", true, "Account created.");
         Path data = directory.resolve("data"), config = data.resolve("server.properties");
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=normal\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=normal\n");
         try (Running server = new Running(jar, config, directory)) {
             int port = server.ready(); PublicKey key = publicKey(Files.readString(data.resolve("keys/public.txt")).trim());
             org.tortodrone.support.MultiSessionScenario.run(port, key);
@@ -421,9 +421,9 @@ public final class ServerIntegrationTest {
     private static void launchModes(Path source,Path directory) throws Exception {
         Files.createDirectories(directory);Path jar=directory.resolve("tortodrone.jar");org.tortodrone.support.TestDeployment.copyServer(source,jar);
         var explicit=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin","java").toString(),"-Djava.awt.headless=true","-jar",jar.toString(),"--gui").redirectErrorStream(true).start();
-        try {check(explicit.waitFor(10,TimeUnit.SECONDS),"explicit headless GUI refusal exits");String output=new String(explicit.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);check(explicit.exitValue()!=0&&output.contains("--gui requires an available graphical desktop"),"explicit GUI refuses headless environment");check(!Files.exists(directory.resolve("data")),"GUI refusal never touches runtime data");}
+        try {check(explicit.waitFor(10,TimeUnit.SECONDS),"explicit headless GUI refusal exits");String output=new String(explicit.getInputStream().readAllBytes(),java.nio.charset.StandardCharsets.UTF_8);check(explicit.exitValue()!=0&&output.contains("--gui was removed"),"explicit GUI refuses headless environment");check(!Files.exists(directory.resolve("data")),"GUI refusal never touches runtime data");}
         finally{if(explicit.isAlive()){explicit.destroyForcibly();explicit.waitFor();}}
-        Path config=directory.resolve("mode.properties");Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\n");
+        Path config=directory.resolve("mode.properties");Files.writeString(config,"server-ip=0.0.0.0\nserver-port=0\nnews-port=0\n");
         try(var server=new Running(jar,config,directory,java.util.List.of("-Djava.awt.headless=true"),false)){server.ready();}
         Path classes=directory.resolve("terminal-classes.log");
         try(var server=new Running(jar,config,directory,java.util.List.of("-Djava.awt.headless=false","-Xlog:class+load=info:file="+classes))){server.ready();}
@@ -436,7 +436,7 @@ public final class ServerIntegrationTest {
         org.tortodrone.support.TestDeployment.copyServer(sourceJar, jar);
         Path config = directory.resolve("data/server.properties");
         Files.createDirectories(config.getParent());
-        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nlog-mode=debug\n");
+        Files.writeString(config, "server-ip=0.0.0.0\nserver-port=0\nnews-port=0\nlog-mode=debug\n");
         try (Running server = new Running(jar, config, directory);
              Socket unfinished = new Socket("127.0.0.1", server.ready())) {
             unfinished.setSoTimeout(10000);

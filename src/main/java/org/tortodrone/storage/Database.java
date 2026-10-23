@@ -367,7 +367,12 @@ public final class Database {
         return progress(username,knightName,expectedAccount,expectedWorld,rank,subrank,prestige,null);
     }
     public WorldProfile progress(String username,String knightName,int expectedAccount,int expectedWorld,Integer rank,Integer subrank,Integer prestige,String starterSprite)throws IOException{
-        return write(c->{var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);var old=profile.progress();
+        return progress(username,knightName,expectedAccount,expectedWorld,rank,subrank,prestige,starterSprite,-1);
+    }
+    public WorldProfile progress(String username,String knightName,int expectedAccount,int expectedWorld,Integer rank,Integer subrank,Integer prestige,String starterSprite,long expectedRevision)throws IOException {
+        return write(c->{var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            if(expectedRevision>=0&&profile.revision()!=expectedRevision)throw new IOException("Knight changed; refresh before editing");
+            var old=profile.progress();
             org.tortodrone.character.KnightProgress next;
             try{if((rank==null)!=(subrank==null))throw new IllegalArgumentException();next=new org.tortodrone.character.KnightProgress(rank==null?old.rank():rank,subrank==null?old.subrank():subrank,prestige==null?old.prestige():prestige);}
             catch(IllegalArgumentException invalid){throw new IOException("Rank must be 1-10, subrank 1-4 and prestige nonnegative",invalid);}
@@ -392,11 +397,16 @@ public final class Database {
     }
     private WorldProfile balance(String username,String knightName,int expectedAccount,int expectedWorld,
             org.tortodrone.character.Currency currency,long amount,boolean absolute) throws IOException {
+        return administrativeCurrency(username,knightName,expectedAccount,expectedWorld,currency,amount,absolute,-1);
+    }
+    public WorldProfile administrativeCurrency(String username,String knightName,int expectedAccount,int expectedWorld,
+            org.tortodrone.character.Currency currency,long amount,boolean absolute,long expectedRevision)throws IOException {
         Objects.requireNonNull(currency);
         if(absolute ? amount<0||amount>Integer.MAX_VALUE : amount==0||amount<-Integer.MAX_VALUE||amount>Integer.MAX_VALUE)
             throw new IOException(absolute ? "Balance must be between 0 and 2147483647" : "Amount must be between 1 and 2147483647");
         return write(c -> {
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            if(expectedRevision>=0&&profile.revision()!=expectedRevision)throw new IOException("Balance changed; refresh before editing");
             long previous=currency==org.tortodrone.character.Currency.CROWNS?profile.crowns():profile.energy();
             long balance=absolute?amount:previous+amount, delta=balance-previous;
             if(balance<0)throw new IOException("Insufficient "+currency.name().toLowerCase(Locale.ROOT));
@@ -415,9 +425,13 @@ public final class Database {
     /** Local administrator quantity/removal, audited and published by the existing revision poller. */
     public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,
             long itemId,int quantity,org.tortodrone.character.ItemCatalog catalog) throws IOException {
+        return itemQuantity(username,knightName,expectedAccount,expectedWorld,itemId,quantity,catalog,-1);
+    }
+    public WorldProfile itemQuantity(String username,String knightName,int expectedAccount,int expectedWorld,long itemId,int quantity,org.tortodrone.character.ItemCatalog catalog,long expectedRevision)throws IOException {
         if(quantity<0||quantity>9999)throw new IOException("Quantity must be between 0 and 9999");
         return write(c->{
             var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            if(expectedRevision>=0&&profile.revision()!=expectedRevision)throw new IOException("Inventory changed; refresh before editing");
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(item.starter()||item.permanent()||item.equippedSlot()!=null)
                 throw new IOException("Starter, permanent or equipped items cannot be removed or adjusted; unequip ordinary items in the client first");
@@ -528,6 +542,19 @@ public final class Database {
             modifiers.validate(catalog.require(item.config()),rules);
             try(var s=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=?,variants=? WHERE world_id=? AND item_id=?")){s.setInt(1,modifiers.level());s.setFloat(2,modifiers.heat());s.setString(3,org.tortodrone.resources.Json.stringify(modifiers.variants()));s.setInt(4,profile.worldId());s.setLong(5,itemId);if(s.executeUpdate()!=1)throw new IOException("Item changed");}
             TownStore.touch(c,profile.worldId());event(c,profile.accountId(),"item modifiers; world="+profile.worldId()+"; item="+itemId);
+            return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
+        });
+    }
+    /** Web/local administration; expected identity and revision are checked inside BEGIN IMMEDIATE. */
+    public WorldProfile itemAccessory(String username,String knightName,int expectedAccount,int expectedWorld,long expectedRevision,long itemId,String accessory,org.tortodrone.town.TownCatalog rules)throws IOException {
+        return write(c->{
+            var profile=administrativeProfile(c,username,knightName,expectedAccount,expectedWorld);
+            if(profile.revision()!=expectedRevision)throw new IOException("Inventory changed; refresh before editing");
+            var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("Item is not owned by this knight"));
+            String costume;
+            try(var s=c.prepareStatement("SELECT costume FROM knights WHERE account_id=? AND id=?")){s.setInt(1,profile.accountId());s.setInt(2,profile.knightId());try(var r=s.executeQuery()){if(!r.next())throw new IOException("Knight changed");costume=r.getString(1);}}
+            TownStore.editAccessory(c,profile,item,accessory,costume,rules);
+            TownStore.touch(c,profile.worldId());event(c,profile.accountId(),"item accessory; world="+profile.worldId()+"; item="+itemId);
             return WorldProfiles.load(c,profile.accountId(),profile.knightId(),-1);
         });
     }

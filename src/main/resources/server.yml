@@ -9,3 +9,8 @@ log-max-mib: 10
 log-retention: 5
 # Folder name under content/maps; the existing startup flow requires a town.
 startup-map: haven
+
+# Optional administration, served by the shared News HTTP listener.
+webui-enabled: false
+webui-public-url: ""
+webui-tls-mode: reverse-proxy

@@ -23,7 +23,7 @@ Install **JDK 25** and make sure `java` is on `PATH`. The Gradle 9.5.1 wrapper i
 ### 2. Create an account
 
 ```sh
-java -jar build/tortodrone-admin.jar
+java -jar build/tortodrone-admin.jar --create-account Alice
 ```
 
 ### 3. Start the server
@@ -35,7 +35,7 @@ java -jar build/tortodrone.jar
 java -jar build/tortodrone.jar --nogui
 ```
 
-The account manager creates the normal username/password account; use it before connecting the client. The server opens a GUI when a desktop is available. Use `--nogui` for headless hosting or `--gui` to explicitly require a desktop.
+The CLI creates normal username/password accounts. Hosting is headless. Optional HTTPS administration shares News port 8080 and replaces both desktop windows; see [secure WebUI setup](docs/operations.md#secure-webui-setup).
 
 ## What works today
 
@@ -132,7 +132,7 @@ startup-map: haven
 | [Operations](docs/operations.md) | Deployment, accounts, commands, client troubleshooting, backup and releases. |
 | [Content](docs/content.md) | Maps, items, combat defaults, verified imports and current extension limits. |
 | [Architecture](docs/architecture.md) | Identity/storage, protocol, simulation and security invariants. |
-| [Development](docs/development.md) | Build/tests, isolated stock-client and GUI checks. |
+| [Development](docs/development.md) | Build/tests and isolated stock-client checks. |
 | [Research](docs/research.md) | Reference sources, protocol evidence, bundled scene provenance and historical investigation pointers. |
 | [Training Hall](docs/training-hall.md) | Current scene behavior, verification and limits. |
 | [AGENTS.md](AGENTS.md) | Short rules for coding agents. |

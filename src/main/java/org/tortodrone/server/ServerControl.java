@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.tortodrone.account.AccountStore;
 import org.tortodrone.world.SceneRegistry;
 
-/** Small lifecycle owner shared by the listener, terminal and optional desktop. */
+/** Small lifecycle owner shared by the listener, terminal and optional WebUI. */
 public final class ServerControl {
     public enum State { STARTING, RUNNING, STOPPING, STOPPED, FAILED }
     public record Snapshot(String version,State state,String endpoint,Instant startedAt,long uptimeSeconds,int maps,int items,
@@ -28,6 +28,11 @@ public final class ServerControl {
     private String endpoint="",failure="";
     private int itemCount;
     private boolean startRequested=true,exitRequested;
+    private final java.util.concurrent.ConcurrentHashMap<Long,java.net.Socket> sockets=new java.util.concurrent.ConcurrentHashMap<>();
+    void connection(long id,java.net.Socket socket){sockets.put(id,socket);}
+    void disconnected(long id){sockets.remove(id);}
+    public boolean kick(long id)throws IOException{var socket=sockets.get(id);if(socket==null)return false;socket.close();return true;}
+    public synchronized void restart(){stop();startRequested=true;notifyAll();}
     public ServerControl(String version,Path data) {this.version=version;this.data=data;}
     public Path dataDirectory() {return data;}
     public SessionRegistry sessions() {return sessions;}
@@ -37,8 +42,8 @@ public final class ServerControl {
         return new Snapshot(version,state,endpoint,startedAt,uptime,scenes==null?0:scenes.catalog().scenes().size(),itemCount,
             sessions.snapshots(),scenes==null?List.of():scenes.statuses(),scenes==null?List.of():scenes.catalog().scenes(),RuntimeMetrics.capture(),failure);
     }
-    public synchronized boolean awaitStart(boolean desktop) throws InterruptedException {
-        while(!startRequested&&!exitRequested&&desktop)wait();
+    public synchronized boolean awaitStart(boolean persistent) throws InterruptedException {
+        while(!startRequested&&!exitRequested&&persistent)wait();
         if(exitRequested||!startRequested)return false;
         startRequested=false;state=State.STARTING;failure="";startedAt=Instant.now();startedNanos=System.nanoTime();stoppedNanos=0;return true;
     }

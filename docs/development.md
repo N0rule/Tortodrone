@@ -71,7 +71,7 @@ Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml`
 | Protocol, auth, storage, trades | Targeted positive/negative/ownership/rollback tests | Relevant packaged integration or stock-reader check |
 | Scene or portal logic | Map/simulation tests | Stock scene enter/return or two-client check for changed transitions |
 | Items/combat | Targeted catalog, damage/equipment tests | One isolated graphical test if modifying actual client-visible effects |
-| Server GUI | Focused UI tests | One isolated desktop fixture when visual behavior changed |
+| WebUI | Focused HTTP/security/domain tests | Disposable HTTPS browser fixture |
 | Performance/concurrency | Focused correctness/race checks | Benchmark only for explicit performance questions |
 | Major cross-cutting change / release | `./gradlew testAll` once at the end | Relevant stock-client acceptance |
 | Documentation only | Diff and link/source review | No Java tests |
@@ -95,16 +95,9 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 `CheckCombatRendering` uses a fresh output path, records logs/screenshots and exercises sword/gun/bomb controls and Haven↔Training travel. It does not verify every weapon, moving-target hits, full parties or general dungeon mechanics. Source-client binary/current wire observations matter more than an old 2011 marshaller ID table.
 
-## Opt-in server/admin Swing check
+## WebUI verification
 
-On a Java 25 **graphical desktop**, from the source directory:
-
-```sh
-./gradlew buildServer buildAdmin testClasses
-java --enable-native-access=ALL-UNNAMED -cp 'build/tortodrone.jar:.build/classes/java/test' org.tortodrone.server.DesktopCheck /tmp/tortodrone-desktop-check-fresh
-```
-
-Choose a fresh/nonexistent output directory under `/tmp`. The fixture starts only disposable local processes and stores `desktop.log` plus captured GUI component PNGs for review. It exercises windows, account/knight browsing, sessions, charts, logs, grants, balances and lifecycle actions; **it does not launch the stock game**. Use OS-appropriate classpath separators when adapting this Linux example. Linux/niri may need `_JAVA_AWT_WM_NONREPARENTING=1` for stock-client graphical probes.
+`./gradlew testUnit -PunitTests=WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest` exercises disposable HTTP, credential and domain fixtures. For browser acceptance, use a disposable deployment and same-host TLS proxy configured as in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
 
 ## Load testing
 

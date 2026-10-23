@@ -8,7 +8,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
 /** Listener, logging and initial map settings; legacy selection is migration-only. */
-public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap) {
+public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap, org.tortodrone.web.WebSettings webui) {
+    public ServerSettings(String bind,int port,int newsPort,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy,String startupMap){this(bind,port,newsPort,mode,clients,maxMiB,retention,packs,legacy,startupMap,org.tortodrone.web.WebSettings.DISABLED);}
     /** Default Uplink News image port; the launcher points content_url at the same host. */
     public static final int DEFAULT_NEWS_PORT=8080;
     public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy){this(bind,port,DEFAULT_NEWS_PORT,mode,clients,maxMiB,retention,packs,legacy,"haven");}
@@ -48,7 +49,7 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
                 for(var e:org.tortodrone.resources.Yaml.read(file).entrySet()) {
                     if(java.util.Set.of("content-packs","legacy-content").contains(e.getKey()))throw new IOException(file+": pack settings are migration-only; use unified content directories");
                     if(!defaults.containsKey(e.getKey()))throw new IOException(file+": unknown server setting "+e.getKey());
-                    if(!(e.getValue() instanceof String||e.getValue() instanceof Number))throw new IOException(file+": expected scalar setting "+e.getKey());
+                    if(!(e.getValue() instanceof String||e.getValue() instanceof Number||e.getValue() instanceof Boolean))throw new IOException(file+": expected scalar setting "+e.getKey());
                     settings.setProperty(e.getKey(),e.getValue().toString());
                 }
             } else settings.putAll(org.tortodrone.resources.ContentFiles.properties(file));
@@ -81,7 +82,7 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
         String packs=value(settings,"content-packs"),legacy=value(settings,"legacy-content");
         if(packs.isEmpty())throw new IOException("content-packs must list at least one pack");
         if(!java.util.Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings));
+        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings),org.tortodrone.web.WebSettings.read(settings));
     }
 
     public static String startupMap(Path file)throws IOException {

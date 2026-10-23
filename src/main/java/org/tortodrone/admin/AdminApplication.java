@@ -1,22 +1,20 @@
 package org.tortodrone.admin;
 
-import java.awt.GraphicsEnvironment;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Arrays;
-import javax.swing.*;
 import org.tortodrone.account.AccountStore;
 
-/** Local desktop account manager; shares only the database with the game server. */
+/** Local account and WebUI credential manager; shares only the database with the game server. */
 public final class AdminApplication {
     public static void main(String[] args) {
         try {
-            String[] launchArguments = args.clone();
             if (args.length == 1 && args[0].equals("--help")) {
                 System.out.println("Usage: java -jar tortodrone-admin.jar [--data path/to/server/data] [command]");
-                System.out.println("No command opens the desktop account manager.");
+                System.out.println("Administration is available at the configured HTTPS URL /admin/.");
                 System.out.println("Commands: --list-accounts | --create-account username [--gm] | --set-password username | --check-password username | --set-gm username true|false | --delete-account username | --version");
+                System.out.println("WebUI: --webui-user username VIEWER|MODERATOR|ADMINISTRATOR | --webui-revoke username | --webui-proxy-key");
                 System.out.println("Knights: --list-knights username | --delete-knight username knight-name (exact name confirmation)");
                 System.out.println("Progress: --set-rank username knight-name rank subrank | --set-prestige username knight-name total");
                 System.out.println("Items: --items [search] | --give-item username knight-name quantity \"catalogue ID or exact item config\"");return;
@@ -29,13 +27,9 @@ public final class AdminApplication {
             Path location = Path.of(AdminApplication.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path directory = (Files.isDirectory(location) ? location : location.getParent()).resolve("data");
             if (args.length >= 2 && args[0].equals("--data")) { directory = Path.of(args[1]); args = Arrays.copyOfRange(args,2,args.length); }
+            if(args.length>0&&args[0].startsWith("--webui-")){webui(directory,args);return;}
             if (args.length == 0) {
-                Integer desktopExit = DesktopBootstrap.relaunchIfNeeded(location,launchArguments);
-                if (desktopExit != null) { if (desktopExit != 0) System.exit(desktopExit); return; }
-                if (GraphicsEnvironment.isHeadless()) throw new IOException("A graphical desktop is required. Run on the server PC's desktop, or use --help for terminal commands.");
-                DesktopTheme.installDefault();
-                Path data = directory;
-                SwingUtilities.invokeLater(() -> new AdminWindow(data).setVisible(true));
+                System.out.println("Use the configured HTTPS WebUI at /admin/, or --help for local commands.");
             } else {
                 // Short-lived account/knight commands operate on SQLite, not the game world.
                 // The full content loader fingerprints maps and parses large fire catalogs twice;
@@ -54,9 +48,21 @@ public final class AdminApplication {
             System.err.println("Account manager: " + failure.getMessage()); System.exit(1);
         }
     }
-    /** Opens a database-backed inspector on the EDT; loading remains in the window worker. */
-    public static void openKnight(Path data,String knight) {
-        SwingUtilities.invokeLater(()->{DesktopTheme.installDefault();new AdminWindow(data,knight).setVisible(true);});
+    private static void webui(Path directory,String[] args)throws IOException {
+        Files.createDirectories(directory);
+        if(args.length==1&&args[0].equals("--webui-proxy-key")){
+            Path file=directory.resolve("webui-proxy.key");
+            org.tortodrone.web.WebIdentityStore.createProxyKey(file);
+            System.out.println("Created proxy secret file. Configure the same-host TLS proxy to inject its value as X-Tortodrone-Proxy. Protect this file and the proxy configuration.");return;
+        }
+        var store=new org.tortodrone.web.WebIdentityStore(directory);
+        if(args.length==2&&args[0].equals("--webui-revoke")){store.revoke(args[1]);System.out.println("WebUI identity and sessions revoked.");return;}
+        if(args.length!=3||!args[0].equals("--webui-user"))throw new IOException("Use --help for WebUI commands");
+        var role=org.tortodrone.web.WebIdentityStore.Role.valueOf(args[2]);
+        var input=new BufferedReader(new InputStreamReader(System.in,StandardCharsets.UTF_8));
+        char[] first=password(input,"WebUI password (14–128 characters): "),second=null;
+        try{second=password(input,"Confirm password: ");if(!Arrays.equals(first,second))throw new IOException("Passwords do not match");store.put(args[1],first,role);System.out.println("WebUI identity saved; previous sessions revoked.");}
+        finally{Arrays.fill(first,'\0');if(second!=null)Arrays.fill(second,'\0');}
     }
     private static void command(AccountStore accounts,String[] args) throws IOException {
         if(args[0].equals("--set-rank")&&args.length==5||args[0].equals("--set-prestige")&&args.length==4){

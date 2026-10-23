@@ -8,11 +8,10 @@ import java.net.InetSocketAddress;
 import java.nio.file.*;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import org.tortodrone.resources.ContentFiles;
 
-/** Serves Uplink News images from content/shared/news over plain HTTP for the unmodified client. */
+/** One shared HTTP listener: public stock-client News and optional isolated administration routes. */
 public final class NewsServer implements AutoCloseable {
     private static final long MAX_IMAGE_BYTES=org.tortodrone.news.NewsCatalog.MAX_IMAGE_BYTES;
     private final HttpServer server;
@@ -20,9 +19,20 @@ public final class NewsServer implements AutoCloseable {
     private NewsServer(HttpServer server,ExecutorService executor){this.server=server;this.executor=executor;}
     /** Bind the same interface as the game listener; the caller decides how to handle an unavailable port. */
     public static NewsServer start(InetAddress address,int port,Path root,Consumer<String> debug)throws IOException {
+        return start(address,port,root,debug,null);
+    }
+    public static NewsServer start(InetAddress address,int port,Path root,Consumer<String> debug,com.sun.net.httpserver.HttpHandler admin)throws IOException {
+        // JDK request deadlines bound slow headers/bodies on the shared executor.
+        System.setProperty("sun.net.httpserver.maxReqTime","15");
+        System.setProperty("sun.net.httpserver.maxRspTime","30");
+        System.setProperty("sun.net.httpserver.maxReqHeaders","64");
+        System.setProperty("sun.net.httpserver.maxReqHeaderSize","16384");
+        System.setProperty("jdk.httpserver.maxConnections","128");
         var server=HttpServer.create(new InetSocketAddress(address,port),16);
-        var executor=Executors.newVirtualThreadPerTaskExecutor();
+        var executor=new java.util.concurrent.ThreadPoolExecutor(4,16,30,java.util.concurrent.TimeUnit.SECONDS,
+            new java.util.concurrent.ArrayBlockingQueue<>(64),Thread.ofPlatform().name("HTTP-",0).factory(),new java.util.concurrent.ThreadPoolExecutor.AbortPolicy());
         server.createContext("/news/",exchange->serve(exchange,root,debug));
+        if(admin!=null)server.createContext("/admin/",admin);
         server.setExecutor(executor);
         server.start();
         return new NewsServer(server,executor);
@@ -62,5 +72,5 @@ public final class NewsServer implements AutoCloseable {
         if(lower.endsWith(".jpg")||lower.endsWith(".jpeg"))return "image/jpeg";
         return null;
     }
-    @Override public void close(){server.stop(0);executor.shutdownNow();}
+    @Override public void close(){server.stop(2);executor.shutdownNow();}
 }

@@ -58,6 +58,14 @@ public final class AccountStore implements AutoCloseable {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Knight progress requires SQLite storage");
         return database.progress(username,knight,expectedAccount,expectedWorld,rank,subrank,prestige,starterSprite);
     }
+    public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld,String sprite,long expectedRevision)throws IOException {
+        validateUsername(username);if(database==null||expectedRevision<0)throw new IOException("A current knight revision is required");
+        return database.progress(username,knight,expectedAccount,expectedWorld,rank,subrank,prestige,sprite,expectedRevision);
+    }
+    public WorldProfile administrativeCurrency(String username,String knight,Currency currency,long amount,boolean absolute,int expectedAccount,int expectedWorld,long expectedRevision)throws IOException {
+        validateUsername(username);if(database==null||expectedRevision<0)throw new IOException("A current knight revision is required");
+        return database.administrativeCurrency(username,knight,expectedAccount,expectedWorld,currency,amount,absolute,expectedRevision);
+    }
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld)throws IOException {
         if(username!=null)validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1);
@@ -65,6 +73,14 @@ public final class AccountStore implements AutoCloseable {
     public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld,org.tortodrone.character.ItemModifiers modifiers)throws IOException{
         validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
         return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1,modifiers,town);
+    }
+    public WorldProfile grantItems(String username,String knight,String config,int quantity,int expectedAccount,int expectedWorld,org.tortodrone.character.ItemModifiers modifiers,boolean bound,int expireDays)throws IOException {
+        validateUsername(username);if(database==null)throw new IOException("Item grants require SQLite storage");
+        return database.grantItems(username,knight,expectedAccount,expectedWorld,catalog.require(config),quantity,-1,-1,modifiers,town,bound,expireDays);
+    }
+    public WorldProfile itemAccessory(String username,String knight,long item,String accessory,int expectedAccount,int expectedWorld,long expectedRevision)throws IOException {
+        validateUsername(username);if(database==null)throw new IOException("Item editing requires SQLite storage");
+        return database.itemAccessory(username,knight,expectedAccount,expectedWorld,expectedRevision,item,accessory,town);
     }
     public WorldProfile itemModifiers(String username,String knight,long itemId,org.tortodrone.character.ItemModifiers modifiers,int expectedAccount,int expectedWorld,long expectedRevision)throws IOException{
         validateUsername(username);if(database==null)throw new IOException("Item editing requires SQLite storage");
@@ -116,6 +132,10 @@ public final class AccountStore implements AutoCloseable {
         validateUsername(username);
         if(database==null)throw new IOException("Inventory administration requires SQLite storage");
         return database.itemQuantity(username,knight,expectedAccount,expectedWorld,item,quantity,catalog);
+    }
+    public WorldProfile itemQuantity(String username,String knight,long item,int quantity,int expectedAccount,int expectedWorld,long expectedRevision)throws IOException {
+        validateUsername(username);if(database==null||expectedRevision<0)throw new IOException("A current inventory revision is required");
+        return database.itemQuantity(username,knight,expectedAccount,expectedWorld,item,quantity,catalog,expectedRevision);
     }
     public void create(String username,char[] password) throws IOException { create(username,password,false); }
     public synchronized void create(String username,char[] password,boolean gameMaster) throws IOException {
