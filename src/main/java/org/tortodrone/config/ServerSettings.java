@@ -10,8 +10,11 @@ import java.util.Properties;
 /** Listener, logging and initial map settings; legacy selection is migration-only. */
 public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap, org.tortodrone.web.WebSettings webui) {
     public ServerSettings(String bind,int port,int newsPort,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy,String startupMap){this(bind,port,newsPort,mode,clients,maxMiB,retention,packs,legacy,startupMap,org.tortodrone.web.WebSettings.DISABLED);}
-    /** Default Uplink News image port; the launcher points content_url at the same host. */
-    public static final int DEFAULT_NEWS_PORT=8080;
+    /** One port shared by the WebUI and stock-client content_url News images. */
+    public static final String HTTP_PORT_SETTING="webui/content_url-port";
+    public static final int DEFAULT_HTTP_PORT=8080;
+    public static final int DEFAULT_NEWS_PORT=DEFAULT_HTTP_PORT;
+    public int httpPort(){return newsPort;}
     public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy){this(bind,port,DEFAULT_NEWS_PORT,mode,clients,maxMiB,retention,packs,legacy,"haven");}
     public ServerSettings(String bind,int port,LogMode mode,int clients,int maxMiB,int retention) { this(bind,port,mode,clients,maxMiB,retention,"vanilla","auto"); }
     public ServerSettings(String bind,int port,LogMode mode,int clients) { this(bind,port,mode,clients,10,5); }
@@ -43,19 +46,27 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
             defaults.load(source);
         }
         Properties settings=new Properties();settings.putAll(defaults);
+        Properties overrides=new Properties();
         org.tortodrone.resources.ContentFiles.safe(file);
         if(Files.exists(file)) {
             if(file.toString().endsWith(".yml")) {
                 for(var e:org.tortodrone.resources.Yaml.read(file).entrySet()) {
                     if(java.util.Set.of("content-packs","legacy-content").contains(e.getKey()))throw new IOException(file+": pack settings are migration-only; use unified content directories");
-                    if(!defaults.containsKey(e.getKey()))throw new IOException(file+": unknown server setting "+e.getKey());
+                    if(!defaults.containsKey(e.getKey())&&!e.getKey().equals("news-port"))throw new IOException(file+": unknown server setting "+e.getKey());
                     if(!(e.getValue() instanceof String||e.getValue() instanceof Number||e.getValue() instanceof Boolean))throw new IOException(file+": expected scalar setting "+e.getKey());
-                    settings.setProperty(e.getKey(),e.getValue().toString());
+                    overrides.setProperty(e.getKey(),e.getValue().toString());
                 }
-            } else settings.putAll(org.tortodrone.resources.ContentFiles.properties(file));
+            } else overrides.putAll(org.tortodrone.resources.ContentFiles.properties(file));
         }
-        for(String name:settings.stringPropertyNames())
-            if(!defaults.containsKey(name))throw new IOException("Unknown server property: "+name);
+        for(String name:overrides.stringPropertyNames())
+            if(!defaults.containsKey(name)&&!name.equals("news-port"))throw new IOException("Unknown server property: "+name);
+        if(overrides.containsKey("news-port")) {
+            int legacy=number(overrides,"news-port",0,65535);
+            if(overrides.containsKey(HTTP_PORT_SETTING)&&number(overrides,HTTP_PORT_SETTING,0,65535)!=legacy)
+                throw new IOException("news-port and "+HTTP_PORT_SETTING+" configure the same listener and must agree; keep only "+HTTP_PORT_SETTING);
+            overrides.setProperty(HTTP_PORT_SETTING,Integer.toString(legacy));
+        }
+        settings.putAll(overrides);
         return settings;
     }
     public static ServerSettings read(Path file) throws IOException {
@@ -69,7 +80,7 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
             throw new IOException("server-port must be an integer from 0 to 65535");
         }
         if (port < 0 || port > 65535) throw new IOException("server-port must be from 0 to 65535");
-        int newsPort=number(settings,"news-port",0,65535);
+        int newsPort=number(settings,HTTP_PORT_SETTING,0,65535);
         LogMode logMode = switch (value(settings, "log-mode")) {
             case "normal" -> LogMode.NORMAL;
             case "debug" -> LogMode.DEBUG;
@@ -82,7 +93,7 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
         String packs=value(settings,"content-packs"),legacy=value(settings,"legacy-content");
         if(packs.isEmpty())throw new IOException("content-packs must list at least one pack");
         if(!java.util.Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings),org.tortodrone.web.WebSettings.read(settings));
+        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings),org.tortodrone.web.WebSettings.read(settings,newsPort));
     }
 
     public static String startupMap(Path file)throws IOException {

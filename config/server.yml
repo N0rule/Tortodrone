@@ -1,8 +1,6 @@
 # Restart the server after editing. Port 0 selects an ephemeral port for isolated tests.
 server-ip: 0.0.0.0
 server-port: 47624
-# Uplink News image HTTP port, bound to server-ip. 0 selects an ephemeral port.
-news-port: 8080
 max-clients: 16
 log-mode: normal
 log-max-mib: 10
@@ -13,5 +11,7 @@ startup-map: haven
 # Optional administration, served by the shared News HTTP listener.
 webui-enabled: false
 webui-public-url: ""
+# One shared HTTP port for WebUI and public News, even when WebUI is disabled.
+webui/content_url-port: 8080
 # reverse-proxy uses HTTPS; http explicitly permits direct plaintext access.
 webui-tls-mode: reverse-proxy

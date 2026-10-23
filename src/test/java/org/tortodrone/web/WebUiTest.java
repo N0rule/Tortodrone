@@ -74,6 +74,7 @@ public final class WebUiTest {
                     for(int i=0;i<12;i++)security.allowLogin();check(!security.allowLogin(),"bounded global login rate");
                 }
                 httpMode(root,news,frontend,identities,service);
+                automaticHttpMode(root,news,frontend,identities,service);
                 cookie=null;csrf=null;
                 try(var http=NewsServer.start(InetAddress.getLoopbackAddress(),org.tortodrone.config.ServerSettings.DEFAULT_NEWS_PORT,news,x->{})){
                     port=http.port();check(port==8080&&request("GET","/news/public.png",null,Map.of()).status==200,"public News on default port 8080");
@@ -129,6 +130,39 @@ public final class WebUiTest {
             clock.addAndGet(31*60_000);check(request("GET","/admin/api/status",null,authenticated).status==401,"HTTP idle expiration");
         }
     }
+    private static void automaticHttpMode(Path root,Path news,Path frontend,WebIdentityStore identities,AdminService service)throws Exception {
+        Path config=root.resolve("automatic-http.yml");
+        Files.writeString(config,"server-ip: 0.0.0.0\nwebui-enabled: true\nwebui-public-url: http://0.0.0.0\nwebui/content_url-port: 0\nwebui-tls-mode: http\n");
+        var settings=org.tortodrone.config.ServerSettings.read(config);
+        var security=new WebSecurity(settings.webui(),identities,root.resolve("automatic-without-proxy-key"));
+        try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),news,x->{},new AdminHandler(security,identities,service,frontend))){
+            port=http.port();String authority="127.0.0.1:"+port;
+            var headers=new HashMap<String,String>();headers.put("Host",authority);headers.put("Origin","http://"+authority);
+            check(request("GET","/admin/",null,headers).status==200,"automatic mode accepts concrete connection address");
+            check(request("GET","/news/public.png",null,Map.of()).status==200,"automatic WebUI and News share one port");
+            var bad=new HashMap<>(headers);bad.put("Host","attacker.example:"+port);bad.put("Origin","http://attacker.example:"+port);
+            check(request("GET","/admin/",null,bad).status==403,"automatic mode rejects arbitrary matching Host/Origin pairs");
+            bad=new HashMap<>(headers);bad.put("Host","0.0.0.0:"+port);bad.put("Origin","http://0.0.0.0:"+port);
+            check(request("GET","/admin/",null,bad).status==403,"wildcard is configuration, never a browser Host");
+            bad=new HashMap<>(headers);bad.put("Host","127.0.0.1:"+(port==65535?65534:port+1));
+            check(request("GET","/admin/",null,bad).status==403,"automatic mode validates actual listener port");
+            bad=new HashMap<>(headers);bad.put("Origin","http://attacker.example:"+port);
+            check(request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),bad).status==403,"automatic mode keeps Origin protection");
+            bad=new HashMap<>(headers);bad.put("X-Forwarded-Host",authority);
+            check(request("GET","/admin/",null,bad).status==403,"automatic mode rejects forwarded authority");
+            var login=request("POST","/admin/api/login",form(Map.of("username","administrator","password",PASSWORD)),headers);
+            check(login.status==200,"automatic-address login");
+            headers.put("Cookie",login.headers.get("set-cookie").split(";")[0]);headers.put("X-CSRF-Token",(String)((Map<?,?>)Json.parse(login.body)).get("csrf"));
+            check(request("GET","/admin/api/status",null,headers).status==200,"automatic-address authenticated session");
+            check(request("POST","/admin/api/logout","",headers).status==200,"automatic-address logout");
+            check(request("GET","/admin/api/status",null,headers).status==401,"automatic-address logout revokes session");
+            var localhost=Map.of("Host","localhost:"+port,"Origin","http://localhost:"+port);
+            check(request("GET","/admin/",null,localhost).status==200,"loopback localhost alias accepted");
+            var otherAddress=Map.of("Host","127.0.0.2:"+port,"Origin","http://127.0.0.2:"+port);
+            check(request("GET","/admin/",null,otherAddress).status==403,"Host must match the destination interface");
+            check(requestTo(InetAddress.ofLiteral("127.0.0.2"),"GET","/admin/",null,otherAddress).status==200,"one wildcard listener accepts another concrete local address");
+        }
+    }
     private static HashMap<String,String> headers(){var h=new HashMap<String,String>();h.put("Host","admin.example");h.put("X-Tortodrone-Proxy",secret);h.put("X-Forwarded-Proto","https");h.put("Origin","https://admin.example");return h;}
     private static HashMap<String,String> authenticated(){var h=headers();if(cookie!=null)h.put("Cookie",cookie);if(csrf!=null)h.put("X-CSRF-Token",csrf);return h;}
     private static Response get(String route)throws Exception{return request("GET","/admin/api/"+route,null,authenticated());}
@@ -137,7 +171,10 @@ public final class WebUiTest {
     private static void login(String user)throws Exception{var r=post("login",Map.of("username",user,"password",PASSWORD));check(r.status==200,"login "+user+": "+r.body);String set=r.headers.get("set-cookie");check(set.contains("HttpOnly")&&set.contains("Secure")&&set.contains("SameSite=Strict"),"cookie protections");cookie=set.split(";")[0];csrf=(String)((Map<?,?>)Json.parse(r.body)).get("csrf");}
     private record Response(int status,Map<String,String> headers,String body){}
     private static Response request(String method,String path,String body,Map<String,String> headers)throws Exception{
-        try(var socket=new Socket(InetAddress.getLoopbackAddress(),port)){
+        return requestTo(InetAddress.getLoopbackAddress(),method,path,body,headers);
+    }
+    private static Response requestTo(InetAddress destination,String method,String path,String body,Map<String,String> headers)throws Exception{
+        try(var socket=new Socket(destination,port)){
             socket.setSoTimeout(10000);var out=socket.getOutputStream();byte[] bytes=body==null?new byte[0]:body.getBytes(StandardCharsets.UTF_8);
             StringBuilder request=new StringBuilder(method+" "+path+" HTTP/1.1\r\nConnection: close\r\n");
             if(!headers.containsKey("Host"))request.append("Host: localhost\r\n");headers.forEach((k,v)->request.append(k).append(": ").append(v).append("\r\n"));

@@ -8,7 +8,7 @@ Install Java 25. Run `java -jar tortodrone-admin.jar --create-account Alice` to 
 
 - Hosting is always headless; `--nogui` remains accepted and `--gui` is rejected.
 - `--config path/to/server.yml` selects settings without moving `data/`. Restart the process to apply settings changes.
-- One shared HTTP listener uses `news-port` (8080 by default). `/news/` is public; `/admin/` and `/admin/api/` exist only when enabled.
+- One shared HTTP listener uses `webui/content_url-port` (8080 by default; legacy `news-port` is still accepted). `/news/` is public; `/admin/` and `/admin/api/` exist only when enabled.
 - With WebUI enabled, stopping the game listener disconnects its clients but keeps HTTP available for restart. Full process shutdown is a separate confirmed WebUI action. With WebUI disabled, terminal `stop` ends the process.
 - The admin JAR remains a local CLI. Use `--help` or `--data /path/to/server/data` before a command; it never starts another HTTP service.
 
@@ -17,7 +17,7 @@ Edit `config/server.yml` while stopped:
 ```yaml
 server-ip: 0.0.0.0
 server-port: 47624
-news-port: 8080
+webui/content_url-port: 8080
 webui-enabled: false
 webui-public-url: ""
 webui-tls-mode: reverse-proxy
@@ -32,7 +32,7 @@ startup-map: haven
 
 ## Secure WebUI setup
 
-The default `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Explicit `webui-tls-mode: http` permits direct HTTP access for local or LAN testing. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. `webui-public-url` must be the exact browser origin, without a trailing slash; use an HTTPS URL for proxy mode or an HTTP URL for direct mode.
+The default `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to the existing HTTP port. Explicit `webui-tls-mode: http` permits direct HTTP access for local or LAN testing. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
 
 Create credentials locally (passwords are prompted, never command arguments):
 
@@ -40,17 +40,17 @@ Create credentials locally (passwords are prompted, never command arguments):
 java -jar tortodrone-admin.jar --webui-user operator ADMINISTRATOR
 ```
 
-For direct LAN access, set the server PC's actual LAN address (example `192.168.1.50`):
+For direct local/LAN access with automatic server addresses:
 
 ```yaml
 server-ip: 0.0.0.0
-news-port: 8080
 webui-enabled: true
-webui-public-url: http://192.168.1.50:8080
+webui-public-url: http://0.0.0.0
+webui/content_url-port: 8080
 webui-tls-mode: http
 ```
 
-Restart the server process and open `http://192.168.1.50:8080/admin/`. No domain, certificate, proxy or proxy key is needed. Use that exact address on the server PC too, or configure a different origin such as `http://localhost:8080` for local-only browsing. HTTP does not encrypt passwords or session traffic; choose it only on a network you trust. If a browser previously received HSTS for the same hostname, use an IP address or clear that hostname's HSTS setting before testing HTTP.
+Restart the server process and open `http://YOUR_SERVER_IP:8080/admin/` (for example `http://192.168.1.50:8080/admin/`), or `http://localhost:8080/admin/` on the server PC. Here `http://0.0.0.0` is an automatic-address configuration value, not a browser destination: Host must match the connection's concrete local IP and actual listening port; localhost is also accepted for loopback connections. Origin must match that validated Host. Arbitrary DNS hostnames are rejected in automatic mode. Set a concrete `webui-public-url`, such as `http://192.168.1.50`, if you want one fixed allowed address. No domain, certificate, proxy or proxy key is needed. HTTP does not encrypt passwords or session traffic; choose it only on a network you trust. If a browser previously received HSTS for the same hostname, use an IP address or clear that hostname's HSTS setting before testing HTTP.
 
 For the default HTTPS proxy mode, also create a proxy key:
 

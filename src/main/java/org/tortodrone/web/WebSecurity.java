@@ -3,6 +3,7 @@ package org.tortodrone.web;
 import com.sun.net.httpserver.HttpExchange;
 import java.io.IOException;
 import java.net.URI;
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
@@ -33,13 +34,30 @@ public final class WebSecurity {
     public boolean trusted(HttpExchange e){
         var h=e.getRequestHeaders();
         if(h.containsKey("Forwarded")||h.containsKey("X-Forwarded-Host")||h.containsKey("X-Forwarded-For"))return false;
-        String host=URI.create(settings.publicUrl()).getRawAuthority();
-        if(!host.equals(single(e,"Host")))return false;
+        String host=single(e,"Host");
+        String expectedOrigin=settings.publicUrl();
+        if(settings.automaticHost()) {
+            if(!localAuthority(e,host))return false;
+            expectedOrigin="http://"+host;
+        } else if(!URI.create(settings.publicUrl()).getRawAuthority().equals(host))return false;
         if(settings.directHttp()) {
             if(h.containsKey("X-Forwarded-Proto")||h.containsKey("X-Tortodrone-Proxy"))return false;
         } else if(!e.getRemoteAddress().getAddress().isLoopbackAddress()||!"https".equals(single(e,"X-Forwarded-Proto"))||!equal(proxySecret,single(e,"X-Tortodrone-Proxy")))return false;
         String origin=single(e,"Origin");
-        return (!h.containsKey("Origin")||settings.publicUrl().equals(origin))&&(!e.getRequestMethod().equals("POST")||settings.publicUrl().equals(origin));
+        return (!h.containsKey("Origin")||expectedOrigin.equals(origin))&&(!e.getRequestMethod().equals("POST")||expectedOrigin.equals(origin));
+    }
+    /** Automatic HTTP access accepts this connection's concrete local IP, never an arbitrary DNS Host. */
+    private static boolean localAuthority(HttpExchange e,String host){
+        if(host==null)return false;
+        try {
+            URI uri=URI.create("http://"+host);
+            if(!host.equals(uri.getRawAuthority())||uri.getHost()==null||uri.getUserInfo()!=null||!uri.getPath().isEmpty()||uri.getQuery()!=null||uri.getFragment()!=null)return false;
+            if((uri.getPort()==-1?80:uri.getPort())!=e.getLocalAddress().getPort())return false;
+            String name=uri.getHost();
+            if(name.equals("localhost"))return e.getLocalAddress().getAddress().isLoopbackAddress()&&e.getRemoteAddress().getAddress().isLoopbackAddress();
+            if(name.startsWith("[")&&name.endsWith("]"))name=name.substring(1,name.length()-1);
+            return InetAddress.ofLiteral(name).equals(e.getLocalAddress().getAddress());
+        }catch(IllegalArgumentException invalid){return false;}
     }
     private static String single(HttpExchange e,String name){var values=e.getRequestHeaders().get(name);return values==null||values.size()!=1?null:values.getFirst();}
     public static boolean equal(String a,String b){return a!=null&&b!=null&&MessageDigest.isEqual(a.getBytes(StandardCharsets.UTF_8),b.getBytes(StandardCharsets.UTF_8));}

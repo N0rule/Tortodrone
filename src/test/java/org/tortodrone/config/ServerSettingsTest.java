@@ -43,7 +43,29 @@ public final class ServerSettingsTest {
                 Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: "+url+"\nwebui-tls-mode: http\n");
                 try{ServerSettings.read(yaml);throw new AssertionError("Invalid direct HTTP origin accepted: "+url);}catch(IOException expected){}
             }
-            System.out.println("PASS: bounded client capacity, default and existing configuration compatibility");
+            Files.writeString(yaml,"server-ip: 0.0.0.0\nwebui-enabled: true\nwebui-public-url: http://0.0.0.0\nwebui/content_url-port: 8091\nwebui-tls-mode: http\n");
+            var shared=ServerSettings.read(yaml);
+            check(shared.bind().equals("0.0.0.0")&&shared.httpPort()==8091&&shared.newsPort()==8091,"one canonical port shared with legacy Java accessor");
+            check(shared.webui().automaticHost()&&shared.webui().publicUrl().equals("http://0.0.0.0:8091"),"wildcard URL inherits the shared port");
+            Files.writeString(yaml,Files.readString(yaml).replace("http://0.0.0.0","http://192.168.1.50"));
+            check(ServerSettings.read(yaml).webui().publicUrl().equals("http://192.168.1.50:8091"),"concrete host URL inherits shared port too");
+            Files.writeString(file,"news-port=8091\nwebui-enabled=true\nwebui-public-url=http://192.168.1.50\nwebui-tls-mode=http\n");
+            check(ServerSettings.read(file).httpPort()==8091&&ServerSettings.read(file).webui().publicUrl().equals("http://192.168.1.50:8091"),"legacy port remains compatible and fills the origin port");
+            Files.writeString(file,Files.readString(file)+"webui/content_url-port=8091\n");
+            check(ServerSettings.read(file).httpPort()==8091,"matching old/new port aliases are compatible");
+            Files.writeString(file,Files.readString(file).replace("news-port=8091","news-port=8080"));
+            try{ServerSettings.read(file);throw new AssertionError("Conflicting shared HTTP ports accepted");}catch(IOException expected){check(expected.getMessage().contains("same listener"),"clear conflicting port error");}
+            for(String portValue:new String[]{"-1","65536","invalid"}) {
+                Files.writeString(yaml,"webui/content_url-port: "+portValue+"\n");
+                try{ServerSettings.read(yaml);throw new AssertionError("Invalid shared HTTP port accepted");}catch(IOException expected){}
+            }
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: http://0.0.0.0\nwebui/content_url-port: 0\nwebui-tls-mode: http\n");
+            check(ServerSettings.read(yaml).httpPort()==0&&ServerSettings.read(yaml).webui().automaticHost(),"ephemeral automatic HTTP fixtures supported");
+            Files.writeString(yaml,"webui-enabled: true\nwebui-public-url: https://admin.example\nwebui/content_url-port: 8091\nwebui-tls-mode: reverse-proxy\n");
+            check(ServerSettings.read(yaml).webui().publicUrl().equals("https://admin.example"),"HTTPS proxy public port is independent of backend listener");
+            Files.writeString(yaml,Files.readString(yaml).replace("https://admin.example","https://0.0.0.0"));
+            try{ServerSettings.read(yaml);throw new AssertionError("Wildcard proxy hostname accepted");}catch(IOException expected){}
+            System.out.println("PASS: bounded settings, one shared HTTP port, legacy compatibility, automatic host origins and proxy defaults");
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
 }

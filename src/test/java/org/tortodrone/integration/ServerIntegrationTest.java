@@ -202,7 +202,7 @@ public final class ServerIntegrationTest {
         check(defaults.logMode() == ServerSettings.LogMode.NORMAL, "default logs use normal mode");
         check(!properties(config).containsKey("data-directory"), "generated settings omit data-directory");
         // Use an ephemeral port so this scenario can run alongside a real server.
-        String settings = Files.readString(config).replace("server-port=47624", "server-port=0").replace("news-port=8080","news-port=0");
+        String settings = Files.readString(config).replace("server-port=47624", "server-port=0").replace("webui/content_url-port=8080","webui/content_url-port=0");
         Files.writeString(config, settings);
         byte[] identity;
         // Start from outside the deployment: state must follow the JAR, not the shell.

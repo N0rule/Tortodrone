@@ -63,8 +63,9 @@ public final class Server {
                         var security=new org.tortodrone.web.WebSecurity(settings.webui(),identities,dataDirectory);
                         handler=new org.tortodrone.web.AdminHandler(security,identities,adminService,directory.resolve("webui"));
                     }
-                    try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.newsPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
-                        log.info("Shared HTTP listener: "+http.port()+"; WebUI "+(handler==null?"disabled":settings.webui().publicUrl()+"/admin/"));
+                    try(var http=NewsServer.start(InetAddress.getByName(settings.bind()),settings.httpPort(),directory.resolve("content/shared/news"),log::debug,handler)) {
+                        String webAddress=settings.webui().automaticHost()?"http://<server-ip>:"+http.port():settings.webui().publicUrl();
+                        log.info("Shared HTTP listener: "+http.port()+"; WebUI "+(handler==null?"disabled":webAddress+"/admin/"));
                         while(control.awaitStart(settings.webui().enabled())) {
                             try {run(settings,dataDirectory,log,control,false,content);content=null;}
                             catch(Exception failed){control.failed(failed);log.error("Server startup failed: "+failed.getMessage());if(!settings.webui().enabled())throw failed;}
