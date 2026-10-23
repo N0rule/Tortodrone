@@ -663,6 +663,806 @@ catalogs:
     price: 25000
   - item: wild_hunting_blade_recipe
     price: 25000
+# Hall of Heroes tier stock: each catalog holds the captured 5-star family's goods whose item
+# rarity is at most N (Hall_of_Heroes.wiki:118-132, proven by reference-inputs
+# contrib/check_hoh_stock_rule.py + install_hoh_tier_stock.py). No 2/3/4-star mannequin is
+# placed in the current maps, so these catalogs await a map/station binding change.
+- config: Rule/Hall of Heroes/Bomber 2 Star
+  goods:
+  - item: blast_bomb_recipe
+    price: 1000
+  - item: crystal_bomb_recipe
+    price: 1000
+  - item: dark_matter_bomb_recipe
+    price: 1000
+  - item: fiery_vaporizer_recipe
+    price: 1000
+  - item: freezing_vaporizer_recipe
+    price: 1000
+  - item: haze_bomb_recipe
+    price: 1000
+  - item: shard_bomb_recipe
+    price: 1000
+  - item: slumber_smogger_recipe
+    price: 1000
+  - item: spiral_demo_helm_recipe
+    price: 1000
+  - item: spiral_demo_suit_recipe
+    price: 1000
+  - item: splinter_bomb_recipe
+    price: 1000
+  - item: toxic_vaporizer_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Bomber 3 Star
+  goods:
+  - item: blast_bomb_recipe
+    price: 1000
+  - item: crystal_bomb_recipe
+    price: 1000
+  - item: dark_matter_bomb_recipe
+    price: 1000
+  - item: fiery_vaporizer_recipe
+    price: 1000
+  - item: freezing_vaporizer_recipe
+    price: 1000
+  - item: haze_bomb_recipe
+    price: 1000
+  - item: shard_bomb_recipe
+    price: 1000
+  - item: slumber_smogger_recipe
+    price: 1000
+  - item: spiral_demo_helm_recipe
+    price: 1000
+  - item: spiral_demo_suit_recipe
+    price: 1000
+  - item: splinter_bomb_recipe
+    price: 1000
+  - item: toxic_vaporizer_recipe
+    price: 1000
+  - item: deconstructor_recipe
+    price: 4000
+  - item: fiery_vaporizer_mk_ii_recipe
+    price: 4000
+  - item: freezing_vaporizer_mk_ii_recipe
+    price: 4000
+  - item: fused_demo_helm_recipe
+    price: 4000
+  - item: fused_demo_suit_recipe
+    price: 4000
+  - item: padded_demo_helm_recipe
+    price: 4000
+  - item: padded_demo_suit_recipe
+    price: 4000
+  - item: rock_salt_bomb_recipe
+    price: 4000
+  - item: slumber_smogger_mk_ii_recipe
+    price: 4000
+  - item: sun_shards_recipe
+    price: 4000
+  - item: super_blast_bomb_recipe
+    price: 4000
+  - item: super_crystal_bomb_recipe
+    price: 4000
+  - item: super_dark_matter_bomb_recipe
+    price: 4000
+  - item: super_shard_bomb_recipe
+    price: 4000
+  - item: super_splinter_bomb_recipe
+    price: 4000
+  - item: toxic_vaporizer_mk_ii_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Bomber 4 Star
+  goods:
+  - item: blast_bomb_recipe
+    price: 1000
+  - item: crystal_bomb_recipe
+    price: 1000
+  - item: dark_matter_bomb_recipe
+    price: 1000
+  - item: fiery_vaporizer_recipe
+    price: 1000
+  - item: freezing_vaporizer_recipe
+    price: 1000
+  - item: haze_bomb_recipe
+    price: 1000
+  - item: shard_bomb_recipe
+    price: 1000
+  - item: slumber_smogger_recipe
+    price: 1000
+  - item: spiral_demo_helm_recipe
+    price: 1000
+  - item: spiral_demo_suit_recipe
+    price: 1000
+  - item: splinter_bomb_recipe
+    price: 1000
+  - item: toxic_vaporizer_recipe
+    price: 1000
+  - item: deconstructor_recipe
+    price: 4000
+  - item: fiery_vaporizer_mk_ii_recipe
+    price: 4000
+  - item: freezing_vaporizer_mk_ii_recipe
+    price: 4000
+  - item: fused_demo_helm_recipe
+    price: 4000
+  - item: fused_demo_suit_recipe
+    price: 4000
+  - item: padded_demo_helm_recipe
+    price: 4000
+  - item: padded_demo_suit_recipe
+    price: 4000
+  - item: rock_salt_bomb_recipe
+    price: 4000
+  - item: slumber_smogger_mk_ii_recipe
+    price: 4000
+  - item: sun_shards_recipe
+    price: 4000
+  - item: super_blast_bomb_recipe
+    price: 4000
+  - item: super_crystal_bomb_recipe
+    price: 4000
+  - item: super_dark_matter_bomb_recipe
+    price: 4000
+  - item: super_shard_bomb_recipe
+    price: 4000
+  - item: super_splinter_bomb_recipe
+    price: 4000
+  - item: toxic_vaporizer_mk_ii_recipe
+    price: 4000
+  - item: fiery_atomizer_recipe
+    price: 10000
+  - item: freezing_atomizer_recipe
+    price: 10000
+  - item: heavy_crystal_bomb_recipe
+    price: 10000
+  - item: heavy_dark_matter_bomb_recipe
+    price: 10000
+  - item: heavy_deconstructor_recipe
+    price: 10000
+  - item: heavy_demo_helm_recipe
+    price: 10000
+  - item: heavy_demo_suit_recipe
+    price: 10000
+  - item: heavy_shard_bomb_recipe
+    price: 10000
+  - item: heavy_splinter_bomb_recipe
+    price: 10000
+  - item: ionized_salt_bomb_recipe
+    price: 10000
+  - item: irontech_bomb_recipe
+    price: 10000
+  - item: master_blast_bomb_recipe
+    price: 10000
+  - item: quilted_demo_helm_recipe
+    price: 10000
+  - item: quilted_demo_suit_recipe
+    price: 10000
+  - item: radiant_sun_shards_recipe
+    price: 10000
+  - item: slumber_squall_recipe
+    price: 10000
+  - item: toxic_atomizer_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Cobalt 2 Star
+  goods:
+  - item: cobalt_armor_recipe
+    price: 1000
+  - item: cobalt_helm_recipe
+    price: 1000
+  - item: defender_recipe
+    price: 1000
+  - item: calibur_recipe
+    price: 1000
+  - item: brandish_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: blast_bomb_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Cobalt 3 Star
+  goods:
+  - item: cobalt_armor_recipe
+    price: 1000
+  - item: cobalt_helm_recipe
+    price: 1000
+  - item: defender_recipe
+    price: 1000
+  - item: calibur_recipe
+    price: 1000
+  - item: brandish_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: blast_bomb_recipe
+    price: 1000
+  - item: solid_cobalt_armor_recipe
+    price: 4000
+  - item: solid_cobalt_helm_recipe
+    price: 4000
+  - item: great_defender_recipe
+    price: 4000
+  - item: tempered_calibur_recipe
+    price: 4000
+  - item: cautery_sword_recipe
+    price: 4000
+  - item: nightblade_recipe
+    price: 4000
+  - item: fireburst_brandish_recipe
+    price: 4000
+  - item: iceburst_brandish_recipe
+    price: 4000
+  - item: super_blaster_recipe
+    price: 4000
+  - item: super_blast_bomb_recipe
+    price: 4000
+  - item: deconstructor_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Cobalt 4 Star
+  goods:
+  - item: cobalt_armor_recipe
+    price: 1000
+  - item: cobalt_helm_recipe
+    price: 1000
+  - item: defender_recipe
+    price: 1000
+  - item: calibur_recipe
+    price: 1000
+  - item: brandish_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: blast_bomb_recipe
+    price: 1000
+  - item: solid_cobalt_armor_recipe
+    price: 4000
+  - item: solid_cobalt_helm_recipe
+    price: 4000
+  - item: great_defender_recipe
+    price: 4000
+  - item: tempered_calibur_recipe
+    price: 4000
+  - item: cautery_sword_recipe
+    price: 4000
+  - item: nightblade_recipe
+    price: 4000
+  - item: fireburst_brandish_recipe
+    price: 4000
+  - item: iceburst_brandish_recipe
+    price: 4000
+  - item: super_blaster_recipe
+    price: 4000
+  - item: super_blast_bomb_recipe
+    price: 4000
+  - item: deconstructor_recipe
+    price: 4000
+  - item: mighty_cobalt_armor_recipe
+    price: 10000
+  - item: vitasuit_deluxe_recipe
+    price: 10000
+  - item: mighty_cobalt_helm_recipe
+    price: 10000
+  - item: mighty_defender_recipe
+    price: 10000
+  - item: ascended_calibur_recipe
+    price: 10000
+  - item: cold_iron_carver_recipe
+    price: 10000
+  - item: advanced_cautery_sword_recipe
+    price: 10000
+  - item: silent_nightblade_recipe
+    price: 10000
+  - item: blazebrand_recipe
+    price: 10000
+  - item: blizzbrand_recipe
+    price: 10000
+  - item: master_blaster_recipe
+    price: 10000
+  - item: master_blast_bomb_recipe
+    price: 10000
+  - item: irontech_bomb_recipe
+    price: 10000
+  - item: heavy_deconstructor_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Elemental Def 2 Star
+  goods:
+  - item: magic_cloak_recipe
+    price: 1000
+  - item: magic_hood_recipe
+    price: 1000
+  - item: owlite_shield_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Elemental Def 3 Star
+  goods:
+  - item: magic_cloak_recipe
+    price: 1000
+  - item: magic_hood_recipe
+    price: 1000
+  - item: owlite_shield_recipe
+    price: 1000
+  - item: elemental_cloak_recipe
+    price: 4000
+  - item: elemental_hood_recipe
+    price: 4000
+  - item: horned_owlite_shield_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Elemental Def 4 Star
+  goods:
+  - item: magic_cloak_recipe
+    price: 1000
+  - item: magic_hood_recipe
+    price: 1000
+  - item: owlite_shield_recipe
+    price: 1000
+  - item: elemental_cloak_recipe
+    price: 4000
+  - item: elemental_hood_recipe
+    price: 4000
+  - item: horned_owlite_shield_recipe
+    price: 4000
+  - item: miracle_cloak_recipe
+    price: 10000
+  - item: miracle_hood_recipe
+    price: 10000
+  - item: wise_owlite_shield_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Gunner 2 Star
+  goods:
+  - item: autogun_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: cryotech_alchemer_recipe
+    price: 1000
+  - item: firotech_alchemer_recipe
+    price: 1000
+  - item: prismatech_alchemer_recipe
+    price: 1000
+  - item: shadowtech_alchemer_recipe
+    price: 1000
+  - item: voltech_alchemer_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Gunner 3 Star
+  goods:
+  - item: autogun_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: cryotech_alchemer_recipe
+    price: 1000
+  - item: firotech_alchemer_recipe
+    price: 1000
+  - item: prismatech_alchemer_recipe
+    price: 1000
+  - item: shadowtech_alchemer_recipe
+    price: 1000
+  - item: voltech_alchemer_recipe
+    price: 1000
+  - item: cryotech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: firotech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: gunslinger_hat_recipe
+    price: 4000
+  - item: gunslinger_sash_recipe
+    price: 4000
+  - item: magnus_recipe
+    price: 4000
+  - item: needle_shot_recipe
+    price: 4000
+  - item: pepperbox_recipe
+    price: 4000
+  - item: prismatech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: shadowtech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: super_blaster_recipe
+    price: 4000
+  - item: voltech_alchemer_mk_ii_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Gunner 4 Star
+  goods:
+  - item: autogun_recipe
+    price: 1000
+  - item: blaster_recipe
+    price: 1000
+  - item: cryotech_alchemer_recipe
+    price: 1000
+  - item: firotech_alchemer_recipe
+    price: 1000
+  - item: prismatech_alchemer_recipe
+    price: 1000
+  - item: shadowtech_alchemer_recipe
+    price: 1000
+  - item: voltech_alchemer_recipe
+    price: 1000
+  - item: cryotech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: firotech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: gunslinger_hat_recipe
+    price: 4000
+  - item: gunslinger_sash_recipe
+    price: 4000
+  - item: magnus_recipe
+    price: 4000
+  - item: needle_shot_recipe
+    price: 4000
+  - item: pepperbox_recipe
+    price: 4000
+  - item: prismatech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: shadowtech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: super_blaster_recipe
+    price: 4000
+  - item: voltech_alchemer_mk_ii_recipe
+    price: 4000
+  - item: cryo_driver_recipe
+    price: 10000
+  - item: fiery_pepperbox_recipe
+    price: 10000
+  - item: firo_driver_recipe
+    price: 10000
+  - item: master_blaster_recipe
+    price: 10000
+  - item: mega_magnus_recipe
+    price: 10000
+  - item: prisma_driver_recipe
+    price: 10000
+  - item: shadow_driver_recipe
+    price: 10000
+  - item: strike_needle_recipe
+    price: 10000
+  - item: sunset_duster_recipe
+    price: 10000
+  - item: sunset_stetson_recipe
+    price: 10000
+  - item: volt_driver_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Heavy 2 Star
+  goods:
+  - item: plate_shield_recipe
+    price: 1000
+  - item: spiral_plate_helm_recipe
+    price: 1000
+  - item: spiral_plate_mail_recipe
+    price: 1000
+  - item: troika_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Heavy 3 Star
+  goods:
+  - item: plate_shield_recipe
+    price: 1000
+  - item: spiral_plate_helm_recipe
+    price: 1000
+  - item: spiral_plate_mail_recipe
+    price: 1000
+  - item: troika_recipe
+    price: 1000
+  - item: boosted_plate_helm_recipe
+    price: 4000
+  - item: boosted_plate_mail_recipe
+    price: 4000
+  - item: boosted_plate_shield_recipe
+    price: 4000
+  - item: kamarin_recipe
+    price: 4000
+  - item: magnus_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Heavy 4 Star
+  goods:
+  - item: plate_shield_recipe
+    price: 1000
+  - item: spiral_plate_helm_recipe
+    price: 1000
+  - item: spiral_plate_mail_recipe
+    price: 1000
+  - item: troika_recipe
+    price: 1000
+  - item: boosted_plate_helm_recipe
+    price: 4000
+  - item: boosted_plate_mail_recipe
+    price: 4000
+  - item: boosted_plate_shield_recipe
+    price: 4000
+  - item: kamarin_recipe
+    price: 4000
+  - item: magnus_recipe
+    price: 4000
+  - item: heavy_plate_helm_recipe
+    price: 10000
+  - item: heavy_plate_mail_recipe
+    price: 10000
+  - item: heavy_plate_shield_recipe
+    price: 10000
+  - item: khorovod_recipe
+    price: 10000
+  - item: mega_magnus_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Piercing Def 2 Star
+  goods:
+  - item: jelly_helm_recipe
+    price: 1000
+  - item: jelly_mail_recipe
+    price: 1000
+  - item: jelly_shield_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Piercing Def 3 Star
+  goods:
+  - item: jelly_helm_recipe
+    price: 1000
+  - item: jelly_mail_recipe
+    price: 1000
+  - item: jelly_shield_recipe
+    price: 1000
+  - item: brute_jelly_helm_recipe
+    price: 4000
+  - item: brute_jelly_mail_recipe
+    price: 4000
+  - item: brute_jelly_shield_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Piercing Def 4 Star
+  goods:
+  - item: jelly_helm_recipe
+    price: 1000
+  - item: jelly_mail_recipe
+    price: 1000
+  - item: jelly_shield_recipe
+    price: 1000
+  - item: brute_jelly_helm_recipe
+    price: 4000
+  - item: brute_jelly_mail_recipe
+    price: 4000
+  - item: brute_jelly_shield_recipe
+    price: 4000
+  - item: rock_jelly_helm_recipe
+    price: 10000
+  - item: rock_jelly_mail_recipe
+    price: 10000
+  - item: rock_jelly_shield_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Shadow Def 2 Star
+  goods:
+  - item: skelly_mask_recipe
+    price: 1000
+  - item: skelly_shield_recipe
+    price: 1000
+  - item: skelly_suit_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Shadow Def 3 Star
+  goods:
+  - item: skelly_mask_recipe
+    price: 1000
+  - item: skelly_shield_recipe
+    price: 1000
+  - item: skelly_suit_recipe
+    price: 1000
+  - item: scary_skelly_mask_recipe
+    price: 4000
+  - item: scary_skelly_shield_recipe
+    price: 4000
+  - item: scary_skelly_suit_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Shadow Def 4 Star
+  goods:
+  - item: skelly_mask_recipe
+    price: 1000
+  - item: skelly_shield_recipe
+    price: 1000
+  - item: skelly_suit_recipe
+    price: 1000
+  - item: scary_skelly_mask_recipe
+    price: 4000
+  - item: scary_skelly_shield_recipe
+    price: 4000
+  - item: scary_skelly_suit_recipe
+    price: 4000
+  - item: sinister_skelly_mask_recipe
+    price: 10000
+  - item: sinister_skelly_shield_recipe
+    price: 10000
+  - item: sinister_skelly_suit_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Specialist 2 Star
+  goods:
+  - item: dim_recipe
+    price: 250
+  - item: warm_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Specialist 3 Star
+  goods:
+  - item: dim_recipe
+    price: 250
+  - item: warm_recipe
+    price: 1000
+  - item: angelic_helm_recipe
+    price: 4000
+  - item: angelic_raiment_recipe
+    price: 4000
+  - item: chroma_mask_recipe
+    price: 4000
+  - item: chroma_suit_recipe
+    price: 4000
+  - item: drake_scale_helm_recipe
+    price: 4000
+  - item: drake_scale_mail_recipe
+    price: 4000
+  - item: drake_scale_shield_recipe
+    price: 4000
+  - item: glowing_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Specialist 4 Star
+  goods:
+  - item: dim_recipe
+    price: 250
+  - item: warm_recipe
+    price: 1000
+  - item: angelic_helm_recipe
+    price: 4000
+  - item: angelic_raiment_recipe
+    price: 4000
+  - item: chroma_mask_recipe
+    price: 4000
+  - item: chroma_suit_recipe
+    price: 4000
+  - item: drake_scale_helm_recipe
+    price: 4000
+  - item: drake_scale_mail_recipe
+    price: 4000
+  - item: drake_scale_shield_recipe
+    price: 4000
+  - item: glowing_recipe
+    price: 4000
+  - item: salamander_mask_recipe
+    price: 10000
+  - item: salamander_suit_recipe
+    price: 10000
+  - item: seraphic_helm_recipe
+    price: 10000
+  - item: seraphic_mail_recipe
+    price: 10000
+  - item: shining_recipe
+    price: 10000
+  - item: silvermail_recipe
+    price: 10000
+  - item: stone_tortoise_recipe
+    price: 10000
+  - item: virulisk_mask_recipe
+    price: 10000
+  - item: virulisk_suit_recipe
+    price: 10000
+  - item: wyvern_scale_helm_recipe
+    price: 10000
+  - item: wyvern_scale_mail_recipe
+    price: 10000
+  - item: wyvern_scale_shield_recipe
+    price: 10000
+- config: Rule/Hall of Heroes/Striker 2 Star
+  goods:
+  - item: brandish_recipe
+    price: 1000
+  - item: cutter_recipe
+    price: 1000
+  - item: flourish_recipe
+    price: 1000
+  - item: spur_recipe
+    price: 1000
+  - item: wolver_cap_recipe
+    price: 1000
+  - item: wolver_coat_recipe
+    price: 1000
+- config: Rule/Hall of Heroes/Striker 3 Star
+  goods:
+  - item: brandish_recipe
+    price: 1000
+  - item: cutter_recipe
+    price: 1000
+  - item: flourish_recipe
+    price: 1000
+  - item: spur_recipe
+    price: 1000
+  - item: wolver_cap_recipe
+    price: 1000
+  - item: wolver_coat_recipe
+    price: 1000
+  - item: arc_razor_recipe
+    price: 4000
+  - item: cautery_sword_recipe
+    price: 4000
+  - item: dusker_cap_recipe
+    price: 4000
+  - item: dusker_coat_recipe
+    price: 4000
+  - item: fireburst_brandish_recipe
+    price: 4000
+  - item: flamberge_recipe
+    price: 4000
+  - item: iceburst_brandish_recipe
+    price: 4000
+  - item: nightblade_recipe
+    price: 4000
+  - item: padded_hunting_cap_recipe
+    price: 4000
+  - item: padded_hunting_coat_recipe
+    price: 4000
+  - item: rigadoon_recipe
+    price: 4000
+  - item: striker_recipe
+    price: 4000
+  - item: swift_flourish_recipe
+    price: 4000
+  - item: swiftstrike_buckler_recipe
+    price: 4000
+- config: Rule/Hall of Heroes/Striker 4 Star
+  goods:
+  - item: brandish_recipe
+    price: 1000
+  - item: cutter_recipe
+    price: 1000
+  - item: flourish_recipe
+    price: 1000
+  - item: spur_recipe
+    price: 1000
+  - item: wolver_cap_recipe
+    price: 1000
+  - item: wolver_coat_recipe
+    price: 1000
+  - item: arc_razor_recipe
+    price: 4000
+  - item: cautery_sword_recipe
+    price: 4000
+  - item: dusker_cap_recipe
+    price: 4000
+  - item: dusker_coat_recipe
+    price: 4000
+  - item: fireburst_brandish_recipe
+    price: 4000
+  - item: flamberge_recipe
+    price: 4000
+  - item: iceburst_brandish_recipe
+    price: 4000
+  - item: nightblade_recipe
+    price: 4000
+  - item: padded_hunting_cap_recipe
+    price: 4000
+  - item: padded_hunting_coat_recipe
+    price: 4000
+  - item: rigadoon_recipe
+    price: 4000
+  - item: striker_recipe
+    price: 4000
+  - item: swift_flourish_recipe
+    price: 4000
+  - item: swiftstrike_buckler_recipe
+    price: 4000
+  - item: advanced_cautery_sword_recipe
+    price: 10000
+  - item: ash_tail_cap_recipe
+    price: 10000
+  - item: ash_tail_coat_recipe
+    price: 10000
+  - item: blazebrand_recipe
+    price: 10000
+  - item: blizzbrand_recipe
+    price: 10000
+  - item: daring_rigadoon_recipe
+    price: 10000
+  - item: fierce_flamberge_recipe
+    price: 10000
+  - item: grand_flourish_recipe
+    price: 10000
+  - item: hunting_blade_recipe
+    price: 10000
+  - item: quilted_hunting_cap_recipe
+    price: 10000
+  - item: quilted_hunting_coat_recipe
+    price: 10000
+  - item: silent_nightblade_recipe
+    price: 10000
+  - item: vile_striker_recipe
+    price: 10000
+  - item: winmillion_recipe
+    price: 10000
 - config: Captured/OCH/Basil T1
   goods:
   - item: shadowtech_alchemer_recipe
@@ -1164,6 +1964,8 @@ catalogs:
   min: 0
   max: 0
   chance: 1
+# Krogmo Coin wares from Sullivan.wiki (reference-inputs contrib/reference/wiki-vendor-stock.tsv);
+# the in-game Token Trader, PvP station had no catalog before this binding.
 - config: Documented/Haven/Greave
   goods:
   - item: circuit_breaker_armor

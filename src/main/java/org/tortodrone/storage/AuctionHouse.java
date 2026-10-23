@@ -21,6 +21,13 @@ public final class AuctionHouse {
     public static int wonFee(int crowns){return Math.max(0,(int)Math.ceil(crowns*.1f));}
     public static int nextBid(int bid,int buy,boolean first){if(first)return bid;int raw=Math.max(1,(int)Math.floor(.05f*bid)),mag=(int)Math.pow(10,(int)Math.log10(raw));int next=(int)Math.min(Integer.MAX_VALUE,(long)bid+Math.max(1,mag*(raw/mag)));return buy==0||buy>next?next:buy;}
     public TownStore.Result operate(int account,int knight,long auth,int method,List<Object> args,boolean staff)throws IOException{
+        return operate(account,knight,auth,method,args,staff,Map.of());
+    }
+    /** Server-owned presence snapshot, scoped to this database. Values are authenticated session
+     * revisions, rechecked in the bid transaction; no client can choose the refund destination.
+     * A disconnect after the snapshot still retains a committed credit on reconnect. */
+    public TownStore.Result operate(int account,int knight,long auth,int method,List<Object> args,boolean staff,Map<Integer,Long> online)throws IOException{
+        var presence=Map.copyOf(online);
         return database.write(c->{var p=WorldProfiles.load(c,account,knight,auth);sweep(c);Object result;
             switch(method){
                 case 1->{long id=(Long)args.get(0);int amount=(Integer)args.get(1);var listing=require(c,id,p.worldId());
@@ -35,14 +42,15 @@ public final class AuctionHouse {
                         mail(c,id,p.worldId(),compose("s.bid_complete",display(listing.item())),"m.bid_complete",0,listing.item());
                         recordBid(c,id,p.worldId());result=new AuctionState.Update(require(c,id,p.worldId()),null);break;
                     }
-                    TownStore.pay(c,p,amount-(listing.bidder()==p.worldId()?listing.bid():0),0);if(listing.bidder()!=0&&listing.bidder()!=p.worldId())mail(c,id,listing.bidder(),compose("s.bid_outbid",display(listing.item())),"m.bid_outbid",listing.bid(),null);
+                    TownStore.pay(c,p,amount-(listing.bidder()==p.worldId()?listing.bid():0),0);
+                    if(listing.bidder()!=0&&listing.bidder()!=p.worldId())refundOutbid(c,listing,presence.get(listing.bidder()));
                     boolean buy=listing.buy()!=0&&amount==listing.buy();try(var s=c.prepareStatement("UPDATE town_auctions SET bid=?,bidder=?,expires=CASE WHEN ? THEN ? ELSE expires END WHERE id=? AND ended=0")){s.setInt(1,amount);s.setInt(2,p.worldId());s.setBoolean(3,buy);s.setLong(4,System.currentTimeMillis());s.setLong(5,id);if(s.executeUpdate()!=1)throw new IOException("e.auction_busy");}
                     try(var s=c.prepareStatement("INSERT INTO town_auction_bids(auction,world_id,has_bid) VALUES(?,?,1) ON CONFLICT(auction,world_id) DO UPDATE SET has_bid=1")){s.setLong(1,id);s.setInt(2,p.worldId());s.executeUpdate();}
                     if(buy)settle(c,id);result=new AuctionState.Update(require(c,id,p.worldId()),null);
                 }
                 case 2->{long id=(Long)args.get(0);var listing=require(c,id,p.worldId());if(listing.featured()||listing.seller()!=p.worldId()){if(!staff)throw new IOException("m.access_denied");TownStore.requireGameMaster(c,account,auth);}if(listing.ended()){result=new AuctionState.Update(listing,"e.auction_ended");break;}if(listing.bidder()!=0){if(!staff)throw new IOException("e.auction_bid");TownStore.requireGameMaster(c,account,auth);}
                     try(var s=c.prepareStatement("UPDATE town_auctions SET cancelled=1,expires=? WHERE id=? AND ended=0")){s.setLong(1,System.currentTimeMillis());s.setLong(2,id);s.executeUpdate();}settle(c,id);result=new AuctionState.Update(require(c,id,p.worldId()),null);}
-                case 3,4->{var all=list(c,p.worldId());result=all.stream().filter(v->method==3?v.seller()==p.worldId():v.participated()||v.watching()).toList();}
+                case 3,4->{var all=list(c,p.worldId());result=all.stream().filter(v->method==3?v.seller()==p.worldId():v.participated()||v.watching()).toList();if(method==4)clearOutbids(c,p.worldId());}
                 case 5->{var search=(SessionDecoder.AuctionSearch)args.get(0);int page=(Integer)args.get(1);if(page<0||page>100000)throw new IOException("Invalid auction page");var all=new ArrayList<>(list(c,p.worldId(),true,search.featured()).stream().filter(v->!v.ended()&&v.availableAt()<=System.currentTimeMillis()&&v.expires()>System.currentTimeMillis()&&v.featured()==search.featured()).filter(v->search.configs()==null||items.find(v.item().config())!=null&&search.configs().contains(items.find(v.item().config()).stockId())).filter(v->search.group()==null||groupOrdinal(items.find(v.item().config()))==search.group().ordinal()).toList());
                     Comparator<AuctionState.Listing> sort=switch(search.sort()){case 1->AuctionHouse::compareBidUnit;case 2->AuctionHouse::compareBuyUnit;case 3->Comparator.comparingInt(v->v.item().count());case 4->Comparator.comparingInt(v->{var d=items.find(v.item().config());return d==null?0:d.rarity();});case 5->Comparator.comparingInt(v->v.item().variants().size());default->Comparator.comparingLong(AuctionState.Listing::expires);};if(!search.ascending())sort=sort.reversed();all.sort(sort.thenComparingLong(AuctionState.Listing::id));int pages=(all.size()+49)/50,start=Math.min(all.size(),page*50);result=new AuctionState.Page(pages,all.subList(start,Math.min(start+50,all.size())));}
                 case 6->{long itemId=(Long)args.get(0);int count=(Integer)args.get(1),bid=(Integer)args.get(2),buy=(Integer)args.get(3),duration=((SessionDecoder.EnumValue)args.get(4)).ordinal();boolean featured=(Boolean)args.get(5);
@@ -59,6 +67,32 @@ public final class AuctionHouse {
                 default->throw new IOException("Unknown auction operation");
             }TownStore.touch(c,p.worldId());return new TownStore.Result(WorldProfiles.load(c,account,knight,auth),result);
         });
+    }
+    private static String outbidPrefix(int world){return "auction.outbid."+world+".";}
+    private void refundOutbid(Connection c,AuctionState.Listing listing,Long sessionAuth)throws SQLException,IOException {
+        boolean direct=false;
+        if(sessionAuth!=null)try(var s=c.prepareStatement("SELECT a.auth_revision,w.crowns FROM world_characters w JOIN accounts a ON a.id=w.account_id WHERE w.world_id=?")) {
+            s.setInt(1,listing.bidder());try(var r=s.executeQuery()){direct=r.next()&&r.getLong(1)==sessionAuth&&(long)r.getInt(2)+listing.bid()<=Integer.MAX_VALUE;}
+        }
+        if(!direct){mail(c,listing.id(),listing.bidder(),compose("s.bid_outbid",display(listing.item())),"m.bid_outbid",listing.bid(),null);return;}
+        TownStore.credit(c,listing.bidder(),listing.bid(),0);
+        try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")) {
+            s.setString(1,outbidPrefix(listing.bidder())+listing.id());s.setInt(2,listing.bid());s.executeUpdate();
+        }
+    }
+    static List<AuctionState.Outbid> loadOutbids(Connection c,int world)throws SQLException,IOException {
+        var result=new ArrayList<AuctionState.Outbid>();String prefix=outbidPrefix(world);
+        try(var s=c.prepareStatement("SELECT a.id,a.item,m.value FROM metadata m JOIN town_auctions a ON a.id=CAST(substr(m.key,?) AS INTEGER) WHERE m.key LIKE ? ORDER BY a.id")) {
+            s.setInt(1,prefix.length()+1);s.setString(2,prefix+"%");
+            try(var r=s.executeQuery()){while(r.next())result.add(new AuctionState.Outbid(r.getLong(1),decode(r.getString(2)).config(),r.getInt(3)));}
+        }
+        return List.copyOf(result);
+    }
+    private static void clearOutbids(Connection c,int world)throws SQLException {
+        try(var s=c.prepareStatement("DELETE FROM metadata WHERE key LIKE ?")){s.setString(1,outbidPrefix(world)+"%");s.executeUpdate();}
+    }
+    static void cleanOutbids(Connection c)throws SQLException {
+        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key LIKE 'auction.outbid.%' AND key NOT IN (SELECT 'auction.outbid.'||w.world_id||'.'||a.id FROM world_characters w JOIN town_auction_bids b ON b.world_id=w.world_id JOIN town_auctions a ON a.id=b.auction)");}
     }
     private static int compareBidUnit(AuctionState.Listing a,AuctionState.Listing b){return Long.compare((long)a.bid()*b.item().count(),(long)b.bid()*a.item().count());}
     private static int compareBuyUnit(AuctionState.Listing a,AuctionState.Listing b){return Long.compare((long)a.buy()*b.item().count(),(long)b.buy()*a.item().count());}

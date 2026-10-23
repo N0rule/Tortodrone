@@ -66,9 +66,10 @@ public final class DepotStore {
         try(var s=c.prepareStatement("SELECT * FROM town_depot_promotions WHERE cancelled=0 AND starts<=? AND ends>? ORDER BY id")) {
             s.setLong(1,now);s.setLong(2,now);try(var r=s.executeQuery()){while(r.next()){var p=promotion(r);if(active.putIfAbsent(p.offerId(),p)!=null)throw new IOException("Conflicting Supply Depot promotions");}}
         }
+        var automatic=DepotSpecials.offers(base,now);
         var offers=new ArrayList<Offer>();for(var o:base.offers()) {
             var p=active.get(o.id());var g=o.good();boolean available=o.enabled()&&(!o.promotionOnly()||p!=null);
-            offers.add(p==null?new Offer(o.id(),g,o.featured(),available,o.promotionOnly()):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id(),p.ends()));
+            offers.add(p==null?automatic.getOrDefault(o.id(),new Offer(o.id(),g,o.featured(),available,o.promotionOnly())):new Offer(o.id(),new TownCatalog.Good(g.item(),g.count(),p.crowns(),p.energy(),g.limit(),"",0),o.featured()||p.featured(),available,o.promotionOnly(),p.referencePrice()==null?0:p.referencePrice(),p.referencePrice()!=null,p.id(),p.ends()));
         }
         return new Snapshot(base.revision(),offers);
     }

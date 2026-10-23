@@ -126,6 +126,14 @@ for the spotlights, the same sizes as the window's shipped parts. The optional
 player's browser. Images may not escape the folder, and a missing, non-image or
 escaping file stops startup, as does `enabled: true` with no packs. An absent
 `news.yml`, or `enabled: false`, answers the client with no News.
+Startup checks PNG/JPEG header dimensions against those slot sizes without
+initializing AWT, and shares the HTTP server's 8 MiB file limit. This byte limit
+is a local serving policy.
+`action: depot` opens the native Supply Depot instead of a URL; it also enables
+the tooltip. Other actions and nonempty arguments are rejected in this Town-only
+implementation. The property names and action routing follow reference inputs
+`client/bX.java:40-54`, `client/ds_1.java:369-372` and the captured Depot banner in
+`contrib/check_uplink_news.py`; no archived banner assets are bundled.
 The server serves this folder over HTTP on `server-ip:news-port` and refuses
 traversal, non-image paths and unknown files, so point the launcher's `content_url` at the host and `news-port` configured
 in `config/server.yml`.
@@ -566,6 +574,14 @@ and variants YAML no longer duplicate them. Advanced overrides merge by exact
 invented or removed. NPC filenames use verified native names where available;
 `id` and native dialogue bindings remain authoritative even after a file rename.
 
+The 27 `Rule/Hall of Heroes/<Family> <2|3|4> Star` catalogues filter the existing
+nine captured 5-star families by original item rarity, retaining order, quantities
+and prices (1/2/3/4/5 stars: 250/1,000/4,000/10,000/25,000 crowns). This reuses
+the rule checked by reference inputs `check_hoh_stock_rule.py` and
+`install_hoh_tier_stock.py`. Current Town maps place only 5-star mannequins;
+these lower-tier definitions do **not** establish reachable lower-tier gameplay.
+No mission hall or fabricated actor placement is added.
+
 Harness merchant definitions in `town/sprites.yml` now include `prerequisite` and
 `crowns`. Prerequisites and recharge modifiers come from installed stock configs;
 the 8,000/32,000/128,000 crown prices are corroborated by the
@@ -623,9 +639,27 @@ join the featured response, including direct-price promotions. Native `promoHead
 is `~`; `promoDetail` carries `m.promo_hours_left|~N` below 36 hours, otherwise
 `m.promo_days_left|~N`. These verified wire values come from reference inputs
 `DepotTimedGoods` and its cited native DEFAULT countdown. The quote retains the
-fixed expiry so countdown changes cannot invalidate a purchase. Daily automatic
-selection remains unavailable: the archive explicitly labels its selection,
-discount draw and winter reset timing INTERIM, not recovered original rules.
+fixed expiry so countdown changes cannot invalidate a purchase.
+
+**Automatic daily Specials:** `DepotSpecials` overlays two equipment goods at noon
+Pacific, using the twelve exact captured sale-day pairs transcribed as numeric
+facts in `seeds/depot-specials.tsv` from reference inputs `DepotTimedGoods.ROWS`.
+`contrib/check_depot_specials_rotation.py` documents the observed reset and native
+discount defaults. Uncaptured dates use an explicitly **reconstructed**, restart-
+stable SHA-256 selection: one 150/500-Energy good and one 1,600/3,500-Energy good
+from the immutable seed, discounted 2–8% with a minimum 5-Energy reduction. This
+is not the archive's interim RNG or a recovered official selection algorithm.
+Winter noon Pacific timing is also reconstructed; only daylight-time resets
+were captured. Calendar boundaries account for daylight-saving transitions.
+
+SQLite remains authoritative for availability and prices. Disabled, temporary,
+removed, quantity-changed or repriced selected offers are not restored or rerolled.
+Administrator promotions override a selected automatic offer during their window;
+cancellation/expiration reveals that day's automatic sale if still eligible.
+No automatic promotion rows or schema changes are written. Negative promotion
+identities distinguish automatic sale windows in server-issued quotes, so a stale
+day's quote fails even if the replacement repeats its price. Player preview labels
+automatic offers and their expiration and explains the reconstruction policy.
 
 Times persist as Unix milliseconds UTC, **start inclusive, end exclusive**; the
 admin forms show the local timezone. Overlapping uncancelled windows for the same
@@ -651,10 +685,22 @@ stock/status/time display and confirmed cancellation. New escrow records retain
 source item-instance IDs for inspection; older records without that field show 0.
 Attachment grants retain the existing safe inventory-ID allocation behavior.
 
-Outbid refunds remain durable mail for both online/offline players. Historical
-online direct refunds/chat are a known parity gap; presence/notification handoff
-has not been verified sufficiently to replace the safe path. Exact current
-last-minute extension timing and destructive 30-day mail purging are deferred.
+Online outbid refunds now credit the original bidder inside the bid transaction,
+using a deployment-scoped server presence snapshot and rechecking recipient
+authentication. Offline/stale-authentication recipients and overflowing balances
+receive the existing refund mail. Disconnecting after the online decision retains
+the committed credit and durable indicator for reconnect, without a second mail.
+The existing world-state poller publishes balances, native `PlayerObject.outbid`
+and `auction:m.note_outbid` with item/refund arguments after commit. My Bids clears
+the indicator. Refund notices use integer metadata beside the auction records;
+no database migration is inferred. System-info chat routing and My Bids
+acknowledgement follow the archive's explicitly reconstructed notification behavior.
+
+Native time-left categories use the archived wiki's approximate 5-minute, 1-hour,
+4-hour and 24-hour boundaries; a two-day listing is Very Long, matching the archive
+capture cited by `AuctionManager.timeLeft`. Exact last-minute extension duration
+and destructive 30-day mail purging remain evidence blocked. The archive's
+five-minute extension is explicitly interim and is not enabled here.
 See the [evidence matrix](research.md#economy-parity-baseline-2026-10-18).
 
 ## Native map import

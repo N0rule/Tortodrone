@@ -121,6 +121,7 @@ final class WorldProfiles {
     static void cleanProgress(Connection c)throws SQLException{
         FriendStore.clean(c);
         NamedLoadouts.clean(c);
+        AuctionHouse.cleanOutbids(c);
         try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key LIKE 'knight.progress.%' AND key NOT IN (SELECT 'knight.progress.'||world_id||'.rank' FROM world_characters UNION ALL SELECT 'knight.progress.'||world_id||'.prestige' FROM world_characters)");}
     }
 }

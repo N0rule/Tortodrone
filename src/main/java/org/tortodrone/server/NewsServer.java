@@ -14,7 +14,7 @@ import org.tortodrone.resources.ContentFiles;
 
 /** Serves Uplink News images from content/shared/news over plain HTTP for the unmodified client. */
 public final class NewsServer implements AutoCloseable {
-    private static final long MAX_IMAGE_BYTES=8L*1024*1024;
+    private static final long MAX_IMAGE_BYTES=org.tortodrone.news.NewsCatalog.MAX_IMAGE_BYTES;
     private final HttpServer server;
     private final ExecutorService executor;
     private NewsServer(HttpServer server,ExecutorService executor){this.server=server;this.executor=executor;}

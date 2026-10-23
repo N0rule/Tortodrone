@@ -253,6 +253,7 @@ final class WorldSession implements AutoCloseable {
         if(before.energy()>after.energy()&&membership!=null)membership.effect(new StarterCatalog.Model("Energy Spent",Map.of()));
         output.send(()->codec.itemChanges(oid,knight,before,after));output.send(()->codec.balances(oid,after));
         if(publishTown)output.send(()->codec.townState(oid,after));
+        publishOutbids(before,after);
         if(!before.town().loadouts().equals(after.town().loadouts())||before.town().equippedSprite()!=after.town().equippedSprite()
                 ||!before.town().sprites().equals(after.town().sprites()))output.send(()->codec.loadoutChanges(oid,before,after));
     }
@@ -314,7 +315,7 @@ final class WorldSession implements AutoCloseable {
         if(!valid)throw new SessionDecoder.Rejected("Invalid auction/mail arguments");
         try{if(closed||!selected()||!entered||!subscribed)throw new IOException("Enter a scene first");
             if(trades!=null&&trades.active(tradeMember)&&(auction&&(method==1||method==2||method==6)||mail&&(method==1||method==2||method==5)))throw new IOException("Finish the trade first");
-            var house=characters.auction(scenes.town());var result=auction?house.operate(characters.accountId(),knight.id(),authRevision,method,a,roles.gameMaster()):house.mail(characters.accountId(),knight.id(),authRevision,method,a);
+            var house=characters.auction(scenes.town());var result=auction?house.operate(characters.accountId(),knight.id(),authRevision,method,a,roles.gameMaster(),auctionPresence(characters.worldStorageFile())):house.mail(characters.accountId(),knight.id(),authRevision,method,a);
             townChanged(result);if(resultListener)output.send(()->codec.townResult(oid,listener.requestId(),result.result(),profile));else output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
     }
@@ -461,6 +462,13 @@ final class WorldSession implements AutoCloseable {
     static Map<Integer,FriendPresence> friendPresence(java.nio.file.Path storage) {
         var result=new HashMap<Integer,FriendPresence>();
         synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.friendLocation);}}
+        return Map.copyOf(result);
+    }
+    /** Read only volatile session presence and immutable auth revisions under ACTIVE.
+     * The recipient's DB authentication is checked again before a direct refund commits. */
+    static Map<Integer,Long> auctionPresence(java.nio.file.Path storage) {
+        var result=new HashMap<Integer,Long>();
+        synchronized(ACTIVE){for(var entry:ACTIVE.entrySet()){var session=entry.getValue();if(session.friendOnline&&!session.socket.isClosed()&&session.characters.hasWorldStorage()&&session.characters.worldStorageFile().equals(storage))result.put(entry.getKey(),session.authRevision);}}
         return Map.copyOf(result);
     }
     synchronized void refreshFriends(WorldStatePoller.Registration registration,org.tortodrone.storage.FriendStore.Snapshot snapshot,Map<Integer,FriendPresence> online)throws IOException {
@@ -1804,10 +1812,16 @@ final class WorldSession implements AutoCloseable {
                 var visibleBefore=visibleProfile();var previous=profile;profile=fresh;
                 if(fresh.crowns()!=previous.crowns()||fresh.energy()!=previous.energy())output.send(()->codec.balances(oid,profile));
                 if(!fresh.progress().equals(previous.progress())){membership.equipment(visibleProfile());output.send(()->codec.knightProgress(oid,profile));}
-                if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));}
+                if(!fresh.town().equals(previous.town())){membership.equipment(visibleProfile());output.send(()->codec.townState(oid,profile));publishOutbids(previous,profile);}
                 if(!fresh.town().loadouts().equals(previous.town().loadouts()))output.send(()->codec.loadoutChanges(oid,previous,profile));
                 if(!fresh.items().equals(previous.items())){updateAppearance();var visibleAfter=visibleProfile();output.send(()->codec.itemChanges(oid,knight,visibleBefore,visibleAfter));}
             }
+        }
+    }
+    private void publishOutbids(WorldProfile before,WorldProfile after)throws IOException {
+        for(var notice:after.town().outbids())if(!before.town().outbids().contains(notice)) {
+            var item=characters.catalog().require(notice.item());
+            output.send(()->codec.auctionOutbid(scene.oid(),"%item:"+item.nameKey(),notice.crowns()));
         }
     }
     private WorldProfile loadProfile(WorldProfile cached)throws IOException {

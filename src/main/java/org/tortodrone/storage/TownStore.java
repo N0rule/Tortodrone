@@ -74,7 +74,7 @@ public final class TownStore {
         try(var s=c.prepareStatement("SELECT * FROM town_sprites WHERE world_id=? ORDER BY id")){s.setInt(1,world);try(var r=s.executeQuery()){while(r.next())sprites.add(new TownState.Sprite(r.getInt("id"),r.getString("config"),r.getString("name"),r.getInt("level"),r.getFloat("heat"),r.getObject("last_full")==null?null:r.getLong("last_full"),r.getLong("full_stamp"),r.getInt("perk_level"),new HashSet<>(numbers(r.getString("perks"))),(Integer)r.getObject("perk"),numbers(r.getString("powers")),numbers(r.getString("ultimates")),r.getLong("harness")));}}
         try(var s=c.prepareStatement("SELECT * FROM town_harnesses WHERE world_id=? ORDER BY id")){s.setInt(1,world);try(var r=s.executeQuery()){while(r.next())harnesses.add(new TownState.Harness(r.getLong("id"),r.getString("config")));}}
         try(var s=c.prepareStatement("SELECT sprite FROM town_equipped WHERE world_id=?")){s.setInt(1,world);try(var r=s.executeQuery()){if(r.next())equipped=r.getInt(1);}}
-        return new TownState(recipes,sprites,equipped,harnesses,AuctionHouse.loadMail(c,world),NamedLoadouts.load(c,world));
+        return new TownState(recipes,sprites,equipped,harnesses,AuctionHouse.loadMail(c,world),NamedLoadouts.load(c,world),AuctionHouse.loadOutbids(c,world));
     }
     private static List<Integer> numbers(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->((Number)v).intValue()).toList();}
     static List<String> strings(String json)throws IOException{return ((List<?>)Json.parse(json)).stream().map(v->(String)v).toList();}

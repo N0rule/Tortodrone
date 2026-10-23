@@ -17,9 +17,8 @@ public final class NewsTest {
         Path home=Files.createTempDirectory("tortodrone-news-");
         try {
             Path news=home.resolve("content/shared/news");Files.createDirectories(news);
-            byte[] featured="FEATURED-IMAGE".getBytes(StandardCharsets.US_ASCII);
-            Files.write(news.resolve("featured.png"),featured);Files.write(news.resolve("left.png"),new byte[]{5});
-            Files.write(news.resolve("right.jpg"),new byte[]{6});Files.write(news.resolve("second.png"),new byte[]{7});
+            byte[] featured=image(news.resolve("featured.png"),570,300);
+            image(news.resolve("left.png"),280,190);image(news.resolve("right.jpg"),280,190);image(news.resolve("second.png"),1,1);
             Files.createDirectories(home.resolve("content/shared"));Files.write(home.resolve("content/shared/secret.png"),"TOP-SECRET".getBytes(StandardCharsets.US_ASCII));
 
             write(news,"""
@@ -43,6 +42,11 @@ public final class NewsTest {
                 "top.image","news/featured.png","top.tip","Featured","top.url","https://example.invalid/featured",
                 "left.image","news/left.png","right.image","news/right.jpg")),"first pack property pairs use the news/ image prefix");
             check(catalog.propertyList(1).equals(List.of("top.image","news/second.png")),"spotlights stay optional");
+            write(news,"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: depot\n      tooltip: Supply Depot\n");
+            check(NewsYaml.load(news).propertyList(0).equals(List.of("top.image","news/featured.png","top.action","depot","top.tip","Supply Depot")),"native Depot action and tooltip pairs");
+            image(news.resolve("too-wide.png"),571,300);image(news.resolve("too-high.jpg"),280,191);
+            Files.write(news.resolve("invalid.png"),new byte[]{1,2,3});
+            Files.write(news.resolve("large.png"),new byte[(int)NewsCatalog.MAX_IMAGE_BYTES+1]);
 
             // Every response is one randomly chosen pack; with two packs both must appear.
             var seen=new HashSet<List<String>>();
@@ -69,7 +73,13 @@ public final class NewsTest {
                 {"enabled: true\npacks:\n  - spotlights:\n      left:\n        image: left.png\n","requires a featured banner"},
                 {"enabled: true\npacks:\n  - featured: null\n","requires a featured banner"},
                 {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n    spotlights:\n      middle:\n        image: left.png\n","unknown field"},
-                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: x\n","unknown field"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: x\n","only the depot action"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: mission\n","only the depot action"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n      action: depot\n      argument: unknown\n","takes no argument"},
+                {"enabled: true\npacks:\n  - featured:\n      image: too-wide.png\n","570x300"},
+                {"enabled: true\npacks:\n  - featured:\n      image: featured.png\n    spotlights:\n      left:\n        image: too-high.jpg\n","280x190"},
+                {"enabled: true\npacks:\n  - featured:\n      image: invalid.png\n","not a valid PNG or JPEG"},
+                {"enabled: true\npacks:\n  - featured:\n      image: large.png\n","8 MiB"},
                 {"enabled: true\npacks:\n  - featured:\n      tooltip: x\n","requires an image"},
                 {"enabled: true\npacks:\n  - featured:\n      image: ../secret.png\n","escapes"},
                 {"enabled: true\npacks:\n  - featured:\n      image: featured.txt\n","PNG or JPEG"},
@@ -107,6 +117,7 @@ public final class NewsTest {
                 check(got.head().toLowerCase(Locale.ROOT).contains("content-type: image/png"),"news image content type");
                 check(request(server.port(),"GET","/news/right.jpg").head().contains("image/jpeg"),"jpeg content type");
                 check(request(server.port(),"GET","/news/unknown.png").status()==404,"missing image is not served");
+                check(request(server.port(),"GET","/news/large.png").status()==404,"startup and HTTP share the same byte limit");
                 check(request(server.port(),"GET","/news/news.yml").status()==404,"non-image files are not served");
                 check(request(server.port(),"GET","/news/").status()==404,"the news root lists nothing");
                 var escaped=request(server.port(),"GET","/news/../secret.png");
@@ -117,6 +128,11 @@ public final class NewsTest {
             }
             System.out.println("PASS: Uplink News packs, random selection, native property list, result serialization and HTTP image serving");
         }finally{delete(home);}
+    }
+    private static byte[] image(Path file,int width,int height)throws IOException {
+        var image=new java.awt.image.BufferedImage(width,height,java.awt.image.BufferedImage.TYPE_INT_RGB);
+        check(javax.imageio.ImageIO.write(image,file.toString().endsWith(".jpg")?"jpeg":"png",file.toFile()),"test image writer");
+        return Files.readAllBytes(file);
     }
     private static void write(Path news,String yaml)throws IOException {Files.writeString(news.resolve("news.yml"),yaml);}
     private static String type(DataInputStream in,Map<Integer,String> types)throws IOException {

@@ -1,0 +1,27 @@
+# Captured sale-day facts only; no code or raw captures.
+# Source: reference-inputs DepotTimedGoods.ROWS, cross-checked by contrib/check_depot_specials_rotation.py
+# Pacific start date	item	sale energy	regular energy	evidence
+2026-08-21	Gear/Armor/Heavy Plate Mail	1522	1600	reference/observations/prestige-2026-08-22/run.jsonl:156 handle 209
+2026-08-21	Weapon/Bomb/Blast Bomb	142	150	reference/observations/prestige-2026-08-22/run.jsonl:156 handle 61
+2026-09-11	Gear/Helm/Bombastic Demo Helm	3249	3500	run/live-capture-2026-09-12-arcade/wire.redacted.jsonl:61 handle 131
+2026-09-11	Weapon/Handgun/Needle Shot	486	500	run/live-capture-2026-09-12-arcade/wire.redacted.jsonl:61 handle 87
+2026-09-17	Weapon/Handgun/Shadow Driver	1487	1600	run/wire/live-2026-09-18.jsonl:76 handle 196
+2026-09-17	Weapon/Bomb/Toxic Vaporizer Mk II	461	500	run/wire/live-2026-09-18.jsonl:76 handle 31
+2026-09-18	Weapon/Bomb/Super Blast Bomb	485	500	reference/observations/session-2026-09-19/depot.jsonl:4590 handle 60
+2026-09-18	Weapon/Bomb/Shivermist Buster	3335	3500	reference/observations/session-2026-09-19/depot.jsonl:4590 handle 140
+2026-09-22	Weapon/Bomb/Sun Shards	476	500	run/bot/captures/bot-20260923.jsonl:44 handle 17
+2026-09-22	Gear/Helm/Chaos Cowl	3334	3500	run/bot/captures/bot-20260923.jsonl:44 handle 174
+2026-09-24	Weapon/Bomb/Nitronome	3272	3500	run/wire/live-2026-09-25-lead.jsonl:3494 handle 144
+2026-09-24	Gear/Armor/Wolver Coat	142	150	run/wire/live-2026-09-25-lead.jsonl:3494 handle 110
+2026-10-02	Weapon/Sword/Ascended Calibur	1551	1600	run/live-capture-2026-10-02/wire.redacted.jsonl:68 handle 160
+2026-10-02	Weapon/Sword/Troika	139	150	run/live-capture-2026-10-02/wire.redacted.jsonl:68 handle 97
+2026-10-03	Gear/Shield/Jelly Shield	143	150	run/live-capture-2026-10-03b/wire.redacted.jsonl:130217 handle 102
+2026-10-03	Gear/Helm/Mighty Cobalt Helm	1555	1600	run/live-capture-2026-10-03b/wire.redacted.jsonl:130217 handle 154
+2026-10-04	Weapon/Bomb/Scintillating Sun Shards	3397	3500	run/live-capture-2026-10-05-arcade/wire.redacted.jsonl:2266 handle 276
+2026-10-04	Weapon/Bomb/Fiery Vaporizer	145	150	run/live-capture-2026-10-05-arcade/wire.redacted.jsonl:2266 handle 58
+2026-10-06	Gear/Helm/Drake Scale Helm	465	500	run/live-capture-2026-10-06/wire.redacted.jsonl:306 handle 1
+2026-10-06	Weapon/Bomb/Heavy Dark Matter Bomb	1479	1600	run/live-capture-2026-10-06/wire.redacted.jsonl:306 handle 321
+2026-10-07	Weapon/Handgun/Shadowtech Alchemer Mk II	467	500	run/live-capture-2026-10-08/wire.redacted.jsonl:369 handle 13
+2026-10-07	Gear/Helm/Sunset Stetson	1517	1600	run/live-capture-2026-10-08/wire.redacted.jsonl:369 handle 189
+2026-10-09	Gear/Armor/Gunslinger Sash	462	500	run/live-capture-2026-10-10/wire.redacted.jsonl:102 handle 77
+2026-10-09	Gear/Shield/Wyvern Scale Shield	1514	1600	run/live-capture-2026-10-10/wire.redacted.jsonl:102 handle 252

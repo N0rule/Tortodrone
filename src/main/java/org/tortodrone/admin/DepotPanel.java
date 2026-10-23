@@ -80,8 +80,8 @@ final class DepotPanel extends JPanel {
         });
     }
     private void preview(){window.execute(()->window.accounts().depot().catalog(),value->{
-        var text=new StringBuilder("Effective catalog at "+date(System.currentTimeMillis())+". Stock client refreshes on its next catalog request.\n");
-        for(var o:value.offers())if(o.enabled())text.append("#").append(o.id()).append(" ").append(o.good().item()).append(" × ").append(o.good().count()).append(" — ").append(o.good().energy()>0?o.good().energy()+" Energy":o.good().price()+" crowns").append(o.sale()?" (regular "+o.originalPrice()+")":"").append(o.featured()||o.sale()?" [Specials]":"").append('\n');
+        var text=new StringBuilder("Effective catalog at "+date(System.currentTimeMillis())+". Stock client refreshes on its next catalog request.\nAutomatic sales use captured dates when available; other selections and winter noon Pacific timing are reconstructed.\nManual promotions override automatic sales. Disabling or repricing an offer suppresses its automatic sale.\n");
+        for(var o:value.offers())if(o.enabled())text.append("#").append(o.id()).append(" ").append(o.good().item()).append(" × ").append(o.good().count()).append(" — ").append(o.good().energy()>0?o.good().energy()+" Energy":o.good().price()+" crowns").append(o.sale()?" (regular "+o.originalPrice()+")":"").append(o.featured()||o.sale()?" [Specials]":"").append(org.tortodrone.storage.DepotSpecials.automatic(o)?" [automatic; ends "+date(o.promotionEnds())+"]":"").append('\n');
         var area=new JTextArea(text.toString(),24,90);area.setEditable(false);JOptionPane.showMessageDialog(window,new JScrollPane(area),"What players can request now",JOptionPane.INFORMATION_MESSAGE);
     });}
     private static JSpinner number(int value,int min,int max){return new JSpinner(new SpinnerNumberModel(value,min,max,1));}

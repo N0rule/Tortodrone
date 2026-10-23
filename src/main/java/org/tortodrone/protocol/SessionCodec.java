@@ -666,7 +666,8 @@ public final class SessionCodec {
         for(int value:values)out.writeByte(value);
     }
     public byte[] townState(int oid,WorldProfile profile)throws IOException {
-        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(5);
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(6);
+            attribute(out,oid,"outbid",o->value(o,!profile.town().outbids().isEmpty()));
             attribute(out,oid,"newMailInfo",o->{type(o,"com.threerings.presents.dobj.DSet");var mail=profile.town().mail().stream().filter(m->!m.read()).toList();o.writeInt(mail.size());for(var m:mail){type(o,"com.threerings.projectx.uplink.data.NewMailInfo");o.writeLong(m.id());name(o,m.sender());value(o,new SessionDecoder.EnumValue("com.threerings.projectx.uplink.data.MailType",m.nativeType()));}});
             attribute(out,oid,"recipes",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().recipes().size());for(var recipe:profile.town().recipes()){type(o,"com.threerings.projectx.craft.data.Recipe");o.writeBoolean(true);o.writeLong(recipe.id());string(o,recipe.config());}});
             attribute(out,oid,"harnesses",o->{type(o,"com.threerings.presents.dobj.DSet");o.writeInt(profile.town().harnesses().size());for(var h:profile.town().harnesses())harness(o,h);});
@@ -723,7 +724,7 @@ public final class SessionCodec {
         // The caller's winning status is carried explicitly by the view, separate from seller ownership.
         if(a.participated()&&a.bidder()!=0&&!a.mine())status=a.bidder()==listingViewer?2:3;else if(!a.participated()&&a.watching())status=4;
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.BidStatus",status));
-        long hours=(a.expires()-System.currentTimeMillis())/3600000;int time=a.cancelled()?6:a.ended()||a.expires()<=System.currentTimeMillis()?5:hours<1?0:hours<4?1:hours<12?2:hours<48?3:4;
+        int time=a.timeLeft(System.currentTimeMillis());
         value(out,new SessionDecoder.EnumValue("com.threerings.projectx.auction.data.TimeLeft",time));out.writeInt(a.buy());out.writeInt(a.bid());string(out,a.item().config());out.writeBoolean(false);out.writeInt(a.item().count());out.writeBoolean(a.mine());if(a.featured()){type(out,"com.threerings.projectx.auction.data.FeaturedInfo");out.writeShort(a.featuredRemaining());out.writeShort(a.featuredTotal());}else out.writeShort(0);
     }
     private static String auctionMailText(String text){
@@ -989,10 +990,17 @@ public final class SessionCodec {
         });
     }
     public byte[] chatFeedback(int sceneOid,String reason)throws IOException {
+        return systemMessage(sceneOid,reason,null);
+    }
+    /** Original auction localization arguments; system-info routing is archive reconstructed. */
+    public byte[] auctionOutbid(int sceneOid,String itemName,int crowns)throws IOException {
+        return systemMessage(sceneOid,"m.note_outbid|"+itemName+"|~"+crowns,"auction");
+    }
+    private byte[] systemMessage(int sceneOid,String reason,String bundle)throws IOException {
         return frame(out->{
             eventHeader(out,"MessageEvent",sceneOid);string(out,"crowd.chat");
             out.writeBoolean(true);out.writeInt(1);type(out,"com.threerings.crowd.chat.data.SystemMessage");
-            string(out,reason);string(out,null);out.writeByte(1);
+            string(out,reason);string(out,bundle);out.writeByte(1);
         });
     }
 
