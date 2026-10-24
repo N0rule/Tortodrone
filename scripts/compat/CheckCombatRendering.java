@@ -194,7 +194,7 @@ public final class CheckCombatRendering {
     private static void relocate(Path content,String kind)throws Exception {
         Path map=content.resolve("maps/advanced_training"),file=map.resolve("actors.yml");
         var prepared=MapYaml.prepare(map,content.resolve("shared"));var yaml=Yaml.read(file);var actors=Yaml.map(yaml.get("actors"),"actors");
-        float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));int pot=0;boolean pad=false;
+        float x=Float.parseFloat(prepared.descriptor().getProperty("spawn-x")),y=Float.parseFloat(prepared.descriptor().getProperty("spawn-y"));int pot=0;boolean pad=false,capsule=false;
         var bindings=Yaml.map(Json.parseCatalog(Files.readString(map.resolve("native/bindings.json"))),"bindings");var nativeActors=Yaml.map(bindings.get("actors"),"actors");
         inheritFixtureActors(bindings,actors);
         for(var actor:actors.entrySet()) {
@@ -202,6 +202,9 @@ public final class CheckCombatRendering {
             if(kind.equals("hazards")&&(fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Fire Pot")||fixed.getOrDefault("child.config","").equals("Dynamic/Lift Objects/Oil Pot"))){value.put("x",x+(pot++==0?-.8f:.8f));value.put("y",y+1);}
             if(kind.equals("health")&&(config.endsWith("/Floor/Fire")||config.endsWith("/Floor/Shock"))){value.put("x",x);value.put("y",y+3);}
             else if(kind.equals("health")&&!pad&&config.endsWith("/Heal Pad")){value.put("x",x);value.put("y",y+1);pad=true;}
+            // Keep a replacement pickup from changing the inventory assertion
+            // while the isolated client waits for its scene-entry crossfade.
+            if(kind.equals("health")&&!capsule&&fixed.getOrDefault("child.config","").equals("Item/Pickups/Capsule/Health Capsule")){value.put("x",x);value.put("y",y);value.put("delay",60000);capsule=true;}
         }
         if(kind.equals("hazards")&&pot!=2)throw new IOException("Expected original Fire and Oil Pot pads");
         Files.delete(file);Yaml.write(file,yaml);

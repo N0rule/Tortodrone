@@ -10,6 +10,7 @@ import org.tortodrone.character.StarterCatalog;
 public final class SceneWeaponsTest {
     public static void main(String[] args)throws Exception {
         authoredHeavyAttacks();
+        banStickDamageIsAuthored();
         reportedWeaponRegressions();
         chargeTargetDamage();
         var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).entry();
@@ -91,6 +92,27 @@ public final class SceneWeaponsTest {
         blockedCellCannotBeSkipped();
         fireTracksAttackAnimationSpeed(map.collision());
         System.out.println("PASS: gun bullet emission/movement/fizzle, bomb fuse/effect, orbital collision and owned cleanup");
+    }
+    private static void banStickDamageIsAuthored()throws Exception {
+        var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));
+        for(int activity:new int[]{292,293,294,290}){
+            var monster=new SceneContent.Spec(Map.of("native-type","Monster","config","Fixture","health","100","radius",".25","damage-mask","2"));
+            var content=new SceneContent(List.of(new SceneContent.Entry("near",1,0,0,monster),new SceneContent.Entry("far",4,0,0,monster)),Map.of(),Map.of(),Map.of("player.base-health",100f),Map.of(),Map.of(),Map.of());
+            var entities=new SceneEntities(content,openTerrain());var weapons=new SceneWeapons(openTerrain());weapons.targets(entities);
+            var model=new StarterCatalog.Model("Fixture",Map.of());
+            var owner=new ActorState(10,1001,"Owner",0,100,0,0,0,0,0,activity,100,model);
+            var peer=new ActorState(11,1002,"Peer",0,100,1,0,0,0,0,0,100,model);
+            var distant=new ActorState(12,1003,"Distant",0,100,4,0,0,0,0,0,100,model);
+            var health=new HashMap<Integer,SceneHealth>();for(var player:List.of(owner,peer,distant))health.put(player.id(),new SceneHealth(content));
+            entities.playerHits(hit->health.get(hit.actor()).hit(hit.damage(),hit.timestamp()));entities.advance(100,List.of(owner,peer,distant));
+            int near=entities.actors().getFirst().id(),far=entities.actors().get(1).id();
+            for(var fire:catalog.find("Weapon/Sword/The Ban Stick",activity).fireRefs())check(weapons.fire(fire.action(),owner,101),"authored Ban Stick action executes");
+            if(activity==290){
+                check(!health.get(10).alive()&&!health.get(11).alive(),"native mask 3 deliberately kills the wielder and nearby players");
+                check(entities.actor(near)==null,"charged area also kills a nearby enemy");
+            }else check(health.values().stream().allMatch(SceneHealth::alive),"normal swings retain monster-only damage and cannot hit owner or peers");
+            check(health.get(12).alive()&&entities.actor(far)!=null,"authored damage area excludes distant players and enemies");
+        }
     }
     private static void reportedWeaponRegressions()throws Exception {
         var catalog=FireCatalog.load(org.tortodrone.support.ContentFixture.path("combat/fires.json"));

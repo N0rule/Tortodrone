@@ -83,6 +83,10 @@ public final class StockTools {
             case "gameplay-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("gameplay-check expects game-directory");fixture="GameplayCompatibility";
             }
+            case "gameplay-parity-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("gameplay-parity-check expects game-directory");fixture="GameplayParityCompatibility";
+                for(String source:List.of("GameplayParityCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "restoration-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("restoration-check expects game-directory");fixture="RestorationCompatibility";
                 for(String source:List.of("RestorationCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));

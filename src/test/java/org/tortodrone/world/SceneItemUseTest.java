@@ -13,6 +13,22 @@ public final class SceneItemUseTest {
         var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
         var capsule=map.content().items().get("Pickup/Capsule/Health Capsule");
         try(var fixture=new Fixture(map)) {
+            var before=fixture.simulation.snapshot();int started;
+            synchronized(fixture.simulation){
+                check(fixture.member.useItem(-1,capsule),"full-health capsule attempt is confirmed without a client-visible refusal");
+                check(fixture.simulation.snapshot().players().getFirst().activity()==TownMovement.USE_ITEM,"full-health attempt publishes the normal hand-raising activity");
+                check(!fixture.member.useItem(-1,capsule),"animation prevents repeated use requests");
+                started=SceneClock.now();
+            }
+            fixture.await(s->s.timestamp()>=started+TownMovement.USE_ITEM_MILLIS+100);
+            check(fixture.member.health().current()==200&&fixture.member.takeUsedItems().isEmpty(),"full-health attempt changes neither HP nor inventory");
+            check(fixture.simulation.snapshot().effectsSince(before).isEmpty(),"animation-only use emits no healing VFX");
+            check(fixture.member.useItem(-1,capsule),"retained capsule can be attempted again after the normal activity completes");
+            fixture.hit(damage(20,false));
+            fixture.await(s->s.timestamp()>=started+2*TownMovement.USE_ITEM_MILLIS+200);
+            check(fixture.member.health().current()==180&&fixture.member.takeUsedItems().isEmpty(),"animation-only attempt cannot become a delayed inventory transaction after taking damage");
+        }
+        try(var fixture=new Fixture(map)) {
             int started;
             synchronized(fixture.simulation) {
                 fixture.hit(damage(160,false));

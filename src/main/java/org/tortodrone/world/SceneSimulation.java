@@ -161,10 +161,12 @@ public final class SceneSimulation {
                 if(lift==0){movement.resetInput(stamp);return false;}usedItems.add(id);health.curseItem(id,stamp);updateLife(stamp);return true;
             }
             if(!spec.text("kind","").equals("capsule"))return false;
-            if(spec.integer("heal",0)>0){if(health.state().current()>=health.state().maximum())return false;}
-            else try{if(!SceneWeapons.usable(FireCatalog.actionJson(spec.text("use-action",""))))return false;}
+            if(spec.integer("heal",0)<=0)try{if(!SceneWeapons.usable(FireCatalog.actionJson(spec.text("use-action",""))))return false;}
             catch(java.io.IOException invalid){return false;}
             int stamp=SceneClock.now();if(!movement.useItem(new org.tortodrone.character.StarterCatalog.Model(spec.text("config",""),Map.of()),stamp))return false;
+            // The native use activity is accepted even when a Health Capsule has
+            // nothing to heal. This attempt has no item action or consumption.
+            if(spec.integer("heal",0)>0&&health.state().current()>=health.state().maximum())return true;
             health.curseItem(id,stamp);if(!health.alive()){usedItems.add(id);updateLife(stamp);return true;}
             pendingItem=id;itemLand=stamp+spec.integer("delay",0);itemSpec=spec;return true;
         }}
@@ -175,7 +177,25 @@ public final class SceneSimulation {
         public SceneHealth.State health(){synchronized(SceneSimulation.this){check();return health.state();}}
         public boolean arsenalZone(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&arsenalZones.stream().anyMatch(e->e.spec().contains(e.x(),e.y(),e.rotation(),movement.x(),movement.y(),ScenePortals.PAWN_RADIUS));}}
         public boolean equipmentAllowed(){synchronized(SceneSimulation.this){check();return entered&&portal==null&&health.alive()&&(!instance.map().kind().equals("level")||arsenalZone());}}
-        public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){check();health.inventory(profile);}}
+        private List<org.tortodrone.character.WorldProfile.Item> carriedItems=List.of();
+        public void inventory(org.tortodrone.character.WorldProfile profile){synchronized(SceneSimulation.this){
+            check();carriedItems=profile.items();health.inventory(profile);entities.reconsiderPickups(appearance.id());
+        }}
+        private boolean canPickup(SceneContent.Spec spec){
+            if(!spec.flag("pickup-transient",false))return true;
+            String item=spec.text("pickup-item","");
+            if(spec.fields().containsKey("pickup-equip-slot")){
+                int slot=spec.integer("pickup-equip-slot",0);
+                var equipped=carriedItems.stream().filter(i->Objects.equals(i.equippedSlot(),slot)).findFirst().orElse(null);
+                var stats=instance.map().content().stats();
+                return equipped==null||equipped.id()<0&&stats.getOrDefault("gear."+item+".health-bonus",0f)>stats.getOrDefault("gear."+equipped.config()+".health-bonus",0f);
+            }
+            var counts=new HashMap<String,Integer>();
+            for(var carried:carriedItems)if(carried.id()<0&&carried.equippedSlot()==null)counts.merge(carried.config(),carried.count(),Integer::sum);
+            // Claims reserve capacity until the session commits or refuses them.
+            for(var reserved:entities.pendingPickups(appearance.id()))if(reserved.temporary()&&reserved.equippedSlot()==null)counts.merge(reserved.item(),1,Integer::sum);
+            return counts.getOrDefault(item,0)<3&&(counts.containsKey(item)||counts.size()<4);
+        }
         public SceneStatus.State status(){synchronized(SceneSimulation.this){check();return health.status();}}
         public boolean heal(int amount){synchronized(SceneSimulation.this){check();return heal(amount,SceneClock.now());}}
         private boolean heal(int amount,int stamp){
@@ -236,7 +256,7 @@ public final class SceneSimulation {
         public void equipment(org.tortodrone.character.WorldProfile profile) {
             synchronized(SceneSimulation.this){check();
                 int priorSprite=sprite==null?0:sprite.id();
-                combatProfile=profile;progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
+                combatProfile=profile;carriedItems=profile.items();progress=profile.progress();sprite=profile.town().sprites().stream().filter(s->s.id()==profile.town().equippedSprite()).findFirst().orElse(null);
                 if(priorSprite!=(sprite==null?0:sprite.id())){
                     weapons.cancel(petId);petSkill=petShield=petShieldMaximum=0;petShieldPower=null;petFollow=false;
                     // Preserve the recharge deadlines: swapping sprites cannot bypass cooldowns.
@@ -338,6 +358,7 @@ public final class SceneSimulation {
                 GearStats.damage(instance.map().content().stats(),member.combatProfile,member.combat.state().weapon(),town,gearTags);});
         entities.feedback(this::feedback);
         entities.playerActive(id->{var member=members.get(id);return member!=null&&member.entered&&member.health.alive()&&member.movement.activity()!=TownMovement.RESURRECT;});
+        entities.pickupEligible((id,spec)->{var member=members.get(id);return member!=null&&member.canPickup(spec);});
         entities.playerTargetable(id->{var member=members.get(id);return member!=null&&member.health.status().modifiers().canBeTargeted();});
         entities.playerImpulse((id,impulse)->{var member=members.get(id);if(member!=null&&member.entered&&member.health.alive()&&member.combat!=null)member.combat.impulse(impulse);});
         entities.playerHits(hit->{var member=members.get(hit.actor());if(member!=null&&member.entered){

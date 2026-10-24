@@ -120,6 +120,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public void playerHeal(java.util.function.BiPredicate<Integer,Integer> heal){playerHeal=Objects.requireNonNull(heal);}
     private java.util.function.IntPredicate playerActive=id->true;
     public void playerActive(java.util.function.IntPredicate predicate){playerActive=Objects.requireNonNull(predicate);}
+    private java.util.function.BiPredicate<Integer,SceneContent.Spec> pickupEligible=(id,spec)->true;
+    public void pickupEligible(java.util.function.BiPredicate<Integer,SceneContent.Spec> predicate){pickupEligible=Objects.requireNonNull(predicate);}
     private java.util.function.IntPredicate playerTargetable=id->true;
     public void playerTargetable(java.util.function.IntPredicate predicate){playerTargetable=Objects.requireNonNull(predicate);}
     private java.util.function.BiConsumer<Integer,KnightCombat.Impulse> playerImpulse=(id,impulse)->{};
@@ -233,6 +235,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         for(var e:entities.values())if(e.claim==player&&!e.claimTaken){e.claimTaken=true;result.add(new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null));}
         return List.copyOf(result);
     }
+    public List<Pickup> pendingPickups(int player){
+        return entities.values().stream().filter(e->e.claim==player).map(e->new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null)).toList();
+    }
+    public void reconsiderPickups(int player){for(var e:entities.values())e.refusedPickups.remove(player);}
     public void completePickup(int player,int actor,boolean success){
         var e=entities.get(actor);if(e==null||e.claim!=player)return;
         e.claim=0;e.claimTaken=false;if(success)e.destroyed=SceneClock.now();else e.refusedPickups.add(player);
@@ -480,7 +486,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void collect(Entity e,float elapsed,List<ActorState> players){
         if(e.spec.text("pickup-item","").isEmpty())return;
         for(var player:players){
-            if(!playerActive.test(player.id()))continue;
+            if(!playerActive.test(player.id())||!pickupEligible.test(player.id(),e.spec))continue;
             float dx=player.x()-e.x,dy=player.y()-e.y,distance=(float)Math.hypot(dx,dy);
             float reach=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS;
             if(distance>reach+e.spec.number("vacuum-expansion",0)){e.refusedPickups.remove(player.id());continue;}

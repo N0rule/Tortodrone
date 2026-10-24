@@ -461,7 +461,7 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
             if(arsenalBlinkOnly&&stage==43&&view.sceneId()==1){
                 if(!app.GQ().Pu())throw new AssertionError("Returning to Haven retained a solo mission party");
                 app.nk().a(null,"/training",false);blinkHidden=blinkVisible=false;started=now;stage=45;return;
@@ -910,11 +910,34 @@ public final class CombatRenderingCheck {
     }
     private boolean checkedStatuses,checkedEmergency,healthShieldEquipped,sawHurt,sawHealEffect,sawSparkEffect,healingWalk,checkedHealing;
     private Confirm sparkReply;
+    private Confirm fullCapsuleReply;
+    private long fullCapsuleId,fullCapsuleStarted,sparkVisualStarted,healthSceneReady;
+    private boolean fullCapsuleAnimated,fullCapsuleChecked;
     private void healthTick(View view,long now)throws Exception {
         var party=(com.threerings.projectx.dungeon.data.PartyObject)app.GQ().CW();
         Object hud=view.value().getClass().getMethod("Jb").invoke(view.value());
         Object panel=field(hud,"aEc").get(hud);
         if(stage==2){
+            if(healthSceneReady==0){healthSceneReady=now;return;}
+            // Let the native scene-entry crossfade finish before inspecting the use animation.
+            if(now-healthSceneReady<3_000_000_000L)return;
+            if(app.GG().getDisplayWidth()<1024)throw new AssertionError("Health acceptance requires a visible native scene viewport");
+            if(!fullCapsuleChecked){
+                if(fullCapsuleReply==null){
+                    for(var item:app.CT().items)if(item.VA()<0&&item.Vx().getName().equals("Pickup/Capsule/Health Capsule"))fullCapsuleId=item.VA();
+                    if(fullCapsuleId==0){if(now-started>20_000_000_000L)throw new AssertionError("Health Capsule fixture was not collected");return;}
+                    fullCapsuleReply=new Confirm();fullCapsuleStarted=now;
+                    app.zr().bU(com.threerings.projectx.item.client.L.class).a(fullCapsuleId,(Object)null,fullCapsuleReply);return;
+                }
+                if(fullCapsuleReply.done&&fullCapsuleReply.reason!=null)throw new AssertionError("Full-health capsule rejected: "+fullCapsuleReply.reason);
+                var capsuleActor=authoritative.get(app.CT().pawnId);
+                if(capsuleActor instanceof Dungeoneer knight&&knight.adU()==5&&!fullCapsuleAnimated&&now-fullCapsuleStarted>=300_000_000L&&activityPlaying(view.PO(),5)){capture("full-health-capsule-use");fullCapsuleAnimated=true;}
+                if(now-fullCapsuleStarted<2_000_000_000L)return;
+                boolean retained=false;for(var item:app.CT().items)if(item.VA()==fullCapsuleId&&item.getCount()==1)retained=true;
+                var hp=party.health.iterator().next();
+                if(!fullCapsuleReply.done||!fullCapsuleAnimated||!retained||hp.current!=hp.maximum||sawHealEffect)throw new AssertionError("Full-health capsule did not complete as animation-only use: confirmed="+fullCapsuleReply.done+" animation="+fullCapsuleAnimated+" retained="+retained+" hp="+hp.current+"/"+hp.maximum+" healEffect="+sawHealEffect);
+                fullCapsuleChecked=true;System.out.println("CHECK: native full-health capsule animation, successful confirmation, unchanged inventory/HP and no healing effect");
+            }
             if(!healthShieldEquipped){
                 if(equip==null){
                     long id=0;for(var item:app.CT().items)if(item.Vx().getName().equals("Gear/Shield/Grey Owlite Shield"))id=item.VA();
@@ -940,6 +963,8 @@ public final class CombatRenderingCheck {
         if(stage==41){
             if(sparkReply.done&&sparkReply.reason!=null)throw new AssertionError(sparkReply.reason);
             if(hp.current>0&&sawSparkEffect){
+                if(sparkVisualStarted==0)sparkVisualStarted=now;
+                if(now-sparkVisualStarted<300_000_000L)return;
                 if(!sawHurt||!sawHealEffect)throw new AssertionError("Missing hurt or healing feedback");
                 capture("spark-revived");finishImages();passed=done=true;System.out.println("PASS: original Fire/Shock traps with lowered Grey Owlite Shield, hurt animation, healing sound effect and paid Spark revive effect");app.shutdown();
             }
@@ -1126,7 +1151,7 @@ public final class CombatRenderingCheck {
     private boolean hazardRendered;
     private long hazardSince;
     private void hazardsTick(View view,long now)throws Exception {
-        if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
+        if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
         if(view.sceneId()!=294)return;
         var own=authoritative.get(app.CT().pawnId);if(!(own instanceof Dungeoneer knight))return;
         String potConfig="Dynamic/Lift Objects/"+(hazardRound%2==0?"Fire Pot":"Oil Pot");
