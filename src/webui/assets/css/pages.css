@@ -814,3 +814,10 @@
         grid-column: 1 / -1;
     }
 }
+
+.equipment-slot .slot-icon.native-symbol {
+    padding: 5px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--cyan) 7%, transparent);
+}

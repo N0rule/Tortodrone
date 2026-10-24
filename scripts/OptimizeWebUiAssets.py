@@ -24,10 +24,11 @@ def main():
         prepared = json.loads((previous_output / "manifest.json").read_text())
         if prepared.get("source") != "Stock resolver and colorizer; WebP 88 at 64px, Sprite icons 96px; lossless PNG UI; SHA-256 deduplicated":
             raise ValueError("Cached pack uses different optimization settings")
-        old_ui, old_sprites = set(raw["ui"].values()), set(raw["sprites"].values())
-        for group in ("items", "ui", "sprites"):
-            for key, name in raw[group].items():
-                target = prepared[group].get(key)
+        old_ui = set(raw["ui"].values()) | set(raw.get("symbols", {}).values())
+        old_sprites = set(raw["sprites"].values())
+        for group in ("items", "ui", "sprites", "symbols"):
+            for key, name in raw.get(group, {}).items():
+                target = prepared.get(group, {}).get(key)
                 if not target:
                     continue
                 file = (previous_output / target).resolve()
@@ -43,8 +44,8 @@ def main():
     output.mkdir(parents=True)
     (output / "icons").mkdir()
     replacements = {}
-    paths = sorted(set().union(*(manifest[key].values() for key in ("items", "ui", "sprites"))))
-    ui = set(manifest["ui"].values())
+    paths = sorted(set().union(*(manifest.get(key, {}).values() for key in ("items", "ui", "sprites", "symbols"))))
+    ui = set(manifest["ui"].values()) | set(manifest.get("symbols", {}).values())
     sprites = set(manifest["sprites"].values())
     for name in paths:
         file = (source / name).resolve()
@@ -72,8 +73,8 @@ def main():
         if not (output / target).exists():
             (output / target).write_bytes(data)
         replacements[name] = target
-    for key in ("items", "ui", "sprites"):
-        manifest[key] = {name: replacements[path] for name, path in manifest[key].items()}
+    for key in ("items", "ui", "sprites", "symbols"):
+        manifest[key] = {name: replacements[path] for name, path in manifest.get(key, {}).items()}
     manifest["bytes"] = sum(p.stat().st_size for p in (output / "icons").iterdir())
     manifest["source"] = "Stock resolver and colorizer; WebP 88 at 64px, Sprite icons 96px; lossless PNG UI; SHA-256 deduplicated"
     (output / "manifest.json").write_text(json.dumps(manifest, sort_keys=True, separators=(",", ":")))

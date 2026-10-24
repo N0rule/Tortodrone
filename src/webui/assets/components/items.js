@@ -1,3 +1,4 @@
+import { setSymbols, symbol } from './symbols.js';
 import { el, number, heat } from '../ui.js';
 import { api } from '../api.js';
 let manifest = { items: {}, ui: {}, sprites: {} };
@@ -17,6 +18,10 @@ export async function loadAssets() {
         const response = await fetch('/admin/assets/game/manifest.json', { cache: 'no-cache' });
         if (response.ok) {
             manifest = await response.json();
+            setSymbols(manifest.symbols, manifest.ui);
+            if (manifest.symbols?.brand)
+                for (const image of document.querySelectorAll('.brand > img'))
+                    image.replaceWith(symbol('brand'));
         }
     } catch {
         /* Every icon has a local fallback. */

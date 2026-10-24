@@ -1,4 +1,16 @@
-/** Navigation uses one stroke family. Native artwork is reserved for game content. */
+/** Native silhouettes use the surrounding text color; source-owned outlines are fallbacks. */
+let masks = {},
+    originals = {},
+    nextId = 0;
+export function setSymbols(symbols = {}, ui = {}) {
+    masks = symbols || {};
+    originals = ui || {};
+}
+function asset(value) {
+    return typeof value === 'string' && /^[A-Za-z0-9_./-]+$/.test(value) && !value.includes('..')
+        ? '/admin/assets/game/' + value
+        : null;
+}
 const shapes = {
     weapon: 'm4 3 9 8-2 4-4-2-4-9Zm8 10 8 8m-5-2 4-4',
     armor: 'm8 3 4 3 4-3 6 5-4 4-2-2v11H8V10l-2 2-4-4 6-5Z',
@@ -28,6 +40,19 @@ const shapes = {
     remove: 'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7'
 };
 export function symbol(name) {
+    const key = name.startsWith('slot-') || name === 'brand' ? name : 'nav-' + name;
+    const prepared = asset(masks[key]),
+        original = asset(originals[key]);
+    if (prepared || original) return nativeSymbol(prepared || original, name, !!prepared);
+    return fallback(name);
+}
+function fallback(name) {
+    if (name === 'brand') {
+        const image = document.createElement('img');
+        image.src = '/admin/assets/icons/mark.svg';
+        image.alt = '';
+        return image;
+    }
     if (name.startsWith('slot-'))
         name =
             {
@@ -52,4 +77,76 @@ export function symbol(name) {
     path.setAttribute('d', shapes[name] || shapes.details);
     svg.append(path);
     return svg;
+}
+
+function nativeSymbol(file, name, prepared) {
+    const ns = 'http://www.w3.org/2000/svg';
+    const make = (tag, attrs) => {
+        const node = document.createElementNS(ns, tag);
+        for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+        return node;
+    };
+    const root = make('svg', {
+            viewBox: '0 0 48 48',
+            class: 'ui-icon native-symbol',
+            'aria-hidden': 'true'
+        }),
+        defs = make('defs', {}),
+        id = 'icon-tint-' + ++nextId,
+        filter = make('filter', {
+            id,
+            x: '0',
+            y: '0',
+            width: '100%',
+            height: '100%',
+            'color-interpolation-filters': 'sRGB'
+        });
+    // Older prepared packs contain colored UI art. Preserve their luminance until re-exported.
+    if (!prepared)
+        filter.append(
+            make('feColorMatrix', {
+                type: 'matrix',
+                values: '0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 .54 1.79 .18 0 -.25',
+                result: 'luminance'
+            })
+        );
+    if (!prepared)
+        filter.append(
+            make('feComposite', {
+                in: 'luminance',
+                in2: 'SourceAlpha',
+                operator: 'in',
+                result: 'ink'
+            })
+        );
+    filter.append(
+        make('feFlood', { 'flood-color': 'currentColor' }),
+        make('feComposite', { in2: prepared ? 'SourceAlpha' : 'ink', operator: 'in' })
+    );
+    defs.append(filter);
+    const image = make('image', {
+        href: file,
+        width: 48,
+        height: 48,
+        preserveAspectRatio: 'xMidYMid meet',
+        filter: `url(#${id})`
+    });
+    image.addEventListener(
+        'error',
+        () => {
+            if (name === 'brand') {
+                image.removeAttribute('filter');
+                image.setAttribute('href', '/admin/assets/icons/mark.svg');
+            } else {
+                const outline = fallback(name);
+                root.setAttribute('viewBox', outline.getAttribute('viewBox'));
+                root.replaceChildren(...outline.childNodes);
+                root.classList.remove('native-symbol');
+            }
+        },
+        { once: true }
+    );
+    root.dataset.symbol = name;
+    root.append(defs, image);
+    return root;
 }
