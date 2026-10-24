@@ -89,7 +89,14 @@ export async function run(group, { disposable = false, username, knight } = {}) 
             check(search.value === 'Gel', 'Inventory filter survives tab changes');
             pass('inventory and Sprite tab state');
             button('All Knights').click();
-            await until(() => !$('.knight-name')?.checkVisibility(), 'Knight roster');
+            await until(
+                () =>
+                    !$('.knight-name')?.checkVisibility() &&
+                    [...$('#page').querySelectorAll('button')].some(
+                        (b) => b.textContent.trim() === 'Open profile'
+                    ),
+                'Knight roster'
+            );
             button('Open profile').click();
             await until(() => $('.knight-name')?.checkVisibility(), 'return to same Knight');
             pass('Knight roster/profile return');
@@ -101,11 +108,16 @@ export async function run(group, { disposable = false, username, knight } = {}) 
         }
         if (group === 'gear') {
             await navigate('knights', profile, () => !!$('.equipment-slot:not(.empty-slot)'));
-            $('.equipment-slot:not(.empty-slot)').click();
+            $('.equipment-slot[data-slot="0"]').click();
+            await until(() => $('#dialog').open, 'equipment actions');
+            button('Inspect / edit equipped item', $('#dialog')).click();
             await until(
                 () => $('#dialog').open && $('#dialog').textContent.includes('Draft is valid.'),
                 'gear preview'
             );
+            [...$('#dialog .gear-card').querySelectorAll('button')]
+                .find((b) => /^Level /.test(b.textContent))
+                .click();
             const level = control('Level', $('#dialog')),
                 heat = control('Heat fraction', $('#dialog'));
             set(level, 2);
@@ -115,7 +127,7 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 () => $('#dialog').textContent.includes('Draft is valid.'),
                 'updated preview'
             );
-            const choice = $('#dialog input[data-variant]:not(:disabled)');
+            const choice = $('#dialog button[data-variant]:not(:disabled)');
             if (choice) {
                 choice.click();
                 await until(
@@ -142,8 +154,27 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 'Saved gear uses native level and precise Heat'
             );
             pass('gear preview, draft protection and authoritative save');
-            $('.equipment-slot:not(.empty-slot)').click();
+            $('.equipment-slot[data-slot="0"]').click();
+            await until(() => $('#dialog').open, 'equipment actions');
+            button('Inspect / edit equipped item', $('#dialog')).click();
             await until(() => $('#dialog').open, 'gear reopen');
+            const beforeAccessory = await api.request('knight-view', profile);
+            const attached = beforeAccessory.profile.items.find((i) => i.equippedSlot === 0);
+            if (attached.accessory || attached.additionalAccessories.length) {
+                await api.change('item-accessory', {
+                    username,
+                    knight,
+                    accountId: beforeAccessory.profile.accountId,
+                    worldId: beforeAccessory.profile.worldId,
+                    revision: beforeAccessory.profile.revision,
+                    itemId: attached.id,
+                    accessory: ''
+                });
+                await close();
+                await refresh();
+                $('.equipment-slot[data-slot="0"]').click();
+                button('Inspect / edit equipped item', $('#dialog')).click();
+            }
             button('Edit accessories', $('#dialog')).click();
             await until(() => !!control('Search accessories'), 'visual accessories');
             const tile = $('#dialog .item-tile');
@@ -159,6 +190,158 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 );
                 pass('visual accessory attachment');
             } else await close();
+        }
+        if (group === 'polish') {
+            await navigate('knights', profile, () => !!$('.equipment-slot[data-slot="7"]'));
+            $('.equipment-slot[data-slot="7"]').click();
+            await until(() => $('#dialog').open, 'weapon actions');
+            button('Inspect / edit equipped item', $('#dialog')).click();
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'weapon preview'
+            );
+            check(
+                $('#dialog .gear-card').textContent.includes('Elemental damage'),
+                'Diskgun elemental damage'
+            );
+            check(
+                !$('#dialog .gear-card').textContent.includes('Health bonus'),
+                'No irrelevant weapon health'
+            );
+            await close();
+            $('.equipment-slot[data-slot="6"]').click();
+            button('Inspect / edit equipped item', $('#dialog')).click();
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'Ban Stick preview'
+            );
+            for (const label of [
+                'Attack Speed Increased: Very High',
+                'Damage Bonus vs Beast: Very High',
+                'Charge Time Reduction: Very High',
+                'Charge Time Reduction: Low'
+            ])
+                check($('#dialog .gear-card').textContent.includes(label), label);
+            const uv = $('#dialog .uv-picker');
+            uv.open = true;
+            const search = control('Search Unique Variants', $('#dialog'));
+            set(search, 'Charge Time');
+            check(
+                [...uv.querySelectorAll('.variant-choice')]
+                    .filter((n) => !n.hidden)
+                    .every((n) => n.textContent.includes('Charge Time')),
+                'Searchable effects'
+            );
+            await close();
+            $('.equipment-slot[data-slot="7"]').click();
+            button('Unequip', $('#dialog')).click();
+            await save();
+            await until(
+                () => $('.equipment-slot[data-slot="7"]').classList.contains('empty-slot'),
+                'empty slot update'
+            );
+            $('.equipment-slot[data-slot="7"]').click();
+            await until(
+                () => !!control('Search compatible equipment', $('#dialog')),
+                'empty slot picker'
+            );
+            set(control('Search compatible equipment', $('#dialog')), 'Fiery Diskgun');
+            const tile = [...$('#dialog').querySelectorAll('.item-tile')].find(
+                (t) => !t.hidden && t.textContent.includes('Fiery Diskgun')
+            );
+            check(tile, 'Owned compatible item');
+            tile.click();
+            await save();
+            await until(
+                () => !$('.equipment-slot[data-slot="7"]').classList.contains('empty-slot'),
+                'equip update'
+            );
+            $('.equipment-slot[data-slot="7"]').click();
+            const grantSection = [...$('#dialog').querySelectorAll('details')].find(
+                (d) => d.querySelector('summary')?.textContent === 'Grant and equip'
+            );
+            grantSection.open = true;
+            set(control('Search items', grantSection), 'Proto Gun');
+            await until(
+                () =>
+                    [...grantSection.querySelectorAll('.item-tile')].some((t) =>
+                        t.textContent.includes('Proto Gun')
+                    ),
+                'Compatible grant catalogue'
+            );
+            [...grantSection.querySelectorAll('.item-tile')]
+                .find((t) => t.textContent.includes('Proto Gun'))
+                .click();
+            await save();
+            await until(
+                () => $('.equipment-slot[data-slot="7"]').textContent.includes('Proto Gun'),
+                'Atomic grant and equip'
+            );
+            $('.equipment-slot[data-slot="7"]').click();
+            [...$('#dialog').querySelectorAll('.item-tile')]
+                .find((t) => t.textContent.includes('Fiery Diskgun'))
+                .click();
+            await save();
+            await until(
+                () => $('.equipment-slot[data-slot="7"]').textContent.includes('Fiery Diskgun'),
+                'Restore weapon through owned picker'
+            );
+            pass('Native item cards, searchable UVs, empty slot equip and occupied slot unequip');
+            let heavy = 0,
+                probes = 0;
+            const fetchBefore = window.fetch;
+            window.fetch = (url, ...args) => {
+                if (String(url).includes('/knight-view?')) heavy++;
+                if (String(url).includes('/knight-state?')) probes++;
+                return fetchBefore(url, ...args);
+            };
+            try {
+                await refresh();
+                await refresh();
+                check(probes >= 2 && heavy === 0, 'Unchanged profiles use lightweight probes');
+            } finally {
+                window.fetch = fetchBefore;
+            }
+            await navigate('knights', { ...profile, tab: 'sprites' }, () => !!$('.sprite-card'));
+            check(
+                $('.sprite-skills').textContent.includes('Firebolt'),
+                'Official Sprite skill names'
+            );
+            check(
+                $('.sprite-card').getBoundingClientRect().width >
+                    $('#page').getBoundingClientRect().width * 0.8,
+                'Sprite uses available width'
+            );
+            check(
+                $('.sprite-skills').querySelectorAll('.panel').length === 3,
+                'Three readable skill cards'
+            );
+            check(
+                document.querySelectorAll('#navigation img.ui-icon').length === 12,
+                'Original client navigation icons'
+            );
+            await navigate('accounts', { username }, () => !!control('Game Master permission'));
+            const gm = control('Game Master permission');
+            const original = gm.checked;
+            gm.click();
+            await until(() => !gm.disabled, 'GM save');
+            check(
+                (await api.request('accounts')).find((a) => a.username === username).gameMaster !==
+                    original,
+                'Inline GM persists'
+            );
+            await navigate('knights', profile, () => !!$('.knight-header'));
+            check(
+                $('.knight-header').textContent.includes(original ? 'Player' : 'Game Master'),
+                'Knight permission badge updates'
+            );
+            await navigate('accounts', { username }, () => !!control('Game Master permission'));
+            control('Game Master permission').click();
+            await until(
+                () => !control('Game Master permission').disabled,
+                'Restore fixture permission'
+            );
+            pass('Lightweight polling, wide Sprite skills, icons and inline GM permissions');
         }
         if (group === 'news') {
             await navigate('news', {}, () => !!control('Enable News'));

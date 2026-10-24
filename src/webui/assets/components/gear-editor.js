@@ -1,3 +1,4 @@
+import { symbol } from './symbols.js';
 import { api } from '../api.js';
 import {
     el,
@@ -34,7 +35,7 @@ export function modifierControls(def, item) {
     });
     const slider = input('Heat', heatInput.value, 'range', { min: 0, max: 1, step: 0.001 });
     const bar = heat(+heatInput.value),
-        choices = el('div', null, 'choice-list'),
+        choices = el('div', null, 'variant-picker'),
         search = input('Search Unique Variants');
     search.placeholder = 'Filter Unique Variants';
     const selected = new Set((item?.variants || []).map((v) => v.name)),
@@ -47,17 +48,27 @@ export function modifierControls(def, item) {
             label('Heat fraction (0–1)', heatInput),
             label('Heat', slider)
         );
+    controls.hidden = true;
     const checkboxes = [];
     for (const path of [...new Set([...def.variants, ...selected])]) {
-        const check = input(path, selected.has(path), 'checkbox');
+        const check = button(def.variantDisplay?.[path]?.label || variantName(path), () => {
+            check.checked = !check.checked;
+            check.onchange();
+        });
+        check.checked = selected.has(path);
+        check.className = 'variant-option';
+        check.prepend(symbol('variants'));
         check.dataset.variant = path;
-        const row = label(variantName(path), check);
+        const row = el('div', null, 'variant-choice');
+        row.append(check);
         row.title = path;
+        row.dataset.category = def.variantDisplay?.[path]?.category || 'Other';
         choices.append(row);
         checkboxes.push(check);
         check.onchange = () => {
             if (check.checked) selected.add(path);
             else selected.delete(path);
+            check.setAttribute('aria-pressed', check.checked);
             update();
         };
     }
@@ -66,10 +77,23 @@ export function modifierControls(def, item) {
             row.hidden = !row.textContent.toLowerCase().includes(search.value.toLowerCase());
     };
     if (checkboxes.length) {
-        const uv = el('section');
+        const uv = el('details', null, 'uv-picker');
+        const category = select('Effect category', [
+            ['', 'All effects'],
+            ...[...new Set(Object.values(def.variantDisplay || {}).map((v) => v.category))].map(
+                (c) => [c, c.replace(/([a-z])([A-Z])/g, '$1 $2')]
+            )
+        ]);
+        const filter = () => {
+            for (const row of choices.children)
+                row.hidden =
+                    !row.textContent.toLowerCase().includes(search.value.toLowerCase()) ||
+                    (!!category.value && row.dataset.category !== category.value);
+        };
+        category.onchange = search.oninput = filter;
         uv.append(
-            el('h3', 'Unique Variants'),
-            search,
+            el('summary', 'Add or change Unique Variants'),
+            toolbar(search, category),
             el(
                 'small',
                 'Up to three distinct variants; compatible families are checked by the server.'
@@ -78,8 +102,10 @@ export function modifierControls(def, item) {
         );
         node.append(uv);
     }
-    node.prepend(controls);
-    node.append(current, preview, valid);
+    const card = el('section', null, 'gear-card stack');
+    card.append(preview, controls);
+    node.prepend(card);
+    node.append(current, valid);
     let generation = 0,
         timer,
         disposed = false,
@@ -90,10 +116,10 @@ export function modifierControls(def, item) {
         variants: [...selected].join('\n')
     });
     const initial = JSON.stringify(values());
-    const baseline = el('div', null, 'draft-preview');
+    const baseline = el('details', null, 'draft-preview');
     if (item) {
-        baseline.append(el('h3', 'Current stats'));
-        node.insertBefore(baseline, preview);
+        baseline.append(el('summary', 'Compare with saved item'));
+        node.append(baseline);
     }
     let currentStats;
     const original = item
@@ -121,14 +147,34 @@ export function modifierControls(def, item) {
             itemLine(def),
             ...(def.progression
                 ? [
-                      el(
-                          'p',
-                          `Level ${level.value} · ${(Number(heatInput.value) * 100).toFixed(1)}% Heat`
+                      toolbar(
+                          button(`Level ${level.value}`, () => {
+                              controls.hidden = !controls.hidden;
+                              if (!controls.hidden) level.focus();
+                          }),
+                          button(`${(Number(heatInput.value) * 100).toFixed(1)}% Heat`, () => {
+                              controls.hidden = !controls.hidden;
+                              if (!controls.hidden) heatInput.focus();
+                          })
                       ),
                       bar
                   ]
                 : []),
-            ...[...selected].map((v) => badge(variantName(v), 'uv'))
+            ...[...selected].map((v) => {
+                const remove = button(
+                    def.variantDisplay?.[v]?.label || variantName(v),
+                    () => {
+                        selected.delete(v);
+                        const c = checkboxes.find((c) => c.dataset.variant === v);
+                        if (c) c.checked = false;
+                        update();
+                    },
+                    'uv effect-chip'
+                );
+                remove.title = 'Remove this Unique Variant';
+                remove.prepend(symbol('variants'));
+                return remove;
+            })
         );
         checkboxes.forEach((c) => {
             c.disabled = !c.checked;
@@ -159,24 +205,22 @@ export function modifierControls(def, item) {
                     currentStats = before;
                     if (item)
                         baseline.replaceChildren(
-                            el('h3', 'Current stats'),
-                            statFacts(before?.stats)
+                            el('summary', 'Compare with saved item'),
+                            statFacts(before?.properties),
+                            effectsView(before?.effects)
                         );
                     const compatible = new Set(result.compatibleVariants);
                     checkboxes.forEach((c) => {
                         c.disabled = !c.checked && !compatible.has(c.dataset.variant);
+                        c.setAttribute('aria-pressed', c.checked);
+                        c.parentElement.title = c.disabled
+                            ? 'Incompatible with the selected family or three-UV limit'
+                            : c.dataset.variant;
                     });
-                    const stats = Object.entries(result.stats || {});
-                    if (stats.length)
-                        preview.append(
-                            el('h3', 'Draft stats'),
-                            facts(
-                                stats.map(([name, value]) => [
-                                    name.replaceAll('-', ' ').replaceAll('.', ' · '),
-                                    value
-                                ])
-                            )
-                        );
+                    preview.append(
+                        statFacts(result.properties),
+                        effectsView(result.effects?.filter((e) => e.source !== 'Unique Variant'))
+                    );
                 }
             } catch (error) {
                 if (!disposed && id === generation && error.name !== 'AbortError') {
@@ -213,20 +257,42 @@ export function modifierControls(def, item) {
         }
     };
 }
-function statFacts(stats) {
-    const entries = Object.entries(stats || {});
-    return entries.length
-        ? facts(entries.map(([k, v]) => [k.replaceAll('-', ' ').replaceAll('.', ' · '), v]))
-        : el('small', 'No calculated stats available for this item.');
+function effectsView(effects = []) {
+    const list = el('ul', null, 'item-effects');
+    for (const e of effects) {
+        const row = el('li');
+        row.append(el('strong', e.label), el('small', e.source));
+        list.append(row);
+    }
+    return list;
 }
+function statFacts(properties = []) {
+    const root = el('div', null, 'item-properties');
+    for (const property of properties) {
+        const row = el('div', null, 'item-property');
+        row.append(el('span', property.label), el('strong', Number(property.value.toFixed(2))));
+        if (property.meter != null) {
+            const bar = heat(property.meter);
+            bar.setAttribute('aria-label', property.label + ' rating');
+            bar.title = property.note;
+            row.append(bar);
+        }
+        if (property.note) row.title = property.note;
+        root.append(row);
+    }
+    return root;
+}
+
 export async function inspectItem(def, item, fixed, writable = false) {
-    const node = el('div', null, 'stack');
-    node.append(itemLine(def, item));
+    const node = el('div', null, 'stack gear-inspector');
+    if (!writable) node.append(itemLine(def, item));
     const attached = [item.accessory, ...item.additionalAccessories].filter(Boolean),
         accessoryView = el('div', null, 'item-grid'),
         inspection = new AbortController();
     let disposed = false;
-    node.append(
+    const metadata = el('details');
+    metadata.append(
+        el('summary', 'Binding, ownership and accessories'),
         facts([
             ['Category', def?.category],
             ['Level', def?.progression ? item.level + 1 : 'Not applicable'],
@@ -259,6 +325,13 @@ export async function inspectItem(def, item, fixed, writable = false) {
             ],
             ['Accessories', attached.length ? `${attached.length} attached` : 'None']
         ])
+    );
+    node.append(
+        toolbar(
+            badge(item.bound ? 'Bound' : item.bindOnEquip ? 'Binds on equip' : 'Unbound'),
+            badge(item.equippedSlot == null ? 'Unequipped' : 'Equipped')
+        ),
+        metadata
     );
     if (attached.length) {
         node.append(accessoryView);
@@ -308,7 +381,11 @@ export async function inspectItem(def, item, fixed, writable = false) {
                 inspection.signal
             )
                 .then((result) => {
-                    if (!disposed) stats.replaceChildren(statFacts(result.stats));
+                    if (!disposed)
+                        stats.replaceChildren(
+                            statFacts(result.properties),
+                            effectsView(result.effects)
+                        );
                 })
                 .catch(() => {});
         }

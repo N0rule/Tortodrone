@@ -1,3 +1,6 @@
+import { symbol } from '../components/symbols.js';
+import { api } from '../api.js';
+import { itemPicker } from '../components/item-picker.js';
 import {
     el,
     button,
@@ -15,7 +18,7 @@ import {
     number
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
-import { edit, confirm, field, conflict } from '../components/dialog.js';
+import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
 import { itemLine, currency, itemTile, icon, variantName } from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
 import { spriteCard } from '../components/sprite-card.js';
@@ -198,11 +201,132 @@ export async function mount(ctx) {
             }
         }
     }
+    function equipmentPicker(index) {
+        const current = view.profile.items.find((i) => i.equippedSlot === index),
+            snapshot = fixed();
+        const root = el('div', null, 'stack'),
+            grid = el('div', null, 'item-grid'),
+            search = input('Search compatible equipment');
+        const filter = select('Equipment filter', [
+            ['all', 'All owned'],
+            ['unequipped', 'Unequipped'],
+            ['uv', 'With Unique Variants']
+        ]);
+        let selected = null,
+            grant = '',
+            picker;
+        const canEdit = ctx.admin && view.equipmentEditable && view.unlockedSlots.includes(index);
+        root.append(
+            el(
+                'p',
+                !view.equipmentEditable
+                    ? 'Sign out of the game before changing equipment. Online equipment is managed at an Arsenal Station.'
+                    : !view.unlockedSlots.includes(index)
+                      ? 'Activate a slot upgrade in the game to use this slot.'
+                      : 'Equip owned gear or grant a compatible item. Equipping applies the item’s binding rules.'
+            )
+        );
+        if (current)
+            root.append(
+                toolbar(
+                    button('Inspect / edit equipped item', () => inspect(current)),
+                    button('Unequip', () => {
+                        selected = current.id;
+                        grant = '';
+                        root.dataset.unequip = 'true';
+                        for (const tile of grid.children)
+                            tile.setAttribute('aria-pressed', 'false');
+                        selection.textContent = 'Unequip ' + definition(current)?.name;
+                    })
+                )
+            );
+        for (const b of root.querySelectorAll('button'))
+            if (b.textContent.trim() === 'Unequip') b.disabled = !canEdit;
+        const selection = el('p', 'Choose an item.', 'muted');
+        const candidates = view.profile.items.filter((i) =>
+            definition(i)?.compatibleSlots.includes(index)
+        );
+        for (const item of candidates) {
+            const def = definition(item),
+                tile = itemTile(def, item, () => {
+                    selected = item.id;
+                    grant = '';
+                    root.dataset.unequip = 'false';
+                    for (const child of grid.children)
+                        child.setAttribute('aria-pressed', child === tile);
+                    selection.textContent = 'Equip ' + def.name;
+                });
+            tile.dataset.search = def.name.toLowerCase();
+            tile.dataset.equipped = item.equippedSlot != null;
+            tile.dataset.uv = !!item.variants.length;
+            if (item.variants.length)
+                tile.append(
+                    el(
+                        'small',
+                        item.variants
+                            .map((v) => def.variantDisplay?.[v.name]?.label || variantName(v.name))
+                            .join('; '),
+                        'uv'
+                    )
+                );
+            grid.append(tile);
+        }
+        const applyFilter = () => {
+            for (const tile of grid.children)
+                if (tile.dataset.search)
+                    tile.hidden =
+                        !tile.dataset.search.includes(search.value.toLowerCase()) ||
+                        (filter.value === 'unequipped' && tile.dataset.equipped === 'true') ||
+                        (filter.value === 'uv' && tile.dataset.uv !== 'true');
+        };
+        search.oninput = filter.onchange = applyFilter;
+        root.append(toolbar(search, filter), grid, selection);
+        if (!candidates.length) grid.append(el('p', 'No compatible owned items.'));
+        if (canEdit) {
+            const grantSection = el('details');
+            grantSection.append(el('summary', 'Grant and equip'));
+            picker = itemPicker(
+                (def) => {
+                    if (!def.compatibleSlots.includes(index))
+                        throw new Error('This item is not compatible with this slot.');
+                    selected = 0;
+                    grant = def.config;
+                    root.dataset.unequip = 'false';
+                    selection.textContent = 'Grant and equip ' + def.name;
+                },
+                { grantable: true, compatibleSlot: index }
+            );
+            grantSection.append(picker.node);
+            root.append(grantSection);
+        }
+        openDialog({
+            title: slotNames.get(index) || 'Equipment',
+            content: root,
+            target: snapshot.worldId,
+            revision: snapshot.revision,
+            submit: canEdit ? 'Save equipment' : 'Close',
+            notifySaved: canEdit,
+            dispose: () => picker?.dispose(),
+            isDirty: () => canEdit && selected !== null,
+            onSubmit: async () => {
+                if (!canEdit) return;
+                if (selected === null) throw new Error('Choose an item or Unequip.');
+                await api.change('equipment', {
+                    ...snapshot,
+                    itemId: selected,
+                    slot: root.dataset.unequip === 'true' ? '' : index,
+                    grant
+                });
+            }
+        });
+    }
     function equipment() {
         const grid = el('div', null, 'equipment-grid'),
             cache = new Map();
         function update() {
-            const slots = new Map(slotNames);
+            const slots = new Map(
+                [6, 7, 8, 9, 0, 1, 2, 3, 4, 15, 10, 11].map((i) => [i, slotNames.get(i)])
+            );
             for (const item of view.profile.items)
                 if (item.equippedSlot != null && !slots.has(item.equippedSlot))
                     slots.set(item.equippedSlot, `Equipment ${item.equippedSlot}`);
@@ -217,13 +341,17 @@ export async function mount(ctx) {
                             const current = view.profile.items.find(
                                 (i) => i.equippedSlot === index
                             );
-                            if (current) return inspect(current);
+                            return equipmentPicker(index);
                         },
                         'equipment-slot'
                     );
                     cache.set(index, slot);
                 }
-                const signature = JSON.stringify(item || null);
+                const signature = JSON.stringify([
+                    item || null,
+                    view.equipmentEditable,
+                    view.unlockedSlots
+                ]);
                 if (slot.dataset.signature === signature) return slot;
                 slot.dataset.signature = signature;
                 slot.classList.toggle('empty-slot', !item);
@@ -231,7 +359,7 @@ export async function mount(ctx) {
                 info.append(
                     el(
                         'span',
-                        title + (item ? ` · ${item.slot.toLowerCase().replaceAll('_', ' ')}` : ''),
+                        title + (!view.unlockedSlots.includes(index) ? ' · Locked' : ''),
                         'slot-label'
                     )
                 );
@@ -248,11 +376,36 @@ export async function mount(ctx) {
                     );
                 if (item?.variants.length)
                     info.append(
-                        el('small', item.variants.map((v) => variantName(v.name)).join(' · '), 'uv')
+                        el(
+                            'small',
+                            item.variants
+                                .map(
+                                    (v) =>
+                                        def?.variantDisplay?.[v.name]?.label || variantName(v.name)
+                                )
+                                .join('; '),
+                            'uv'
+                        )
                     );
                 if (item?.bound) info.append(el('small', 'Bound'));
-                slot.replaceChildren(icon(item?.config, def?.rarity), info);
-                slot.disabled = !item;
+                const emptyIcon = symbol(
+                    'slot-' +
+                        (index >= 6 && index <= 9
+                            ? 'weapon'
+                            : index === 0
+                              ? 'helmet'
+                              : index === 1
+                                ? 'armor'
+                                : index === 2
+                                  ? 'shield'
+                                  : index === 10 || index === 11
+                                    ? 'trinket'
+                                    : 'costume')
+                );
+                emptyIcon.classList.add('slot-icon');
+                slot.replaceChildren(item ? icon(item.config, def?.rarity) : emptyIcon, info);
+                slot.dataset.slot = index;
+                slot.disabled = false;
                 return slot;
             });
             const wanted = new Set(desired);
@@ -495,6 +648,26 @@ export async function mount(ctx) {
             if (id === requestId) roster.update(rows);
             return;
         }
+        if (selectedKey === key && view) {
+            const probe = await ctx.request('knight-state', { username, knight });
+            if (id !== requestId) return;
+            if (
+                probe.state.worldId === view.profile.worldId &&
+                probe.state.revision === view.profile.revision
+            ) {
+                view.online = probe.online;
+                view.gameMaster = probe.state.gameMaster;
+                view.equipmentEditable = probe.equipmentEditable;
+                for (const sprite of view.sprites) {
+                    sprite.online = probe.online;
+                    sprite.active = probe.available ? sprite.state.id === probe.deployed : null;
+                    sprite.live = sprite.state.id === probe.deployed ? probe.live : null;
+                }
+                updateHeader();
+                if (activeTab === 'sprites' || activeTab === 'equipment') bodyController?.update();
+                return;
+            }
+        }
         const result = await ctx.request('knight-view', { username, knight });
         if (id !== requestId) return;
         const switched = selectedKey !== key;
@@ -522,7 +695,7 @@ export async function mount(ctx) {
     await refresh();
     return {
         node,
-        interval: 4000,
+        interval: 6000,
         refresh,
         async navigate(next) {
             requestId++;

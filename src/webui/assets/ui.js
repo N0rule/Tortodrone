@@ -1,3 +1,4 @@
+import { symbol } from './components/symbols.js';
 export const $ = (selector) => document.querySelector(selector);
 export function el(tag, text, className) {
     const node = document.createElement(tag);
@@ -12,6 +13,16 @@ export function text(node, value) {
 export function button(label, action, className = 'secondary', available) {
     const node = el('button', label, className);
     node.type = 'button';
+    const actionIcon = /^(Edit|Inspect)/.test(label)
+        ? 'edit'
+        : /^(Add|Grant)/.test(label)
+          ? 'add'
+          : /^(Save|Equip)\b/.test(label)
+            ? 'save'
+            : /^(Remove|Unequip|Delete)/.test(label)
+              ? 'remove'
+              : null;
+    if (actionIcon) node.prepend(symbol(actionIcon));
     if (available) {
         node.refreshAvailability = () => {
             node.disabled = !available();
@@ -140,6 +151,7 @@ export function tabs(options, value, onChange) {
     }
     for (const [id, title] of options) {
         const b = button(title, () => choose(id));
+        b.prepend(symbol(id));
         b.dataset.tab = id;
         b.setAttribute('role', 'tab');
         b.setAttribute('aria-selected', id === value);

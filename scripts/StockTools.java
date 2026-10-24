@@ -13,6 +13,10 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "webui-presentation" -> {
+                if(args.length!=4)throw new IllegalArgumentException("webui-presentation expects game-directory content-directory fresh-output-file");
+                fixture="WebUiPresentationExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+            }
             case "webui-assets" -> {
                 if(args.length!=3)throw new IllegalArgumentException("webui-assets expects game-directory fresh-output-directory");
                 fixture="WebUiAssetsExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

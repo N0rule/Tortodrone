@@ -9,7 +9,8 @@ import org.tortodrone.world.*;
 public record ContentRegistry(List<Pack> packs, Map<String,Resource> resources, SceneCatalog scenes,
         ItemCatalog items, WeaponCatalog weapons, EquipmentCatalog equipment, FireCatalog fires,
         List<String> warnings, org.tortodrone.town.TownCatalog town, FireCatalog petFires,
-        org.tortodrone.news.NewsCatalog news, org.tortodrone.loot.BoxCatalog boxes) {
+        org.tortodrone.news.NewsCatalog news, org.tortodrone.loot.BoxCatalog boxes, PresentationCatalog presentation) {
+    public ContentRegistry(List<Pack> packs,Map<String,Resource> resources,SceneCatalog scenes,ItemCatalog items,WeaponCatalog weapons,EquipmentCatalog equipment,FireCatalog fires,List<String> warnings,org.tortodrone.town.TownCatalog town,FireCatalog petFires,org.tortodrone.news.NewsCatalog news,org.tortodrone.loot.BoxCatalog boxes){this(packs,resources,scenes,items,weapons,equipment,fires,warnings,town,petFires,news,boxes,PresentationCatalog.empty());}
     public record Pack(String id,String version) { }
     public record Resource(String pack,Path path,String sha256) { }
     public ContentRegistry {

@@ -338,6 +338,14 @@ public final class Database {
             return Map.copyOf(states);
         });
     }
+    /** Indexed revision probe; does not materialize inventory or town state. */
+    public WorldState knightState(String username,String knight)throws IOException {
+        if(read(c->InventoryExpiry.due(c,System.currentTimeMillis())))write(c->null);
+        return read(c->{try(var statement=c.prepareStatement("SELECT w.account_id,w.knight_id,w.world_id,k.name,w.state_revision,a.auth_revision,a.game_master FROM world_characters w JOIN accounts a ON a.id=w.account_id JOIN knights k ON k.account_id=w.account_id AND k.id=w.knight_id WHERE a.name_key=? AND k.name_key=?")){
+            statement.setString(1,username.toLowerCase(Locale.ROOT));statement.setString(2,knight.toLowerCase(Locale.ROOT));
+            try(var r=statement.executeQuery()){if(!r.next())throw new IOException("No such knight");return new WorldState(r.getInt(1),r.getInt(2),r.getInt(3),r.getString(4),r.getLong(5),r.getLong(6),r.getBoolean(7));}
+        }});
+    }
     /** Current world state without an authentication-revision check, for read-only publications. */
     public WorldProfile profile(int accountId,int knightId) throws IOException {
         return worldProfile(accountId,knightId,-1);
@@ -450,6 +458,11 @@ public final class Database {
     public WorldProfile equip(int accountId,int knightId,long revision,long itemId,Integer slot) throws IOException {
         return write(c -> {
             var profile=WorldProfiles.load(c,accountId,knightId,revision);
+            equip(c,profile,itemId,slot);
+            return WorldProfiles.load(c,accountId,knightId,revision);
+        });
+    }
+    private static void equip(Connection c,WorldProfile profile,long itemId,Integer slot)throws SQLException,IOException {
             var item=profile.items().stream().filter(i->i.id()==itemId).findFirst().orElseThrow(()->new IOException("No such owned item"));
             if(slot!=null && !item.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
             if(slot!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,slot))throw new IOException("Activate a slot upgrade first");
@@ -465,7 +478,22 @@ public final class Database {
             }
             if(slot!=null&&(slot==8||slot==9))try(var st=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?)")){st.setString(1,"item.weapon-slot."+itemId);st.setInt(2,slot);st.executeUpdate();}
             try(PreparedStatement s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=?")){s.setInt(1,profile.worldId());s.executeUpdate();}
-            return WorldProfiles.load(c,accountId,knightId,revision);
+    }
+    public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant,org.tortodrone.character.ItemCatalog catalog,org.tortodrone.town.TownCatalog rules)throws IOException {
+        return write(c->{
+            var profile=administrativeProfile(c,username,knight,account,world);
+            if(profile.revision()!=revision)throw new IOException("Inventory changed; refresh before editing");
+            long owned=itemId;
+            if(!grant.isEmpty()) {
+                var entry=catalog.require(grant);
+                if(!entry.grantable()||slot==null||!entry.slot().accepts(slot))throw new IOException("Item cannot be equipped in that slot");
+                org.tortodrone.character.ItemModifiers.NONE.validate(entry,rules);
+                owned=new TownStore(this,catalog,rules).create(c,profile,grant,1,false,0,0,List.of());
+                profile=WorldProfiles.load(c,account,profile.knightId(),-1);
+            }
+            equip(c,profile,owned,slot);
+            event(c,account,"equipment; world="+world+"; item="+owned+"; slot="+slot);
+            return WorldProfiles.load(c,account,profile.knightId(),-1);
         });
     }
     /** Permission and target identity are checked under the same write lock as allocation. */

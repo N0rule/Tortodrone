@@ -3,7 +3,7 @@ import { el, input, select, toolbar, button, text, report } from '../ui.js';
 import { itemTile } from './items.js';
 
 /** Bounded server pages; obsolete search results never replace the latest results. */
-export function itemPicker(onChoose, { grantable = false } = {}) {
+export function itemPicker(onChoose, { grantable = false, compatibleSlot = null } = {}) {
     const node = el('div', null, 'stack'),
         search = input('Search items'),
         categories = select('Item category', [['', 'All categories']], '');
@@ -40,7 +40,8 @@ export function itemPicker(onChoose, { grantable = false } = {}) {
                     search: search.value,
                     category: categories.value,
                     page,
-                    size: 24
+                    size: 24,
+                    slot: compatibleSlot ?? ''
                 },
                 false,
                 request.signal

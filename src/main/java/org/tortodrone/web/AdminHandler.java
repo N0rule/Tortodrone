@@ -35,7 +35,7 @@ public final class AdminHandler implements HttpHandler {
     private static String safeValidation(String message) {
         if(message==null)return null;
         return switch(message) {
-            case "Invalid item level or heat","Level is outside this item's progression table",
+            case "Sign out of the game before changing equipment","Item cannot be equipped in that slot","Activate a slot upgrade first","No such owned item","Invalid item level or heat","Level is outside this item's progression table",
                 "Maximum-level items cannot store heat","Choose up to three distinct UVs valid for this item",
                 "Choose only one UV from each variant family","Use a PNG or JPEG filename","Invalid image encoding",
                 "Uploaded images must be at most 1 MiB","Image exceeds the 570 by 300 featured slot","News image library is full"->message;

@@ -1,3 +1,4 @@
+import { symbol as uiSymbol } from './components/symbols.js';
 import { api } from './api.js';
 import { $, el, button, text, notify, report } from './ui.js';
 import { route, go } from './router.js';
@@ -17,18 +18,18 @@ import * as access from './pages/access.js';
 import * as audit from './pages/audit.js';
 
 const pages = [
-    ['overview', 'Overview', '◈', 0, overview],
-    ['players', 'Online Players', '♧', 0, players],
-    ['accounts', 'Accounts', '▣', 1, accounts],
-    ['knights', 'Knights', '◇', 1, knights],
-    ['depot', 'Supply Depot', '⬡', 2, depot],
-    ['auctions', 'Auction House', '⚑', 2, auctions],
-    ['news', 'Uplink News', '▤', 2, news],
-    ['content', 'Content Catalogue', '▦', 2, content],
-    ['console', 'Console', '›_', 2, consolePage],
-    ['logs', 'Logs', '≡', 0, logs],
-    ['webui-users', 'WebUI Access', '⚿', 2, access],
-    ['audit', 'Audit Trail', '✓', 2, audit]
+    ['overview', 'Overview', null, 0, overview],
+    ['players', 'Online Players', null, 0, players],
+    ['accounts', 'Accounts', null, 1, accounts],
+    ['knights', 'Knights', null, 1, knights],
+    ['depot', 'Supply Depot', null, 2, depot],
+    ['auctions', 'Auction House', null, 2, auctions],
+    ['news', 'Uplink News', null, 2, news],
+    ['content', 'Content Catalogue', null, 2, content],
+    ['console', 'Console', null, 2, consolePage],
+    ['logs', 'Logs', null, 0, logs],
+    ['webui-users', 'WebUI Access', null, 2, access],
+    ['audit', 'Audit Trail', null, 2, audit]
 ];
 let generation = 0,
     current,
@@ -181,9 +182,9 @@ function signedIn() {
     $('#navigation').replaceChildren(
         ...pages
             .filter((p) => p[3] <= rank())
-            .map(([name, title, icon]) => {
+            .map(([name, title]) => {
                 const a = el('a'),
-                    symbol = el('span', icon, 'nav-icon');
+                    symbol = uiSymbol(name);
                 symbol.setAttribute('aria-hidden', 'true');
                 a.append(symbol, el('span', title));
                 a.href = '#' + name;

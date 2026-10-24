@@ -11,10 +11,17 @@ export function spriteCard() {
         values = el('dl'),
         live = el('dl'),
         bar = heat(0),
-        advanced = details('Authoritative Sprite data', {}),
-        skills = el('div', null, 'stack');
+        advanced = details('Advanced Sprite data', {}),
+        perks = el('details'),
+        perkList = el('ul', null, 'perk-list'),
+        skills = el('div', null, 'sprite-skills');
     node.classList.add('sprite-card', 'stack');
-    node.append(image, name, toolbar(ownership, deployment), values, bar, live, skills, advanced);
+    const overview = el('div', null, 'sprite-overview'),
+        identity = el('div', null, 'stack');
+    identity.append(name, toolbar(ownership, deployment), bar, values);
+    overview.append(image, identity);
+    perks.append(el('summary', 'All owned perks'), perkList);
+    node.append(overview, skills, perks, live, advanced);
     const facts = new Map(),
         liveFacts = new Map(),
         skillCards = [];
@@ -52,20 +59,22 @@ export function spriteCard() {
                 imageKey = key;
             }
             const entries = [
-                ['Type', p.config.split('/').at(-1)],
-                ['Level', s.displayedLevel],
+                ['Type', s.display?.name || p.config.split('/').at(-1)],
+                ['Level / tier', `${s.displayedLevel} / ${s.tier}`],
                 ['Heat', `${(p.heat * 100).toFixed(1)}%`],
-                [
-                    'Skill points spent / earned',
-                    `${p.powers.reduce((a, b) => a + b, 0)} / ${s.skillPoints}`
-                ],
+                ['Skill points spent / available', `${s.spentPoints} / ${s.availablePoints}`],
                 ['Harness', s.harness?.config],
-                ['Selected perk', p.perk == null ? 'None' : s.perkCatalogue[p.perk]?.name],
+                [
+                    'Selected perk',
+                    p.perk == null ? 'None' : s.perkNames?.[s.perkCatalogue[p.perk]?.name]
+                ],
                 [
                     'Owned perks',
                     p.perks
-                        .map((i) => s.perkCatalogue[i]?.name || `Unknown perk ${i}`)
-                        .join(', ') || 'None'
+                        .slice(0, 3)
+                        .map((i) => s.perkNames?.[s.perkCatalogue[i]?.name] || `Unknown perk ${i}`)
+                        .join(', ') +
+                        (p.perks.length > 3 ? ` and ${p.perks.length - 3} more` : '') || 'None'
                 ]
             ];
             for (const [key, value] of entries) set(values, facts, key, value);
@@ -82,6 +91,16 @@ export function spriteCard() {
                     s.live.cooldownSeconds.map((n) => `${n.toFixed(1)}s`).join(' / ')
                 );
             }
+            const perkSignature = JSON.stringify(p.perks);
+            if (perkList.dataset.signature !== perkSignature) {
+                perkList.replaceChildren(
+                    ...p.perks.map((i) =>
+                        el('li', s.perkNames?.[s.perkCatalogue[i]?.name] || 'Unknown perk')
+                    )
+                );
+                perkList.dataset.signature = perkSignature;
+            }
+            perks.hidden = !p.perks.length;
             const definitions = s.definition?.skills || [];
             for (let i = 0; i < Math.max(3, definitions.length); i++) {
                 if (!skillCards[i]) {
@@ -91,21 +110,43 @@ export function spriteCard() {
                     skills.append(card);
                 }
                 const card = skillCards[i],
-                    definition = definitions[i];
+                    definition = definitions[i],
+                    display = s.display?.skills?.[i];
+                const title = card.card.querySelector('h2');
+                if (title.dataset.config !== p.config) {
+                    title.replaceChildren(
+                        spriteIcon(p.config, `skill:${i}`),
+                        el('span', display?.name || `Skill ${i + 1}`)
+                    );
+                    title.dataset.config = p.config;
+                }
                 set(card.root, card.facts, 'State', s.unlocked[i] ? 'Unlocked' : 'Locked');
                 set(
                     card.root,
                     card.facts,
                     'Upgrade ranks',
-                    p.powers.slice(i * 3, i * 3 + 3).join(' / ')
+                    p.powers
+                        .slice(i * 3, i * 3 + 3)
+                        .map(
+                            (rank, j) =>
+                                `${display?.upgrades?.[j] || 'Upgrade ' + (j + 1)}: ${rank}`
+                        )
+                        .join(' • ')
                 );
                 set(card.root, card.facts, 'Ultimate', s.ultimate[i] ? 'Unlocked' : 'Locked');
-                set(card.root, card.facts, 'Selected ultimate', ['None', 'A', 'B'][p.ultimates[i]]);
                 set(
                     card.root,
                     card.facts,
-                    'Attacks',
-                    definition?.attacks.map((a) => a.split('/').at(-1)).join(', ')
+                    'Selected ultimate',
+                    p.ultimates[i]
+                        ? display?.ultimates?.[p.ultimates[i] - 1] || 'Unavailable'
+                        : 'None'
+                );
+                set(
+                    card.root,
+                    card.facts,
+                    'Ultimate choices',
+                    display?.ultimates?.join(' / ') || 'Unavailable'
                 );
             }
             text(advanced.querySelector('pre'), JSON.stringify(s, null, 2));

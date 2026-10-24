@@ -35,6 +35,7 @@ public final class AdminService implements AutoCloseable {
             case "accounts"->accounts.list();
             case "knights"->accounts.knights(p.text("username"));
             case "knight"->accounts.worldProfile(p.text("username"),p.text("knight"));
+            case "knight-state"->views.state(p.text("username"),p.text("knight"));
             case "knight-view"->views.knight(p.text("username"),p.text("knight"));
             case "knights-all"->views.knights();
             case "catalogue"->views.items(p);
@@ -55,7 +56,7 @@ public final class AdminService implements AutoCloseable {
         };
     }
     public static WebIdentityStore.Role permission(String route,boolean write){
-        if(!write)return switch(route){case "status","logs","metrics"->WebIdentityStore.Role.VIEWER;case "accounts","knights","knight","items","knight-view","knights-all","catalogue","item","item-definitions","accessories","item-preview"->WebIdentityStore.Role.MODERATOR;default->WebIdentityStore.Role.ADMINISTRATOR;};
+        if(!write)return switch(route){case "status","logs","metrics"->WebIdentityStore.Role.VIEWER;case "accounts","knights","knight","items","knight-state","knight-view","knights-all","catalogue","item","item-definitions","accessories","item-preview"->WebIdentityStore.Role.MODERATOR;default->WebIdentityStore.Role.ADMINISTRATOR;};
         return route.equals("kick")?WebIdentityStore.Role.MODERATOR:WebIdentityStore.Role.ADMINISTRATOR;
     }
     public Object write(String route,Input p)throws IOException {
@@ -82,6 +83,7 @@ public final class AdminService implements AutoCloseable {
             case "item-grant"->{return accounts.grantItems(p.text("username"),p.text("knight"),p.text("config"),p.positive("quantity"),p.positive("accountId"),p.positive("worldId"),modifiers(p),p.flag("bound"),p.integer("expireDays"));}
             case "item-quantity"->{return accounts.itemQuantity(p.text("username"),p.text("knight"),p.number("itemId"),p.integer("quantity"),p.positive("accountId"),p.positive("worldId"),p.number("revision"));}
             case "item-accessory"->{return accounts.itemAccessory(p.text("username"),p.text("knight"),p.number("itemId"),p.optional("accessory").isEmpty()?null:p.text("accessory"),p.positive("accountId"),p.positive("worldId"),p.number("revision"));}
+            case "equipment"->{return accounts.administrativeEquipment(p.text("username"),p.text("knight"),p.positive("accountId"),p.positive("worldId"),p.number("revision"),p.number("itemId"),p.optional("slot").isEmpty()?null:p.integer("slot"),p.optional("grant"));}
             case "item-modifiers"->{return accounts.itemModifiers(p.text("username"),p.text("knight"),p.number("itemId"),modifiers(p),p.positive("accountId"),p.positive("worldId"),p.number("revision"));}
             case "depot-save"->{return accounts.depot().save(p.number("revision"),new DepotStore.Offer(p.integer("id"),new TownCatalog.Good(p.text("config"),p.positive("quantity"),p.integer("crowns"),p.integer("energy"),p.integer("limit"),"",0),p.flag("featured"),p.flag("enabled"),p.flag("promotionOnly")));}
             case "promotion-create"->{return accounts.depot().schedule(p.number("revision"),new DepotStore.Promotion(0,p.integer("offerId"),p.number("starts"),p.number("ends"),p.integer("crowns"),p.integer("energy"),p.optional("referencePrice").isEmpty()?null:p.integer("referencePrice"),p.flag("featured"),false));}

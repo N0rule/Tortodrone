@@ -251,3 +251,197 @@
         font-size: 17px;
     }
 }
+/* The item itself is the editing surface; the UV catalogue stays folded until needed. */
+.gear-inspector > .item-line .item-icon,
+.gear-card .item-icon {
+    width: 80px;
+    height: 80px;
+}
+.gear-card {
+    border-top: 3px solid var(--gold);
+    background: var(--inset);
+    padding: 18px;
+}
+.gear-card .item-line strong {
+    font-size: 1.35rem;
+}
+.gear-inspector .form-grid {
+    padding: 12px;
+    background: var(--raised);
+    border-radius: var(--radius);
+}
+.variant-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 8px;
+    max-height: 320px;
+    overflow: auto;
+    padding: 8px 2px;
+}
+.variant-choice {
+    min-width: 0;
+}
+.variant-option {
+    width: 100%;
+    height: 100%;
+    text-align: left;
+    white-space: normal;
+}
+.variant-option[aria-pressed='true'] {
+    border-color: var(--purple);
+    background: var(--raised);
+}
+.uv-picker {
+    border: 1px solid var(--line);
+    padding: 12px;
+}
+.uv-picker > summary {
+    cursor: pointer;
+    color: var(--purple);
+    margin-bottom: 10px;
+}
+.effect-chip {
+    display: block;
+    text-align: left;
+    margin: 6px 0;
+    border-color: var(--purple);
+}
+.item-effects {
+    list-style: none;
+    padding: 0;
+    margin: 12px 0;
+}
+.item-effects li {
+    border-left: 3px solid var(--gold);
+    padding: 5px 10px;
+    margin: 6px 0;
+}
+.item-effects small {
+    display: block;
+    color: var(--muted);
+}
+.sprite-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+.sprite-card {
+    min-width: 0;
+}
+.sprite-overview {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: 22px;
+}
+.sprite-overview .item-icon {
+    width: 112px;
+    height: 112px;
+}
+.sprite-overview dl {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(0, 3fr);
+}
+.sprite-skills {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+.sprite-skills .panel {
+    min-width: 0;
+    background: var(--inset);
+}
+.sprite-skills dl {
+    display: block;
+}
+.sprite-skills dt {
+    margin-top: 12px;
+    color: var(--muted);
+}
+.sprite-card dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+.equipment-slot:focus-visible,
+.variant-option:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+}
+@media (max-width: 800px) {
+    .sprite-skills {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .sprite-overview {
+        grid-template-columns: 72px minmax(0, 1fr);
+        gap: 12px;
+    }
+    .sprite-overview .item-icon {
+        width: 72px;
+        height: 72px;
+    }
+    .sprite-overview dl {
+        display: block;
+    }
+    .sprite-overview dt {
+        margin-top: 8px;
+    }
+}
+.equipment-slot .uv,
+.item-tile .uv,
+.effect-chip {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+.gear-card .draft-preview {
+    border: 0;
+    padding: 0;
+    background: transparent;
+}
+.item-properties {
+    display: grid;
+    gap: 10px;
+}
+.item-property {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 5px 12px;
+}
+.item-property .heat {
+    grid-column: 1 / -1;
+}
+.perk-list {
+    columns: 3 180px;
+    padding-left: 22px;
+}
+.perk-list li {
+    break-inside: avoid;
+    margin-bottom: 8px;
+}
+.equipment-slot .slot-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    object-fit: contain;
+}
+.sprite-skills h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sprite-skills h2 .item-icon {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+}
+.effect-chip {
+    background: var(--raised);
+    color: var(--purple);
+}
+.gear-card > .form-grid {
+    margin-top: 0;
+}
+.gear-card .item-icon img,
+.sprite-overview .item-icon img,
+.sprite-skills .item-icon img {
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
+}

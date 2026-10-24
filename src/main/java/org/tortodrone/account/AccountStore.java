@@ -51,6 +51,17 @@ public final class AccountStore implements AutoCloseable {
         return new org.tortodrone.storage.AuctionHouse(database,catalog,org.tortodrone.town.TownCatalog.empty());
     }
 
+    /** Shares the attachment lock with login, so no live session can race the offline write. */
+    public WorldProfile administrativeEquipment(String username,String knight,int account,int world,long revision,long itemId,Integer slot,String grant)throws IOException {
+        validateUsername(username);
+        if(database==null||revision<0||account<=0||world<=0)throw new IOException("A current knight revision is required");
+        synchronized(attachmentLocks.computeIfAbsent(account,id->new Object())) {
+            if(sessions.containsKey(account))throw new IOException("Sign out of the game before changing equipment");
+            return database.administrativeEquipment(username,knight,account,world,revision,itemId,slot,grant,catalog,town);
+        }
+    }
+    public Database.WorldState knightState(String username,String knight)throws IOException {validateUsername(username);if(database==null)throw new IOException("Knight inspection requires SQLite storage");return database.knightState(username,knight);}
+    public boolean gameAttached(int account){return sessions.containsKey(account);}
     public WorldProfile progress(String username,String knight,Integer rank,Integer subrank,Integer prestige,int expectedAccount,int expectedWorld)throws IOException{
         return progress(username,knight,rank,subrank,prestige,expectedAccount,expectedWorld,null);
     }

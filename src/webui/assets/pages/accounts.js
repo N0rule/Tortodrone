@@ -1,4 +1,17 @@
-import { el, toolbar, button, panel, facts, badge, date, text } from '../ui.js';
+import { api } from '../api.js';
+import {
+    el,
+    toolbar,
+    button,
+    panel,
+    facts,
+    badge,
+    date,
+    text,
+    input,
+    label,
+    changed
+} from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field } from '../components/dialog.js';
 
@@ -75,14 +88,6 @@ export async function mount(ctx) {
                             )
                     )
                 ),
-                button('GM permission', () =>
-                    edit(
-                        'Game permission · ' + account.username,
-                        'account-gm',
-                        [field('gm', 'Game Master', account.gameMaster, 'checkbox')],
-                        fixed
-                    )
-                ),
                 button(
                     'Delete account',
                     () =>
@@ -96,6 +101,27 @@ export async function mount(ctx) {
                     'danger'
                 )
             );
+        const gm = input('Game Master permission', account.gameMaster, 'checkbox');
+        gm.setAttribute('role', 'switch');
+        gm.disabled = !ctx.admin;
+        const feedback = el(
+            'small',
+            'Game account permission; WebUI roles are managed separately.'
+        );
+        gm.onchange = async () => {
+            gm.disabled = true;
+            try {
+                await api.change('account-gm', { ...fixed, gm: gm.checked });
+                text(feedback, 'Game Master permission saved.');
+                changed();
+            } catch (error) {
+                gm.checked = account.gameMaster;
+                text(feedback, error.message);
+            } finally {
+                gm.disabled = false;
+            }
+        };
+        actions.prepend(label('Game Master', gm), feedback);
         const roster = new DataTable(
             [
                 ['Knight', (k) => k.name],

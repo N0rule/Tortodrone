@@ -34,6 +34,9 @@ public final class WebUiAssetsExport {
             default->throw new UnsupportedOperationException("Offline icon export cannot call "+method.getName());
         });
         images=new com.threerings.opengl.util.h(ctx,false);
+        // ItemConfig.Level.d uses this stock style to color category masks for empty sockets.
+        var socketStyle=manager.d(com.threerings.opengl.gui.config.StyleConfig.class,"Status/Equip Socket/Backing, Icon").getOriginal(ctx);
+        var socketColors=((com.threerings.opengl.gui.config.BackgroundConfig.ColorizedImage)socketStyle.background).colorizations;
         Files.createDirectories(out.resolve("icons"));
         int missing=0;
         for(var config:manager.bd(ItemConfig.class).kK()) {
@@ -45,6 +48,16 @@ public final class WebUiAssetsExport {
                 if(entry.getValue()!=null&&!entry.getValue().file.isBlank())try{sprites.put(config.getName()+":"+entry.getKey(),write(entry.getValue()));}catch(RuntimeException|IOException unavailable){missing++;}
             }
         }
+        for(var config:manager.bd(BattleSpriteConfig.class).kK())for(int i=0;i<config.skills.length;i++) {
+            var icon=config.skills[i].name.icon;
+            if(icon!=null&&!icon.file.isBlank())sprites.put(config.getName()+":skill:"+i,write(icon));
+        }
+        var navigation=new TreeMap<String,String>();
+        for(var entry:Map.ofEntries(Map.entry("overview","readyroom"),Map.entry("players","social"),Map.entry("accounts","guildhall"),Map.entry("knights","equipment"),Map.entry("equipment","loadout"),Map.entry("inventory","arsenal"),Map.entry("progression","missions"),Map.entry("depot","supplydepot"),Map.entry("news","feed"),Map.entry("content","arsenal"),Map.entry("console","settings"),Map.entry("logs","mail"),Map.entry("webui-users","settings"),Map.entry("details","help"),Map.entry("edit","forge")).entrySet())navigation.put(entry.getKey(),"ui/hud_v2/images/icons/system/"+entry.getValue()+".png");
+        navigation.put("auctions","ui/icon/market_32.png");navigation.put("sprites","ui/icon/inventory/categories/icon_battlesprite.png");
+        navigation.put("audit","ui/icon/check.png");navigation.put("save","ui/icon/check.png");navigation.put("add","ui/icon/icon_plus.png");navigation.put("remove","ui/button/dismiss-sml.png");
+        for(var entry:navigation.entrySet()){var icon=new IconConfig.ColorizedImage();icon.file=entry.getValue();if(icon.file.contains("/categories/"))icon.colorizations=socketColors;ui.put("nav-"+entry.getKey(),write(icon));}
+        for(var entry:Map.ofEntries(Map.entry("helmet","helmet"),Map.entry("armor","armor"),Map.entry("shield","shield"),Map.entry("weapon","sword"),Map.entry("trinket","amulet"),Map.entry("costume","costume")).entrySet()){var icon=new IconConfig.ColorizedImage();icon.file="ui/icon/inventory/categories/icon_"+entry.getValue()+".png";icon.colorizations=socketColors;ui.put("slot-"+entry.getKey(),write(icon));}
         for(var entry:Map.of("crowns","ui/icon/crown_32.png","energy","ui/icon/energy_32.png","prestige","ui/icon/prestige_16.png",
                 "heat","ui/window/geartip_levelbar.png","variants","ui/window/geartip_variant.png","equipment","ui/status/images/backing_slots.png",
                 "button","ui/button/up.png","button-active","ui/button/up_yellow.png").entrySet()) {
