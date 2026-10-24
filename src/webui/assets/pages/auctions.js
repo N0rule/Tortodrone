@@ -42,19 +42,24 @@ export async function mount(ctx) {
         ],
         {
             key: (r) => r.listing.id,
+            presentationKey: (r) => state(r.listing),
             actions: (get) => [
                 button('Inspect', () => {
                     selected = get().listing.id;
                     return inspect();
                 }),
-                button('Cancel', () =>
-                    confirm(
-                        'Cancel auction #' + get().listing.id,
-                        'auction-cancel',
-                        { id: get().listing.id },
-                        [],
-                        'The auction service will release escrow and arrange any required refunds.'
-                    )
+                button(
+                    'Cancel',
+                    () =>
+                        confirm(
+                            'Cancel auction #' + get().listing.id,
+                            'auction-cancel',
+                            { id: get().listing.id },
+                            [],
+                            'The auction service will release escrow and arrange any required refunds.'
+                        ),
+                    'secondary',
+                    () => !get().listing.ended && !get().listing.cancelled
                 )
             ],
             filters: [
@@ -75,12 +80,13 @@ export async function mount(ctx) {
         const id = ++selection,
             row = rows.find((r) => r.listing.id === selected);
         if (!row) {
+            detailSignature = null;
             detail.replaceChildren();
             return;
         }
         const deliveries = await ctx.request('deliveries', { id: selected });
         if (id !== selection) return;
-        const signature = JSON.stringify([row, deliveries]);
+        const signature = JSON.stringify([row, deliveries, state(row.listing)]);
         if (detailSignature === signature) return;
         detailSignature = signature;
         const a = row.listing;
@@ -111,7 +117,30 @@ export async function mount(ctx) {
                     ],
                     ['Starts', date(a.availableAt)],
                     ['Expires', date(a.expires)],
-                    ['Escrow', 'Held and settled by the auction service']
+                    ['Opening / current bid', a.bid.toLocaleString() + ' Crowns'],
+                    ['Buyout', a.buy ? a.buy.toLocaleString() + ' Crowns' : 'Disabled'],
+                    [
+                        'Level',
+                        definitions.get(a.item.config)?.progression
+                            ? a.item.level + 1
+                            : 'Not applicable'
+                    ],
+                    [
+                        'Heat',
+                        definitions.get(a.item.config)?.progression
+                            ? `${(a.item.heatProgress * 100).toFixed(1)}%`
+                            : 'Not applicable'
+                    ],
+                    [
+                        'Binding',
+                        a.item.bound ? 'Bound' : a.item.bindOnEquip ? 'Binds on equip' : 'Unbound'
+                    ],
+                    [
+                        'Escrow',
+                        a.cancelled || a.ended
+                            ? 'Settlement recorded; see deliveries below'
+                            : 'Held by the auction service'
+                    ]
                 ]),
                 details('Listing and escrow state', row),
                 panel('Deliveries', deliveryTable.node)

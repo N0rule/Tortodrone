@@ -36,6 +36,20 @@ public final class ServerControl {
     public ServerControl(String version,Path data) {this.version=version;this.data=data;}
     public Path dataDirectory() {return data;}
     public SessionRegistry sessions() {return sessions;}
+    /** Session and destination guards surround the read; no control lock enters a scene. */
+    public org.tortodrone.world.SceneSimulation.Companion companion(long session,int account,int knight) {
+        SceneRegistry registry;
+        synchronized(this){if(state!=State.RUNNING)return null;registry=scenes;}
+        var before=sessions.find(session);
+        if(registry==null||before==null||!java.util.Objects.equals(before.accountId(),account)
+                ||!java.util.Objects.equals(before.knightId(),knight)||before.instanceId()==null)return null;
+        var result=registry.companion(before.instanceId(),knight);
+        var after=sessions.find(session);
+        synchronized(this){if(state!=State.RUNNING||scenes!=registry)return null;}
+        if(after==null||!java.util.Objects.equals(after.accountId(),account)||!java.util.Objects.equals(after.knightId(),knight)
+                ||!java.util.Objects.equals(after.instanceId(),before.instanceId()))return null;
+        return result;
+    }
     long nextSessionId() {return ids.incrementAndGet();}
     public synchronized Snapshot snapshot() {
         long uptime=startedAt==null?0:Math.max(0,((stoppedNanos==0?System.nanoTime():stoppedNanos)-startedNanos)/1000000000);

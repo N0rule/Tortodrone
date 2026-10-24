@@ -16,10 +16,11 @@ final class AdminViews {
     public record KnightRow(String username,int accountId,boolean gameMaster,int id,String name,boolean online) { }
     public record SpriteView(TownState.Sprite state,boolean selected,Boolean active,boolean online,
             int displayedLevel,int tier,int iconTier,int skillPoints,List<Boolean> unlocked,List<Boolean> ultimate,
-            TownCatalog.Sprite definition,List<TownCatalog.Perk> perkCatalogue,TownState.Harness harness) { }
+            TownCatalog.Sprite definition,List<TownCatalog.Perk> perkCatalogue,TownState.Harness harness,LiveSprite live) { }
+    public record LiveSprite(boolean following,int shieldHealth,int shieldMaximum,List<Double> cooldownSeconds) { }
     public record KnightView(String name,String username,boolean gameMaster,String guild,boolean online,
             WorldProfile profile,List<Item> definitions,List<SpriteView> sprites) { }
-    public record Accessory(String config,String name,String location,Set<String> blocks) { }
+    public record Accessory(String config,String name,String location,Set<String> blocks,String iconConfig) { }
     private final AccountStore accounts;
     private final ServerControl control;
     private final Map<String,Float> stats;
@@ -55,7 +56,9 @@ final class AdminViews {
     }
     KnightView knight(String username,String name)throws IOException {
         var p=accounts.worldProfile(username,name);boolean gm=accounts.isGameMaster(p.accountId());
-        boolean online=control.sessions().snapshots().stream().anyMatch(s->Objects.equals(s.accountId(),p.accountId())&&Objects.equals(s.knightId(),p.worldId()));
+        var session=control.sessions().snapshots().stream().filter(s->Objects.equals(s.accountId(),p.accountId())&&Objects.equals(s.knightId(),p.worldId())).findFirst().orElse(null);
+        boolean online=session!=null;
+        var companion=session==null?null:control.companion(session.id(),p.accountId(),p.worldId());
         var definitions=p.items().stream().map(i->accounts.catalog().find(i.config())).filter(Objects::nonNull).distinct().map(this::item).toList();
         var rules=accounts.townRules();
         var sprites=p.town().sprites().stream().map(s->{
@@ -63,9 +66,12 @@ final class AdminViews {
             // SessionCodec and the scene simulation resolve the implicit base harness this way.
             var harness=p.town().harnesses().stream().filter(h->h.id()==s.harness()).findFirst().orElse(new TownState.Harness(0,"Iron Harness"));
             // Native BattleSprite.ad selects icon1 below 14, icon2 below 49, then icon3.
-            return new SpriteView(s,selected,null,online,s.level()+1,SpriteRules.tier(s.level()),s.level()<14?1:s.level()<49?2:3,SpriteRules.points(s.level()),
+            Boolean active=!online?false:companion==null?null:companion.deployed()!=null&&companion.deployed().sprite().id()==s.id();
+            var pet=Boolean.TRUE.equals(active)?companion.deployed():null;
+            var live=pet==null?null:new LiveSprite(pet.follow(),pet.shieldHealth(),pet.shieldMaximum(),pet.nextSkill().stream().map(t->Math.max(0d,(t-companion.observedAt())/1000d)).toList());
+            return new SpriteView(s,selected,active,online,s.level()+1,SpriteRules.tier(s.level()),s.level()<14?1:s.level()<49?2:3,SpriteRules.points(s.level()),
                 java.util.stream.IntStream.range(0,3).mapToObj(i->SpriteRules.unlocked(s.level(),i)).toList(),
-                java.util.stream.IntStream.range(0,3).mapToObj(i->SpriteRules.ultimate(s.level(),i)).toList(),rules.sprite(s.config()),rules.perks(),harness);
+                java.util.stream.IntStream.range(0,3).mapToObj(i->SpriteRules.ultimate(s.level(),i)).toList(),rules.sprite(s.config()),rules.perks(),harness,live);
         }).toList();
         return new KnightView(name,username,gm,"No guild",online,p,definitions,sprites);
     }
@@ -77,7 +83,7 @@ final class AdminViews {
             String ref=rules.item(e.config()).get("accessory");var a=ref==null?null:rules.accessory(ref);
             if(a==null||a.remove()||rules.accessoryModel(ref)==null||a.location().startsWith(helm?"ARMOR_":"HELM_")
                     ||a.blocks().stream().anyMatch(rules.blockers(config)::contains))continue;
-            result.putIfAbsent(ref,new Accessory(ref,accounts.catalog().displayName(e),a.location(),a.blocks()));
+            result.putIfAbsent(ref,new Accessory(ref,accounts.catalog().displayName(e),a.location(),a.blocks(),e.config()));
         }
         return List.copyOf(result.values());
     }
@@ -86,7 +92,14 @@ final class AdminViews {
         var variants=p.optional("variants").isBlank()?List.<String>of():Arrays.stream(p.text("variants").split("\n")).toList();
         var modifiers=new ItemModifiers(p.integer("level"),Float.parseFloat(p.text("heat")),variants);
         modifiers.validate(e,accounts.townRules());
-        return Map.of("valid",true,"displayedLevel",modifiers.level()+1,"heat",modifiers.heat(),"stats",stats(e,modifiers));
+        var compatible=new ArrayList<String>();
+        for(String candidate:accounts.townRules().availableVariants(TownCatalog.itemGroup(e))) {
+            if(variants.contains(candidate)){compatible.add(candidate);continue;}
+            var proposed=new ArrayList<>(variants);proposed.add(candidate);
+            try{accounts.townRules().validateVariants(TownCatalog.itemGroup(e),proposed);compatible.add(candidate);}
+            catch(IOException invalid){/* Candidate conflicts with the authoritative family/count rules. */}
+        }
+        return Map.of("valid",true,"displayedLevel",modifiers.level()+1,"heat",modifiers.heat(),"stats",stats(e,modifiers),"compatibleVariants",compatible);
     }
     private Map<String,Float> stats(ItemCatalog.Entry e,ItemModifiers modifiers) {
         String prefix="gear."+e.config()+".";

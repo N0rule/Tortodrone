@@ -111,3 +111,7 @@ export function itemTile(def, item, onClick) {
         );
     return root;
 }
+
+export function variantName(path) {
+    return path.split('/').at(-1).replaceAll('_', ' ');
+}

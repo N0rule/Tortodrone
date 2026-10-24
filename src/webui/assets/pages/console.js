@@ -4,6 +4,11 @@ import { edit, field } from '../components/dialog.js';
 import { logStream } from '../components/log-stream.js';
 const history = [],
     outputHistory = [];
+let commandDraft = '';
+export function reset() {
+    history.length = outputHistory.length = 0;
+    commandDraft = '';
+}
 export async function mount(ctx) {
     const metadata = await ctx.request('console'),
         node = el('div', null, 'stack'),
@@ -14,7 +19,7 @@ export async function mount(ctx) {
     output.setAttribute('aria-label', 'Command results');
     output.setAttribute('aria-live', 'polite');
     const form = el('form', null, 'command-form'),
-        command = input('Command', '', 'text', {
+        command = input('Command', commandDraft, 'text', {
             maxLength: 128,
             required: true,
             autocomplete: 'off',
@@ -67,6 +72,9 @@ export async function mount(ctx) {
         if (auto) output.scrollTop = output.scrollHeight;
         text(feedback, 'Command completed');
     }
+    command.oninput = () => {
+        commandDraft = command.value;
+    };
     command.onkeydown = (event) => {
         if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
             event.preventDefault();
@@ -76,6 +84,7 @@ export async function mount(ctx) {
                 Math.min(history.length, index + (event.key === 'ArrowUp' ? -1 : 1))
             );
             command.value = index === history.length ? draft : history[index];
+            commandDraft = command.value;
             command.setSelectionRange(command.value.length, command.value.length);
         }
     };
@@ -100,7 +109,7 @@ export async function mount(ctx) {
                 'This command changes server state.',
                 (result) => {
                     record(value, result);
-                    if (command.value.trim() === value) command.value = '';
+                    if (command.value.trim() === value) command.value = commandDraft = '';
                 }
             );
             return;
@@ -112,7 +121,7 @@ export async function mount(ctx) {
             const result = await api.consoleCommand(value);
             if (!ctx.alive()) return;
             record(value, result);
-            if (command.value.trim() === value) command.value = '';
+            if (command.value.trim() === value) command.value = commandDraft = '';
         } catch (error) {
             text(feedback, error.message);
             ctx.report(error);
@@ -123,7 +132,18 @@ export async function mount(ctx) {
     };
     node.append(
         toolbar(
-            button('Help', async () => record('help', await api.consoleCommand('help'))),
+            button('Help', async () => {
+                if (pending) return;
+                pending = true;
+                run.disabled = true;
+                try {
+                    const result = await api.consoleCommand('help');
+                    if (ctx.alive()) record('help', result);
+                } finally {
+                    pending = false;
+                    run.disabled = false;
+                }
+            }),
             scroll,
             button('Clear results', () => {
                 outputHistory.length = 0;
@@ -146,8 +166,14 @@ export async function mount(ctx) {
     );
     async function refresh() {
         if (!stream.paused) stream.update(await ctx.request('logs'));
-        text(feedback, pending ? 'Executing…' : 'Connected');
     }
     await refresh();
-    return { node, refresh, interval: 3000 };
+    return {
+        node,
+        refresh,
+        interval: 3000,
+        dispose() {
+            commandDraft = command.value;
+        }
+    };
 }

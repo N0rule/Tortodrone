@@ -14,7 +14,7 @@ import {
     report
 } from '../ui.js';
 import { openDialog, edit, field } from './dialog.js';
-import { itemLine, currency } from './items.js';
+import { itemLine, icon, variantName } from './items.js';
 import { itemPicker } from './item-picker.js';
 
 export function modifierControls(def, item) {
@@ -51,8 +51,7 @@ export function modifierControls(def, item) {
     for (const path of [...new Set([...def.variants, ...selected])]) {
         const check = input(path, selected.has(path), 'checkbox');
         check.dataset.variant = path;
-        if (!def.variants.includes(path)) check.disabled = true;
-        const row = label(path.replace(/^Variant\//, '').replaceAll('/', ' › '), check);
+        const row = label(variantName(path), check);
         row.title = path;
         choices.append(row);
         checkboxes.push(check);
@@ -66,7 +65,7 @@ export function modifierControls(def, item) {
         for (const row of choices.children)
             row.hidden = !row.textContent.toLowerCase().includes(search.value.toLowerCase());
     };
-    if (def.variants.length) {
+    if (checkboxes.length) {
         const uv = el('section');
         uv.append(
             el('h3', 'Unique Variants'),
@@ -83,12 +82,27 @@ export function modifierControls(def, item) {
     node.append(current, preview, valid);
     let generation = 0,
         timer,
-        disposed = false;
+        disposed = false,
+        request;
     const values = () => ({
         level: def.progression ? Number(level.value) - 1 : 0,
         heat: def.progression ? Number(heatInput.value) : 0,
         variants: [...selected].join('\n')
     });
+    const initial = JSON.stringify(values());
+    const baseline = el('div', null, 'draft-preview');
+    if (item) {
+        baseline.append(el('h3', 'Current stats'));
+        node.insertBefore(baseline, preview);
+    }
+    let currentStats;
+    const original = item
+        ? {
+              level: item.level,
+              heat: item.heatProgress,
+              variants: item.variants.map((v) => v.name).join('\n')
+          }
+        : values();
     function update() {
         const max = +level.value >= def.levels;
         if (max) {
@@ -114,27 +128,48 @@ export function modifierControls(def, item) {
                       bar
                   ]
                 : []),
-            ...[...selected].map((v) => badge(v.replace(/^Variant\//, ''), 'uv'))
+            ...[...selected].map((v) => badge(variantName(v), 'uv'))
         );
         checkboxes.forEach((c) => {
-            c.disabled =
-                !def.variants.includes(c.dataset.variant) || (selected.size >= 3 && !c.checked);
+            c.disabled = !c.checked;
         });
         const id = ++generation;
         clearTimeout(timer);
+        request?.abort();
+        request = new AbortController();
+        const signal = request.signal;
         text(valid, 'Checking draft…');
         timer = setTimeout(async () => {
             try {
-                const result = await api.request('item-preview', {
-                    config: def.config,
-                    ...values()
-                });
+                const [result, before] = await Promise.all([
+                    api.request('item-preview', { config: def.config, ...values() }, false, signal),
+                    currentStats ||
+                        api
+                            .request(
+                                'item-preview',
+                                { config: def.config, ...original },
+                                false,
+                                signal
+                            )
+                            .catch(() => null)
+                ]);
                 if (!disposed && id === generation) {
                     text(valid, 'Draft is valid.');
                     valid.className = 'muted';
+                    currentStats = before;
+                    if (item)
+                        baseline.replaceChildren(
+                            el('h3', 'Current stats'),
+                            statFacts(before?.stats)
+                        );
+                    const compatible = new Set(result.compatibleVariants);
+                    checkboxes.forEach((c) => {
+                        c.disabled = !c.checked && !compatible.has(c.dataset.variant);
+                    });
                     const stats = Object.entries(result.stats || {});
                     if (stats.length)
                         preview.append(
+                            el('h3', 'Draft stats'),
                             facts(
                                 stats.map(([name, value]) => [
                                     name.replaceAll('-', ' ').replaceAll('.', ' · '),
@@ -144,8 +179,13 @@ export function modifierControls(def, item) {
                         );
                 }
             } catch (error) {
-                if (!disposed && id === generation) {
-                    text(valid, 'Draft is not valid. Check level, Heat and UV compatibility.');
+                if (!disposed && id === generation && error.name !== 'AbortError') {
+                    checkboxes.forEach((c) => {
+                        c.disabled =
+                            !c.checked &&
+                            (!def.variants.includes(c.dataset.variant) || selected.size >= 3);
+                    });
+                    text(valid, error.message || 'Check level, Heat and UV compatibility.');
                     valid.className = 'error';
                 }
             }
@@ -163,17 +203,29 @@ export function modifierControls(def, item) {
     return {
         node,
         values,
+        isDirty: () => initial !== JSON.stringify(values()),
         validate: () => api.request('item-preview', { config: def.config, ...values() }),
         dispose() {
             disposed = true;
             generation++;
+            request?.abort();
             clearTimeout(timer);
         }
     };
 }
+function statFacts(stats) {
+    const entries = Object.entries(stats || {});
+    return entries.length
+        ? facts(entries.map(([k, v]) => [k.replaceAll('-', ' ').replaceAll('.', ' · '), v]))
+        : el('small', 'No calculated stats available for this item.');
+}
 export async function inspectItem(def, item, fixed, writable = false) {
     const node = el('div', null, 'stack');
     node.append(itemLine(def, item));
+    const attached = [item.accessory, ...item.additionalAccessories].filter(Boolean),
+        accessoryView = el('div', null, 'item-grid'),
+        inspection = new AbortController();
+    let disposed = false;
     node.append(
         facts([
             ['Category', def?.category],
@@ -190,36 +242,148 @@ export async function inspectItem(def, item, fixed, writable = false) {
                     : `Equipped slot ${item.equippedSlot}`
             ],
             ['Binding', item.bound ? 'Bound' : item.bindOnEquip ? 'Binds on equip' : 'Unbound'],
+            ['Cursed', item.cursed ? 'Yes' : 'No'],
+            [
+                'Protection',
+                [
+                    item.starter ? 'Starter item' : '',
+                    item.permanent ? 'Permanent item' : '',
+                    def?.locked ? 'Locked item' : ''
+                ]
+                    .filter(Boolean)
+                    .join(', ') || 'Standard item'
+            ],
             [
                 'Expiration',
                 item.expiresAt ? new Date(item.expiresAt).toLocaleString() : 'Permanent'
             ],
-            [
-                'Accessories',
-                [item.accessory, ...item.additionalAccessories].filter(Boolean).join(', ') || 'None'
-            ]
+            ['Accessories', attached.length ? `${attached.length} attached` : 'None']
         ])
     );
+    if (attached.length) {
+        node.append(accessoryView);
+        const render = (options) => {
+            accessoryView.replaceChildren(
+                ...attached.map((config) => {
+                    const definition = options.find((a) => a.config === config),
+                        tile = el('div', null, 'draft-preview');
+                    tile.append(
+                        icon(definition?.iconConfig),
+                        el('strong', definition?.name || config.split('/').at(-1))
+                    );
+                    if (definition)
+                        tile.append(
+                            el('small', definition.location.replaceAll('_', ' ').toLowerCase())
+                        );
+                    return tile;
+                })
+            );
+        };
+        render([]);
+        api.request('accessories', { config: item.config }, false, inspection.signal)
+            .then((options) => {
+                if (!disposed) render(options);
+            })
+            .catch(() => {});
+    }
     let modifiers;
+    const itemName = def?.name || item.config.split('/').at(-1);
     if (writable && def && (def.progression || def.variants.length)) {
         modifiers = modifierControls(def, item);
         node.append(modifiers.node);
-    } else for (const v of item.variants) node.append(badge(v.name, 'uv'));
+    } else {
+        for (const v of item.variants) node.append(badge(variantName(v.name), 'uv'));
+        if (def) {
+            const stats = el('div');
+            node.append(stats);
+            api.request(
+                'item-preview',
+                {
+                    config: item.config,
+                    level: item.level,
+                    heat: item.heatProgress,
+                    variants: item.variants.map((v) => v.name).join('\n')
+                },
+                false,
+                inspection.signal
+            )
+                .then((result) => {
+                    if (!disposed) stats.replaceChildren(statFacts(result.stats));
+                })
+                .catch(() => {});
+        }
+    }
     if (writable) {
         const accessory = button('Edit accessories', async () => {
             const options = await api.request('accessories', { config: item.config });
-            edit(
-                'Accessories · ' + def.name,
-                'item-accessory',
-                [
-                    field('accessory', 'Accessory', '', 'text', [
-                        ['', 'Remove all attached accessories'],
-                        ...options.map((a) => [a.config, `${a.name} · ${a.location}`])
-                    ])
-                ],
-                { ...fixed, itemId: item.id },
-                'Adding an accessory preserves existing accessories. The server checks occupied locations and blocked combinations.'
+            const content = el('div', null, 'stack'),
+                grid = el('div', null, 'item-grid'),
+                filter = input('Search accessories'),
+                selection = el('p', 'Choose an accessory to attach.');
+            let selected = null;
+            for (const option of options) {
+                const tile = button(
+                    '',
+                    () => {
+                        selected = option.config;
+                        for (const child of grid.children)
+                            child.setAttribute('aria-pressed', child === tile);
+                        text(
+                            selection,
+                            `Attach ${option.name} at ${option.location.replaceAll('_', ' ').toLowerCase()}.`
+                        );
+                    },
+                    'item-tile'
+                );
+                tile.append(
+                    icon(option.iconConfig),
+                    el('strong', option.name),
+                    el('small', option.location.replaceAll('_', ' ').toLowerCase())
+                );
+                tile.dataset.search = option.name.toLowerCase();
+                tile.setAttribute('aria-pressed', 'false');
+                grid.append(tile);
+            }
+            const remove = button('Remove all attached accessories', () => {
+                selected = '';
+                for (const child of grid.children) child.setAttribute('aria-pressed', 'false');
+                text(selection, 'Remove all attached accessories.');
+            });
+            remove.disabled = !item.accessory && !item.additionalAccessories.length;
+            filter.oninput = () => {
+                for (const child of grid.children)
+                    child.hidden = !(child.dataset.search || '').includes(
+                        filter.value.toLowerCase()
+                    );
+            };
+            content.append(
+                el(
+                    'p',
+                    'Existing accessories are preserved when attaching. Occupied locations and blocked combinations are checked on save.'
+                ),
+                filter,
+                grid,
+                remove,
+                selection
             );
+            if (!options.length)
+                grid.append(el('p', 'No compatible accessories in the current catalogue.'));
+            openDialog({
+                title: 'Accessories · ' + itemName,
+                content,
+                target: fixed.worldId,
+                revision: fixed.revision,
+                isDirty: () => selected !== null,
+                onSubmit: async () => {
+                    if (selected === null)
+                        throw new Error('Select an accessory or choose removal.');
+                    await api.change('item-accessory', {
+                        ...fixed,
+                        itemId: item.id,
+                        accessory: selected
+                    });
+                }
+            });
         });
         accessory.disabled = !['HELM', 'ARMOR', 'HELM_COSTUME', 'ARMOR_COSTUME'].includes(
             item.slot
@@ -229,7 +393,7 @@ export async function inspectItem(def, item, fixed, writable = false) {
                 accessory,
                 button('Quantity / remove', () =>
                     edit(
-                        'Quantity · ' + def.name,
+                        'Quantity · ' + itemName,
                         'item-quantity',
                         [
                             field('quantity', 'Quantity (0 removes)', item.count, 'number', null, {
@@ -256,7 +420,12 @@ export async function inspectItem(def, item, fixed, writable = false) {
         revision: fixed.revision,
         submit: modifiers ? 'Save gear' : 'Close',
         notifySaved: !!modifiers,
-        dispose: () => modifiers?.dispose(),
+        dispose: () => {
+            disposed = true;
+            inspection.abort();
+            modifiers?.dispose();
+        },
+        isDirty: () => modifiers?.isDirty() || false,
         onSubmit: async () => {
             if (modifiers) {
                 await modifiers.validate();
@@ -279,7 +448,7 @@ export function grantItem(fixed) {
         expiry = input('Expiration in days', 0, 'number', {
             min: 0,
             step: 1,
-            max: 36500,
+            max: 3650,
             required: true
         });
     const picker = itemPicker(
@@ -307,6 +476,8 @@ export function grantItem(fixed) {
         submit: 'Confirm grant',
         target: fixed.worldId,
         revision: fixed.revision,
+        isDirty: () =>
+            !!selected || quantity.value !== '1' || bound.checked || expiry.value !== '0',
         dispose: () => {
             picker.dispose();
             modifiers?.dispose();
@@ -333,7 +504,9 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         selection = el('div'),
         form = el('div', null, 'form-grid'),
         controls = new Map();
-    let selected;
+    let selected,
+        disposed = false;
+    const initial = new Map();
     const picker = itemPicker(
         (def) => {
             selected = def;
@@ -344,12 +517,14 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
     if (selectedConfig)
         api.request('item', { config: selectedConfig })
             .then((def) => {
-                if (!selected) {
+                if (!disposed && !selected) {
                     selected = def;
                     selection.replaceChildren(itemLine(def));
                 }
             })
-            .catch(report);
+            .catch((error) => {
+                if (!disposed) report(error);
+            });
     for (const f of fields) {
         const c = f.options
             ? select(f.title, f.options, f.value)
@@ -357,6 +532,7 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         c.required =
             f.constraints.required ?? (f.type !== 'checkbox' && f.key !== 'referencePrice');
         controls.set(f.key, c);
+        initial.set(f.key, f.type === 'checkbox' ? c.checked : c.value);
         form.append(label(f.title, c));
     }
     node.append(selection, picker.node, form);
@@ -366,7 +542,19 @@ export function itemForm(title, route, fields, fixed = {}, selectedConfig = '') 
         target: route,
         revision: fixed.revision,
         submit: 'Confirm changes',
-        dispose: () => picker.dispose(),
+        isDirty: () =>
+            (selected?.config || selectedConfig) !== selectedConfig ||
+            fields.some(
+                (f) =>
+                    initial.get(f.key) !==
+                    (f.type === 'checkbox'
+                        ? controls.get(f.key).checked
+                        : controls.get(f.key).value)
+            ),
+        dispose: () => {
+            disposed = true;
+            picker.dispose();
+        },
         onSubmit: async () => {
             if (!selected) throw new Error('Select an item first.');
             const values = { ...fixed, config: selected.config };

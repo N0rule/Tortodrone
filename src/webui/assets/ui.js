@@ -9,9 +9,15 @@ export function text(node, value) {
     const next = String(value ?? '—');
     if (node.textContent !== next) node.textContent = next;
 }
-export function button(label, action, className = 'secondary') {
+export function button(label, action, className = 'secondary', available) {
     const node = el('button', label, className);
     node.type = 'button';
+    if (available) {
+        node.refreshAvailability = () => {
+            node.disabled = !available();
+        };
+        node.refreshAvailability();
+    }
     node.addEventListener('click', async () => {
         try {
             await action();

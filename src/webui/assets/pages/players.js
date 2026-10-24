@@ -18,13 +18,17 @@ export async function mount(ctx) {
                 ? (get) => [
                       button(
                           'Account',
-                          () => get().username && ctx.go('accounts', { username: get().username })
+                          () => ctx.go('accounts', { username: get().username }),
+                          'secondary',
+                          () => !!get().username
                       ),
                       button(
                           'Knight',
                           () =>
                               get().knight &&
-                              ctx.go('knights', { username: get().username, knight: get().knight })
+                              ctx.go('knights', { username: get().username, knight: get().knight }),
+                          'secondary',
+                          () => !!get().username && !!get().knight
                       ),
                       ...(ctx.moderator
                           ? [

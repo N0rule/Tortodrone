@@ -387,6 +387,14 @@ public final class SceneSimulation {
     }
     /** Selection/subscription sees the same scene-owned entities without advancing movement. */
     public synchronized Snapshot snapshot(){return capture(SceneClock.now(),null);}
+    /** Read one existing membership without ticking the scene or creating an instance. */
+    public record Companion(int selectedSprite,ScenePetState deployed,int observedAt) { }
+    public synchronized Companion companion(int knight) {
+        var member=members.get(knight);
+        if(member==null||member.detached)return null;
+        var actor=member.petActor();
+        return new Companion(member.sprite==null?0:member.sprite.id(),actor==null?null:actor.pet(),SceneClock.now());
+    }
     public synchronized int playerCount(){return members.size();}
     public synchronized long tickCount(){return tickCount;}
     private Snapshot capture(int stamp,Snapshot baseline) {

@@ -1,5 +1,18 @@
 import { el, text } from '../ui.js';
 const NS = 'http://www.w3.org/2000/svg';
+export function nearestSample(samples, time) {
+    if (!samples.length) return -1;
+    let low = 0,
+        high = samples.length - 1;
+    while (low < high) {
+        const middle = Math.floor((low + high) / 2);
+        if (samples[middle].time < time) low = middle + 1;
+        else high = middle;
+    }
+    return low > 0 && Math.abs(samples[low - 1].time - time) <= Math.abs(samples[low].time - time)
+        ? low - 1
+        : low;
+}
 function svg(tag, attrs = {}) {
     const node = document.createElementNS(NS, tag);
     for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, v);
@@ -31,7 +44,8 @@ export function chart(title, unit, series) {
     graph.append(lines, ...paths, cursor);
     node.append(heading, graph, readout);
     let samples = [],
-        index = 0;
+        index = 0,
+        inspecting = false;
     function inspect(at) {
         index = Math.max(0, Math.min(samples.length - 1, at));
         const s = samples[index];
@@ -57,12 +71,24 @@ export function chart(title, unit, series) {
         cursor.setAttribute('visibility', 'visible');
     }
     graph.onpointermove = (event) => {
-        const rect = graph.getBoundingClientRect();
-        inspect(Math.round(((event.clientX - rect.left) / rect.width) * (samples.length - 1)));
+        if (!samples.length) return;
+        inspecting = true;
+        const x = new DOMPoint(event.clientX, event.clientY).matrixTransform(
+            graph.getScreenCTM().inverse()
+        ).x;
+        const time =
+            samples[0].time +
+            Math.max(0, Math.min(1, (x - 45) / 535)) * (samples.at(-1).time - samples[0].time);
+        inspect(nearestSample(samples, time));
+    };
+    graph.onpointerleave = graph.onblur = () => {
+        inspecting = false;
+        inspect(samples.length - 1);
     };
     graph.onkeydown = (event) => {
         if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) {
             event.preventDefault();
+            inspecting = true;
             inspect(
                 event.key === 'Home'
                     ? 0
@@ -75,6 +101,7 @@ export function chart(title, unit, series) {
     return {
         node,
         update(values) {
+            const inspectedTime = samples[index]?.time;
             samples = values;
             const all = series
                 .flatMap((s) => values.map((v, i) => s.value(v, i, values)))
@@ -136,7 +163,12 @@ export function chart(title, unit, series) {
             if (!all.length) {
                 text(readout, 'No measured samples available.');
                 cursor.setAttribute('visibility', 'hidden');
-            } else inspect(values.length - 1);
+            } else
+                inspect(
+                    inspecting && inspectedTime != null
+                        ? nearestSample(values, inspectedTime)
+                        : values.length - 1
+                );
         }
     };
 }

@@ -4,9 +4,16 @@ import { el, button, input, select, toolbar, text } from '../ui.js';
 export class DataTable {
     constructor(
         columns,
-        { key = (row) => row.id, actions, filters = [], pageSize = 30, search = true } = {}
+        {
+            key = (row) => row.id,
+            actions,
+            filters = [],
+            pageSize = 30,
+            search = true,
+            presentationKey = () => ''
+        } = {}
     ) {
-        Object.assign(this, { columns, key, actions, filters, pageSize });
+        Object.assign(this, { columns, key, actions, filters, pageSize, presentationKey });
         this.rows = [];
         this.cache = new Map();
         this.page = 1;
@@ -124,13 +131,15 @@ export class DataTable {
                 if (this.actions) {
                     const td = el('td');
                     const actions = this.actions(() => entry.record);
+                    entry.actions = actions;
                     td.append(toolbar(...actions));
                     row.append(td);
                 }
                 this.cache.set(key, entry);
             }
             entry.record = record;
-            const signature = JSON.stringify(record);
+            for (const action of entry.actions || []) action.refreshAvailability?.();
+            const signature = JSON.stringify(record) + this.presentationKey(record);
             if (entry.signature !== signature) {
                 this.columns.forEach(([, fn], index) => {
                     const value = fn(record),

@@ -13,11 +13,19 @@ export function openDialog({
     target,
     after,
     dispose,
+    isDirty,
     notifySaved = true
 }) {
     const dialog = $('#dialog'),
         form = $('#editor');
     if (dialog.open) {
+        if (
+            active?.pending ||
+            (active?.isDirty?.() && !window.confirm('Discard the unsaved changes in this editor?'))
+        ) {
+            dispose?.();
+            return false;
+        }
         cleanup?.();
         cleanup = null;
         dialog.close();
@@ -29,45 +37,73 @@ export function openDialog({
     $('#submit-dialog').textContent = submit;
     $('#submit-dialog').disabled = false;
     $('#fields').replaceChildren(content);
-    active = { revision, target };
+    const state = { revision, target, isDirty, pending: false, conflicted: false };
+    active = state;
     cleanup = dispose;
-    let pending = false;
     form.onsubmit = async (event) => {
         event.preventDefault();
-        if (pending) return;
-        pending = true;
+        if (state.pending || state.conflicted) return;
+        state.pending = true;
         $('#submit-dialog').disabled = true;
         $('#dialog-error').textContent = '';
         try {
             const result = await onSubmit(form);
+            if (active !== state) return;
             dialog.close();
             if (notifySaved) changed();
             if (after) await after(result);
         } catch (error) {
+            if (active !== state) return;
             $('#dialog-error').textContent =
                 error.status === 409
                     ? error.message +
                       ' Your draft is preserved. Close and reopen this record to use its latest revision.'
                     : error.message;
         } finally {
-            pending = false;
-            $('#submit-dialog').disabled = false;
+            state.pending = false;
+            if (active === state) $('#submit-dialog').disabled = state.conflicted;
         }
     };
     $('#close-dialog').onclick = $('#cancel-dialog').onclick = () => {
-        if (!pending) dialog.close();
+        if (
+            !state.pending &&
+            (!isDirty?.() || window.confirm('Discard the unsaved changes in this editor?'))
+        )
+            dialog.close();
     };
     dialog.oncancel = (event) => {
-        if (pending) event.preventDefault();
+        if (
+            state.pending ||
+            (isDirty?.() && !window.confirm('Discard the unsaved changes in this editor?'))
+        )
+            event.preventDefault();
     };
     dialog.onclose = () => {
         if (!dialog.open) {
             active = null;
             cleanup?.();
             cleanup = null;
+            $('#fields').replaceChildren();
+            form.onsubmit = null;
         }
     };
     dialog.showModal();
+    return true;
+}
+export function dialogDirty() {
+    return !!active?.isDirty?.();
+}
+export function closeDialog(force = false) {
+    const dialog = $('#dialog');
+    if (!dialog.open) return true;
+    if (
+        !force &&
+        (active?.pending ||
+            (dialogDirty() && !window.confirm('Discard the unsaved changes in this editor?')))
+    )
+        return false;
+    dialog.close();
+    return true;
 }
 export function conflict(target, revision) {
     if (
@@ -80,6 +116,7 @@ export function conflict(target, revision) {
     $('#dialog-conflict').textContent =
         'This record changed while you were editing. Your draft is preserved; reopen the record before saving.';
     $('#dialog-conflict').hidden = false;
+    active.conflicted = true;
     $('#submit-dialog').disabled = true;
 }
 export const field = (key, title, value = '', type = 'text', options, constraints = {}) => ({
@@ -93,6 +130,7 @@ export const field = (key, title, value = '', type = 'text', options, constraint
 export function edit(title, route, fields = [], fixed = {}, description = '', after) {
     const content = el('div', null, 'form-grid'),
         controls = new Map();
+    const initial = new Map();
     for (const f of fields) {
         const control = f.options
             ? select(f.title, f.options, f.value)
@@ -110,6 +148,7 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
         if (f.type === 'textarea') row.classList.add('wide');
         content.append(row);
         controls.set(f.key, control);
+        initial.set(f.key, f.type === 'checkbox' ? control.checked : control.value);
     }
     openDialog({
         title,
@@ -117,6 +156,14 @@ export function edit(title, route, fields = [], fixed = {}, description = '', af
         description,
         revision: fixed.revision,
         target: fixed.worldId ?? route,
+        isDirty: () =>
+            fields.some(
+                (f) =>
+                    initial.get(f.key) !==
+                    (f.type === 'checkbox'
+                        ? controls.get(f.key).checked
+                        : controls.get(f.key).value)
+            ),
         onSubmit: async () => {
             const values = { ...fixed };
             for (const f of fields) {

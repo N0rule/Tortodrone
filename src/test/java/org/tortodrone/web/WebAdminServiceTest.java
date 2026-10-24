@@ -45,10 +45,20 @@ public final class WebAdminServiceTest {
                 var validPreview=(Map<?,?>)service.read("item-preview",new AdminService.Input(helmPreview));
                 check(validPreview.get("heat").equals(0.375f)&&validPreview.get("displayedLevel").equals(1),"precise heat and zero-based level conversion");
                 check(validPreview.get("stats").equals(helmDefinition.stats()),"base preview uses the same authoritative stats");
+                check(validPreview.get("compatibleVariants").equals(helmDefinition.variants()),"unmodified gear offers every authoritative UV choice");
                 helmPreview.put("level",String.valueOf(helmDefinition.levels()-1));refused(()->service.read("item-preview",new AdminService.Input(helmPreview)));
                 helmPreview.put("level","0");
                 if(!helmDefinition.variants().isEmpty()) {
-                    String variant=helmDefinition.variants().getFirst();helmPreview.put("variants",variant);service.read("item-preview",new AdminService.Input(helmPreview));
+                    String variant=helmDefinition.variants().getFirst();helmPreview.put("variants",variant);
+                    var chosenPreview=(Map<?,?>)service.read("item-preview",new AdminService.Input(helmPreview));
+                    var compatible=(List<?>)chosenPreview.get("compatibleVariants");
+                    check(compatible.contains(variant),"selected UV remains removable in the picker");
+                    for(String candidate:helmDefinition.variants())if(!candidate.equals(variant)) {
+                        boolean accepted=true;
+                        try{content.town().validateVariants(org.tortodrone.town.TownCatalog.itemGroup(content.items().find(helmConfig)),List.of(variant,candidate));}
+                        catch(IOException rejected){accepted=false;}
+                        check(compatible.contains(candidate)==accepted,"picker compatibility agrees with save validation");
+                    }
                     helmPreview.put("variants",variant+"\n"+variant);refused(()->service.read("item-preview",new AdminService.Input(helmPreview)));
                     preview.put("level","0");preview.put("variants",variant);refused(()->service.read("item-preview",new AdminService.Input(preview)));
                 }
@@ -92,7 +102,7 @@ public final class WebAdminServiceTest {
                 var sprites=accounts.worldProfile("Alice","Alice-Knight");
                 accounts.progress("Alice","Alice-Knight",3,2,1200,account,sprites.worldId(),"Drakon",sprites.revision());
                 view=(AdminViews.KnightView)service.read("knight-view",new AdminService.Input(Map.of("username","Alice","knight","Alice-Knight")));
-                check(view.sprites().size()==1&&view.sprites().getFirst().displayedLevel()==view.sprites().getFirst().state().level()+1&&view.sprites().getFirst().active()==null,"Sprite inspection exposes exact progression and unavailable live deployment");
+                check(view.sprites().size()==1&&view.sprites().getFirst().displayedLevel()==view.sprites().getFirst().state().level()+1&&Boolean.FALSE.equals(view.sprites().getFirst().active())&&view.sprites().getFirst().live()==null,"Sprite inspection exposes exact progression and offline deployment state");
                 check(view.sprites().getFirst().state().harness()==0&&view.sprites().getFirst().harness().config().equals("Iron Harness"),"implicit base harness matches native serialization and simulation");
             }
             System.out.println("PASS: WebUI domain actions, ownership, revision guards, inventory/accessory rollback, Depot, auctions and atomic News validation");

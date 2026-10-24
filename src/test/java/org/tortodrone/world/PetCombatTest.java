@@ -18,7 +18,15 @@ public final class PetCombatTest {
         var profile=new WorldProfile(10,1,1,0,0,1,List.of(),KnightProgress.RECRUIT,new TownState(List.of(),List.of(sprite),7,List.of(),List.of()));
         var member=instance.simulation().join(actor,snapshot->{});
         try{
-            member.combat(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")),profile);member.equipment(profile);member.enter();
+            member.combat(WeaponCatalog.load(org.tortodrone.support.ContentFixture.path("combat/weapons.tsv")),profile);member.equipment(profile);
+            check(instance.simulation().companion(10).selectedSprite()==7&&instance.simulation().companion(10).deployed()==null,"selected is distinct from deployed before scene entry");
+            member.enter();
+            synchronized(instance.simulation()) {
+                long ticks=instance.simulation().tickCount();var presence=instance.simulation().companion(10);
+                check(presence.deployed()!=null&&presence.deployed().knight()==10&&presence.deployed().sprite().id()==7,"read-only inspection finds the actual owned scene companion");
+                check(instance.simulation().tickCount()==ticks,"inspection does not advance simulation");
+            }
+            check(scenes.companion(instance.oid(),10).deployed()!=null&&scenes.companion(instance.oid(),11)==null&&scenes.companion(-1,10)==null,"registry inspection finds only existing owned memberships");
             var initial=instance.simulation().snapshot();var companion=initial.actors().stream().filter(a->a.pet()!=null).findFirst().orElseThrow();
             check(!companion.player()&&companion.pet().knight()==10&&initial.players().size()==1,"pet is owned by its knight and never becomes a player occupant");
             stamp=SceneClock.now();check(member.input(stamp,0,0,128,stamp,stamp,System.nanoTime()/1_000_000),"native skill intent accepted");
@@ -49,6 +57,7 @@ public final class PetCombatTest {
             check(instance.simulation().snapshot().actors().stream().filter(a->a.pet()!=null).allMatch(a->a.pet().nextSkill().get(1)>SceneClock.now()),"locked skill cannot start or consume a cooldown");
         }finally{member.close();}
         check(instance.simulation().snapshot().actors().stream().noneMatch(a->a.pet()!=null||a.projectile()!=null&&a.projectile().faction()==10),"departure removes companion and its projectiles");scenes.release(instance,10);
+        check(scenes.companion(instance.oid(),10)==null,"departure invalidates live companion inspection");
         System.out.println("PASS: dungeon companion, skill command, native rearm/follow timing, cooldown, locked skill and owned cleanup");
     }
 }

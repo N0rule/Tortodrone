@@ -13,7 +13,8 @@ export function itemPicker(onChoose, { grantable = false } = {}) {
     let page = 1,
         generation = 0,
         timer,
-        selected = null;
+        selected = null,
+        request;
     const previous = button('Previous', () => {
             page--;
             return load();
@@ -25,14 +26,34 @@ export function itemPicker(onChoose, { grantable = false } = {}) {
     const paging = toolbar(count, previous, next);
     node.append(toolbar(search, categories), grid, paging);
     async function load() {
+        clearTimeout(timer);
         const id = ++generation;
-        const result = await api.request('catalogue', {
-            search: search.value,
-            category: categories.value,
-            page,
-            size: 24
-        });
+        request?.abort();
+        request = new AbortController();
+        previous.disabled = next.disabled = true;
+        grid.setAttribute('aria-busy', 'true');
+        let result;
+        try {
+            result = await api.request(
+                'catalogue',
+                {
+                    search: search.value,
+                    category: categories.value,
+                    page,
+                    size: 24
+                },
+                false,
+                request.signal
+            );
+        } catch (error) {
+            if (id !== generation || error.name === 'AbortError') return;
+            grid.setAttribute('aria-busy', 'false');
+            grid.replaceChildren(el('p', error.message, 'error'), button('Retry search', load));
+            text(count, 'Catalogue unavailable');
+            return;
+        }
         if (id !== generation) return;
+        grid.setAttribute('aria-busy', 'false');
         if (categories.options.length === 1)
             for (const name of result.categories) {
                 const o = el('option', name);
@@ -58,6 +79,7 @@ export function itemPicker(onChoose, { grantable = false } = {}) {
     }
     search.oninput = () => {
         generation++;
+        request?.abort();
         clearTimeout(timer);
         timer = setTimeout(() => {
             page = 1;
@@ -88,6 +110,7 @@ export function itemPicker(onChoose, { grantable = false } = {}) {
         node,
         dispose() {
             generation++;
+            request?.abort();
             clearTimeout(timer);
         }
     };

@@ -130,12 +130,17 @@ export async function mount(ctx) {
             ['Price', (p) => toolbar(currency('crowns', p.crowns), currency('energy', p.energy))]
         ],
         {
+            presentationKey: promotionState,
             actions: (get) => [
-                button('Cancel', () =>
-                    confirm('Cancel promotion #' + get().id, 'promotion-cancel', {
-                        ...fixed(),
-                        id: get().id
-                    })
+                button(
+                    'Cancel',
+                    () =>
+                        confirm('Cancel promotion #' + get().id, 'promotion-cancel', {
+                            ...fixed(),
+                            id: get().id
+                        }),
+                    'secondary',
+                    () => !get().cancelled
                 )
             ],
             filters: [

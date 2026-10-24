@@ -1,6 +1,6 @@
 import { api } from '../api.js';
 import { el, input, select, label, toolbar, button, panel, text, notify, report } from '../ui.js';
-import { openDialog } from '../components/dialog.js';
+import { openDialog, conflict as dialogConflict } from '../components/dialog.js';
 
 function schema(catalog) {
     return {
@@ -38,7 +38,8 @@ export async function mount(ctx) {
         pack = 0,
         slot = 'featured',
         dirty = false,
-        revision = data.revision;
+        revision = data.revision,
+        stale = false;
     const node = el('div', null, 'stack'),
         enabled = input('Enable News', draft.enabled, 'checkbox'),
         packs = select('News pack', [], ''),
@@ -66,6 +67,12 @@ export async function mount(ctx) {
         dimensions = el('small'),
         error = el('p', null, 'error'),
         title = el('h2');
+    const removeSpotlight = button('Remove spotlight', () => {
+        if (slot === 'featured' || !draft.packs[pack]) return;
+        draft.packs[pack].spotlights[slot] = null;
+        mark();
+        showSlot();
+    });
     const fields = panel(
         '',
         title,
@@ -74,14 +81,7 @@ export async function mount(ctx) {
         label('Tooltip', tooltip),
         label('Link URL', url),
         label('Action', action),
-        toolbar(
-            button('Remove spotlight', () => {
-                if (slot === 'featured') return;
-                draft.packs[pack].spotlights[slot] = null;
-                mark();
-                showSlot();
-            })
-        ),
+        toolbar(removeSpotlight),
         error
     );
     fields.classList.add('stack');
@@ -92,15 +92,40 @@ export async function mount(ctx) {
     raw.className = 'mono';
     raw.maxLength = 60000;
     const advanced = el('details');
-    advanced.append(
-        el('summary', 'Advanced YAML'),
-        raw,
-        button('Review and save YAML', () => review('news-save', { yaml: raw.value }))
-    );
+    const saveYaml = button('Review and save YAML', () => review('news-save', { yaml: raw.value }));
+    raw.oninput = () => text(dirtyLabel, 'Unsaved YAML draft');
+    advanced.append(el('summary', 'Advanced YAML'), raw, saveYaml);
     const file = input('Upload News image', '', 'file', { accept: 'image/png,image/jpeg' });
     const save = button('Review and save News', () =>
         review('news-visual-save', { catalog: JSON.stringify(newsDocument(draft)) })
     );
+    const reload = button('Load latest News', async () => {
+        if (
+            isDirty() &&
+            !window.confirm('Discard the unsaved visual and YAML drafts and load the latest News?')
+        )
+            return;
+        accept(await ctx.request('news'));
+    });
+    const removePack = button('Remove pack', () => {
+        if (!draft.packs.length) return;
+        openDialog({
+            title: 'Remove pack ' + (pack + 1),
+            content: el(
+                'p',
+                'Removes this pack from your draft. Save News to publish this change.'
+            ),
+            submit: 'Remove from draft',
+            notifySaved: false,
+            onSubmit: async () => {
+                draft.packs.splice(pack, 1);
+                pack = Math.max(0, pack - 1);
+                mark();
+                updatePacks();
+                showSlot();
+            }
+        });
+    });
     node.append(
         toolbar(
             label('Enable News', enabled),
@@ -116,25 +141,8 @@ export async function mount(ctx) {
                 updatePacks();
                 showSlot();
             }),
-            button('Remove pack', () => {
-                if (!draft.packs.length) return;
-                openDialog({
-                    title: 'Remove pack ' + (pack + 1),
-                    content: el(
-                        'p',
-                        'Removes this pack from your draft. Save News to publish this change.'
-                    ),
-                    submit: 'Remove from draft',
-                    notifySaved: false,
-                    onSubmit: async () => {
-                        draft.packs.splice(pack, 1);
-                        pack = Math.max(0, pack - 1);
-                        mark();
-                        updatePacks();
-                        showSlot();
-                    }
-                });
-            }),
+            removePack,
+            reload,
             save,
             dirtyLabel
         ),
@@ -160,7 +168,10 @@ export async function mount(ctx) {
         dirty = true;
         text(dirtyLabel, 'Unsaved draft');
     }
+    const isDirty = () => dirty || raw.value !== data.yaml;
     function updatePacks() {
+        removePack.disabled = !draft.packs.length;
+        packs.disabled = !draft.packs.length;
         packs.replaceChildren(
             ...draft.packs.map((_, i) => {
                 const option = el('option', 'Pack ' + (i + 1));
@@ -198,15 +209,9 @@ export async function mount(ctx) {
             target.replaceChildren(img);
         }
     }
-    function showSlot() {
+    function renderImages() {
         const value = banner(),
             max = slot === 'featured' ? [570, 300] : [280, 190];
-        text(
-            title,
-            slot === 'featured'
-                ? 'Featured banner'
-                : slot[0].toUpperCase() + slot.slice(1) + ' spotlight'
-        );
         image.replaceChildren(
             ...[
                 ['', 'No image selected'],
@@ -220,6 +225,18 @@ export async function mount(ctx) {
             })
         );
         image.value = value?.image || '';
+    }
+    function showSlot() {
+        const value = banner(),
+            max = slot === 'featured' ? [570, 300] : [280, 190];
+        text(
+            title,
+            slot === 'featured'
+                ? 'Featured banner'
+                : slot[0].toUpperCase() + slot.slice(1) + ' spotlight'
+        );
+        renderImages();
+        removeSpotlight.disabled = slot === 'featured' || !value;
         tooltip.value = value?.tooltip || '';
         url.value = value?.url || '';
         action.value = value?.action || '';
@@ -254,9 +271,18 @@ export async function mount(ctx) {
                 value.action = action.value;
                 value.argument = '';
                 mark();
+                removeSpotlight.disabled = slot === 'featured' || !banner();
                 renderPreview();
                 if (control === image) {
                     const info = data.images.find((i) => i.image === image.value);
+                    text(
+                        error,
+                        image.value && !info
+                            ? 'Selected image is missing or invalid.'
+                            : !image.value
+                              ? 'Choose an image for this banner.'
+                              : ''
+                    );
                     text(
                         dimensions,
                         info
@@ -301,15 +327,34 @@ export async function mount(ctx) {
         }
     };
     function review(route, values) {
+        if (stale) return;
+        if (
+            route === 'news-visual-save' &&
+            raw.value !== data.yaml &&
+            !window.confirm('Saving the visual draft replaces the unsaved YAML draft. Continue?')
+        )
+            return;
+        if (
+            route === 'news-save' &&
+            dirty &&
+            !window.confirm('Saving YAML replaces the unsaved visual draft. Continue?')
+        )
+            return;
         const content = el('div');
         content.append(
             el(
                 'p',
-                `${draft.enabled ? 'Enable' : 'Disable'} Uplink News with ${draft.packs.length} pack(s).`
+                route === 'news-save'
+                    ? 'Review the YAML configuration below before saving.'
+                    : `${draft.enabled ? 'Enable' : 'Disable'} Uplink News with ${draft.packs.length} pack(s).`
             ),
             el('p', 'The game listener must be restarted to publish a new pack selection.', 'muted')
         );
-        if (route === 'news-visual-save') content.append(preview.cloneNode(true));
+        if (route === 'news-visual-save') {
+            const snapshot = preview.cloneNode(true);
+            for (const b of snapshot.querySelectorAll('button')) b.disabled = true;
+            content.append(snapshot);
+        } else content.append(el('pre', values.yaml));
         openDialog({
             title: 'Publish Uplink News configuration',
             content,
@@ -318,33 +363,45 @@ export async function mount(ctx) {
             submit: 'Save News',
             onSubmit: async () => {
                 const result = await api.change(route, { ...values, revision });
-                data = result;
-                revision = result.revision;
-                draft = schema(result.catalog);
-                dirty = false;
-                raw.value = result.yaml;
-                enabled.checked = draft.enabled;
-                pack = Math.min(pack, Math.max(0, draft.packs.length - 1));
-                text(dirtyLabel, 'Saved');
-                conflict.hidden = true;
-                save.disabled = false;
-                updatePacks();
-                showSlot();
+                accept(result);
             }
         });
+    }
+    function accept(latest) {
+        data = latest;
+        revision = latest.revision;
+        draft = schema(latest.catalog);
+        dirty = stale = false;
+        raw.value = latest.yaml;
+        enabled.checked = draft.enabled;
+        pack = Math.min(pack, Math.max(0, draft.packs.length - 1));
+        text(dirtyLabel, 'Saved');
+        conflict.hidden = true;
+        save.disabled = saveYaml.disabled = false;
+        updatePacks();
+        showSlot();
     }
     updatePacks();
     showSlot();
     async function refresh() {
         const latest = await ctx.request('news');
         if (latest.revision !== revision) {
-            conflict.hidden = false;
-            text(
-                conflict,
-                'News changed on the server. Your draft is preserved. Reload this page before saving against the latest revision.'
-            );
-            save.disabled = true;
+            dialogConflict('news', latest.revision);
+            if (!isDirty()) accept(latest);
+            else {
+                stale = true;
+                conflict.hidden = false;
+                text(
+                    conflict,
+                    'News changed on the server. Your draft is preserved. Use Load latest News to discard this draft and edit the current revision.'
+                );
+                save.disabled = saveYaml.disabled = true;
+            }
+        }
+        if (JSON.stringify(latest.images) !== JSON.stringify(data.images)) {
+            data.images = latest.images;
+            renderImages();
         }
     }
-    return { node, refresh, interval: 15000 };
+    return { node, refresh, isDirty, interval: 15000 };
 }

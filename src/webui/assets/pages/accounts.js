@@ -41,6 +41,7 @@ export async function mount(ctx) {
         const id = ++selection,
             account = rows.find((a) => a.username === selected);
         if (!account) {
+            detailSignature = null;
             detail.replaceChildren();
             return;
         }

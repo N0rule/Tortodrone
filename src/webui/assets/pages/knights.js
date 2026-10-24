@@ -12,13 +12,13 @@ import {
     tabs,
     text,
     heat,
-    number,
-    date
+    number
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict } from '../components/dialog.js';
-import { itemLine, currency, itemTile, icon, spriteIcon } from '../components/items.js';
+import { itemLine, currency, itemTile, icon, variantName } from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
+import { spriteCard } from '../components/sprite-card.js';
 
 const slotNames = new Map([
     [0, 'Helmet'],
@@ -48,10 +48,14 @@ export async function mount(ctx) {
     let params = ctx.params,
         view,
         selectedKey = '',
-        activeTab = params.get('tab') || 'equipment',
+        activeTab = sectionNames.some(([id]) => id === params.get('tab'))
+            ? params.get('tab')
+            : 'equipment',
         requestId = 0,
         bodyController,
-        lastRevision;
+        lastRevision,
+        lastLive;
+    const sections = new Map();
     const roster = new DataTable(
         [
             ['Knight', (k) => k.name],
@@ -244,11 +248,7 @@ export async function mount(ctx) {
                     );
                 if (item?.variants.length)
                     info.append(
-                        el(
-                            'small',
-                            item.variants.map((v) => v.name.replace(/^Variant\//, '')).join(' · '),
-                            'uv'
-                        )
+                        el('small', item.variants.map((v) => variantName(v.name)).join(' · '), 'uv')
                     );
                 if (item?.bound) info.append(el('small', 'Bound'));
                 slot.replaceChildren(icon(item?.config, def?.rarity), info);
@@ -407,78 +407,27 @@ export async function mount(ctx) {
         return { node, update };
     }
     function sprites() {
-        const node = el('div', null, 'sprite-grid');
+        const node = el('div', null, 'sprite-grid'),
+            cards = new Map(),
+            empty = el('p', 'This Knight owns no Battle Sprites.', 'empty');
         function update() {
-            node.replaceChildren(
-                ...view.sprites.map((s) => {
-                    const p = s.state,
-                        card = panel(p.name || p.config.split('/').at(-1));
-                    card.classList.add('sprite-card', 'stack');
-                    const flags = toolbar(
-                        badge(s.selected ? 'Selected' : 'Owned', s.selected ? 'gold' : ''),
-                        badge('Active deployment unavailable')
-                    );
-                    card.prepend(spriteIcon(p.config, s.iconTier));
-                    card.append(
-                        flags,
-                        facts([
-                            ['Type', p.config.split('/').at(-1)],
-                            ['Level', s.displayedLevel],
-                            ['Heat', `${(p.heat * 100).toFixed(1)}%`],
-                            [
-                                'Skill points spent / earned',
-                                `${p.powers.reduce((a, b) => a + b, 0)} / ${s.skillPoints}`
-                            ],
-                            [
-                                'Harness',
-                                s.harness?.config ||
-                                    (p.harness ? 'Unknown harness reference' : 'None')
-                            ],
-                            [
-                                'Selected perk',
-                                p.perk == null
-                                    ? 'None'
-                                    : s.perkCatalogue[p.perk]?.name || 'Unavailable'
-                            ],
-                            [
-                                'Owned perks',
-                                p.perks
-                                    .map(
-                                        (index) =>
-                                            s.perkCatalogue[index]?.name || `Unknown perk ${index}`
-                                    )
-                                    .join(', ') || 'None'
-                            ]
-                        ]),
-                        heat(p.heat)
-                    );
-                    const skills = s.definition?.skills || [];
-                    skills.forEach((skill, i) =>
-                        card.append(
-                            panel(
-                                `Skill ${i + 1}`,
-                                facts([
-                                    ['State', s.unlocked[i] ? 'Unlocked' : 'Locked'],
-                                    ['Upgrade ranks', p.powers.slice(i * 3, i * 3 + 3).join(' / ')],
-                                    ['Ultimate', s.ultimate[i] ? 'Unlocked' : 'Locked'],
-                                    ['Selected ultimate', p.ultimates[i] ?? 'Unavailable'],
-                                    [
-                                        'Attacks',
-                                        skill.attacks.map((a) => a.split('/').at(-1)).join(', ') ||
-                                            'Unavailable'
-                                    ]
-                                ])
-                            )
-                        )
-                    );
-                    if (!skills.length)
-                        card.append(el('p', 'Skill definitions unavailable.', 'muted'));
-                    card.append(details('Owned perks and authoritative state', s));
-                    return card;
-                })
-            );
-            if (!view.sprites.length)
-                node.append(el('p', 'This Knight owns no Battle Sprites.', 'empty'));
+            const desired = view.sprites.map((s) => {
+                let card = cards.get(s.state.id);
+                if (!card) {
+                    card = spriteCard();
+                    cards.set(s.state.id, card);
+                }
+                card.update(s);
+                return card.node;
+            });
+            if (!desired.length) desired.push(empty);
+            const wanted = new Set(desired);
+            for (const child of [...node.children]) if (!wanted.has(child)) child.remove();
+            desired.forEach((child, i) => {
+                if (node.children[i] !== child) node.insertBefore(child, node.children[i] || null);
+            });
+            const ids = new Set(view.sprites.map((s) => s.state.id));
+            for (const id of cards.keys()) if (!ids.has(id)) cards.delete(id);
         }
         update();
         return { node, update };
@@ -520,28 +469,33 @@ export async function mount(ctx) {
         return { node, update };
     }
     function showTab() {
-        bodyController =
-            activeTab === 'equipment'
-                ? equipment()
-                : activeTab === 'inventory'
-                  ? inventory()
-                  : activeTab === 'sprites'
-                    ? sprites()
-                    : simpleSection();
+        bodyController = sections.get(activeTab);
+        if (!bodyController) {
+            bodyController =
+                activeTab === 'equipment'
+                    ? equipment()
+                    : activeTab === 'inventory'
+                      ? inventory()
+                      : activeTab === 'sprites'
+                        ? sprites()
+                        : simpleSection();
+            sections.set(activeTab, bodyController);
+        } else bodyController.update();
         content.replaceChildren(bodyController.node);
     }
     async function refresh() {
+        const id = ++requestId;
         const username = params.get('username'),
             knight = params.get('knight'),
             key = `${username}:${knight}`;
         if (!username || !knight) {
             list.hidden = false;
             profileHost.hidden = true;
-            roster.update(await ctx.request('knights-all'));
+            const rows = await ctx.request('knights-all');
+            if (id === requestId) roster.update(rows);
             return;
         }
-        const id = ++requestId,
-            result = await ctx.request('knight-view', { username, knight });
+        const result = await ctx.request('knight-view', { username, knight });
         if (id !== requestId) return;
         const switched = selectedKey !== key;
         view = result;
@@ -551,13 +505,19 @@ export async function mount(ctx) {
         updateHeader();
         conflict(view.profile.worldId, view.profile.revision);
         if (switched) {
+            sections.clear();
             tabBar = tabs(sectionNames, activeTab, (tab) =>
                 ctx.go('knights', { username: view.username, knight: view.name, tab })
             );
             profileHost.replaceChildren(header, actions, tabBar, content);
             showTab();
-        } else if (lastRevision !== view.profile.revision) bodyController?.update();
+        } else if (
+            lastRevision !== view.profile.revision ||
+            (activeTab === 'sprites' && lastLive !== JSON.stringify(view.sprites))
+        )
+            bodyController?.update();
         lastRevision = view.profile.revision;
+        lastLive = JSON.stringify(view.sprites);
     }
     await refresh();
     return {
@@ -565,11 +525,15 @@ export async function mount(ctx) {
         interval: 4000,
         refresh,
         async navigate(next) {
+            requestId++;
             const nextTab = sectionNames.some(([id]) => id === next.get('tab'))
                 ? next.get('tab')
                 : 'equipment';
             params = next;
             if (next.get('username') + ':' + next.get('knight') === selectedKey && view) {
+                const returning = profileHost.hidden;
+                list.hidden = true;
+                profileHost.hidden = false;
                 if (activeTab !== nextTab) {
                     activeTab = nextTab;
                     showTab();
@@ -578,6 +542,7 @@ export async function mount(ctx) {
                         b.tabIndex = b.dataset.tab === activeTab ? 0 : -1;
                     }
                 }
+                if (returning) await refresh();
             } else {
                 activeTab = nextTab;
                 await refresh();

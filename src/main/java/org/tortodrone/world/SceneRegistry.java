@@ -72,6 +72,15 @@ public final class SceneRegistry {
         }
     }
     public SceneCatalog catalog(){return catalog;}
+    /** Inspect only an already allocated instance; release this monitor before entering simulation. */
+    public SceneSimulation.Companion companion(int instanceId,int knight) {
+        Instance target=null;
+        synchronized(this) {
+            for(var copies:instances.values())for(var candidate:copies)if(candidate.oid()==instanceId)target=candidate;
+            if(target==null)for(var candidate:interiors.values())if(candidate.oid()==instanceId)target=candidate;
+        }
+        return target==null?null:target.simulation().companion(knight);
+    }
     public record Status(int templateId,int instanceId,String name,int players,String state) { }
     public synchronized List<Status> statuses() {
         var result=new ArrayList<Status>();

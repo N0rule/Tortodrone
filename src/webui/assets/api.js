@@ -12,7 +12,7 @@ export class ApiError extends Error {
 export class Api {
     /** @type {Session|null} */ session = null;
     /** @template T @param {string} route @param {Record<string,string|number|boolean>} [values] @param {boolean} [write] @returns {Promise<T>} */
-    async request(route, values = {}, write = false) {
+    async request(route, values = {}, write = false, signal) {
         const parameters = new URLSearchParams(
             Object.entries(values).map(([k, v]) => [k, String(v)])
         );
@@ -29,7 +29,9 @@ export class Api {
                       }
                     : {},
                 body: write ? parameters : undefined,
-                signal: AbortSignal.timeout(15000)
+                signal: signal
+                    ? AbortSignal.any([signal, AbortSignal.timeout(15000)])
+                    : AbortSignal.timeout(15000)
             }
         );
         const data = await response.json();

@@ -2,6 +2,7 @@ import { api } from './api.js';
 import { $, el, button, text, notify, report } from './ui.js';
 import { route, go } from './router.js';
 import { loadAssets } from './components/items.js';
+import { dialogDirty, closeDialog } from './components/dialog.js';
 import * as overview from './pages/overview.js';
 import * as players from './pages/players.js';
 import * as accounts from './pages/accounts.js';
@@ -33,8 +34,9 @@ let generation = 0,
     current,
     controller,
     timer,
-    refreshing,
-    queued = false,
+    refreshJob,
+    pageRequests,
+    acceptedHash = location.hash,
     setupRequired = false;
 const rank = () => ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'].indexOf(api.session?.role);
 function connection(value, online = true) {
@@ -43,15 +45,18 @@ function connection(value, online = true) {
 }
 async function refresh() {
     if (!api.session || !controller?.refresh) return;
-    if (refreshing) {
-        queued = true;
-        return refreshing;
+    if (refreshJob?.id === generation) {
+        refreshJob.repeat = true;
+        return refreshJob.promise;
     }
-    const id = generation;
+    const id = generation,
+        target = controller,
+        job = { id, repeat: false };
+    refreshJob = job;
     $('#refresh').disabled = true;
-    refreshing = (async () => {
+    job.promise = (async () => {
         try {
-            await controller.refresh();
+            await target.refresh();
             if (id === generation && current !== 'overview' && current !== 'players')
                 connection('Connected');
         } catch (error) {
@@ -61,20 +66,20 @@ async function refresh() {
             }
         } finally {
             if (id === generation) $('#refresh').disabled = false;
-            refreshing = null;
-            if (queued) {
-                queued = false;
-                refresh();
+            if (refreshJob === job) {
+                refreshJob = null;
+                if (job.repeat && id === generation) refresh();
             }
         }
     })();
-    return refreshing;
+    return job.promise;
 }
 function poll() {
     clearTimeout(timer);
     timer = setTimeout(async () => {
+        const id = generation;
         if (api.session && !document.hidden) await refresh();
-        if (api.session) poll();
+        if (api.session && id === generation) poll();
     }, controller?.interval || 15000);
 }
 async function navigate() {
@@ -85,6 +90,20 @@ async function navigate() {
         go('overview');
         return;
     }
+    if (
+        current &&
+        next.name !== current &&
+        controller?.isDirty?.() &&
+        !window.confirm('Discard the unsaved changes on this page?')
+    ) {
+        location.hash = acceptedHash;
+        return;
+    }
+    if (location.hash !== acceptedHash && !closeDialog()) {
+        location.hash = acceptedHash;
+        return;
+    }
+    acceptedHash = location.hash;
     $('#shell').classList.remove('menu-open');
     $('#menu').setAttribute('aria-expanded', 'false');
     for (const a of $('#navigation').children)
@@ -103,6 +122,10 @@ async function navigate() {
         return;
     }
     const id = ++generation;
+    pageRequests?.abort();
+    const requests = new AbortController();
+    pageRequests = requests;
+    refreshJob = null;
     controller?.dispose?.();
     controller = null;
     current = next.name;
@@ -120,7 +143,7 @@ async function navigate() {
         connection,
         alive: () => generation === id && !!api.session,
         request: async (...args) => {
-            const value = await api.request(...args);
+            const value = await api.request(args[0], args[1], false, requests.signal);
             if (generation !== id || !api.session)
                 throw new DOMException('Page changed', 'AbortError');
             return value;
@@ -172,7 +195,10 @@ function signedIn() {
 }
 async function signedOut() {
     generation++;
+    pageRequests?.abort();
+    refreshJob = null;
     controller?.dispose?.();
+    consolePage.reset();
     controller = null;
     api.session = null;
     current = null;
@@ -180,7 +206,7 @@ async function signedOut() {
     $('#shell').hidden = true;
     $('#login').hidden = false;
     $('#page').replaceChildren();
-    if ($('#dialog').open) $('#dialog').close();
+    closeDialog(true);
     const form = $('#login-form'),
         submit = form.querySelector('button');
     submit.disabled = true;
@@ -239,6 +265,9 @@ $('#login-form').onsubmit = async (event) => {
     }
 };
 $('#logout').onclick = async () => {
+    if (controller?.isDirty?.() && !window.confirm('Discard the unsaved changes and sign out?'))
+        return;
+    if (!closeDialog()) return;
     try {
         await api.logout();
         await signedOut();
@@ -277,6 +306,12 @@ for (const [key, values] of [
     };
 }
 window.addEventListener('hashchange', navigate);
+window.addEventListener('beforeunload', (event) => {
+    if (controller?.isDirty?.() || dialogDirty()) {
+        event.preventDefault();
+        event.returnValue = '';
+    }
+});
 document.addEventListener('session-expired', signedOut);
 document.addEventListener('data-changed', () => refresh());
 document.addEventListener('visibilitychange', () => {
