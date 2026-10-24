@@ -12,14 +12,19 @@ public final class SessionRegistry {
             String state, Integer accountId, String username, Integer rosterId, Integer knightId,
             String knight, Integer sceneId, Integer instanceId, String scene, String clientVersion) { }
     private final ConcurrentHashMap<Long, Snapshot> sessions = new ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.LongAdder connections = new java.util.concurrent.atomic.LongAdder();
+    private final java.util.concurrent.atomic.LongAdder disconnections = new java.util.concurrent.atomic.LongAdder();
+    public long connections() { return connections.sum(); }
+    public long disconnections() { return disconnections.sum(); }
     public List<Snapshot> snapshots() { return sessions.values().stream().sorted(java.util.Comparator.comparingLong(Snapshot::id)).toList(); }
     public Snapshot find(long id) { return sessions.get(id); }
     public void connected(long id, SocketAddress remote) {
         var now=Instant.now();
         if(sessions.putIfAbsent(id,new Snapshot(id,String.valueOf(remote),now,now,"Connected",null,null,null,null,null,null,null,null,null))!=null)
             throw new IllegalStateException("Duplicate session ID");
+        connections.increment();
     }
-    public void disconnected(long id) { sessions.remove(id); }
+    public void disconnected(long id) { if (sessions.remove(id) != null) disconnections.increment(); }
     public SessionLog observe(long id, SessionLog delegate) {
         return new SessionLog() {
             public boolean debugEnabled() { return delegate.debugEnabled(); }

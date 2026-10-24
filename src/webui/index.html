@@ -1,20 +1,121 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tortodrone · Control room</title><link rel="stylesheet" href="/admin/assets/app.css"><script type="module" src="/admin/assets/app.js"></script></head>
-<body>
-<a class="skip" href="#main">Skip to content</a>
-<div id="login" class="login"><form id="login-form" method="post">
-<div class="brand">TORTODRONE <span>CONTROL ROOM</span></div><p class="eyebrow">SECURE ADMINISTRATION</p>
-<h1 id="login-title">Welcome back.</h1><p id="login-description">Sign in with your WebUI identity.</p>
-<label>Username<input name="username" autocomplete="username" required minlength="3" maxlength="64" pattern="(?:[a-zA-Z0-9_]|-){3,64}"></label>
-<label>Password<input name="password" type="password" autocomplete="current-password" required maxlength="128"></label>
-<div id="setup-fields" hidden>
-<label>Confirm password<input name="passwordConfirmation" type="password" autocomplete="new-password" maxlength="128" disabled></label>
-<label>Setup code<input name="setupCode" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]{8}" minlength="8" maxlength="8" spellcheck="false" disabled></label>
-</div>
-<button type="submit" disabled>Sign in</button><p id="login-error" role="alert"></p>
-<small id="login-help">Recover access from the server console with <code>webui password &lt;username&gt;</code>.</small>
-</form></div>
-<div id="shell" hidden><aside><a class="brand" href="#dashboard">TORTODRONE<span>CONTROL ROOM</span></a><p class="eyebrow">OPERATIONS</p><nav id="navigation" aria-label="Administration"></nav><footer><span id="identity"></span><button id="theme" class="quiet">Switch theme</button><button id="logout" class="quiet">Sign out</button></footer></aside><div class="workspace"><header><span id="connection" class="badge">Connecting</span><span id="clock"></span></header><main id="main" tabindex="-1"><div class="page-heading"><div><p class="eyebrow">TORTODRONE / ADMINISTRATION</p><h1 id="title">Overview</h1><p id="subtitle"></p></div><button id="refresh" class="secondary">Refresh</button></div><div id="notice" role="status" aria-live="polite"></div><section id="page" data-screen-label="Administration"></section></main></div></div>
-<dialog id="dialog"><form id="editor"><div class="dialog-heading"><h2 id="dialog-title"></h2><button type="button" id="close-dialog" class="quiet" aria-label="Close dialog">×</button></div><p id="dialog-description"></p><div id="fields"></div><p id="dialog-error" role="alert"></p><div class="dialog-actions"><button type="button" id="cancel-dialog" class="secondary">Cancel</button><button type="submit" id="submit-dialog">Confirm change</button></div></form></dialog>
-</body></html>
+<html lang="en" data-theme="dark" data-density="comfortable">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta name="color-scheme" content="dark light" />
+        <title>Tortodrone</title>
+        <script src="/admin/assets/preferences.js"></script>
+        <link rel="icon" href="/admin/assets/icons/mark.svg" type="image/svg+xml" />
+        <link rel="stylesheet" href="/admin/assets/css/tokens.css" />
+        <link rel="stylesheet" href="/admin/assets/css/base.css" />
+        <link rel="stylesheet" href="/admin/assets/css/layout.css" />
+        <link rel="stylesheet" href="/admin/assets/css/components.css" />
+        <link rel="stylesheet" href="/admin/assets/css/pages.css" />
+        <script type="module" src="/admin/assets/app.js"></script>
+    </head>
+    <body>
+        <a class="skip" href="#main">Skip to content</a>
+        <div id="login" class="login">
+            <form id="login-form" method="post" class="login-panel">
+                <div class="brand"><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</div>
+                <h1 id="login-title">Sign in</h1>
+                <p id="login-description">WebUI access</p>
+                <label
+                    >Username<input
+                        name="username"
+                        autocomplete="username"
+                        required
+                        minlength="3"
+                        maxlength="64"
+                        pattern="(?:[a-zA-Z0-9_]|-){3,64}"
+                /></label>
+                <label
+                    >Password<input
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        required
+                        maxlength="128"
+                /></label>
+                <div id="setup-fields" hidden>
+                    <label
+                        >Confirm password<input
+                            name="passwordConfirmation"
+                            type="password"
+                            autocomplete="new-password"
+                            maxlength="128"
+                            disabled
+                    /></label>
+                    <label
+                        >Setup code<input
+                            name="setupCode"
+                            autocomplete="one-time-code"
+                            inputmode="numeric"
+                            pattern="[0-9]{8}"
+                            minlength="8"
+                            maxlength="8"
+                            disabled
+                    /></label>
+                </div>
+                <button type="submit" disabled>Sign in</button>
+                <p id="login-error" class="error" role="alert"></p>
+                <small id="login-help"></small>
+            </form>
+        </div>
+        <div id="shell" hidden>
+            <aside id="sidebar">
+                <a class="brand" href="#overview"
+                    ><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</a
+                >
+                <nav id="navigation" aria-label="Administration"></nav>
+                <footer>
+                    <span id="identity"></span>
+                    <div class="preference-controls">
+                        <button id="theme" class="quiet">Light theme</button
+                        ><button id="density" class="quiet">Compact view</button>
+                    </div>
+                    <button id="logout" class="quiet">Sign out</button>
+                </footer>
+            </aside>
+            <div class="workspace">
+                <header class="topbar">
+                    <button
+                        id="menu"
+                        class="quiet"
+                        aria-label="Toggle navigation"
+                        aria-expanded="false"
+                    >
+                        ☰</button
+                    ><span id="connection" class="status">Connecting</span><span id="clock"></span>
+                </header>
+                <main id="main" tabindex="-1">
+                    <div class="page-heading">
+                        <h1 id="title">Overview</h1>
+                        <button id="refresh" class="quiet">Refresh</button>
+                    </div>
+                    <div id="notice" role="status" aria-live="polite" hidden></div>
+                    <section id="page" aria-label="Administration"></section>
+                </main>
+            </div>
+        </div>
+        <dialog id="dialog" aria-labelledby="dialog-title">
+            <form id="editor">
+                <div class="dialog-heading">
+                    <h2 id="dialog-title"></h2>
+                    <button type="button" id="close-dialog" class="quiet" aria-label="Close dialog">
+                        ×
+                    </button>
+                </div>
+                <div id="dialog-description"></div>
+                <div id="dialog-conflict" role="alert" class="warning" hidden></div>
+                <div id="fields"></div>
+                <p id="dialog-error" role="alert" class="error"></p>
+                <div class="dialog-actions">
+                    <button type="button" id="cancel-dialog" class="secondary">Cancel</button
+                    ><button type="submit" id="submit-dialog">Save changes</button>
+                </div>
+            </form>
+        </dialog>
+    </body>
+</html>

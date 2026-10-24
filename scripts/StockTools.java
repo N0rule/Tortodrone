@@ -13,6 +13,10 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "webui-assets" -> {
+                if(args.length!=3)throw new IllegalArgumentException("webui-assets expects game-directory fresh-output-directory");
+                fixture="WebUiAssetsExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
             case "action-graphs-check" -> {
                 if(args.length!=2)throw new IllegalArgumentException("action-graphs-check expects game-directory");fixture="ActionGraphCompatibility";
                 for(String source:List.of("ActionGraphCompatibility","FireCatalogExport","SceneStatusExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));

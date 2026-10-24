@@ -23,6 +23,11 @@ public final class WebUiTest {
             Path data=root.resolve("data"),news=root.resolve("content/shared/news"),frontend=root.resolve("webui");
             Files.createDirectories(data);Files.createDirectories(news);Files.createDirectories(frontend.resolve("assets"));
             Files.write(news.resolve("public.png"),new byte[]{1,2,3});Files.writeString(frontend.resolve("index.html"),"<html>Administration</html>");
+            Files.createDirectories(frontend.resolve("assets/js/pages"));
+            Files.writeString(frontend.resolve("assets/js/pages/fixture.js"),"export const fixture = true;");
+            Files.writeString(frontend.resolve("assets/fixture.css"),"body { color: blue; }");
+            Files.writeString(frontend.resolve("assets/manifest.json"),"{}");
+            Files.write(frontend.resolve("assets/fixture.webp"),new byte[]{1,2,3});
             WebIdentityStore.createProxyKey(data.resolve("webui-proxy.key"));secret=Files.readString(data.resolve("webui-proxy.key")).strip();
             if(Files.getFileStore(data).supportsFileAttributeView("posix"))check(Files.getPosixFilePermissions(data.resolve("webui-proxy.key")).equals(java.nio.file.attribute.PosixFilePermissions.fromString("rw-------")),"proxy secret private from creation");
             try{WebIdentityStore.createProxyKey(data.resolve("webui-proxy.key"));throw new AssertionError("Existing proxy key overwritten");}catch(FileAlreadyExistsException expected){}
@@ -44,6 +49,16 @@ public final class WebUiTest {
                     check(request("GET","/news/public.png",null,Map.of()).status==200,"News public on shared listener");
                     check(request("GET","/admin/",null,Map.of()).status==403,"direct HTTP refused");
                     check(request("GET","/admin/",null,headers()).status==200,"trusted frontend");
+                    var module=request("GET","/admin/assets/js/pages/fixture.js",null,headers());
+                    check(module.status==200&&module.headers.get("content-type").startsWith("text/javascript"),"nested modules have JavaScript MIME");
+                    var conditional=headers();conditional.put("If-None-Match",module.headers.get("etag"));
+                    check(request("GET","/admin/assets/js/pages/fixture.js",null,conditional).status==304,"static assets revalidate by content hash");
+                    check(request("GET","/admin/assets/fixture.webp",null,headers()).headers.get("content-type").equals("image/webp"),"optimized image MIME");
+                    check(request("GET","/admin/assets/manifest.json",null,headers()).status==200,"icon manifest served");
+                    if(Files.getFileStore(frontend).supportsFileAttributeView("posix")) {
+                        Files.writeString(root.resolve("private.json"),"private fixture");Files.createSymbolicLink(frontend.resolve("assets/escape.json"),root.resolve("private.json"));
+                        check(request("GET","/admin/assets/escape.json",null,headers()).status!=200,"static assets cannot escape by symlink");
+                    }
                     var bad=headers();bad.put("X-Tortodrone-Proxy","wrong");check(request("GET","/admin/",null,bad).status==403,"forged proxy rejected");
                     bad=headers();bad.put("X-Forwarded-For","127.0.0.1");check(request("GET","/admin/",null,bad).status==403,"untrusted forwarded chain rejected");
                     bad=headers();bad.put("Host","evil.example");check(request("GET","/admin/",null,bad).status==403,"host rejected");
@@ -70,7 +85,10 @@ public final class WebUiTest {
                     check(post("account-create",Map.of("padding","x".repeat(66000))).status==400,"request size bounded");
                     check(post("logout",Map.of()).status==200&&get("status").status==401,"logout revokes session");
                     login("viewer");check(get("console").status==403&&post("console",Map.of("command","status","confirmation","console")).status==403,"viewer cannot access console");check(get("status").status==200&&get("accounts").status==403,"viewer monitoring only");check(post("stop",Map.of("confirmation","stop")).status==403,"viewer cannot stop listener");
+                    check(get("metrics").status==200&&get("catalogue").status==403&&get("knights-all").status==403,"new reads preserve role boundaries");
+                    check(post("news-upload",Map.of("name","fixture.png","data","AA==","confirmation","news-upload")).status==403,"image uploads require administrator permission");
                     login("moderator");check(get("console").status==403&&post("console",Map.of("command","help","confirmation","console")).status==403,"moderator cannot access console");check(get("accounts").status==200&&get("depot").status==403,"moderator scope");check(post("account-create",create).status==403,"moderator cannot create account");
+                    check(get("catalogue").status==200&&get("knights-all").status==200,"moderator read-only inspection");
                     clock.addAndGet(31*60_000);check(get("status").status==401,"idle session expires");
                     login("administrator");identities.put("administrator",PASSWORD.toCharArray(),WebIdentityStore.Role.ADMINISTRATOR);check(get("status").status==401,"credential reset revokes sessions");
                     login("administrator");identities.revoke("administrator");identities.put("administrator",PASSWORD.toCharArray(),WebIdentityStore.Role.ADMINISTRATOR);check(get("status").status==401,"delete and recreate cannot resurrect old sessions");

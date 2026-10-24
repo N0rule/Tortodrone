@@ -128,6 +128,9 @@ public final class ServerIntegrationTest {
                 }
             }
             // Reject mismatched and incomplete keys without replacing the server's identity.
+            // With WebUI enabled, startup failures deliberately leave recovery HTTP available.
+            // These assertions exercise fail-fast headless startup, so disable WebUI in this fixture.
+            Files.writeString(config,Files.readString(config)+"\nwebui-enabled=false\n");
             check(Files.readString(state.resolve("logs/latest.log")).lines().filter(line->line.contains("Public key : ")).count()==1,
                 "reopening existing keys does not repeat the public key");
             Files.writeString(state.resolve("keys/public.txt"), "mismatched");

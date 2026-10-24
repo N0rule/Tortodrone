@@ -68,7 +68,7 @@ public final class NewsYaml {
         if(dimensions[0]>maxWidth||dimensions[1]>maxHeight)
             throw new IOException(where+" image is "+dimensions[0]+"x"+dimensions[1]+", larger than the "+maxWidth+"x"+maxHeight+" slot: "+name);
     }
-    private static int[] dimensions(Path path)throws IOException {
+    public static int[] dimensions(Path path)throws IOException {
         // ImageIO initializes AWT even in a nogui server. Read only bounded format metadata.
         try(var input=new java.io.DataInputStream(Files.newInputStream(path))) {
             if(path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".png")) {

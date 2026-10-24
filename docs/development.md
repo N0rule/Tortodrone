@@ -97,7 +97,23 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 ## WebUI verification
 
-`./gradlew testUnit -PunitTests=WebIdentityStoreTest,WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest` exercises disposable HTTP, credential and domain fixtures. `./gradlew integrationWebUi integrationConsole` verifies packaged first-run setup, WebUI identity management, console recovery while the listener is stopped and ordinary local administration. For browser acceptance, use a disposable deployment and same-host TLS proxy configured as in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
+`./gradlew testUnit -PunitTests=WebIdentityStoreTest,WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest` exercises disposable HTTP, credential and domain fixtures. `./gradlew integrationWebUi integrationConsole` verifies packaged first-run setup, WebUI identity management, console recovery while the listener is stopped and ordinary local administration. For browser acceptance, use a disposable deployment with explicitly configured direct HTTP or the same-host TLS proxy described in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
+
+The framework-free WebUI uses shared components in `assets/components/`, page controllers in `assets/pages/`, and CSS tokens/layout/components/pages. A page mounts once; its `refresh` updates existing nodes. Polling refreshes are serialized at the page boundary, stale navigation results are discarded, and polling pauses in hidden tabs. Knight inspection polls every four seconds; metric samples are collected server-side every five seconds with one hour of bounded in-memory retention. `MetricHistoryTest` covers retention and session counters. Dark/light theme and comfortable/compact density are the only locally persisted UI preferences.
+
+`node src/test/webui/news-test.mjs` checks visual News serialization against the native optional-action rules. `node --check <module.js>` checks individual frontend modules without a build toolchain. Frontend sources use four-space formatting (Prettier 3.6.2, single quotes, print width 100, no trailing commas); this tooling is optional and is not part of production deployment.
+
+`knight-view`, `knights-all`, `catalogue`, `item`, `item-definitions`, `accessories` and `item-preview` are read-only adapters over existing services. Level display is stored level + 1; Heat remains the native fraction. Gear draft validation and available UVs come from domain rules. Sprite inspection exposes owned/selected state and the native icon tier; live Sprite deployment is unavailable and is not inferred from a connection. News provides a visual three-slot editor (570×300, 280×190 twice), an advanced YAML editor, and PNG/JPEG uploads limited to 1 MiB, 128 library images and 32 MiB total. Saves retain schema validation, revisions and atomic publication; a listener restart publishes a changed pack selection.
+
+Optional original artwork preparation is local and read-only with respect to the client:
+
+```sh
+java scripts/StockTools.java webui-assets "/path/to/Spiral Knights" local/webui-assets
+python scripts/OptimizeWebUiAssets.py local/webui-assets local/webui-assets-optimized
+./gradlew build
+```
+
+The optional optimizer requires Pillow with WebP support. The stock client's resolver and colorizer supply exact item/Sprite mappings; images are resized, content-hash deduplicated, and recorded in `manifest.json`. `buildWebui` overlays `local/webui-assets-optimized`, or an explicit `-PwebuiAssets=/prepared/path`, into `build/webui/assets/game/`. Neither the client nor Python is required at runtime or for ordinary builds. Clean builds without a prepared pack use source-owned SVG fallbacks. Prepared client artwork stays under ignored `local/`; do not commit it or redistribute it without the necessary rights. Static modules and image/font MIME types remain confined to the symlink-free asset directory; hashed icons are cacheable, while private APIs remain uncached.
 
 ## Load testing
 

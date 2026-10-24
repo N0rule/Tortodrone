@@ -112,6 +112,12 @@ val prepareHaven = tasks.register<Exec>("prepareHaven") {
 }
 val buildWebui = tasks.register<Sync>("buildWebui") {
     from("src/webui")
+    // Optional prepared local artwork. Ordinary clean builds retain source-owned fallbacks.
+    val preparedAssets = providers.gradleProperty("webuiAssets").getOrElse("local/webui-assets-optimized")
+    if (file(preparedAssets).isDirectory) {
+        duplicatesStrategy = DuplicatesStrategy.INCLUDE
+        from(preparedAssets) { into("assets/game") }
+    }
     into(publicOutput.dir("webui"))
 }
 val buildServer = tasks.register("buildServer") {

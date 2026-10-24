@@ -23,10 +23,26 @@ public final class AdminHandler implements HttpHandler {
             if(!security.trusted(e)){send(e,403,Map.of("error","Request does not match the configured WebUI transport and origin"));return;}
             if(!requests.tryAcquire()){send(e,503,Map.of("error","Busy; retry shortly"));return;}
             try{handleTrusted(e);}catch(IllegalArgumentException invalid){send(e,400,Map.of("error","Invalid request fields"));}
-            catch(IOException invalid){send(e,409,Map.of("error","Operation refused; refresh and verify the selection and values"));}
+            catch(IOException invalid){
+                String message=safeValidation(invalid.getMessage());
+                send(e,message==null?409:422,Map.of("error",message==null?"Operation refused; refresh and verify the selection and values":message));
+            }
             catch(Exception failed){send(e,500,Map.of("error","Administration operation unavailable"));}
             finally{requests.release();}
         }
+    }
+    /** Only fixed, reviewed validation messages cross the HTTP boundary; no filesystem/SQL details. */
+    private static String safeValidation(String message) {
+        if(message==null)return null;
+        return switch(message) {
+            case "Invalid item level or heat","Level is outside this item's progression table",
+                "Maximum-level items cannot store heat","Choose up to three distinct UVs valid for this item",
+                "Choose only one UV from each variant family","Use a PNG or JPEG filename","Invalid image encoding",
+                "Uploaded images must be at most 1 MiB","Image exceeds the 570 by 300 featured slot","News image library is full"->message;
+            case "e.existing_accessory"->"An accessory already occupies that location. Remove attached accessories before adding a replacement.";
+            case "e.cant_use_accessory"->"This accessory is not compatible with the selected equipment.";
+            default->null;
+        };
     }
     private void handleTrusted(HttpExchange e)throws Exception {
         String path=e.getRequestURI().getRawPath();
@@ -40,7 +56,8 @@ public final class AdminHandler implements HttpHandler {
         if(!path.startsWith("/admin/")){send(e,404,Map.of("error","Not found"));return;}
         if(!path.startsWith("/admin/api/")) {if(post){send(e,405,Map.of("error","Method not allowed"));return;}staticFile(e,path);return;}
         String route=path.substring("/admin/api/".length());
-        var p=parameters(post?body(e):Objects.requireNonNullElse(e.getRequestURI().getRawQuery(),""));
+        int limit=route.equals("news-upload")?2*1024*1024:65536;
+        var p=parameters(post?body(e,limit):Objects.requireNonNullElse(e.getRequestURI().getRawQuery(),""),limit);
         if(route.equals("setup")&&!post){send(e,200,Map.of("required",security.setupRequired()));return;}
         if(route.equals("setup")&&post){
             if(!security.allowLogin()||!logins.tryAcquire()){send(e,429,Map.of("error","Setup rate limit; wait one minute"));return;}
@@ -110,21 +127,32 @@ public final class AdminHandler implements HttpHandler {
     }
     private static long positiveRevision(AdminService.Input p){long revision=p.number("revision");if(revision<1)throw new IllegalArgumentException("Invalid revision");return revision;}
     private static Object session(WebSecurity.Session s){return Map.of("username",s.identity().username(),"role",s.identity().role(),"csrf",s.csrf(),"expires",s.expires());}
-    private static String body(HttpExchange e)throws IOException {
+    private static String body(HttpExchange e,int limit)throws IOException {
         if(!"application/x-www-form-urlencoded;charset=UTF-8".equalsIgnoreCase(e.getRequestHeaders().getFirst("Content-Type")))throw new IllegalArgumentException();
-        byte[] b=e.getRequestBody().readNBytes(65537);if(b.length>65536)throw new IllegalArgumentException("Request too large");return new String(b,StandardCharsets.UTF_8);
+        byte[] b=e.getRequestBody().readNBytes(limit+1);if(b.length>limit)throw new IllegalArgumentException("Request too large");return new String(b,StandardCharsets.UTF_8);
     }
-    private static AdminService.Input parameters(String text){
-        if(text.length()>65536)throw new IllegalArgumentException();var result=new HashMap<String,String>();
+    private static AdminService.Input parameters(String text,int limit){
+        if(text.length()>limit)throw new IllegalArgumentException();var result=new HashMap<String,String>();
         if(!text.isEmpty())for(String pair:text.split("&")){int pos=pair.indexOf('=');if(pos<1)throw new IllegalArgumentException();String key=URLDecoder.decode(pair.substring(0,pos),StandardCharsets.UTF_8),value=URLDecoder.decode(pair.substring(pos+1),StandardCharsets.UTF_8);if(result.putIfAbsent(key,value)!=null||result.size()>40)throw new IllegalArgumentException();}
         return new AdminService.Input(Map.copyOf(result));
     }
     private void staticFile(HttpExchange e,String path)throws IOException {
         String name=path.equals("/admin/")?"index.html":path.substring("/admin/".length());
-        String type=switch(name){case "index.html"->"text/html; charset=utf-8";case "assets/app.js","assets/api.js"->"text/javascript; charset=utf-8";case "assets/app.css"->"text/css; charset=utf-8";default->null;};
+        String type=null;
+        if(name.equals("index.html"))type="text/html; charset=utf-8";
+        else if(name.matches("assets/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_.-]+")) {
+            String extension=name.substring(name.lastIndexOf('.')+1).toLowerCase(Locale.ROOT);
+            type=switch(extension){case "js"->"text/javascript; charset=utf-8";case "css"->"text/css; charset=utf-8";
+                case "json"->"application/json; charset=utf-8";case "png"->"image/png";case "jpg","jpeg"->"image/jpeg";
+                case "webp"->"image/webp";case "svg"->"image/svg+xml";case "woff2"->"font/woff2";default->null;};
+        }
         if(type==null){send(e,404,Map.of("error","Not found"));return;}
         Path file=ContentFiles.relative(frontend,name);ContentFiles.regular(file);if(Files.size(file)>2*1024*1024)throw new IOException("Asset too large");
-        byte[] b=Files.readAllBytes(file);e.getResponseHeaders().set("Content-Type",type);e.sendResponseHeaders(200,b.length);e.getResponseBody().write(b);
+        byte[] b=Files.readAllBytes(file);e.getResponseHeaders().set("Content-Type",type);
+        if(!name.equals("index.html"))e.getResponseHeaders().set("Cache-Control",name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")?"private, max-age=31536000, immutable":"private, max-age=0, must-revalidate");
+        e.getResponseHeaders().set("ETag","\""+ContentFiles.digest(file)+"\"");
+        if(e.getResponseHeaders().getFirst("ETag").equals(e.getRequestHeaders().getFirst("If-None-Match"))){e.sendResponseHeaders(304,-1);return;}
+        e.sendResponseHeaders(200,b.length);e.getResponseBody().write(b);
     }
     private static void send(HttpExchange e,int status,Object result)throws IOException {byte[] b=WebJson.encode(result).getBytes(StandardCharsets.UTF_8);e.getResponseHeaders().set("Content-Type","application/json; charset=utf-8");e.sendResponseHeaders(status,b.length);e.getResponseBody().write(b);}
 }

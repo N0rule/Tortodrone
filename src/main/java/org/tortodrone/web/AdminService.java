@@ -17,6 +17,8 @@ public final class AdminService implements AutoCloseable {
     private final ArrayDeque<ServerLog.Event> logs=new ArrayDeque<>();
     private final AutoCloseable subscription;
     private final NewsEditor news;
+    private final AdminViews views;
+    private final MetricHistory history;
     private final org.tortodrone.resources.ContentRegistry validatedContent;
     public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment)throws IOException {
         this(accounts,control,log,deployment,null);
@@ -24,6 +26,7 @@ public final class AdminService implements AutoCloseable {
     public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,org.tortodrone.resources.ContentRegistry validatedContent)throws IOException {
         this.validatedContent=validatedContent;
         this.accounts=accounts;this.control=control;this.deployment=deployment;news=new NewsEditor(deployment.resolve("content/shared/news"));
+        views=new AdminViews(accounts,control,validatedContent);history=new MetricHistory(control);
         subscription=log.subscribe(e->{synchronized(logs){if(logs.size()==1000)logs.removeFirst();logs.addLast(e);}});
     }
     public Object read(String route,Input p)throws IOException {
@@ -32,6 +35,14 @@ public final class AdminService implements AutoCloseable {
             case "accounts"->accounts.list();
             case "knights"->accounts.knights(p.text("username"));
             case "knight"->accounts.worldProfile(p.text("username"),p.text("knight"));
+            case "knight-view"->views.knight(p.text("username"),p.text("knight"));
+            case "knights-all"->views.knights();
+            case "catalogue"->views.items(p);
+            case "item"->views.item(p.text("config"));
+            case "item-definitions"->views.definitions(p.optional("configs"));
+            case "accessories"->views.accessories(p.text("config"));
+            case "item-preview"->views.validateModifiers(p);
+            case "metrics"->history.read(p.optional("minutes").isEmpty()?5:p.integer("minutes"));
             case "items"->accounts.catalog().entries().stream().filter(e->(e.config()+" "+e.displayName()).toLowerCase(Locale.ROOT).contains(p.optional("search").toLowerCase(Locale.ROOT))).limit(250).map(e->Map.of("config",e.config(),"name",e.displayName(),"category",accounts.catalog().category(e),"grantable",e.grantable(),"reason",e.unavailableReason())).toList();
             case "depot"->Map.of("snapshot",accounts.depot().snapshot(),"promotions",accounts.depot().promotions(),"effective",accounts.depot().catalog());
             case "auctions"->accounts.auctions().overview();
@@ -44,7 +55,7 @@ public final class AdminService implements AutoCloseable {
         };
     }
     public static WebIdentityStore.Role permission(String route,boolean write){
-        if(!write)return switch(route){case "status","logs"->WebIdentityStore.Role.VIEWER;case "accounts","knights","knight","items"->WebIdentityStore.Role.MODERATOR;default->WebIdentityStore.Role.ADMINISTRATOR;};
+        if(!write)return switch(route){case "status","logs","metrics"->WebIdentityStore.Role.VIEWER;case "accounts","knights","knight","items","knight-view","knights-all","catalogue","item","item-definitions","accessories","item-preview"->WebIdentityStore.Role.MODERATOR;default->WebIdentityStore.Role.ADMINISTRATOR;};
         return route.equals("kick")?WebIdentityStore.Role.MODERATOR:WebIdentityStore.Role.ADMINISTRATOR;
     }
     public Object write(String route,Input p)throws IOException {
@@ -79,6 +90,8 @@ public final class AdminService implements AutoCloseable {
             case "auction-cancel"->{return accounts.auctions().cancel(p.number("id"));}
             case "auction-settle"->accounts.auctions().settleExpired();
             case "news-save"->{return news.save(p.text("yaml"),p.text("revision"));}
+            case "news-visual-save"->{return news.saveCatalog(p.text("catalog"),p.text("revision"));}
+            case "news-upload"->{return news.upload(p.text("name"),p.text("data"));}
             default->throw new IllegalArgumentException("Unknown action");
         }
         return Map.of("ok",true);
@@ -94,5 +107,5 @@ public final class AdminService implements AutoCloseable {
         public int positive(String key){int n=integer(key);if(n<=0)throw new IllegalArgumentException("Invalid "+key);return n;}
         public boolean flag(String key){String v=text(key);if(!v.equals("true")&&!v.equals("false"))throw new IllegalArgumentException("Invalid "+key);return Boolean.parseBoolean(v);}
     }
-    @Override public void close()throws Exception{subscription.close();}
+    @Override public void close()throws Exception{history.close();subscription.close();}
 }
