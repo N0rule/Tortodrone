@@ -1,4 +1,3 @@
-import { setSymbols } from './symbols.js';
 import { el, number, heat } from '../ui.js';
 import { api } from '../api.js';
 let manifest = { items: {}, ui: {}, sprites: {} };
@@ -18,7 +17,6 @@ export async function loadAssets() {
         const response = await fetch('/admin/assets/game/manifest.json', { cache: 'no-cache' });
         if (response.ok) {
             manifest = await response.json();
-            setSymbols(manifest.ui);
         }
     } catch {
         /* Every icon has a local fallback. */
@@ -91,14 +89,7 @@ export function itemTile(def, item, onClick) {
         root.append(
             el('small', `×${number(item.count)}${item.equippedSlot != null ? ' · Equipped' : ''}`)
         );
-        if (def?.progression)
-            root.append(
-                el(
-                    'small',
-                    `Level ${item.level + 1} · ${(item.heatProgress * 100).toFixed(1)}% Heat`
-                ),
-                heat(item.heatProgress)
-            );
+        if (def?.progression) root.append(gearProgress(def, item));
         if (item.bound || item.expiresAt)
             root.append(
                 el(
@@ -118,4 +109,50 @@ export function itemTile(def, item, onClick) {
 
 export function variantName(path) {
     return path.split('/').at(-1).replaceAll('_', ' ');
+}
+
+/** Native stored levels are zero based; max level is defined per item. */
+export function gearProgress(def, item) {
+    const node = el('div', null, 'gear-progress');
+    const max = item.level + 1 >= def.levels;
+    node.append(
+        el(
+            'small',
+            max
+                ? `Level ${item.level + 1} · Maximum`
+                : `Level ${item.level + 1} · ${(item.heatProgress * 100).toFixed(1)}% Heat`,
+            max ? 'max-level' : ''
+        )
+    );
+    if (!max) {
+        const bar = heat(item.heatProgress);
+        bar.setAttribute('aria-label', 'Heat to next level');
+        node.append(bar);
+    }
+    return node;
+}
+export function variantEffect(config, def) {
+    const meta = def?.variantDisplay?.[config],
+        node = el('div', null, 'variant-effect');
+    const image = el('img');
+    image.src = path(manifest.ui?.variants) || '/admin/assets/icons/variant.svg';
+    image.alt = '';
+    image.setAttribute('aria-hidden', 'true');
+    image.onerror = () => {
+        image.onerror = null;
+        image.src = '/admin/assets/icons/variant.svg';
+    };
+    const label = meta?.label || variantName(config),
+        separator = label.lastIndexOf(': ');
+    node.append(
+        image,
+        el('span', separator < 0 ? label : label.slice(0, separator + 2), 'effect-name')
+    );
+    if (separator >= 0) node.append(el('small', label.slice(separator + 2), 'effect-strength'));
+    return node;
+}
+export function variantEffects(def, variants = []) {
+    const node = el('div', null, 'variant-effects');
+    for (const variant of variants) node.append(variantEffect(variant.name, def));
+    return node;
 }

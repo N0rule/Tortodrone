@@ -1,5 +1,5 @@
 import { api } from '../api.js';
-import { el, toolbar, button, input, label, text, download } from '../ui.js';
+import { el, button, input, label, text } from '../ui.js';
 import { edit, field } from '../components/dialog.js';
 import { logStream } from '../components/log-stream.js';
 const history = [],
@@ -11,13 +11,12 @@ export function reset() {
 }
 export async function mount(ctx) {
     const metadata = await ctx.request('console'),
-        node = el('div', null, 'stack'),
-        output = el('div', null, 'terminal'),
-        stream = logStream(),
+        node = el('div', null, 'console-workspace'),
+        stream = logStream({ commands: outputHistory }),
         feedback = el('small', 'Connected');
-    output.setAttribute('role', 'log');
-    output.setAttribute('aria-label', 'Command results');
-    output.setAttribute('aria-live', 'polite');
+    const output = stream.output;
+    output.setAttribute('aria-label', 'Console output');
+    feedback.className = 'console-connection';
     const form = el('form', null, 'command-form'),
         command = input('Command', commandDraft, 'text', {
             maxLength: 128,
@@ -39,38 +38,12 @@ export async function mount(ctx) {
     form.append(label('Command', command), run, completions);
     let index = history.length,
         draft = '',
-        auto = true,
         pending = false;
-    function renderEntry(entry) {
-        const group = el('div'),
-            line = el(
-                'div',
-                `${new Date(entry.time).toLocaleTimeString()} > ${entry.command}`,
-                'command'
-            );
-        group.append(line, el('pre', entry.output));
-        output.append(group);
-        while (output.children.length > 50) output.firstChild.remove();
-    }
-    for (const entry of outputHistory) renderEntry(entry);
-    const scroll = button('Autoscroll on', () => {
-        auto = !auto;
-        text(scroll, auto ? 'Autoscroll on' : 'Autoscroll off');
-        if (auto) output.scrollTop = output.scrollHeight;
-    });
-    output.onscroll = () => {
-        if (auto && output.scrollHeight - output.scrollTop - output.clientHeight > 50) {
-            auto = false;
-            text(scroll, 'Autoscroll off');
-        }
-    };
-    function record(value, result) {
-        const entry = { time: Date.now(), command: value, output: result.output };
-        outputHistory.push(entry);
+    function record(value, result, error = false) {
+        outputHistory.push({ time: Date.now(), command: value, output: result.output, error });
         if (outputHistory.length > 50) outputHistory.shift();
-        renderEntry(entry);
-        if (auto) output.scrollTop = output.scrollHeight;
-        text(feedback, 'Command completed');
+        stream.redraw();
+        text(feedback, error ? 'Command failed' : 'Connected');
     }
     command.oninput = () => {
         commandDraft = command.value;
@@ -123,49 +96,43 @@ export async function mount(ctx) {
             record(value, result);
             if (command.value.trim() === value) command.value = commandDraft = '';
         } catch (error) {
-            text(feedback, error.message);
+            record(value, { output: error.message }, true);
             ctx.report(error);
         } finally {
             pending = false;
             run.disabled = false;
         }
     };
-    node.append(
-        toolbar(
-            button('Help', async () => {
-                if (pending) return;
-                pending = true;
-                run.disabled = true;
-                try {
-                    const result = await api.consoleCommand('help');
-                    if (ctx.alive()) record('help', result);
-                } finally {
-                    pending = false;
-                    run.disabled = false;
-                }
-            }),
-            scroll,
-            button('Clear results', () => {
-                outputHistory.length = 0;
-                output.replaceChildren();
-            }),
-            button('Export results', () =>
-                download(
-                    'tortodrone-console.txt',
-                    outputHistory
-                        .map((r) => `${new Date(r.time).toISOString()} > ${r.command}\n${r.output}`)
-                        .join('\n')
-                )
-            ),
-            feedback
-        ),
-        output,
-        form,
-        el('h2', 'Live server output'),
-        stream.node
-    );
+    const help = button('Help', async () => {
+        if (pending) return;
+        pending = true;
+        run.disabled = true;
+        try {
+            const result = await api.consoleCommand('help');
+            if (ctx.alive()) record('help', result);
+        } catch (error) {
+            if (ctx.alive()) {
+                record('help', { output: error.message }, true);
+                ctx.report(error);
+            }
+        } finally {
+            pending = false;
+            run.disabled = false;
+        }
+    });
+    stream.tools.prepend(help);
+    stream.tools.append(feedback);
+    node.append(stream.tools, output, form);
     async function refresh() {
-        if (!stream.paused) stream.update(await ctx.request('logs'));
+        try {
+            if (!stream.paused) stream.update(await ctx.request('logs'));
+            text(feedback, stream.paused ? 'Display paused' : 'Connected');
+            feedback.classList.remove('error');
+        } catch (error) {
+            text(feedback, 'Disconnected · ' + error.message);
+            feedback.classList.add('error');
+            throw error;
+        }
     }
     await refresh();
     return {

@@ -1,6 +1,6 @@
 import { el, input, select, toolbar, button, text, download } from '../ui.js';
 /** Retains bounded output and appends only new rows. Scroll and controls have stable identity. */
-export function logStream() {
+export function logStream({ commands = [] } = {}) {
     const node = el('div', null, 'stack'),
         output = el('div', null, 'terminal'),
         search = input('Search output'),
@@ -32,9 +32,20 @@ export function logStream() {
             row.line.toLowerCase().includes(search.value.toLowerCase())
         );
     }
-    const key = (row) => `${row.timestamp}:${row.thread}:${row.level}:${row.line}`;
+    const key = (row) => row.id || `${row.timestamp}:${row.thread}:${row.level}:${row.line}`;
+    const commandRows = () =>
+        commands.map((entry) => ({
+            id: 'command-' + entry.time + '-' + entry.command,
+            timestamp: new Date(entry.time).toISOString(),
+            level: entry.error ? 'ERROR' : 'COMMAND',
+            line: '> ' + entry.command + '\n' + entry.output,
+            entry
+        }));
     function display(force = false) {
-        const visible = rows.filter(matches),
+        const retained = [...rows, ...commandRows()].sort(
+                (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+            ),
+            visible = retained.filter(matches),
             atBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 35;
         const anchor = [...output.children].find(
                 (n) => n.offsetTop >= output.offsetTop + output.scrollTop
@@ -48,7 +59,22 @@ export function logStream() {
                 const id = signature + ':' + occurrence;
                 let line = cache.get(id);
                 if (!line) {
-                    line = el('div', row.line, row.level);
+                    line = el('div', null, 'terminal-line ' + row.level);
+                    const time = el(
+                        'time',
+                        new Date(row.timestamp).toLocaleTimeString([], { hour12: false }),
+                        'log-time'
+                    );
+                    time.dateTime = row.timestamp;
+                    const level = el('span', row.level, 'log-level');
+                    const message = el('span', row.message ?? row.line, 'log-message');
+                    if (row.entry) {
+                        message.replaceChildren(
+                            el('span', '> ' + row.entry.command, 'command'),
+                            el('pre', row.entry.output, 'command-response')
+                        );
+                    }
+                    line.append(time, level, message);
                     line.title = row.timestamp || '';
                     cache.set(id, line);
                 }
@@ -65,9 +91,15 @@ export function logStream() {
             output.scrollTop += anchor.getBoundingClientRect().top - before;
         text(
             count,
-            `${visible.length} visible · ${rows.length} retained${paused ? ' · paused' : ''}`
+            `${visible.length} visible · ${retained.length} retained${paused ? ' · paused' : ''}`
         );
-        if (auto && (atBottom || force)) output.scrollTop = output.scrollHeight;
+        if (auto && (atBottom || force)) {
+            output.scrollTop = output.scrollHeight;
+            if (!output.isConnected)
+                requestAnimationFrame(() => {
+                    if (auto && output.isConnected) output.scrollTop = output.scrollHeight;
+                });
+        }
     }
     function update(incoming) {
         pending = incoming;
@@ -93,22 +125,25 @@ export function logStream() {
             button('Clear display', () => {
                 clearing = new Set(pending.map(key));
                 rows = [];
+                commands.length = 0;
                 display(true);
             }),
             button('Copy visible', () =>
                 navigator.clipboard.writeText(
-                    rows
+                    [...rows, ...commandRows()]
+                        .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
                         .filter(matches)
-                        .map((r) => r.line)
+                        .map((r) => `${r.timestamp} [${r.level}] ${r.message ?? r.line}`)
                         .join('\n')
                 )
             ),
             button('Export', () =>
                 download(
                     'tortodrone-log.txt',
-                    rows
+                    [...rows, ...commandRows()]
+                        .sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
                         .filter(matches)
-                        .map((r) => r.line)
+                        .map((r) => `${r.timestamp} [${r.level}] ${r.message ?? r.line}`)
                         .join('\n')
                 )
             ),
@@ -120,6 +155,8 @@ export function logStream() {
         node,
         update,
         output,
+        redraw: () => display(),
+        tools: node.firstChild,
         get paused() {
             return paused;
         }

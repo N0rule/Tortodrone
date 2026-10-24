@@ -14,12 +14,18 @@ import {
     select,
     tabs,
     text,
-    heat,
     number
 } from '../ui.js';
 import { DataTable } from '../components/table.js';
 import { edit, confirm, field, conflict, openDialog } from '../components/dialog.js';
-import { itemLine, currency, itemTile, icon, variantName } from '../components/items.js';
+import {
+    itemLine,
+    currency,
+    itemTile,
+    icon,
+    variantEffects,
+    gearProgress
+} from '../components/items.js';
 import { inspectItem, grantItem } from '../components/gear-editor.js';
 import { spriteCard } from '../components/sprite-card.js';
 
@@ -100,9 +106,11 @@ export async function mount(ctx) {
         name = el('h2', null, 'knight-name'),
         badges = el('div', null, 'badges'),
         accountLink = el('a'),
-        left = el('div'),
+        left = el('div', null, 'knight-identity'),
         wallet = el('div', null, 'knight-wallet');
-    left.append(name, badges, accountLink);
+    const account = el('div', null, 'knight-account');
+    account.append(el('span', 'Account'), accountLink);
+    left.append(name, badges, account);
     header.append(left, wallet);
     const crowns = button('', () => editCurrency('CROWNS')),
         energy = button('', () => editCurrency('ENERGY')),
@@ -183,7 +191,7 @@ export async function mount(ctx) {
             badge(`Rank ${view.profile.progress.rank}-${view.profile.progress.subrank}`),
             status(view.online ? 'Online' : 'Offline', view.online),
             badge(view.gameMaster ? 'Game Master' : 'Player', view.gameMaster ? 'gold' : ''),
-            badge(view.guild)
+            badge(view.guild || 'No guild')
         );
         text(accountLink, view.username);
         accountLink.href = '#accounts?' + new URLSearchParams({ username: view.username });
@@ -259,16 +267,7 @@ export async function mount(ctx) {
             tile.dataset.search = def.name.toLowerCase();
             tile.dataset.equipped = item.equippedSlot != null;
             tile.dataset.uv = !!item.variants.length;
-            if (item.variants.length)
-                tile.append(
-                    el(
-                        'small',
-                        item.variants
-                            .map((v) => def.variantDisplay?.[v.name]?.label || variantName(v.name))
-                            .join('; '),
-                        'uv'
-                    )
-                );
+            if (item.variants.length) tile.append(variantEffects(def, item.variants));
             grid.append(tile);
         }
         const applyFilter = () => {
@@ -355,6 +354,7 @@ export async function mount(ctx) {
                 if (slot.dataset.signature === signature) return slot;
                 slot.dataset.signature = signature;
                 slot.classList.toggle('empty-slot', !item);
+                slot.classList.toggle('locked-slot', !view.unlockedSlots.includes(index));
                 const info = el('div', null, 'slot-info');
                 info.append(
                     el(
@@ -364,29 +364,17 @@ export async function mount(ctx) {
                     )
                 );
                 info.append(
-                    el('span', item ? def?.name || item.config.split('/').at(-1) : 'Empty')
+                    el(
+                        'span',
+                        item
+                            ? def?.name || item.config.split('/').at(-1)
+                            : view.unlockedSlots.includes(index)
+                              ? 'Available slot'
+                              : 'Slot upgrade required'
+                    )
                 );
-                if (item && def?.progression)
-                    info.append(
-                        el(
-                            'small',
-                            `Level ${item.level + 1} · ${(item.heatProgress * 100).toFixed(1)}% Heat`
-                        ),
-                        heat(item.heatProgress)
-                    );
-                if (item?.variants.length)
-                    info.append(
-                        el(
-                            'small',
-                            item.variants
-                                .map(
-                                    (v) =>
-                                        def?.variantDisplay?.[v.name]?.label || variantName(v.name)
-                                )
-                                .join('; '),
-                            'uv'
-                        )
-                    );
+                if (item && def?.progression) info.append(gearProgress(def, item));
+                if (item?.variants.length) info.append(variantEffects(def, item.variants));
                 if (item?.bound) info.append(el('small', 'Bound'));
                 const emptyIcon = symbol(
                     'slot-' +
@@ -405,7 +393,7 @@ export async function mount(ctx) {
                 emptyIcon.classList.add('slot-icon');
                 slot.replaceChildren(item ? icon(item.config, def?.rarity) : emptyIcon, info);
                 slot.dataset.slot = index;
-                slot.disabled = false;
+                slot.disabled = !item && !view.unlockedSlots.includes(index);
                 return slot;
             });
             const wanted = new Set(desired);

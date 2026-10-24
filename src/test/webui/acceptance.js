@@ -115,13 +115,10 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 () => $('#dialog').open && $('#dialog').textContent.includes('Draft is valid.'),
                 'gear preview'
             );
-            [...$('#dialog .gear-card').querySelectorAll('button')]
-                .find((b) => /^Level /.test(b.textContent))
-                .click();
             const level = control('Level', $('#dialog')),
-                heat = control('Heat fraction', $('#dialog'));
+                heat = control('Heat percentage', $('#dialog'));
             set(level, 2);
-            set(heat, 0.375);
+            set(heat, 37.5);
             level.focus();
             await until(
                 () => $('#dialog').textContent.includes('Draft is valid.'),
@@ -227,7 +224,7 @@ export async function run(group, { disposable = false, username, knight } = {}) 
             const search = control('Search Unique Variants', $('#dialog'));
             set(search, 'Charge Time');
             check(
-                [...uv.querySelectorAll('.variant-choice')]
+                [...uv.querySelectorAll('.variant-option')]
                     .filter((n) => !n.hidden)
                     .every((n) => n.textContent.includes('Charge Time')),
                 'Searchable effects'
@@ -317,8 +314,8 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 'Three readable skill cards'
             );
             check(
-                document.querySelectorAll('#navigation img.ui-icon').length === 12,
-                'Original client navigation icons'
+                document.querySelectorAll('#navigation svg.ui-icon').length === 12,
+                'Consistent navigation icon family'
             );
             await navigate('accounts', { username }, () => !!control('Game Master permission'));
             const gm = control('Game Master permission');
@@ -417,12 +414,112 @@ export async function run(group, { disposable = false, username, knight } = {}) 
             await pause(100);
             pass('News page departure protection');
         }
+        if (group === 'grants') {
+            await navigate('knights', profile, () => !!$('.knight-name'));
+            const before = await api.request('knight-view', profile);
+            $('.knight-wallet button').click();
+            set(control('Amount', $('#dialog')), before.profile.crowns + 125);
+            await save();
+            check(
+                (await api.request('knight-view', profile)).profile.crowns ===
+                    before.profile.crowns + 125,
+                'Currency editor remains functional'
+            );
+            button('Grant item').click();
+            set(control('Search items', $('#dialog')), 'Owlite Shield');
+            await until(
+                () =>
+                    [...document.querySelectorAll('#dialog .item-tile .item-name')].some(
+                        (n) => n.textContent === 'Owlite Shield'
+                    ),
+                'Grant catalogue'
+            );
+            [...document.querySelectorAll('#dialog .item-tile')]
+                .find((n) => n.querySelector('.item-name')?.textContent === 'Owlite Shield')
+                .click();
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'Grant preview'
+            );
+            check(
+                $('#dialog').querySelectorAll('.item-line').length === 1,
+                'Selected item identity appears once'
+            );
+            const level = control('Level slider', $('#dialog'));
+            set(level, level.max);
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'Maximum-level preview'
+            );
+            check(control('Heat', $('#dialog')).disabled, 'Max-level grant disables Heat');
+            $('#dialog .uv-picker').open = true;
+            $('#dialog .variant-option:not(:disabled)').click();
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'Grant UV preview'
+            );
+            await save();
+            const after = await api.request('knight-view', profile),
+                ids = new Set(before.profile.items.map((i) => i.id)),
+                item = after.profile.items.find((i) => !ids.has(i.id));
+            check(
+                item &&
+                    item.level + 1 === +level.max &&
+                    item.heatProgress === 0 &&
+                    item.variants.length === 1,
+                'Grant persists authoritative level, Heat and UVs'
+            );
+            $('.equipment-slot[data-slot="2"]').click();
+            [...document.querySelectorAll('#dialog .item-tile')]
+                .find((n) => n.querySelector('.item-name')?.textContent === 'Owlite Shield')
+                .click();
+            await save();
+            const card = $('.equipment-slot[data-slot="2"]');
+            check(
+                card.textContent.includes('Maximum') &&
+                    !card.querySelector('progress') &&
+                    card.querySelectorAll('.variant-effect').length === 1,
+                'Equipped maximum gear uses one UV row and no empty Heat meter'
+            );
+            card.click();
+            button('Unequip', $('#dialog')).click();
+            await save();
+            button('Inventory').click();
+            await until(() => !!control('Search inventory'), 'Inventory');
+            set(control('Search inventory'), 'Owlite Shield');
+            await until(
+                () =>
+                    [...document.querySelectorAll('#page .item-tile')].some(
+                        (n) => n.querySelector('.item-name')?.textContent === 'Owlite Shield'
+                    ),
+                'Granted inventory item'
+            );
+            [...document.querySelectorAll('#page .item-tile')]
+                .find((n) => n.querySelector('.item-name')?.textContent === 'Owlite Shield')
+                .click();
+            await until(
+                () => $('#dialog').textContent.includes('Draft is valid.'),
+                'Owned gear inspector'
+            );
+            button('Quantity / remove', $('#dialog')).click();
+            set(control('Quantity (0 removes)', $('#dialog')), 0);
+            await save();
+            check(
+                !(await api.request('knight-view', profile)).profile.items.some(
+                    (i) => i.id === item.id
+                ),
+                'Quantity removal remains functional'
+            );
+            pass(
+                'Currency, grant with modifiers, max-level equipment, inventory inspection and removal'
+            );
+        }
         if (group === 'console') {
             await navigate('console', {}, () => !!control('Command'));
             set(control('Command'), 'help');
             $('.command-form').requestSubmit();
             await until(
-                () => $('[aria-label="Command results"]').textContent.includes('> help'),
+                () => $('[aria-label="Console output"]').textContent.includes('> help'),
                 'command result'
             );
             await until(() => control('Command').value === '', 'clear submitted command');
@@ -434,7 +531,7 @@ export async function run(group, { disposable = false, username, knight } = {}) 
                 'Command draft survives navigation'
             );
             check(
-                $('[aria-label="Command results"]').textContent.includes('> help'),
+                $('[aria-label="Console output"]').textContent.includes('> help'),
                 'Command history survives navigation'
             );
             pass('console draft and result history');

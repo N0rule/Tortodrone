@@ -76,7 +76,7 @@ export async function mount(ctx) {
         { name: 'Players', value: (s) => s.players },
         { name: 'Scenes', value: (s) => s.scenes }
     ]);
-    const activity = chart('Connection activity', 'events', [
+    const activity = chart('Connection activity', 'events / sample', [
         { name: 'Connected', value: (s, i, a) => (i ? s.connected - a[i - 1].connected : -1) },
         {
             name: 'Disconnected',

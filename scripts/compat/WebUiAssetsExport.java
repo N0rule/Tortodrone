@@ -59,7 +59,7 @@ public final class WebUiAssetsExport {
         for(var entry:navigation.entrySet()){var icon=new IconConfig.ColorizedImage();icon.file=entry.getValue();if(icon.file.contains("/categories/"))icon.colorizations=socketColors;ui.put("nav-"+entry.getKey(),write(icon));}
         for(var entry:Map.ofEntries(Map.entry("helmet","helmet"),Map.entry("armor","armor"),Map.entry("shield","shield"),Map.entry("weapon","sword"),Map.entry("trinket","amulet"),Map.entry("costume","costume")).entrySet()){var icon=new IconConfig.ColorizedImage();icon.file="ui/icon/inventory/categories/icon_"+entry.getValue()+".png";icon.colorizations=socketColors;ui.put("slot-"+entry.getKey(),write(icon));}
         for(var entry:Map.of("crowns","ui/icon/crown_32.png","energy","ui/icon/energy_32.png","prestige","ui/icon/prestige_16.png",
-                "heat","ui/window/geartip_levelbar.png","variants","ui/window/geartip_variant.png","equipment","ui/status/images/backing_slots.png",
+                "heat","ui/window/geartip_levelbar.png","variants","ui/window/tooltip_parts/icon_variant.png","equipment","ui/status/images/backing_slots.png",
                 "button","ui/button/up.png","button-active","ui/button/up_yellow.png").entrySet()) {
             var icon=new IconConfig.ColorizedImage();icon.file=entry.getValue();ui.put(entry.getKey(),write(icon));
         }

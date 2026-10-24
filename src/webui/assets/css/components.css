@@ -53,7 +53,7 @@
     gap: 5px;
 }
 .uv {
-    color: var(--purple);
+    color: var(--gold);
 }
 .empty {
     padding: 35px 15px;
@@ -362,4 +362,19 @@ button > .ui-icon,
 }
 img.ui-icon {
     object-fit: contain;
+}
+
+#navigation .ui-icon {
+    color: var(--cyan);
+}
+#navigation [aria-current='page'] .ui-icon {
+    color: var(--gold);
+}
+.tabs .ui-icon,
+button > svg.ui-icon {
+    color: currentColor;
+}
+a:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
 }

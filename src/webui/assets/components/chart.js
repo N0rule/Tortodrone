@@ -21,7 +21,15 @@ function svg(tag, attrs = {}) {
 export function chart(title, unit, series) {
     const node = el('section', null, 'panel'),
         heading = el('h2', title),
-        readout = el('div', 'Waiting for samples', 'chart-legend');
+        readout = el('div', 'Waiting for samples', 'chart-legend'),
+        current = el('div', null, 'chart-current'),
+        currentValues = series.map((s, i) => {
+            const row = el('div', null, i ? 'secondary-value' : ''),
+                value = el('strong', '—');
+            row.append(value, el('small', s.name + (unit.startsWith('events') ? ' / sample' : '')));
+            current.append(row);
+            return value;
+        });
     const graph = svg('svg', {
         viewBox: '0 0 600 190',
         class: 'chart',
@@ -42,7 +50,7 @@ export function chart(title, unit, series) {
             visibility: 'hidden'
         });
     graph.append(lines, ...paths, cursor);
-    node.append(heading, graph, readout);
+    node.append(heading, current, graph, readout);
     let samples = [],
         index = 0,
         inspecting = false;
@@ -103,12 +111,24 @@ export function chart(title, unit, series) {
         update(values) {
             const inspectedTime = samples[index]?.time;
             samples = values;
+            series.forEach((s, i) => {
+                const n = values.length ? s.value(values.at(-1), values.length - 1, values) : NaN;
+                text(
+                    currentValues[i],
+                    Number.isFinite(n) && n >= 0
+                        ? n.toLocaleString(undefined, {
+                              maximumFractionDigits:
+                                  unit === '' || unit.startsWith('events') ? 0 : 1
+                          }) + (unit && !unit.startsWith('events') ? ' ' + unit : '')
+                        : 'Unavailable'
+                );
+            });
             const all = series
                 .flatMap((s) => values.map((v, i) => s.value(v, i, values)))
                 .filter((v) => Number.isFinite(v) && v >= 0);
             const rawMaximum = Math.max(unit === '%' ? 100 : 1, ...all) * (unit === '%' ? 1 : 1.12),
                 maximum =
-                    unit === '' || unit === 'events'
+                    unit === '' || unit.startsWith('events')
                         ? Math.max(2, Math.ceil(rawMaximum / 2) * 2)
                         : rawMaximum,
                 grid = [];
