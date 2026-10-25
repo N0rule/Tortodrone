@@ -95,6 +95,12 @@ public final class WebUiTest {
                     check(get("../assets/app.js").status==404,"traversal rejected");
                     check(request("GET","/admin/%2e%2e/data/webui.sqlite",null,authenticated()).status==404,"encoded traversal rejected");
                     check(request("GET","/admin/assets/secret.key",null,authenticated()).status==404,"static allowlist");
+                    var welcome=(Map<?,?>)Json.parse(get("welcome").body);
+                    check(welcome.get("message").equals(org.tortodrone.config.ServerSettings.DEFAULT_WELCOME_MESSAGE),"welcome setting is readable");
+                    check(post("welcome-save",Map.of("message","Welcome, knight!","revision",welcome.get("revision"),"confirmation","welcome-save")).status==200&&Files.readString(root.resolve("config/server.yml")).contains("welcome-message: 'Welcome, knight!'"),"welcome setting writes server.yml");
+                    var latestWelcome=(Map<?,?>)Json.parse(get("welcome").body);
+                    var invalidWelcome=post("welcome-save",Map.of("message","x".repeat(257),"revision",latestWelcome.get("revision"),"confirmation","welcome-save"));
+                    check(invalidWelcome.status==422&&invalidWelcome.body.contains("at most 256 characters"),"welcome bounds reach the browser without filesystem detail");
                     check(post("account-create",Map.of("padding","x".repeat(66000))).status==400,"request size bounded");
                     check(post("logout",Map.of()).status==200&&get("status").status==401,"logout revokes session");
                     login("viewer");check(get("console").status==403&&post("console",Map.of("command","status","confirmation","console")).status==403,"viewer cannot access console");check(get("status").status==200&&get("accounts").status==403,"viewer monitoring only");check(post("stop",Map.of("confirmation","stop")).status==403,"viewer cannot stop listener");

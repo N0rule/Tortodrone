@@ -56,7 +56,7 @@ public final class Server {
                 ServerControl control=new ServerControl(version(),dataDirectory);
                 var content=org.tortodrone.resources.ContentManager.load(directory,settings);
                 try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());
-                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content):null;
+                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content,config):null;
                     var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
                     com.sun.net.httpserver.HttpHandler handler=null;
                     String setupCode=null;

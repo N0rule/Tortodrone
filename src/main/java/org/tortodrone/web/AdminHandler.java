@@ -38,7 +38,8 @@ public final class AdminHandler implements HttpHandler {
             case "Sign out of the game before changing equipment","Item cannot be equipped in that slot","Activate a slot upgrade first","No such owned item","Invalid item level or heat","Level is outside this item's progression table",
                 "Maximum-level items cannot store heat","Choose up to three distinct UVs valid for this item",
                 "Choose only one UV from each variant family","Use a PNG or JPEG filename","Invalid image encoding",
-                "Uploaded images must be at most 1 MiB","Image exceeds the 570 by 300 featured slot","News image library is full"->message;
+                "Uploaded images must be at most 1 MiB","Image exceeds the 570 by 300 featured slot","News image library is full",
+                "welcome-message must be at most 256 characters","welcome-message must not contain control characters","welcome-message must not contain invalid text"->message;
             case "e.existing_accessory"->"An accessory already occupies that location. Remove attached accessories before adding a replacement.";
             case "e.cant_use_accessory"->"This accessory is not compatible with the selected equipment.";
             default->null;

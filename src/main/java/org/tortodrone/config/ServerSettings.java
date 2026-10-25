@@ -100,7 +100,12 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
     }
 
     private static String welcomeMessage(Properties settings)throws IOException {
-        String message=value(settings,"welcome-message");
+        return welcomeMessage(value(settings,"welcome-message"));
+    }
+
+    /** Validate a configured welcome notice; the empty string disables it. */
+    public static String welcomeMessage(String message)throws IOException {
+        message=message==null?"":message.strip();
         if(message.codePointCount(0,message.length())>MAX_WELCOME_CHARACTERS)
             throw new IOException("welcome-message must be at most "+MAX_WELCOME_CHARACTERS+" characters");
         for(int i=0;i<message.length();i++) {

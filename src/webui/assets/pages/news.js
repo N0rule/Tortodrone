@@ -34,11 +34,15 @@ export function newsDocument(draft) {
 }
 export async function mount(ctx) {
     let data = await ctx.request('news'),
+        welcome = await ctx.request('welcome'),
         draft = schema(data.catalog),
         pack = 0,
         slot = 'featured',
         dirty = false,
         revision = data.revision,
+        welcomeRevision = welcome.revision,
+        welcomeMessage = welcome.message,
+        welcomeStale = false,
         stale = false;
     const node = el('div', null, 'stack'),
         enabled = input('Enable News', draft.enabled, 'checkbox'),
@@ -95,6 +99,17 @@ export async function mount(ctx) {
     const saveYaml = button('Review and save YAML', () => review('news-save', { yaml: raw.value }));
     raw.oninput = () => text(dirtyLabel, 'Unsaved YAML draft');
     advanced.append(el('summary', 'Advanced YAML'), raw, saveYaml);
+    const welcomeInput = input('Welcome message', welcomeMessage);
+    welcomeInput.maxLength = 256;
+    const welcomeStatus = el('small', 'Restart the server process to apply changes.', 'muted');
+    const welcomeSave = button('Save welcome message', () => reviewWelcome());
+    const welcomePanel = panel(
+        'Welcome message',
+        label('Shown once in chat after a knight enters the world. Leave empty to disable.', welcomeInput),
+        el('small', 'Up to 256 characters. Stored in the active server configuration file.'),
+        toolbar(welcomeSave, welcomeStatus)
+    );
+    welcomePanel.classList.add('stack');
     const file = input('Upload News image', '', 'file', { accept: 'image/png,image/jpeg' });
     const save = button('Review and save News', () =>
         review('news-visual-save', { catalog: JSON.stringify(newsDocument(draft)) })
@@ -102,10 +117,17 @@ export async function mount(ctx) {
     const reload = button('Load latest News', async () => {
         if (
             isDirty() &&
-            !window.confirm('Discard the unsaved visual and YAML drafts and load the latest News?')
+            !window.confirm(
+                'Discard the unsaved News, YAML and welcome drafts and load the latest settings?'
+            )
         )
             return;
-        accept(await ctx.request('news'));
+        const [latest, latestWelcome] = await Promise.all([
+            ctx.request('news'),
+            ctx.request('welcome')
+        ]);
+        accept(latest);
+        acceptWelcome(latestWelcome);
     });
     const removePack = button('Remove pack', () => {
         if (!draft.packs.length) return;
@@ -156,7 +178,8 @@ export async function mount(ctx) {
                 'Featured: 570 × 300. Spotlights: 280 × 190. Smaller images retain their native dimensions.'
             )
         ),
-        advanced
+        advanced,
+        welcomePanel
     );
     const banner = () =>
         !draft.packs[pack]
@@ -168,7 +191,9 @@ export async function mount(ctx) {
         dirty = true;
         text(dirtyLabel, 'Unsaved draft');
     }
-    const isDirty = () => dirty || raw.value !== data.yaml;
+    const newsDirty = () => dirty || raw.value !== data.yaml;
+    const welcomeDirty = () => welcomeInput.value !== welcomeMessage;
+    const isDirty = () => newsDirty() || welcomeDirty();
     function updatePacks() {
         removePack.disabled = !draft.packs.length;
         packs.disabled = !draft.packs.length;
@@ -367,6 +392,42 @@ export async function mount(ctx) {
             }
         });
     }
+    function reviewWelcome() {
+        if (welcomeStale) return;
+        const content = el('div');
+        content.append(
+            el('p', 'This message appears once in chat after a knight enters the world.'),
+            el('p', welcomeInput.value || '(disabled)', 'mono'),
+            el('p', 'The server process must restart before players see the change.', 'muted')
+        );
+        openDialog({
+            title: 'Review welcome message',
+            content,
+            revision: welcomeRevision,
+            target: 'welcome',
+            submit: 'Save message',
+            onSubmit: async () => {
+                const result = await api.change('welcome-save', {
+                    message: welcomeInput.value,
+                    revision: welcomeRevision
+                });
+                acceptWelcome(result, true);
+            }
+        });
+    }
+    function acceptWelcome(latest, saved = false) {
+        welcomeRevision = latest.revision;
+        welcomeMessage = latest.message;
+        welcomeInput.value = latest.message;
+        welcomeStale = false;
+        welcomeSave.disabled = false;
+        text(
+            welcomeStatus,
+            saved
+                ? 'Saved. Restart the server process to apply.'
+                : 'Restart the server process to apply changes.'
+        );
+    }
     function accept(latest) {
         data = latest;
         revision = latest.revision;
@@ -387,7 +448,7 @@ export async function mount(ctx) {
         const latest = await ctx.request('news');
         if (latest.revision !== revision) {
             dialogConflict('news', latest.revision);
-            if (!isDirty()) accept(latest);
+            if (!newsDirty()) accept(latest);
             else {
                 stale = true;
                 conflict.hidden = false;
@@ -401,6 +462,19 @@ export async function mount(ctx) {
         if (JSON.stringify(latest.images) !== JSON.stringify(data.images)) {
             data.images = latest.images;
             renderImages();
+        }
+        const latestWelcome = await ctx.request('welcome');
+        if (latestWelcome.revision !== welcomeRevision) {
+            dialogConflict('welcome', latestWelcome.revision);
+            if (!welcomeDirty()) acceptWelcome(latestWelcome);
+            else {
+                welcomeStale = true;
+                welcomeSave.disabled = true;
+                text(
+                    welcomeStatus,
+                    'Settings changed on disk. Load the latest settings before editing.'
+                );
+            }
         }
     }
     return { node, refresh, isDirty, interval: 15000 };

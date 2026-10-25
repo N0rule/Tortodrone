@@ -17,6 +17,7 @@ public final class AdminService implements AutoCloseable {
     private final ArrayDeque<ServerLog.Event> logs=new ArrayDeque<>();
     private final AutoCloseable subscription;
     private final NewsEditor news;
+    private final WelcomeEditor welcome;
     private final AdminViews views;
     private final MetricHistory history;
     private final org.tortodrone.resources.ContentRegistry validatedContent;
@@ -24,8 +25,12 @@ public final class AdminService implements AutoCloseable {
         this(accounts,control,log,deployment,null);
     }
     public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,org.tortodrone.resources.ContentRegistry validatedContent)throws IOException {
+        this(accounts,control,log,deployment,validatedContent,org.tortodrone.config.ServerSettings.defaultPath(deployment));
+    }
+    public AdminService(AccountStore accounts,ServerControl control,ServerLog log,Path deployment,org.tortodrone.resources.ContentRegistry validatedContent,Path config)throws IOException {
         this.validatedContent=validatedContent;
         this.accounts=accounts;this.control=control;this.deployment=deployment;news=new NewsEditor(deployment.resolve("content/shared/news"));
+        welcome=new WelcomeEditor(config);
         views=new AdminViews(accounts,control,validatedContent);history=new MetricHistory(control);
         subscription=log.subscribe(e->{synchronized(logs){if(logs.size()==1000)logs.removeFirst();logs.addLast(e);}});
     }
@@ -51,6 +56,7 @@ public final class AdminService implements AutoCloseable {
             case "console"->AdminConsole.commands();
             case "logs"->{synchronized(logs){yield List.copyOf(logs);}}
             case "news"->news.read();
+            case "welcome"->welcome.read();
             case "content"->{var c=validatedContent==null?org.tortodrone.resources.ContentManager.load(deployment):validatedContent;yield Map.of("warnings",c.warnings(),"maps",c.scenes().scenes().size(),"items",c.items().entries().size(),"news",c.news(),"merchants",c.town().stations());}
             default->throw new IllegalArgumentException("Unknown resource");
         };
@@ -94,6 +100,7 @@ public final class AdminService implements AutoCloseable {
             case "news-save"->{return news.save(p.text("yaml"),p.text("revision"));}
             case "news-visual-save"->{return news.saveCatalog(p.text("catalog"),p.text("revision"));}
             case "news-upload"->{return news.upload(p.text("name"),p.text("data"));}
+            case "welcome-save"->{return welcome.save(p.optional("message"),p.text("revision"));}
             default->throw new IllegalArgumentException("Unknown action");
         }
         return Map.of("ok",true);
