@@ -1,0 +1,59 @@
+package org.tortodrone.world;
+
+import java.io.IOException;
+import java.util.*;
+import org.tortodrone.character.StarterCatalog;
+import static org.tortodrone.support.TestWire.check;
+
+/** Exercises the real entity removal and dynamic-door collision paths, with explicit tick times. */
+public final class SceneActionsTest {
+    private static final String EXIT="{\"kind\":\"delay\",\"millis\":5000,\"action\":{\"kind\":\"signal\",\"tag\":\"door end\",\"name\":\"open\"}}";
+    public static void main(String[] args)throws Exception {
+        var map=SceneCatalog.load(org.tortodrone.support.ContentFixture.path("maps")).scene(294);
+        var boss=entry("giant",0,0,Map.of("config","Fixture/Giant","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","10","damage-mask","2","radius","0.4","tags","wave miniboss","death-time","100"));
+        var door=entry("door",3,0,Map.of("config","Fixture/Door","native-type","com.threerings.projectx.dungeon.data.actor.Door","kind","Door","collision-flags","1","width","2","height","1","tags","door end","door-speed","0"));
+        var trigger=entry("3306",0,0,Map.of("config","Trigger/Actor Removed","kind","SceneTrigger","event","removed","watch-tag","wave miniboss","action",EXIT));
+        var content=new SceneContent(List.of(boss,door,trigger),Map.of());
+        var scene=new SceneEntities(content,map.collision());var isolated=new SceneEntities(content,map.collision());
+        check(scene.actors().size()==2,"script handler never creates a native actor or phantom place");
+        int time=SceneClock.now()+100;
+        scene.advance(time,List.of());check(!scene.walkable(3,0,219),"exit begins collision-blocked");
+        var hit=new StarterCatalog.Model("DamageRegion",Map.of("shape",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",1f)),
+            "damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",20f))));
+        scene.damage(hit,0,0,0,time,219);
+        scene.advance(time+199,List.of());check(!scene.walkable(3,0,219),"HP zero alone cannot open the exit");
+        scene.advance(time+200,List.of()); // 100 ms death animation plus existing 100 ms publication grace.
+        scene.advance(time+5199,List.of());check(!scene.walkable(3,0,219),"exit remains blocked before the sourced five-second delay");
+        scene.advance(time+5200,List.of());
+        var opened=scene.actors().stream().filter(a->a.entity().kind().equals("Door")).findFirst().orElseThrow();
+        check((opened.flags()&6)==6,"door publishes OPEN and TRANSITION flags at the scheduled time");
+        scene.advance(time+5201,List.of());check(scene.walkable(3,0,219),"native transition completion releases collision");
+        isolated.advance(time+10000,List.of());check(!isolated.walkable(3,0,219),"another scene's boss/door are unaffected");
+        scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
+        scheduler();
+        try{SceneActions.rule(entry("bad",0,0,Map.of("kind","SceneTrigger","event","removed","watch-tag","wave","all","unknown","action",EXIT)));throw new AssertionError("Invalid group flag accepted");}catch(IOException expected){}
+        for(String invalid:List.of("{\"kind\":\"executeClass\",\"name\":\"arbitrary\"}","{\"kind\":\"signal\",\"tag\":\"x\",\"name\":\"open\",\"extra\":true}",EXIT.replace("5000","-1"),EXIT.replace("5000","0.5"),EXIT.replace("5000","999999999999")))
+            try{SceneActions.parse(invalid);throw new AssertionError("Invalid graph accepted");}catch(IOException expected){}
+        System.out.println("PASS: actor-removal exit delay, door flags/collision, scene isolation, scheduling, all-target guards, failure, cancellation and graph validation");
+    }
+    private static SceneContent.Entry entry(String key,float x,float y,Map<String,String> fields){return new SceneContent.Entry(key,x,y,0,new SceneContent.Spec(fields));}
+    private static void scheduler()throws Exception {
+        var events=new ArrayList<String>();
+        var action=new SceneActions.Sequence(List.of(new SceneActions.Delay(20,new SceneActions.Delay(30,new SceneActions.Signal("door","first"))),new SceneActions.Delay(50,new SceneActions.Signal("door","second"))),false);
+        var rule=new SceneActions.Rule("all","removed","wave","",true,action);
+        var runtime=new SceneActions(List.of(rule),(tag,name,time)->{events.add(name+":"+time);return true;});
+        runtime.removed(Set.of("wave"),tag->true,100);runtime.advance(200);check(events.isEmpty(),"all=true waits for the last matching actor");
+        runtime.removed(Set.of("other"),tag->false,200);runtime.advance(200);check(events.isEmpty(),"unrelated actors cannot activate the rule");
+        runtime.removed(Set.of("wave"),tag->false,200);runtime.advance(500);
+        check(events.equals(List.of("second:250","first:250")),"late ticks retain nested due times and insertion order for equal deadlines");
+        runtime.removed(Set.of("wave"),tag->false,600);runtime.close();runtime.advance(1000);check(events.size()==2&&runtime.pending()==0,"scene cancellation discards delayed work");
+        for(boolean stop:List.of(false,true)){
+            events.clear();var compound=new SceneActions.Sequence(List.of(new SceneActions.Signal("door","fail"),new SceneActions.Signal("door","after")),stop);
+            var failure=new SceneActions(List.of(new SceneActions.Rule("failure","signal","start","go",false,compound)),(tag,name,time)->{events.add(name);return !name.equals("fail");});
+            failure.signal("start","go",1);failure.advance(1);check(events.size()==(stop?1:2),"compound honors native stopOnFailure");
+        }
+        SceneActions[] loop={null};loop[0]=new SceneActions(List.of(new SceneActions.Rule("loop","signal","loop","go",false,new SceneActions.Signal("loop","go"))),
+            (tag,name,time)->{loop[0].signal(tag,name,time);return true;});
+        loop[0].signal("loop","go",1);loop[0].advance(1);check(loop[0].pending()==1,"cyclic signals are tick-budgeted instead of recursing");loop[0].close();
+    }
+}

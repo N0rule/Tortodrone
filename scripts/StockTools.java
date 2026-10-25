@@ -25,6 +25,10 @@ public final class StockTools {
                 if(args.length!=2)throw new IllegalArgumentException("action-graphs-check expects game-directory");fixture="ActionGraphCompatibility";
                 for(String source:List.of("ActionGraphCompatibility","FireCatalogExport","SceneStatusExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
+            case "scene-actions-check" -> {
+                if(args.length!=2)throw new IllegalArgumentException("scene-actions-check expects game-directory");fixture="SceneActionCompatibility";
+                for(String source:List.of("SceneActionCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "item-actions" -> {
                 if(args.length!=3)throw new IllegalArgumentException("item-actions expects game-directory fresh-output-file");
                 fixture="SceneItemExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
