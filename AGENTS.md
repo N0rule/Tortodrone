@@ -14,12 +14,13 @@ Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; no
 - Scene instances own simulation state; client input is intent, not position. Guard travel/subscription generations; keep network I/O outside simulation/storage locks.
 - Unified YAML content and a migration-only legacy pack reader are implemented; imported definitions alone do not prove gameplay support.
 
-## Verification — fast by default
+## Verification — test only what the change needs
+- **Never run the full test suite by default.** `./gradlew testAll` is very slow and expensive; do not run it for routine changes, and do not treat "major change" as permission. Run it only when the owner explicitly asks for it.
 - **Docs/minor cleanup:** inspect diff/links; no Java tests.
 - **Normal Java/content change:** `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` compiles/packages and runs only the selected standalone programs (see `docs/development.md`). Use `./gradlew build` for compilation/package checks without execution. Add a focused regression if behavior changed.
 - **Auth/storage/trade/protocol/concurrency:** targeted positive/negative, ownership and rollback tests; add relevant integration checks. Do not trade away safety for speed.
 - **Client-visible changes:** focused tests first. Run **one relevant isolated stock-client/graphical scenario** only when required to establish the changed behavior; otherwise state that visuals were not verified. Never run graphical tests routinely.
-- **Major cross-cutting change or explicit release verification:** full `./gradlew testAll` at the final checkpoint, not after each edit. A routine patch `VERSION` bump alone does not require the full suite. Do not run benchmarks, full suites, repeated builds or unrelated checks by default.
+- Pick the smallest set of tests that actually covers the change; never widen to unrelated areas. Do not run benchmarks, repeated builds or tests for code you did not touch.
 - Stop after acceptance criteria pass. Rerun checks only for affected changes/failures; report skipped or unavailable verification honestly.
 
 ## Finish
