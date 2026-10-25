@@ -147,12 +147,20 @@ public final class AdminHandler implements HttpHandler {
                 case "webp"->"image/webp";case "svg"->"image/svg+xml";case "woff2"->"font/woff2";default->null;};
         }
         if(type==null){send(e,404,Map.of("error","Not found"));return;}
-        Path file=ContentFiles.relative(frontend,name);ContentFiles.regular(file);if(Files.size(file)>2*1024*1024)throw new IOException("Asset too large");
-        byte[] b=Files.readAllBytes(file);e.getResponseHeaders().set("Content-Type",type);
+        Path file=ContentFiles.relative(frontend,name);
+        if(!Files.isRegularFile(file,LinkOption.NOFOLLOW_LINKS)){send(e,404,Map.of("error","Not found"));return;}
+        int limit=2*1024*1024;
+        if(Files.size(file)>limit)throw new IOException("Asset too large");
+        byte[] b;
+        try(var input=Files.newInputStream(file,LinkOption.NOFOLLOW_LINKS)){b=input.readNBytes(limit+1);}
+        if(b.length>limit)throw new IOException("Asset too large");
+        e.getResponseHeaders().set("Content-Type",type);
         if(!name.equals("index.html"))e.getResponseHeaders().set("Cache-Control",name.matches("assets/game/icons/[a-f0-9]{64}\\.(?:png|webp)")?"private, max-age=31536000, immutable":"private, max-age=0, must-revalidate");
-        e.getResponseHeaders().set("ETag","\""+ContentFiles.digest(file)+"\"");
+        // Hash the response snapshot: a second file read can race an atomic asset replacement.
+        try{e.getResponseHeaders().set("ETag","\""+HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(b))+"\"");}
+        catch(java.security.NoSuchAlgorithmException impossible){throw new AssertionError(impossible);}
         if(e.getResponseHeaders().getFirst("ETag").equals(e.getRequestHeaders().getFirst("If-None-Match"))){e.sendResponseHeaders(304,-1);return;}
-        e.sendResponseHeaders(200,b.length);e.getResponseBody().write(b);
+        e.sendResponseHeaders(200,b.length==0?-1:b.length);if(b.length>0)e.getResponseBody().write(b);
     }
     private static void send(HttpExchange e,int status,Object result)throws IOException {byte[] b=WebJson.encode(result).getBytes(StandardCharsets.UTF_8);e.getResponseHeaders().set("Content-Type","application/json; charset=utf-8");e.sendResponseHeaders(status,b.length);e.getResponseBody().write(b);}
 }

@@ -53,6 +53,19 @@ public final class WebUiTest {
                     check(module.status==200&&module.headers.get("content-type").startsWith("text/javascript"),"nested modules have JavaScript MIME");
                     var conditional=headers();conditional.put("If-None-Match",module.headers.get("etag"));
                     check(request("GET","/admin/assets/js/pages/fixture.js",null,conditional).status==304,"static assets revalidate by content hash");
+                    String replacement="export const fixture = false;";
+                    Path moduleFile=frontend.resolve("assets/js/pages/fixture.js");
+                    var modified=Files.getLastModifiedTime(moduleFile);
+                    Files.writeString(moduleFile,replacement);Files.setLastModifiedTime(moduleFile,modified);
+                    var changed=request("GET","/admin/assets/js/pages/fixture.js",null,conditional);
+                    String expectedTag="\""+HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(replacement.getBytes(StandardCharsets.UTF_8)))+"\"";
+                    check(changed.status==200&&changed.body.equals(replacement)&&changed.headers.get("etag").equals(expectedTag),"response hash follows exact served bytes even with unchanged modification time");
+                    check(request("GET","/admin/assets/missing.js",null,headers()).status==404,"missing static asset returns not found");
+                    Files.write(frontend.resolve("assets/empty.css"),new byte[0]);
+                    var empty=request("GET","/admin/assets/empty.css",null,headers());
+                    check(empty.status==200&&empty.body.isEmpty(),"empty assets finish without a chunked response body");
+                    Files.write(frontend.resolve("assets/large.json"),new byte[2*1024*1024+1]);
+                    check(request("GET","/admin/assets/large.json",null,headers()).status==409,"oversized assets are refused");
                     check(request("GET","/admin/assets/fixture.webp",null,headers()).headers.get("content-type").equals("image/webp"),"optimized image MIME");
                     check(request("GET","/admin/assets/manifest.json",null,headers()).status==200,"icon manifest served");
                     if(Files.getFileStore(frontend).supportsFileAttributeView("posix")) {

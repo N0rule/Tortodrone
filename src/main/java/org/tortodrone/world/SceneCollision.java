@@ -97,14 +97,23 @@ public final class SceneCollision {
     /** Native actor shapes at two world poses, with a rounded damage-region expansion. */
     public static boolean overlaps(Object first,float x,float y,float rotation,Object second,float otherX,float otherY,float otherRotation,float expansion) {
         float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation),oc=(float)Math.cos(otherRotation),os=(float)Math.sin(otherRotation);
-        for(var a:fromData(first,0))for(var b:fromData(second,0)){
-            var worldA=transform(a,x,y,c,s,1);var worldB=transform(b,otherX,otherY,oc,os,1);
-            if(intersects(worldA,worldB))return true;
-            if(expansion<=0)continue;
-            if(worldA instanceof Circle circle){if(intersects(new Circle(circle.center,circle.radius+expansion),worldB))return true;}
-            else if(worldA instanceof Capsule capsule){if(intersects(new Capsule(capsule.a,capsule.b,capsule.radius+expansion),worldB))return true;}
-            else if(worldA instanceof Polygon polygon)for(int i=0;i<polygon.points.size();i++)
-                if(intersects(new Capsule(polygon.points.get(i),polygon.points.get((i+1)%polygon.points.size()),expansion),worldB))return true;
+        var localA=fromData(first,0);
+        if(localA.isEmpty())return false;
+        var localB=fromData(second,0);
+        if(localB.isEmpty())return false;
+        // Each compound part has one world pose for this query, independent of its counterpart.
+        var posedB=new Geom[localB.size()];
+        for(int i=0;i<posedB.length;i++)posedB[i]=transform(localB.get(i),otherX,otherY,oc,os,1);
+        for(var a:localA){
+            var worldA=transform(a,x,y,c,s,1);
+            for(var worldB:posedB){
+                if(intersects(worldA,worldB))return true;
+                if(expansion<=0)continue;
+                if(worldA instanceof Circle circle){if(intersects(new Circle(circle.center,circle.radius+expansion),worldB))return true;}
+                else if(worldA instanceof Capsule capsule){if(intersects(new Capsule(capsule.a,capsule.b,capsule.radius+expansion),worldB))return true;}
+                else if(worldA instanceof Polygon polygon)for(int i=0;i<polygon.points.size();i++)
+                    if(intersects(new Capsule(polygon.points.get(i),polygon.points.get((i+1)%polygon.points.size()),expansion),worldB))return true;
+            }
         }
         return false;
     }

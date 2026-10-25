@@ -34,11 +34,15 @@
 }
 #sidebar .brand {
     padding: 0 8px 25px;
+    flex-shrink: 0;
 }
 #navigation {
     display: grid;
     gap: 3px;
     overflow: auto;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-bright) transparent;
 }
 #navigation a {
     display: flex;
@@ -74,6 +78,9 @@
     padding: 20px 8px 0;
     color: var(--muted);
     font-size: 12px;
+    border-top: 1px solid var(--line);
+    flex-shrink: 0;
+    overflow-wrap: anywhere;
 }
 .preference-controls {
     display: flex;
@@ -96,8 +103,11 @@
     border-bottom: 1px solid var(--line);
     color: var(--muted);
     font-size: 12px;
+    background: var(--surface);
 }
-#menu {
+#menu,
+#close-navigation,
+#navigation-backdrop {
     display: none;
 }
 main {
@@ -111,6 +121,8 @@ main {
     justify-content: space-between;
     gap: 20px;
     margin-bottom: 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
 }
 .page-heading h1 {
     margin: 0;
@@ -218,6 +230,25 @@ main {
     #shell.menu-open #sidebar {
         display: flex;
     }
+    #close-navigation {
+        display: block;
+        align-self: flex-end;
+        margin: -12px 0 12px;
+    }
+    #shell.menu-open #navigation-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 29;
+        width: 100%;
+        height: 100dvh;
+        padding: 0;
+        background: var(--scrim);
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        filter: none;
+    }
     #menu {
         display: block;
     }
@@ -235,5 +266,8 @@ main {
     }
     .toolbar {
         gap: 8px;
+    }
+    .pagination {
+        flex-wrap: wrap;
     }
 }

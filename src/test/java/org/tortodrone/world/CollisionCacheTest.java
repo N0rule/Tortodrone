@@ -7,6 +7,7 @@ import static org.tortodrone.support.TestWire.check;
 /** Cached pawn geometry follows actual entity movement, rotation, ownership and destruction. */
 public final class CollisionCacheTest {
     public static void main(String[] args)throws Exception {
+        compoundOverlap();
         var rectangle=new FireCatalog.DataValue("Shape$Rectangle",Map.of("width",2f,"height",.5f));
         var fields=new HashMap<String,String>();
         fields.put("native-type","Monster");fields.put("config","Fixture");fields.put("health","100");fields.put("damage-mask","2");fields.put("collision-flags","8");
@@ -40,6 +41,26 @@ public final class CollisionCacheTest {
         moving.damage(new StarterCatalog.Model("DamageRegion",Map.of("damage",lethal)),turned.x(),turned.y(),0,stamp+201,219);
         check(moving.actor(initial.id())==null&&!moving.penetration(turned.x(),turned.y()+1.2f,219).present(),"destroyed actors stop colliding despite a populated cache");
         System.out.println("PASS: concurrent immutable reference reuse, definition equality, collision translation/rotation refresh, instance isolation, ownership and destruction");
+    }
+    private static void compoundOverlap() {
+        var parts=List.of(
+            new FireCatalog.DataValue("Shape$Rectangle",Map.of("width",2f,"height",.5f)),
+            new FireCatalog.DataValue("Shape$Capsule",Map.of("radius",.3f,"length",2f)),
+            new FireCatalog.DataValue("Shape$Circle",Map.of("radius",.7f)));
+        var compound=new FireCatalog.DataValue("Shape$Compound",Map.of("shapes",new FireCatalog.ListValue("shape",new ArrayList<>(parts))));
+        var empty=new FireCatalog.DataValue("Shape$Compound",Map.of("shapes",new FireCatalog.ListValue("shape",List.of())));
+        check(!SceneCollision.overlaps(empty,0,0,0,compound,0,0,0,1),"empty first compound has no contact");
+        check(!SceneCollision.overlaps(compound,0,0,0,empty,0,0,0,1),"empty second compound has no contact");
+        int hits=0,misses=0;
+        for(float rotation: new float[]{0,.7f,1.57f})for(float expansion:new float[]{0,.2f})
+            for(float x=-3;x<=3;x+=.3f)for(float y=-2;y<=2;y+=.4f){
+                boolean expected=false;
+                for(var a:parts)for(var b:parts)expected|=SceneCollision.overlaps(a,x,y,rotation,b,.2f,-.3f,-rotation,expansion);
+                check(SceneCollision.overlaps(compound,x,y,rotation,compound,.2f,-.3f,-rotation,expansion)==expected,
+                    "compound poses preserve individual shape contact and rounded expansion");
+                if(expected)hits++;else misses++;
+            }
+        check(hits>0&&misses>0,"compound regression includes contacts and exclusions");
     }
     private static ActorState player(int stamp,float x,float y){return new ActorState(219,1001,"Fixture",0,stamp,x,y,0,0,0,new StarterCatalog.Model("Fixture",Map.of()));}
 }

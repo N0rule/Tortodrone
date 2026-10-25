@@ -20,7 +20,7 @@ p {
     margin: 0 0 12px;
 }
 h1 {
-    font-size: 30px;
+    font-size: 32px;
     line-height: 1.2;
     letter-spacing: -0.6px;
 }
@@ -51,15 +51,15 @@ button,
 .button {
     cursor: pointer;
     padding: 8px 14px;
-    color: #122a3b;
-    background: #e6bc62;
-    border: 1px solid #e6bc62;
+    color: var(--action-text);
+    background: var(--action);
+    border: 1px solid var(--action);
     border-radius: var(--radius);
     font-weight: 700;
     box-shadow: inset 0 1px #ffffff40;
     white-space: nowrap;
 }
-button:hover {
+button:not(:disabled):hover {
     filter: brightness(1.1);
 }
 button:disabled {
@@ -108,6 +108,15 @@ input[type='checkbox'] {
 input[type='range'] {
     padding: 0;
     accent-color: var(--gold);
+}
+input::placeholder,
+textarea::placeholder {
+    color: var(--muted);
+    opacity: 1;
+}
+::selection {
+    color: var(--inset);
+    background: var(--cyan);
 }
 textarea {
     min-height: 150px;

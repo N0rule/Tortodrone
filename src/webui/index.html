@@ -64,7 +64,9 @@
             </form>
         </div>
         <div id="shell" hidden>
+            <button id="navigation-backdrop" tabindex="-1" aria-label="Close navigation"></button>
             <aside id="sidebar">
+                <button id="close-navigation" class="quiet" aria-label="Close navigation">Close ×</button>
                 <a class="brand" href="#overview"
                     ><img src="/admin/assets/icons/mark.svg" alt="" />Tortodrone</a
                 >
@@ -85,6 +87,7 @@
                         class="quiet"
                         aria-label="Toggle navigation"
                         aria-expanded="false"
+                        aria-controls="sidebar"
                     >
                         ☰</button
                     ><span id="connection" class="status">Connecting</span><span id="clock"></span>

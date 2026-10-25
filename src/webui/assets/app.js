@@ -40,6 +40,15 @@ let generation = 0,
     acceptedHash = location.hash,
     setupRequired = false;
 const rank = () => ['VIEWER', 'MODERATOR', 'ADMINISTRATOR'].indexOf(api.session?.role);
+const mobile = matchMedia('(max-width: 760px)');
+function menu(open, restoreFocus = false) {
+    open = open && mobile.matches;
+    $('#shell').classList.toggle('menu-open', open);
+    $('#menu').setAttribute('aria-expanded', String(open));
+    $('.workspace').inert = open;
+    if (open) $('#close-navigation').focus();
+    else if (restoreFocus) $('#menu').focus();
+}
 function connection(value, online = true) {
     text($('#connection'), value);
     $('#connection').classList.toggle('online', online);
@@ -105,8 +114,9 @@ async function navigate() {
         return;
     }
     acceptedHash = location.hash;
-    $('#shell').classList.remove('menu-open');
-    $('#menu').setAttribute('aria-expanded', 'false');
+    const fromMenu = $('#shell').classList.contains('menu-open');
+    menu(false);
+    if (fromMenu) $('#main').focus();
     for (const a of $('#navigation').children)
         a.setAttribute('aria-current', a.dataset.page === next.name ? 'page' : 'false');
     text($('#title'), spec[1]);
@@ -123,6 +133,7 @@ async function navigate() {
         return;
     }
     const id = ++generation;
+    $('#refresh').disabled = true;
     pageRequests?.abort();
     const requests = new AbortController();
     pageRequests = requests;
@@ -158,6 +169,7 @@ async function navigate() {
         }
         controller = mounted;
         $('#page').replaceChildren(mounted.node);
+        $('#refresh').disabled = !mounted.refresh;
         connection('Connected');
         poll();
     } catch (error) {
@@ -196,6 +208,7 @@ function signedIn() {
 }
 async function signedOut() {
     generation++;
+    menu(false);
     pageRequests?.abort();
     refreshJob = null;
     controller?.dispose?.();
@@ -278,8 +291,34 @@ $('#logout').onclick = async () => {
 };
 $('#refresh').onclick = refresh;
 $('#menu').onclick = () => {
-    const open = $('#shell').classList.toggle('menu-open');
-    $('#menu').setAttribute('aria-expanded', open);
+    menu(!$('#shell').classList.contains('menu-open'));
+};
+$('#close-navigation').onclick = $('#navigation-backdrop').onclick = () => menu(false, true);
+mobile.addEventListener('change', () => menu(false));
+document.addEventListener('keydown', (event) => {
+    if (!$('#shell').classList.contains('menu-open')) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        menu(false, true);
+    } else if (event.key === 'Tab') {
+        const controls = [...$('#sidebar').querySelectorAll('a[href], button:not(:disabled)')].filter(
+            (node) => node.checkVisibility()
+        );
+        const first = controls[0],
+            last = controls.at(-1);
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    }
+});
+$('.skip').onclick = (event) => {
+    event.preventDefault();
+    menu(false);
+    $('#main').focus();
 };
 function preferences() {
     text(

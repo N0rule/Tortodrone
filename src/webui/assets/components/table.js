@@ -1,5 +1,23 @@
 import { el, button, input, select, toolbar, text } from '../ui.js';
 
+const collator = new Intl.Collator(undefined, { numeric: true });
+/** Evaluate renderers once per row; sorting must not construct cells for every comparison. */
+export function sortRows(rows, value, direction) {
+    return rows
+        .map((row) => {
+            const result = value(row);
+            return { row, value: result?.textContent ?? result ?? '' };
+        })
+        .sort(
+            (a, b) =>
+                direction *
+                (typeof a.value === 'number' && typeof b.value === 'number'
+                    ? a.value - b.value
+                    : collator.compare(String(a.value), String(b.value)))
+        )
+        .map(({ row }) => row);
+}
+
 /** Keyed rows and persistent controls. Updating data never replaces the table or its inputs. */
 export class DataTable {
     constructor(
@@ -88,27 +106,14 @@ export class DataTable {
     }
     render() {
         const q = this.query.value.toLowerCase();
-        const rows = this.rows.filter(
+        let rows = this.rows.filter(
             (r) =>
                 (!q || JSON.stringify(r).toLowerCase().includes(q)) &&
                 this.choices.every(([c, match]) => match(r, c.value))
         );
         if (this.sort >= 0) {
             const fn = this.columns[this.sort][2] || this.columns[this.sort][1];
-            rows.sort((a, b) => {
-                const x = fn(a),
-                    y = fn(b);
-                return (
-                    this.direction *
-                    (typeof x === 'number' && typeof y === 'number'
-                        ? x - y
-                        : String(x?.textContent ?? x ?? '').localeCompare(
-                              String(y?.textContent ?? y ?? ''),
-                              undefined,
-                              { numeric: true }
-                          ))
-                );
-            });
+            rows = sortRows(rows, fn, this.direction);
         }
         const pages = Math.max(1, Math.ceil(rows.length / this.pageSize));
         this.page = Math.min(this.page, pages);

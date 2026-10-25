@@ -97,6 +97,15 @@ th button {
     box-shadow: none;
     font-weight: 400;
 }
+th[aria-sort] button {
+    color: var(--cyan);
+}
+th[aria-sort='ascending'] button::after {
+    content: ' ↑';
+}
+th[aria-sort='descending'] button::after {
+    content: ' ↓';
+}
 td {
     padding: var(--row) 12px;
     border-top: 1px solid var(--line);
