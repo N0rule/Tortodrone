@@ -213,6 +213,11 @@ public final class SceneContentExport {
             var children=new ArrayList<Object>();for(var child:compound.actions)children.add(sceneAction(child,depth+1));
             return Map.of("kind","sequence","stopOnFailure",compound.stopOnFailure,"actions",children);
         }
+        if(action instanceof ActionConfig.Conditional conditional&&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Limit limit){
+            if(limit.limit<0||limit.limit>1_000_000)throw new IOException("Unsupported condition limit");
+            return Map.of("kind","limited","limit",limit.limit,"action",sceneAction(conditional.action,depth+1),"otherwise",
+                conditional.elseAction==null?Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()):sceneAction(conditional.elseAction,depth+1));
+        }
         throw new IOException("Unsupported scene action "+(action==null?"null":action.getClass().getName()));
     }
 

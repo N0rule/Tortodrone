@@ -50,7 +50,7 @@ public final class ScenePackExport {
         if(spawnCol<0||spawnCol>=width||spawnRow<0||spawnRow>=height||!bits.get(spawnRow*width+spawnCol)
                 ||scene.aQ((int)Math.floor(spawnX),(int)Math.floor(spawnY))==null
                 ||scene.a(actor,shape.d(new Transform2D(new Vector2f(spawnX,spawnY),0))))
-            throw new IOException("Native or requested spawn is not walkable; refusing an invented arrival");
+            throw new IOException("Native or requested spawn is not walkable at "+spawnX+","+spawnY+" (native entrance "+entrance.id+"); refusing an invented arrival");
         // Stage only after all configuration/collision validation succeeds.
         Files.createDirectories(out);
         Files.write(out.resolve("scene.dat"),layout);
@@ -90,8 +90,8 @@ public final class ScenePackExport {
     private static Entrance defaultEntrance(TudeySceneModel scene,ConfigManager manager)throws IOException {
         var matches=new ArrayList<TudeySceneModel.PlaceableEntry>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)) {
-            PlaceableConfig config=entry.placeable.a(manager,PlaceableConfig.class);
-            if(config.q(manager) instanceof PlaceableConfig.Marker marker && marker.defaultEntrance)matches.add(entry);
+            // Entrances may be stateful elevator props, not only editor markers (scene 337).
+            if(entry.at(manager))matches.add(entry);
         }
         if(matches.size()!=1)throw new IOException("Expected exactly one native default entrance, found "+matches.size());
         var entry=matches.getFirst();var position=entry.transform.tD();var rotation=entry.transform.tE();

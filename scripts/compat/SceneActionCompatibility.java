@@ -19,12 +19,19 @@ public final class SceneActionCompatibility {
         runtime.removed(Set.of("wave miniboss"),tag->false,100);runtime.advance(5099);
         if(!events.isEmpty())throw new AssertionError("Early exit signal");runtime.advance(5100);
         if(!events.equals(List.of("door end:open:5100")))throw new AssertionError("Native delay/signal fields changed");
+        var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;
+        var conditional=new ActionConfig.Conditional();conditional.condition=limit;conditional.action=signal;conditional.elseAction=null;
+        var limited=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(conditional,0)));
+        events.clear();var once=new SceneActions(List.of(new SceneActions.Rule("once","signal","start","activate",false,limited)),
+            (tag,name,stamp)->{events.add(name);return true;});
+        once.signal("start","activate",1);once.signal("start","activate",1);once.advance(1);
+        if(!events.equals(List.of("open")))throw new AssertionError("Native Limit condition did not execute once");
         compound.actions=new ActionConfig[]{delayed,new ActionConfig.FireEffect()};
         try{SceneContentExport.sceneAction(compound,0);throw new AssertionError("Unsupported sibling was silently dropped");}catch(IOException expected){}
         delayed.variance=50;
         try{SceneContentExport.sceneAction(delayed,0);throw new AssertionError("Unimplemented variance accepted");}catch(IOException expected){}
         signal.target=new TargetConfig.Source();
         try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported target accepted");}catch(IOException expected){}
-        System.out.println("PASS: stock action fields, delayed signal timing, full-compound refusal, variance and target guards");
+        System.out.println("PASS: stock action fields, delayed signal timing, Limit condition, full-compound refusal, variance and target guards");
     }
 }

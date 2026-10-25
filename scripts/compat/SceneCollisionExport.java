@@ -32,7 +32,8 @@ public final class SceneCollisionExport {
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
             int mask=entry.ax(cm);if(mask==0)continue;
             Shape shape=entry.av(cm);if(shape==null)throw new IOException("Colliding placeable has no native shape");
-            var geometries=new ArrayList<String>();geometry(shape,geometries,0);
+            var geometries=new ArrayList<String>();
+            try{geometry(shape,geometries,0);}catch(IOException invalid){throw new IOException("Collision at entry "+entry.getKey()+" ("+entry.placeable.getName()+"): "+invalid.getMessage(),invalid);}
             for(String geometry:geometries)shapes.add(mask+";"+geometry);
             if(shapes.size()>MAX_SHAPES)throw new IOException("Too many native placeable collision shapes");
         }
@@ -64,7 +65,7 @@ public final class SceneCollisionExport {
             Vector2f center=(Vector2f)invoke(shape,"aet");out.add("C;"+f(center.x)+";"+f(center.y)+";0.0");return;
         }
         if(type.endsWith(".h")){
-            int n=((Number)invoke(shape,"getVertexCount")).intValue();if(n<3||n>MAX_VERTICES)throw new IOException("Invalid native polygon size");
+            int n=((Number)invoke(shape,"getVertexCount")).intValue();if(n<3||n>MAX_VERTICES)throw new IOException("Invalid native polygon size: "+n);
             var values=new StringBuilder("P");for(int j=0;j<n;j++){Vector2f v=(Vector2f)invoke(shape,"gL",int.class,j);values.append(';').append(f(v.x)).append(';').append(f(v.y));}out.add(values.toString());return;
         }
         if(type.endsWith(".i")){

@@ -31,6 +31,7 @@ public final class SceneActionsTest {
         isolated.advance(time+10000,List.of());check(!isolated.walkable(3,0,219),"another scene's boss/door are unaffected");
         scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
         scheduler();
+        limits();
         try{SceneActions.rule(entry("bad",0,0,Map.of("kind","SceneTrigger","event","removed","watch-tag","wave","all","unknown","action",EXIT)));throw new AssertionError("Invalid group flag accepted");}catch(IOException expected){}
         for(String invalid:List.of("{\"kind\":\"executeClass\",\"name\":\"arbitrary\"}","{\"kind\":\"signal\",\"tag\":\"x\",\"name\":\"open\",\"extra\":true}",EXIT.replace("5000","-1"),EXIT.replace("5000","0.5"),EXIT.replace("5000","999999999999")))
             try{SceneActions.parse(invalid);throw new AssertionError("Invalid graph accepted");}catch(IOException expected){}
@@ -55,5 +56,21 @@ public final class SceneActionsTest {
         SceneActions[] loop={null};loop[0]=new SceneActions(List.of(new SceneActions.Rule("loop","signal","loop","go",false,new SceneActions.Signal("loop","go"))),
             (tag,name,time)->{loop[0].signal(tag,name,time);return true;});
         loop[0].signal("loop","go",1);loop[0].advance(1);check(loop[0].pending()==1,"cyclic signals are tick-budgeted instead of recursing");loop[0].close();
+    }
+    private static void limits(){
+        var events=new ArrayList<String>();
+        var limited=new SceneActions.Limited(1,new SceneActions.Signal("x","once"),new SceneActions.Signal("x","exhausted"));
+        // Reusing an immutable descriptor must not share mutable condition state across nodes/rules/scenes.
+        var sequence=new SceneActions.Sequence(List.of(limited,limited),false);
+        var rules=List.of(new SceneActions.Rule("a","signal","x","a",false,sequence),new SceneActions.Rule("b","signal","x","b",false,limited));
+        for(int instance=0;instance<2;instance++){
+            events.clear();var runtime=new SceneActions(rules,(tag,name,time)->{events.add(name);return false;});
+            runtime.signal("x","a",100);runtime.advance(100);
+            check(events.equals(List.of("once","once")),"each node owns a condition counter, even with a reused descriptor");
+            runtime.signal("x","a",101);runtime.advance(101);
+            check(events.equals(List.of("once","once","exhausted","exhausted")),"failed actions still consume their native Limit evaluation");
+            runtime.signal("x","b",102);runtime.advance(102);
+            check(events.getLast().equals("once"),"another handler owns an independent condition counter");
+        }
     }
 }
