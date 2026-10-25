@@ -193,6 +193,31 @@ public final class Database {
             try(var r=s.executeQuery()){if(!r.next())throw new IOException("Account changed; reconnect");}
         }
     }
+
+    /** Last acknowledged permanent scene, keyed by the non-recycled world identity. */
+    public int lastTownScene(int accountId,int knightId,long authRevision)throws IOException {
+        return read(c->{
+            c.setAutoCommit(false);
+            requirePreferenceOwner(c,accountId,authRevision);
+            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
+            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
+                s.setString(1,"world."+profile.worldId()+".last-town-scene");
+                int result;try(var r=s.executeQuery()){result=r.next()?r.getInt(1):0;}
+                c.commit();return result;
+            }
+        });
+    }
+    public void lastTownScene(int accountId,int knightId,long authRevision,int scene)throws IOException {
+        if(scene<=0||scene==Integer.MAX_VALUE)throw new IOException("Invalid permanent scene");
+        write(c->{
+            requirePreferenceOwner(c,accountId,authRevision);
+            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
+            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
+                s.setString(1,"world."+profile.worldId()+".last-town-scene");s.setInt(2,scene);s.executeUpdate();
+            }
+            return null;
+        });
+    }
     private static Identity identity(ResultSet r) throws SQLException {
         return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }

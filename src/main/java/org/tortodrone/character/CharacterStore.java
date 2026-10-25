@@ -226,6 +226,12 @@ public final class CharacterStore {
     public boolean inspectionHidden(long authRevision)throws IOException {
         return database!=null&&database.inspectionHidden(accountId,authRevision);
     }
+    public int lastTownScene(int knightId,long authRevision)throws IOException {
+        return database.lastTownScene(accountId,knightId,authRevision);
+    }
+    public void lastTownScene(int knightId,long authRevision,int scene)throws IOException {
+        database.lastTownScene(accountId,knightId,authRevision,scene);
+    }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
         if(database==null)throw new IOException("Preferences require SQLite storage");
         database.inspectionHidden(accountId,authRevision,hidden);

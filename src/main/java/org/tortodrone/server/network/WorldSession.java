@@ -46,6 +46,7 @@ final class WorldSession implements AutoCloseable {
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
     private SceneRegistry.Instance scene;
+    private boolean readyRoom, returnRequested;
     private SceneSimulation.Membership membership;
     private SceneSimulation.Snapshot lastSnapshot;
     private final Object publications=new Object();
@@ -100,11 +101,11 @@ final class WorldSession implements AutoCloseable {
         if(entered)friendLocation=presence(view);
         // A private solo bookkeeping party is not an active dungeon party in Haven.
         // Publishing it there makes the stock command handler ask to abandon a mission.
-        int visibleParty=scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
+        int visibleParty=readyRoom?0:scene.map().town()&&view.members().size()==1&&scenes.parties().owner(partyMember,profile.worldId())==0?0:view.oid();
         if(visibleParty!=announcedPartyOid){
             boolean changed=announcedPartyOid!=0;announcedPartyOid=visibleParty;subscribedPartyOid=0;publishedParty=null;
             output.send(()->codec.partyOid(oid,visibleParty));
-            if(changed&&!traveling&&(!scene.map().town()||portalMove!=null))forcePartyExit();
+            if(changed&&!traveling&&!readyRoom&&(!scene.map().town()||portalMove!=null))forcePartyExit();
         }else if(subscribedPartyOid==view.oid()&&publishedParty!=null&&!publishedParty.equals(view)){
             var before=publishedParty;output.send(()->codec.partyChanges(before,view));publishedParty=view;
         }
@@ -118,6 +119,7 @@ final class WorldSession implements AutoCloseable {
         return new FriendPresence(scene.map().name(),scene.map().zone(),joinable?scene.oid():0);
     }
     private void forcePartyExit()throws IOException {
+        if(readyRoom)return;
         if(scene.map().town()&&portalMove==null)return;
         if(portalMove!=null&&portalMove.destination().map().town())return;
         if(portalMove!=null&&portalMove.destination()!=scene)scenes.release(portalMove.destination(),profile.worldId());
@@ -813,11 +815,12 @@ final class WorldSession implements AutoCloseable {
 
     synchronized boolean selected() { return knight != null; }
     boolean hasInteriors(){return scenes.catalog().scenes().stream().anyMatch(map->!map.town());}
-    synchronized boolean ownsScene(int oid) { return selected() && scene.oid()==oid; }
-    synchronized boolean ownsInteriorParty(int target){return selected()&&scenes.parties().owns(partyMember,target);}
+    synchronized boolean ownsScene(int oid) { return selected() && !readyRoom && scene.oid()==oid; }
+    synchronized boolean ownsInteriorParty(int target){return selected()&&!readyRoom&&scenes.parties().owns(partyMember,target);}
     /** Cross-session friend follow only reads the peer's stable party seat under its own monitor. */
     synchronized PartyRegistry.Member partyMemberSnapshot(){return partyMember;}
     synchronized void subscribeInteriorParty(short message)throws IOException {
+        if(readyRoom)throw new IOException("The Ready Room has no scene party");
         profile=loadProfile(profile);
         partyState();var view=scenes.parties().view(partyMember);
         var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,scene));
@@ -908,6 +911,12 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void select(String name, Map<String, Short> receivers)
             throws IOException, CharacterStore.Refused {
+        select(name,receivers,false);
+    }
+
+    /** The returning-knight picker stages locally; creation still uses the existing intro bypass. */
+    synchronized void select(String name, Map<String, Short> receivers, boolean stageInReadyRoom)
+            throws IOException, CharacterStore.Refused {
         long selectionStarted=System.nanoTime();
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         if (selected()) throw new IOException("A character is already selected; reconnect to change characters");
@@ -923,18 +932,23 @@ final class WorldSession implements AutoCloseable {
             }
             var choice = characters.roster().stream().filter(k -> k.id() == loaded.knightId())
                 .findFirst().orElseThrow(() -> new IOException("No such knight"));
+            int saved=characters.lastTownScene(choice.id(),authRevision);
+            int destination=scenes.catalog().scenes().stream().filter(map->map.id()==saved&&map.town())
+                .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
             synchronized (ACTIVE) {
                 if (ACTIVE.containsKey(loaded.worldId())) throw new IOException("This knight is already online");
                 profile = loaded;
                 knight = choice;
-                scene = scenes.destination(scenes.catalog().entry().id(),loaded.worldId());
+                scene = scenes.destination(destination,loaded.worldId());
                 ACTIVE.put(loaded.worldId(), this);
             }
         }
         created = SceneClock.now();
         if(characters.hasWorldStorage()){characters.friends().session(characters.accountId(),knight.id(),authRevision);profile=characters.worldProfile(knight.name(),authRevision,profile);}
         friendOnline=true;
-        attach();
+        readyRoom=stageInReadyRoom;
+        if(readyRoom)friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
+        else attach();
         partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);partyState();
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.townState(oid,profile));
@@ -945,7 +959,7 @@ final class WorldSession implements AutoCloseable {
         receiverChanged(receivers);
         log.selected(knight.id(),profile.worldId(),knight.name());
         log.info("Character selected; knight=" + knight.name() + " (#" + profile.worldId() + "); rosterId="+knight.id());
-        monitorScene();
+        if(!readyRoom)monitorScene();
         log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
@@ -964,7 +978,8 @@ final class WorldSession implements AutoCloseable {
         if (receiver == null) forcedReceiver = null;
         if (selected() && receiver != null && !receiver.equals(forcedReceiver)) {
             var destination=portalMove==null?scene:portalMove.destination();
-            output.send(() -> codec.forceScene(oid, receiver,destination));
+            if(readyRoom&&!returnRequested)output.send(()->codec.forceDestination(oid,receiver,ReadyRoom.ZONE,ReadyRoom.SCENE));
+            else output.send(() -> codec.forceScene(oid, receiver,destination));
             forcedReceiver = receiver;
         }
     }
@@ -973,6 +988,14 @@ final class WorldSession implements AutoCloseable {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         int service = request.service();
         var args = request.arguments();
+        if(service==1&&request.method()==11){
+            if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid return-to-last request");
+            if(!selected()||forcedReceiver==null)throw new SessionDecoder.Rejected("Select a knight first");
+            try{characters.worldProfile(knight.name(),authRevision,profile);}
+            catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
+            if(readyRoom){returnRequested=true;short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,scene));}
+            return true;
+        }
         if(service==1&&request.method()==7){
             if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
             try{
@@ -1183,6 +1206,33 @@ final class WorldSession implements AutoCloseable {
             try{characters.worldProfile(knight.name(),authRevision,profile);}
             catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             int target=zone?(Integer)args.get(1):(Integer)args.get(0);
+            if(zone&&args.get(0).equals(ReadyRoom.ZONE)){
+                if(target!=ReadyRoom.SCENE||!(args.get(2) instanceof Integer))throw new IOException("%chat:m.no_such_scene");
+                if(portalMove!=null||returnRequested)throw new IOException("Finish the current journey first");
+                if(!readyRoom){
+                    var returnScene=scene;
+                    if(!scene.map().town()){
+                        int saved=characters.lastTownScene(knight.id(),authRevision);
+                        int permanent=scenes.catalog().scenes().stream().filter(map->map.id()==saved&&map.town())
+                            .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
+                        returnScene=scenes.destination(permanent,profile.worldId());
+                    }
+                    var before=visibleProfile();
+                    closeConversation();closeTownDialog();leaveChat();subscribed=entered=false;sceneGeneration++;
+                    departedSceneOid=scene.oid();membership.close();membership=null;
+                    scenes.release(scene,profile.worldId());
+                    // Private instances are not durable return destinations.
+                    scene=returnScene;
+                    temporaryItems.clear();lastSnapshot=null;reference=acknowledge=0;arrival=null;
+                    readyRoom=true;refreshParty(true);
+                    var after=visibleProfile();if(!before.equals(after))output.send(()->codec.itemChanges(oid,knight,before,after));
+                }
+                friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
+                output.send(()->codec.readyRoomLocation(oid));
+                output.send(()->codec.readyRoomMove(oid,listener.requestId()));
+                return;
+            }
+            if(readyRoom&&(!returnRequested||target!=scene.map().id()))throw new IOException("Return to game before entering a scene");
             var targetMap=scenes.catalog().scene(target);
             if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(targetMap.zone())))
                 throw new IOException("Scene does not belong to that zone");
@@ -1190,12 +1240,13 @@ final class WorldSession implements AutoCloseable {
             var next=portalMove==null?destination(target):portalMove.destination();
             if(portalMove!=null&&next!=portalMove.destination())throw new IOException("Finish the current portal journey first");
             if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
-            if(next!=scene||portalMove!=null) {
+            if(next!=scene||portalMove!=null||readyRoom) {
                 closeConversation();
                 if(!temporaryItems.isEmpty()){var before=visibleProfile();temporaryItems.clear();output.send(()->codec.itemChanges(oid,knight,before,profile));publishQuickbar();}
                 leaveChat();
                 subscribed=entered=false;sceneGeneration++;occupantClients=Map.of();occupantRoles=Map.of();lastSnapshot=null;
-                reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+                reference=acknowledge=0;alchemyTarget=null;departedSceneOid=scene.oid();if(membership!=null)membership.close();if(scene!=next)scenes.release(scene,profile.worldId());scene=next;
+                readyRoom=returnRequested=false;
                 arrival=portalMove==null?null:portalMove.entrance();portalMove=null;
                 created=SceneClock.now();attach();
                 monitorScene();
@@ -1427,6 +1478,7 @@ final class WorldSession implements AutoCloseable {
 
     synchronized void subscribe(short message) throws IOException {
         if (!selected()) throw new IOException("Select a knight before subscribing to a scene");
+        if(readyRoom)throw new IOException("The Ready Room has no server place object");
         if(closed)throw new IOException("Session closed");
         if(portalMove!=null)throw new IOException("Scene is departing through a portal");
         var snapshot=scene.simulation().snapshot();
@@ -1448,6 +1500,7 @@ final class WorldSession implements AutoCloseable {
         if(portalMove!=null)return; // A source readiness RPC may already be queued before forceScene.
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
+        if(scene.map().town())characters.lastTownScene(knight.id(),authRevision,scene.map().id());
         entered = true;
         friendLocation=presence(scenes.parties().view(partyMember));
         departedSceneOid=0;
@@ -1545,7 +1598,7 @@ final class WorldSession implements AutoCloseable {
         else {String reason=failure;output.send(()->codec.invocationFailure(oid,listener.requestId(),reason));}
     }
 
-    synchronized boolean ownsChannel(int channel){return selected()&&(channel==scenes.channelOid(scene.map().zone(),false)||channel==scenes.channelOid(scene.map().zone(),true));}
+    synchronized boolean ownsChannel(int channel){return selected()&&!readyRoom&&(channel==scenes.channelOid(scene.map().zone(),false)||channel==scenes.channelOid(scene.map().zone(),true));}
     synchronized void subscribeChannel(short message,int channel)throws IOException {
         if(closed||!ownsChannel(channel))throw new IOException("This chat channel belongs to another zone");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
@@ -1864,7 +1917,7 @@ final class WorldSession implements AutoCloseable {
         appearance=new StarterCatalog.Model(scene.map().town()?"Character/PC/Default":"Character/PC/Level",
             Map.of("Model",model,"Height",model.arguments().get("Height")));
     }
-    private void updateAppearance(){rebuildAppearance();membership.equipment(visibleProfile());membership.appearance(actorAppearance());}
+    private void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
     private ActorState actorAppearance() {
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
             arrival==null?scene.map().spawnX():arrival.x(),arrival==null?scene.map().spawnY():arrival.y(),

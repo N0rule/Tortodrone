@@ -796,8 +796,34 @@ public final class SessionCodec {
         return forceScene(oid,receiver,SceneRegistry.system().entry());
     }
     public byte[] forceScene(int oid,short receiver,SceneRegistry.Instance scene) throws IOException {
+        return forceDestination(oid,receiver,scene.map().zone(),scene.map().id());
+    }
+    public byte[] forceDestination(int oid,short receiver,int zone,int scene) throws IOException {
         return frame(out -> { eventHeader(out,"InvocationNotificationEvent",oid);out.writeShort(receiver);out.writeByte(1);
-            out.writeBoolean(true);out.writeInt(2);value(out,scene.map().zone());value(out,scene.map().id()); });
+            out.writeBoolean(true);out.writeInt(2);value(out,zone);value(out,scene); });
+    }
+
+    /** Native moveSucceeded, not moveSucceededWithScene: the client loads its own model. */
+    public byte[] readyRoomMove(int oid,short request) throws IOException {
+        return frame(out -> {
+            eventHeader(out,"InvocationResponseEvent",oid);out.writeShort(request);out.writeByte(2);
+            out.writeBoolean(true);out.writeInt(3);value(out,org.tortodrone.world.ReadyRoom.PLACE);
+            type(out,"com.threerings.projectx.data.ReadyRoomSceneConfig");string(out,null);
+            type(out,"com.threerings.whirled.zone.data.ZoneSummary");out.writeInt(org.tortodrone.world.ReadyRoom.ZONE);name(out,"");
+            type(out,"[Lcom.threerings.whirled.zone.data.SceneSummary;");out.writeInt(1);
+            type(out,"com.threerings.whirled.zone.data.SceneSummary");out.writeInt(org.tortodrone.world.ReadyRoom.SCENE);string(out,"~");
+            emptyCollection(out);emptyCollection(out);
+        });
+    }
+
+    public byte[] readyRoomLocation(int oid) throws IOException {
+        return frame(out -> {
+            eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(5);
+            attribute(out,oid,"zoneId",o->value(o,org.tortodrone.world.ReadyRoom.ZONE));
+            attribute(out,oid,"instanceId",o->value(o,0));
+            attribute(out,oid,"zoneGeneralOid",o->value(o,0));attribute(out,oid,"zoneTradeOid",o->value(o,0));
+            attribute(out,oid,"location",o->value(o,null));
+        });
     }
 
     public byte[] sceneMove(int oid,short request,boolean zone) throws IOException {

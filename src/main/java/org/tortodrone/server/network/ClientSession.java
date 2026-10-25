@@ -258,7 +258,7 @@ final class ClientSession {
                 failure = "No such knight";
             } else {
                 if(!receivers.containsKey(org.tortodrone.world.SceneRegistry.ZONE_RECEIVER))failure="World entry requires a scene receiver";
-                else try { world.select(name,receivers); }
+                else try { world.select(name,receivers,true); }
                 catch(CharacterStore.Refused|IOException refused){failure=refused.getMessage();}
             }
         } else if (invocation.method() == 6) {
