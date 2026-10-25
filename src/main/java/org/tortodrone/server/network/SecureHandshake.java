@@ -35,6 +35,11 @@ public final class SecureHandshake {
 
     public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
             int connectionId, String host, int port, AccountStore accounts) throws Exception {
+        run(socket,key,log,localAuth,connectionId,host,port,accounts,"");
+    }
+
+    public static void run(Socket socket, PrivateKey key, SessionLog log, boolean localAuth,
+            int connectionId, String host, int port, AccountStore accounts, String welcomeMessage) throws Exception {
         long started=System.nanoTime();
         HandshakeCodec codec = new HandshakeCodec();
         byte[] body = HandshakeCodec.readFrame(socket.getInputStream());
@@ -107,7 +112,7 @@ public final class SecureHandshake {
             Arrays.fill(secret, (byte) 0);
             try (var session = accounts.attach(account,socket)) {
                 ClientDiagnostics.joined(log,socket,connectionId,account,request,language,region,(System.nanoTime()-started)/1_000_000);
-                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision(),session);
+                ClientSession.run(socket, codec, connectionId, host, port, log, account.characters(),account.authRevision(),session,welcomeMessage);
             }
         } finally {
             Arrays.fill(plain, (byte) 0);

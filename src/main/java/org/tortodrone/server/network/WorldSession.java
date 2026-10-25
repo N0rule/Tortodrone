@@ -40,6 +40,8 @@ final class WorldSession implements AutoCloseable {
     private final SessionLog log;
     private final SceneRegistry scenes;
     private final WeaponCatalog weapons;
+    private final String welcomeMessage;
+    private boolean welcomed;
     @FunctionalInterface interface RoleSource { boolean gameMaster()throws IOException; }
     private final RoleSource roles;
     private boolean gameMaster,inspectionHidden;
@@ -790,6 +792,11 @@ final class WorldSession implements AutoCloseable {
 
     WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
             SessionCodec codec, int oid, long revision, SessionLog log, SceneRegistry scenes,RoleSource roles) {
+        this(socket,characters,output,codec,oid,revision,log,scenes,roles,"");
+    }
+
+    WorldSession(Socket socket, CharacterStore characters, SessionOutput output,
+            SessionCodec codec, int oid, long revision, SessionLog log, SceneRegistry scenes,RoleSource roles,String welcomeMessage) {
         this.socket = socket;
         this.characters = characters;
         this.output = output;
@@ -797,6 +804,7 @@ final class WorldSession implements AutoCloseable {
         this.oid = oid;
         authRevision = revision;
         this.log = log;
+        this.welcomeMessage = welcomeMessage == null ? "" : welcomeMessage;
         diagnostics=new ClientDiagnostics(log,oid,characters.accountId(),characters.username());
         this.scenes = scenes;
         this.weapons=scenes.weapons();
@@ -1445,6 +1453,10 @@ final class WorldSession implements AutoCloseable {
         departedSceneOid=0;
         int generation=sceneGeneration,place=scene.oid();
         chat=CHAT.join(place,oid,knight.name(),chatRate,message->deliverChat(place,generation,message));CHAT.away(chat,awayMessage);
+        if(!welcomed&&!welcomeMessage.isEmpty()) {
+            welcomed=true;
+            output.send(()->codec.systemNotice(place,welcomeMessage));
+        }
         trades=PlayerTrades.forStore(characters);
         tradeMember=trades.join(characters,knight,profile,authRevision,place,oid,output,codec,socket);
         lastStamp = SceneClock.now();

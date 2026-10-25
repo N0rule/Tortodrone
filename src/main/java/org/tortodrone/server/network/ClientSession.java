@@ -33,14 +33,21 @@ final class ClientSession {
 
     static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
             SessionLog log, CharacterStore characters, long authRevision, AccountStore.Session session) throws Exception {
+        run(socket,incoming,connectionId,host,port,log,characters,authRevision,session,"");
+    }
+
+    static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
+            SessionLog log, CharacterStore characters, long authRevision, AccountStore.Session session,
+            String welcomeMessage) throws Exception {
         if(!session.current())throw new IOException("Session replaced during login");
         try (SessionOutput output = new SessionOutput(socket)) {
-            run(socket, incoming, connectionId, host, port, log, characters, output, authRevision,session);
+            run(socket, incoming, connectionId, host, port, log, characters, output, authRevision,session,welcomeMessage);
         }
     }
 
     private static void run(Socket socket, HandshakeCodec incoming, int connectionId, String host, int port,
-            SessionLog log, CharacterStore characters, SessionOutput output, long authRevision, AccountStore.Session session) throws Exception {
+            SessionLog log, CharacterStore characters, SessionOutput output, long authRevision, AccountStore.Session session,
+            String welcomeMessage) throws Exception {
         SessionCodec outgoing = new SessionCodec(characters.catalog());
         int clientOid = Math.addExact(1000, Math.multiplyExact(2,connectionId));
         output.send(() -> outgoing.bootstrap(connectionId, clientOid, host, port));
@@ -50,7 +57,7 @@ final class ClientSession {
         boolean firstPing = true;
         CharacterStore.Subscription subscription = null;
         WorldSession world=new WorldSession(socket,characters,output,outgoing,clientOid,authRevision,log,
-            org.tortodrone.world.SceneRegistry.system(),session::gameMaster);
+            org.tortodrone.world.SceneRegistry.system(),session::gameMaster,welcomeMessage);
         session.onInvalidated(world::close);
         try {
             byte[] body;

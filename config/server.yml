@@ -7,6 +7,8 @@ log-max-mib: 10
 log-retention: 5
 # Folder name under content/maps; the existing startup flow requires a town.
 startup-map: haven
+# Shown once in chat after a knight enters the world. Set to "" to disable.
+welcome-message: Welcome to Tortodrone!
 
 # Administration starts on the shared HTTP listener by default.
 webui-enabled: true
