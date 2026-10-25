@@ -56,7 +56,7 @@ public final class Server {
                 ServerControl control=new ServerControl(version(),dataDirectory);
                 var content=org.tortodrone.resources.ContentManager.load(directory,settings);
                 try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());
-                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content):null;
+                    var adminService=settings.webui().enabled()?new org.tortodrone.web.AdminService(adminAccounts,control,log,directory,content,config):null;
                     var console=new ServerConsole(adminAccounts,log,()->{if(settings.webui().enabled())control.stop();else control.exit();},()->!control.exiting(),control,true)) {
                     com.sun.net.httpserver.HttpHandler handler=null;
                     String setupCode=null;
@@ -135,13 +135,13 @@ public final class Server {
                 log.debug("Public key: " + keys.resolve("public.txt"));
                 log.debug("Account database: " + accounts.databaseFile());
                 control.resources(scenes,catalog.entries().size());
-                accept(listener,key,log,accounts,settings.maxClients(),control,console,startup,webReady,setupNotice);
+                accept(listener,key,log,accounts,settings.maxClients(),settings.welcomeMessage(),control,console,startup,webReady,setupNotice);
             }
         }
     }
 
     private static void accept(ServerSocket listener, PrivateKey key, ServerLog log,
-            AccountStore accounts,int maxClients,ServerControl control,ServerConsole console,long startup,Runnable webReady,Runnable setupNotice)
+            AccountStore accounts,int maxClients,String welcomeMessage,ServerControl control,ServerConsole console,long startup,Runnable webReady,Runnable setupNotice)
             throws IOException {
         ClientConnections clients = new ClientConnections();
         Semaphore slots = new Semaphore(maxClients);
@@ -182,7 +182,7 @@ public final class Server {
                 control.connection(id,client);
                 clients.start(client, "Client-" + id, () -> {
                     try {
-                        receive(client, id, key, listener.getLocalPort(), log, accounts,control.sessions());
+                        receive(client, id, key, listener.getLocalPort(), log, accounts,control.sessions(),welcomeMessage);
                     } finally {
                         control.disconnected(id);
                         slots.release();
@@ -212,7 +212,7 @@ public final class Server {
     }
 
     private static void receive(Socket client, long id, PrivateKey key, int port,
-            ServerLog log, AccountStore accounts,SessionRegistry sessions) {
+            ServerLog log, AccountStore accounts,SessionRegistry sessions,String welcomeMessage) {
         long connected=System.nanoTime();String reason="remote closed";
         sessions.connected(id,client.getRemoteSocketAddress());
         log.info("Connected | session="+id+" | endpoint="+client.getRemoteSocketAddress());
@@ -229,7 +229,7 @@ public final class Server {
             });
             // A wildcard listener uses the concrete local interface of this connection.
             SecureHandshake.run(client, key, sessionLog, true,
-                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, accounts);
+                Math.toIntExact(id), client.getLocalAddress().getHostAddress(), port, accounts, welcomeMessage);
         } catch (SocketTimeoutException e) {
             reason="idle timeout";log.debug("Client idle timeout | session="+id);
         } catch (java.security.GeneralSecurityException e) {

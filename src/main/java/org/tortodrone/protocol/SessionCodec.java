@@ -990,7 +990,11 @@ public final class SessionCodec {
         });
     }
     public byte[] chatFeedback(int sceneOid,String reason)throws IOException {
-        return systemMessage(sceneOid,reason,null);
+        return systemNotice(sceneOid,reason);
+    }
+    /** Server-authored notice rendered in the stock chat log; null resolves the literal text. */
+    public byte[] systemNotice(int sceneOid,String text)throws IOException {
+        return systemMessage(sceneOid,text,null);
     }
     /** Original auction localization arguments; system-info routing is archive reconstructed. */
     public byte[] auctionOutbid(int sceneOid,String itemName,int crowns)throws IOException {

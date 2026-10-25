@@ -7,9 +7,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Properties;
 
-/** Listener, logging and initial map settings; legacy selection is migration-only. */
-public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap, org.tortodrone.web.WebSettings webui) {
-    public ServerSettings(String bind,int port,int newsPort,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy,String startupMap){this(bind,port,newsPort,mode,clients,maxMiB,retention,packs,legacy,startupMap,org.tortodrone.web.WebSettings.DISABLED);}
+/** Listener, logging, chat notice and initial map settings; legacy selection is migration-only. */
+public record ServerSettings(String bind, int port, int newsPort, LogMode logMode, int maxClients, int logMaxMiB, int logRetention, String contentPacks, String legacyContent, String startupMap, String welcomeMessage, org.tortodrone.web.WebSettings webui) {
+    /** Printed once in the chat log when a knight first enters the world after login; empty disables it. */
+    public static final String DEFAULT_WELCOME_MESSAGE="Welcome to Tortodrone!";
+    private static final int MAX_WELCOME_CHARACTERS=256;
+    public ServerSettings(String bind,int port,int newsPort,LogMode mode,int clients,int maxMiB,int retention,String packs,String legacy,String startupMap){this(bind,port,newsPort,mode,clients,maxMiB,retention,packs,legacy,startupMap,DEFAULT_WELCOME_MESSAGE,org.tortodrone.web.WebSettings.DISABLED);}
     /** One port shared by the WebUI and stock-client content_url News images. */
     public static final String HTTP_PORT_SETTING="webui/content_url-port";
     public static final int DEFAULT_HTTP_PORT=8080;
@@ -93,7 +96,27 @@ public record ServerSettings(String bind, int port, int newsPort, LogMode logMod
         String packs=value(settings,"content-packs"),legacy=value(settings,"legacy-content");
         if(packs.isEmpty())throw new IOException("content-packs must list at least one pack");
         if(!java.util.Set.of("auto","disabled").contains(legacy))throw new IOException("legacy-content must be auto or disabled");
-        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings),org.tortodrone.web.WebSettings.read(settings,newsPort));
+        return new ServerSettings(bind, port, newsPort, logMode, maxClients, number(settings,"log-max-mib",1,1024), number(settings,"log-retention",1,100),packs,legacy,startupMap(settings),welcomeMessage(settings),org.tortodrone.web.WebSettings.read(settings,newsPort));
+    }
+
+    private static String welcomeMessage(Properties settings)throws IOException {
+        return welcomeMessage(value(settings,"welcome-message"));
+    }
+
+    /** Validate a configured welcome notice; the empty string disables it. */
+    public static String welcomeMessage(String message)throws IOException {
+        message=message==null?"":message.strip();
+        if(message.codePointCount(0,message.length())>MAX_WELCOME_CHARACTERS)
+            throw new IOException("welcome-message must be at most "+MAX_WELCOME_CHARACTERS+" characters");
+        for(int i=0;i<message.length();i++) {
+            char c=message.charAt(i);
+            if(Character.isISOControl(c))throw new IOException("welcome-message must not contain control characters");
+            if(Character.isHighSurrogate(c)) {
+                if(++i>=message.length()||!Character.isLowSurrogate(message.charAt(i)))
+                    throw new IOException("welcome-message must not contain invalid text");
+            }else if(Character.isLowSurrogate(c))throw new IOException("welcome-message must not contain invalid text");
+        }
+        return message;
     }
 
     public static String startupMap(Path file)throws IOException {

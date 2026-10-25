@@ -13,6 +13,20 @@ public final class ServerSettingsTest {
             check(ServerSettings.read(home.resolve("data/server.properties")).contentPacks().equals("vanilla")&&!Files.exists(home.resolve("data")),"reading content defaults creates no data or config directory");
             check(ServerSettings.load(file).maxClients()==16&&ServerSettings.load(file).webui().enabled()&&ServerSettings.load(file).webui().automaticHost(),"bundled properties enable HTTP administration with the existing client limit");
             check(Files.readString(file).contains("content-packs=vanilla")&&Files.readString(file).contains("legacy-content=auto"),"new settings include content selection defaults");
+            check(ServerSettings.load(file).welcomeMessage().equals(ServerSettings.DEFAULT_WELCOME_MESSAGE),"bundled settings include the default welcome message");
+            Files.writeString(file,"welcome-message=Welcome, traveller!\n");
+            check(ServerSettings.load(file).welcomeMessage().equals("Welcome, traveller!"),"welcome message is configurable");
+            Files.writeString(file,"welcome-message=\n");
+            check(ServerSettings.load(file).welcomeMessage().isEmpty(),"empty welcome message disables the notice");
+            Files.writeString(file,"welcome-message=bad\\ntext\n");
+            try{ServerSettings.load(file);throw new AssertionError("Control characters in welcome accepted");}catch(IOException expected){check(expected.getMessage().startsWith("welcome-message"),"clear welcome message error");}
+            Files.writeString(file,"welcome-message="+"w".repeat(257)+"\n");
+            try{ServerSettings.load(file);throw new AssertionError("Oversized welcome accepted");}catch(IOException expected){check(expected.getMessage().startsWith("welcome-message"),"bounded welcome message");}
+            Path yamlWelcome=home.resolve("welcome-server.yml");
+            Files.writeString(yamlWelcome,"welcome-message: Custom greeting\n");
+            check(ServerSettings.read(yamlWelcome).welcomeMessage().equals("Custom greeting"),"welcome message uses the same YAML settings file");
+            Files.writeString(yamlWelcome,"welcome-message: \"\"\n");
+            check(ServerSettings.read(yamlWelcome).welcomeMessage().isEmpty(),"empty YAML welcome message disables the notice");
             Files.writeString(file,"content-packs=vanilla,addon\nlegacy-content=disabled\n");
             check(ServerSettings.load(file).contentPacks().equals("vanilla,addon")&&ServerSettings.load(file).legacyContent().equals("disabled"),"content selection uses the same settings file");
             Files.writeString(file,"legacy-content=invalid\n");

@@ -26,9 +26,10 @@ log-mode: normal
 log-max-mib: 10
 log-retention: 5
 startup-map: haven
+welcome-message: Welcome to Tortodrone!
 ```
 
-`max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files. Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
+`max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
 
 ## Secure WebUI setup
 
@@ -84,7 +85,7 @@ WebUI identities are independent of game accounts and GM status. `VIEWER` can mo
 
 The browser uses HttpOnly SameSite cookies and a session-bound CSRF token. HTTPS proxy mode adds the Secure cookie flag and HSTS; direct HTTP uses a separate cookie name without the Secure flag so LAN browsers can send it over HTTP. APIs enforce role, Origin, Host, size and concurrency limits. Login is globally limited to ten attempts per minute; HTTP request deadlines bound stalled requests. Privileged action attempts/outcomes are stored in `data/webui.sqlite`, separately from game data. A requested action without a final outcome indicates interruption and must be inspected before retrying. Audit failure prevents starting an action; the game services keep their own transactional ledgers. Do not delete either database to clear logs.
 
-The UI includes monitoring charts, players/scenes, accounts and knights, inventory/modifiers/accessories, binding/expiry on grants, Depot offers/promotions/effective catalogue, auction escrow/deliveries, searchable logs/export, content validation and News preview/editing. News editing only replaces validated `news.yml`, using existing images; listener restart publishes changed pack selection. The native protocol selects a random pack, so array order is preserved without promising a rotation order. Item support remains constrained by the authoritative catalogue and services.
+The UI includes monitoring charts, players/scenes, accounts and knights, inventory/modifiers/accessories, binding/expiry on grants, Depot offers/promotions/effective catalogue, auction escrow/deliveries, searchable logs/export, content validation and News preview/editing, including the welcome chat message at the bottom of Uplink News (a server process restart applies it). News editing only replaces validated `news.yml`, using existing images; listener restart publishes changed pack selection. The native protocol selects a random pack, so array order is preserved without promising a rotation order. Item support remains constrained by the authoritative catalogue and services.
 
 ### Console recovery for WebUI accounts
 
