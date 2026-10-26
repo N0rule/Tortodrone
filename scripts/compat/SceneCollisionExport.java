@@ -28,12 +28,12 @@ public final class SceneCollisionExport {
             int flags=nativeCells.aY(coord.x,coord.y);if(flags!=0)cells.put(key(coord.x,coord.y),new Cell(coord.x,coord.y,flags));
         }
         if(cells.size()>MAX_CELLS||floors.size()>MAX_CELLS)throw new IOException("Too many native collision cells");
-        var shapes=new TreeSet<String>();
+        var shapes=new LinkedHashSet<String>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
             int mask=entry.ax(cm);if(mask==0)continue;
             Shape shape=entry.av(cm);if(shape==null)throw new IOException("Colliding placeable has no native shape");
             var geometries=new ArrayList<String>();
-            try{geometry(shape,geometries,0);}catch(IOException invalid){throw new IOException("Collision at entry "+entry.getKey()+" ("+entry.placeable.getName()+"): "+invalid.getMessage(),invalid);}
+            try{geometry(shape,geometries,0,shape.aeu());}catch(IOException invalid){throw new IOException("Collision at entry "+entry.getKey()+" ("+entry.placeable.getName()+"): "+invalid.getMessage(),invalid);}
             for(String geometry:geometries)shapes.add(mask+";"+geometry);
             if(shapes.size()>MAX_SHAPES)throw new IOException("Too many native placeable collision shapes");
         }
@@ -54,7 +54,7 @@ public final class SceneCollisionExport {
         System.out.println("PASS: exported native static collision cells="+cells.size()+" floors="+floors.size()+" shapes="+shapes.size()+" layout="+digest);
     }
 
-    private static void geometry(Shape shape,List<String> out,int depth)throws IOException {
+    static void geometry(Shape shape,List<String> out,int depth,com.threerings.math.Rect gate)throws IOException {
         if(depth>32)throw new IOException("Native compound collision shape is too deep");
         String type=shape.getClass().getName();
         if(type.endsWith(".b")){
@@ -65,8 +65,8 @@ public final class SceneCollisionExport {
             Vector2f center=(Vector2f)invoke(shape,"aet");out.add("C;"+f(center.x)+";"+f(center.y)+";0.0");return;
         }
         if(type.endsWith(".h")){
-            int n=((Number)invoke(shape,"getVertexCount")).intValue();if(n<3||n>MAX_VERTICES)throw new IOException("Invalid native polygon size: "+n);
-            var values=new StringBuilder("P");for(int j=0;j<n;j++){Vector2f v=(Vector2f)invoke(shape,"gL",int.class,j);values.append(';').append(f(v.x)).append(';').append(f(v.y));}out.add(values.toString());return;
+            int n=((Number)invoke(shape,"getVertexCount")).intValue();if(n<2||n>MAX_VERTICES)throw new IOException("Invalid native polygon size: "+n);
+            var values=new StringBuilder(n==2?"D":"P");for(int j=0;j<n;j++){Vector2f v=(Vector2f)invoke(shape,"gL",int.class,j);values.append(';').append(f(v.x)).append(';').append(f(v.y));}if(n==2)values.append(';').append(f(gate.tt().x)).append(';').append(f(gate.tt().y)).append(';').append(f(gate.tu().x)).append(';').append(f(gate.tu().y));out.add(values.toString());return;
         }
         if(type.endsWith(".i")){
             Vector2f a=(Vector2f)invoke(shape,"aeo"),b=(Vector2f)invoke(shape,"aep");
@@ -78,7 +78,7 @@ public final class SceneCollisionExport {
         }
         if(type.endsWith(".c")){
             Shape[] children=(Shape[])invoke(shape,"aer");if(children.length>MAX_VERTICES)throw new IOException("Invalid native compound shape size");
-            for(Shape child:children)geometry(child,out,depth+1);return;
+            for(Shape child:children)geometry(child,out,depth+1,shape.aeu());return;
         }
         throw new IOException("Unsupported native collision shape class: "+type);
     }

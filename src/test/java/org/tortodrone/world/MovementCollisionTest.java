@@ -10,6 +10,15 @@ public final class MovementCollisionTest {
     public static void main(String[] args)throws Exception {
         var terrain=SceneWeaponsTest.openTerrain();
         var geometry=geometry("P;0;0;2;0;2;2;0;2");
+        var rail=geometry("D;0;0;1;0;-2;-2;3;2");
+        check(!rail.clear(43,disc(.25f),2,.1f,0),"two-vertex native polygon retains circle planes beyond endpoints inside compound bounds");
+        check(rail.clear(43,disc(.25f),3.3f,.1f,0),"compound bounds stop the extended circle planes");
+        var railPush=rail.penetration(43,2,.1f,.25f);
+        check(Math.abs(railPush.y()-.15f)<.00001&&railPush.x()==0,"rail separates circular pawns by native plane distance");
+        var rotated=geometry("P;4.5;65;5;65;5.000001;69;4.500001;69");
+        var edgeContact=rotated.penetration(43,4.5f,65.1f,ScenePortals.PAWN_RADIUS);
+        check(edgeContact.x()<-.33f&&Math.abs(edgeContact.y())<.001f,"exact rotated-edge contact keeps its native separating normal");
+        for(String invalid:List.of("D;0;0;0;0;-1;-1;1;1","D;0;0;1;0;2;2;3;3"))try{geometry(invalid);throw new AssertionError("Invalid rail accepted");}catch(java.io.IOException expected){}
         var overlap=new TownMovement(terrain,-.2f,1);
         overlap.staticCollision(geometry,43);walk(overlap,1000,(float)Math.PI,100);
         check(overlap.x()<-.7f,"a pawn already overlapping static geometry can walk away");

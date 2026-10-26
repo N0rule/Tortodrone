@@ -64,26 +64,42 @@ public final class SceneCollision {
         return result;
     }
     private static Penetration penetration(Geom obstacle,Point center,float radius) {
+        if(obstacle instanceof Rail rail){
+            if(!railIntersects(rail,new Circle(center,radius)))return Penetration.NONE;
+            return polygonContact(new Polygon(List.of(rail.a,rail.b)),center,radius);
+        }
         if(obstacle instanceof Circle circle)return radial(center,circle.center,radius+circle.radius);
         if(obstacle instanceof Capsule capsule)return radial(center,nearest(center,capsule.a,capsule.b),radius+capsule.radius);
-        var polygon=(Polygon)obstacle;Point closest=null;double best=Double.POSITIVE_INFINITY;
-        float winding=polygon.winding,depth=Float.POSITIVE_INFINITY;int edge=-1;boolean interior=true;
-        for(int i=0;i<polygon.points.size();i++){
-            var a=polygon.points.get(i);var b=polygon.points.get((i+1)%polygon.points.size());
-            var point=nearest(center,a,b);
-            double distance=distance2(center,point);if(distance<best){best=distance;closest=point;}
-            float nx=a.y-b.y,ny=b.x-a.x,length=polygon.edgeLengths[i];if(length==0)continue;
-            // Keep native float plane distances, including their tie order at inside corners.
-            float signed=(nx*center.x+ny*center.y-nx*a.x-ny*a.y)*winding;
-            interior&=signed>=0;float separation=signed/length;
-            if(separation<depth){depth=separation;edge=i;}
-        }
-        if(!interior||edge<0)return radial(center,closest,radius);
-        var a=polygon.points.get(edge);var b=polygon.points.get((edge+1)%polygon.points.size());
-        float length=polygon.edgeLengths[edge];if(length==0)return Penetration.NONE;
-        float scale=winding*(radius+depth)/length;
-        return new Penetration((b.y-a.y)*scale,(a.x-b.x)*scale);
+        var polygon=(Polygon)obstacle;
+        if(!circlePolygon(new Circle(center,radius),polygon))return Penetration.NONE;
+        return polygonContact(polygon,center,radius);
     }
+    private static Penetration polygonContact(Polygon polygon,Point center,float radius){
+        // Convex native polygons classify contacts using adjacent edge planes. A nearest-point
+        // approximation loses the separating normal at an exactly coincident, rotated edge.
+        float minimum=Float.MAX_VALUE;int closest=0,n=polygon.points.size();
+        for(int i=0;i<n;i++){
+            var a=polygon.points.get(i);var b=polygon.points.get((i+1)%n);
+            float dx=b.x-a.x,dy=b.y-a.y,length=polygon.edgeLengths[i];if(length==0)continue;
+            float signed=plane(a,b,center)*polygon.winding;
+            if(signed>=0){float distance=signed/length;if(distance<minimum){minimum=distance;closest=i;}continue;}
+            var next=polygon.points.get((i+2)%n);
+            if(plane(b,next,center)*polygon.winding<=0&&distance2(center,b)>0)return radial(center,b,radius);
+            var previous=polygon.points.get((i+n-1)%n);
+            if(plane(previous,a,center)*polygon.winding>=0){
+                float scale=polygon.winding*Math.max(0,radius/length+signed/(dx*dx+dy*dy));
+                return new Penetration(dy*scale,-dx*scale);
+            }
+        }
+        var a=polygon.points.get(closest);var b=polygon.points.get((closest+1)%n);
+        float length=polygon.edgeLengths[closest];if(length==0||minimum==Float.MAX_VALUE)return Penetration.NONE;
+        float normalize=polygon.winding/length;
+        return new Penetration((b.y-a.y)*normalize*(radius+minimum),(a.x-b.x)*normalize*(radius+minimum));
+    }
+    private static float plane(Point a,Point b,Point point){
+        float nx=a.y-b.y,ny=b.x-a.x;return nx*point.x+ny*point.y-nx*a.x-ny*a.y;
+    }
+
     private static Penetration radial(Point center,Point closest,float radius) {
         float dx=center.x-closest.x,dy=center.y-closest.y,distance=(float)Math.hypot(dx,dy);
         if(distance==0||distance>=radius)return Penetration.NONE;
@@ -250,6 +266,7 @@ public final class SceneCollision {
     private static Geom parseGeometry(String text)throws IOException{
         try{
             String[] f=text.split(";",-1);String kind=f[0];
+            if(kind.equals("D")&&f.length==9)return new Rail(new Point(num(f[1]),num(f[2])),new Point(num(f[3]),num(f[4])),new Bounds(num(f[5]),num(f[6]),num(f[7]),num(f[8])));
             if(kind.equals("C")&&f.length==4)return new Circle(new Point(num(f[1]),num(f[2])),positive(num(f[3])));
             if(kind.equals("K")&&f.length==6)return new Capsule(new Point(num(f[1]),num(f[2])),new Point(num(f[3]),num(f[4])),positive(num(f[5])));
             if(kind.equals("P")&&f.length>=7&&f.length%2==1){var points=new ArrayList<Point>();for(int i=1;i<f.length;i+=2)points.add(new Point(num(f[i]),num(f[i+1])));return new Polygon(points);}
@@ -264,6 +281,7 @@ public final class SceneCollision {
     private static long key(int x,int y){return ((long)x<<32)^(y&0xffffffffL);}
 
     private static Bounds bounds(Geom g){
+        if(g instanceof Rail r)return r.gate;
         if(g instanceof Circle c)return new Bounds(c.center.x-c.radius,c.center.y-c.radius,c.center.x+c.radius,c.center.y+c.radius);
         if(g instanceof Capsule c)return new Bounds(Math.min(c.a.x,c.b.x)-c.radius,Math.min(c.a.y,c.b.y)-c.radius,Math.max(c.a.x,c.b.x)+c.radius,Math.max(c.a.y,c.b.y)+c.radius);
         Polygon p=(Polygon)g;float minX=Float.POSITIVE_INFINITY,minY=minX,maxX=Float.NEGATIVE_INFINITY,maxY=maxX;
@@ -271,6 +289,8 @@ public final class SceneCollision {
     }
     private static Polygon rectangle(float x0,float y0,float x1,float y1){return new Polygon(List.of(new Point(x0,y0),new Point(x1,y0),new Point(x1,y1),new Point(x0,y1)));}
     private static boolean intersects(Geom a,Geom b){
+        if(a instanceof Rail rail)return railIntersects(rail,b);
+        if(b instanceof Rail rail)return railIntersects(rail,a);
         if(a instanceof Circle x&&b instanceof Circle y)return distance2(x.center,y.center)<=sq(x.radius+y.radius);
         if(a instanceof Circle x&&b instanceof Polygon y)return circlePolygon(x,y);
         if(a instanceof Polygon x&&b instanceof Circle y)return circlePolygon(y,x);
@@ -280,6 +300,26 @@ public final class SceneCollision {
         if(a instanceof Capsule x&&b instanceof Polygon y)return capsulePolygon(x,y);
         if(a instanceof Polygon x&&b instanceof Capsule y)return capsulePolygon(y,x);
         return polygonsIntersect((Polygon)a,(Polygon)b);
+    }
+    /** Native two-vertex polygon: circle planes extend to the containing compound's bounds. */
+    private static boolean railIntersects(Rail rail,Geom moving){
+        if(!rail.gate.intersects(bounds(moving)))return false;
+        if(moving instanceof Circle circle){
+            double dx=rail.b.x-rail.a.x,dy=rail.b.y-rail.a.y;
+            double cross=dx*(circle.center.y-rail.a.y)-dy*(circle.center.x-rail.a.x);
+            return cross*cross<=sq(circle.radius)*(dx*dx+dy*dy);
+        }
+        if(moving instanceof Capsule capsule){
+            float signed=(rail.a.y-rail.b.y)*capsule.a.x+(rail.b.x-rail.a.x)*capsule.a.y
+                -(rail.a.y-rail.b.y)*rail.a.x-(rail.b.x-rail.a.x)*rail.a.y;
+            return signed==0||segmentDistance2(rail.a,rail.b,capsule.a,capsule.b)<=sq(capsule.radius);
+        }
+        if(moving instanceof Polygon polygon){
+            if(inside(rail.a,polygon)||inside(rail.b,polygon))return true;
+            for(int i=0;i<polygon.points.size();i++)if(segmentsIntersect(rail.a,rail.b,polygon.points.get(i),polygon.points.get((i+1)%polygon.points.size())))return true;
+            return false;
+        }
+        var other=(Rail)moving;return segmentsIntersect(rail.a,rail.b,other.a,other.b);
     }
     private static boolean circlePolygon(Circle circle,Polygon poly){
         if(inside(circle.center,poly))return true;for(int i=0;i<poly.points.size();i++)if(pointSegment2(circle.center,poly.points.get(i),poly.points.get((i+1)%poly.points.size()))<=sq(circle.radius))return true;return false;
@@ -303,21 +343,25 @@ public final class SceneCollision {
 
     private interface Geom { }
     private record Point(float x,float y) { Point { if(!Float.isFinite(x)||!Float.isFinite(y))throw new IllegalArgumentException("Non-finite point"); } }
+    private record Rail(Point a,Point b,Bounds gate) implements Geom {
+        Rail {if(a.x==b.x&&a.y==b.y||gate.minX>gate.maxX||gate.minY>gate.maxY||a.x<gate.minX||a.x>gate.maxX||a.y<gate.minY||a.y>gate.maxY||b.x<gate.minX||b.x>gate.maxX||b.y<gate.minY||b.y>gate.maxY)throw new IllegalArgumentException("Invalid native rail polygon");}
+    }
     private record Circle(Point center,float radius) implements Geom { Circle { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid circle"); } }
     private record Capsule(Point a,Point b,float radius) implements Geom { Capsule { if(!Float.isFinite(radius)||radius<0)throw new IllegalArgumentException("Invalid capsule"); } }
     private static final class Polygon implements Geom {
         final List<Point> points;final float winding;final float[] edgeLengths;
         Polygon(List<Point> points){
-            this.points=List.copyOf(points);if(points.size()<3||points.size()>4096)throw new IllegalArgumentException("Invalid polygon");
+            this.points=List.copyOf(points);if(points.size()<2||points.size()>4096)throw new IllegalArgumentException("Invalid polygon");
             edgeLengths=new float[points.size()];double area=0;
             for(int i=0;i<points.size();i++){
                 var a=points.get(i);var b=points.get((i+1)%points.size());area+=(double)a.x*b.y-(double)b.x*a.y;
-                edgeLengths[i]=(float)Math.hypot(a.y-b.y,b.x-a.x);
+                float nx=a.y-b.y,ny=b.x-a.x;edgeLengths[i]=(float)Math.sqrt(nx*nx+ny*ny);
             }
             winding=area>=0?1:-1;
         }
     }
     private record Bounds(float minX,float minY,float maxX,float maxY) {
+        boolean intersects(Bounds other){return maxX>=other.minX&&minX<=other.maxX&&maxY>=other.minY&&minY<=other.maxY;}
         boolean near(float x,float y,float radius){return x+radius>=minX&&x-radius<=maxX&&y+radius>=minY&&y-radius<=maxY;}
     }
     private record Obstacle(int mask,Geom geometry,Bounds bounds) {
