@@ -30,7 +30,7 @@ public final class SceneActionCompatibility {
         var events=new ArrayList<String>();
         var runtime=new SceneActions(List.of(new SceneActions.Rule("3306","removed","wave miniboss","",false,action)),
             (tag,name,stamp)->{events.add(tag+":"+name+":"+stamp);return true;});
-        runtime.removed(Set.of("wave miniboss"),tag->false,100);runtime.advance(5099);
+        runtime.removed(Set.of("wave miniboss"),tag->false,100);runtime.advance(100);runtime.advance(5099);
         if(!events.isEmpty())throw new AssertionError("Early exit signal");runtime.advance(5100);
         if(!events.equals(List.of("door end:open:5100")))throw new AssertionError("Native delay/signal fields changed");
         var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;
@@ -76,7 +76,7 @@ public final class SceneActionCompatibility {
         compound.actions=new ActionConfig[]{delayed,new ActionConfig.FireEffect()};
         try{SceneContentExport.sceneAction(compound,0);throw new AssertionError("Unsupported sibling was silently dropped");}catch(IOException expected){}
         delayed.variance=50;
-        try{SceneContentExport.sceneAction(delayed,0);throw new AssertionError("Unimplemented variance accepted");}catch(IOException expected){}
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();
         try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported target accepted");}catch(IOException expected){}
         if(args.length>1){
@@ -89,6 +89,16 @@ public final class SceneActionCompatibility {
             exported.signal("start tut_miniboss","activate",100,"entry:3280");exported.advance(100);exported.advance(150);
             exported.signal("start tut_miniboss","activate",200,"entry:3280");exported.advance(200);
             if(!events.equals(List.of("spawn boss:activate","boss camera:activate","boss music:activate")))throw new AssertionError("Captured entry 3265 did not dispatch its authored targets once: "+events);
+            var boss=content.entries().stream().filter(entry->entry.key().equals("3267")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
+            events.clear();var encounter=new SceneActions(List.of(SceneActions.rule(boss)),(tag,name,stamp,source)->{events.add(tag+":"+name+":"+stamp);return true;},
+                new Random(){@Override public int nextInt(int bound){if(bound!=1000)throw new AssertionError("Unexpected captured variance");return bound/2;}});
+            encounter.signal("spawn boss","activate",100,"entry:3265");encounter.advance(100);encounter.advance(3599);
+            if(!events.equals(List.of("rocket 1:activate:100")))throw new AssertionError("Captured encounter advanced early");
+            encounter.advance(3600);encounter.advance(6100);encounter.advance(8100);
+            if(!events.equals(List.of("rocket 1:activate:100","rocket 2:activate:3600","miniboss:activate:6100","door hidden:open:8100","door miniboss:close:8100","start player:activate:8100","replace knightsa:activate:8100")))throw new AssertionError("Captured encounter signal timing differs: "+events);
+            encounter.signal("spawn boss","activate",8200,"entry:3265");encounter.advance(8200);encounter.advance(20000);
+            if(events.size()!=7)throw new AssertionError("Captured encounter replayed");
+            System.out.println("PASS: captured tutorial entry 3267 -> seven authored timed signals, bounded variance, no replay");
             System.out.println("PASS: captured tutorial entry 3265 -> authoritative scheduler -> three authored signals, no replay");
         }
         System.out.println("PASS: stock action fields, delayed signal timing, Limit condition, signal transitions, inherited/recovered tags, compound targets, full-compound refusal, variance and target guards");

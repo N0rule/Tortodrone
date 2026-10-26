@@ -10,8 +10,9 @@ public final class SceneActions {
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
-    public record Delay(int millis,Action action) implements Action {
-        public Delay { if(millis<0||millis>3_600_000)throw new IllegalArgumentException("Invalid scene action delay");Objects.requireNonNull(action); }
+    public record Delay(int millis,int variance,Action action) implements Action {
+        public Delay(int millis,Action action){this(millis,0,action);}
+        public Delay { if(millis<0||millis>3_600_000||variance<0||variance>3_600_000)throw new IllegalArgumentException("Invalid scene action delay");Objects.requireNonNull(action); }
     }
     public record Sequence(List<Action> actions,boolean stopOnFailure) implements Action {
         public Sequence { actions=List.copyOf(actions);if(actions.size()>256)throw new IllegalArgumentException("Too many compound actions"); }
@@ -53,6 +54,7 @@ public final class SceneActions {
     private final List<Compiled> rules;
     private final List<State> states;
     private final SourcedSignals signals;
+    private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
     private int activeSources;
@@ -62,7 +64,9 @@ public final class SceneActions {
         this(rules,adapt(signals));
     }
     private static SourcedSignals adapt(Signals signals){Objects.requireNonNull(signals);return (tag,name,stamp,source)->signals.apply(tag,name,stamp);}
-    public SceneActions(List<Rule> rules,SourcedSignals signals){
+    public SceneActions(List<Rule> rules,SourcedSignals signals){this(rules,signals,new Random());}
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){
+        this.random=Objects.requireNonNull(random);
         this.signals=Objects.requireNonNull(signals);
         if(rules.size()>2048)throw new IllegalArgumentException("Too many scene handlers");
         var keys=new HashSet<String>();for(var rule:rules){if(!keys.add(rule.key()))throw new IllegalArgumentException("Duplicate scene handler");validate(rule.action(),0,new int[]{0});}
@@ -95,7 +99,7 @@ public final class SceneActions {
             if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source());
         }
     }
-    /** Equal-time actions retain authored order; nested delays retain their original due time. */
+    /** Equal-time actions retain authored order; overdue work executes on the current scene tick. */
     public void advance(int stamp){
         if(closed)return;
         if(advanced&&stamp<lastAdvanced)throw new IllegalArgumentException("Scene action clock moved backwards");
@@ -113,14 +117,14 @@ public final class SceneActions {
     }
     private void drain(int stamp,int[] budget){
         while(!pending.isEmpty()&&pending.peek().due()<=stamp&&budget[0]>0){
-            var task=pending.remove();execute(task.node(),task.due(),task.source(),budget);
+            var task=pending.remove();execute(task.node(),stamp,task.source(),budget);
         }
     }
     private boolean execute(Node node,long due,String source,int[] budget){
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
-            case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.millis()),source);
+            case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source);
             case Sequence sequence -> {
                 boolean success=true;
                 for(var child:node.children)if(!execute(child,due,source,budget)){success=false;if(sequence.stopOnFailure())break;}
@@ -153,9 +157,14 @@ public final class SceneActions {
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
         if("signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name")))return new Signal(string(map.get("tag")),string(map.get("name")));
-        if("delay".equals(kind)&&map.keySet().equals(Set.of("kind","millis","action"))&&map.get("millis") instanceof Number number){
+        if("delay".equals(kind)&&(map.keySet().equals(Set.of("kind","millis","action"))||map.keySet().equals(Set.of("kind","millis","variance","action")))&&map.get("millis") instanceof Number number){
             long millis=number.longValue();if(number.doubleValue()!=millis)throw new IllegalArgumentException("Fractional delay");
-            return new Delay(Math.toIntExact(millis),decode(map.get("action"),depth+1,count));
+            int variance=0;
+            if(map.containsKey("variance")){
+                if(!(map.get("variance") instanceof Number v)||v.doubleValue()!=v.longValue())throw new IllegalArgumentException("Invalid delay variance");
+                variance=Math.toIntExact(((Number)map.get("variance")).longValue());
+            }
+            return new Delay(Math.toIntExact(millis),variance,decode(map.get("action"),depth+1,count));
         }
         if("sequence".equals(kind)&&map.keySet().equals(Set.of("kind","stopOnFailure","actions"))&&map.get("stopOnFailure") instanceof Boolean stop&&map.get("actions") instanceof List<?> list){
             var actions=new ArrayList<Action>();for(var child:list)actions.add(decode(child,depth+1,count));return new Sequence(actions,stop);

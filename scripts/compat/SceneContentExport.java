@@ -228,8 +228,8 @@ public final class SceneContentExport {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
         if(action instanceof ActionConfig.Delayed delay){
-            if(delay.variance!=0||delay.delay<0||delay.delay>3_600_000)throw new IOException("Unsupported scene action delay/variance");
-            return Map.of("kind","delay","millis",delay.delay,"action",sceneAction(delay.action,depth+1));
+            if(delay.variance<0||delay.variance>3_600_000||delay.delay<0||delay.delay>3_600_000)throw new IOException("Unsupported scene action delay/variance");
+            return Map.of("kind","delay","millis",delay.delay,"variance",delay.variance,"action",sceneAction(delay.action,depth+1));
         }
         if(action instanceof ActionConfig.Compound compound){
             if(compound.actions==null||compound.actions.length>256)throw new IOException("Invalid scene compound");

@@ -31,6 +31,7 @@ public final class SceneActionsTest {
         isolated.advance(time+10000,List.of());check(!isolated.walkable(3,0,219),"another scene's boss/door are unaffected");
         scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
         scheduler();
+        variance();
         limits();
         transitions();
         try{SceneActions.rule(entry("bad",0,0,Map.of("kind","SceneTrigger","event","removed","watch-tag","wave","all","unknown","action",EXIT)));throw new AssertionError("Invalid group flag accepted");}catch(IOException expected){}
@@ -46,8 +47,9 @@ public final class SceneActionsTest {
         var runtime=new SceneActions(List.of(rule),(tag,name,time)->{events.add(name+":"+time);return true;});
         runtime.removed(Set.of("wave"),tag->true,100);runtime.advance(200);check(events.isEmpty(),"all=true waits for the last matching actor");
         runtime.removed(Set.of("other"),tag->false,200);runtime.advance(200);check(events.isEmpty(),"unrelated actors cannot activate the rule");
-        runtime.removed(Set.of("wave"),tag->false,200);runtime.advance(500);
-        check(events.equals(List.of("second:250","first:250")),"late ticks retain nested due times and insertion order for equal deadlines");
+        runtime.removed(Set.of("wave"),tag->false,200);runtime.advance(200);runtime.advance(500);
+        check(events.equals(List.of("second:500")),"late tick does not collapse a nested delay");runtime.advance(530);
+        check(events.equals(List.of("second:500","first:530")),"late actions publish current tick and nested delays start there");
         runtime.removed(Set.of("wave"),tag->false,600);runtime.close();runtime.advance(1000);check(events.size()==2&&runtime.pending()==0,"scene cancellation discards delayed work");
         for(boolean stop:List.of(false,true)){
             events.clear();var compound=new SceneActions.Sequence(List.of(new SceneActions.Signal("door","fail"),new SceneActions.Signal("door","after")),stop);
@@ -57,6 +59,29 @@ public final class SceneActionsTest {
         SceneActions[] loop={null};loop[0]=new SceneActions(List.of(new SceneActions.Rule("loop","signal","loop","go",false,new SceneActions.Signal("loop","go"))),
             (tag,name,time)->{loop[0].signal(tag,name,time);return true;});
         loop[0].signal("loop","go",1);loop[0].advance(1);check(loop[0].pending()==1,"cyclic signals are tick-budgeted instead of recursing");loop[0].close();
+    }
+    private static void variance()throws Exception {
+        var parsed=SceneActions.parse("{\"kind\":\"delay\",\"millis\":5,\"variance\":10,\"action\":{\"kind\":\"signal\",\"tag\":\"out\",\"name\":\"go\"}}");
+        for(boolean upper:List.of(false,true)){
+            var events=new ArrayList<Integer>();
+            var random=new Random(0){@Override public int nextInt(int bound){check(bound==20,"native variance range is twice the variance");return upper?bound-1:0;}};
+            var runtime=new SceneActions(List.of(new SceneActions.Rule("v","signal","in","go",false,parsed)),(tag,name,time,source)->{events.add(time);return true;},random);
+            runtime.signal("in","go",100);runtime.advance(100);
+            if(upper){check(events.isEmpty(),"upper variance delays dispatch");runtime.advance(113);check(events.isEmpty(),"exclusive upper bound");runtime.advance(114);}
+            check(events.equals(List.of(upper?114:100)),"variance clamps negative sampled delay to zero");
+        }
+        var first=new ArrayList<Integer>();var second=new ArrayList<Integer>();
+        for(var events:List.of(first,second)){
+            var runtime=new SceneActions(List.of(new SceneActions.Rule("seed","signal","in","go",false,parsed)),(tag,name,time,source)->{events.add(time);return true;},new Random(77));
+            for(int i=0;i<20;i++){int now=100+i*100;runtime.signal("in","go",now);for(int tick=now;tick<=now+20;tick++)runtime.advance(tick);}
+        }
+        check(first.equals(second)&&first.size()==20,"seeded scene randomness replays without shared state");
+        var fixed=new SceneActions(List.of(new SceneActions.Rule("fixed","signal","in","go",false,new SceneActions.Delay(0,new SceneActions.Signal("out","go")))),
+            (tag,name,time,source)->true,new Random(){@Override public int nextInt(int bound){throw new AssertionError("Fixed delay consumed randomness");}});
+        fixed.signal("in","go",1);fixed.advance(1);
+        for(String value:List.of("-1","0.5","3600001","null","\"10\"")){
+            try{SceneActions.parse("{\"kind\":\"delay\",\"millis\":5,\"variance\":"+value+",\"action\":{\"kind\":\"sequence\",\"actions\":[],\"stopOnFailure\":false}}");throw new AssertionError("Invalid variance accepted");}catch(IOException expected){}
+        }
     }
     private static void limits(){
         var events=new ArrayList<String>();
