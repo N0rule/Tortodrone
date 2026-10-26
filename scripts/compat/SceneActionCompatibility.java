@@ -22,6 +22,15 @@ public final class SceneActionCompatibility {
         try{SceneContentExport.sceneTags(marker,Map.of("Tag",42),tags);throw new AssertionError("Non-text tag accepted");}catch(IOException expected){}
         parameter.paths=new String[]{"implementation.tags.tags[256]"};
         try{SceneContentExport.sceneTags(marker,Map.of("Tag","oversized"),tags);throw new AssertionError("Unbounded slot accepted");}catch(IOException expected){}
+        var table=new com.threerings.projectx.dungeon.config.SpawnTableConfig.Original();
+        var leaf=new com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry();leaf.actor=new com.threerings.config.ConfigReference<>("Fixture/Monster","Wave Tag","(Wave Tag)");table.root=leaf;
+        var wave=new com.threerings.config.Parameter.Direct();wave.name="Wave";wave.paths=new String[]{"root.actor[\"Wave Tag\"]"};table.parameters=new com.threerings.config.Parameter[]{wave};
+        var bound=SceneContentExport.singleTableActor(table,Map.of("Wave","boss support 1"));
+        if(!bound.kW().get("Wave Tag").equals("boss support 1")||!leaf.actor.kW().get("Wave Tag").equals("(Wave Tag)"))throw new AssertionError("Actor table lost argument binding or mutated native config");
+        wave.paths=new String[]{"root.actor[\"Wave Tag\"]","root.unimplemented"};
+        try{SceneContentExport.singleTableActor(table,Map.of("Wave","bad"));throw new AssertionError("Unsupported table parameter sibling ignored");}catch(IOException expected){}
+        table.root=new com.threerings.projectx.dungeon.config.SpawnTableConfig.RandomEntry();
+        try{SceneContentExport.singleTableActor(table,Map.of());throw new AssertionError("Random table sampled at export time");}catch(IOException expected){}
         var target=new TargetConfig.Tagged();target.tag="door end";
         var signal=new ActionConfig.Signal();signal.name="open";signal.target=target;
         var delayed=new ActionConfig.Delayed();delayed.delay=5000;delayed.variance=0;delayed.action=signal;
@@ -94,6 +103,18 @@ public final class SceneActionCompatibility {
             var folder=java.nio.file.Path.of(args[1]);var properties=new Properties();
             try(var input=java.nio.file.Files.newInputStream(folder.resolve("map.properties"))){properties.load(input);}
             var content=org.tortodrone.world.SceneContent.load(folder,properties.getProperty("scene-sha256"));
+            for(String key:List.of("496","497","511","2845","2846","2897","3321","3367","3381","3382","3383","3385")){
+                var entry=content.entries().stream().filter(e->e.key().equals(key)&&e.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
+                var operation=SceneActions.rule(entry).action();
+                if(!(operation instanceof SceneActions.Limited single)||!(single.action() instanceof SceneActions.Spawn spawn)||!spawn.activate())throw new AssertionError("Native single-actor activation missing at "+key);
+                String expected=Set.of("496","497","511","2846").contains(key)?"Character/NPC/Monster/Slime/Jelly Cube (Intro)":Set.of("2845","2897").contains(key)?"Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)":"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)";
+                if(!spawn.fields().get("config").equals(expected))throw new AssertionError("Native single-actor table changed at "+key);
+                if(expected.contains("Gun Puppy")){
+                    String waveTag=Set.of("3321","3367").contains(key)?"boss support 1":"boss support 2";
+                    if(!Arrays.asList(spawn.fields().get("tags").split(",")).contains(waveTag)||!spawn.fields().get("config.argument.Wave Tag").equals("string|"+waveTag))throw new AssertionError("Derived actor/table wave tag lost at "+key);
+                }
+            }
+            System.out.println("PASS: all 12 native early/rocket actor-table activations preserve concrete actor identity; Gun Puppy wave tags survive table and derived actor parameters");
             var trigger=content.entries().stream().filter(entry->entry.key().equals("3265")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
             var rule=SceneActions.rule(trigger);events.clear();
             var exported=new SceneActions(List.of(rule),(tag,name,stamp)->{events.add(tag+":"+name);return true;});

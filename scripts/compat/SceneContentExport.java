@@ -310,15 +310,12 @@ public final class SceneContentExport {
             return preparedSpawn(cm,spawn.actor,false);
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ActivateMonster spawn){
-            if(cm==null||spawn.spawnTable==null||!spawn.spawnTable.getName().equals("default (Actor)")
+            if(cm==null||spawn.spawnTable==null
                     ||spawn.warp||spawn.topLevel||spawn.rotation!=0||!spawn.relative||spawn.translation.x!=0||spawn.translation.y!=0
                     ||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported monster activation table or transform");
             var table=spawn.spawnTable.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
             if(table==null)throw new IOException("Missing monster activation table");
-            var state=new com.threerings.projectx.dungeon.config.SpawnTableConfig.a();state.depth=0;state.difficulty=com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM;
-            var actors=new ArrayList<ConfigReference<ActorConfig>>();table.a(cm,state,null,null,actors::add);
-            if(actors.size()!=1)throw new IOException("Default actor table did not resolve one actor");
-            return preparedSpawn(cm,actors.getFirst(),true);
+            return preparedSpawn(cm,singleTableActor(table,spawn.spawnTable.kW()),true);
         }
 
         if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.StartConversation start){
@@ -376,11 +373,51 @@ public final class SceneContentExport {
         try{
             if(rules==null){rules=new Properties();try(var input=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(input);}}
             writeActor(cm,fields,"",actor);
-            var config=actor.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.ai(cm),"tags");
-            if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,actor.kW(),tags)));
+            var resolved=resolvedActor(cm,actor);var config=resolved.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.ai(cm),"tags");
+            if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.kW(),tags)));
             new org.tortodrone.world.SceneActions.Spawn(fields,activate);
         }catch(Exception invalid){throw new IOException("Unsupported scene spawn actor "+actor.getName()+": "+invalid.getMessage(),invalid);}
         return Map.of("kind","spawn","fields",fields,"activate",activate);
+    }
+
+    /** Actor-only tables are deterministic; never sample random/conditional tables at export time. */
+    static ConfigReference<ActorConfig> singleTableActor(com.threerings.projectx.dungeon.config.SpawnTableConfig table,Map<String,Object> arguments)throws IOException {
+        if(!(table instanceof com.threerings.projectx.dungeon.config.SpawnTableConfig.Original original)
+                ||original.root==null||original.root.getClass()!=com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry.class
+                ||((com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry)original.root).actor==null)throw new IOException("Unsupported monster activation table root");
+        var actor=((com.threerings.projectx.dungeon.config.SpawnTableConfig.ActorEntry)original.root).actor;
+        var result=new ConfigReference<ActorConfig>(actor.getName());result.kW().putAll(actor.kW());
+        for(var parameter:table.parameters)if(arguments.containsKey(parameter.name)){
+            if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)||direct.paths==null||direct.paths.length==0)throw new IOException("Unsupported actor table parameter");
+            for(String path:direct.paths){
+                if(path.equals("root.actor")||path.equals("implementation.root.actor")){
+                    Object value=arguments.get(parameter.name);
+                    if(!(value instanceof ConfigReference<?> reference)||reference.getName()==null)throw new IOException("Invalid actor table reference");
+                    result=new ConfigReference<>(reference.getName());result.kW().putAll(reference.kW());
+                }else{
+                    var match=java.util.regex.Pattern.compile("(?:implementation\\.)?root\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
+                    if(!match.matches())throw new IOException("Unsupported actor table parameter path");
+                    result.kW().put(match.group(1),arguments.get(parameter.name));
+                }
+            }
+        }
+        return result;
+    }
+
+    private static ConfigReference<ActorConfig> resolvedActor(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {
+        for(int depth=0;depth<16;depth++){
+            var config=reference.a(cm,ActorConfig.class);
+            if(config==null)throw new IOException("Unresolved scene actor");
+            if(!(config.implementation instanceof ActorConfig.Derived derived))return reference;
+            if(derived.actor==null)throw new IOException("Missing derived scene actor");
+            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.kW().putAll(derived.actor.kW());
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+                var match=java.util.regex.Pattern.compile("implementation\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
+                if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+            }
+            reference=next;
+        }
+        throw new IOException("Actor derivation exceeds limit");
     }
 
     /** Recover only explicit preserved scalar tag paths; never infer a binding from argument names. */
