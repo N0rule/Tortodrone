@@ -98,6 +98,7 @@ public final class SceneSimulation {
             return new Delta(List.copyOf(added),List.copyOf(updated),removed,List.copyOf(changed),previous.byId);
         }
     }
+    public record ConversationRequest(SceneConversation definition,ActorState source,int timestamp) { }
     public final class Membership implements AutoCloseable {
         private ActorState appearance;
         private final TownMovement movement;
@@ -319,6 +320,11 @@ public final class SceneSimulation {
                 movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
+        private ConversationRequest pendingConversation;
+        public ConversationRequest takeConversation(){synchronized(SceneSimulation.this){check();var request=pendingConversation;pendingConversation=null;return request;}}
+        public boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){
+            check();return entered&&entities.conversationResponse(definition,node,choice,source,appearance.id(),SceneClock.now());
+        }}
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
         @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
     }
@@ -372,6 +378,10 @@ public final class SceneSimulation {
             member.movement.status(member.health.status().modifiers());
             if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
         }});
+        entities.conversations((definition,source,stamp,target)->{
+            for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);
+            return true;
+        });
         entities.pawnStatuses((id,operation,stamp)->{
             var member=members.get(id);if(member==null||!member.entered)return false;
             if(operation.clear()){member.health.clearStatus(operation.clearMask());return true;}

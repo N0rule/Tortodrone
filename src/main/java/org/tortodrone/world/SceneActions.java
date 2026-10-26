@@ -7,7 +7,7 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Conversation,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
@@ -47,6 +47,10 @@ public final class SceneActions {
         }
         public boolean clear(){return condition==null;}
     }
+    public record Conversation(String id,boolean activatorOnly) implements Action {
+        public Conversation(String id){this(id,false);}
+        public Conversation { text(id); }
+    }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
         public Delay { if(millis<0||millis>3_600_000||variance<0||variance>3_600_000)throw new IllegalArgumentException("Invalid scene action delay");Objects.requireNonNull(action); }
@@ -66,6 +70,7 @@ public final class SceneActions {
             if(!event.equals("removed"))text(name);
         }
     }
+    @FunctionalInterface public interface Conversations { boolean apply(Conversation operation,int stamp,String source,String activator); }
     @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
@@ -89,7 +94,7 @@ public final class SceneActions {
         State(Rule rule){definition=rule;root=new Node(rule.action());}
     }
     private record Compiled(Rule rule,State state) { }
-    private record Pending(long due,long order,Node node,String source) { }
+    private record Pending(long due,long order,Node node,String source,String activator) { }
     private static final int MAX_PENDING=4096,MAX_PER_TICK=1024;
     private final List<Compiled> rules;
     private final List<State> states;
@@ -97,6 +102,7 @@ public final class SceneActions {
     private final DestroyActors destroy;
     private final SpawnActors spawn;
     private final PawnStatuses pawnStatuses;
+    private final Conversations conversations;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -111,7 +117,9 @@ public final class SceneActions {
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){this(rules,signals,random,(tag,stamp,source)->false);}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy){this(rules,signals,random,destroy,(actor,stamp,source)->false);}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn){this(rules,signals,random,destroy,spawn,(operation,stamp,source)->false);}
-    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses){
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses){this(rules,signals,random,destroy,spawn,pawnStatuses,(operation,stamp,source,activator)->false);}
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations){
+        this.conversations=Objects.requireNonNull(conversations);
         this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
         this.spawn=Objects.requireNonNull(spawn);
         this.destroy=Objects.requireNonNull(destroy);
@@ -128,9 +136,10 @@ public final class SceneActions {
         }
         this.rules=List.copyOf(compiled);states=List.copyOf(shared.values());
     }
-    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp){
+    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp){removed(tags,remaining,stamp,"removed");}
+    public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp,String activator){
         if(closed)return;
-        for(var compiled:rules){var rule=compiled.rule();if(rule.event().equals("removed")&&tags.contains(rule.tag())&&(!rule.all()||!remaining.test(rule.tag())))enqueue(compiled.state().root,stamp,rule.source());}
+        for(var compiled:rules){var rule=compiled.rule();if(rule.event().equals("removed")&&tags.contains(rule.tag())&&(!rule.all()||!remaining.test(rule.tag())))enqueue(compiled.state().root,stamp,rule.source(),activator);}
     }
     public void signal(String tag,String name,int stamp){
         signal(tag,name,stamp,"external");
@@ -140,12 +149,12 @@ public final class SceneActions {
         text(source);
         for(var compiled:rules){var rule=compiled.rule();var state=compiled.state();
             if(rule.event().equals("removed")||!rule.tag().equals(tag)||!rule.name().equals(name))continue;
-            if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source());continue;}
+            if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source(),source);continue;}
             boolean already=state.active.containsKey(source);
             if(!already&&activeSources>=MAX_PENDING){rejected++;continue;}
             if(!already)activeSources++;
             state.active.put(source,true);
-            if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source());
+            if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source(),source);
         }
     }
     /** Equal-time actions retain authored order; overdue work executes on the current scene tick. */
@@ -158,7 +167,7 @@ public final class SceneActions {
             for(var state:states)for(var iterator=state.active.entrySet().iterator();iterator.hasNext();){
                 var entry=iterator.next();
                 if(entry.getValue())entry.setValue(false);
-                else{iterator.remove();activeSources--;if(state.definition.event().equals("signal-stop"))enqueue(state.root,stamp,state.definition.source());}
+                else{iterator.remove();activeSources--;if(state.definition.event().equals("signal-stop"))enqueue(state.root,stamp,state.definition.source(),entry.getKey());}
             }
             advanced=true;lastAdvanced=stamp;
             drain(stamp,budget);
@@ -166,32 +175,38 @@ public final class SceneActions {
     }
     private void drain(int stamp,int[] budget){
         while(!pending.isEmpty()&&pending.peek().due()<=stamp&&budget[0]>0){
-            var task=pending.remove();execute(task.node(),stamp,task.source(),budget);
+            var task=pending.remove();execute(task.node(),stamp,task.source(),task.activator(),budget);
         }
     }
-    private boolean execute(Node node,long due,String source,int[] budget){
+    private boolean execute(Node node,long due,String source,String activator,int[] budget){
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
             case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
-            case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source);
+            case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source,activator);
             case Sequence sequence -> {
                 boolean success=true;
-                for(var child:node.children)if(!execute(child,due,source,budget)){success=false;if(sequence.stopOnFailure())break;}
+                for(var child:node.children)if(!execute(child,due,source,activator,budget)){success=false;if(sequence.stopOnFailure())break;}
                 yield success;
             }
             case Limited limited -> {
                 boolean allowed=node.remaining>0;
                 if(allowed)node.remaining--;
-                yield execute(node.children.get(allowed?0:1),due,source,budget);
+                yield execute(node.children.get(allowed?0:1),due,source,activator,budget);
             }
         };
     }
-    private boolean enqueue(Node node,long due,String source){
+    private boolean enqueue(Node node,long due,String source,String activator){
         if(closed||pending.size()>=MAX_PENDING||due>Integer.MAX_VALUE){rejected++;return false;}
-        pending.add(new Pending(due,order++,node,source));return true;
+        pending.add(new Pending(due,order++,node,source,activator));return true;
+    }
+    /** Only server-authored conversation responses enqueue standalone graphs. */
+    public boolean perform(Action action,int stamp,String source){return perform(action,stamp,source,source);}
+    public boolean perform(Action action,int stamp,String source,String activator){
+        text(source);text(activator);validate(action,0,new int[]{0});return enqueue(new Node(action),stamp,source,activator);
     }
     public int pending(){return pending.size();}
     public long rejected(){return rejected;}
@@ -208,6 +223,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("conversation".equals(kind)&&map.keySet().equals(Set.of("kind","id","activator"))&&map.get("activator") instanceof Boolean target)return new Conversation(string(map.get("id")),target);
         if("pawn-status".equals(kind)&&map.keySet().equals(Set.of("kind","config"))){
             var model=FireCatalog.modelJson(string(map.get("config")));
             if(!(model.arguments().get("reference") instanceof StarterCatalog.Model reference)||!(model.arguments().get("data") instanceof FireCatalog.DataValue data))throw new IllegalArgumentException("Incomplete scripted pawn status");

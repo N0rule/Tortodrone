@@ -133,6 +133,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface PawnStatusSink { boolean apply(int actor,SceneActions.PawnStatus operation,int stamp); }
     private PawnStatusSink pawnStatus=(actor,operation,stamp)->false;
     public void pawnStatuses(PawnStatusSink sink){pawnStatus=Objects.requireNonNull(sink);}
+    @FunctionalInterface public interface ConversationSink { boolean start(SceneConversation conversation,ActorState source,int stamp,int target); }
+    private ConversationSink conversationSink=(conversation,source,stamp,target)->false;
+    public void conversations(ConversationSink sink){conversationSink=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -145,7 +148,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -300,7 +303,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
                     entities.remove(e.id);
                     actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
-                        tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp);
+                        tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp,"actor:"+e.id);
                     if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
                 }
                 continue;
@@ -369,6 +372,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
         for(var e:List.copyOf(entities.values()))for(var action:e.status.takeActions())attack.accept(e.snapshot(),action);
+        for(var sensor:content.entries())if(sensor.spec().flag("scene-sensor",false)){
+            int mask=sensor.spec().integer("sensor-mask",0),pawnFlags=Math.round(content.stats().getOrDefault("player.collision-flags",4f));
+            if((mask&pawnFlags)==0)continue;
+            for(var player:players)if(playerActive.test(player.id())&&sensor.spec().contains(sensor.x(),sensor.y(),sensor.rotation(),player.x(),player.y(),ScenePortals.PAWN_RADIUS))
+                actions.signal(sensor.spec().text("watch-tag",""),sensor.spec().text("signal",""),stamp,"actor:"+player.id());
+        }
         actions.advance(stamp);
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
@@ -667,6 +676,33 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
+    }
+    private ActorState scriptSource(String source,int stamp){
+        if(source.startsWith("actor:"))try{return actor(Integer.parseInt(source.substring(6)));}catch(NumberFormatException invalid){return null;}
+        if(!source.startsWith("entry:"))return null;
+        String key=source.substring(6);var binding=content.entries().stream().filter(entry->entry.key().equals(key)).findFirst().orElse(null);
+        if(binding==null||!key.matches("[0-9]+"))return null;
+        var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,key,null,SceneStatus.State.NORMAL,0,0,true);
+        // A native entry identity for presentation only; never inserted as an actor or occupant.
+        return new ActorState(0,0,"",0,stamp,binding.x(),binding.y(),binding.rotation(),0,0,0,stamp,binding.spec().config(),false,null,null,state);
+    }
+    private boolean startConversation(SceneActions.Conversation operation,int stamp,String source,String activator){
+        var definition=content.conversations().get(operation.id());var origin=scriptSource(source,stamp);
+        if(definition==null||origin==null)return false;
+        int target=0;
+        if(operation.activatorOnly()){
+            var player=players.stream().filter(p->("actor:"+p.id()).equals(activator)).findFirst().orElse(null);
+            if(player==null)return true;target=player.id();
+        }
+        return conversationSink.start(definition,origin,stamp,target);
+    }
+    boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
+        if(content.conversations().get(definition.actor())!=definition||source==null)return false;
+        var current=definition.nodes().get(node);if(current==null||choice<0||choice>=current.responses().size())return false;
+        String identity;
+        if(source.entity()!=null&&source.entity().entrySource())identity="entry:"+source.entity().key();else identity="actor:"+source.id();
+        if(scriptSource(identity,stamp)==null)return false;
+        var action=current.responses().get(choice).action();return action==null||actions.perform(action,stamp,identity,"actor:"+responder);
     }
     private boolean pawnStatuses(SceneActions.PawnStatus operation,int stamp,String source){
         boolean applied=false;

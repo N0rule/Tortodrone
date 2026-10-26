@@ -741,8 +741,8 @@ public final class SessionCodec {
                 var node=conversation.nodes().get(nodeId);
                 type(o,"com.threerings.projectx.data.ConversationDialogInfo");
                 sourceKey(o,source);
-                vector(o,source.x(),source.y());o.writeFloat(source.rotation());value(o,node.transientModel());o.writeShort(0);
-                value(o,node.userInterface());value(o,conversation.model());value(o,node.animation());o.writeShort(0);
+                vector(o,source.x(),source.y());o.writeFloat(source.rotation());value(o,node.transientModel());value(o,conversation.sourceCloseAnimation());
+                value(o,node.userInterface());value(o,conversation.model());value(o,node.animation());value(o,conversation.music());
                 string(o,conversation.name());string(o,conversation.bundle());string(o,node.message());
                 type(o,"[Ljava.lang.String;");int count=node.responses().size();o.writeInt(count);
                 o.writeShort((count+7)/8);

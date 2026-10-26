@@ -157,6 +157,7 @@ final class WorldSession implements AutoCloseable {
     private long townShopCycle,townTradeGeneration;
     private float townX,townY;
     private SceneConversation conversation;
+    private final Set<Short> conversationResponses=new LinkedHashSet<>();
     private String conversationNode;
     private ActorState conversationSource;
     private long conversationCreated;
@@ -760,12 +761,17 @@ final class WorldSession implements AutoCloseable {
         }
         if(!ownsScene(request.oid())||request.service()!=SceneConversation.SERVICE)return false;
         var args=request.arguments();
-        if(!ownsScene(request.oid())||!entered||conversation==null||request.method()!=1||args.size()!=2
+        if(!ownsScene(request.oid())||!entered||request.method()!=1||args.size()!=2
                 ||!(args.get(0) instanceof Integer choice)||!(args.get(1) instanceof SessionDecoder.Listener listener)
                 ||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid conversation response");
+        if(conversationResponses.contains(listener.requestId())){output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;}
+        if(conversation==null)throw new SessionDecoder.Rejected("No active conversation");
         var responses=conversation.nodes().get(conversationNode).responses();
         if(choice<0||choice>=responses.size()){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Invalid conversation choice"));return true;}
         var response=responses.get(choice);String destination=response.destination();
+        if(response.action()!=null&&!membership.conversationResponse(conversation,conversationNode,choice,conversationSource)){
+            output.send(()->codec.invocationFailure(oid,listener.requestId(),"Conversation source is unavailable"));return true;
+        }
         if(!response.station().isEmpty()){
             var station=scenes.town().station(response.station());
             if(station==null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Town service is unavailable"));return true;}
@@ -775,6 +781,8 @@ final class WorldSession implements AutoCloseable {
         }else if(destination.isEmpty())closeConversation();else{
             conversationNode=destination;output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
         }
+        conversationResponses.add(listener.requestId());
+        if(conversationResponses.size()>256){var oldest=conversationResponses.iterator();oldest.next();oldest.remove();}
         output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
     }
     private void closeConversation()throws IOException {
@@ -1824,6 +1832,12 @@ final class WorldSession implements AutoCloseable {
         if(townDialog!=null&&tradeMember!=null&&townTradeGeneration!=tradeMember.dialogGeneration)closeTownDialog();
         if(townDialog!=null&&(own==null||Math.hypot(own.x()-townX,own.y()-townY)>1))closeTownDialog();
         if(conversation!=null&&(own==null||Math.hypot(own.x()-conversationX,own.y()-conversationY)>1))closeConversation();
+        var scripted=membership.takeConversation();
+        if(scripted!=null&&own!=null){
+            closeTownDialog();conversation=scripted.definition();conversationSource=scripted.source();conversationNode=conversation.initial();
+            conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
+            output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
+        }
         int target=membership.takeInteraction();
         if(target>0&&own!=null){
             var interaction=scene.simulation().interactionSource(target);
@@ -1835,7 +1849,7 @@ final class WorldSession implements AutoCloseable {
             if(station!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){openTownDialog(station,source);}
             else if(binding!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){
                 closeTownDialog();conversation=binding;conversationNode=binding.initial();conversationSource=source;
-                conversationCreated=System.currentTimeMillis();conversationX=own.x();conversationY=own.y();
+                conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
                 output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,source,conversationCreated));
             }
         }
