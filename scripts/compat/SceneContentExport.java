@@ -168,11 +168,13 @@ public final class SceneContentExport {
     /** Whole-graph extraction only: an unsupported sibling must never disappear from a compound. */
     private static void collectTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
         for(Object raw:scene.adH())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
-            var original=entry.placeable.a(cm,PlaceableConfig.class).q(cm);
+            var config=entry.placeable.a(cm,PlaceableConfig.class);
+            var original=config.q(cm);
             if(original.handlers==null)continue;
             for(int hi=0;hi<original.handlers.length;hi++){
-                var handler=original.handlers[hi];
+                var handler=restoreSceneHandler(entry.placeable.getName(),original.handlers[hi]);
                 if(!sceneHandler(handler))continue;
+                if(handler!=original.handlers[hi])importReport.add("Restored archived One Time Action signal/Limit at "+key(entry.getKey())+" / "+hi);
                 try{
                     var fields=new TreeMap<String,String>();
                     fields.put("kind","SceneTrigger");fields.put("config",entry.placeable.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));
@@ -184,8 +186,7 @@ public final class SceneContentExport {
                         fields.put("event","removed");fields.put("all",Boolean.toString(removed.all));tags=List.of(tagged.tag);
                     }else{
                         fields.putAll(sceneSignal(handler));
-                        var tagFields=new TreeMap<String,String>();writeTags(tagFields,"",original.tags);
-                        tags=Arrays.stream(tagFields.getOrDefault("tags","").split(",")).filter(t->!t.isBlank()).toList();
+                        tags=sceneTags(config,entry.placeable.kW(),original.tags);
                         if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
                     }
                     fields.put("action",org.tortodrone.resources.Json.stringify(sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0)));
@@ -199,6 +200,20 @@ public final class SceneContentExport {
             }
         }
     }
+    /** Exact stripped footprint of the archived One Time Action; do not generalize empty guards. */
+    static HandlerConfig restoreSceneHandler(String config,HandlerConfig handler){
+        // reference inputs placeable.xml: Trigger/One Time Action -> SignalStart("activate"),
+        // Conditional(Limit(1)). Scene args retain its authored Action; no native config is mutated.
+        if(config.equals("Trigger/One Time Action")&&handler instanceof HandlerConfig.SignalStart start
+                &&start.name.isEmpty()&&start.action instanceof ActionConfig.Conditional conditional
+                &&conditional.elseAction==null&&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged
+                &&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source){
+            var result=new HandlerConfig.SignalStart();result.name="activate";
+            var action=new ActionConfig.Conditional();var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;
+            action.condition=limit;action.action=conditional.action;action.elseAction=null;result.action=action;return result;
+        }
+        return handler;
+    }
     private static boolean sceneHandler(HandlerConfig handler){return handler instanceof HandlerConfig.ActorRemoved||handler instanceof HandlerConfig.Signal||handler instanceof HandlerConfig.SignalStart||handler instanceof HandlerConfig.SignalStop;}
     static Map<String,String> sceneSignal(HandlerConfig handler)throws IOException {
         if(handler instanceof HandlerConfig.Signal signal){
@@ -211,8 +226,7 @@ public final class SceneContentExport {
     }
     static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
-        if(action instanceof ActionConfig.Signal signal&&signal.target instanceof com.threerings.tudey.config.TargetConfig.Tagged target)
-            return Map.of("kind","signal","tag",target.tag,"name",signal.name);
+        if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
         if(action instanceof ActionConfig.Delayed delay){
             if(delay.variance!=0||delay.delay<0||delay.delay>3_600_000)throw new IOException("Unsupported scene action delay/variance");
             return Map.of("kind","delay","millis",delay.delay,"action",sceneAction(delay.action,depth+1));
@@ -228,6 +242,40 @@ public final class SceneContentExport {
                 conditional.elseAction==null?Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()):sceneAction(conditional.elseAction,depth+1));
         }
         throw new IOException("Unsupported scene action "+(action==null?"null":action.getClass().getName()));
+    }
+
+    /** Recover only explicit preserved scalar tag paths; never infer a binding from argument names. */
+    static List<String> sceneTags(com.threerings.config.ParameterizedConfig config,Map<String,Object> arguments,
+                                  com.threerings.tudey.config.TagConfig nativeTags)throws IOException {
+        var slots=new TreeMap<Integer,String>();
+        for(int i=0;i<nativeTags.tags.length;i++)slots.put(i,nativeTags.tags[i]);
+        for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
+            if(!arguments.containsKey(parameter.name))continue;
+            for(String path:direct.paths){
+                var match=java.util.regex.Pattern.compile("implementation\\.tags\\.tags\\[([0-9]+)\\]").matcher(path);
+                if(!match.matches())continue;
+                int index;
+                try{index=Integer.parseInt(match.group(1));}catch(NumberFormatException invalid){throw new IOException("Invalid native tag slot",invalid);}
+                if(index>255)throw new IOException("Native tag slot exceeds bound");
+                if(!(arguments.get(parameter.name) instanceof String value))throw new IOException("Native tag argument is not text");
+                slots.put(index,value);
+            }
+        }
+        var result=new ArrayList<String>(slots.values());
+        if(nativeTags.derived!=null)result.addAll(Arrays.asList(nativeTags.derived.adx()));
+        for(String tag:result)if(tag==null||tag.length()>256||tag.contains(",")||tag.chars().anyMatch(Character::isISOControl))throw new IOException("Unrepresentable native scene tag");
+        return result.stream().filter(tag->!tag.isBlank()).distinct().toList();
+    }
+    private static Map<String,Object> sceneSignalAction(com.threerings.tudey.config.TargetConfig target,String name,int depth)throws IOException {
+        if(depth>16)throw new IOException("Scene signal target graph is too deep");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","signal","tag",tagged.tag,"name",name);
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Compound compound){
+            if(compound.targets==null||compound.targets.length>256)throw new IOException("Invalid scene signal targets");
+            var actions=new ArrayList<Object>();
+            for(var child:compound.targets)actions.add(sceneSignalAction(child,name,depth+1));
+            return Map.of("kind","sequence","stopOnFailure",false,"actions",actions);
+        }
+        throw new IOException("Unsupported scene signal target "+(target==null?"null":target.getClass().getName()));
     }
 
     private static ConfigReference<ActorConfig> bindArguments(ConfigReference<ActorConfig> actor,Map<String,Object> source){
