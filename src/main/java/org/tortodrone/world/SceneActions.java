@@ -6,9 +6,12 @@ import org.tortodrone.resources.Json;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
+    }
+    public record Destroy(String tag) implements Action {
+        public Destroy { text(tag); }
     }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
@@ -29,6 +32,7 @@ public final class SceneActions {
             if(!event.equals("removed"))text(name);
         }
     }
+    @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
     @FunctionalInterface public interface Signals { boolean apply(String tag,String name,int stamp); }
     @FunctionalInterface public interface SourcedSignals { boolean apply(String tag,String name,int stamp,String source); }
     private static final class Node {
@@ -54,6 +58,7 @@ public final class SceneActions {
     private final List<Compiled> rules;
     private final List<State> states;
     private final SourcedSignals signals;
+    private final DestroyActors destroy;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -65,7 +70,9 @@ public final class SceneActions {
     }
     private static SourcedSignals adapt(Signals signals){Objects.requireNonNull(signals);return (tag,name,stamp,source)->signals.apply(tag,name,stamp);}
     public SceneActions(List<Rule> rules,SourcedSignals signals){this(rules,signals,new Random());}
-    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){this(rules,signals,random,(tag,stamp,source)->false);}
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy){
+        this.destroy=Objects.requireNonNull(destroy);
         this.random=Objects.requireNonNull(random);
         this.signals=Objects.requireNonNull(signals);
         if(rules.size()>2048)throw new IllegalArgumentException("Too many scene handlers");
@@ -124,6 +131,7 @@ public final class SceneActions {
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source);
             case Sequence sequence -> {
                 boolean success=true;
@@ -156,6 +164,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count){
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("destroy".equals(kind)&&map.keySet().equals(Set.of("kind","tag")))return new Destroy(string(map.get("tag")));
         if("signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name")))return new Signal(string(map.get("tag")),string(map.get("name")));
         if("delay".equals(kind)&&(map.keySet().equals(Set.of("kind","millis","action"))||map.keySet().equals(Set.of("kind","millis","variance","action")))&&map.get("millis") instanceof Number number){
             long millis=number.longValue();if(number.doubleValue()!=millis)throw new IllegalArgumentException("Fractional delay");

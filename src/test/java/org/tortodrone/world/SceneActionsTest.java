@@ -30,6 +30,7 @@ public final class SceneActionsTest {
         scene.advance(time+5201,List.of());check(scene.walkable(3,0,219),"native transition completion releases collision");
         isolated.advance(time+10000,List.of());check(!isolated.walkable(3,0,219),"another scene's boss/door are unaffected");
         scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
+        destruction(map.collision());
         scheduler();
         variance();
         limits();
@@ -40,6 +41,30 @@ public final class SceneActionsTest {
         System.out.println("PASS: actor-removal exit delay, door flags/collision, scene isolation, scheduling, all-target guards, failure, cancellation and graph validation");
     }
     private static SceneContent.Entry entry(String key,float x,float y,Map<String,String> fields){return new SceneContent.Entry(key,x,y,0,new SceneContent.Spec(fields));}
+    private static void destruction(CollisionMap terrain)throws Exception {
+        var seed=entry("seed",0,0,Map.of("config","Fixture/Seed","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","1","damage-mask","2","tags","seed","death-time","0"));
+        var target=entry("target",5,0,Map.of("config","Fixture/Target","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","10","damage-mask","2","tags","targets","death-time","5000","collision-flags","1","radius","0.4"));
+        var other=entry("other",8,0,target.spec().fields());
+        var destroy=entry("destroy",0,0,Map.of("config","Trigger/Removed","kind","SceneTrigger","event","removed","watch-tag","seed","action","{\"kind\":\"destroy\",\"tag\":\"targets\"}"));
+        var removed=entry("removed",0,0,Map.of("config","Trigger/Removed","kind","SceneTrigger","event","removed","watch-tag","targets","all","true","action","{\"kind\":\"signal\",\"tag\":\"door\",\"name\":\"toggle\"}"));
+        var door=entry("door",12,0,Map.of("config","Fixture/Door","native-type","com.threerings.projectx.dungeon.data.actor.Door","kind","Door","tags","door","collision-flags","1","width","2","height","1","door-speed","0"));
+        var content=new SceneContent(List.of(seed,target,other,destroy,removed,door),Map.of());
+        var scene=new SceneEntities(content,terrain);var isolated=new SceneEntities(content,terrain);var hits=new ArrayList<SceneCombatEvent>();scene.feedback(hits::add);
+        int now=SceneClock.now()+100;scene.advance(now,List.of());
+        var damage=new StarterCatalog.Model("DamageRegion",Map.of("shape",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",1f)),"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",2f))));
+        scene.damage(damage,0,0,0,now,219);int combatEvents=hits.size();scene.advance(now+100,List.of());
+        var victims=scene.actors().stream().filter(a->Set.of("target","other").contains(a.entity().key())).toList();
+        check(victims.size()==2&&victims.stream().allMatch(a->a.entity().destroyed()==now+100&&a.entity().health()==1),"script destruction publishes timestamp without damage or death animation");
+        check(hits.size()==combatEvents,"script destruction emits no combat damage reward event");
+        scene.advance(now+100,List.of());check(scene.actors().size()==3,"same tick retains destroyed actor publication");
+        scene.advance(now+101,List.of());check(scene.actors().size()==1,"scripted actors removed on next tick");
+        scene.advance(now+102,List.of());check(scene.walkable(12,0,219),"all-target removal signals door exactly once");
+        isolated.advance(now+1000,List.of());check(isolated.actors().size()==4&&!isolated.walkable(12,0,219),"destruction remains scene-local");
+        var events=new ArrayList<String>();
+        var action=new SceneActions.Sequence(List.of(new SceneActions.Destroy("missing"),new SceneActions.Signal("out","after")),true);
+        var runtime=new SceneActions(List.of(new SceneActions.Rule("failure","signal","in","go",false,action)),(tag,name,time)->{events.add(name);return true;});
+        runtime.signal("in","go",1);runtime.advance(1);check(events.isEmpty(),"missing actor fails and stops compound");
+    }
     private static void scheduler()throws Exception {
         var events=new ArrayList<String>();
         var action=new SceneActions.Sequence(List.of(new SceneActions.Delay(20,new SceneActions.Delay(30,new SceneActions.Signal("door","first"))),new SceneActions.Delay(50,new SceneActions.Signal("door","second"))),false);

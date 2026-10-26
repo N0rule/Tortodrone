@@ -11,7 +11,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
-        boolean claimTaken,ignited;
+        boolean claimTaken,ignited,scriptDestroyed;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
@@ -141,7 +141,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;});
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -293,7 +293,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.destroyed!=Integer.MAX_VALUE){
                 // Monster destroyed time already includes the native death animation.
                 // Retain one short publication grace, rather than counting it twice.
-                if(stamp-e.destroyed>=100){
+                if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
                     entities.remove(e.id);
                     actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
                         tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp);
@@ -653,6 +653,16 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
+    }
+    private boolean destroyTagged(String tag,int stamp,String source){
+        boolean found=false;
+        for(var e:entities.values())if(Arrays.asList(e.spec.text("tags","").split(",")).contains(tag)){
+            found=true;
+            if(e.destroyed!=Integer.MAX_VALUE)continue;
+            // Destruction is not damage: no hit, death animation, loot or combat reward.
+            e.destroyed=stamp;e.scriptDestroyed=true;e.status.clear();e.path=List.of();e.impulse=null;
+        }
+        return found;
     }
     private void signal(String tag,String name,int stamp,String source){
         if(tag.isEmpty()||name.isEmpty())return;

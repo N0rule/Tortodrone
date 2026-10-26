@@ -50,6 +50,13 @@ public final class SceneActionCompatibility {
         if(!events.equals(List.of("open")))throw new AssertionError("Native one-time trigger replayed");
         var stop=new com.threerings.tudey.config.HandlerConfig.SignalStop();stop.name="activate";
         if(!SceneContentExport.sceneSignal(stop).equals(Map.of("event","signal-stop","signal","activate")))throw new AssertionError("SignalStop fields changed");
+        var destroy=new ActionConfig.DestroyActor();destroy.target=target;destroy.endScene=false;
+        var destruction=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(destroy,0)));
+        if(!(destruction instanceof SceneActions.Destroy d)||!d.tag().equals("door end"))throw new AssertionError("Native destruction target lost");
+        destroy.endScene=true;
+        try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported shutdown mode accepted");}catch(IOException expected){}
+        destroy.endScene=false;destroy.target=new TargetConfig.Source();
+        try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported destruction target accepted");}catch(IOException expected){}
         var second=new TargetConfig.Tagged();second.tag="boss music";
         var targets=new TargetConfig.Compound();targets.targets=new TargetConfig[]{target,second,target};signal.target=targets;
         var multi=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(signal,0)));
@@ -101,6 +108,6 @@ public final class SceneActionCompatibility {
             System.out.println("PASS: captured tutorial entry 3267 -> seven authored timed signals, bounded variance, no replay");
             System.out.println("PASS: captured tutorial entry 3265 -> authoritative scheduler -> three authored signals, no replay");
         }
-        System.out.println("PASS: stock action fields, delayed signal timing, Limit condition, signal transitions, inherited/recovered tags, compound targets, full-compound refusal, variance and target guards");
+        System.out.println("PASS: stock action fields, delayed signal timing, Limit condition, signal transitions, inherited/recovered tags, compound targets, destruction guards, full-compound refusal, variance and target guards");
     }
 }

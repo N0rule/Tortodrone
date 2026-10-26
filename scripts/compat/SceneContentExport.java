@@ -227,6 +227,11 @@ public final class SceneContentExport {
     static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
+        if(action instanceof ActionConfig.DestroyActor destruction){
+            if(destruction.endScene)throw new IOException("Scene-ending destruction is not implemented");
+            if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","destroy","tag",tagged.tag);
+            throw new IOException("Unsupported actor destruction target");
+        }
         if(action instanceof ActionConfig.Delayed delay){
             if(delay.variance<0||delay.variance>3_600_000||delay.delay<0||delay.delay>3_600_000)throw new IOException("Unsupported scene action delay/variance");
             return Map.of("kind","delay","millis",delay.delay,"variance",delay.variance,"action",sceneAction(delay.action,depth+1));
