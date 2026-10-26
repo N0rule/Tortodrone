@@ -80,6 +80,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 if(key.isBlank()||!keys.add(key+":"+spec.text("handler-index",""))||spec.text("config","").isBlank()||spec.text("kind","").isBlank())throw new IllegalArgumentException("Invalid binding");
                 float x=finite(spec.number("x",Float.NaN)),y=finite(spec.number("y",Float.NaN)),rotation=finite(spec.number("rotation",Float.NaN));
                 spec.config();if(!spec.child().fields().isEmpty())spec.child().config();
+                if(spec.text("kind","").equals("SceneTrigger"))SceneActions.rule(new Entry(key,x,y,rotation,spec));
                 entries.add(new Entry(key,x,y,rotation,spec));
             }
             for(String key:p.stringPropertyNames())if(key.startsWith("scale."))scales.put(key.substring(6),finite(Float.parseFloat(p.getProperty(key))));

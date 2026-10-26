@@ -76,6 +76,7 @@ public final class SceneContentExport {
             put(values, prefix + "config", binding.actorReference().getName());
             writeActor(cm, values, prefix, binding.actorReference());
         }
+        collectTriggers(cm,scene,values,indexes);
         values.put("entries", String.join(",", indexes));
         writeDialogues(cm,values,bindings);
         Files.writeString(target, propertiesText(values), StandardCharsets.UTF_8,
@@ -128,7 +129,7 @@ public final class SceneContentExport {
             if (handlers == null) continue;
             for (int hi = 0; hi < handlers.length; hi++) {
                 HandlerConfig handler = handlers[hi];
-                if (!(handler instanceof HandlerConfig.Startup startup)) {importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
+                if (!(handler instanceof HandlerConfig.Startup startup)) {if(!(raw instanceof TudeySceneModel.PlaceableEntry)||!sceneHandler(handler))importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
                 collectStartup(cm, result, sourceKey, hi, x, y, rotation, startup.action,sourceArgs,state,0);
             }
         }
@@ -142,7 +143,9 @@ public final class SceneContentExport {
         if (action == null) return;
         if (depth > 32) throw new IOException("Startup compound nesting exceeds limit at " + sourceKey);
         if (action instanceof ActionConfig.SpawnActor spawn) {
-            if (spawn.actor == null) {if(Boolean.getBoolean("tortodrone.townExport"))return;throw new IOException("Startup actor reference missing at " + sourceKey);}
+            // Native SpawnActor explicitly succeeds without spawning when its reference is null.
+            // For example scene 398's pipe valves select this branch with Spawn with Valve?=No.
+            if (spawn.actor == null) {importReport.add("Native null startup actor (no spawn) at "+sourceKey);return;}
             ActorConfig actor = spawn.actor.a(cm, ActorConfig.class);
             if (actor == null) throw new IOException("Unresolved startup actor at " + sourceKey);
             result.add(new Binding(sourceKey, handlerIndex, x, y, rotation, bindArguments(spawn.actor,sourceArgs)));
@@ -160,6 +163,124 @@ public final class SceneContentExport {
                 collectStartup(cm, result, sourceKey + "/startup." + handlerIndex + ".action." + i,
                     handlerIndex, x, y, rotation, compound.actions[i],sourceArgs,state,depth + 1);
         } else importReport.add("Unsupported startup action at "+sourceKey+" / "+handlerIndex+": "+action.getClass().getName());
+    }
+
+    /** Whole-graph extraction only: an unsupported sibling must never disappear from a compound. */
+    private static void collectTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
+        for(Object raw:scene.adH())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
+            var config=entry.placeable.a(cm,PlaceableConfig.class);
+            var original=config.q(cm);
+            if(original.handlers==null)continue;
+            for(int hi=0;hi<original.handlers.length;hi++){
+                var handler=restoreSceneHandler(entry.placeable.getName(),original.handlers[hi]);
+                if(!sceneHandler(handler))continue;
+                if(handler!=original.handlers[hi])importReport.add("Restored archived One Time Action signal/Limit at "+key(entry.getKey())+" / "+hi);
+                try{
+                    var fields=new TreeMap<String,String>();
+                    fields.put("kind","SceneTrigger");fields.put("config",entry.placeable.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));
+                    fields.put("state-key",key(entry.getKey())+":"+hi);
+                    var point=entry.au(cm);fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));fields.put("rotation","0");
+                    List<String> tags;
+                    if(handler instanceof HandlerConfig.ActorRemoved removed){
+                        if(!(removed.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged))throw new IOException("ActorRemoved target is not Tagged");
+                        fields.put("event","removed");fields.put("all",Boolean.toString(removed.all));tags=List.of(tagged.tag);
+                    }else{
+                        fields.putAll(sceneSignal(handler));
+                        tags=sceneTags(config,entry.placeable.kW(),original.tags);
+                        if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
+                    }
+                    fields.put("action",org.tortodrone.resources.Json.stringify(sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0)));
+                    for(int ti=0;ti<tags.size();ti++){
+                        if(tags.get(ti).isBlank())throw new IOException("Handler tag is empty");
+                        String index=Integer.toString(indexes.size());indexes.add(index);
+                        for(var field:fields.entrySet())values.put("entry."+index+"."+field.getKey(),field.getValue());
+                        values.put("entry."+index+".handler-index",hi+".tag."+ti);values.put("entry."+index+".watch-tag",tags.get(ti));
+                    }
+                }catch(IOException unsupported){importReport.add("Unsupported complete scene handler at "+key(entry.getKey())+" / "+hi+": "+unsupported.getMessage());}
+            }
+        }
+    }
+    /** Exact stripped footprint of the archived One Time Action; do not generalize empty guards. */
+    static HandlerConfig restoreSceneHandler(String config,HandlerConfig handler){
+        // reference inputs placeable.xml: Trigger/One Time Action -> SignalStart("activate"),
+        // Conditional(Limit(1)). Scene args retain its authored Action; no native config is mutated.
+        if(config.equals("Trigger/One Time Action")&&handler instanceof HandlerConfig.SignalStart start
+                &&start.name.isEmpty()&&start.action instanceof ActionConfig.Conditional conditional
+                &&conditional.elseAction==null&&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged
+                &&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source){
+            var result=new HandlerConfig.SignalStart();result.name="activate";
+            var action=new ActionConfig.Conditional();var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;
+            action.condition=limit;action.action=conditional.action;action.elseAction=null;result.action=action;return result;
+        }
+        return handler;
+    }
+    private static boolean sceneHandler(HandlerConfig handler){return handler instanceof HandlerConfig.ActorRemoved||handler instanceof HandlerConfig.Signal||handler instanceof HandlerConfig.SignalStart||handler instanceof HandlerConfig.SignalStop;}
+    static Map<String,String> sceneSignal(HandlerConfig handler)throws IOException {
+        if(handler instanceof HandlerConfig.Signal signal){
+            if(signal.refractoryPeriod!=0)throw new IOException("Signal refractory period is not implemented");
+            return Map.of("event","signal","signal",signal.name);
+        }
+        if(handler instanceof HandlerConfig.SignalStart signal)return Map.of("event","signal-start","signal",signal.name);
+        if(handler instanceof HandlerConfig.SignalStop signal)return Map.of("event","signal-stop","signal",signal.name);
+        throw new IOException("Unsupported signal handler");
+    }
+    static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {
+        if(depth>16)throw new IOException("Scene action graph is too deep");
+        if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
+        if(action instanceof ActionConfig.DestroyActor destruction){
+            if(destruction.endScene)throw new IOException("Scene-ending destruction is not implemented");
+            if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","destroy","tag",tagged.tag);
+            throw new IOException("Unsupported actor destruction target");
+        }
+        if(action instanceof ActionConfig.Delayed delay){
+            if(delay.variance<0||delay.variance>3_600_000||delay.delay<0||delay.delay>3_600_000)throw new IOException("Unsupported scene action delay/variance");
+            return Map.of("kind","delay","millis",delay.delay,"variance",delay.variance,"action",sceneAction(delay.action,depth+1));
+        }
+        if(action instanceof ActionConfig.Compound compound){
+            if(compound.actions==null||compound.actions.length>256)throw new IOException("Invalid scene compound");
+            var children=new ArrayList<Object>();for(var child:compound.actions)children.add(sceneAction(child,depth+1));
+            return Map.of("kind","sequence","stopOnFailure",compound.stopOnFailure,"actions",children);
+        }
+        if(action instanceof ActionConfig.Conditional conditional&&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Limit limit){
+            if(limit.limit<0||limit.limit>1_000_000)throw new IOException("Unsupported condition limit");
+            return Map.of("kind","limited","limit",limit.limit,"action",sceneAction(conditional.action,depth+1),"otherwise",
+                conditional.elseAction==null?Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()):sceneAction(conditional.elseAction,depth+1));
+        }
+        throw new IOException("Unsupported scene action "+(action==null?"null":action.getClass().getName()));
+    }
+
+    /** Recover only explicit preserved scalar tag paths; never infer a binding from argument names. */
+    static List<String> sceneTags(com.threerings.config.ParameterizedConfig config,Map<String,Object> arguments,
+                                  com.threerings.tudey.config.TagConfig nativeTags)throws IOException {
+        var slots=new TreeMap<Integer,String>();
+        for(int i=0;i<nativeTags.tags.length;i++)slots.put(i,nativeTags.tags[i]);
+        for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct){
+            if(!arguments.containsKey(parameter.name))continue;
+            for(String path:direct.paths){
+                var match=java.util.regex.Pattern.compile("implementation\\.tags\\.tags\\[([0-9]+)\\]").matcher(path);
+                if(!match.matches())continue;
+                int index;
+                try{index=Integer.parseInt(match.group(1));}catch(NumberFormatException invalid){throw new IOException("Invalid native tag slot",invalid);}
+                if(index>255)throw new IOException("Native tag slot exceeds bound");
+                if(!(arguments.get(parameter.name) instanceof String value))throw new IOException("Native tag argument is not text");
+                slots.put(index,value);
+            }
+        }
+        var result=new ArrayList<String>(slots.values());
+        if(nativeTags.derived!=null)result.addAll(Arrays.asList(nativeTags.derived.adx()));
+        for(String tag:result)if(tag==null||tag.length()>256||tag.contains(",")||tag.chars().anyMatch(Character::isISOControl))throw new IOException("Unrepresentable native scene tag");
+        return result.stream().filter(tag->!tag.isBlank()).distinct().toList();
+    }
+    private static Map<String,Object> sceneSignalAction(com.threerings.tudey.config.TargetConfig target,String name,int depth)throws IOException {
+        if(depth>16)throw new IOException("Scene signal target graph is too deep");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","signal","tag",tagged.tag,"name",name);
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Compound compound){
+            if(compound.targets==null||compound.targets.length>256)throw new IOException("Invalid scene signal targets");
+            var actions=new ArrayList<Object>();
+            for(var child:compound.targets)actions.add(sceneSignalAction(child,name,depth+1));
+            return Map.of("kind","sequence","stopOnFailure",false,"actions",actions);
+        }
+        throw new IOException("Unsupported scene signal target "+(target==null?"null":target.getClass().getName()));
     }
 
     private static ConfigReference<ActorConfig> bindArguments(ConfigReference<ActorConfig> actor,Map<String,Object> source){
@@ -463,10 +584,10 @@ public final class SceneContentExport {
         }
     }
 
-    private static void writeTags(Map<String, String> out, String prefix, Object tagConfig)
+    static void writeTags(Map<String, String> out, String prefix, Object tagConfig)
         throws Exception {
         if (tagConfig == null) return;
-        Object raw = field(tagConfig, "tags");
+        Object raw = callNoArg(tagConfig, List.of("adx", "getTags"));
         if (raw == null) return;
         List<String> tags = new ArrayList<>();
         if (raw instanceof String[] array) {

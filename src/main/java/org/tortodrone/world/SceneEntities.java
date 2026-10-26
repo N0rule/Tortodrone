@@ -11,7 +11,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
-        boolean claimTaken,ignited;
+        boolean claimTaken,ignited,scriptDestroyed;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
@@ -101,6 +101,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         "Dynamic/Lift Objects/Oil Pot",new Pot(1f,null,null,"Bomb/Monster/Oil Slick",.45f,15000));
 
     private final SceneContent content;private final CollisionMap terrain;
+    private final SceneActions actions;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
@@ -134,7 +135,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
-        for(var binding:content.entries())spawn(binding,binding.spec(),null,stamp);
+        var rules=new ArrayList<SceneActions.Rule>();
+        for(var binding:content.entries()){
+            if(binding.spec().text("kind","").equals("SceneTrigger")){
+                try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
+            }else spawn(binding,binding.spec(),null,stamp);
+        }
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -286,8 +293,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.destroyed!=Integer.MAX_VALUE){
                 // Monster destroyed time already includes the native death animation.
                 // Retain one short publication grace, rather than counting it twice.
-                if(stamp-e.destroyed>=100){
+                if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
                     entities.remove(e.id);
+                    actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
+                        tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp);
                     if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
                 }
                 continue;
@@ -356,6 +365,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         for(var e:List.copyOf(entities.values()))for(var pulse:e.status.takePulses())statusPulse(e.id,pulse,e.x,e.y,stamp);
         for(var e:List.copyOf(entities.values()))for(var action:e.status.takeActions())attack.accept(e.snapshot(),action);
+        actions.advance(stamp);
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){
@@ -639,13 +649,24 @@ public final class SceneEntities implements SceneWeapons.Targets {
             var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",condition));
             for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
         }
-        signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp);
+        signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp,"actor:"+e.id);
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
     }
-    private void signal(String tag,String name,int stamp){
+    private boolean destroyTagged(String tag,int stamp,String source){
+        boolean found=false;
+        for(var e:entities.values())if(Arrays.asList(e.spec.text("tags","").split(",")).contains(tag)){
+            found=true;
+            if(e.destroyed!=Integer.MAX_VALUE)continue;
+            // Destruction is not damage: no hit, death animation, loot or combat reward.
+            e.destroyed=stamp;e.scriptDestroyed=true;e.status.clear();e.path=List.of();e.impulse=null;
+        }
+        return found;
+    }
+    private void signal(String tag,String name,int stamp,String source){
         if(tag.isEmpty()||name.isEmpty())return;
+        actions.signal(tag,name,stamp,source);
         for(var target:entities.values())if(Arrays.asList(target.spec.text("tags","").split(",")).contains(tag)){
             if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
                 boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
