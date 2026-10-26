@@ -382,6 +382,7 @@ public final class SceneSimulation {
             for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);
             return true;
         });
+        entities.effects(weapons::effect);
         entities.pawnStatuses((id,operation,stamp)->{
             var member=members.get(id);if(member==null||!member.entered)return false;
             if(operation.clear()){member.health.clearStatus(operation.clearMask());return true;}

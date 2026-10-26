@@ -7,28 +7,30 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Conversation,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Conversation,SourceEffect,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
     public record Destroy(String tag) implements Action {
         public Destroy { text(tag); }
     }
-    /** Prepared server-owned Monster at its handler's source entry, never a client config. */
+    /** Prepared Monster or noncolliding global cosmetic Block at its handler's source entry. */
     public record Spawn(Map<String,String> fields,boolean activate) implements Action {
         public Spawn(Map<String,String> fields){this(fields,false);}
         public Spawn {
             fields=Map.copyOf(fields);
-            if(fields.size()>1024||!"com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))
-                    ||!"Monster".equals(fields.get("kind"))||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
+            boolean monster="com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))&&"Monster".equals(fields.get("kind"));
+            boolean cosmetic="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&"Global".equals(fields.get("shape"))&&!activate;
+            if(fields.size()>1024||!(monster||cosmetic)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
+            if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");
             for(String key:fields.keySet())if(key.endsWith(".chain-next")){
                 int slot=spec.integer(key,-1),rearm=spec.integer(key.substring(0,key.length()-10)+"chain-rearm",-1);
                 if(slot<0||slot>255||!fields.containsKey("attack."+slot+".clear")||rearm<0||rearm>3_600_000)throw new IllegalArgumentException("Invalid prepared attack chain");
             }
             for(String key:List.of("health","speed","radius","width","height","bounds-min-x","bounds-min-y","bounds-max-x","bounds-max-y"))if(!Float.isFinite(spec.number(key,0)))throw new IllegalArgumentException("Non-finite spawn actor value");
-            if(spec.number("health",0)<=0||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
+            if(monster&&spec.number("health",0)<=0||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
             spec.config();
             int collision=spec.integer("collision-flags",0);spec.integer("activate-time",0);
             var model=spec.model("source-shape");
@@ -51,6 +53,10 @@ public final class SceneActions {
         public Conversation(String id){this(id,false);}
         public Conversation { text(id); }
     }
+    /** Cosmetic native effect at the owning entry; gameplay effect actions are refused at export. */
+    public record SourceEffect(StarterCatalog.Model config) implements Action {
+        public SourceEffect { Objects.requireNonNull(config);text(config.name()); }
+    }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
         public Delay { if(millis<0||millis>3_600_000||variance<0||variance>3_600_000)throw new IllegalArgumentException("Invalid scene action delay");Objects.requireNonNull(action); }
@@ -71,6 +77,7 @@ public final class SceneActions {
         }
     }
     @FunctionalInterface public interface Conversations { boolean apply(Conversation operation,int stamp,String source,String activator); }
+    @FunctionalInterface public interface Effects { boolean apply(SourceEffect operation,int stamp,String source); }
     @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
@@ -103,6 +110,7 @@ public final class SceneActions {
     private final SpawnActors spawn;
     private final PawnStatuses pawnStatuses;
     private final Conversations conversations;
+    private final Effects effects;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -119,6 +127,10 @@ public final class SceneActions {
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn){this(rules,signals,random,destroy,spawn,(operation,stamp,source)->false);}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses){this(rules,signals,random,destroy,spawn,pawnStatuses,(operation,stamp,source,activator)->false);}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations){
+        this(rules,signals,random,destroy,spawn,pawnStatuses,conversations,(operation,stamp,source)->false);
+    }
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects){
+        this.effects=Objects.requireNonNull(effects);
         this.conversations=Objects.requireNonNull(conversations);
         this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
         this.spawn=Objects.requireNonNull(spawn);
@@ -183,6 +195,7 @@ public final class SceneActions {
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
+            case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
             case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
@@ -223,6 +236,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));
         if("conversation".equals(kind)&&map.keySet().equals(Set.of("kind","id","activator"))&&map.get("activator") instanceof Boolean target)return new Conversation(string(map.get("id")),target);
         if("pawn-status".equals(kind)&&map.keySet().equals(Set.of("kind","config"))){
             var model=FireCatalog.modelJson(string(map.get("config")));

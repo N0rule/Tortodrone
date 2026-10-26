@@ -302,6 +302,14 @@ public final class SceneContentExport {
     private static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
+        if(action!=null&&action.getClass()==ActionConfig.FireEffect.class){
+            var effect=(ActionConfig.FireEffect)action;
+            if(effect.effect==null){importReport.add("Native null scene effect (no fire); presentation data may be stripped");return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());}
+            if(cm==null||!(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported scene effect location");
+            var config=effect.effect.a(cm,com.threerings.tudey.config.EffectConfig.class);
+            if(config==null||!cosmeticEffect(config))throw new IOException("Unimplemented scene effect gameplay action or native subtype");
+            return Map.of("kind","source-effect","config",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect)));
+        }
         if(action!=null&&action.getClass()==ActionConfig.SpawnActor.class){
             var spawn=(ActionConfig.SpawnActor)action;
             if(spawn.actor==null)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
@@ -368,12 +376,23 @@ public final class SceneContentExport {
         return target instanceof com.threerings.tudey.config.TargetConfig.InstanceOf instance
             &&instance.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic");
     }
+    static boolean cosmeticEffect(com.threerings.tudey.config.EffectConfig config){
+        var action=config.action;
+        if(action!=null&&!(action.getClass()==ActionConfig.SpawnActor.class&&((ActionConfig.SpawnActor)action).actor==null)
+                &&!(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==0))return false;
+        return config.a(new ConfigReference<>("Basic"),0,new com.threerings.tudey.data.EntityKey.Entry(1),new com.threerings.math.Vector2f(),0).getClass()==com.threerings.tudey.data.effect.Effect.class;
+    }
     private static Map<String,Object> preparedSpawn(ConfigManager cm,ConfigReference<ActorConfig> actor,boolean activate)throws IOException {
         var fields=new TreeMap<String,String>();fields.put("config",actor.getName());
         try{
             if(rules==null){rules=new Properties();try(var input=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(input);}}
             writeActor(cm,fields,"",actor);
             var resolved=resolvedActor(cm,actor);var config=resolved.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.ai(cm),"tags");
+            if(fields.get("kind").equals("Block")){
+                var original=config.ai(cm);
+                if(original.getClass()!=com.threerings.projectx.dungeon.config.DungeonActorConfig.Block.class||original.handlers!=null&&original.handlers.length!=0
+                        ||((com.threerings.projectx.dungeon.config.DungeonActorConfig.Block)original).damageAction!=null)throw new IOException("Unimplemented cosmetic block handlers/damage action");
+            }
             if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.kW(),tags)));
             new org.tortodrone.world.SceneActions.Spawn(fields,activate);
         }catch(Exception invalid){throw new IOException("Unsupported scene spawn actor "+actor.getName()+": "+invalid.getMessage(),invalid);}

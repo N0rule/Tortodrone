@@ -93,8 +93,12 @@ public final class SceneActionCompatibility {
         if(SceneContentExport.restoreSceneHandler("Unrelated",stripped)!=stripped)throw new AssertionError("Unrelated handler repaired");
         strippedCondition.tag="real condition";
         if(SceneContentExport.restoreSceneHandler("Trigger/One Time Action",stripped)!=stripped)throw new AssertionError("Non-stripped guard overwritten");
-        compound.actions=new ActionConfig[]{delayed,new ActionConfig.FireEffect()};
+        compound.actions=new ActionConfig[]{delayed,new ActionConfig.Signal()};
         try{SceneContentExport.sceneAction(compound,0);throw new AssertionError("Unsupported sibling was silently dropped");}catch(IOException expected){}
+        var cosmetic=new com.threerings.tudey.config.EffectConfig();
+        if(!SceneContentExport.cosmeticEffect(cosmetic))throw new AssertionError("Native empty effect action rejected");
+        cosmetic.action=signal;
+        if(SceneContentExport.cosmeticEffect(cosmetic))throw new AssertionError("Gameplay effect accepted without executing its action");
         delayed.variance=50;
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();

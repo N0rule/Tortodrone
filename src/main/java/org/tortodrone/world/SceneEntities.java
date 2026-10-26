@@ -136,6 +136,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface ConversationSink { boolean start(SceneConversation conversation,ActorState source,int stamp,int target); }
     private ConversationSink conversationSink=(conversation,source,stamp,target)->false;
     public void conversations(ConversationSink sink){conversationSink=Objects.requireNonNull(sink);}
+    @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp); }
+    private EffectSink effectSink=(config,source,stamp)->{};
+    public void effects(EffectSink sink){effectSink=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -148,7 +151,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -696,6 +699,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         return conversationSink.start(definition,origin,stamp,target);
     }
+    private boolean sourceEffect(SceneActions.SourceEffect operation,int stamp,String source){
+        var origin=scriptSource(source,stamp);if(origin==null)return false;
+        effectSink.fire(operation.config(),origin,stamp);return true;
+    }
     boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
         if(content.conversations().get(definition.actor())!=definition||source==null)return false;
         var current=definition.nodes().get(node);if(current==null||choice<0||choice>=current.responses().size())return false;
@@ -840,6 +847,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         for(var e:List.copyOf(entities.values())){
             if(e.destroyed!=Integer.MAX_VALUE)continue;
+            // Native BlockLogic.wasDamaged returns false without a damageAction. A
+            // global music block has no physical body or damage reaction to evaluate.
+            if(e.kind.equals("Block")&&e.collisionFlags==0&&e.spec.text("shape","").equals("Global")&&e.spec.text("damage-action","").isEmpty())continue;
             float dx=e.x-x,dy=e.y-y,c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             boolean hit;
             if(defined instanceof FireCatalog.DataValue geometry){

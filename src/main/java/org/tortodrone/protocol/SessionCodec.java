@@ -1439,7 +1439,8 @@ public final class SessionCodec {
     }
     private void effect(DataOutputStream out,SceneEffect effect)throws IOException {
         type(out,"com.threerings.tudey.data.effect.Effect");value(out,effect.config());out.writeInt(effect.timestamp());
-        if(effect.targetActor()==0)out.writeShort(0);else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(effect.targetActor());}
+        if(effect.targetEntry()!=null){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,effect.targetEntry());}
+        else if(effect.targetActor()==0)out.writeShort(0);else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(effect.targetActor());}
         vector(out,effect.x(),effect.y());out.writeFloat(effect.rotation());out.writeInt(effect.ownerOid());
     }
     private void weapon(DataOutputStream out,int bag,KnightCombat.State combat)throws IOException {

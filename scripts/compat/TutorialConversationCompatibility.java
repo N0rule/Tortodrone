@@ -84,10 +84,13 @@ public final class TutorialConversationCompatibility {
     private static void spawnedEncounter(SceneContent content,Path pack,String hash,SceneEntities world,SceneConversation definition,ActorState source,ActorState player)throws Exception {
         String puppy="Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",giant="Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant";
         var isolated=new SceneEntities(content,CollisionMap.read(pack.resolve("walkability.gz")),SceneCollision.load(pack,hash));
+        var weapons=new SceneWeapons(CollisionMap.read(pack.resolve("walkability.gz")));world.effects(weapons::effect);
         var operations=new ArrayList<SceneActions.PawnStatus>();world.pawnStatuses((id,operation,stamp)->{operations.add(operation);return true;});
         if(!world.conversationResponse(definition,"part 1a",0,source,player.id(),3075)||!world.conversationResponse(definition,"part 2a",0,source,player.id(),3100))throw new AssertionError("Original response refused");
         if(world.conversationResponse(definition,"part 2a",1,source,player.id(),3100)||world.conversationResponse(definition,"part 2a",0,null,player.id(),3100))throw new AssertionError("Invalid response/source accepted");
         world.advance(3100,List.of(player));
+        var music=weapons.effects().stream().filter(e->Integer.valueOf(3363).equals(e.targetEntry())).findFirst().orElseThrow(()->new AssertionError("Authored boss-music effect did not fire"));
+        if(music.timestamp()!=3100||music.ownerOid()!=0||music.targetActor()!=0||!music.config().name().equals("Basic"))throw new AssertionError("Boss-music effect source/timing differs");
         var first=world.actors().stream().filter(a->a.config().name().equals(puppy)).toList();
         if(first.size()!=1||first.getFirst().created()!=3100||first.getFirst().activity()!=3)throw new AssertionError("First authored Gun Puppy was not activated with the response");
         for(int stamp=3150;stamp<=11100;stamp+=50){
@@ -107,13 +110,27 @@ public final class TutorialConversationCompatibility {
             if(key.equals("3392")&&(enemy.created()!=9100||enemy.activity()!=3||world.specification(enemy.id()).number("health",0)!=1440))throw new AssertionError("Native Giant health/activation timing lost");
         }
         if(operations.stream().noneMatch(SceneActions.PawnStatus::clear))throw new AssertionError("Eight-second start-player signal did not reach its status operation");
+        var musicActors=world.actors().stream().filter(a->a.config().name().equals("Environment/Music")).toList();
+        if(musicActors.size()!=1||musicActors.getFirst().created()!=9100||!musicActors.getFirst().config().arguments().get("File").equals("sound/music/battle_1.ogg")
+                ||!Arrays.asList(world.specification(musicActors.getFirst().id()).text("tags","").split(",")).contains("boss music"))throw new AssertionError("Authored delayed music actor/arguments missing");
+        var wireActors=new ArrayList<>(enemies);wireActors.addAll(musicActors);
         world.conversationResponse(definition,"part 2a",0,source,player.id(),11150);world.advance(11150,List.of(player));
         if(world.actors().stream().filter(a->a.config().name().equals(puppy)||a.config().name().equals(giant)).count()!=3)throw new AssertionError("Replayed activation duplicated encounter actors");
         var bytes=new ByteArrayOutputStream();append(bytes,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));append(bytes,HandshakeCodec.authenticationResponse((short)2,true,"synthetic","Fixture"));
-        append(bytes,new SessionCodec().sceneDelta(1001,140,0,(short)0,11100,11100,(short)50,enemies,List.of(),new int[0],Map.of(),true));
+        var legacyEffect=new SceneEffect(music.sequence()+1,music.config(),3100,player.x(),player.y(),player.rotation(),0,player.id());
+        append(bytes,new SessionCodec().sceneDelta(1001,140,0,(short)0,11100,11100,(short)50,wireActors,List.of(),new int[0],Map.of(),true,List.of(music,legacyEffect)));
         var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
         var delta=(com.threerings.tudey.dobj.SceneDeltaEvent)((com.threerings.presents.net.EventNotification)input.qe()).yj();
-        if(delta.aej().length!=3||Arrays.stream(delta.aej()).anyMatch(a->!(a instanceof com.threerings.projectx.dungeon.data.actor.Monster))||input.available()!=0)throw new AssertionError("Spawned monsters failed stock-reader decoding");
+        if(delta.aej().length!=4||Arrays.stream(delta.aej()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Monster).count()!=3||input.available()!=0)throw new AssertionError("Spawned monsters failed stock-reader decoding");
+        var nativeMusic=Arrays.stream(delta.aej()).filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.Block).findFirst().orElseThrow();
+        if(!nativeMusic.Mv().getName().equals("Environment/Music")||!nativeMusic.Mv().kW().get("File").equals("sound/music/battle_1.ogg")||nativeMusic.adX()!=9100)throw new AssertionError("Native music block reference/framing changed");
+        if(delta.aem().length!=2)throw new AssertionError("Native entry/actor effects missing");
+        var decoded=delta.aem()[0];
+        if(!(decoded.aed() instanceof EntityKey.Entry target)||!target.getKey().equals(3363)||decoded.QY()!=3100||decoded.lk()!=0||!decoded.tz().equals(new Vector2f(music.x(),music.y()))||decoded.tA()!=music.rotation())throw new AssertionError("Native entry-targeted effect framing changed");
+        if(!(delta.aem()[1].aed() instanceof EntityKey.Actor)||!delta.aem()[1].aed().equals(new EntityKey.Actor(player.id())))throw new AssertionError("Existing actor-targeted effect framing changed");
+        var model=(ConfigReference<?>)decoded.Mv().kW().get("Model");
+        if(model==null||!model.getName().equals("model/scripted/play_sound_clip.dat")||!model.kW().get("File").equals("sound/music/fanfare_failure_1.ogg"))throw new AssertionError("Original boss sound reference lost");
+        System.out.println("PASS: original boss fanfare effect -> existing effect queue -> stock reader, exact Entry(3363), sound reference, transform, timestamp and no pre-executing client (audio playback not verified)");
         System.out.println("PASS: real exported response -> production scene scheduler -> Gun Puppy now/3500 +/- 500 ms, Giant at 6000 ms, release at 8000 ms; exact marker transforms, wave tags, health, one-time activation, isolation and stock Monster creation frames (AI not covered)");
     }
     private static void append(ByteArrayOutputStream output,byte[] frame){output.write(frame,4,frame.length-4);}

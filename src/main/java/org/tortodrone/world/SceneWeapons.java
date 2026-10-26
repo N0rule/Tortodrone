@@ -127,10 +127,12 @@ public final class SceneWeapons {
         };
     }
     public void effect(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp){
-        if(config==null)return;if(effects.size()>=MAX_EFFECTS)effects.removeFirst();
+        if(config==null)return;
         // These server-fired effects must reach the controlling client too;
         // _clientOid denotes a pre-executed effect that client already showed.
-        effects.addLast(new SceneEffect(++sequence,config,stamp,source.x(),source.y(),source.rotation(),0,source.id()));
+        Integer entry=source.entity()!=null&&source.entity().entrySource()?Integer.valueOf(source.entity().key()):null;
+        var effect=new SceneEffect(sequence+1,config,stamp,source.x(),source.y(),source.rotation(),0,entry==null?source.id():0,entry);
+        if(effects.size()>=MAX_EFFECTS)effects.removeFirst();sequence++;effects.addLast(effect);
     }
     public List<ActorState> actors(){return shots.values().stream().map(Shot::snapshot).toList();}
     public List<SceneEffect> effects(){return List.copyOf(effects);}
