@@ -13,6 +13,16 @@ public final class SceneMonsterExport {
             var ref=monster.attacks[i];if(ref==null||ref.ref==null)continue;
             var attack=AttackConfig.b(cm,ref.ref);String p=prefix+"attack."+i+".";indexes.add(Integer.toString(i));
             out.put(p+"land",Integer.toString(attack.Qh()));out.put(p+"clear",Integer.toString(attack.Qf()));
+            if(attack instanceof AttackConfig.Chain chain){
+                boolean unconditional=chain.condition instanceof com.threerings.tudey.config.ConditionConfig.Always;
+                // The native default Action condition executes a null SpawnActor, which returns true.
+                if(chain.condition instanceof com.threerings.tudey.config.ConditionConfig.Action condition
+                        &&condition.action!=null&&condition.action.getClass()==com.threerings.tudey.config.ActionConfig.SpawnActor.class
+                        &&((com.threerings.tudey.config.ActionConfig.SpawnActor)condition.action).actor==null)unconditional=true;
+                if(unconditional&&chain.attack>=0&&chain.attack<monster.attacks.length&&monster.attacks[chain.attack]!=null){
+                    out.put(p+"chain-next",Integer.toString(chain.attack));out.put(p+"chain-rearm",Integer.toString(attack.Qg()));
+                }else out.put(p+"chain-unsupported",chain.condition==null?"null":chain.condition.getClass().getName());
+            }
             out.put(p+"fire-speed",Float.toString(attack.fireSpeed));
             var fires=new ArrayList<String>();
             if(attack.fireRefs!=null)for(int f=0;f<attack.fireRefs.length;f++){

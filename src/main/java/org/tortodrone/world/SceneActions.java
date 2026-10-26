@@ -20,8 +20,12 @@ public final class SceneActions {
             fields=Map.copyOf(fields);
             if(fields.size()>1024||!"com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))
                     ||!"Monster".equals(fields.get("kind"))||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
-            for(var field:fields.entrySet())if(field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Spawn field exceeds limit");
+            for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
+            for(String key:fields.keySet())if(key.endsWith(".chain-next")){
+                int slot=spec.integer(key,-1),rearm=spec.integer(key.substring(0,key.length()-10)+"chain-rearm",-1);
+                if(slot<0||slot>255||!fields.containsKey("attack."+slot+".clear")||rearm<0||rearm>3_600_000)throw new IllegalArgumentException("Invalid prepared attack chain");
+            }
             for(String key:List.of("health","speed","radius","width","height","bounds-min-x","bounds-min-y","bounds-max-x","bounds-max-y"))if(!Float.isFinite(spec.number(key,0)))throw new IllegalArgumentException("Non-finite spawn actor value");
             if(spec.number("health",0)<=0||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
             spec.config();

@@ -510,7 +510,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
     }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> players){
-        float distance=e.spec.number("acquire-distance",0);if(distance<=0)return;
+        float distance=e.spec.number("acquire-distance",0);if(distance<=0&&e.activity<4)return;
         if(stamp>=e.nextAcquire){
             float nearest=distance;e.target=0;
             for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
@@ -520,7 +520,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         float nearest=target==null?Float.POSITIVE_INFINITY:(float)Math.hypot(target.x()-e.x,target.y()-e.y);
         e.flags=target==null?0:16;
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
-        int slot=e.spec.integer("attack",-1);String prefix="attack."+slot+".";
+        int slot=e.activity>=4?e.activity-4:e.spec.integer("attack",-1);String prefix="attack."+slot+".";
         var modifiers=e.status.state().modifiers();
         if(!modifiers.canAttack()||modifiers.shocked()){
             if(e.activity>=4){e.activity=0;e.fired.clear();}
@@ -537,16 +537,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     e.fired.add(fire);
                 }
             }
+            int chain=e.spec.integer(prefix+"chain-next",-1);
+            if(chain>=0&&stamp-e.activityStarted>e.spec.integer(prefix+"chain-rearm",Integer.MAX_VALUE)){
+                beginAttack(e,chain,stamp);return;
+            }
             if(stamp-e.activityStarted>=Math.round(e.spec.integer(prefix+"clear",0)/e.attackSpeed))e.activity=0;
             return;
         }
         if(target!=null&&e.activity==0&&slot>=0&&stamp>=e.nextAttack&&nearest<=e.spec.number("attack-distance",0)&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
-            float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return;}
-            if(modifiers.canRotate())e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
-            // Native monsters retain the attack's speed until that activity finishes.
-            e.attackSpeed=modifiers.attackSpeed();
-            e.activity=4+slot;e.activityStarted=stamp;e.nextAttack=stamp+Math.round(e.spec.integer("attack-interval",0)/e.attackSpeed);e.fired.clear();return;
+            if(beginAttack(e,slot,stamp)){
+                if(modifiers.canRotate())e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
+                e.nextAttack=stamp+Math.round(e.spec.integer("attack-interval",0)/e.attackSpeed);
+            }
+            return;
         }
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
         float tx=target.x(),ty=target.y();
@@ -566,6 +570,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
         float step=Math.min(nearest,e.speed*e.status.state().modifiers().speed()*elapsed);
         float x=e.x+(float)Math.cos(e.direction)*step,y=e.y+(float)Math.sin(e.direction)*step;
         if(moveEntity(e,x,y))e.flags|=2;
+    }
+    private boolean beginAttack(Entity e,int slot,int stamp){
+        if(slot<0||slot>255||!e.status.state().modifiers().canAttack()||e.status.state().modifiers().attackSpeed()<=0)return false;
+        float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return false;}
+        // Activity changes reset fire receipts; a chained activity owns its own fire table and speed.
+        e.attackSpeed=e.status.state().modifiers().attackSpeed();e.activity=4+slot;e.activityStarted=stamp;e.fired.clear();return true;
     }
     private boolean sight(Entity e,float tx,float ty){
         if(!staticCollision.clearSegment(129,POINT,e.x,e.y,tx,ty,0))return false;
