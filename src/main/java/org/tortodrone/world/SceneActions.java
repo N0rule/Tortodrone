@@ -3,10 +3,11 @@ package org.tortodrone.world;
 import java.io.IOException;
 import java.util.*;
 import org.tortodrone.resources.Json;
+import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,Spawn,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
@@ -34,6 +35,18 @@ public final class SceneActions {
             if(collision!=0)SceneCollision.pawnShape(spec,model==null?null:model.arguments().get("value"));
         }
     }
+    /** Native InstanceOf(PawnLogic) status operations over this scene's entered knights. */
+    public record PawnStatus(StarterCatalog.Model condition,FireCatalog.DataValue data,int clearMask) implements Action {
+        public PawnStatus {
+            if(condition==null){if(data!=null||clearMask<0)throw new IllegalArgumentException("Invalid pawn status clear");}
+            else{
+                if(data==null||clearMask!=0||!data.type().equals("com.threerings.projectx.dungeon.config.StatusConditionConfig$Stop"))throw new IllegalArgumentException("Unsupported scripted pawn status");
+                float min=SceneDamage.number(data,"minDuration",0),max=SceneDamage.number(data,"maxDuration",0);
+                if(!Float.isFinite(min)||!Float.isFinite(max)||min<0||max<min||max>Integer.MAX_VALUE)throw new IllegalArgumentException("Invalid scripted status duration");
+            }
+        }
+        public boolean clear(){return condition==null;}
+    }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
         public Delay { if(millis<0||millis>3_600_000||variance<0||variance>3_600_000)throw new IllegalArgumentException("Invalid scene action delay");Objects.requireNonNull(action); }
@@ -53,6 +66,7 @@ public final class SceneActions {
             if(!event.equals("removed"))text(name);
         }
     }
+    @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
     @FunctionalInterface public interface Signals { boolean apply(String tag,String name,int stamp); }
@@ -82,6 +96,7 @@ public final class SceneActions {
     private final SourcedSignals signals;
     private final DestroyActors destroy;
     private final SpawnActors spawn;
+    private final PawnStatuses pawnStatuses;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -95,7 +110,9 @@ public final class SceneActions {
     public SceneActions(List<Rule> rules,SourcedSignals signals){this(rules,signals,new Random());}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){this(rules,signals,random,(tag,stamp,source)->false);}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy){this(rules,signals,random,destroy,(actor,stamp,source)->false);}
-    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn){
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn){this(rules,signals,random,destroy,spawn,(operation,stamp,source)->false);}
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses){
+        this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
         this.spawn=Objects.requireNonNull(spawn);
         this.destroy=Objects.requireNonNull(destroy);
         this.random=Objects.requireNonNull(random);
@@ -156,6 +173,7 @@ public final class SceneActions {
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
             case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source);
@@ -187,9 +205,18 @@ public final class SceneActions {
         try{var action=decode(Json.parse(json,32),0,new int[]{0});validate(action,0,new int[]{0});return action;}
         catch(IllegalArgumentException|ArithmeticException invalid){throw new IOException("Invalid scene action graph",invalid);}
     }
-    private static Action decode(Object value,int depth,int[] count){
+    private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("pawn-status".equals(kind)&&map.keySet().equals(Set.of("kind","config"))){
+            var model=FireCatalog.modelJson(string(map.get("config")));
+            if(!(model.arguments().get("reference") instanceof StarterCatalog.Model reference)||!(model.arguments().get("data") instanceof FireCatalog.DataValue data))throw new IllegalArgumentException("Incomplete scripted pawn status");
+            return new PawnStatus(reference,data,0);
+        }
+        if("pawn-clear".equals(kind)&&map.keySet().equals(Set.of("kind","mask"))&&map.get("mask") instanceof Number mask){
+            if(mask.doubleValue()!=mask.longValue())throw new IllegalArgumentException("Invalid status mask");
+            return new PawnStatus(null,null,Math.toIntExact(mask.longValue()));
+        }
         if("spawn".equals(kind)&&map.keySet().equals(Set.of("kind","fields","activate"))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
             var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate);
         }

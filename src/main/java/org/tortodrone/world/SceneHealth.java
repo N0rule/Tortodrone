@@ -34,6 +34,7 @@ public final class SceneHealth {
     public void inventory(WorldProfile profile){status.equipment(profile);}
     public void curseItem(long item,int stamp){if(alive()){rawDamage((int)Math.ceil(status.used(item)),stamp);died(stamp);}}
     public void condition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){status.applyResolved(ref,data,stamp);}
+    public boolean applyCondition(org.tortodrone.character.StarterCatalog.Model ref,Object data,int stamp){return status.applyResolvedResult(ref,data,stamp);}
     public boolean clearStatus(int mask){return status.clear(mask);}
     public boolean cloaked(){return status.cloaked();}
     public void breakCloak(){status.breakCloak();}

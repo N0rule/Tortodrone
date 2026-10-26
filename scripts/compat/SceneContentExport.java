@@ -266,6 +266,18 @@ public final class SceneContentExport {
             return preparedSpawn(cm,actors.getFirst(),true);
         }
 
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
+            if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");
+            org.tortodrone.world.FireCatalog.Action prepared;
+            try{prepared=FireCatalogExport.readAction(cm,status);}catch(Exception invalid){throw new IOException("Unresolved scripted status",invalid);}
+            if(prepared.kind()!=org.tortodrone.world.FireCatalog.Kind.APPLY_STATUS)throw new IOException("Unresolved scripted status");
+            var fields=Map.<String,Object>of("kind","pawn-status","config",org.tortodrone.world.FireCatalog.modelJson(prepared.config()));
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+        }
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearStatus status){
+            if(!pawnTarget(status.target)||status.mask<0)throw new IOException("Unsupported scripted status clear target/mask");
+            return Map.of("kind","pawn-clear","mask",status.mask);
+        }
         if(action instanceof ActionConfig.DestroyActor destruction){
             if(destruction.endScene)throw new IOException("Scene-ending destruction is not implemented");
             if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","destroy","tag",tagged.tag);
@@ -288,6 +300,10 @@ public final class SceneContentExport {
         throw new IOException("Unsupported scene action "+(action==null?"null":action.getClass().getName()));
     }
 
+    private static boolean pawnTarget(com.threerings.tudey.config.TargetConfig target){
+        return target instanceof com.threerings.tudey.config.TargetConfig.InstanceOf instance
+            &&instance.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic");
+    }
     private static Map<String,Object> preparedSpawn(ConfigManager cm,ConfigReference<ActorConfig> actor,boolean activate)throws IOException {
         var fields=new TreeMap<String,String>();fields.put("config",actor.getName());
         try{

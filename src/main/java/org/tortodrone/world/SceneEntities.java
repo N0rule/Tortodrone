@@ -130,6 +130,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public void playerImpulse(java.util.function.BiConsumer<Integer,KnightCombat.Impulse> callback){playerImpulse=Objects.requireNonNull(callback);}
     private java.util.function.BiConsumer<ActorState,FireCatalog.Action> attack=(actor,action)->{};
     public void attacks(java.util.function.BiConsumer<ActorState,FireCatalog.Action> fire){attack=Objects.requireNonNull(fire);}
+    @FunctionalInterface public interface PawnStatusSink { boolean apply(int actor,SceneActions.PawnStatus operation,int stamp); }
+    private PawnStatusSink pawnStatus=(actor,operation,stamp)->false;
+    public void pawnStatuses(PawnStatusSink sink){pawnStatus=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -142,7 +145,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -664,6 +667,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
+    }
+    private boolean pawnStatuses(SceneActions.PawnStatus operation,int stamp,String source){
+        boolean applied=false;
+        for(var player:players)applied=pawnStatus.apply(player.id(),operation,stamp)||applied;
+        return operation.clear()||applied; // Native ClearStatus succeeds even with no targets.
     }
     private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source){
         if(entities.size()>=4096||!source.startsWith("entry:"))return false;

@@ -109,6 +109,18 @@ public final class SceneActionCompatibility {
             if(!events.equals(List.of("rocket 1:activate:100","rocket 2:activate:3600","miniboss:activate:6100","door hidden:open:8100","door miniboss:close:8100","start player:activate:8100","replace knightsa:activate:8100")))throw new AssertionError("Captured encounter signal timing differs: "+events);
             encounter.signal("spawn boss","activate",8200,"entry:3265");encounter.advance(8200);encounter.advance(20000);
             if(events.size()!=7)throw new AssertionError("Captured encounter replayed");
+            var stopEntry=content.entries().stream().filter(entry->entry.key().equals("3263")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
+            var releaseEntry=content.entries().stream().filter(entry->entry.key().equals("3317")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
+            var operations=new ArrayList<SceneActions.PawnStatus>();
+            var controls=new SceneActions(List.of(SceneActions.rule(stopEntry),SceneActions.rule(releaseEntry)),(tag,name,stamp,source)->true,new Random(1),(tag,stamp,source)->false,(actor,stamp,source)->false,
+                (operation,stamp,source)->{operations.add(operation);return true;});
+            controls.signal("stop player","activate",100,"entry:3362");controls.advance(100);
+            controls.signal("start player","activate",200,"entry:3267");controls.advance(200);
+            if(operations.size()!=2||operations.getFirst().clear()||!operations.getFirst().condition().name().equals("Scripted/Stop")||!operations.getLast().clear()||operations.getLast().clearMask()!=Integer.MAX_VALUE)throw new AssertionError("Captured player control actions lost");
+            var forbiddenTarget=new com.threerings.tudey.config.TargetConfig.InstanceOf();forbiddenTarget.logicClass="java.lang.Runtime";
+            var wrongTarget=new com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearStatus();wrongTarget.target=forbiddenTarget;wrongTarget.mask=Integer.MAX_VALUE;
+            try{SceneContentExport.sceneAction(wrongTarget,0);throw new AssertionError("Arbitrary class target accepted");}catch(IOException expected){}
+            System.out.println("PASS: captured tutorial stop/release graphs retain Scripted/Stop and native clear mask; arbitrary target classes refused");
             var miniboss=content.entries().stream().filter(entry->entry.key().equals("3392")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
             var spawns=new ArrayList<SceneActions.Spawn>();var spawnSources=new ArrayList<String>();
             var activation=new SceneActions(List.of(SceneActions.rule(miniboss)),(tag,name,stamp,source)->true,new Random(1),(tag,stamp,source)->false,

@@ -30,6 +30,7 @@ public final class SceneStatus {
     }
     private final SceneContent content;private final boolean monster;
     private final Map<String,Active> active=new LinkedHashMap<>();
+    private long applications;
     private final Map<Integer,Integer> shieldCooloff=new HashMap<>();
     private org.tortodrone.character.WorldProfile equipment;
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
@@ -67,6 +68,10 @@ public final class SceneStatus {
     }
     public void applyResolved(StarterCatalog.Model reference,Object data,int stamp){
         applyResolved(reference,data,stamp,false);
+    }
+    /** Reports the existing status eligibility/cooloff result without bypassing it. */
+    public boolean applyResolvedResult(StarterCatalog.Model reference,Object data,int stamp){
+        long before=applications;applyResolved(reference,data,stamp);return applications!=before;
     }
     private void applyResolved(StarterCatalog.Model reference,Object data,int stamp,boolean checkChance){
         if(!(data instanceof FireCatalog.DataValue value))return;
@@ -164,7 +169,7 @@ public final class SceneStatus {
             next.cursedItems.addAll(weapons.subList(0,Math.min(weapons.size(),(int)parameter(next,"minCurseWeapons","maxCurseWeapons"))));
             next.cursedItems.addAll(pickups.subList(0,Math.min(pickups.size(),(int)parameter(next,"minCursePickups","maxCursePickups"))));
         }
-        active.put(key,next);
+        active.put(key,next);applications++;
     }
     private float resolvedParameter(StarterCatalog.Model reference,Object data,String argument,String field,String selector,String configSelector,String prefix,float fallback){
         var args=new HashMap<>(reference.arguments());args.putIfAbsent(argument,SceneDamage.number(data,field,fallback));

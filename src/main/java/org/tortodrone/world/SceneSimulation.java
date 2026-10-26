@@ -372,6 +372,11 @@ public final class SceneSimulation {
             member.movement.status(member.health.status().modifiers());
             if(result.amount()>0)feedback(new SceneCombatEvent(0,hit.timestamp(),hit.actor(),result.feedback(),hit.source(),"NORMAL"));
         }});
+        entities.pawnStatuses((id,operation,stamp)->{
+            var member=members.get(id);if(member==null||!member.entered)return false;
+            if(operation.clear()){member.health.clearStatus(operation.clearMask());return true;}
+            return member.health.applyCondition(operation.condition(),operation.data(),stamp);
+        });
         entities.playerHeal((actor,amount)->{var member=members.get(actor);return member!=null&&member.entered&&member.heal(amount,SceneClock.now());});
         weapons.petActions(action->{var member=members.get(action.owner());if(member==null||!member.entered)return;
             switch(action.kind()){
