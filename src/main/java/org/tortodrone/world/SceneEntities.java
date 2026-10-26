@@ -12,6 +12,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final String kind;final StarterCatalog.Model config;final Entity pad;
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
         boolean claimTaken,ignited,scriptDestroyed;
+        String scriptSource="";
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
@@ -141,7 +142,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -653,6 +654,18 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
+    }
+    private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source){
+        if(entities.size()>=4096||!source.startsWith("entry:"))return false;
+        String key=source.substring(6);
+        var origin=content.entries().stream().filter(entry->entry.key().equals(key)&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElse(null);
+        if(origin==null)return false;
+        var spec=new SceneContent.Spec(actor.fields());
+        var binding=new SceneContent.Entry("spawn:"+nextId,origin.x(),origin.y(),origin.rotation(),spec);
+        // Construction happens before publication; failed metadata cannot leave a partial actor.
+        var entity=new Entity(nextId,stamp,binding,spec,null,content);entity.scriptSource=source;
+        if(actor.activate()&&spec.integer("activate-time",0)>0)entity.activity=3;
+        nextId++;entities.put(entity.id,entity);return true;
     }
     private boolean destroyTagged(String tag,int stamp,String source){
         boolean found=false;

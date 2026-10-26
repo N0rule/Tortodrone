@@ -30,6 +30,7 @@ public final class SceneActionsTest {
         scene.advance(time+5201,List.of());check(scene.walkable(3,0,219),"native transition completion releases collision");
         isolated.advance(time+10000,List.of());check(!isolated.walkable(3,0,219),"another scene's boss/door are unaffected");
         scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
+        spawning(map.collision());
         destruction(map.collision());
         scheduler();
         variance();
@@ -41,6 +42,29 @@ public final class SceneActionsTest {
         System.out.println("PASS: actor-removal exit delay, door flags/collision, scene isolation, scheduling, all-target guards, failure, cancellation and graph validation");
     }
     private static SceneContent.Entry entry(String key,float x,float y,Map<String,String> fields){return new SceneContent.Entry(key,x,y,0,new SceneContent.Spec(fields));}
+    private static void spawning(CollisionMap terrain)throws Exception {
+        var fields=Map.of("config","Fixture/Spawned","kind","Monster","native-type","com.threerings.projectx.dungeon.data.actor.Monster","health","10","damage-mask","2","tags","wave miniboss","death-time","0","collision-flags","1","radius","0.4","activate-time","10");
+        String action=org.tortodrone.resources.Json.stringify(Map.of("kind","spawn","fields",fields,"activate",true));
+        var parsed=SceneActions.parse(action);check(parsed instanceof SceneActions.Spawn,"typed spawn metadata");
+        var seed=entry("seed",0,0,Map.of("config","Fixture/Seed","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","1","damage-mask","2","tags","seed","death-time","0"));
+        var trigger=new SceneContent.Entry("spawnpoint",5,0,1.25f,new SceneContent.Spec(Map.of("config","Trigger/Removed","kind","SceneTrigger","event","removed","watch-tag","seed","action",action)));
+        var content=new SceneContent(List.of(seed,trigger),Map.of());var scene=new SceneEntities(content,terrain);var isolated=new SceneEntities(content,terrain);
+        int now=SceneClock.now()+100;scene.advance(now,List.of());
+        var damage=new StarterCatalog.Model("DamageRegion",Map.of("shape",new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Circle",Map.of("radius",1f)),"damage",new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Normal",Map.of("flags",2,"amount",2f))));
+        scene.damage(damage,0,0,0,now,219);scene.advance(now+100,List.of());
+        var spawned=scene.actors().getFirst();
+        check(scene.actors().size()==1&&spawned.x()==5&&spawned.y()==0&&spawned.rotation()==1.25f,"spawn uses authored source marker transform");
+        check(spawned.entity().health()==1&&spawned.activity()==3,"spawn publishes full health and native activation state");
+        check(!scene.walkable(5,0,219),"spawned actor participates in dynamic collision");
+        scene.damage(damage,5,0,0,now+101,219);
+        check(scene.actors().getFirst().entity().health()==.8f,"spawned actor takes authoritative combat damage");
+        for(int hit=0;hit<4;hit++)scene.damage(damage,5,0,0,now+102+hit,219);
+        scene.advance(now+300,List.of());check(scene.actors().isEmpty(),"spawned enemy follows normal death/removal lifecycle");
+        isolated.advance(now+1000,List.of());check(isolated.actors().size()==1&&isolated.actors().getFirst().x()==0,"spawn is isolated to its scene instance");
+        for(String invalid:List.of(action.replace("\"10\"","\"NaN\""),action.replace("actor.Monster","actor.Pickup"),action.replace("\"collision-flags\":\"1\"","\"collision-flags\":\"invalid\"")))try{SceneActions.parse(invalid);throw new AssertionError("Invalid spawn accepted");}catch(IOException expected){}
+        var runtime=new SceneActions(List.of(new SceneActions.Rule("missing","signal","in","go",false,parsed)),(tag,name,time)->true);
+        runtime.signal("in","go",1);runtime.advance(1);check(runtime.pending()==0,"unavailable spawn executor fails safely");
+    }
     private static void destruction(CollisionMap terrain)throws Exception {
         var seed=entry("seed",0,0,Map.of("config","Fixture/Seed","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","1","damage-mask","2","tags","seed","death-time","0"));
         var target=entry("target",5,0,Map.of("config","Fixture/Target","native-type","com.threerings.projectx.dungeon.data.actor.Monster","kind","Monster","health","10","damage-mask","2","tags","targets","death-time","5000","collision-flags","1","radius","0.4"));

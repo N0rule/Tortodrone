@@ -50,6 +50,10 @@ public final class SceneActionCompatibility {
         if(!events.equals(List.of("open")))throw new AssertionError("Native one-time trigger replayed");
         var stop=new com.threerings.tudey.config.HandlerConfig.SignalStop();stop.name="activate";
         if(!SceneContentExport.sceneSignal(stop).equals(Map.of("event","signal-stop","signal","activate")))throw new AssertionError("SignalStop fields changed");
+        var emptySpawn=new ActionConfig.SpawnActor();emptySpawn.actor=null;
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(emptySpawn,0))) instanceof SceneActions.Sequence empty)||!empty.actions().isEmpty())throw new AssertionError("Null spawn should succeed without an actor");
+        emptySpawn.actor=new com.threerings.config.ConfigReference<>("Fixture/Monster");emptySpawn.location=new TargetConfig.Tagged();
+        try{SceneContentExport.sceneAction(emptySpawn,0);throw new AssertionError("Unsupported spawn location accepted");}catch(IOException expected){}
         var destroy=new ActionConfig.DestroyActor();destroy.target=target;destroy.endScene=false;
         var destruction=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(destroy,0)));
         if(!(destruction instanceof SceneActions.Destroy d)||!d.tag().equals("door end"))throw new AssertionError("Native destruction target lost");
@@ -105,6 +109,16 @@ public final class SceneActionCompatibility {
             if(!events.equals(List.of("rocket 1:activate:100","rocket 2:activate:3600","miniboss:activate:6100","door hidden:open:8100","door miniboss:close:8100","start player:activate:8100","replace knightsa:activate:8100")))throw new AssertionError("Captured encounter signal timing differs: "+events);
             encounter.signal("spawn boss","activate",8200,"entry:3265");encounter.advance(8200);encounter.advance(20000);
             if(events.size()!=7)throw new AssertionError("Captured encounter replayed");
+            var miniboss=content.entries().stream().filter(entry->entry.key().equals("3392")&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
+            var spawns=new ArrayList<SceneActions.Spawn>();var spawnSources=new ArrayList<String>();
+            var activation=new SceneActions(List.of(SceneActions.rule(miniboss)),(tag,name,stamp,source)->true,new Random(1),(tag,stamp,source)->false,
+                (actor,stamp,source)->{spawns.add(actor);spawnSources.add(source);return true;});
+            activation.signal("miniboss","activate",100,"entry:3267");activation.advance(100);activation.advance(150);
+            activation.signal("miniboss","activate",200,"entry:3267");activation.advance(200);
+            if(spawns.size()!=1||!spawnSources.equals(List.of("entry:3392")))throw new AssertionError("Captured monster activation duplicated or lost source");
+            var spawned=spawns.getFirst();
+            if(!spawned.activate()||!spawned.fields().get("config").equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")||!spawned.fields().get("tags").contains("wave miniboss")||!spawned.fields().get("health").equals("1440"))throw new AssertionError("Captured miniboss identity, wave tag or native health lost");
+            System.out.println("PASS: captured entry 3392 emits one prepared Ironwood Giant with wave tag and native health; AI/playthrough not covered");
             System.out.println("PASS: captured tutorial entry 3267 -> seven authored timed signals, bounded variance, no replay");
             System.out.println("PASS: captured tutorial entry 3265 -> authoritative scheduler -> three authored signals, no replay");
         }

@@ -6,12 +6,29 @@ import org.tortodrone.resources.Json;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,Spawn,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
     public record Destroy(String tag) implements Action {
         public Destroy { text(tag); }
+    }
+    /** Prepared server-owned Monster at its handler's source entry, never a client config. */
+    public record Spawn(Map<String,String> fields,boolean activate) implements Action {
+        public Spawn(Map<String,String> fields){this(fields,false);}
+        public Spawn {
+            fields=Map.copyOf(fields);
+            if(fields.size()>1024||!"com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))
+                    ||!"Monster".equals(fields.get("kind"))||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
+            for(var field:fields.entrySet())if(field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Spawn field exceeds limit");
+            var spec=new SceneContent.Spec(fields);
+            for(String key:List.of("health","speed","radius","width","height","bounds-min-x","bounds-min-y","bounds-max-x","bounds-max-y"))if(!Float.isFinite(spec.number(key,0)))throw new IllegalArgumentException("Non-finite spawn actor value");
+            if(spec.number("health",0)<=0||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
+            spec.config();
+            int collision=spec.integer("collision-flags",0);spec.integer("activate-time",0);
+            var model=spec.model("source-shape");
+            if(collision!=0)SceneCollision.pawnShape(spec,model==null?null:model.arguments().get("value"));
+        }
     }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
@@ -32,6 +49,7 @@ public final class SceneActions {
             if(!event.equals("removed"))text(name);
         }
     }
+    @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
     @FunctionalInterface public interface Signals { boolean apply(String tag,String name,int stamp); }
     @FunctionalInterface public interface SourcedSignals { boolean apply(String tag,String name,int stamp,String source); }
@@ -59,6 +77,7 @@ public final class SceneActions {
     private final List<State> states;
     private final SourcedSignals signals;
     private final DestroyActors destroy;
+    private final SpawnActors spawn;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -71,7 +90,9 @@ public final class SceneActions {
     private static SourcedSignals adapt(Signals signals){Objects.requireNonNull(signals);return (tag,name,stamp,source)->signals.apply(tag,name,stamp);}
     public SceneActions(List<Rule> rules,SourcedSignals signals){this(rules,signals,new Random());}
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random){this(rules,signals,random,(tag,stamp,source)->false);}
-    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy){
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy){this(rules,signals,random,destroy,(actor,stamp,source)->false);}
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn){
+        this.spawn=Objects.requireNonNull(spawn);
         this.destroy=Objects.requireNonNull(destroy);
         this.random=Objects.requireNonNull(random);
         this.signals=Objects.requireNonNull(signals);
@@ -131,6 +152,7 @@ public final class SceneActions {
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source);
             case Sequence sequence -> {
@@ -164,6 +186,9 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count){
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("spawn".equals(kind)&&map.keySet().equals(Set.of("kind","fields","activate"))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
+            var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate);
+        }
         if("destroy".equals(kind)&&map.keySet().equals(Set.of("kind","tag")))return new Destroy(string(map.get("tag")));
         if("signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name")))return new Signal(string(map.get("tag")),string(map.get("name")));
         if("delay".equals(kind)&&(map.keySet().equals(Set.of("kind","millis","action"))||map.keySet().equals(Set.of("kind","millis","variance","action")))&&map.get("millis") instanceof Number number){
