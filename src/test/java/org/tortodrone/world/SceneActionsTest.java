@@ -32,6 +32,7 @@ public final class SceneActionsTest {
         scene.advance(time+15000,List.of());check(scene.walkable(3,0,219),"removal is processed once");
         scheduler();
         limits();
+        transitions();
         try{SceneActions.rule(entry("bad",0,0,Map.of("kind","SceneTrigger","event","removed","watch-tag","wave","all","unknown","action",EXIT)));throw new AssertionError("Invalid group flag accepted");}catch(IOException expected){}
         for(String invalid:List.of("{\"kind\":\"executeClass\",\"name\":\"arbitrary\"}","{\"kind\":\"signal\",\"tag\":\"x\",\"name\":\"open\",\"extra\":true}",EXIT.replace("5000","-1"),EXIT.replace("5000","0.5"),EXIT.replace("5000","999999999999")))
             try{SceneActions.parse(invalid);throw new AssertionError("Invalid graph accepted");}catch(IOException expected){}
@@ -72,5 +73,39 @@ public final class SceneActionsTest {
             runtime.signal("x","b",102);runtime.advance(102);
             check(events.getLast().equals("once"),"another handler owns an independent condition counter");
         }
+    }
+    private static void transitions(){
+        var events=new ArrayList<String>();
+        var rules=List.of(new SceneActions.Rule("start","signal-start","gate","activate",false,new SceneActions.Signal("out","start")),
+            new SceneActions.Rule("stop","signal-stop","gate","activate",false,new SceneActions.Signal("out","stop")));
+        var runtime=new SceneActions(rules,(tag,name,time,source)->{events.add(name+":"+time+":"+source);return true;});
+        runtime.signal("gate","activate",100,"actor:1");runtime.signal("gate","activate",100,"actor:1");
+        runtime.signal("gate","activate",100,"actor:2");runtime.advance(100);runtime.advance(100);
+        check(events.equals(List.of("start:100:start","start:100:start")),"signal starts deduplicate per source; repeated advance cannot age transitions");
+        runtime.signal("gate","activate",150,"actor:1");runtime.advance(150);
+        check(events.getLast().equals("stop:150:stop")&&events.size()==3,"only the source that stopped signaling emits SignalStop");
+        runtime.advance(200);check(events.getLast().equals("stop:200:stop")&&events.size()==4,"remaining source stops on its next quiet tick");
+        runtime.signal("gate","activate",250,"actor:1");runtime.advance(250);
+        check(events.getLast().equals("start:250:start")&&events.size()==5,"a source can start again after a quiet tick");
+        runtime.close();runtime.advance(300);check(events.size()==5,"closing a scene cancels pending signal-stop transitions");
+
+        var once=new SceneActions.Limited(1,new SceneActions.Delay(10,new SceneActions.Signal("out","once")),new SceneActions.Sequence(List.of(),false));
+        var aliases=List.of(new SceneActions.Rule("first","signal-start","first-tag","activate",false,once,"shared-handler","entry:3265"),
+            new SceneActions.Rule("alias","signal-start","second-tag","activate",false,once,"shared-handler","entry:3265"));
+        for(int instance=0;instance<2;instance++){
+            events.clear();var single=new SceneActions(aliases,(tag,name,time,source)->{events.add(name+":"+time+":"+source);return true;});
+            single.signal("first-tag","activate",100,"actor:1");single.signal("second-tag","activate",100,"actor:1");
+            single.signal("second-tag","activate",100,"actor:2");single.advance(100);single.advance(110);
+            check(events.equals(List.of("once:110:entry:3265")),"tag aliases share Limit state and delayed effects retain their trigger source");
+            single.advance(150);single.signal("first-tag","activate",200,"actor:1");single.advance(200);single.advance(250);
+            check(events.size()==1,"reactivation cannot replay a one-time encounter");
+        }
+        try{
+            new SceneActions(List.of(aliases.getFirst(),new SceneActions.Rule("bad","signal-stop","second-tag","activate",false,once,"shared-handler","entry:3265")),(tag,name,time)->true);
+            throw new AssertionError("Incompatible handler aliases accepted");
+        }catch(IllegalArgumentException expected){}
+        var bounded=new SceneActions(rules,(tag,name,time)->true);
+        for(int i=0;i<5000;i++)bounded.signal("gate","activate",100,"actor:"+i);
+        check(bounded.rejected()>0&&bounded.pending()<=4096,"activation tracking and pending work are bounded across handlers");bounded.close();
     }
 }

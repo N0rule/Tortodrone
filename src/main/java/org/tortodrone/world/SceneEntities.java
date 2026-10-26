@@ -141,7 +141,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time)->{signal(tag,name,time);return true;});
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;});
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -649,14 +649,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
             var damage=new FireCatalog.DataValue("com.threerings.projectx.dungeon.config.DamageConfig$Status",Map.of("statusCondition",condition));
             for(var target:entities.values())if(target.kind.equals("Monster")&&target.destroyed==Integer.MAX_VALUE&&(tag.isBlank()||Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))&&Math.hypot(target.x-e.x,target.y-e.y)<=radius+target.spec.number("radius",0))target.status.apply(damage,stamp);
         }
-        signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp);
+        signal(e.spec.text("state."+state+".tag",""),e.spec.text("state."+state+".signal",""),stamp,"actor:"+e.id);
     }
     private void fireEffect(Entity e,StarterCatalog.Model effect,int stamp){
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
     }
-    private void signal(String tag,String name,int stamp){
+    private void signal(String tag,String name,int stamp,String source){
         if(tag.isEmpty()||name.isEmpty())return;
-        actions.signal(tag,name,stamp);
+        actions.signal(tag,name,stamp,source);
         for(var target:entities.values())if(Arrays.asList(target.spec.text("tags","").split(",")).contains(tag)){
             if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
                 boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;

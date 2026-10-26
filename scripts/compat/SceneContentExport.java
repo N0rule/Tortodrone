@@ -129,7 +129,7 @@ public final class SceneContentExport {
             if (handlers == null) continue;
             for (int hi = 0; hi < handlers.length; hi++) {
                 HandlerConfig handler = handlers[hi];
-                if (!(handler instanceof HandlerConfig.Startup startup)) {if(!(raw instanceof TudeySceneModel.PlaceableEntry)||!(handler instanceof HandlerConfig.ActorRemoved)&&!(handler instanceof HandlerConfig.Signal))importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
+                if (!(handler instanceof HandlerConfig.Startup startup)) {if(!(raw instanceof TudeySceneModel.PlaceableEntry)||!sceneHandler(handler))importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
                 collectStartup(cm, result, sourceKey, hi, x, y, rotation, startup.action,sourceArgs,state,0);
             }
         }
@@ -172,19 +172,18 @@ public final class SceneContentExport {
             if(original.handlers==null)continue;
             for(int hi=0;hi<original.handlers.length;hi++){
                 var handler=original.handlers[hi];
-                if(!(handler instanceof HandlerConfig.ActorRemoved)&&!(handler instanceof HandlerConfig.Signal))continue;
+                if(!sceneHandler(handler))continue;
                 try{
                     var fields=new TreeMap<String,String>();
                     fields.put("kind","SceneTrigger");fields.put("config",entry.placeable.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));
+                    fields.put("state-key",key(entry.getKey())+":"+hi);
                     var point=entry.au(cm);fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));fields.put("rotation","0");
                     List<String> tags;
                     if(handler instanceof HandlerConfig.ActorRemoved removed){
                         if(!(removed.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged))throw new IOException("ActorRemoved target is not Tagged");
                         fields.put("event","removed");fields.put("all",Boolean.toString(removed.all));tags=List.of(tagged.tag);
                     }else{
-                        var signal=(HandlerConfig.Signal)handler;
-                        if(signal.refractoryPeriod!=0)throw new IOException("Signal refractory period is not implemented");
-                        fields.put("event","signal");fields.put("signal",signal.name);
+                        fields.putAll(sceneSignal(handler));
                         var tagFields=new TreeMap<String,String>();writeTags(tagFields,"",original.tags);
                         tags=Arrays.stream(tagFields.getOrDefault("tags","").split(",")).filter(t->!t.isBlank()).toList();
                         if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
@@ -199,6 +198,16 @@ public final class SceneContentExport {
                 }catch(IOException unsupported){importReport.add("Unsupported complete scene handler at "+key(entry.getKey())+" / "+hi+": "+unsupported.getMessage());}
             }
         }
+    }
+    private static boolean sceneHandler(HandlerConfig handler){return handler instanceof HandlerConfig.ActorRemoved||handler instanceof HandlerConfig.Signal||handler instanceof HandlerConfig.SignalStart||handler instanceof HandlerConfig.SignalStop;}
+    static Map<String,String> sceneSignal(HandlerConfig handler)throws IOException {
+        if(handler instanceof HandlerConfig.Signal signal){
+            if(signal.refractoryPeriod!=0)throw new IOException("Signal refractory period is not implemented");
+            return Map.of("event","signal","signal",signal.name);
+        }
+        if(handler instanceof HandlerConfig.SignalStart signal)return Map.of("event","signal-start","signal",signal.name);
+        if(handler instanceof HandlerConfig.SignalStop signal)return Map.of("event","signal-stop","signal",signal.name);
+        throw new IOException("Unsupported signal handler");
     }
     static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
@@ -522,10 +531,10 @@ public final class SceneContentExport {
         }
     }
 
-    private static void writeTags(Map<String, String> out, String prefix, Object tagConfig)
+    static void writeTags(Map<String, String> out, String prefix, Object tagConfig)
         throws Exception {
         if (tagConfig == null) return;
-        Object raw = field(tagConfig, "tags");
+        Object raw = callNoArg(tagConfig, List.of("adx", "getTags"));
         if (raw == null) return;
         List<String> tags = new ArrayList<>();
         if (raw instanceof String[] array) {
