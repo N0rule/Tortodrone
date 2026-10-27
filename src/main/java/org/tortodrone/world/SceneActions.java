@@ -7,17 +7,23 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,Spawn,PawnStatus,Conversation,SourceEffect,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
     public record Destroy(String tag) implements Action {
         public Destroy { text(tag); }
     }
+    /** Compound native targets retain order/multiplicity and succeed if any actor was found. */
+    public record DestroyMany(List<String> tags) implements Action {
+        public DestroyMany { tags=List.copyOf(tags);if(tags.size()>256)throw new IllegalArgumentException("Too many destruction targets");tags.forEach(SceneActions::text); }
+    }
     /** Prepared Monster or noncolliding global cosmetic Block at its handler's source entry. */
-    public record Spawn(Map<String,String> fields,boolean activate) implements Action {
+    public record Spawn(Map<String,String> fields,boolean activate,String locationTag) implements Action {
+        public Spawn(Map<String,String> fields,boolean activate){this(fields,activate,"");}
         public Spawn(Map<String,String> fields){this(fields,false);}
         public Spawn {
+            Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag);
             fields=Map.copyOf(fields);
             boolean monster="com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))&&"Monster".equals(fields.get("kind"));
             boolean cosmetic="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&"Global".equals(fields.get("shape"))&&!activate;
@@ -53,9 +59,10 @@ public final class SceneActions {
         public Conversation(String id){this(id,false);}
         public Conversation { text(id); }
     }
-    /** Cosmetic native effect at the owning entry; gameplay effect actions are refused at export. */
-    public record SourceEffect(StarterCatalog.Model config) implements Action {
-        public SourceEffect { Objects.requireNonNull(config);text(config.name()); }
+    /** Cosmetic native effect at Source (empty tag) or authored Tagged locations. */
+    public record SourceEffect(StarterCatalog.Model config,String locationTag) implements Action {
+        public SourceEffect(StarterCatalog.Model config){this(config,"");}
+        public SourceEffect { Objects.requireNonNull(config);text(config.name());Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag); }
     }
     public record Delay(int millis,int variance,Action action) implements Action {
         public Delay(int millis,Action action){this(millis,0,action);}
@@ -199,6 +206,10 @@ public final class SceneActions {
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
             case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
+            case DestroyMany destruction -> {
+                boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
+                yield found;
+            }
             case Delay delay -> enqueue(node.children.getFirst(),Math.addExact(due,delay.variance()==0?delay.millis():Math.max(0,delay.millis()+random.nextInt(delay.variance()*2)-delay.variance())),source,activator);
             case Sequence sequence -> {
                 boolean success=true;
@@ -222,6 +233,18 @@ public final class SceneActions {
         text(source);text(activator);validate(action,0,new int[]{0});return enqueue(new Node(action),stamp,source,activator);
     }
     public int pending(){return pending.size();}
+    public static Set<String> conversationIds(Action action){
+        validate(action,0,new int[]{0});var ids=new LinkedHashSet<String>();conversationIds(action,ids);return Set.copyOf(ids);
+    }
+    private static void conversationIds(Action action,Set<String> ids){
+        switch(action){
+            case Conversation conversation->ids.add(conversation.id());
+            case Delay delay->conversationIds(delay.action(),ids);
+            case Sequence sequence->{for(var child:sequence.actions())conversationIds(child,ids);}
+            case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
+            default->{}
+        }
+    }
     public long rejected(){return rejected;}
     public void close(){closed=true;pending.clear();for(var state:states)state.active.clear();activeSources=0;}
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
@@ -230,13 +253,17 @@ public final class SceneActions {
         switch(action){case Delay delay->validate(delay.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
-        try{var action=decode(Json.parse(json,32),0,new int[]{0});validate(action,0,new int[]{0});return action;}
+        try{
+            if(json.length()>4_000_000)throw new IllegalArgumentException("Scene action metadata exceeds limit");
+            var action=decode(Json.parse(json,32,1024,262144),0,new int[]{0});validate(action,0,new int[]{0});return action;
+        }
         catch(IllegalArgumentException|ArithmeticException invalid){throw new IOException("Invalid scene action graph",invalid);}
     }
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
         if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));
+        if("tagged-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","tag")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))),tag(map.get("tag")));
         if("conversation".equals(kind)&&map.keySet().equals(Set.of("kind","id","activator"))&&map.get("activator") instanceof Boolean target)return new Conversation(string(map.get("id")),target);
         if("pawn-status".equals(kind)&&map.keySet().equals(Set.of("kind","config"))){
             var model=FireCatalog.modelJson(string(map.get("config")));
@@ -247,9 +274,10 @@ public final class SceneActions {
             if(mask.doubleValue()!=mask.longValue())throw new IllegalArgumentException("Invalid status mask");
             return new PawnStatus(null,null,Math.toIntExact(mask.longValue()));
         }
-        if("spawn".equals(kind)&&map.keySet().equals(Set.of("kind","fields","activate"))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
-            var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate);
+        if("spawn".equals(kind)&&(map.keySet().equals(Set.of("kind","fields","activate"))||map.keySet().equals(Set.of("kind","fields","activate","tag")))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
+            var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate,map.containsKey("tag")?tag(map.get("tag")):"");
         }
+        if("destroy-many".equals(kind)&&map.keySet().equals(Set.of("kind","tags"))&&map.get("tags") instanceof List<?> tags)return new DestroyMany(tags.stream().map(SceneActions::string).toList());
         if("destroy".equals(kind)&&map.keySet().equals(Set.of("kind","tag")))return new Destroy(string(map.get("tag")));
         if("signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name")))return new Signal(string(map.get("tag")),string(map.get("name")));
         if("delay".equals(kind)&&(map.keySet().equals(Set.of("kind","millis","action"))||map.keySet().equals(Set.of("kind","millis","variance","action")))&&map.get("millis") instanceof Number number){
@@ -271,6 +299,7 @@ public final class SceneActions {
         throw new IllegalArgumentException("Unsupported scene action or fields");
     }
     private static String string(Object value){if(!(value instanceof String text))throw new IllegalArgumentException("Expected scene action text");return text;}
+    private static String tag(Object value){String result=string(value);text(result);return result;}
     public static Rule rule(SceneContent.Entry entry)throws IOException {
         var spec=entry.spec();
         if(!Set.of("true","false").contains(spec.text("all","false")))throw new IOException("Invalid actor-removal all flag");

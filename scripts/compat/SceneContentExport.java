@@ -79,6 +79,7 @@ public final class SceneContentExport {
         }
         collectTriggers(cm,scene,values,indexes);
         collectAreaTriggers(cm,scene,values,indexes);
+        collectAnchors(cm,scene,values,indexes);
         values.put("entries", String.join(",", indexes));
         writeDialogues(cm,values,bindings);
         Files.writeString(target, propertiesText(values), StandardCharsets.UTF_8,
@@ -256,6 +257,19 @@ public final class SceneContentExport {
         if(condition instanceof com.threerings.tudey.config.ConditionConfig.All all){if(all.conditions==null)return false;for(var child:all.conditions)if(!pawnCondition(child,depth+1))return false;return true;}
         return false;
     }
+    /** Static tagged entry logics are target locations, never synthetic server actors. */
+    private static void collectAnchors(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
+        for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
+            var reference=resolvedPlaceable(cm,entry.placeable);var config=reference.a(cm,PlaceableConfig.class);var original=config.q(cm);
+            if(original.tags==null)continue;
+            var tags=sceneTags(config,reference.kW(),original.tags);if(tags.isEmpty())continue;
+            String index=Integer.toString(indexes.size()),prefix="entry."+index+".";indexes.add(index);
+            var point=entry.au(cm);var q=entry.transform.tE();
+            put(values,prefix+"kind","SceneAnchor");put(values,prefix+"config",entry.placeable.getName());put(values,prefix+"source-key",key(entry.getKey()));put(values,prefix+"handler-index","anchor");
+            put(values,prefix+"source-tags",String.join(",",tags));putFloat(values,prefix+"x",finite(point.x,"anchor x"));putFloat(values,prefix+"y",finite(point.y,"anchor y"));
+            putFloat(values,prefix+"rotation",(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI));
+        }
+    }
     private static ConfigReference<PlaceableConfig> resolvedPlaceable(ConfigManager cm,ConfigReference<PlaceableConfig> reference)throws IOException {
         for(int depth=0;depth<16;depth++){
             var config=reference.a(cm,PlaceableConfig.class);
@@ -301,21 +315,27 @@ public final class SceneContentExport {
     static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm)throws IOException {return sceneAction(action,depth,cm,false);}
     private static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
+        if(action instanceof ActionConfig.None)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
         if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
         if(action!=null&&action.getClass()==ActionConfig.FireEffect.class){
             var effect=(ActionConfig.FireEffect)action;
             if(effect.effect==null){importReport.add("Native null scene effect (no fire); presentation data may be stripped");return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());}
-            if(cm==null||!(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported scene effect location");
+            if(cm==null)throw new IOException("Scene effect requires native preparation");
             var config=effect.effect.a(cm,com.threerings.tudey.config.EffectConfig.class);
             if(config==null||!cosmeticEffect(config))throw new IOException("Unimplemented scene effect gameplay action or native subtype");
-            return Map.of("kind","source-effect","config",org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect)));
+            String model=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect));
+            if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("kind","source-effect","config",model);
+            if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank())return Map.of("kind","tagged-effect","config",model,"tag",tagged.tag);
+            throw new IOException("Unsupported scene effect location");
         }
         if(action!=null&&action.getClass()==ActionConfig.SpawnActor.class){
             var spawn=(ActionConfig.SpawnActor)action;
             if(spawn.actor==null)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
-            if(!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported scene spawn location");
             if(cm==null)throw new IOException("Scene spawn requires native actor preparation");
-            return preparedSpawn(cm,spawn.actor,false);
+            var prepared=new TreeMap<String,Object>(preparedSpawn(cm,spawn.actor,false));
+            if(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source)return prepared;
+            if(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank()){prepared.put("tag",tagged.tag);return prepared;}
+            throw new IOException("Unsupported scene spawn location");
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ActivateMonster spawn){
             if(cm==null||spawn.spawnTable==null
@@ -352,6 +372,7 @@ public final class SceneContentExport {
         if(action instanceof ActionConfig.DestroyActor destruction){
             if(destruction.endScene)throw new IOException("Scene-ending destruction is not implemented");
             if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","destroy","tag",tagged.tag);
+            if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Compound){var tags=new ArrayList<String>();destructionTags(destruction.target,tags,0);return Map.of("kind","destroy-many","tags",tags);}
             throw new IOException("Unsupported actor destruction target");
         }
         if(action instanceof ActionConfig.Delayed delay){
@@ -375,6 +396,12 @@ public final class SceneContentExport {
     private static boolean pawnTarget(com.threerings.tudey.config.TargetConfig target){
         return target instanceof com.threerings.tudey.config.TargetConfig.InstanceOf instance
             &&instance.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic");
+    }
+    private static void destructionTags(com.threerings.tudey.config.TargetConfig target,List<String> tags,int depth)throws IOException {
+        if(depth>16||tags.size()>256)throw new IOException("Scene destruction target graph exceeds bounds");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank()){if(tags.size()>=256)throw new IOException("Too many scene destruction targets");tags.add(tagged.tag);return;}
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Compound compound&&compound.targets!=null&&compound.targets.length<=256){for(var child:compound.targets)destructionTags(child,tags,depth+1);return;}
+        throw new IOException("Unsupported scene destruction target sibling");
     }
     static boolean cosmeticEffect(com.threerings.tudey.config.EffectConfig config){
         var action=config.action;
@@ -566,7 +593,7 @@ public final class SceneContentExport {
         if(handlers==null)return;
         if(depth>16)throw new IOException("Cyclic monster death handler references");
         for(var handler:handlers){
-            if(handler instanceof HandlerConfig.Shutdown shutdown)actions.add(FireCatalogExport.readAction(cm,shutdown.action));
+            if(handler instanceof HandlerConfig.Shutdown shutdown)actions.add(FireCatalogExport.readSceneAction(cm,shutdown.action));
             else if(handler instanceof HandlerConfig.Reference reference&&reference.handler!=null){
                 var config=cm.a(com.threerings.tudey.config.ParameterizedHandlerConfig.class,reference.handler);
                 if(config==null)throw new IOException("Unresolved monster death handler: "+reference.handler.getName());

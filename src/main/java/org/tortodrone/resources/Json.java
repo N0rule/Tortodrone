@@ -14,9 +14,11 @@ public final class Json {
         if(maxDepth<1||maxDepth>128)throw new IllegalArgumentException("Invalid JSON depth limit");
         return parse(text,maxDepth,128);
     }
-    public static Object parseCatalog(String text)throws IOException {return parse(text,32,50_000);}
-    private static Object parse(String text,int maxDepth,int maxFields)throws IOException {
-        var parser = new Parser(text,maxDepth,maxFields);
+    public static Object parseCatalog(String text)throws IOException {return parse(text,32,50_000,262144);}
+    private static Object parse(String text,int maxDepth,int maxFields)throws IOException {return parse(text,maxDepth,maxFields,65536);}
+    public static Object parse(String text,int maxDepth,int maxFields,int maxString)throws IOException {
+        if(maxDepth<1||maxDepth>128||maxFields<1||maxFields>50_000||maxString<1||maxString>4_000_000)throw new IllegalArgumentException("Invalid JSON limits");
+        var parser = new Parser(text,maxDepth,maxFields,maxString);
         Object value = parser.value(0);
         parser.space();
         if (parser.at != text.length()) throw new IOException("Trailing JSON data");
@@ -67,8 +69,8 @@ public final class Json {
         } else throw new IOException("Unsupported JSON value");
     }
     private static final class Parser {
-        private final String text; private final int maxDepth,maxFields; private int at, nodes;
-        Parser(String text,int maxDepth,int maxFields) { this.text = text;this.maxDepth=maxDepth;this.maxFields=maxFields; }
+        private final String text; private final int maxDepth,maxFields,maxString; private int at, nodes;
+        Parser(String text,int maxDepth,int maxFields,int maxString) { this.text = text;this.maxDepth=maxDepth;this.maxFields=maxFields;this.maxString=maxString; }
         void space() { while (at < text.length() && " \r\n\t".indexOf(text.charAt(at)) >= 0) at++; }
         IOException invalid() { return new IOException("Invalid JSON at offset " + at); }
         Object value(int depth) throws IOException {
@@ -133,7 +135,7 @@ public final class Json {
                         default -> throw invalid();
                     };
                 }
-                result.append(c); if (result.length()>65536) throw invalid();
+                result.append(c); if (result.length()>maxString) throw invalid();
             }
             throw invalid();
         }

@@ -103,6 +103,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
 
     private final SceneContent content;private final CollisionMap terrain;
     private final SceneActions actions;
+    private final Map<String,List<SceneContent.Entry>> anchors=new LinkedHashMap<>();
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
@@ -145,9 +146,16 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
-        var rules=new ArrayList<SceneActions.Rule>();
+        var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
         for(var binding:content.entries()){
-            if(binding.spec().text("kind","").equals("SceneTrigger")){
+            if(binding.spec().text("kind","").equals("SceneAnchor")){
+                if(!binding.key().matches("[0-9]+")||Integer.parseInt(binding.key())<1||!anchorKeys.add(binding.key())||!Float.isFinite(binding.x())||!Float.isFinite(binding.y())||!Float.isFinite(binding.rotation()))throw new IllegalArgumentException("Invalid scene anchor identity/transform");
+                var tags=binding.spec().text("source-tags","").split(",");if(tags.length>256)throw new IllegalArgumentException("Too many scene anchor tags");
+                for(String tag:tags)if(!tag.isBlank()){
+                    if(tag.length()>256||tag.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene anchor tag");
+                    anchors.computeIfAbsent(tag,key->new ArrayList<>()).add(binding);
+                }
+            }else if(binding.spec().text("kind","").equals("SceneTrigger")){
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
@@ -700,8 +708,25 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return conversationSink.start(definition,origin,stamp,target);
     }
     private boolean sourceEffect(SceneActions.SourceEffect operation,int stamp,String source){
-        var origin=scriptSource(source,stamp);if(origin==null)return false;
-        effectSink.fire(operation.config(),origin,stamp);return true;
+        if(operation.locationTag().isEmpty()){
+            var origin=scriptSource(source,stamp);if(origin==null)return false;
+            effectSink.fire(operation.config(),origin,stamp);
+        }else{
+            var origins=taggedSources(operation.locationTag(),stamp);if(origins.size()>256)return false;
+            for(var origin:origins)effectSink.fire(operation.config(),origin,stamp);
+        }
+        return true; // Native FireEffect succeeds even when its Tagged selection is empty.
+    }
+    private List<ActorState> taggedSources(String tag,int stamp){
+        var result=new ArrayList<ActorState>();
+        for(var binding:anchors.getOrDefault(tag,List.of()))result.add(entrySource(binding,stamp));
+        // Native Tagged maps retain a destroyed actor until its actual removal.
+        for(var entity:entities.values())if(Arrays.asList(entity.spec.text("tags","").split(",")).contains(tag))result.add(entity.snapshot());
+        return result;
+    }
+    private ActorState entrySource(SceneContent.Entry binding,int stamp){
+        var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,binding.key(),null,SceneStatus.State.NORMAL,0,0,true);
+        return new ActorState(0,0,"",0,stamp,binding.x(),binding.y(),binding.rotation(),0,0,0,stamp,binding.spec().config(),false,null,null,state);
     }
     boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
         if(content.conversations().get(definition.actor())!=definition||source==null)return false;
@@ -717,16 +742,24 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return operation.clear()||applied; // Native ClearStatus succeeds even with no targets.
     }
     private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source){
-        if(entities.size()>=4096||!source.startsWith("entry:"))return false;
-        String key=source.substring(6);
-        var origin=content.entries().stream().filter(entry->entry.key().equals(key)&&entry.spec().text("kind","").equals("SceneTrigger")).findFirst().orElse(null);
-        if(origin==null)return false;
+        List<ActorState> origins;
+        if(actor.locationTag().isEmpty()){
+            if(source.startsWith("entry:")){
+                String key=source.substring(6);var entry=content.entries().stream().filter(e->e.key().equals(key)).findFirst().orElse(null);
+                if(entry==null)return false;origins=List.of(entrySource(entry,stamp));
+            }else{var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
+        }else origins=taggedSources(actor.locationTag(),stamp);
+        if(origins.size()>256||entities.size()+origins.size()>4096)return false;
         var spec=new SceneContent.Spec(actor.fields());
-        var binding=new SceneContent.Entry("spawn:"+nextId,origin.x(),origin.y(),origin.rotation(),spec);
-        // Construction happens before publication; failed metadata cannot leave a partial actor.
-        var entity=new Entity(nextId,stamp,binding,spec,null,content);entity.scriptSource=source;
-        if(actor.activate()&&spec.integer("activate-time",0)>0)entity.activity=3;
-        nextId++;entities.put(entity.id,entity);return true;
+        var staged=new ArrayList<Entity>();int next=nextId;
+        for(var origin:origins){
+            var binding=new SceneContent.Entry("spawn:"+next,origin.x(),origin.y(),origin.rotation(),spec);
+            var entity=new Entity(next++,stamp,binding,spec,null,content);entity.scriptSource=source;
+            if(actor.activate()&&spec.integer("activate-time",0)>0)entity.activity=3;
+            staged.add(entity);
+        }
+        // Validate the whole selection before publication; a failed batch changes no actor IDs.
+        for(var entity:staged)entities.put(entity.id,entity);nextId=next;return true;
     }
     private boolean destroyTagged(String tag,int stamp,String source){
         boolean found=false;

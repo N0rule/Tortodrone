@@ -80,7 +80,6 @@ public final class ContentManager {
                     if(!actors.cycles().containsKey(spec.text("inverse",cycle.getKey())))throw new IOException("Missing inverse trap cycle: "+cycle.getKey());
                 }
                 for(var actor:actors.entries())if(actor.spec().fields().containsKey("cycle")&&!actors.cycles().containsKey(actor.spec().text("cycle","")))throw new IOException("Actor references missing trap cycle: "+actor.key());
-                for(var conversation:actors.conversations().values())if(actors.entries().stream().filter(a->a.spec().text("dialogue",a.spec().text("config","")).equals(conversation.actor())).count()!=1)throw new IOException("Missing or ambiguous NPC actor binding: "+conversation.actor());
                 for(var conversation:actors.conversations().values())for(var node:conversation.nodes().values())for(var response:node.responses())if(!response.station().isEmpty()&&town!=null&&town.station(response.station())==null)throw new IOException("NPC references missing Town station: "+response.station());
                 scenes.put(folder.getKey(),new SceneCatalog.MapScene(folder.getKey(),Integer.parseInt(p.getProperty("zone-id")),p.getProperty("zone-name"),p.getProperty("name"),p.getProperty("image"),p.getProperty("kind"),Integer.parseInt(p.getProperty("version")),x,y,Float.parseFloat(p.getProperty("spawn-rotation")),instances,collision,layout,ScenePortals.load(prepared.portals(),digest,collision),actors,SceneCollision.load(nativeDir,digest)));
             }

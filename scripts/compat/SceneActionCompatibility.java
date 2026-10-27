@@ -70,6 +70,12 @@ public final class SceneActionCompatibility {
         try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported shutdown mode accepted");}catch(IOException expected){}
         destroy.endScene=false;destroy.target=new TargetConfig.Source();
         try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported destruction target accepted");}catch(IOException expected){}
+        var destructionTargets=new TargetConfig.Compound();var absent=new TargetConfig.Tagged();absent.tag="missing";
+        destructionTargets.targets=new TargetConfig[]{absent,target,target};destroy.target=destructionTargets;
+        var many=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(destroy,0)));
+        if(!(many instanceof SceneActions.DestroyMany group)||!group.tags().equals(List.of("missing","door end","door end")))throw new AssertionError("Compound destruction lost order/multiplicity");
+        destructionTargets.targets=new TargetConfig[]{target,new TargetConfig.Source()};
+        try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported destruction sibling dropped");}catch(IOException expected){}
         var second=new TargetConfig.Tagged();second.tag="boss music";
         var targets=new TargetConfig.Compound();targets.targets=new TargetConfig[]{target,second,target};signal.target=targets;
         var multi=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(signal,0)));
@@ -99,6 +105,12 @@ public final class SceneActionCompatibility {
         if(!SceneContentExport.cosmeticEffect(cosmetic))throw new AssertionError("Native empty effect action rejected");
         cosmetic.action=signal;
         if(SceneContentExport.cosmeticEffect(cosmetic))throw new AssertionError("Gameplay effect accepted without executing its action");
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(new ActionConfig.None(),0))) instanceof SceneActions.Sequence noop)||!noop.actions().isEmpty())throw new AssertionError("Native None must succeed without an effect");
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        var cm=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var recursive=new ActionConfig.SpawnActor();recursive.actor=new com.threerings.config.ConfigReference<>("Character/NPC/Companions/Knights/Immortal/Sword Knight/Tier 1");
+        try{FireCatalogExport.readSceneAction(cm,recursive);throw new AssertionError("Recursive companion graph was embedded into projectile metadata");}catch(IOException expected){if(!expected.getMessage().contains("scene actor graph"))throw expected;}
+        if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
         delayed.variance=50;
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();

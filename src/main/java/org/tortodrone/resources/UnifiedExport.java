@@ -117,7 +117,7 @@ final class UnifiedExport {
     }
     private Map<String,Object> exportNpc(Properties original,String id,Path target)throws IOException {
         String prefix="dialogue."+id+".";var properties=section(original,prefix);String bundle=properties.get("bundle");if(bundle.equals("npc"))bundle="conversation";
-        var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model"))if(properties.containsKey(key))fixed.put(key,properties.get(key));fixed.put("bundle",bundle);
+        var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model","source-close-animation","music"))if(properties.containsKey(key))fixed.put(key,properties.get(key));fixed.put("bundle",bundle);
         String speaker=properties.get("name");
         if(game!=null&&speaker!=null&&!speaker.startsWith("~")&&!speaker.startsWith("%")&&!bundle(bundle).containsKey(speaker)){
             String found=null;for(String candidate:List.of("shop","conversation","mission"))if(bundle(candidate).containsKey(speaker)){if(found!=null){found=null;break;}found=candidate;}
@@ -129,7 +129,7 @@ final class UnifiedExport {
             var effects=new LinkedHashMap<String,Object>();for(String field:List.of("animation","transient","interface"))if(node.containsKey(field))effects.put(field,node.get(field));
             var nr=new LinkedHashMap<String,Object>();nr.put("properties",effects);nr.put("key",key);nr.put("defaultText",text);
             var responses=new ArrayList<Object>();var nativeResponses=new ArrayList<Object>();
-            for(int i=0;i<Integer.parseInt(node.get("responses"));i++) {String rp="response."+i+".";String rk=node.get(rp+"text"),rt=resolve(bundle,rk);var r=new LinkedHashMap<String,Object>();r.put("text",rt);String next=node.getOrDefault(rp+"destination","");if(next.isEmpty())r.put("close",true);else r.put("next",next);var action=new LinkedHashMap<String,Object>();for(String field:List.of("station","command"))if(!node.getOrDefault(rp+field,"").isEmpty())action.put(field,node.get(rp+field));if(!action.isEmpty())r.put("action",i);responses.add(r);nativeResponses.add(Map.of("key",rk,"defaultText",rt,"properties",action));}
+            for(int i=0;i<Integer.parseInt(node.get("responses"));i++) {String rp="response."+i+".";String rk=node.get(rp+"text"),rt=resolve(bundle,rk);var r=new LinkedHashMap<String,Object>();r.put("text",rt);String next=node.getOrDefault(rp+"destination","");if(next.isEmpty())r.put("close",true);else r.put("next",next);var action=new LinkedHashMap<String,Object>();for(String field:List.of("station","command","action"))if(!node.getOrDefault(rp+field,"").isEmpty())action.put(field,node.get(rp+field));if(!action.isEmpty())r.put("action",i);responses.add(r);nativeResponses.add(Map.of("key",rk,"defaultText",rt,"properties",action));}
             nr.put("responses",nativeResponses);nativeNodes.put(name,nr);nodes.put(name,Map.of("text",text,"responses",responses));
         }
         String file=id;

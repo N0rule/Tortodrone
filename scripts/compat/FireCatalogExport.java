@@ -17,6 +17,8 @@ public final class FireCatalogExport {
     private static final Map<String,Integer> UNSUPPORTED = new TreeMap<>();
     private static final Set<String> NESTED_FIRES = new HashSet<>();
     private static final Set<ConfigReference<ActorConfig>> NESTED_ACTORS = new HashSet<>();
+    private static boolean sceneActors;
+    private static final Set<String> SCENE_ACTORS=new HashSet<>();
     private static int actionCount, projectileCount;
     private static int damageRarity;
 
@@ -492,7 +494,17 @@ public final class FireCatalogExport {
         result.amount=amount;result.flags=source.flags;result.shouldReact=source.shouldReact;result.majorReact=source.majorReact;result.limiter=source.limiter;
         return argumentValue(result);
     }
-    private static ActorSpec actor(ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor) throws Exception {
+    /** Scene-owned entity graphs cannot embed recursive respawn actors in projectile metadata. */
+    static Action readSceneAction(ConfigManager manager,ActionConfig action)throws Exception {
+        boolean previous=sceneActors;sceneActors=true;
+        try{return readAction(manager,action);}finally{sceneActors=previous;if(!previous)SCENE_ACTORS.clear();}
+    }
+    private static ActorSpec actor(ConfigManager manager,ConfigReference<ActorConfig> reference,ActorConfig.Original actor)throws Exception {
+        if(!sceneActors)return actorBody(manager,reference,actor);
+        if(SCENE_ACTORS.size()>=16||!SCENE_ACTORS.add(reference.getName()))throw new IOException("Recursive or oversized scene actor graph: "+reference.getName());
+        try{return actorBody(manager,reference,actor);}finally{SCENE_ACTORS.remove(reference.getName());}
+    }
+    private static ActorSpec actorBody(ConfigManager manager, ConfigReference<ActorConfig> reference, ActorConfig.Original actor) throws Exception {
         String type; int fuse=0; float speed=0,maxStep=-1,ox=0,oy=0,height=0;Action detonation=null; OrbitSpec orbit=null;
         String refName=reference.getName();
         if (isNamedSubtype(actor.getClass(), "com.threerings.projectx.dungeon.config.DungeonActorConfig$CompoundOrbitalBullet")) {

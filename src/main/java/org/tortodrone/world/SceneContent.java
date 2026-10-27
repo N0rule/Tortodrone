@@ -62,6 +62,22 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
     public record Entry(String key,float x,float y,float rotation,Spec spec) { }
     public SceneContent { entries=List.copyOf(entries);scales=Map.copyOf(scales);conversations=Map.copyOf(conversations);stats=Map.copyOf(stats);items=Map.copyOf(items);cycles=Map.copyOf(cycles);statuses=Map.copyOf(statuses);mapIcons=List.copyOf(mapIcons); }
     public static SceneContent empty(){return new SceneContent(List.of(),Map.of());}
+    /** Placed NPCs own one actor binding; scene-started dialogues require reachable authored actions. */
+    public void validateConversations()throws IOException {
+        var pending=new ArrayDeque<String>();var reached=new HashSet<String>();
+        for(var entry:entries)if(entry.spec().text("kind","").equals("SceneTrigger"))pending.addAll(SceneActions.conversationIds(SceneActions.rule(entry).action()));
+        for(var conversation:conversations.values())if(!conversation.actor().startsWith("@conversation/")){
+            long count=entries.stream().filter(e->!Set.of("SceneTrigger","SceneAnchor").contains(e.spec().text("kind",""))&&e.spec().text("dialogue",e.spec().text("config","")).equals(conversation.actor())).count();
+            if(count!=1)throw new IOException("Missing or ambiguous NPC actor binding: "+conversation.actor());
+            pending.add(conversation.actor());
+        }
+        while(!pending.isEmpty()){
+            String id=pending.removeFirst();if(!reached.add(id))continue;
+            var definition=conversations.get(id);if(definition==null)throw new IOException("Missing scripted conversation: "+id);
+            for(var node:definition.nodes().values())for(var response:node.responses())if(response.action()!=null)pending.addAll(SceneActions.conversationIds(response.action()));
+        }
+        for(var conversation:conversations.values())if(conversation.actor().startsWith("@conversation/")&&!reached.contains(conversation.actor()))throw new IOException("Unreferenced scripted conversation: "+conversation.actor());
+    }
     public static SceneContent load(Path folder,String layoutHash)throws IOException {
         Path file=folder.resolve("content.properties");if(!Files.exists(file))return empty();
         if(Files.isSymbolicLink(file)||!Files.isRegularFile(file)||Files.size(file)>4_000_000)throw new IOException("Invalid scene content");
@@ -111,7 +127,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 icons.add(new MapIcon(icon,finite(Float.parseFloat(p.getProperty(prefix+"x"))),finite(Float.parseFloat(p.getProperty(prefix+"y")))));
             }
             if(icons.size()>2048)throw new IllegalArgumentException("Too many minimap icons");
-            return new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons));
+            var content=new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons));content.validateConversations();return content;
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid prepared scene content",invalid);}
     }
     private static float finite(float f){if(!Float.isFinite(f)||Math.abs(f)>1_000_000)throw new IllegalArgumentException("Invalid content number");return f;}
