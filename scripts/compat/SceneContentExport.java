@@ -231,6 +231,11 @@ public final class SceneContentExport {
                 else if(sensor instanceof HandlerConfig.Intersection each&&each.refractoryPeriod==0){event="signal";mask=each.mask;}
                 else throw new IOException("Unsupported area intersection timing");
                 ActionConfig action=sensor.action;
+                if(reference.getName().equals("Portals/Next Floor")){
+                    var restored=restoreNextFloorGuard(action);
+                    if(restored!=action)importReport.add("Restored archived NextFloor PawnLogic guard at "+entry.getKey()+" / "+hi);
+                    action=restored;
+                }
                 if(reference.getName().equals("Player Enter/Base")&&action instanceof ActionConfig.Conditional conditional&&conditional.elseAction==null
                         &&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source){
                     Object extra=reference.kW().get("Trigger Condition");
@@ -256,6 +261,18 @@ public final class SceneContentExport {
         if(condition instanceof com.threerings.tudey.config.ConditionConfig.InstanceOf instance)return instance.target instanceof com.threerings.tudey.config.TargetConfig.Activator&&instance.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic");
         if(condition instanceof com.threerings.tudey.config.ConditionConfig.All all){if(all.conditions==null)return false;for(var child:all.conditions)if(!pawnCondition(child,depth+1))return false;return true;}
         return false;
+    }
+    /** area.xml's exact stripped Next Floor guard: InstanceOf(PawnLogic, Activator). */
+    static ActionConfig restoreNextFloorGuard(ActionConfig action){
+        if(action instanceof ActionConfig.Conditional conditional&&conditional.elseAction==null
+                &&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all
+                &&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source
+                &&conditional.action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.NextFloor next
+                &&next.target instanceof com.threerings.tudey.config.TargetConfig.Activator){
+            var guard=new com.threerings.tudey.config.ConditionConfig.InstanceOf();guard.logicClass="com.threerings.tudey.server.logic.PawnLogic";guard.target=new com.threerings.tudey.config.TargetConfig.Activator();
+            var restored=new ActionConfig.Conditional();restored.condition=guard;restored.action=next;restored.elseAction=null;return restored;
+        }
+        return action;
     }
     /** Static tagged entry logics are target locations, never synthetic server actors. */
     private static void collectAnchors(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
@@ -361,6 +378,10 @@ public final class SceneContentExport {
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent event){
             var fields=Map.<String,Object>of("kind","progress-event","level",event.level,"progress",event.progress);
             org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+        }
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.NextFloor next){
+            if(!(next.target instanceof com.threerings.tudey.config.TargetConfig.Activator))throw new IOException("Unsupported NextFloor target");
+            return Map.of("kind","next-floor");
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
             if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");

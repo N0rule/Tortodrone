@@ -125,10 +125,22 @@ public final class SceneActionCompatibility {
         if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(progress,0))).equals(new SceneActions.ProgressEvent("tutorial","10_Move")))throw new AssertionError("Native analytics vocabulary lost");
         progress.level="";
         try{SceneContentExport.sceneAction(progress,0);throw new AssertionError("Unnamed progress event accepted");}catch(IOException expected){}
+        var nextFloor=new com.threerings.projectx.dungeon.config.DungeonActionConfig.NextFloor();
+        if(!(nextFloor.target instanceof TargetConfig.Activator)||!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(nextFloor,0))).equals(new SceneActions.NextFloor()))throw new AssertionError("Native NextFloor target/shape changed");
+        var strippedPortal=new ActionConfig.Conditional();var blank=new com.threerings.tudey.config.ConditionConfig.Tagged();blank.tag="";blank.target=new TargetConfig.Source();strippedPortal.condition=blank;strippedPortal.action=nextFloor;strippedPortal.elseAction=null;
+        var restoredPortal=(ActionConfig.Conditional)SceneContentExport.restoreNextFloorGuard(strippedPortal);
+        if(restoredPortal==strippedPortal||!(restoredPortal.condition instanceof com.threerings.tudey.config.ConditionConfig.InstanceOf pawn)||!pawn.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic")||!(pawn.target instanceof TargetConfig.Activator)||strippedPortal.condition!=blank)throw new AssertionError("Exact authored portal guard was not restored independently");
+        blank.tag="real guard";if(SceneContentExport.restoreNextFloorGuard(strippedPortal)!=strippedPortal)throw new AssertionError("Non-stripped portal condition overwritten");blank.tag="";
+        strippedPortal.elseAction=new ActionConfig.None();if(SceneContentExport.restoreNextFloorGuard(strippedPortal)!=strippedPortal)throw new AssertionError("Portal else branch dropped");strippedPortal.elseAction=null;
+        nextFloor.target=new TargetConfig.Source();
+        try{SceneContentExport.sceneAction(nextFloor,0);throw new AssertionError("Unsupported NextFloor target accepted");}catch(IOException expected){}
         if(args.length>1){
             var folder=java.nio.file.Path.of(args[1]);var properties=new Properties();
             try(var input=java.nio.file.Files.newInputStream(folder.resolve("map.properties"))){properties.load(input);}
             var content=org.tortodrone.world.SceneContent.load(folder,properties.getProperty("scene-sha256"));
+            var finalPortal=content.entries().stream().filter(e->e.key().equals("1943")&&e.spec().flag("scene-sensor",false)).findFirst().orElseThrow();
+            if(!SceneActions.rule(finalPortal).action().equals(new SceneActions.NextFloor()))throw new AssertionError("Original portal no longer performs NextFloor");
+            System.out.println("PASS: original area 1943 retains its pawn intersection and native Activator NextFloor action; no destination is embedded in its graph");
             for(String name:List.of("Intro","Meetup")){
                 var definition=content.conversations().get("@conversation/Tutorial/Rhendon "+name);
                 if(definition==null||!definition.initial().equals("part 1a")||!definition.nodes().get("part 1a").responses().getFirst().destination().equals("part 2a")

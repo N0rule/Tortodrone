@@ -99,6 +99,8 @@ public final class SceneSimulation {
         }
     }
     public record ConversationRequest(SceneConversation definition,ActorState source,int timestamp) { }
+    /** Membership-owned native NextFloor intent; this is not a completion receipt or travel grant. */
+    public record FloorAdvanceRequest(long sequence,ActorState source,int timestamp) { }
     public final class Membership implements AutoCloseable {
         private ActorState appearance;
         private final TownMovement movement;
@@ -241,7 +243,7 @@ public final class SceneSimulation {
             publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
             entered=true;start();}}
-        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
+        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();pendingAnimated=null;weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
             check();if(!entered||portal!=null||lift!=0||pendingItem!=0||!health.alive())return false;
@@ -303,6 +305,7 @@ public final class SceneSimulation {
                 weapons.effect(new org.tortodrone.character.StarterCatalog.Model("Player/Emergency Rez",Map.of()),actor(),stamp);
                 entities.reviveImpulse(actor(),stamp);
             }return;}
+            activeFloorAdvance=pendingFloorAdvance=null;
             if(movement.dead())return;
             weapons.cancelAttacks(appearance.id());
             entities.cancelClaims(appearance.id());
@@ -321,12 +324,22 @@ public final class SceneSimulation {
                     !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
         private ConversationRequest pendingConversation;
+        private FloorAdvanceRequest activeFloorAdvance,pendingFloorAdvance;
+        private long floorSequence;
+        public FloorAdvanceRequest takeFloorAdvance(){synchronized(SceneSimulation.this){check();var request=pendingFloorAdvance;pendingFloorAdvance=null;return request;}}
+        /** Revalidate the exact request after session-thread preflight; never trust a client token. */
+        public boolean ownsFloorAdvance(FloorAdvanceRequest request){synchronized(SceneSimulation.this){
+            return !detached&&members.get(appearance.id())==this&&entered&&health.alive()&&portal==null&&request!=null&&activeFloorAdvance==request;
+        }}
+        public boolean cancelFloorAdvance(FloorAdvanceRequest request){synchronized(SceneSimulation.this){
+            if(!ownsFloorAdvance(request))return false;activeFloorAdvance=pendingFloorAdvance=null;return true;
+        }}
         public ConversationRequest takeConversation(){synchronized(SceneSimulation.this){check();var request=pendingConversation;pendingConversation=null;return request;}}
         public boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){
             check();return entered&&entities.conversationResponse(definition,node,choice,source,appearance.id(),SceneClock.now());
         }}
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
-        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
+        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
@@ -380,6 +393,15 @@ public final class SceneSimulation {
         }});
         entities.conversations((definition,source,stamp,target)->{
             for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);
+            return true;
+        });
+        entities.floorAdvances((player,source,stamp)->{
+            var member=members.get(player.id());
+            if(member==null||!member.entered||member.detached||!member.health.alive()||member.portal!=null||!instance.map().kind().equals("level"))return false;
+            if(member.activeFloorAdvance==null){
+                var request=new FloorAdvanceRequest(++member.floorSequence,source,stamp);
+                member.activeFloorAdvance=member.pendingFloorAdvance=request;
+            }
             return true;
         });
         entities.effects(weapons::effect);

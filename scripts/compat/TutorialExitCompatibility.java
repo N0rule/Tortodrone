@@ -15,18 +15,21 @@ import org.tortodrone.protocol.*;
 public final class TutorialExitCompatibility {
     private static final String GIANT="Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant";
     private record Dialog(SceneConversation definition,ActorState source,int timestamp) { }
+    private record FloorAdvance(int player,ActorState source,int timestamp) { }
     private final SceneContent content;
     private final SceneEntities world;
     private final SceneWeapons weapons;
     private final SceneHealth health;
     private final TownMovement movement;
     private final List<Dialog> dialogs=new ArrayList<>();
+    private final List<FloorAdvance> floorAdvances=new ArrayList<>();
     private int now=1000,attacks;
     private java.util.function.IntSupplier attackCount=()->attacks;
     private boolean entranceTraversed;
     private TutorialExitCompatibility(SceneContent prepared,CollisionMap terrain,SceneCollision collision,org.tortodrone.resources.ContentRegistry defaults)throws Exception {
         content=prepared;
         world=new SceneEntities(content,terrain,collision);weapons=new SceneWeapons(terrain);weapons.staticCollision(collision);weapons.targets(world);weapons.catalog(defaults.fires());world.effects(weapons::effect);
+        floorAdvanceSink();
         health=new SceneHealth(content);
         world.conversations((definition,source,stamp,target)->{if(target!=0&&target!=219)throw new AssertionError("Wrong dialogue owner");dialogs.add(new Dialog(definition,source,stamp));return true;});
         world.pawnStatuses((id,operation,stamp)->{if(id!=219)return false;if(operation.clear()){health.clearStatus(operation.clearMask());return true;}return health.applyCondition(operation.condition(),operation.data(),stamp);});
@@ -48,9 +51,11 @@ public final class TutorialExitCompatibility {
     private TutorialExitCompatibility(SceneContent content,SceneEntities world,SceneWeapons weapons,SceneHealth health,TownMovement movement,
             SceneConversation opening,ActorState source,int stamp,java.util.function.IntSupplier attacks){
         this.content=content;this.world=world;this.weapons=weapons;this.health=health;this.movement=movement;now=stamp;attackCount=attacks;entranceTraversed=true;
+        floorAdvanceSink();
         dialogs.add(new Dialog(opening,source,stamp));
         world.conversations((definition,origin,time,target)->{if(target!=0&&target!=219)throw new AssertionError("Wrong dialogue owner");dialogs.add(new Dialog(definition,origin,time));return true;});
     }
+    private void floorAdvanceSink(){world.floorAdvances((player,source,stamp)->{floorAdvances.add(new FloorAdvance(player.id(),source,stamp));return true;});}
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
@@ -81,6 +86,7 @@ public final class TutorialExitCompatibility {
         if(!walk(11.5f,63.5f,10000)||!walk(13.5f,65.5f,10000))throw new AssertionError("Authored arena approach blocked at "+position());
         boolean escaped=walk(13.5f,90.5f,20000);
         if(escaped||movement.y()>=75.5f||openDoors()!=0)throw new AssertionError("Player passed the unopened native exit");
+        if(!floorAdvances.isEmpty())throw new AssertionError("Closed exit allowed premature native NextFloor activation");
         System.out.println("PASS: live-boss control walk blocked at "+position()+" by both original closed exit doors");
         if(!walk(13.5f,70,10000)||!walk(14.5f,65,10000)||!walk(boss.x(),boss.y()-1.75f,10000))throw new AssertionError("Legal return to sword range failed at "+position());
         int killTime=0;
@@ -117,7 +123,10 @@ public final class TutorialExitCompatibility {
         TudeySceneModel.AreaEntry portal=null;for(var area:scene.ci(TudeySceneModel.AreaEntry.class))if(area.getKey().equals(1943))portal=area;
         var circle=new ShapeConfig.Circle();circle.radius=ScenePortals.PAWN_RADIUS;
         if(portal==null||!portal.av(cm).b(circle.acP().d(new com.threerings.math.Transform2D(new Vector2f(movement.x(),movement.y()),0))))throw new AssertionError("Movement never reached the original final portal area");
-        System.out.println("PASS: "+(attackCount.getAsInt()-previousAttacks)+" production Proto Sword attack starts -> real Giant damage/death/removal -> complete captured 3306 graph -> exact 5000-ms door opening/closing dialogue -> normal movement to original portal 1943 at "+position());
+        if(floorAdvances.size()!=1||floorAdvances.getFirst().player()!=219||!floorAdvances.getFirst().source().entity().entrySource()
+                ||!floorAdvances.getFirst().source().entity().key().equals("1943")||floorAdvances.getFirst().timestamp()<removed+5000)throw new AssertionError("Original portal did not perform exactly one native NextFloor action for its activating pawn");
+        advanceTo(now+1000);if(floorAdvances.size()!=1)throw new AssertionError("Held portal intersection replayed NextFloor");
+        System.out.println("PASS: "+(attackCount.getAsInt()-previousAttacks)+" production Proto Sword attack starts -> real Giant damage/death/removal -> complete captured 3306 graph -> exact 5000-ms door opening/closing dialogue -> normal movement to original portal 1943 -> its actual NextFloor action exactly once at "+position());
         System.out.println("NOT VERIFIED: fresh knight creation"+(entranceTraversed?"":"/entrance traversal")+", Giant targeting/retaliation, complete squad behavior, NextFloor/Rescue Camp settlement, persistence and graphical playthrough. Fixture "+(entranceTraversed?"continues the same world/pawn from the authored entrance":"starts at the ambush strip")+" with an owned-equipment profile, without an account or network session.");
     }
     private ActorState pose(){return new ActorState(219,1001,"Fixture",0,1000,movement.x(),movement.y(),movement.rotation(),movement.direction(),movement.flags(),movement.activity(),movement.activityStarted(),new StarterCatalog.Model("Character/PC/Default",Map.of()),false,movement.combatState(),null);}

@@ -7,7 +7,9 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Delay,Sequence,Limited { }
+    /** Native PartyBase target Activator; routing and settlement belong to its server-owned party. */
+    public record NextFloor() implements Action { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
@@ -91,6 +93,7 @@ public final class SceneActions {
     }
     @FunctionalInterface public interface Conversations { boolean apply(Conversation operation,int stamp,String source,String activator); }
     @FunctionalInterface public interface Effects { boolean apply(SourceEffect operation,int stamp,String source); }
+    @FunctionalInterface public interface FloorAdvances { boolean apply(int stamp,String source,String activator); }
     @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
     @FunctionalInterface public interface SourcedSpawnActors { boolean apply(Spawn actor,int stamp,String source,String activator); }
@@ -126,6 +129,7 @@ public final class SceneActions {
     private final PawnStatuses pawnStatuses;
     private final Conversations conversations;
     private final Effects effects;
+    private final FloorAdvances floorAdvances;
     private final java.util.random.RandomGenerator random;
     private final PriorityQueue<Pending> pending=new PriorityQueue<>(Comparator.comparingLong(Pending::due).thenComparingLong(Pending::order));
     private long order,rejected;
@@ -148,6 +152,10 @@ public final class SceneActions {
         this(rules,signals,random,destroy,sourced(spawn),pawnStatuses,conversations,effects);
     }
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SourcedSpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects){
+        this(rules,signals,random,destroy,spawn,pawnStatuses,conversations,effects,(stamp,source,activator)->false);
+    }
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SourcedSpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects,FloorAdvances floorAdvances){
+        this.floorAdvances=Objects.requireNonNull(floorAdvances);
         this.effects=Objects.requireNonNull(effects);
         this.conversations=Objects.requireNonNull(conversations);
         this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
@@ -220,6 +228,7 @@ public final class SceneActions {
                 System.getLogger(SceneActions.class.getName()).log(System.Logger.Level.DEBUG,"Scene analytics: level={0}, progress={1}, stamp={2}, source={3}",event.level(),event.progress(),due,source);
                 yield true;
             }
+            case NextFloor ignored -> floorAdvances.apply(Math.toIntExact(due),source,activator);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case DestroyMany destruction -> {
                 boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
@@ -277,6 +286,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("next-floor".equals(kind)&&map.keySet().equals(Set.of("kind")))return new NextFloor();
         if("progress-event".equals(kind)&&map.keySet().equals(Set.of("kind","level","progress")))return new ProgressEvent(string(map.get("level")),string(map.get("progress")));
         if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));
         if("tagged-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","tag")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))),tag(map.get("tag")));

@@ -140,6 +140,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp); }
     private EffectSink effectSink=(config,source,stamp)->{};
     public void effects(EffectSink sink){effectSink=Objects.requireNonNull(sink);}
+    /** Simulation-only request sink. Never perform storage or network work in this callback. */
+    @FunctionalInterface public interface FloorAdvanceSink { boolean request(ActorState player,ActorState source,int stamp); }
+    private FloorAdvanceSink floorAdvanceSink=(player,source,stamp)->false;
+    public void floorAdvances(FloorAdvanceSink sink){floorAdvanceSink=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -159,7 +163,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor);
         // A placed station's interaction region and animated switch share an entry key.
         for(var zone:entities.values())if(zone.spec.flag("arsenal-zone",false))
             arsenalProps.put(zone,entities.values().stream().filter(e->e!=zone&&e.kind.equals("Switch")&&e.binding.key().equals(zone.binding.key())).toList());
@@ -708,6 +712,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(player==null)return true;target=player.id();
         }
         return conversationSink.start(definition,origin,stamp,target);
+    }
+    private boolean nextFloor(int stamp,String source,String activator){
+        var player=players.stream().filter(p->activator.equals("actor:"+p.id())).findFirst().orElse(null);
+        if(player==null)return true; // Native PartyBase succeeds with no resolved knight/party.
+        var origin=scriptSource(source,stamp);if(origin==null)return false;
+        return floorAdvanceSink.request(player,origin,stamp);
     }
     private boolean sourceEffect(SceneActions.SourceEffect operation,int stamp,String source){
         if(operation.locationTag().isEmpty()){
