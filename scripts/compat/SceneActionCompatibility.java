@@ -115,10 +115,31 @@ public final class SceneActionCompatibility {
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();
         try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported target accepted");}catch(IOException expected){}
+        var close=new com.threerings.projectx.config.ProjectXActionConfig.ClearDialog();close.target=new TargetConfig.Activator();
+        SceneContentExport.verifyConversationResponse(close,"part 2a",null,"clear-dialog-activator");
+        SceneContentExport.verifyConversationResponse(close,"",null,"");
+        try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"");throw new AssertionError("Unsourced closing response converted into a jump");}catch(IOException expected){}
+        close.target=new TargetConfig.Source();
+        try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"clear-dialog-activator");throw new AssertionError("Changed native response target accepted");}catch(IOException expected){}
+        var progress=new com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent();progress.level="tutorial";progress.progress="10_Move";
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(progress,0))).equals(new SceneActions.ProgressEvent("tutorial","10_Move")))throw new AssertionError("Native analytics vocabulary lost");
+        progress.level="";
+        try{SceneContentExport.sceneAction(progress,0);throw new AssertionError("Unnamed progress event accepted");}catch(IOException expected){}
         if(args.length>1){
             var folder=java.nio.file.Path.of(args[1]);var properties=new Properties();
             try(var input=java.nio.file.Files.newInputStream(folder.resolve("map.properties"))){properties.load(input);}
             var content=org.tortodrone.world.SceneContent.load(folder,properties.getProperty("scene-sha256"));
+            for(String name:List.of("Intro","Meetup")){
+                var definition=content.conversations().get("@conversation/Tutorial/Rhendon "+name);
+                if(definition==null||!definition.initial().equals("part 1a")||!definition.nodes().get("part 1a").responses().getFirst().destination().equals("part 2a")
+                        ||!definition.nodes().get("part 2a").responses().getFirst().destination().isEmpty()||definition.nodes().get("part 2a").responses().getFirst().action()!=null)throw new AssertionError("Captured Rhendon dialogue missing or altered: "+name);
+            }
+            for(String key:List.of("3393","3481","2955"))if(content.entries().stream().noneMatch(e->e.key().equals(key)&&e.spec().text("kind","").equals("SceneTrigger")))throw new AssertionError("Complete opening handler missing: "+key);
+            var button=content.entries().stream().filter(e->e.key().equals("2207")&&e.spec().text("kind","").equals("Switch")).findFirst().orElseThrow().spec();
+            if(!button.text("switch-mode","").equals("button-once")||!button.text("state.1.tag","").equals("door 1")||!button.text("state.1.signal","").equals("open"))throw new AssertionError("Native one-time button lost its authored gate action");
+            var shrubs=content.entries().stream().filter(e->e.spec().text("config","").equals("Block/Breakable/Haven")).toList();
+            if(shrubs.isEmpty()||shrubs.stream().anyMatch(e->!e.spec().text("damage-action","").equals("destroy")))throw new AssertionError("Native tutorial shrub destruction missing");
+            System.out.println("PASS: both capture-backed Rhendon dialogue edges and all three original opening/music handlers survive export");
             for(String key:List.of("496","497","511","2845","2846","2897","3321","3367","3381","3382","3383","3385")){
                 var entry=content.entries().stream().filter(e->e.key().equals(key)&&e.spec().text("kind","").equals("SceneTrigger")).findFirst().orElseThrow();
                 var operation=SceneActions.rule(entry).action();

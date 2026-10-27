@@ -50,6 +50,12 @@ public final class StockTools {
                 fixture="org.tortodrone.world.TutorialExitCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/TutorialExitCompatibility.java"));
             }
+            case "tutorial-opening-check" -> {
+                if(args.length!=4)throw new IllegalArgumentException("tutorial-opening-check expects game-directory archived-tutorial-scene exported-tutorial-directory");
+                fixture="org.tortodrone.world.TutorialOpeningCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/TutorialOpeningCompatibility.java"));
+                sources.add(project.resolve("scripts/compat/TutorialExitCompatibility.java"));
+            }
             case "item-actions" -> {
                 if(args.length!=3)throw new IllegalArgumentException("item-actions expects game-directory fresh-output-file");
                 fixture="SceneItemExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

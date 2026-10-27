@@ -7,7 +7,7 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,Delay,Sequence,Limited { }
     public record Signal(String tag,String name) implements Action {
         public Signal { text(tag);text(name); }
     }
@@ -18,12 +18,14 @@ public final class SceneActions {
     public record DestroyMany(List<String> tags) implements Action {
         public DestroyMany { tags=List.copyOf(tags);if(tags.size()>256)throw new IllegalArgumentException("Too many destruction targets");tags.forEach(SceneActions::text); }
     }
-    /** Prepared Monster or noncolliding global cosmetic Block at its handler's source entry. */
-    public record Spawn(Map<String,String> fields,boolean activate,String locationTag) implements Action {
+    /** Prepared Monster or noncolliding global cosmetic Block at Source, Tagged or Activator. */
+    public record Spawn(Map<String,String> fields,boolean activate,String locationTag,boolean activatorLocation) implements Action {
+        public Spawn(Map<String,String> fields,boolean activate,String locationTag){this(fields,activate,locationTag,false);}
         public Spawn(Map<String,String> fields,boolean activate){this(fields,activate,"");}
         public Spawn(Map<String,String> fields){this(fields,false);}
         public Spawn {
             Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag);
+            if(activatorLocation&&!locationTag.isEmpty())throw new IllegalArgumentException("Conflicting scene spawn locations");
             fields=Map.copyOf(fields);
             boolean monster="com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))&&"Monster".equals(fields.get("kind"));
             boolean cosmetic="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&"Global".equals(fields.get("shape"))&&!activate;
@@ -42,6 +44,10 @@ public final class SceneActions {
             var model=spec.model("source-shape");
             if(collision!=0)SceneCollision.pawnShape(spec,model==null?null:model.arguments().get("value"));
         }
+    }
+    /** Analytics vocabulary only: no mapping to knight progress/completion flags is established. */
+    public record ProgressEvent(String level,String progress) implements Action {
+        public ProgressEvent { text(level);text(progress); }
     }
     /** Native InstanceOf(PawnLogic) status operations over this scene's entered knights. */
     public record PawnStatus(StarterCatalog.Model condition,FireCatalog.DataValue data,int clearMask) implements Action {
@@ -87,9 +93,11 @@ public final class SceneActions {
     @FunctionalInterface public interface Effects { boolean apply(SourceEffect operation,int stamp,String source); }
     @FunctionalInterface public interface PawnStatuses { boolean apply(PawnStatus operation,int stamp,String source); }
     @FunctionalInterface public interface SpawnActors { boolean apply(Spawn actor,int stamp,String source); }
+    @FunctionalInterface public interface SourcedSpawnActors { boolean apply(Spawn actor,int stamp,String source,String activator); }
     @FunctionalInterface public interface DestroyActors { boolean apply(String tag,int stamp,String source); }
     @FunctionalInterface public interface Signals { boolean apply(String tag,String name,int stamp); }
     @FunctionalInterface public interface SourcedSignals { boolean apply(String tag,String name,int stamp,String source); }
+    private static SourcedSpawnActors sourced(SpawnActors spawn){Objects.requireNonNull(spawn);return (actor,stamp,source,activator)->spawn.apply(actor,stamp,source);}
     private static final class Node {
         final Action action;final List<Node> children;int remaining;
         Node(Action action){
@@ -114,7 +122,7 @@ public final class SceneActions {
     private final List<State> states;
     private final SourcedSignals signals;
     private final DestroyActors destroy;
-    private final SpawnActors spawn;
+    private final SourcedSpawnActors spawn;
     private final PawnStatuses pawnStatuses;
     private final Conversations conversations;
     private final Effects effects;
@@ -137,6 +145,9 @@ public final class SceneActions {
         this(rules,signals,random,destroy,spawn,pawnStatuses,conversations,(operation,stamp,source)->false);
     }
     public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects){
+        this(rules,signals,random,destroy,sourced(spawn),pawnStatuses,conversations,effects);
+    }
+    public SceneActions(List<Rule> rules,SourcedSignals signals,java.util.random.RandomGenerator random,DestroyActors destroy,SourcedSpawnActors spawn,PawnStatuses pawnStatuses,Conversations conversations,Effects effects){
         this.effects=Objects.requireNonNull(effects);
         this.conversations=Objects.requireNonNull(conversations);
         this.pawnStatuses=Objects.requireNonNull(pawnStatuses);
@@ -204,7 +215,11 @@ public final class SceneActions {
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
             case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
-            case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source);
+            case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source,activator);
+            case ProgressEvent event -> {
+                System.getLogger(SceneActions.class.getName()).log(System.Logger.Level.DEBUG,"Scene analytics: level={0}, progress={1}, stamp={2}, source={3}",event.level(),event.progress(),due,source);
+                yield true;
+            }
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case DestroyMany destruction -> {
                 boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
@@ -262,6 +277,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("progress-event".equals(kind)&&map.keySet().equals(Set.of("kind","level","progress")))return new ProgressEvent(string(map.get("level")),string(map.get("progress")));
         if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));
         if("tagged-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","tag")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))),tag(map.get("tag")));
         if("conversation".equals(kind)&&map.keySet().equals(Set.of("kind","id","activator"))&&map.get("activator") instanceof Boolean target)return new Conversation(string(map.get("id")),target);
@@ -274,8 +290,8 @@ public final class SceneActions {
             if(mask.doubleValue()!=mask.longValue())throw new IllegalArgumentException("Invalid status mask");
             return new PawnStatus(null,null,Math.toIntExact(mask.longValue()));
         }
-        if("spawn".equals(kind)&&(map.keySet().equals(Set.of("kind","fields","activate"))||map.keySet().equals(Set.of("kind","fields","activate","tag")))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
-            var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate,map.containsKey("tag")?tag(map.get("tag")):"");
+        if("spawn".equals(kind)&&(map.keySet().equals(Set.of("kind","fields","activate"))||map.keySet().equals(Set.of("kind","fields","activate","tag"))||map.keySet().equals(Set.of("kind","fields","activate","activator"))&&Boolean.TRUE.equals(map.get("activator")))&&map.get("activate") instanceof Boolean activate&&map.get("fields") instanceof Map<?,?> raw){
+            var fields=new HashMap<String,String>();for(var entry:raw.entrySet())fields.put(string(entry.getKey()),string(entry.getValue()));return new Spawn(fields,activate,map.containsKey("tag")?tag(map.get("tag")):"",Boolean.TRUE.equals(map.get("activator")));
         }
         if("destroy-many".equals(kind)&&map.keySet().equals(Set.of("kind","tags"))&&map.get("tags") instanceof List<?> tags)return new DestroyMany(tags.stream().map(SceneActions::string).toList());
         if("destroy".equals(kind)&&map.keySet().equals(Set.of("kind","tag")))return new Destroy(string(map.get("tag")));

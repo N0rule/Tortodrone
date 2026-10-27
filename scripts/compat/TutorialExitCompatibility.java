@@ -22,6 +22,8 @@ public final class TutorialExitCompatibility {
     private final TownMovement movement;
     private final List<Dialog> dialogs=new ArrayList<>();
     private int now=1000,attacks;
+    private java.util.function.IntSupplier attackCount=()->attacks;
+    private boolean entranceTraversed;
     private TutorialExitCompatibility(SceneContent prepared,CollisionMap terrain,SceneCollision collision,org.tortodrone.resources.ContentRegistry defaults)throws Exception {
         content=prepared;
         world=new SceneEntities(content,terrain,collision);weapons=new SceneWeapons(terrain);weapons.staticCollision(collision);weapons.targets(world);weapons.catalog(defaults.fires());world.effects(weapons::effect);
@@ -37,6 +39,17 @@ public final class TutorialExitCompatibility {
         var combat=new KnightCombat(defaults.weapons(),defaults.equipment());combat.equipment(profile);combat.attacks(start->{attacks++;weapons.attack(219,start);});movement.combat(combat);
         var tags=GearStats.damageTags(content.stats());weapons.damageModifiers((owner,start)->GearStats.damage(content.stats(),profile,item,defaults.town(),tags));
         world.advance(now,List.of(pose()));
+    }
+    /** Continue the very same production world/pawn after the entrance regression; no warp/reset. */
+    static void continueFrom(String game,byte[] layout,SceneContent content,SceneEntities world,SceneWeapons weapons,SceneHealth health,TownMovement movement,
+            SceneConversation opening,ActorState source,int stamp,java.util.function.IntSupplier attacks)throws Exception{
+        new TutorialExitCompatibility(content,world,weapons,health,movement,opening,source,stamp,attacks).run(game,layout);
+    }
+    private TutorialExitCompatibility(SceneContent content,SceneEntities world,SceneWeapons weapons,SceneHealth health,TownMovement movement,
+            SceneConversation opening,ActorState source,int stamp,java.util.function.IntSupplier attacks){
+        this.content=content;this.world=world;this.weapons=weapons;this.health=health;this.movement=movement;now=stamp;attackCount=attacks;entranceTraversed=true;
+        dialogs.add(new Dialog(opening,source,stamp));
+        world.conversations((definition,origin,time,target)->{if(target!=0&&target!=219)throw new AssertionError("Wrong dialogue owner");dialogs.add(new Dialog(definition,origin,time));return true;});
     }
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
@@ -58,9 +71,9 @@ public final class TutorialExitCompatibility {
         test.run(args[0],bytes);
     }
     private void run(String game,byte[] layout)throws Exception {
-        advanceTo(3000);var opening=dialogs.stream().filter(d->d.definition().actor().endsWith("Ambushed Knights A")).findFirst().orElseThrow();
+        advanceTo(3000);var opening=dialogs.stream().filter(d->d.definition().actor().endsWith("Ambushed Knights A")).findFirst().orElseThrow();int start=now,previousAttacks=attackCount.getAsInt();
         if(!world.conversationResponse(opening.definition(),"part 1a",0,opening.source(),219,now)||!world.conversationResponse(opening.definition(),"part 2a",0,opening.source(),219,now))throw new AssertionError("Original encounter response rejected");
-        advanceTo(11100);var boss=world.actors().stream().filter(a->a.config().name().equals(GIANT)).findFirst().orElseThrow();int bossId=boss.id();
+        advanceTo(start+8100);var boss=world.actors().stream().filter(a->a.config().name().equals(GIANT)).findFirst().orElseThrow();int bossId=boss.id();
         if(boss.entity().health()!=1||world.specification(bossId).number("health",0)!=1440)throw new AssertionError("Wrong native boss health");
         if(openDoors()!=0||health.status().modifiers().canMove()==false)throw new AssertionError("Fight entry doors/control differ");
         // The control walk is production movement against the unchanged native floor,
@@ -79,7 +92,7 @@ public final class TutorialExitCompatibility {
                 step(50,0,facing,0);
             }
         }
-        if(killTime==0)throw new AssertionError("Proto Sword input did not defeat the Giant; attacks="+attacks+" health="+boss(bossId).entity().health()+" at "+position());
+        if(killTime==0)throw new AssertionError("Proto Sword input did not defeat the Giant; attacks="+(attackCount.getAsInt()-previousAttacks)+" health="+boss(bossId).entity().health()+" at "+position());
         var dying=boss(bossId);int destroyed=dying.entity().destroyed();
         if(dying.activity()!=2||destroyed<=killTime||openDoors()!=0)throw new AssertionError("Native boss death/exit eligibility failed");
         while(boss(bossId)!=null)step(50,0,movement.rotation(),0);
@@ -104,8 +117,8 @@ public final class TutorialExitCompatibility {
         TudeySceneModel.AreaEntry portal=null;for(var area:scene.ci(TudeySceneModel.AreaEntry.class))if(area.getKey().equals(1943))portal=area;
         var circle=new ShapeConfig.Circle();circle.radius=ScenePortals.PAWN_RADIUS;
         if(portal==null||!portal.av(cm).b(circle.acP().d(new com.threerings.math.Transform2D(new Vector2f(movement.x(),movement.y()),0))))throw new AssertionError("Movement never reached the original final portal area");
-        System.out.println("PASS: "+attacks+" production Proto Sword attack starts -> real Giant damage/death/removal -> complete captured 3306 graph -> exact 5000-ms door opening/closing dialogue -> normal movement to original portal 1943 at "+position());
-        System.out.println("NOT VERIFIED: fresh knight creation/entrance traversal, Giant targeting/retaliation, complete squad behavior, NextFloor/Rescue Camp settlement, persistence and graphical playthrough. Fixture starts at the ambush strip with an owned-equipment profile, without an account or network session.");
+        System.out.println("PASS: "+(attackCount.getAsInt()-previousAttacks)+" production Proto Sword attack starts -> real Giant damage/death/removal -> complete captured 3306 graph -> exact 5000-ms door opening/closing dialogue -> normal movement to original portal 1943 at "+position());
+        System.out.println("NOT VERIFIED: fresh knight creation"+(entranceTraversed?"":"/entrance traversal")+", Giant targeting/retaliation, complete squad behavior, NextFloor/Rescue Camp settlement, persistence and graphical playthrough. Fixture "+(entranceTraversed?"continues the same world/pawn from the authored entrance":"starts at the ambush strip")+" with an owned-equipment profile, without an account or network session.");
     }
     private ActorState pose(){return new ActorState(219,1001,"Fixture",0,1000,movement.x(),movement.y(),movement.rotation(),movement.direction(),movement.flags(),movement.activity(),movement.activityStarted(),new StarterCatalog.Model("Character/PC/Default",Map.of()),false,movement.combatState(),null);}
     private ActorState boss(int id){return world.actors().stream().filter(a->a.id()==id).findFirst().orElse(null);}

@@ -334,6 +334,7 @@ public final class SceneContentExport {
             if(cm==null)throw new IOException("Scene spawn requires native actor preparation");
             var prepared=new TreeMap<String,Object>(preparedSpawn(cm,spawn.actor,false));
             if(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source)return prepared;
+            if(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Activator){prepared.put("activator",true);return prepared;}
             if(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank()){prepared.put("tag",tagged.tag);return prepared;}
             throw new IOException("Unsupported scene spawn location");
         }
@@ -356,6 +357,10 @@ public final class SceneContentExport {
                 return Map.of("kind","conversation","id",rules.getProperty("dialogue."+id+".actor"),"activator",start.target instanceof com.threerings.tudey.config.TargetConfig.Activator);
             }
             throw new IOException("Unverified scripted conversation: "+start.conversation.getName());
+        }
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent event){
+            var fields=Map.<String,Object>of("kind","progress-event","level",event.level,"progress",event.progress);
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
             if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");
@@ -670,7 +675,7 @@ public final class SceneContentExport {
                 out.put(prefix+"state.0.signal",Objects.toString(args.get("(Off Signal)"),""));out.put(prefix+"state.0.tag",Objects.toString(args.get("(Target Tag)"),""));
                 out.put(prefix+"state.2.signal",Objects.toString(args.get("(On Signal)"),""));out.put(prefix+"state.2.tag",Objects.toString(args.get("(Target Tag)"),""));
             }else for(int state=0;state<2;state++){
-                String name=mode.equals("button")?(state==0?"Off":"On"):"State "+state;
+                String name=(mode.equals("button")||mode.equals("button-once"))?(state==0?"Off":"On"):"State "+state;
                 Object signal=args.get("("+name+" Signal)");if(signal==null)signal=args.get(name+" Signal");if(state==1&&signal==null)signal=args.get("Start 1 Signal");
                 Object tag=args.get("("+name+" Tag)");if(tag==null)tag=args.get(name+" Tag");
                 out.put(prefix+"state."+state+".signal",Objects.toString(signal,""));out.put(prefix+"state."+state+".tag",Objects.toString(tag,""));
@@ -799,7 +804,7 @@ public final class SceneContentExport {
                     put(out,rp+"text",response.text);put(out,rp+"destination",rules.getProperty(rp+"destination",""));
                     if(script!=null){
                         String restored=rules.getProperty(rp+"action");String destination=rules.getProperty(rp+"destination","");
-                        verifyConversationResponse(response.action,destination,restored);
+                        try{verifyConversationResponse(response.action,destination,restored,rules.getProperty(rp+"stripped-action",""));}catch(IOException invalid){throw new IOException("Conversation "+reference+" / "+node.name+" / "+j+": "+invalid.getMessage(),invalid);}
                         if(restored!=null){org.tortodrone.world.SceneActions.parse(restored);put(out,rp+"action",restored);}
                     }
                 }
@@ -825,13 +830,23 @@ public final class SceneContentExport {
                 &&(jump.node.isEmpty()||jump.node.equals(initial)))return;
         throw new IOException("Scripted conversation initial action changed");
     }
-    private static void verifyConversationResponse(ActionConfig action,String destination,String restored)throws IOException {
+    static void verifyConversationResponse(ActionConfig action,String destination,String restored,String footprint)throws IOException {
+        if(!footprint.isEmpty()){
+            if(footprint.equals("clear-dialog-activator")&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear
+                    &&clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
+            throw new IOException("Sourced conversation response footprint changed");
+        }
         if(strippedConversationAction(action))return;
-        if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==1){verifyConversationResponse(compound.actions[0],destination,restored);return;}
+        // A terminal response already clears its own dialog through the production service.
+        if(destination.isEmpty()&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear
+                &&clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
+        if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==1){verifyConversationResponse(compound.actions[0],destination,restored,"");return;}
         if(!destination.isEmpty()&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump
                 &&jump.target instanceof com.threerings.tudey.config.TargetConfig.Activator&&jump.node.equals(destination))return;
         if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(action,0)))))return;
-        throw new IOException("Scripted conversation response changed; refusing to omit authored siblings");
+        throw new IOException("Scripted conversation response changed ("+(action==null?"null":action.getClass().getName())
+            +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump?", node="+jump.node+", target="+jump.target.getClass().getName():"")
+            +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear?", target="+clear.target.getClass().getName():"")+"); refusing to omit authored siblings");
     }
 
     static void writeTags(Map<String, String> out, String prefix, Object tagConfig)

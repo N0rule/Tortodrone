@@ -667,6 +667,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     &&e.spec.contains(e.x,e.y,e.rotation,other.x,other.y,other.spec.number("radius",0)));
             int state=pressed?2:0;
             if(state!=e.state)setSwitch(e,state,stamp);
+        }else if(mode.equals("button-once")){
+            if(e.state==0&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)))setSwitch(e,1,stamp);
         }else if(mode.equals("button")||mode.equals("damage-timed")){
             if(e.state!=0&&stamp>=e.nextSwitch)setSwitch(e,0,stamp);
             if(mode.equals("button")&&e.state==0&&stamp>=e.nextSwitch&&players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))){
@@ -741,15 +743,19 @@ public final class SceneEntities implements SceneWeapons.Targets {
         for(var player:players)applied=pawnStatus.apply(player.id(),operation,stamp)||applied;
         return operation.clear()||applied; // Native ClearStatus succeeds even with no targets.
     }
-    private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source){
+    private boolean spawnScripted(SceneActions.Spawn actor,int stamp,String source,String activator){
         List<ActorState> origins;
-        if(actor.locationTag().isEmpty()){
+        if(actor.activatorLocation()){
+            var origin=players.stream().filter(player->activator.equals("actor:"+player.id())).findFirst().orElse(null);
+            if(origin==null)origin=scriptSource(activator,stamp);
+            if(origin==null)return false;origins=List.of(origin);
+        }else if(actor.locationTag().isEmpty()){
             if(source.startsWith("entry:")){
                 String key=source.substring(6);var entry=content.entries().stream().filter(e->e.key().equals(key)).findFirst().orElse(null);
                 if(entry==null)return false;origins=List.of(entrySource(entry,stamp));
             }else{var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
         }else origins=taggedSources(actor.locationTag(),stamp);
-        if(origins.size()>256||entities.size()+origins.size()>4096)return false;
+        if(origins.isEmpty()||origins.size()>256||entities.size()+origins.size()>4096)return false;
         var spec=new SceneContent.Spec(actor.fields());
         var staged=new ArrayList<Entity>();int next=nextId;
         for(var origin:origins){

@@ -30,6 +30,7 @@ public final class TaggedSceneTargetsTest {
         check(world.actors().stream().filter(a->a.entity().destroyed()==now+100).count()==3&&world.actors().stream().allMatch(a->a.entity().health()==1),"duplicate/overlapping destruction targets publish once without combat damage");
         world.advance(now+101,List.of(player));check(world.actors().size()==1&&world.walkable(5,0,player.id()),"normal removal releases all spawned collisions");
         missing(terrain,player,now);
+        activator(terrain,now);
         bounded(terrain,player,now);
         var metadata=new HashMap<>(MONSTER);for(int i=0;i<150;i++)metadata.put("attack.0.metadata."+i,"retained");
         try{Json.parse(Json.stringify(metadata));throw new AssertionError("Ordinary JSON field bound was widened");}catch(java.io.IOException expected){}
@@ -45,7 +46,25 @@ public final class TaggedSceneTargetsTest {
     private static void missing(CollisionMap terrain,ActorState player,int now)throws Exception{
         var graph=limited(sequence(List.of(Map.of("kind","spawn","fields",MONSTER,"activate",false,"tag","absent"),Map.of("kind","tagged-effect","config",FireCatalog.modelJson(EFFECT),"tag","absent"),Map.of("kind","source-effect","config",FireCatalog.modelJson(EFFECT))),true));
         var world=new SceneEntities(new SceneContent(List.of(sensor("300",graph)),Map.of()),terrain);var effects=new SceneWeapons(terrain);world.effects(effects::effect);world.advance(now,List.of(player));
-        check(world.actors().isEmpty()&&effects.effects().size()==1&&effects.effects().getFirst().targetEntry().equals(300),"empty Tagged spawn/effect succeeds without falling back to Source");
+        check(world.actors().isEmpty()&&effects.effects().isEmpty(),"native empty Tagged spawn fails and stops the guarded compound without falling back to Source");
+        var effectsOnly=limited(sequence(List.of(Map.of("kind","tagged-effect","config",FireCatalog.modelJson(EFFECT),"tag","absent"),Map.of("kind","source-effect","config",FireCatalog.modelJson(EFFECT))),true));
+        var second=new SceneEntities(new SceneContent(List.of(sensor("301",effectsOnly)),Map.of()),terrain);var queue=new SceneWeapons(terrain);second.effects(queue::effect);second.advance(now,List.of(player));
+        check(queue.effects().size()==1&&queue.effects().getFirst().targetEntry().equals(301),"native empty Tagged FireEffect succeeds and runs the next guarded action without inventing a target");
+    }
+    private static void activator(CollisionMap terrain,int now)throws Exception{
+        var spawn=Map.of("kind","spawn","fields",MONSTER,"activate",false,"activator",true);
+        var graph=limited(Map.of("kind","delay","millis",100,"action",spawn));
+        var content=new SceneContent(List.of(sensor("350",graph)),Map.of());
+        var world=new SceneEntities(content,terrain);world.advance(now,List.of(player(0,0,now)));
+        world.advance(now+100,List.of(player(9,7,now+100),new ActorState(220,1002,"Peer",0,now+100,3,4,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()))));
+        check(world.actors().size()==1&&world.actors().getFirst().x()==9&&world.actors().getFirst().y()==7,"delayed Activator spawn resolves the original player's current authoritative transform, not the entry or a peer");
+        world.advance(now+200,List.of(player(0,0,now+200)));check(world.actors().size()==1,"one-time area activation cannot duplicate an Activator spawn");
+        var disconnected=new SceneEntities(content,terrain);disconnected.advance(now,List.of(player(0,0,now)));
+        disconnected.advance(now+100,List.of(new ActorState(220,1002,"Peer",0,now+100,3,4,0,0,0,new StarterCatalog.Model("Character/PC/Default",Map.of()))));
+        check(disconnected.actors().isEmpty(),"departed Activator never substitutes a peer or handler source");
+        for(var invalid:List.of(Map.of("kind","spawn","fields",MONSTER,"activate",false,"activator",false),Map.of("kind","spawn","fields",MONSTER,"activate",false,"activator",true,"tag","spots"))){
+            try{SceneActions.parse(Json.stringify(invalid));throw new AssertionError("Ambiguous Activator location accepted");}catch(java.io.IOException expected){}
+        }
     }
     private static void bounded(CollisionMap terrain,ActorState player,int now)throws Exception{
         var entries=new ArrayList<SceneContent.Entry>();entries.add(sensor("400",limited(sequence(List.of(Map.of("kind","spawn","fields",MONSTER,"activate",false,"tag","many"),Map.of("kind","source-effect","config",FireCatalog.modelJson(EFFECT))),true))));
