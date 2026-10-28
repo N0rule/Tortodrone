@@ -50,6 +50,7 @@ public final class CombatRenderingCheck {
     private final Path output;
     private final boolean peer;
     private final boolean trainingOnly;
+    private boolean readyRoomOnly;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
     private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly,itemsOnly;
@@ -122,7 +123,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -137,6 +138,7 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
+        probe.readyRoomOnly=Arrays.asList(args).contains("--ready-room-only");
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
@@ -430,6 +432,27 @@ public final class CombatRenderingCheck {
             }
         }
     }
+    private void readyRoomTick(long now)throws Exception{
+        if(app.CT()==null||app.Gu()==null)return;
+        if(stage==0&&app.CT().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dR").isInstance(app.Gu())&&!app.GF().mG()){
+            if(started==0)started=now;if(now-started<3_000_000_000L)return;
+            capture("ready-room");Object controller=new View(app.Gu()).acn();
+            controller.getClass().getMethod("a",Object.class,String.class,Object.class).invoke(controller,null,"town",null);
+            stage=1;started=now;System.out.println("CHECK: native Ready Room town action");
+        }else if(stage==1){
+            if(now-started>20_000_000_000L)throw new AssertionError("Ready Room return did not load Haven; zone="+app.CT().zoneId+" loading="+app.GF().mG());
+            if(!Class.forName("com.threerings.projectx.town.a.c").isInstance(app.Gu()))return;
+            var model=(com.threerings.tudey.data.TudeySceneModel)app.Gu().getClass().getMethod("Sn").invoke(app.Gu());
+            if(model!=null&&model.sceneId==1&&!app.GF().mG()&&new View(app.Gu()).PO()!=null&&new View(app.Gu()).PO().acU().vw()==app.CT().pawnId){
+                stage=2;started=now;
+            }
+        }else if(stage==2&&now-started>3_000_000_000L){
+                capture("ready-room-return-haven");finishImages();
+                var image=ImageIO.read(output.resolve("ready-room-return-haven.png").toFile());
+                if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
+                passed=done=true;System.out.println("PASS: stock graphical Ready Room town action returns to Haven and renders its controlled pawn");app.shutdown();
+        }
+    }
     private void tick(){
         if(done)return;
         try{
@@ -448,6 +471,7 @@ public final class CombatRenderingCheck {
                     +" view="+(current==null?"none":current.getClass().getName())+" loading="+app.GF().mG()
                     +(stage==20?konwayState(viewPawn()):""));
             }
+            if(readyRoomOnly){readyRoomTick(now);return;}
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;

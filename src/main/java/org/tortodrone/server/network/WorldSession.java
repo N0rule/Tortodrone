@@ -871,7 +871,12 @@ final class WorldSession implements AutoCloseable {
         }
         throw new SessionDecoder.Rejected("Unsupported interior party operation");
     }
-    synchronized boolean departingScene(int oid) { return !closed&&departedSceneOid!=0&&departedSceneOid==oid; }
+    synchronized boolean departingScene(int oid) {
+        // Returning from the client-local Ready Room can reuse the reserved town OID.
+        // Once that place is subscribed again its enteredPlace is current, not stale.
+        return !closed&&departedSceneOid!=0&&departedSceneOid==oid
+            &&(readyRoom||portalMove!=null||!subscribed||scene.oid()!=oid);
+    }
     synchronized boolean ownsTrade(int objectId){return trades!=null&&trades.owns(tradeMember,objectId);}
     void subscribeTrade(int objectId,short message)throws IOException {
         PlayerTrades broker;PlayerTrades.Member member;

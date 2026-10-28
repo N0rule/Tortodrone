@@ -55,8 +55,12 @@ public final class ReadyRoomSessionTest {
                     world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
                     move(world,entry.map().zone(),entry.map().id());
                     check(world.ownsScene(entry.oid())&&entry.simulation().playerCount()==initial+1,"return attaches exactly one owned pawn");
-                    world.subscribe((short)4);world.entered();
+                    check(world.departingScene(entry.oid()),"pre-subscription readiness from the reserved old OID remains stale");
+                    world.subscribe((short)4);
+                    check(!world.departingScene(entry.oid()),"ClientSession must route the newly subscribed town's enteredPlace even when the Ready Room reserved the same OID");
+                    world.entered();
                     move(world,ReadyRoom.ZONE,ReadyRoom.SCENE);
+                    check(world.departingScene(entry.oid()),"readiness for the departed world place is ignored while in the client-local room");
                     check(entry.simulation().playerCount()==initial&&!world.ownsScene(entry.oid()),"Ready Room travel removes the pawn and scene authorization");
                     refuse(()->world.entered());refuse(()->world.subscribe((short)5));
                 }
@@ -75,7 +79,10 @@ public final class ReadyRoomSessionTest {
                 world.select(knight.name(),RECEIVERS,true);
                 world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));
                 move(world,otherTown.zone(),otherTown.id());
-                world.subscribe((short)8);world.entered();
+                world.subscribe((short)8);
+                int place=registry.destination(otherTown.id(),characters.worldProfile(knight.name(),1).worldId()).oid();
+                check(!world.departingScene(place),"saved non-entry town readiness also reaches ClientSession instead of being discarded");
+                world.entered();
                 check(characters.lastTownScene(knight.id(),1)==otherTown.id(),"reconnect returns to the saved non-entry town");
             }
         }finally{try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
