@@ -75,6 +75,16 @@ public final class PartyRegistry {
         require(member);if(!member.party.automatic)return;
         remove(member,true);
     }
+    /** Tutorial gates create one private seat; they never borrow a social/training group. */
+    public synchronized void enterTutorial(Member member)throws IOException {
+        require(member);var party=member.party;
+        if(party.automatic||party.members.size()!=1)throw new IOException("The tutorial requires a private solo party");
+        // An offline social peer must not regain this now-private tutorial seat.
+        detached.values().removeIf(claim->claim.party==party);
+        if(party.inviteOnly&&!party.allowFriends&&!party.allowGuild&&!party.shared)return;
+        invalidate(member);party.inviteOnly=true;party.allowFriends=party.allowGuild=party.shared=false;
+        party.revision++;publish(party);
+    }
     private void require(Member member)throws IOException{if(member==null||online.get(member.worldId)!=member)throw new IOException("Party session is no longer current");}
     public synchronized View view(Member member)throws IOException{purge();require(member);return view(member.party);}
     private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic,party.inviteOnly,party.allowFriends,party.allowGuild);}

@@ -1,0 +1,122 @@
+package org.tortodrone.server.network;
+
+import java.io.*;
+import java.lang.reflect.*;
+import java.net.Socket;
+import java.nio.file.*;
+import java.util.*;
+import com.threerings.presents.dobj.*;
+import com.threerings.presents.net.*;
+import com.threerings.projectx.data.ServerObject;
+import com.threerings.projectx.dungeon.data.*;
+import org.tortodrone.account.Passwords;
+import org.tortodrone.character.*;
+import org.tortodrone.protocol.*;
+import org.tortodrone.resources.ContentManager;
+import org.tortodrone.storage.Database;
+import org.tortodrone.world.*;
+
+/** Original-map protocol oracle and premature-report/session rejection checks.
+ * This does not pretend to drive the opening encounters or a complete knight playthrough. */
+public final class TutorialFloorCompatibility {
+    public static void main(String[] args)throws Exception {
+        if(args.length!=2)throw new IllegalArgumentException("Usage: TutorialFloorCompatibility GAME DISPOSABLE_DEPLOYMENT_WITH_ORIGINAL_MAPS");
+        System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
+        var registry=ContentManager.load(Path.of(args[1])).createScenes();SceneRegistry.install(registry);
+        var route=registry.tutorial();check(route!=null,"exact original scene pair and entrance must be available");
+        check(route.source().version()==2008845103&&route.camp().version()==359&&route.entrance().id()==2017,"source revisions and native Camp entrance");
+        check(!route.camp().staticCollision().isEmpty(),"Camp collision is retained; rail primitives have a separate stock collision regression");
+        Path home=Files.createTempDirectory("tortodrone-tutorial-floor-oracle-");
+        try {
+            var db=new Database(home,true);int account=db.create("FloorOwner",new Passwords.Protection(new byte[16],new byte[32]),false);
+            var characters=new CharacterStore(db,account,"FloorOwner");
+            var knight=characters.create(new Knight(0,"Floor-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+            var profile=characters.worldProfile(knight.name(),1);
+            var parties=registry.parties();
+            try(var member=parties.join(1555,knight,profile,event->{})){
+                var scene=registry.destination(398,profile.worldId(),member);check(scene.tutorial()==route,"private instance owns the verified route");
+                var codec=new SessionCodec();var wire=new ByteArrayOutputStream();
+                append(wire,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+                append(wire,HandshakeCodec.authenticationResponse((short)2,true,"fixture","FloorOwner"));
+                append(wire,codec.server((short)3,true));
+                append(wire,codec.party((short)4,parties.view(member),scene));
+                var initialView=parties.view(member);parties.setInviteOnly(member,false);parties.setAllowFriends(member,true);parties.setAllowGuild(member,true);
+                var openView=parties.view(member);append(wire,codec.partyChanges(initialView,openView));
+                parties.enterTutorial(member);append(wire,codec.partyChanges(openView,parties.view(member)));
+                append(wire,codec.finalFloorReport(parties.view(member).oid()));
+                append(wire,codec.party((short)5,parties.view(member),scene,true));
+                var camp=registry.destination(217,profile.worldId(),member);
+                append(wire,codec.sceneMove(1555,(short)6,true,camp,registry.catalog()));
+                var reader=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));reader.qe();reader.qe();
+                var server=(ServerObject)((ObjectResponse<?>)reader.qe()).yk();
+                GateSummary gate=null;for(var candidate:server.gates)if((int)field(candidate,"_gateId")==397)gate=candidate;
+                check(gate!=null,"tutorial gate exists in native bootstrap");
+                check(field(gate,"_name").equals("m.tutorial_b")&&field(gate,"_icon").equals("queen")&&(int)field(gate,"_flags")==3&&(int)field(gate,"_tokens")==9,"captured tutorial gate identity and flags");
+                Object[] colors=(Object[])field(gate,"_colorizations");check(colors.length==2&&(int)field(colors[0],"colorization")==544&&(int)field(colors[1],"colorization")==799,"captured ordered gate colors");
+                var wheels=(GateSummary.Wheel[])field(gate,"_wheels");check(wheels.length==1&&wheels[0] instanceof GateSummary.Constant,"native stationary single-wheel gate");
+                var lengths=(float[])field(wheels[0],"_lengths");check(lengths.length==1&&lengths[0]==(float)(2*Math.PI)&&wheels[0].aD(0)==0,"one native full-circle wedge with valid index lookup");
+                boolean campPresent=false;for(var town:server.towns)if(town.defaultSceneId==217)campPresent=true;
+                check(campPresent,"Camp town is present in the bootstrap");
+                var party=(LevelPartyObject)((ObjectResponse<?>)reader.qe()).yk();
+                checkParty(party,false);
+                for(var child:((CompoundEvent)((EventNotification)reader.qe()).yj()).xE())child.b(party);
+                check(!party.inviteOnly&&party.allowFriends&&party.allowGuild,"boxed native party-setting attribute updates");
+                for(var child:((CompoundEvent)((EventNotification)reader.qe()).yj()).xE())child.b(party);
+                checkParty(party,false);
+                var compound=(CompoundEvent)((EventNotification)reader.qe()).yj();
+                check(compound.xE().size()==4,"exact final-floor transaction size");
+                String[] fields={"pendingFloorType","pendingFloorDepth","pendingFloorName","returnFloor"};
+                for(int i=0;i<fields.length;i++){
+                    var event=(AttributeChangedEvent)compound.xE().get(i);check(event.getName().equals(fields[i]),"native report event order "+fields[i]);event.b(party);
+                    if(i==2)check(party.pendingFloorType==LevelPartyObject.FloorType.NORMAL&&party.pendingFloorDepth==-1&&event.getValue()==null,"name event opens the report with already-current type/depth, including null name");
+                }
+                checkParty(party,true);
+                checkParty((LevelPartyObject)((ObjectResponse<?>)reader.qe()).yk(),true);
+                var move=(InvocationResponseEvent)((EventNotification)reader.qe()).yj();
+                check(Arrays.stream(move.yd()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Camp town scene config");
+                var model=Arrays.stream(move.yd()).filter(v->v instanceof com.threerings.tudey.data.TudeySceneModel).map(v->(com.threerings.tudey.data.TudeySceneModel)v).findFirst().orElseThrow();
+                check(model.sceneId==217&&model.version==359&&reader.available()==0,"native Camp callback carries the original scene/version without trailing bytes");
+                registry.release(scene,profile.worldId());
+            }
+            var socket=new RecordingSocket();
+            try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(),1556,1,m->{},registry)){
+                world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));
+                move(world,route.source().zone(),398);world.subscribeInteriorParty((short)10);world.subscribe((short)11);world.entered();
+                int party=parties.view(world.partyMemberSnapshot()).oid();
+                check(world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true))),"native reportComplete recognized without listener");
+                world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(false)));
+                check(characters.lastTownScene(knight.id(),1)==0&&characters.worldProfile(knight.name(),1).revision()==profile.revision(),"premature/repeated report cannot settle or save Camp");
+                check(!world.interiorPartyInvocation(new SessionDecoder.Invocation(party+1,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true))),"foreign party cannot report completion");
+                try{world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(1)));throw new AssertionError("Wrong native report type accepted");}catch(SessionDecoder.Rejected expected){}
+                move(world,route.camp().zone(),217);
+                var source=registry.destination(398,profile.worldId(),world.partyMemberSnapshot());
+                check(world.ownsScene(source.oid())&&characters.lastTownScene(knight.id(),1)==0,"direct Camp travel cannot substitute for the original exit");
+            }
+            check(registry.statuses().stream().noneMatch(s->s.templateId()==398),"disconnect releases private tutorial actors, instance and subscription");
+            // Independent persisted-return fixture, not a substitute for gameplay completion.
+            characters.completeTutorial(knight.id(),1,characters.worldProfile(knight.name(),1));
+            var returning=new RecordingSocket();
+            try(var output=new SessionOutput(returning);var world=new WorldSession(returning,characters,output,new SessionCodec(),1557,1,m->{},registry)){
+                world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),true);
+                var camp=registry.destination(217,profile.worldId());check(camp.simulation().playerCount()==0,"Ready Room reconnect does not create a Camp pawn");
+                world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(world,route.camp().zone(),217);
+                world.subscribe((short)15);world.entered();
+                var own=camp.simulation().snapshot().players().stream().filter(p->p.id()==profile.worldId()).findFirst().orElseThrow();
+                check(world.ownsScene(camp.oid())&&camp.simulation().playerCount()==1&&own.x()==.5f&&own.y()==-.5f,"saved Camp return attaches exactly one pawn at the original entrance transform");
+                check(characters.lastTownScene(knight.id(),1)==217,"Camp entry acknowledges the persisted destination");
+            }
+            check(registry.destination(217,profile.worldId()).simulation().playerCount()==0,"Camp reconnect fixture leaves no pawn or subscription");
+        }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}}
+        System.out.println("PASS: original 398/217 route; stock-reader tutorial GateSummary/LevelPartyObject, ordered final-floor report and original Camp callback; production session rejects premature/repeated/foreign/malformed completion and direct Camp travel; separate saved-Camp Ready Room return fixture attaches one pawn and cleans up");
+        System.out.println("NOT VERIFIED: full fresh-knight gameplay, real boss AI/retaliation, successful session handoff after combat, graphical tutorial/Camp rendering");
+    }
+    private static void checkParty(LevelPartyObject p,boolean pending){
+        check(p.gateId==397&&p.memberLimit==1&&p.depth==0&&p.floor==0&&p.difficulty.name().equals("MEDIUM")&&p.floorType==LevelPartyObject.FloorType.TUTORIAL&&p.inviteOnly&&!p.allowFriends&&!p.allowGuild&&!p.restricted&&!p.hasPickups&&!p.playFanfare&&!p.showLoot&&!p.showElevatorChoice,"native tutorial party shape and no fabricated reward presentation");
+        check(p.pendingFloorName==null&&p.pendingFloorDepth==(pending?-1:0)&&p.pendingFloorType==(pending?LevelPartyObject.FloorType.NORMAL:LevelPartyObject.FloorType.NO_DEPTH),"native pending final-floor state");
+    }
+    private static Object field(Object object,String name)throws Exception {for(Class<?> c=object.getClass();c!=null;c=c.getSuperclass())try{var f=c.getDeclaredField(name);f.setAccessible(true);return f.get(object);}catch(NoSuchFieldException missing){}throw new NoSuchFieldException(name);}
+    private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
+    private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
+    private static void move(WorldSession world,int zone,int scene)throws IOException {world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(zone,scene,0,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)12))));}
+    private static final class RecordingSocket extends Socket {private final OutputStream sink=OutputStream.nullOutputStream();@Override public OutputStream getOutputStream(){return sink;}}
+}

@@ -56,6 +56,11 @@ public final class StockTools {
                 sources.add(project.resolve("scripts/compat/TutorialOpeningCompatibility.java"));
                 sources.add(project.resolve("scripts/compat/TutorialExitCompatibility.java"));
             }
+            case "tutorial-floor-check" -> {
+                if(args.length!=3)throw new IllegalArgumentException("tutorial-floor-check expects game-directory disposable-deployment-with-original-maps");
+                fixture="org.tortodrone.server.network.TutorialFloorCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/TutorialFloorCompatibility.java"));
+            }
             case "item-actions" -> {
                 if(args.length!=3)throw new IllegalArgumentException("item-actions expects game-directory fresh-output-file");
                 fixture="SceneItemExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

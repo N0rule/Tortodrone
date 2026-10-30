@@ -218,6 +218,34 @@ public final class Database {
             return null;
         });
     }
+    /** Server-owned Crash Site settlement. Receipt and safe return commit together, once.
+     * No reward is granted: the available native evidence establishes only tutorial flag 32. */
+    public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision)throws IOException {
+        return write(c->{
+            requirePreferenceOwner(c,accountId,authRevision);
+            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
+            if(profile.worldId()!=worldId)throw new IOException("Tutorial ownership changed");
+            String receipt="world."+worldId+".tutorial-completed";
+            try(var s=c.prepareStatement("SELECT value FROM metadata WHERE key=?")){
+                s.setString(1,receipt);try(var r=s.executeQuery()){
+                    if(r.next()){
+                        if(r.getInt(1)!=1)throw new IOException("Invalid tutorial receipt");
+                        return profile; // A retry must not overwrite a later saved town.
+                    }
+                }
+            }
+            if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
+            try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
+                s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
+                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.CAMP);s.executeUpdate();
+            }
+            try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
+                s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
+                if(s.executeUpdate()!=1)throw new IOException("Tutorial settlement revision changed");
+            }
+            return WorldProfiles.load(c,accountId,knightId,authRevision);
+        });
+    }
     private static Identity identity(ResultSet r) throws SQLException {
         return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }

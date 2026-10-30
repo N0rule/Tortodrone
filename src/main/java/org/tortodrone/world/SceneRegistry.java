@@ -11,8 +11,11 @@ public final class SceneRegistry {
         private final int oid,index,partyOwner;
         private final SceneCatalog.MapScene map;
         private final SceneSimulation simulation;
+        private final TutorialRoute tutorial;
         public Instance(int oid,int index,SceneCatalog.MapScene map){this(oid,index,map,0);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;simulation=new SceneSimulation(this);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this(oid,index,map,partyOwner,null);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;simulation=new SceneSimulation(this);}
+        public TutorialRoute tutorial(){return tutorial;}
         public int partyOwner(){return partyOwner;}
         public int oid(){return oid;}
         public int index(){return index;}
@@ -20,6 +23,8 @@ public final class SceneRegistry {
         public SceneSimulation simulation(){return simulation;}
     }
     private final SceneCatalog catalog;
+    private final TutorialRoute tutorial;
+    public TutorialRoute tutorial(){return tutorial;}
     private final PartyRegistry parties=new PartyRegistry();
     public PartyRegistry parties(){return parties;}
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
@@ -56,7 +61,7 @@ public final class SceneRegistry {
     public int channelType(int oid){for(int base:channelZones.values()){if(oid==base)return 6;if(oid==base+1)return 7;}return -1;}
     public SceneChat channel(int oid){var channel=channels.get(oid);if(channel==null)throw new IllegalArgumentException("Unknown chat channel");return channel;}
     public SceneRegistry(SceneCatalog catalog) {
-        this.catalog=catalog;int oid=10;
+        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);int oid=10;
         int chatOid=1_500_000_000;
         for(int zone:catalog.scenes().stream().map(SceneCatalog.MapScene::zone).distinct().sorted().toList()) {
             channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
@@ -67,7 +72,7 @@ public final class SceneRegistry {
         var ordered=new ArrayList<>(catalog.scenes());ordered.remove(catalog.entry());ordered.add(0,catalog.entry());
         for(var map:ordered) {
             var copies=new ArrayList<Instance>();
-            for(int i=0;i<map.instances();i++)copies.add(new Instance(oid++,i,map));
+            for(int i=0;i<map.instances();i++)copies.add(new Instance(oid++,i,map,0,tutorial));
             instances.put(map.id(),List.copyOf(copies));
         }
     }
@@ -106,13 +111,18 @@ public final class SceneRegistry {
         var map=catalog.scene(scene);
         if(!map.town()) {
             if(worldId<1)throw new IOException("Invalid interior owner");
+            if(tutorial!=null&&tutorial.source()==map&&member!=null){
+                if(member.worldId!=worldId)throw new IOException("Foreign tutorial owner");
+                if(interiorOids.isEmpty()&&!interiors.containsKey(new InteriorKey(scene,worldId)))throw new IOException("Interior capacity is full; try again later");
+                parties.enterTutorial(member);
+            }
             boolean assigned=map.kind().equals("training")&&member!=null&&parties.owner(member,worldId)==0;
             if(map.kind().equals("training")&&member!=null)parties.enterTraining(member);
             int owner=map.kind().equals("training")&&member!=null?parties.owner(member,worldId):0;
             var key=new InteriorKey(scene,owner==0?worldId:-owner);var existing=interiors.get(key);
             if(existing!=null){interiorLeases.get(existing).add(worldId);return existing;}
             var oid=interiorOids.pollFirst();if(oid==null){if(assigned)parties.leaveTraining(member);throw new IOException("Interior capacity is full; try again later");}
-            var created=new Instance(oid,0,map,owner);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
+            var created=new Instance(oid,0,map,owner,tutorial);created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
         }
         return instance(scene,Math.floorMod(worldId,instances.get(scene).size()));
     }

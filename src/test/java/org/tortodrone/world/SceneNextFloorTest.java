@@ -27,11 +27,21 @@ public final class SceneNextFloorTest {
             var first=awaitRequest(one,frames);
             check(first.source().entity().entrySource()&&first.source().entity().key().equals("1943")&&first.source().x()==1&&first.source().y()==0&&first.sequence()==1,"native intersection preserves its exact entry identity, transform and request generation");
             check(one.ownsFloorAdvance(first)&&!peer.ownsFloorAdvance(first)&&!isolated.ownsFloorAdvance(first),"only the activating membership owns the request, including across scenes");
+            int reportStamp=Integer.MAX_VALUE-1000;
+            try{new FloorReport(peer,first,reportStamp);throw new AssertionError("Peer floor report accepted");}catch(IllegalArgumentException expected){}
+            var report=new FloorReport(one,first,reportStamp);
+            check(!report.ready(reportStamp)&&report.report(false,reportStamp)&&!report.report(true,reportStamp+1),"report is pending until a vote and duplicate votes cannot turn leave into immediate descent");
+            check(!report.ready(reportStamp+FloorReport.LEAVE_DELAY-1)&&report.ready(reportStamp+FloorReport.LEAVE_DELAY),"native leave vote waits 2400ms, including scene timestamp wrap");
+            report.finish();check(!report.valid()&&!report.ready(reportStamp+FloorReport.TIMEOUT),"finished floor report never settles twice");
+            var timeout=new FloorReport(one,first,reportStamp);
+            check(!timeout.ready(reportStamp+FloorReport.TIMEOUT-1)&&timeout.ready(reportStamp+FloorReport.TIMEOUT),"last-floor fallback waits the native 70000ms");
+            var immediate=new FloorReport(one,first,reportStamp);check(immediate.report(true,reportStamp)&&immediate.ready(reportStamp),"native continue report completes the last floor immediately");
             check(!one.ownsFloorAdvance(new SceneSimulation.FloorAdvanceRequest(first.sequence(),first.source(),first.timestamp())),"a reconstructed value cannot forge the server-owned request object");
             check(peer.takeFloorAdvance()==null&&inactive.takeFloorAdvance()==null&&isolated.takeFloorAdvance()==null,"no peer, unentered knight or other scene inherits the request");
             walk(one,frames,21,-1,(float)Math.PI);walk(one,frames,21,1,0);
             check(one.takeFloorAdvance()==null&&one.ownsFloorAdvance(first),"reentering an exit cannot enqueue a second settlement while its request is active");
             check(!peer.cancelFloorAdvance(first)&&one.cancelFloorAdvance(first)&&!one.ownsFloorAdvance(first),"only the owner can retire the exact preflight request");
+            check(!timeout.valid()&&!immediate.ready(reportStamp+FloorReport.TIMEOUT),"cancelled membership requests invalidate all reports");
             walk(one,frames,21,-1,(float)Math.PI);walk(one,frames,21,1,0);
             var second=awaitRequest(one,frames);check(second.sequence()>first.sequence()&&!one.ownsFloorAdvance(first),"a retried preflight gets a new generation and never revives its old token");
             one.pause();check(!one.ownsFloorAdvance(second)&&one.takeFloorAdvance()==null,"departure invalidates and clears pending floor work before travel publication");

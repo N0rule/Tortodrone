@@ -41,6 +41,22 @@ public class PartyRegistryTest {
             try(var again=member(automatic,1)){check(automatic.view(again).oid()!=group,"Training groups never hold a disconnected seat");}
         }
         var capacity=new PartyRegistry();var members=new ArrayList<PartyRegistry.Member>();
+        var tutorial=new PartyRegistry();
+        try(var a=member(tutorial,1);var b=member(tutorial,2)){
+            tutorial.invite(a,"Knight-B");int old=tutorial.view(a).oid();tutorial.enterTutorial(a);
+            var view=tutorial.view(a);check(view.inviteOnly()&&!view.allowFriends()&&!view.allowGuild()&&tutorial.owner(a,1)==0,"tutorial creates private solo gate settings without shared instance ownership");
+            refused(()->tutorial.respond(b,"PARTY_INV:"+old,1));refused(()->tutorial.joinParty(b,a,true));
+            tutorial.invite(a,"Knight-B");tutorial.respond(b,"PARTY_INV:"+old,1);refused(()->tutorial.enterTutorial(a));
+            tutorial.enterTraining(b);refused(()->tutorial.enterTutorial(b));
+        }
+        var interruptedTutorial=new PartyRegistry();
+        try(var a=member(interruptedTutorial,1);var b=member(interruptedTutorial,2)){
+            interruptedTutorial.invite(a,"Knight-B");int social=interruptedTutorial.view(a).oid();interruptedTutorial.respond(b,"PARTY_INV:"+social,1);b.close();
+            interruptedTutorial.enterTutorial(a);
+            try(var reconnect=member(interruptedTutorial,2)){
+                check(interruptedTutorial.view(reconnect).oid()!=social&&interruptedTutorial.view(a).members().size()==1,"an old disconnected social peer cannot rejoin the newly private tutorial seat");
+            }
+        }
         try{
             for(int id=1;id<=9;id++)members.add(member(capacity,id));var leader=members.getFirst();int oid=capacity.view(leader).oid();
             for(int i=1;i<8;i++){capacity.invite(leader,"Knight-"+(char)('A'+i));capacity.respond(members.get(i),"PARTY_INV:"+oid,1);}

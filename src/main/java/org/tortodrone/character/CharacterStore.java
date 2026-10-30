@@ -232,6 +232,10 @@ public final class CharacterStore {
     public void lastTownScene(int knightId,long authRevision,int scene)throws IOException {
         database.lastTownScene(accountId,knightId,authRevision,scene);
     }
+    public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected)throws IOException {
+        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid tutorial owner");
+        return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision());
+    }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
         if(database==null)throw new IOException("Preferences require SQLite storage");
         database.inspectionHidden(accountId,authRevision,hidden);
