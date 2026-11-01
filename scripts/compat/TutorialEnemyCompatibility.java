@@ -1,0 +1,62 @@
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
+import com.threerings.config.*;
+import com.threerings.tudey.config.ActionConfig;
+import org.tortodrone.character.StarterCatalog;
+import org.tortodrone.world.*;
+
+/** Native Intro Jelly config/actions on synthetic open terrain; not a level playthrough. */
+public final class TutorialEnemyCompatibility {
+    public static void main(String[] args)throws Exception {
+        var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
+        resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
+        var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Character/NPC/Monster/Slime/Jelly Cube (Intro)");
+        var action=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(action.fields());var policy=SceneTargeting.read(spec);
+        check(policy!=null&&policy.expansion()==5.9647f&&policy.range()==1.9997f&&policy.interval()==1999&&policy.attack()==0,"exact archive Intro Jelly targeting binding");
+        var content=new SceneContent(List.of(new SceneContent.Entry("intro",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var world=new SceneEntities(content,terrain);var weapons=new SceneWeapons(terrain);weapons.targets(world);
+        var health=new SceneHealth(content);var fires=new ArrayList<Integer>();int[] stamp={SceneClock.now()};
+        world.attacks((actor,fire)->{fires.add(stamp[0]);weapons.fire(fire,actor,stamp[0]);});
+        world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+        var player=player(219,6.69f,0);int enemy=world.actors().getFirst().id();
+        world.advance(stamp[0],List.of(player));
+        stamp[0]+=spec.integer("activate-time",0)+100;world.advance(stamp[0],List.of(player));stamp[0]+=50;world.advance(stamp[0],List.of(player));
+        check((world.actor(enemy).flags()&16)!=0,"native expanded monster shape acquires an intersecting knight: flags="+world.actor(enemy).flags()+" radius="+spec.number("radius",-1)+" shape="+spec.text("shape","")+" activity="+world.actor(enemy).activity());
+        for(int tick=0;tick<200&&fires.isEmpty();tick++){stamp[0]+=50;world.advance(stamp[0],List.of(player));weapons.advance(stamp[0],List.of(player));}
+        check(world.actor(enemy).x()>1&&fires.size()>0,"native jelly pursues and emits its actual Roundhouse fire graph");
+        // The knight closes to melee range through normal movement input. An attack
+        // start at maximum targeting range need not hit a retreating/stationary edge.
+        var movement=new TownMovement(terrain,player.x(),player.y(),0);movement.resetInput(stamp[0]);
+        movement.dynamicPenetration((x,y)->world.penetration(x,y,219));
+        for(int tick=0;tick<240&&health.state().current()==200;tick++){
+            stamp[0]+=50;float dx=world.actor(enemy).x()-movement.x(),dy=world.actor(enemy).y()-movement.y();
+            float heading=(float)Math.atan2(dy,dx);int flags=Math.hypot(dx,dy)>1.1?1:0;
+            check(movement.accept(stamp[0],heading,heading,flags,stamp[0],stamp[0],stamp[0]),"owned knight movement intent accepted");movement.advance(stamp[0],stamp[0]);
+            player=new ActorState(219,1001,"Fixture",0,1,movement.x(),movement.y(),movement.rotation(),movement.direction(),movement.flags(),new StarterCatalog.Model("Player",Map.of()));
+            world.advance(stamp[0],List.of(player));weapons.advance(stamp[0],List.of(player));
+        }
+        if(health.state().current()==200){
+            System.out.println("DIAGNOSTIC: enemy="+world.actor(enemy).x()+","+world.actor(enemy).y()+" player="+player.x()+","+player.y()+" fires="+fires);
+            for(var key:action.fields().keySet())if(key.startsWith("attack.0.fire.")&&key.endsWith("action"))System.out.println(key+"="+action.fields().get(key));
+        }
+        check(health.state().current()<200,"original Roundhouse damages the player through SceneWeapons/SceneEntities/SceneHealth");
+        var retained=player(219,30,0);stamp[0]+=50;world.advance(stamp[0],List.of(retained));
+        check((world.actor(enemy).flags()&16)!=0,"native empty release condition retains a living acquired target outside acquisition range");
+        world.playerActive(id->false);stamp[0]+=50;world.advance(stamp[0],List.of(retained));
+        check((world.actor(enemy).flags()&16)==0,"departed knight cannot remain targeted");
+        var control=new SceneEntities(content,terrain);control.advance(stamp[0],List.of(player(220,6.71f,0)));stamp[0]+=50;control.advance(stamp[0],List.of(player(220,6.71f,0)));
+        check((control.actors().getFirst().flags()&16)==0,"outside native acquisition expansion does not acquire");
+        System.out.println("PASS: original Intro Jelly -> sourced targeting -> collision/speed pursuit -> native Roundhouse graph -> real player damage; target retention, departure and acquisition-boundary controls (synthetic terrain)");
+    }
+    private static ActorState player(int id,float x,float y){return new ActorState(id,1001,"Fixture",0,1,x,y,0,0,0,new StarterCatalog.Model("Player",Map.of()));}
+    private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}
+    private static CollisionMap open()throws Exception {
+        Path file=Files.createTempFile("tortodrone-enemy-open-",".gz");
+        try {try(var out=new DataOutputStream(new GZIPOutputStream(Files.newOutputStream(file)))){out.writeInt(0x54445731);out.writeInt(256);out.writeInt(256);out.writeFloat(-64);out.writeFloat(-64);out.writeFloat(.5f);byte[] cells=new byte[8192];Arrays.fill(cells,(byte)255);out.write(cells);}return CollisionMap.read(file);}
+        finally{Files.delete(file);}
+    }
+}

@@ -14,6 +14,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         boolean claimTaken,ignited,scriptDestroyed;
         String scriptSource="";
         final SceneMovementScript script;
+        final SceneTargeting targeting;
+        final SceneWander wander;
+        int wanderPhase,wanderNext;float wanderRotation;
+        final Map<Integer,Threat> victims;
+        private record Threat(int hits,float damage) { }
         int scriptStep,scriptStarted=Integer.MIN_VALUE;ActorState scriptGoal;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
@@ -34,7 +39,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
-            script=SceneMovementScript.read(spec);
+            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);
+            if(script!=null&&(targeting!=null||wander!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
+            victims=targeting==null?Map.of():new LinkedHashMap<>();
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
             interactive=content.conversations().containsKey(spec.text("dialogue",config.name()))||spec.fields().containsKey("town-station")||spec.fields().containsKey("town-kind");
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
@@ -112,6 +119,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
     private final Map<Entity,List<Entity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
+    private final java.util.random.RandomGenerator random;
     private record Link(Entity entity,int stamp,boolean ghost) { }
     private final ArrayDeque<Link> links=new ArrayDeque<>();
     public record PlayerHit(int actor,Object damage,int timestamp,int source,float multiplier) {
@@ -154,7 +162,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
     }
-    public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){
+    public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){this(content,terrain,staticCollision,new Random());}
+    SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random){
+        this.random=Objects.requireNonNull(random);
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
         var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
         for(var binding:content.entries()){
@@ -169,7 +179,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 try{rules.add(SceneActions.rule(binding));}catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid scene handler",invalid);}
             }else spawn(binding,binding.spec(),null,stamp);
         }
-        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},new Random(),this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
+        actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
         boolean startup=false;
         for(var entry:content.entries())if(entry.spec().flag("scene-startup",false)){startup=true;actions.signal(entry.spec().text("watch-tag",""),"startup",stamp,"entry:"+entry.key());}
         if(startup)actions.advance(stamp);
@@ -586,18 +596,53 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(Math.abs(delta)<.0001f){e.rotation=e.direction=target;return true;}
         e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return false;
     }
+    private void wander(Entity e,int stamp,float elapsed){
+        if(e.activity!=0||!e.status.state().modifiers().canMove())return;
+        boolean outside=Math.hypot(e.x-e.binding.x(),e.y-e.binding.y())>e.wander.radius();
+        float inward=(float)Math.atan2(e.binding.y()-e.y,e.binding.x()-e.x);
+        boolean away=Math.abs(Math.IEEEremainder(inward-e.rotation,2*Math.PI))>Math.PI/2;
+        if(e.wanderPhase==0||e.wanderPhase==2&&(stamp>=e.wanderNext||outside&&away)){
+            // Wander/Base uses uniform [-pi,pi] direction changes and no pauses.
+            // A full-circle uniform turn has the same law around any reflection base.
+            e.wanderRotation=(float)(random.nextDouble()*2*Math.PI-Math.PI);e.wanderPhase=1;e.flags&=~2;
+        }
+        if(e.wanderPhase==1){
+            if(!e.status.state().modifiers().canRotate())return;
+            float delta=(float)Math.IEEEremainder(e.wanderRotation-e.rotation,2*Math.PI),step=e.wander.turnRate()*elapsed;
+            e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);
+            if(Math.abs(delta)>step+.0001f)return;
+            e.wanderPhase=2;e.wanderNext=stamp+e.wander.evaluation();
+        }
+        float step=e.speed*e.status.state().modifiers().speed()*elapsed;
+        if(moveEntity(e,e.x+(float)Math.cos(e.direction)*step,e.y+(float)Math.sin(e.direction)*step))e.flags|=2;
+        else {e.flags&=~2;e.wanderPhase=0;}
+    }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> players){
-        float distance=e.spec.number("acquire-distance",0);if(distance<=0&&e.activity<4)return;
-        if(stamp>=e.nextAcquire){
+        float distance=e.spec.number("acquire-distance",0);if(distance<=0&&e.targeting==null&&e.wander==null&&e.activity<4)return;
+        if(e.targeting!=null&&e.activity==3)return;
+        if(e.targeting!=null){
+            e.victims.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id&&playerActive.test(id)&&playerTargetable.test(id)));
+            if(stamp>=e.nextAcquire){
+                for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())
+                        &&e.spec.contains(e.x,e.y,e.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS+e.targeting.expansion())&&e.victims.size()<256)e.victims.putIfAbsent(player.id(),new Entity.Threat(0,0));
+                double best=Double.NEGATIVE_INFINITY;e.target=0;
+                for(var player:players){var threat=e.victims.get(player.id());if(threat==null)continue;
+                    double rank=10.0*threat.hits()+10.0*threat.damage()-Math.max(0,Math.hypot(player.x()-e.x,player.y()-e.y)-ScenePortals.PAWN_RADIUS);
+                    if(rank>best){best=rank;e.target=player.id();}
+                }
+                e.nextAcquire=stamp+e.targeting.evaluation();
+            }
+        }else if(stamp>=e.nextAcquire){
             float nearest=distance;e.target=0;
             for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
             e.nextAcquire=stamp+e.spec.integer("acquisition-interval",0);
         }
         ActorState target=players.stream().filter(p->p.id()==e.target&&playerActive.test(p.id())&&playerTargetable.test(p.id())).findFirst().orElse(null);
         float nearest=target==null?Float.POSITIVE_INFINITY:(float)Math.hypot(target.x()-e.x,target.y()-e.y);
-        e.flags=target==null?0:16;
+        if(e.targeting==null)e.flags=target==null?0:16;
+        else {e.flags&=~18;if(target!=null)e.flags|=16;}
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
-        int slot=e.activity>=4?e.activity-4:e.spec.integer("attack",-1);String prefix="attack."+slot+".";
+        int slot=e.activity>=4?e.activity-4:(e.targeting==null?e.spec.integer("attack",-1):e.targeting.attack());String prefix="attack."+slot+".";
         var modifiers=e.status.state().modifiers();
         if(!modifiers.canAttack()||modifiers.shocked()){
             if(e.activity>=4){e.activity=0;e.fired.clear();}
@@ -621,14 +666,26 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(stamp-e.activityStarted>=Math.round(e.spec.integer(prefix+"clear",0)/e.attackSpeed))e.activity=0;
             return;
         }
-        if(target!=null&&e.activity==0&&slot>=0&&stamp>=e.nextAttack&&nearest<=e.spec.number("attack-distance",0)&&modifiers.attackSpeed()>0
+        if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
+        if(target!=null)e.wanderPhase=0;
+        float attackDistance=e.targeting==null?nearest:Math.max(0,nearest-ScenePortals.PAWN_RADIUS);
+        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targeting.range();
+        if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
+            if(e.targeting!=null&&modifiers.canRotate()){
+                float angle=(float)Math.atan2(target.y()-e.y,target.x()-e.x),delta=(float)Math.IEEEremainder(angle-e.rotation,2*Math.PI);
+                if(Math.abs(delta)>e.targeting.turnSnap()+.001f){
+                    float step=e.spec.number("turn-rate",0)*elapsed;
+                    e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return;
+                }
+            }
             if(beginAttack(e,slot,stamp)){
                 if(modifiers.canRotate())e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
-                e.nextAttack=stamp+Math.round(e.spec.integer("attack-interval",0)/e.attackSpeed);
+                e.nextAttack=stamp+Math.round((e.targeting==null?e.spec.integer("attack-interval",0):e.targeting.interval())/e.attackSpeed);
             }
             return;
         }
+        if(e.targeting!=null&&attackDistance<=attackRange)return;
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
         float tx=target.x(),ty=target.y();
         if(!entitySegment(e,e.x,e.y,tx,ty)){
@@ -981,6 +1038,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Monster")){
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
+                    if(e.targeting!=null&&players.stream().anyMatch(p->p.id()==owner&&playerActive.test(owner)&&playerTargetable.test(owner))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
+                        var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
+                        e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;
+                    }
                     applyImpulse(e,region,x,y,rotation,stamp);
                     if(e.health==0)e.status.clear();
                     int sourceId=source!=null&&(source.kind.equals("DungeonLift")||source.kind.equals("Bomb"))?source.owner:owner;

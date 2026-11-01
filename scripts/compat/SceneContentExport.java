@@ -730,7 +730,7 @@ public final class SceneContentExport {
     private static void writeMonster(ConfigManager cm, Map<String, String> out, String prefix,
                                      Object original) throws Exception {
         SceneMonsterExport.export(cm,out,prefix,(com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster)original);
-        for (String name : List.of("showHealth", "minReactPercent", "reactTime", "deathTime", "activateTime")) {
+        for (String name : List.of("showHealth", "minReactPercent", "reactTime", "deathTime", "activateTime", "turnRate")) {
             addOptional(out, prefix + kebab(name), field(original, name));
         }
         Object healthScale = field(original, "healthScale");

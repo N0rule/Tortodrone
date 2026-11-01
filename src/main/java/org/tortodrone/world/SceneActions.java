@@ -47,6 +47,8 @@ public final class SceneActions {
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
             var script=SceneMovementScript.read(spec);
+            var targeting=SceneTargeting.read(spec);var wander=SceneWander.read(spec);
+            if((targeting!=null||wander!=null)&&(!monster||script!=null))throw new IllegalArgumentException("Conflicting native targeting actor");
             if(script!=null&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
             if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");
             for(String key:fields.keySet())if(key.endsWith(".chain-next")){
