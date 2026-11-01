@@ -33,6 +33,9 @@ import com.threerings.tudey.data.TudeySceneModel;
 public final class SceneContentExport {
     private static Properties rules;
     private static final List<String> importReport=new ArrayList<>();
+    private record Startup(String key,int handler,float x,float y,float rotation,Map<String,Object> action) { }
+    private static final List<Startup> startups=new ArrayList<>();
+    private static com.threerings.projectx.dungeon.data.LevelSceneConfig levelContext;
     private static final Map<String,com.threerings.projectx.config.ProjectXActionConfig.StartConversation> scriptedConversations=new TreeMap<>();
     private SceneContentExport() { }
 
@@ -48,7 +51,8 @@ public final class SceneContentExport {
         Path target = output.resolve("content.properties");
         if (Files.exists(target)) throw new IOException("Refusing to replace content.properties");
 
-        importReport.clear();scriptedConversations.clear();
+        importReport.clear();scriptedConversations.clear();startups.clear();
+        levelContext=scene.adD() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
         try(var in=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(in);}
@@ -76,6 +80,11 @@ public final class SceneContentExport {
             putFloat(values, prefix + "rotation", binding.rotation());
             put(values, prefix + "config", binding.actorReference().getName());
             writeActor(cm, values, prefix, binding.actorReference());
+        }
+        for(var startup:startups){
+            String index=Integer.toString(indexes.size()),p="entry."+index+".";indexes.add(index);
+            var fields=Map.ofEntries(Map.entry("kind","SceneTrigger"),Map.entry("config","@startup"),Map.entry("source-key",startup.key()),Map.entry("state-key",startup.key()+":startup:"+startup.handler()),Map.entry("event","signal-start"),Map.entry("watch-tag","startup:"+startup.key()+":"+startup.handler()),Map.entry("signal","startup"),Map.entry("scene-startup","true"),Map.entry("action",org.tortodrone.resources.Json.stringify(startup.action())));
+            fields.forEach((k,v)->values.put(p+k,v));values.put(p+"x",Float.toString(startup.x()));values.put(p+"y",Float.toString(startup.y()));values.put(p+"rotation",Float.toString(startup.rotation()));
         }
         collectTriggers(cm,scene,values,indexes);
         collectAreaTriggers(cm,scene,values,indexes);
@@ -133,7 +142,9 @@ public final class SceneContentExport {
             for (int hi = 0; hi < handlers.length; hi++) {
                 HandlerConfig handler = handlers[hi];
                 if (!(handler instanceof HandlerConfig.Startup startup)) {if(!(raw instanceof TudeySceneModel.PlaceableEntry)||!sceneHandler(handler))importReport.add("Unsupported handler at "+sourceKey+" / "+hi+": "+handler.getClass().getName());continue;}
-                collectStartup(cm, result, sourceKey, hi, x, y, rotation, startup.action,sourceArgs,state,0);
+                var staged=new ArrayList<Binding>();int startupCount=startups.size();
+                try{collectStartup(cm,staged,sourceKey,hi,x,y,rotation,startup.action,sourceArgs,state,0);result.addAll(staged);}
+                catch(IOException unsupported){startups.subList(startupCount,startups.size()).clear();importReport.add("Unsupported complete startup at "+sourceKey+" / "+hi+": "+unsupported.getMessage());}
             }
         }
         return result;
@@ -145,7 +156,17 @@ public final class SceneContentExport {
                                        ActionConfig action,Map<String,Object> sourceArgs,com.threerings.projectx.dungeon.config.SpawnTableConfig.a state,int depth) throws Exception {
         if (action == null) return;
         if (depth > 32) throw new IOException("Startup compound nesting exceeds limit at " + sourceKey);
+        if(action instanceof ActionConfig.Random){
+            var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+            startups.add(new Startup(sourceKey,handlerIndex,x,y,rotation,graph));return;
+        }
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction wrapper){
+            var fire=wrapper.fireAction==null?null:cm.a(com.threerings.projectx.dungeon.config.FireActionConfig.class,wrapper.fireAction);
+            if(fire==null)throw new IOException("Unresolved startup fire action: "+wrapper.fireAction);
+            collectStartup(cm,result,sourceKey,handlerIndex,x,y,rotation,fire.action,sourceArgs,state,depth+1);return;
+        }
         if (action instanceof ActionConfig.SpawnActor spawn) {
+            if(!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported startup spawn location");
             // Native SpawnActor explicitly succeeds without spawning when its reference is null.
             // For example scene 398's pipe valves select this branch with Spawn with Valve?=No.
             if (spawn.actor == null) {importReport.add("Native null startup actor (no spawn) at "+sourceKey);return;}
@@ -165,8 +186,9 @@ public final class SceneContentExport {
             for (int i = 0; i < compound.actions.length; i++)
                 collectStartup(cm, result, sourceKey + "/startup." + handlerIndex + ".action." + i,
                     handlerIndex, x, y, rotation, compound.actions[i],sourceArgs,state,depth + 1);
-        } else importReport.add("Unsupported startup action at "+sourceKey+" / "+handlerIndex+": "+action.getClass().getName());
+        } else throw new IOException("Unsupported startup action "+action.getClass().getName());
     }
+
 
     /** Whole-graph extraction only: an unsupported sibling must never disappear from a compound. */
     private static void collectTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
@@ -333,6 +355,12 @@ public final class SceneContentExport {
     private static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.None)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
+        if(action instanceof ActionConfig.Random choice){
+            if(choice.actions==null||choice.actions.length==0||choice.actions.length>256)throw new IOException("Invalid native weighted choice");
+            var actions=new ArrayList<Object>();var weights=new ArrayList<Float>();
+            for(var option:choice.actions){if(option==null||!Float.isFinite(option.weight)||option.weight<0)throw new IOException("Invalid native choice weight");actions.add(sceneAction(option.action,depth+1,cm,pawnActivator));weights.add(option.weight);}
+            return Map.of("kind","weighted-choice","actions",actions,"weights",weights);
+        }
         if(action instanceof ActionConfig.Signal signal)return sceneSignalAction(signal.target,signal.name,depth);
         if(action!=null&&action.getClass()==ActionConfig.FireEffect.class){
             var effect=(ActionConfig.FireEffect)action;
@@ -362,6 +390,13 @@ public final class SceneContentExport {
             var table=spawn.spawnTable.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
             if(table==null)throw new IOException("Missing monster activation table");
             return preparedSpawn(cm,singleTableActor(table,spawn.spawnTable.kW()),true);
+        }
+        if(action!=null&&action.getClass()==com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn.class){
+            var spawn=(com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn)action;
+            if(cm==null||spawn.spawnTable==null||spawn.warp||spawn.rotation!=0||!spawn.relative||spawn.translation.x!=0||spawn.translation.y!=0||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported plain table spawn transform");
+            var table=spawn.spawnTable.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
+            try{return preparedSpawn(cm,singleSceneTableActor(cm,table,spawn.spawnTable.kW(),0),false);}
+            catch(IOException unsupported){throw new IOException("Unsupported scene table "+spawn.spawnTable.getName()+": "+unsupported.getMessage(),unsupported);}
         }
 
         if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.StartConversation start){
@@ -449,8 +484,12 @@ public final class SceneContentExport {
             var resolved=resolvedActor(cm,actor);var config=resolved.a(cm,ActorConfig.class);var tags=(com.threerings.tudey.config.TagConfig)field(config.ai(cm),"tags");
             if(fields.get("kind").equals("Block")){
                 var original=config.ai(cm);
-                if(original.getClass()!=com.threerings.projectx.dungeon.config.DungeonActorConfig.Block.class||original.handlers!=null&&original.handlers.length!=0
-                        ||((com.threerings.projectx.dungeon.config.DungeonActorConfig.Block)original).damageAction!=null)throw new IOException("Unimplemented cosmetic block handlers/damage action");
+                if(original.getClass()!=com.threerings.projectx.dungeon.config.DungeonActorConfig.Block.class||original.handlers!=null&&original.handlers.length!=0)throw new IOException("Unimplemented block handlers");
+                var damage=((com.threerings.projectx.dungeon.config.DungeonActorConfig.Block)original).damageAction;
+                if(damage!=null){
+                    if(!(damage instanceof ActionConfig.DestroyActor destroy)||destroy.endScene||!(destroy.target instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unimplemented block damage action");
+                    fields.put("damage-action","destroy");
+                }
             }
             if(tags!=null)fields.put("tags",String.join(",",sceneTags(config,resolved.kW(),tags)));
             new org.tortodrone.world.SceneActions.Spawn(fields,activate);
@@ -480,6 +519,19 @@ public final class SceneContentExport {
             }
         }
         return result;
+    }
+    private static ConfigReference<ActorConfig> singleSceneTableActor(ConfigManager cm,com.threerings.projectx.dungeon.config.SpawnTableConfig table,Map<String,Object> arguments,int depth)throws IOException {
+        if(depth>16)throw new IOException("Recursive scene table");
+        if(table instanceof com.threerings.projectx.dungeon.config.SpawnTableConfig.Prefab prefab){
+            if(levelContext!=null){
+                Object types=levelContext.bkI?levelContext.bkG:levelContext.bkF;
+                if(types instanceof Map<?,?> map&&!map.isEmpty()||types instanceof java.util.Set<?> set&&!set.isEmpty())throw new IOException("Themed prefab selection needs runtime type handling");
+            }
+            if(prefab.root==null||prefab.root.spawnTable==null||prefab.root.getClass()!=com.threerings.projectx.dungeon.config.SpawnTableConfig.SpawnTypeListEntry.class)throw new IOException("Unsupported prefab root");
+            var reference=prefab.root.spawnTable;var next=reference.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
+            return singleSceneTableActor(cm,next,reference.kW(),depth+1);
+        }
+        return singleTableActor(table,arguments);
     }
 
     private static ConfigReference<ActorConfig> resolvedActor(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {

@@ -7,7 +7,15 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Delay,Sequence,Limited { }
+    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Delay,Sequence,Limited,Choice { }
+    public record Choice(List<Action> actions,List<Float> weights) implements Action {
+        public Choice {
+            actions=List.copyOf(actions);weights=List.copyOf(weights);
+            if(actions.isEmpty()||actions.size()>256||actions.size()!=weights.size())throw new IllegalArgumentException("Invalid weighted scene choice");
+            double total=0;for(float weight:weights){if(!Float.isFinite(weight)||weight<0)throw new IllegalArgumentException("Invalid scene weight");total+=weight;}
+            if(total<=0)throw new IllegalArgumentException("Empty scene choice weight");
+        }
+    }
     /** The native KNIGHT memory target is its living Activator, never a client-selected knight. */
     public record Memory(org.tortodrone.character.KnightMemory mutation) implements Action {public Memory{Objects.requireNonNull(mutation);}}
     /** Native PartyBase target Activator; routing and settlement belong to its server-owned party. */
@@ -22,7 +30,7 @@ public final class SceneActions {
     public record DestroyMany(List<String> tags) implements Action {
         public DestroyMany { tags=List.copyOf(tags);if(tags.size()>256)throw new IllegalArgumentException("Too many destruction targets");tags.forEach(SceneActions::text); }
     }
-    /** Prepared Monster or noncolliding global cosmetic Block at Source, Tagged or Activator. */
+    /** Prepared Monster, cosmetic Block or sourced destroy-on-hit Block at an authored location. */
     public record Spawn(Map<String,String> fields,boolean activate,String locationTag,boolean activatorLocation) implements Action {
         public Spawn(Map<String,String> fields,boolean activate,String locationTag){this(fields,activate,locationTag,false);}
         public Spawn(Map<String,String> fields,boolean activate){this(fields,activate,"");}
@@ -32,8 +40,10 @@ public final class SceneActions {
             if(activatorLocation&&!locationTag.isEmpty())throw new IllegalArgumentException("Conflicting scene spawn locations");
             fields=Map.copyOf(fields);
             boolean monster="com.threerings.projectx.dungeon.data.actor.Monster".equals(fields.get("native-type"))&&"Monster".equals(fields.get("kind"));
-            boolean cosmetic="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&"Global".equals(fields.get("shape"))&&!activate;
-            if(fields.size()>1024||!(monster||cosmetic)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
+            boolean block="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&!activate;
+            boolean cosmetic=block&&"Global".equals(fields.get("shape"));
+            boolean breakable=block&&"destroy".equals(fields.get("damage-action"));
+            if(fields.size()>1024||!(monster||cosmetic||breakable)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
             if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");
@@ -111,6 +121,7 @@ public final class SceneActions {
             children=switch(action){
                 case Delay delay->List.of(new Node(delay.action()));
                 case Sequence sequence->sequence.actions().stream().map(Node::new).toList();
+                case Choice choice->choice.actions().stream().map(Node::new).toList();
                 case Limited limited->{remaining=limited.limit();yield List.of(new Node(limited.action()),new Node(limited.otherwise()));}
                 default->List.of();
             };
@@ -254,6 +265,11 @@ public final class SceneActions {
                 if(allowed)node.remaining--;
                 yield execute(node.children.get(allowed?0:1),due,source,activator,budget);
             }
+            case Choice choice -> {
+                double total=choice.weights().stream().mapToDouble(Float::doubleValue).sum(),draw=random.nextDouble(total);
+                int selected=-1;for(int i=0;i<choice.weights().size();i++)if(choice.weights().get(i)>0){selected=i;draw-=choice.weights().get(i);if(draw<0)break;}
+                yield execute(node.children.get(selected),due,source,activator,budget);
+            }
         };
     }
     private boolean enqueue(Node node,long due,String source,String activator){
@@ -274,6 +290,7 @@ public final class SceneActions {
             case Conversation conversation->ids.add(conversation.id());
             case Delay delay->conversationIds(delay.action(),ids);
             case Sequence sequence->{for(var child:sequence.actions())conversationIds(child,ids);}
+            case Choice choice->{for(var child:choice.actions())conversationIds(child,ids);}
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
             default->{}
         }
@@ -283,7 +300,7 @@ public final class SceneActions {
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
-        switch(action){case Delay delay->validate(delay.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
+        switch(action){case Delay delay->validate(delay.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
         try{
@@ -295,6 +312,11 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("weighted-choice".equals(kind)&&map.keySet().equals(Set.of("kind","actions","weights"))&&map.get("actions") instanceof List<?> actions&&map.get("weights") instanceof List<?> weights){
+            var children=new ArrayList<Action>();var numbers=new ArrayList<Float>();for(var child:actions)children.add(decode(child,depth+1,count));
+            for(var weight:weights){if(!(weight instanceof Number number))throw new IllegalArgumentException("Invalid weight");numbers.add(number.floatValue());}
+            return new Choice(children,numbers);
+        }
         if("next-floor".equals(kind)&&map.keySet().equals(Set.of("kind")))return new NextFloor();
         if("knight-memory".equals(kind)&&map.keySet().equals(Set.of("kind","name","remember"))&&map.get("remember") instanceof Boolean remember)return new Memory(new org.tortodrone.character.KnightMemory(string(map.get("name")),remember));
         if("progress-event".equals(kind)&&map.keySet().equals(Set.of("kind","level","progress")))return new ProgressEvent(string(map.get("level")),string(map.get("progress")));

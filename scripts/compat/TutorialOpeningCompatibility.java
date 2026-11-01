@@ -79,7 +79,14 @@ public final class TutorialOpeningCompatibility {
         route(-3.5f,16.5f);
         var music=world.actors().stream().filter(a->Arrays.asList(world.specification(a.id()).text("tags","").split(",")).contains("music main")).toList();
         if(music.size()!=1||music.getFirst().y()<15||music.getFirst().y()>18)throw new AssertionError("Original area 2955 did not spawn its music at the Activator");
-        route(8.5f,39.5f);route(11.5f,56.25f);
+        route(8.5f,39.5f);
+        var clockworks=world.actors().stream().filter(a->a.config().name().equals("Block/Breakable/Parts/Clockworks (base)")).toList();
+        if(clockworks.size()!=12)throw new AssertionError("Original twelve Clockworks startup blocks missing: "+clockworks.size());
+        var block=clockworks.stream().filter(a->a.x()==7.5f&&a.y()==50.5f).findFirst().orElseThrow();int beforeCuts=attacks;
+        route(7.5f,50.5f);
+        if(attacks<=beforeCuts||world.actors().stream().anyMatch(a->a.id()==block.id()))throw new AssertionError("Normal movement/sword inputs did not break the original Clockworks block");
+        System.out.println("PASS: twelve original Clockworks startup actors -> native collision stops the route -> normal Proto Sword input destroys block 2298 -> walk through its original position");
+        route(11.5f,56.25f);
         for(int i=0;i<42;i++)step(0,0);
         if(dialogs.stream().filter(d->d.definition().actor().endsWith("Ambushed Knights A")).count()!=1||health.status().modifiers().canMove())throw new AssertionError("Entrance traversal never reached the real ambush/Stop/dialogue chain");
         System.out.println("PASS: original area 2955 spawns music at its live Activator; continued collision-checked movement reaches the ambush and its authored delayed conversation/Stop");

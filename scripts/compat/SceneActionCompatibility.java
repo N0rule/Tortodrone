@@ -108,6 +108,14 @@ public final class SceneActionCompatibility {
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(new ActionConfig.None(),0))) instanceof SceneActions.Sequence noop)||!noop.actions().isEmpty())throw new AssertionError("Native None must succeed without an effect");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var nativeChoice=new ActionConfig.Random();var option=new ActionConfig.WeightedAction();option.weight=2.5f;
+        var blockSpawn=new ActionConfig.SpawnActor();blockSpawn.actor=new com.threerings.config.ConfigReference<>("Block/Breakable/Clockworks, base");option.action=blockSpawn;
+        var zero=new ActionConfig.WeightedAction();zero.weight=0;zero.action=new ActionConfig.None();nativeChoice.actions=new ActionConfig.WeightedAction[]{option,zero};
+        var preparedChoice=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(nativeChoice,0,cm)));
+        if(!(preparedChoice instanceof SceneActions.Choice weights)||!weights.weights().equals(List.of(2.5f,0f))||!(weights.actions().getFirst() instanceof SceneActions.Spawn block)||!block.fields().get("damage-action").equals("destroy"))throw new AssertionError("Native weighted block spawn lost weights, branch or native damage action");
+        var unsupportedSibling=new ActionConfig.Signal();unsupportedSibling.target=new TargetConfig.Source();unsupportedSibling.name="unsupported";zero.action=unsupportedSibling;
+        try{SceneContentExport.sceneAction(nativeChoice,0,cm);throw new AssertionError("Unsupported zero-weight sibling dropped");}catch(IOException expected){}
+        System.out.println("PASS: native Random/WeightedAction -> all prepared branches and exact weights; Clockworks block destruction; unsupported sibling refused even at zero weight");
         var recursive=new ActionConfig.SpawnActor();recursive.actor=new com.threerings.config.ConfigReference<>("Character/NPC/Companions/Knights/Immortal/Sword Knight/Tier 1");
         try{FireCatalogExport.readSceneAction(cm,recursive);throw new AssertionError("Recursive companion graph was embedded into projectile metadata");}catch(IOException expected){if(!expected.getMessage().contains("scene actor graph"))throw expected;}
         if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
