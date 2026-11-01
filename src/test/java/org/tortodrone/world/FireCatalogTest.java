@@ -7,6 +7,12 @@ import static org.tortodrone.support.TestWire.check;
 
 public final class FireCatalogTest {
     public static void main(String[] args) throws Exception {
+        var legacyTags=new StarterCatalog.Model("Fixture",Map.of("Tags",new FireCatalog.ListValue("com.threerings.tudey.config.TagConfig",List.of("one","two"))));
+        var recovered=FireCatalog.modelJson(FireCatalog.modelJson(legacyTags)).arguments().get("Tags");
+        check(recovered instanceof FireCatalog.DataValue,"legacy iterable TagConfig becomes a typed native object");
+        var tagData=(FireCatalog.DataValue)recovered;
+        check(tagData.fields().getFirst().name().equals("tags")&&tagData.fields().getFirst().value().equals(new FireCatalog.ListValue("java.lang.String",List.of("one","two"))),"legacy effective tags preserve their values and String array type");
+        try{FireCatalog.modelJson(FireCatalog.modelJson(new StarterCatalog.Model("Fixture",Map.of("Tags",new FireCatalog.ListValue("com.threerings.tudey.config.TagConfig",List.of(1))))));throw new AssertionError("Malformed legacy tag elements accepted");}catch(java.io.IOException expected){}
         Path root=Files.createTempDirectory("tortodrone-fire-catalog-");
         try {
             var bulletModel=new StarterCatalog.Model("Projectile/Bullet",Map.of("Shot",new StarterCatalog.Model("Projectile/Blaster",Map.of("Speed",8.5f))));

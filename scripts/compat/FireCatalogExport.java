@@ -852,7 +852,7 @@ public final class FireCatalogExport {
         if(visiting.put(value,Boolean.TRUE)!=null)throw new IOException("Cyclic stock fire argument: "+value.getClass().getName());
         try {
             if(value instanceof Map<?,?> map)return new FireCatalog.MapValue(arguments(map,depth+1,visiting,nodes));
-            if(value instanceof Iterable<?> iterable){var list=new ArrayList<Object>();for(Object item:iterable)list.add(argument(item,depth+1,visiting,nodes));return new FireCatalog.ListValue(value.getClass().getName(),list);}
+            if(value instanceof Iterable<?> iterable&&!(value instanceof com.threerings.io.Streamable)){var list=new ArrayList<Object>();for(Object item:iterable)list.add(argument(item,depth+1,visiting,nodes));return new FireCatalog.ListValue(value.getClass().getName(),list);}
             if(value.getClass().isArray()){int length=Array.getLength(value);if(length>10_000)throw new IOException("Oversized stock argument array");var list=new ArrayList<Object>();for(int i=0;i<length;i++)list.add(argument(Array.get(value,i),depth+1,visiting,nodes));return new FireCatalog.ListValue(value.getClass().getComponentType().getName(),list);}
             var fields=new ArrayList<FireCatalog.FieldValue>();
             var hierarchy=new ArrayList<Class<?>>();for(Class<?> c=value.getClass();c!=null&&c!=Object.class;c=c.getSuperclass())hierarchy.add(c);

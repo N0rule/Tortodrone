@@ -454,7 +454,12 @@ public final class SessionCodec {
             type(out,object.type());for(var field:object.fields())streamField(out,field);
         } else if(value instanceof FireCatalog.ListValue array) {
             if(array.componentType().startsWith("java.util."))throw new IOException("Unsupported streamed collection");
-            type(out,"[L"+array.componentType()+";");out.writeInt(array.values().size());for(var element:array.values())value(out,element);
+            type(out,"[L"+array.componentType()+";");int size=array.values().size();out.writeInt(size);
+            if(array.componentType().equals("java.lang.String")){
+                out.writeShort((size+7)/8);
+                for(int i=0;i<size;i+=8){int mask=0;for(int j=i;j<Math.min(i+8,size);j++)if(array.values().get(j)!=FireCatalog.NullValue.INSTANCE)mask|=1<<(j-i);out.writeByte(mask);}
+                for(var element:array.values())if(element!=FireCatalog.NullValue.INSTANCE){if(!(element instanceof String text))throw new IOException("Invalid String array element");out.writeUTF(text);}
+            }else for(var element:array.values())value(out,element);
         } else if(value instanceof FireCatalog.MapValue map) {
             type(out,"java.util.HashMap");out.writeInt(map.values().size());for(var entry:new java.util.TreeMap<>(map.values()).entrySet()){value(out,entry.getKey());value(out,entry.getValue());}
         } else throw new IOException("Unsupported preview argument");

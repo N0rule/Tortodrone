@@ -239,7 +239,14 @@ public final class FireCatalog {
             case "transColorization"->{var f=object(v,Set.of("type","class","value"));yield new StarterCatalog.TransColorization(integer(f.get("class")),integer(f.get("value")));}
             case "enum"->{var f=object(v,Set.of("type","class","name","ordinal"));yield new EnumValue(text(f.get("class"),512),text(f.get("name"),256),integer(f.get("ordinal")));}
             case "object"->{var f=object(v,Set.of("type","class","fields"));if(!(f.get("fields") instanceof List<?> fields)||fields.size()>4096)throw new IOException("Invalid streamed fields");var result=new ArrayList<FieldValue>();for(Object field:fields){var fm=object(field,Set.of("name","fieldType","value"));result.add(new FieldValue(text(fm.get("name"),512),text(fm.get("fieldType"),512),readValue(fm.get("value"),d+1,n)));}yield new DataValue(text(f.get("class"),512),result);}
-            case "list"->{var f=object(v,Set.of("type","component","values"));if(!(f.get("values") instanceof List<?> l)||l.size()>10_000)throw new IOException("Invalid argument list");var vals=new ArrayList<Object>();for(Object item:l)vals.add(readValue(item,d+1,n));yield new ListValue(text(f.get("component"),512),vals);}
+            case "list"->{var f=object(v,Set.of("type","component","values"));if(!(f.get("values") instanceof List<?> l)||l.size()>10_000)throw new IOException("Invalid argument list");var vals=new ArrayList<Object>();for(Object item:l)vals.add(readValue(item,d+1,n));String component=text(f.get("component"),512);
+                // Older native exports mistook iterable TagConfig for an array of
+                // TagConfig, although its iterator yields effective String tags.
+                if(component.equals("com.threerings.tudey.config.TagConfig")){
+                    if(vals.stream().anyMatch(item->!(item instanceof String)))throw new IOException("Invalid legacy tag configuration");
+                    yield new DataValue(component,List.of(new FieldValue("tags","[Ljava.lang.String;",new ListValue("java.lang.String",vals)),new FieldValue("derived",component,NullValue.INSTANCE)));
+                }
+                yield new ListValue(component,vals);}
             case "map"->{var f=object(v,Set.of("type","values"));yield new MapValue(readValues(f.get("values"),d+1,n));}
             default->throw new IOException("Unknown fire model value");};}
         throw new IOException("Invalid fire model value");

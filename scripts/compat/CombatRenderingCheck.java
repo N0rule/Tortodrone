@@ -123,7 +123,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -138,6 +138,9 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
+        probe.tutorialOnly=Arrays.asList(args).contains("--tutorial-only");
+        probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
+        if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
         probe.readyRoomOnly=Arrays.asList(args).contains("--ready-room-only");
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
@@ -432,6 +435,95 @@ public final class CombatRenderingCheck {
             }
         }
     }
+    private boolean tutorialEntryOnly;
+    private void tutorialEntryTick(long now)throws Exception {
+        if(app.CT()==null||app.Gu()==null)return;
+        if(started==0)started=now;
+        if(stage<3&&now-started>60_000_000_000L)throw new AssertionError("Tutorial entry timed out; zone="+app.CT().zoneId+" loading="+app.GF().mG());
+        if(stage==0&&app.CT().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dR").isInstance(app.Gu())&&!app.GF().mG()){
+            Object controller=new View(app.Gu()).acn();
+            controller.getClass().getMethod("a",Object.class,String.class,Object.class).invoke(controller,null,"town",null);stage=1;return;
+        }
+        if(app.GF().mG()||!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu()))return;
+        var view=new View(app.Gu());
+        if(stage<=1&&view.sceneId()==1&&view.PO()!=null){GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(398);stage=2;started=now;System.out.println("CHECK: native scene travel to original Crash Site 398");return;}
+        if(stage==2&&view.sceneId()==398&&view.PO()!=null&&view.PO().acU() instanceof Dungeoneer){stage=3;started=now;}
+        if(tutorialOnly&&stage>=3){tutorialPlayTick(view,now);return;}
+        if(stage==3&&now-started>5_000_000_000L){capture("crash-site-entrance");finishImages();passed=done=true;System.out.println("PASS: stock graphical Crash Site entry and controlled Dungeoneer remain connected for five seconds");app.shutdown();}
+    }
+    private boolean tutorialOnly;
+    private SceneCatalog.MapScene tutorialMap;
+    private int tutorialWaypoint,tutorialNode,tutorialBoss;
+    private List<org.tortodrone.world.ScenePathing.Point> tutorialPath=List.of();
+    private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt;
+    private double tutorialBestDistance=Double.POSITIVE_INFINITY;
+    private final Map<String,org.tortodrone.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
+    private String tutorialDialog="";
+    private float tutorialLastX,tutorialLastY;
+    private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
+    private void tutorialPlayTick(View view,long now)throws Exception {
+        if(view.sceneId()==217){if(stage!=6){stage=6;started=now;capture("rescue-camp-arrival");}if(now-started>5_000_000_000L){capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
+        if(view.sceneId()!=398)return;
+        var own=authoritative.get(app.CT().pawnId);if(own==null)return;
+        if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
+            flags(view,0);String key=info.name+":"+info.message;
+            if(!key.equals(tutorialDialog)&&now>=tutorialResponseAt){tutorialDialog=key;tutorialResponseAt=now+750_000_000L;capture("tutorial-dialog-"+tutorialWaypoint+"-"+Math.abs(key.hashCode()));System.out.println("DIALOG: "+key);info.conversationService.f(0,new Confirm());}
+            return;
+        }
+        if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
+        if(stage==3&&tutorialWaypoint<TUTORIAL_WALK.length){
+            var target=TUTORIAL_WALK[tutorialWaypoint];
+            if(tutorialWalk(view,own,target[0],target[1],now)){System.out.println("WALK: "+tutorialWaypoint+" -> "+own.tz());tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}
+            return;
+        }
+        if(stage==3){
+            var boss=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")).findFirst().orElse(null);
+            if(boss==null){if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;}
+            tutorialBoss=boss.vw();if(tutorialWalk(view,own,boss.tz().x,boss.tz().y-1.75f,now)){flags(view,0);stage=4;tutorialCombatAt=now;capture("ironwood-giant-encounter");}return;
+        }
+        if(stage==4){var boss=authoritative.get(tutorialBoss);
+            if(boss==null){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
+            moveToward(view,boss.tz().x-own.tz().x,boss.tz().y-own.tz().y,false);
+            flags(view,(now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0);
+            if(now-tutorialCombatAt>180_000_000_000L)throw new AssertionError("Normal stock sword input failed to defeat Giant; health="+monsterHealth(boss));return;
+        }
+        if(stage==5){float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
+            if(tutorialWaypoint<exit.length){if(tutorialWalk(view,own,exit[tutorialWaypoint][0],exit[tutorialWaypoint][1],now)){tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("tutorial-exit-walk-"+tutorialWaypoint);}}
+            else {flags(view,0);var root=app.getRoot();for(int i=0;i<root.getWindowCount();i++)if(root.getWindow(i) instanceof com.threerings.projectx.dungeon.client.EndOfLevelWindow report)report.bX(true);}
+        }
+    }
+    private boolean tutorialWalk(View view,Actor own,float x,float y,long now)throws Exception {
+        // Route planning provides input targets only. The stock controller and server
+        // still decide movement, collision, attack eligibility and progression.
+        if(Math.hypot(own.tz().x-x,own.tz().y-y)<.35){flags(view,0);return true;}
+        if(tutorialPath.isEmpty()){
+            if(now<tutorialRouteRetryAt){flags(view,0);return false;}
+            if(tutorialSpecs.isEmpty())for(var e:tutorialMap.content().entries())tutorialSpecs.putIfAbsent(e.spec().config().name(),e.spec());
+            int mask=Math.round(tutorialMap.content().stats().get("player.collision-mask"));
+            tutorialPath=org.tortodrone.world.ScenePathing.route(own.tz().x,own.tz().y,x,y,(sx,sy,tx,ty)->{
+                int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.1));
+                for(int i=1;i<=count;i++){float px=sx+(tx-sx)*i/count,py=sy+(ty-sy)*i/count;
+                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,.35f).present())return false;
+                    for(var obstacle:authoritative.values())if(obstacle.vw()!=own.vw()){
+                        var spec=tutorialSpecs.get(obstacle.Mv().getName());
+                        if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bR(2))continue;
+                        if(spec.contains(obstacle.tz().x,obstacle.tz().y,obstacle.tA(),px,py,.35f))return false;
+                    }
+                }return true;
+            });tutorialNode=0;
+            if(tutorialPath.isEmpty()){flags(view,0);tutorialRouteRetryAt=now+500_000_000L;if(now-tutorialProgressAt>20_000_000_000L)throw new AssertionError("No collision route after authored encounter delays from "+own.tz()+" to "+x+","+y);return false;}
+        }
+        while(tutorialNode<tutorialPath.size()&&Math.hypot(own.tz().x-tutorialPath.get(tutorialNode).x(),own.tz().y-tutorialPath.get(tutorialNode).y())<.2)tutorialNode++;
+        if(tutorialNode==tutorialPath.size()){tutorialPath=List.of();return false;}
+        var point=tutorialPath.get(tutorialNode);moveToward(view,point.x()-own.tz().x,point.y()-own.tz().y,true);
+        double distance=Math.hypot(own.tz().x-x,own.tz().y-y);
+        if(distance<tutorialBestDistance-.12){tutorialBestDistance=distance;tutorialProgressAt=now;}
+        if(now-tutorialRepathAt>5_000_000_000L){tutorialRepathAt=now;System.out.println("NAV: waypoint="+tutorialWaypoint+" at="+own.tz()+" node="+point+" target="+x+","+y);}
+        if(now-tutorialProgressAt>2_000_000_000L&&now-tutorialRepathAt>1_000_000_000L){tutorialPath=List.of();}
+        if(now-tutorialProgressAt>500_000_000L)flags(view,(now-tutorialProgressAt)%1_250_000_000L<150_000_000L?4:1);
+        if(now-tutorialProgressAt>15_000_000_000L)throw new AssertionError("Normal tutorial input blocked at "+own.tz()+" toward "+point+" waypoint="+tutorialWaypoint);
+        return false;
+    }
     private void readyRoomTick(long now)throws Exception{
         if(app.CT()==null||app.Gu()==null)return;
         if(stage==0&&app.CT().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dR").isInstance(app.Gu())&&!app.GF().mG()){
@@ -471,6 +563,7 @@ public final class CombatRenderingCheck {
                     +" view="+(current==null?"none":current.getClass().getName())+" loading="+app.GF().mG()
                     +(stage==20?konwayState(viewPawn()):""));
             }
+            if(tutorialEntryOnly){if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
             if(readyRoomOnly){readyRoomTick(now);return;}
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
@@ -1467,7 +1560,7 @@ public final class CombatRenderingCheck {
     private record View(Object value) {
         Sprite PO()throws Exception{Object sprite=value.getClass().getMethod("PO").invoke(value);return sprite==null?null:new Sprite(sprite);}
         Sprite gk(int id)throws Exception{Object sprite=value.getClass().getMethod("gk",int.class).invoke(value,id);return sprite==null?null:new Sprite(sprite);}
-        int sceneId()throws Exception{return ((com.threerings.tudey.data.TudeySceneModel)value.getClass().getMethod("Sn").invoke(value)).sceneId;}
+        int sceneId()throws Exception{var model=(com.threerings.tudey.data.TudeySceneModel)value.getClass().getMethod("Sn").invoke(value);return model==null?0:model.sceneId;}
         Object acn()throws Exception{return value.getClass().getMethod("acn").invoke(value);}
     }
     private record Sprite(Object value) {
@@ -1493,7 +1586,10 @@ public final class CombatRenderingCheck {
     }
     private void capture(String name)throws Exception{
         int w=app.getWindowWidth(),h=app.getWindowHeight();var pixels=BufferUtils.createByteBuffer(w*h*3);
+        int previousReadBuffer=GL11.glGetInteger(GL11.GL_READ_BUFFER);
+        if(tutorialEntryOnly)GL11.glReadBuffer(GL11.GL_FRONT);
         GL11.glReadPixels(0,0,w,h,GL11.GL_RGB,GL11.GL_UNSIGNED_BYTE,pixels);
+        if(tutorialEntryOnly)GL11.glReadBuffer(previousReadBuffer);
         var rgb=new int[w*h];
         for(int y=0;y<h;y++)for(int x=0;x<w;x++){int i=(y*w+x)*3;rgb[(h-y-1)*w+x]=((pixels.get(i)&255)<<16)|((pixels.get(i+1)&255)<<8)|(pixels.get(i+2)&255);}
         writes.add(images.submit(()->{var image=new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);image.setRGB(0,0,w,h,rgb,0,w);ImageIO.write(image,"png",output.resolve(name+".png").toFile());return null;}));
