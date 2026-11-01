@@ -673,10 +673,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return e.spec.contains(e.x,e.y,e.rotation,target.x(),target.y(),e.targeting.expansion()+(victim==null?ScenePortals.PAWN_RADIUS:victim.spec.number("radius",0)));
     }
     private float targetDistance(Entity source,ActorState target){
-        if(target.entity()==null)return Math.max(0,(float)Math.hypot(target.x()-source.x,target.y()-source.y)-ScenePortals.PAWN_RADIUS);
+        return targetDistance(source.x,source.y,target);
+    }
+    private float targetDistance(float x,float y,ActorState target){
+        if(target.entity()==null)return Math.max(0,(float)Math.hypot(target.x()-x,target.y()-y)-ScenePortals.PAWN_RADIUS);
         var victim=entities.get(target.id());if(victim==null)return Float.POSITIVE_INFINITY;
         var body=victim.pawnShape==null?SceneCollision.pawnShape(victim.spec,victim.shape):victim.pawnShape;
-        return body.at(victim.x,victim.y,victim.rotation).distance(source.x,source.y);
+        return body.at(victim.x,victim.y,victim.rotation).distance(x,y);
     }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         var players=targetCandidates(e,occupants);
@@ -772,14 +775,16 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             return;
         }
-        if(e.targeting!=null&&(e.targetMode==null||attackDistance<=attackRange))return;
+        if(e.targeting!=null&&(e.targetMode==null||attackDistance<=attackRange&&sight(e,target.x(),target.y())))return;
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
         float tx=target.x(),ty=target.y();
         if(!entitySegment(e,e.x,e.y,tx,ty)){
             if(e.path.isEmpty()&&stamp<e.nextPath)return;
             if(e.path.isEmpty()||Math.hypot(tx-e.pathX,ty-e.pathY)>=1
                     ||!entitySegment(e,e.x,e.y,e.path.getFirst().x(),e.path.getFirst().y())){
-                e.path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
+                e.path=target.entity()!=null&&e.targeting!=null?
+                    ScenePathing.region(e.x,e.y,(x,y)->Math.max(targetDistance(x,y,target)-attackRange,sight(e,x,y,target.x(),target.y())?0:.01f),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny)):
+                    ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));e.pathX=tx;e.pathY=ty;
                 e.nextPath=stamp+Math.max(50,e.spec.integer("acquisition-interval",0));
             }
             while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
@@ -799,11 +804,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
         e.attackSpeed=e.status.state().modifiers().attackSpeed();e.activity=4+slot;e.activityStarted=stamp;e.fired.clear();e.flags&=~64;return true;
     }
     private boolean sight(Entity e,float tx,float ty){
-        if(!staticCollision.clearSegment(129,POINT,e.x,e.y,tx,ty,0))return false;
-        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-e.x,ty-e.y)/.1));
+        return sight(e,e.x,e.y,tx,ty);
+    }
+    private boolean sight(Entity e,float x,float y,float tx,float ty){
+        if(!staticCollision.clearSegment(129,POINT,x,y,tx,ty,0))return false;
+        int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
         for(var obstacle:entities.values())if(obstacle!=e&&obstacle.destroyed==Integer.MAX_VALUE&&obstacle.carrier==0
                 &&(obstacle.collisionFlags&129)!=0&&!(obstacle.kind.equals("Door")&&(obstacle.flags&6)==2))
-            for(int i=0;i<=steps;i++)if(obstacle.spec.contains(obstacle.x,obstacle.y,obstacle.rotation,e.x+(tx-e.x)*i/steps,e.y+(ty-e.y)*i/steps,0))return false;
+            for(int i=0;i<=steps;i++)if(obstacle.spec.contains(obstacle.x,obstacle.y,obstacle.rotation,x+(tx-x)*i/steps,y+(ty-y)*i/steps,0))return false;
         return true;
     }
     private boolean entitySegment(Entity mover,float x,float y,float tx,float ty){

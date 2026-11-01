@@ -33,6 +33,10 @@ public final class ScenePathingTest {
         var route=ScenePathing.route(-2,0,2,0,traversal);check(route.size()>1,"closed geometry needs intermediate path nodes");
         dynamic.set(false);check(ScenePathing.route(-2,0,2,0,traversal).equals(List.of(new ScenePathing.Point(2,0))),"opening a gate restores the direct path");
         check(ScenePathing.route(0,0,2,0,(x,y,tx,ty)->false).isEmpty(),"unreachable targets terminate the bounded search");
+        var approach=ScenePathing.region(0,0,(x,y)->(float)Math.hypot(5-x,y)-3,
+            (x,y,tx,ty)->Math.hypot(5-tx,ty)>1.5);
+        check(!approach.isEmpty()&&approach.getLast().x()<=3.5&&Math.hypot(5-approach.getLast().x(),approach.getLast().y())<=3,"occupied target is approached to attack range without entering its body");
+        check(ScenePathing.region(0,0,(x,y)->1,(x,y,tx,ty)->false).isEmpty(),"unreachable attack region terminates within its search budget");
         System.out.println("PASS: bounded routing, closed-gate attack occlusion, Shufflebot obstacle pursuit and gate-open traversal");
     }
 }

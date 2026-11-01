@@ -45,6 +45,10 @@ public final class StockTools {
                 for(String source:List.of("TutorialEnemyCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }
             case "party-check" -> fixture="PartyCompatibility";
+            case "tutorial-squad-check" -> {
+                if(args.length!=3)throw new IllegalArgumentException("tutorial-squad-check expects game-directory deployment-with-original-tutorial");
+                fixture="org.tortodrone.world.TutorialSquadCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());sources.add(project.resolve("scripts/compat/TutorialSquadCompatibility.java"));
+            }
             case "tutorial-heat-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("tutorial-heat-check expects game-directory exported-original-scene-398");
                 fixture="TutorialHeatCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

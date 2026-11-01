@@ -13,7 +13,7 @@ public final class MonsterTargetingTest {
         f.putAll(Map.of("attack.0.clear","200","attack.0.land","0","attack.0.fires","0","attack.0.fire.0.delay","0"));
         f.put("attack.0.fire.0.action",FireCatalog.actionJson(new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,new StarterCatalog.Model("Fixture/Attack",Map.of()),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"")));
         var friend=new SceneContent.Entry("friend",.5f,0,0,new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture/Friend","health","100","radius",".45","damage-mask","5")));
-        var enemy=new SceneContent.Entry("enemy",5,0,0,new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture/Enemy","health","100","radius","1.25","damage-mask","2")));
+        var enemy=new SceneContent.Entry("enemy",5,0,0,new SceneContent.Spec(Map.of("native-type","com.threerings.projectx.dungeon.data.actor.Monster","config","Fixture/Enemy","health","100","radius","1.25","damage-mask","2","collision-flags","8")));
         var helper=new SceneContent.Entry("helper",0,0,0,new SceneContent.Spec(f));
         var content=new SceneContent(List.of(helper,friend,enemy),Map.of());var world=new SceneEntities(content,SceneWeaponsTest.openTerrain());
         var attacks=new ArrayList<ActorState>();world.attacks((actor,action)->attacks.add(actor));

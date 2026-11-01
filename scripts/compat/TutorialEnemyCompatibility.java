@@ -65,7 +65,7 @@ public final class TutorialEnemyCompatibility {
         spawn.actor=new ConfigReference<>("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant");
         var giant=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
         for(double draw:role.equals("Bygs")?new double[]{.2}:new double[]{.2,.99}){
-            var content=new SceneContent(List.of(new SceneContent.Entry("helper",0,0,0,ally),new SceneContent.Entry("giant",3,0,0,new SceneContent.Spec(giant.fields()))),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+            var content=new SceneContent(List.of(new SceneContent.Entry("helper",0,0,0,ally),new SceneContent.Entry("giant",8,0,0,new SceneContent.Spec(giant.fields()))),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
             var terrain=open();var world=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(0){@Override public double nextDouble(){return draw;}});
             var weapons=new SceneWeapons(terrain);weapons.targets(world);var health=new SceneHealth(content);int[] stamp={SceneClock.now()};var fired=new ArrayList<Boolean>();
             world.attacks((actor,fire)->fired.add(weapons.fire(fire,actor,stamp[0])));world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
