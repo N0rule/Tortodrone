@@ -521,6 +521,7 @@ public final class FireCatalogExport {
         }
         else if(actor instanceof DungeonActorConfig.Laser laser){type="LASER";fuse=laser.duration;speed=laser.length;}
         else if(refName.startsWith("Bullet/Pet/")&&actor.getClass()==ActorConfig.Original.class){type="ACTOR";fuse=600000;}
+        else if(actor.getClass()==ActorConfig.Original.class&&inertActor(manager,actor)){type="ACTOR";}
         else if(actor instanceof DungeonActorConfig.Bullet bullet){type="BULLET";fuse=bullet.fuse;speed=bullet.speed;ox=bullet.offset==null?0:bullet.offset.x;oy=bullet.offset==null?0:bullet.offset.y;height=bullet.height;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bullet.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else if(actor instanceof DungeonActorConfig.Bomb bomb){type="BOMB";fuse=bomb.fuse;if(NESTED_ACTORS.add(reference)){try{detonation=readAction(manager,bomb.detonationAction);}finally{NESTED_ACTORS.remove(reference);}}else UNSUPPORTED.merge("recursive-actor-detonation",1,Integer::sum);}
         else {type=actor.getClass().getName();UNSUPPORTED.merge("actor:"+type,1,Integer::sum);}
@@ -675,6 +676,16 @@ public final class FireCatalogExport {
             startupActions.isEmpty()?null:new Action(Kind.COMPOUND,null,null,"","","",0,0,0,0,false,0,0,0,0,false,startupActions,""),
             attachment,activation,catalyst&&type.equals("BULLET")&&refName.contains("(Charged)"));
     }
+    /** Only retained no-op server helpers: never turn an unknown actor into a decoration. */
+    private static boolean inertActor(ConfigManager manager,ActorConfig.Original actor)throws Exception {
+        if(actor.collisionMask!=0||actor.collisionFlags!=0||actor.sprite.model!=null)return false;
+        for(var handler:actor.handlers){
+            if(!(handler instanceof HandlerConfig.Tick||handler instanceof HandlerConfig.Timer))return false;
+            if(!emptyAction(readAction(manager,(ActionConfig)field(handler,"action"))))return false;
+        }
+        return true;
+    }
+    private static boolean emptyAction(Action action){return action!=null&&action.kind()==Kind.COMPOUND&&action.children().stream().allMatch(FireCatalogExport::emptyAction);}
     private static ConfigReference<ActorConfig> statusAttachment(ActionConfig action){
         if(action instanceof ActionConfig.Compound compound)for(var child:compound.actions){var found=statusAttachment(child);if(found!=null)return found;}
         if(action instanceof DungeonActionConfig.DamageRegion region)return statusAttachment(region.damage);

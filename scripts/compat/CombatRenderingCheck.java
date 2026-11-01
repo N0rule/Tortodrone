@@ -467,6 +467,8 @@ public final class CombatRenderingCheck {
     private long tutorialDeathAt;
     private final Set<String> tutorialEnemyAttacks=new HashSet<>();
     private final Set<String> tutorialHelperAttacks=new HashSet<>(),tutorialHelperDamage=new HashSet<>();
+    private final Set<Integer> tutorialGiantHeads=new HashSet<>();
+    private boolean tutorialGiantDamage;
     private com.threerings.projectx.dungeon.data.PartyObject tutorialObservedParty;
     private float tutorialLastX,tutorialLastY;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
@@ -476,12 +478,17 @@ public final class CombatRenderingCheck {
             boolean heated=false;for(var item:app.CT().items)if(item instanceof com.threerings.projectx.item.data.LevelItem&&field(item,"_heatProgress").getFloat(item)>0)heated=true;
             if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Camp");
             if(!tutorialHelperAttacks.containsAll(Set.of("Bygs","Warden","Wend"))||tutorialHelperDamage.isEmpty())throw new AssertionError("Original helper combat missing: attacks="+tutorialHelperAttacks+" Giant damage="+tutorialHelperDamage);
-            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
+            if(!tutorialGiantHeads.containsAll(Set.of(0,1))||!tutorialGiantDamage)throw new AssertionError("Giant retaliation missing: native heads="+tutorialGiantHeads+" damage="+tutorialGiantDamage);
+            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families + all helpers + calibrated Giant native warning/strike and damage -> original doors/portal -> Rescue Camp arrival; fresh onboarding/reconnect and original targeting parity remain unverified");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){
             if(tutorialObservedParty!=party){tutorialObservedParty=party;party.a(new com.threerings.projectx.dungeon.data.PartyObject.b(){public void a(com.threerings.projectx.dungeon.data.PartyObject.DamageEvent event){
                 var target=authoritative.get(event.QU());var source=authoritative.get(event.Qx());
+                int damage=target instanceof Dungeoneer?event.QZ()>>>20:event.QZ();
+                if(damage>0&&target!=null&&source!=null&&source.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
+                    if(!tutorialGiantDamage)System.out.println("GIANT DAMAGE: target="+event.QU()+" amount="+damage);tutorialGiantDamage=true;
+                }
                 if(event.QZ()>0&&target!=null&&source!=null&&target.Mv().getName().contains("Ironwood Giant")&&source.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
                     String role=source.Mv().getName().substring(source.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperDamage.add(role))System.out.println("HELPER DAMAGE: "+role+" -> Giant amount="+event.QZ());
                 }
@@ -498,7 +505,12 @@ public final class CombatRenderingCheck {
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
         for(var actor:authoritative.values()){
-            if(actor.Mv().getName().contains("Ironwood Giant"))tutorialBoss=actor.vw();
+            if(actor.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
+                tutorialBoss=actor.vw();
+                if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adU()>=4&&tutorialGiantHeads.add(monster.adU()-4)){
+                    capture("tutorial-giant-head-"+(monster.adU()-4));System.out.println("GIANT ATTACK: native head="+(monster.adU()-4));
+                }
+            }
             if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adU()>=4&&actor.bR(16)&&actor.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
                 String role=actor.Mv().getName().substring(actor.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperAttacks.add(role)){capture("tutorial-helper-"+role);System.out.println("HELPER ATTACK: "+role+" activity="+monster.adU());}
             }

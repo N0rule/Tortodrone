@@ -181,7 +181,13 @@ public final class SceneWeapons {
         // detonation catch up next tick without losing their first movement step.
         for(var shot:List.copyOf(shots.values())){
             if(shot.destroyed!=Integer.MAX_VALUE){if(stamp-shot.destroyed>=100)shots.remove(shot.id);continue;}
-            int end=Math.min(stamp,shot.created+shot.spec.fuse());
+            boolean sourceBound=sourceBound(shot.spec);
+            if(sourceBound){
+                var parent=owners.get(shot.source.actorId);
+                if(parent==null&&targets!=null)parent=targets.actor(shot.source.actorId);
+                if(parent==null||parent.entity()!=null&&parent.entity().destroyed()!=Integer.MAX_VALUE){destroy(shot,stamp,false);continue;}
+            }
+            int end=sourceBound?stamp:Math.min(stamp,shot.created+shot.spec.fuse());
             while(shot.destroyed==Integer.MAX_VALUE){
                 int selected=-1,due=Integer.MAX_VALUE;
                 for(int i=0;i<shot.timers.length;i++){
@@ -197,9 +203,13 @@ public final class SceneWeapons {
                 execute(fired<timer.limit()?timer.action():timer.endAction(),shotPose(shot),due,0);
             }
             if(shot.destroyed==Integer.MAX_VALUE)advanceShot(shot,end,owners.get(shot.source.ownerId));
-            if(shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
+            if(!sourceBound&&shot.destroyed==Integer.MAX_VALUE&&stamp-shot.created>=shot.spec.fuse())destroy(shot,shot.created+shot.spec.fuse(),!shot.spec.nativeType().equals("BOMB"));
         }
         effects.removeIf(effect->stamp-effect.timestamp()>5000);lastStamp=stamp;
+    }
+    /** Inert native helpers have no retained lifetime; bound their ownership to the source. */
+    private static boolean sourceBound(FireCatalog.ActorSpec spec){
+        return spec.nativeType().equals("ACTOR")&&spec.fuse()==0&&spec.timers().isEmpty()&&spec.startup()==null&&spec.shutdown()==null&&spec.detonation()==null&&spec.attachment()==null&&spec.activation()==null&&spec.collisionMask()==0;
     }
     private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage);}
     private void advanceShot(Shot shot,int end,ActorState home){

@@ -52,8 +52,22 @@ public final class TutorialEnemyCompatibility {
         check((control.actors().getFirst().flags()&16)==0,"outside native acquisition expansion does not acquire");
         weighted(cm,"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",false);
         weighted(cm,"Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)",true);
+        giant(cm);
         for(String ally:List.of("Bygs","Warden","Wend"))companion(cm,ally);
         System.out.println("PASS: original Intro Jelly -> sourced targeting -> collision/speed pursuit -> native Roundhouse graph -> real player damage; target retention, departure and acquisition-boundary controls (synthetic terrain)");
+    }
+    private static void giant(ConfigManager cm)throws Exception {
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant");
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(prepared.fields());var policy=SceneTargeting.read(spec);
+        check(policy!=null&&policy.includePlayers()&&policy.monsterMask()==4&&policy.attack()==0,"authorized provisional Giant profile selects native chain head 0 and valid opposing combatants");
+        var content=new SceneContent(List.of(new SceneContent.Entry("giant",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var world=new SceneEntities(content,terrain);var weapons=new SceneWeapons(terrain);weapons.targets(world);var health=new SceneHealth(content);
+        int[] stamp={SceneClock.now()};var accepted=new ArrayList<Boolean>();world.attacks((actor,fire)->{boolean result=weapons.fire(fire,actor,stamp[0]);accepted.add(result);if(!result)System.out.println("GIANT GRAPH REFUSED: "+fire);});
+        world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));var pawn=player(219,3,0);boolean chained=false,warningSpawned=false;
+        for(int tick=0;tick<400;tick++){stamp[0]+=50;world.advance(stamp[0],List.of(pawn));weapons.advance(stamp[0],List.of(pawn));chained|=world.actors().getFirst().activity()==5;warningSpawned|=weapons.actors().stream().anyMatch(a->a.config().name().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Parts/Warning")&&a.projectile().nativeType().equals("ACTOR"));if(health.state().current()<200)break;}
+        check(chained&&warningSpawned&&!accepted.isEmpty()&&accepted.stream().allMatch(Boolean::booleanValue)&&health.state().current()<200,"actual Giant warning actor/strike chain must execute and damage a knight; accepted="+accepted);
+        System.out.println("PASS: provisional capture-calibrated Giant targeting -> native warning/strike chain -> actual knight damage (synthetic terrain; targeting parity limits remain)");
     }
     private static void companion(ConfigManager cm,String role)throws Exception {
         String name="Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/"+role;
@@ -64,8 +78,10 @@ public final class TutorialEnemyCompatibility {
         var follow=SceneFollow.read(ally);check(follow!=null&&follow.evaluation()==500&&follow.minimum()==0&&follow.maximum()==3,"source helper's idle Follow routine: "+role);
         spawn.actor=new ConfigReference<>("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant");
         var giant=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        // Passive target fixture isolates friendly-fire safety from Giant retaliation.
+        var passive=new HashMap<>(giant.fields());passive.keySet().removeIf(k->k.startsWith("targeting."));
         for(double draw:role.equals("Bygs")?new double[]{.2}:new double[]{.2,.99}){
-            var content=new SceneContent(List.of(new SceneContent.Entry("helper",0,0,0,ally),new SceneContent.Entry("giant",8,0,0,new SceneContent.Spec(giant.fields()))),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+            var content=new SceneContent(List.of(new SceneContent.Entry("helper",0,0,0,ally),new SceneContent.Entry("giant",8,0,0,new SceneContent.Spec(passive))),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
             var terrain=open();var world=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(0){@Override public double nextDouble(){return draw;}});
             var weapons=new SceneWeapons(terrain);weapons.targets(world);var health=new SceneHealth(content);int[] stamp={SceneClock.now()};var fired=new ArrayList<Boolean>();
             world.attacks((actor,fire)->fired.add(weapons.fire(fire,actor,stamp[0])));world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));

@@ -640,8 +640,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private List<ActorState> targetCandidates(Entity e,List<ActorState> occupants){
         if(e.targeting==null||e.targeting.monsterMask()==0)return occupants;
-        return entities.values().stream().filter(v->v!=e&&v.kind.equals("Monster")&&v.health>0&&v.destroyed==Integer.MAX_VALUE
-            &&v.status.state().modifiers().canBeTargeted()&&(v.spec.integer("damage-mask",0)&e.targeting.monsterMask())!=0).map(Entity::snapshot).toList();
+        var candidates=new ArrayList<ActorState>();
+        if(e.targeting.includePlayers()&&(Math.round(content.stats().getOrDefault("player.damage-mask",13f))&e.targeting.monsterMask())!=0)candidates.addAll(occupants);
+        candidates.addAll(entities.values().stream().filter(v->v!=e&&v.kind.equals("Monster")&&v.health>0&&v.destroyed==Integer.MAX_VALUE
+            &&v.status.state().modifiers().canBeTargeted()&&(v.spec.integer("damage-mask",0)&e.targeting.monsterMask())!=0).map(Entity::snapshot).toList());return List.copyOf(candidates);
     }
     private void follow(Entity e,int stamp,float elapsed,List<ActorState> occupants){
         if(e.activity!=0)return;
