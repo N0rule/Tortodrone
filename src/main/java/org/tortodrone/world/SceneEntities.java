@@ -5,7 +5,9 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Instance-owned native actors, pad regeneration, movement and damage targets. */
 public final class SceneEntities implements SceneWeapons.Targets {
-    public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot) { }
+    public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
+        public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
+    }
     private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift");
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
@@ -17,6 +19,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final SceneTargeting targeting;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
+        ScenePickupState pickupState;
         final Map<Integer,SceneAttackMotion> attackMotion;
         int wanderPhase,wanderNext;float wanderRotation;
         final Map<Integer,Threat> victims;
@@ -45,6 +48,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(script!=null&&(targeting!=null||wander!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
             victims=targeting==null?Map.of():new LinkedHashMap<>();
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
+            int heat=spec.integer("pickup-heat",0);
+            if(heat<0||heat>1_000_000||heat>0&&(!kind.equals("Pickup")||!spec.text("pickup-item","").isEmpty()))throw new IllegalArgumentException("Invalid native heat pickup");
             if((targeting!=null||wander!=null||!attackMotion.isEmpty())&&!kind.equals("Monster"))throw new IllegalArgumentException("Native combat behavior requires a monster actor");
             interactive=content.conversations().containsKey(spec.text("dialogue",config.name()))||spec.fields().containsKey("town-station")||spec.fields().containsKey("town-kind");
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
@@ -78,7 +83,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         ActorState snapshot(){return new ActorState(id,0,"",0,created,x,y,rotation,direction,flags,activity,activityStarted,config,false,null,null,
             new SceneEntityState(kind,destroyed,speed,pawnRadius,
                 maximumHealth>0?health/maximumHealth:-1,state,stateEntered,count,hitTime,binding.key(),
-                kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime,entrySource()));}
+                kind.equals("DungeonLift")?new SceneLiftState(z,faction,excluded,dropPoint):null,status.state(),affectedType,affectedTime,entrySource(),pickupState));}
     }
     /** Native collision bit 1 << 13 ("lift" in the 2026 mask.properties registry): the served
      *  Lift Barriers state exactly this bit, and the 2026 lift base adds it to thrown and
@@ -283,11 +288,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     public List<Pickup> takePickups(int player){
         var result=new ArrayList<Pickup>();
-        for(var e:entities.values())if(e.claim==player&&!e.claimTaken){e.claimTaken=true;result.add(new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null));}
+        for(var e:entities.values())if(e.claim==player&&!e.claimTaken){e.claimTaken=true;result.add(pickup(e));}
         return List.copyOf(result);
     }
     public List<Pickup> pendingPickups(int player){
-        return entities.values().stream().filter(e->e.claim==player).map(e->new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null)).toList();
+        return entities.values().stream().filter(e->e.claim==player).map(SceneEntities::pickup).toList();
+    }
+    private static Pickup pickup(Entity e){return new Pickup(e.id,e.spec.text("pickup-item",""),e.spec.flag("pickup-transient",false),e.spec.fields().containsKey("pickup-equip-slot")?e.spec.integer("pickup-equip-slot",0):null,e.spec.integer("pickup-heat",0));}
+    public int heatClaim(int player,int actor){var e=entities.get(actor);return e!=null&&e.destroyed==Integer.MAX_VALUE&&e.claim==player&&e.claimTaken?e.spec.integer("pickup-heat",0):0;}
+    public boolean activateHeat(int player,int actor){
+        var e=entities.get(actor);if(heatClaim(player,actor)<=0)return false;
+        var target=players.stream().filter(p->p.id()==player&&p.clientOid()>0).findFirst().orElse(null);if(target==null)return false;
+        e.pickupState=new ScenePickupState(target.clientOid(),lastStamp);
+        float speed=e.spec.number("vacuum-speed",0);
+        e.destroyed=lastStamp+(speed<=0?0:(int)(Math.hypot(target.x()-e.x,target.y()-e.y)*1000/speed));e.claim=0;e.claimTaken=false;return true;
     }
     public void reconsiderPickups(int player){for(var e:entities.values())e.refusedPickups.remove(player);}
     public void completePickup(int player,int actor,boolean success){
@@ -547,13 +561,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
 
     private void collect(Entity e,float elapsed,List<ActorState> players){
-        if(e.spec.text("pickup-item","").isEmpty())return;
+        if(e.spec.text("pickup-item","").isEmpty()&&e.spec.integer("pickup-heat",0)==0)return;
         for(var player:players){
             if(!playerActive.test(player.id())||!pickupEligible.test(player.id(),e.spec))continue;
             float dx=player.x()-e.x,dy=player.y()-e.y,distance=(float)Math.hypot(dx,dy);
             float reach=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS;
             if(distance>reach+e.spec.number("vacuum-expansion",0)){e.refusedPickups.remove(player.id());continue;}
             if(e.refusedPickups.contains(player.id()))continue;
+            if(e.spec.integer("pickup-heat",0)>0){e.claim=player.id();return;}
             if(distance<=reach){e.claim=player.id();return;}
             float step=Math.min(distance,e.spec.number("vacuum-speed",0)*elapsed);
             float x=e.x+dx*step/distance,y=e.y+dy*step/distance;

@@ -218,9 +218,13 @@ public final class Database {
             return null;
         });
     }
-    /** Server-owned Crash Site settlement. Receipt and safe return commit together, once.
-     * No reward is granted: the available native evidence establishes only tutorial flag 32. */
+    /** Server-owned Crash Site settlement. Collected heat, receipt and safe return commit
+     * together, once. No fixed completion reward or rank is invented. */
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision)throws IOException {
+        return completeTutorial(accountId,knightId,authRevision,worldId,revision,0,null);
+    }
+    public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision,float heat,org.tortodrone.town.TownCatalog rules)throws IOException {
+        if(!Float.isFinite(heat)||heat<0||heat>1_000_000||heat>0&&rules==null)throw new IOException("Invalid tutorial heat settlement");
         return write(c->{
             requirePreferenceOwner(c,accountId,authRevision);
             var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
@@ -235,6 +239,7 @@ public final class Database {
                 }
             }
             if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
+            if(heat>0)TownStore.applyHeat(c,profile,rules,heat);
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
                 s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.CAMP);s.executeUpdate();

@@ -233,8 +233,11 @@ public final class CharacterStore {
         database.lastTownScene(accountId,knightId,authRevision,scene);
     }
     public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected)throws IOException {
+        return completeTutorial(knightId,authRevision,expected,0,null);
+    }
+    public WorldProfile completeTutorial(int knightId,long authRevision,WorldProfile expected,float heat,org.tortodrone.town.TownCatalog rules)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid tutorial owner");
-        return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision());
+        return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision(),heat,rules);
     }
     public Set<String> knightMemories(int knightId,long authRevision)throws IOException {
         if(database==null)throw new IOException("Knight memories require SQLite storage");

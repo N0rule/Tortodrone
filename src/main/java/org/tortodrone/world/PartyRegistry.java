@@ -12,13 +12,17 @@ public final class PartyRegistry {
     public record Refresh() implements Event { }
     public record Invitation(int partyOid,List<String> names,int inviter,boolean add) implements Event { }
     public record Chat(int partyOid,SceneChat.Message message) implements Event { }
-    public record Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status) { }
+    public record Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status,float heat) {
+        public Participant(int playerOid,int worldId,int order,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status){this(playerOid,worldId,order,knight,profile,health,status,0);}
+        public Participant {if(!Float.isFinite(heat)||heat<0||heat>1_000_000)throw new IllegalArgumentException("Invalid floor heat");}
+    }
     public record View(int oid,long revision,List<Participant> members,boolean automatic,boolean inviteOnly,boolean allowFriends,boolean allowGuild) { public View{members=List.copyOf(members);} }
     public final class Member implements AutoCloseable {
         public final int playerOid,worldId;
         private Knight knight;private WorldProfile profile;
         private SceneHealth.State health=new SceneHealth.State(1,1,0);
         private SceneStatus.State status=SceneStatus.State.NORMAL;
+        private float heat;
         private final Consumer<Event> endpoint;
         private Party party;private int order;private boolean town=true;
         private Member(int oid,Knight knight,WorldProfile profile,Consumer<Event> endpoint){playerOid=oid;worldId=profile.worldId();this.knight=knight;this.profile=profile;this.endpoint=endpoint;}
@@ -87,7 +91,7 @@ public final class PartyRegistry {
     }
     private void require(Member member)throws IOException{if(member==null||online.get(member.worldId)!=member)throw new IOException("Party session is no longer current");}
     public synchronized View view(Member member)throws IOException{purge();require(member);return view(member.party);}
-    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status)).toList(),party.automatic,party.inviteOnly,party.allowFriends,party.allowGuild);}
+    private View view(Party party){return new View(party.oid,party.revision,party.members.stream().map(m->new Participant(m.playerOid,m.worldId,m.order,m.knight,m.profile,m.health,m.status,m.heat)).toList(),party.automatic,party.inviteOnly,party.allowFriends,party.allowGuild);}
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}
     @FunctionalInterface public interface ReviveTransaction<T>{T commit(int targetWorld)throws IOException;}
@@ -98,8 +102,12 @@ public final class PartyRegistry {
         return transaction.commit(target.worldId);
     }
     public synchronized void state(Member member,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status,boolean town)throws IOException {
-        require(member);boolean changed=!member.knight.equals(knight)||!member.profile.equals(profile)||!member.health.equals(health)||!member.status.equals(status);
-        member.knight=knight;member.profile=profile;member.health=health;member.status=status;member.town=town;if(changed)publish(member.party);
+        state(member,knight,profile,health,status,town,0);
+    }
+    public synchronized void state(Member member,Knight knight,WorldProfile profile,SceneHealth.State health,SceneStatus.State status,boolean town,float heat)throws IOException {
+        require(member);if(!Float.isFinite(heat)||heat<0||heat>1_000_000)throw new IOException("Invalid floor heat");
+        boolean changed=!member.knight.equals(knight)||!member.profile.equals(profile)||!member.health.equals(health)||!member.status.equals(status)||member.heat!=heat;
+        member.knight=knight;member.profile=profile;member.health=health;member.status=status;member.heat=heat;member.town=town;if(changed)publish(member.party);
     }
     public synchronized void invite(Member sender,String name)throws IOException {
         require(sender);var party=sender.party;if(party.automatic)throw new IOException("Training groups do not allow invitations");if(party.members.iterator().next()!=sender)throw new IOException("Only the party leader can invite");

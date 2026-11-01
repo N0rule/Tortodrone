@@ -279,10 +279,13 @@ public final class TownStore {
     public Result addHeat(int account,int knight,long auth,float amount)throws IOException{
         if(!Float.isFinite(amount)||amount<=0||amount>1_000_000)throw new IOException("Invalid heat award");
         return change(account,knight,auth,(c,p)->{
-            float awarded=SlotUpgrades.heatBonusActive(p)?amount*2:amount;
-            var eligible=p.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot())).filter(i->{var g=rules.gear().gear(i.config());return g!=null&&!g.maximum(i.level())&&i.heatProgress()<1;}).toList();
-            for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),awarded/eligible.size()));}return null;
+            applyHeat(c,p,rules,amount);return null;
         });
+    }
+    static void applyHeat(Connection c,WorldProfile p,TownCatalog rules,float amount)throws SQLException,IOException {
+        float awarded=SlotUpgrades.heatBonusActive(p)?amount*2:amount;
+        var eligible=p.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7,8,9).contains(i.equippedSlot())).filter(i->{var g=rules.gear().gear(i.config());return g!=null&&!g.maximum(i.level())&&i.heatProgress()<1;}).toList();
+        for(var item:eligible){var g=rules.gear().gear(item.config());setGearProgress(c,p.worldId(),item.id(),item.level(),g.addHeat(item.level(),item.heatProgress(),awarded/eligible.size()));}
     }
     private static void setGearProgress(Connection c,int world,long item,int level,float heat)throws SQLException,IOException{
         try(var st=c.prepareStatement("UPDATE inventory_items SET level=?,heat_progress=? WHERE world_id=? AND item_id=?")){st.setInt(1,level);st.setFloat(2,heat);st.setInt(3,world);st.setLong(4,item);if(st.executeUpdate()!=1)throw new IOException("Item changed");}

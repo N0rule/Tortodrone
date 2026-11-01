@@ -456,42 +456,56 @@ public final class CombatRenderingCheck {
     private SceneCatalog.MapScene tutorialMap;
     private int tutorialWaypoint,tutorialNode,tutorialBoss;
     private List<org.tortodrone.world.ScenePathing.Point> tutorialPath=List.of();
-    private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt;
+    private long tutorialResponseAt,tutorialProgressAt,tutorialCombatAt,tutorialRepathAt,tutorialRouteRetryAt,tutorialEnemySince;
     private double tutorialBestDistance=Double.POSITIVE_INFINITY;
     private final Map<String,org.tortodrone.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
     private String tutorialDialog="";
     private int tutorialEnemy;
+    private float tutorialCollectedHeat;
+    private long tutorialDeathAt;
     private final Set<String> tutorialEnemyAttacks=new HashSet<>();
     private float tutorialLastX,tutorialLastY;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
     private void tutorialPlayTick(View view,long now)throws Exception {
         if(view.sceneId()==217){if(stage!=6){stage=6;started=now;capture("rescue-camp-arrival");}if(now-started>5_000_000_000L){
             if(!tutorialEnemyAttacks.containsAll(Set.of("Character/NPC/Monster/Slime/Jelly Cube (Intro)","Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)","Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)")))throw new AssertionError("Tutorial did not exercise all three sourced enemy families: "+tutorialEnemyAttacks);
+            boolean heated=false;for(var item:app.CT().items)if(item instanceof com.threerings.projectx.item.data.LevelItem&&field(item,"_heatProgress").getFloat(item)>0)heated=true;
+            if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Camp");
             capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
+        if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){
+            var heat=party.heat.f(app.CT().xL());
+            if(heat!=null&&heat.amount>tutorialCollectedHeat){if(tutorialCollectedHeat==0)capture("tutorial-heat-collected");tutorialCollectedHeat=heat.amount;System.out.println("HEAT: native floor amount="+heat.amount);}
+            var health=party.health.f(app.CT().xL());
+            if(health!=null&&health.current<=0){flags(view,0);if(tutorialDeathAt==0){tutorialDeathAt=now;capture("tutorial-pawn-dead");}if(now-tutorialDeathAt>1_000_000_000L)throw new AssertionError("Tutorial pawn died during normal combat; no death/health shortcut used");return;}
+        }
         if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
             flags(view,0);String key=info.name+":"+info.message;
             if(!key.equals(tutorialDialog)&&now>=tutorialResponseAt){tutorialDialog=key;tutorialResponseAt=now+750_000_000L;capture("tutorial-dialog-"+tutorialWaypoint+"-"+Math.abs(key.hashCode()));System.out.println("DIALOG: "+key);info.conversationService.f(0,new Confirm());}
             return;
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
-        if(stage==3){
+        if(stage==3||stage==4){
             // Fight nearby live enemies with the stock controller. Do not drive through
             // them or change health/actor state in order to keep the route moving.
-            Actor nearest=null;double distance=4.2;
+            Actor nearest=null;double distance=own.tz().y>55?14:4.2;
             for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
                     &&actor.Mv().getName().startsWith("Character/NPC/Monster/")&&!actor.Mv().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0){
                 if(monster.adU()>=4&&tutorialEnemyAttacks.add(actor.Mv().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.Mv().getName()+" activity="+monster.adU()+" at="+actor.tz());}
                 double d=Math.hypot(actor.tz().x-own.tz().x,actor.tz().y-own.tz().y);if(d<distance){distance=d;nearest=actor;}
             }
             if(nearest!=null){
-                if(tutorialEnemy!=nearest.vw()){tutorialEnemy=nearest.vw();tutorialCombatAt=now;System.out.println("COMBAT: approaching "+nearest.Mv().getName());}
-                boolean moving=distance>1.4;moveToward(view,nearest.tz().x-own.tz().x,nearest.tz().y-own.tz().y,moving);
-                flags(view,(moving?1:0)|((now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0));
-                tutorialPath=List.of();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;return;
+                if(tutorialEnemy!=nearest.vw()){tutorialEnemy=nearest.vw();tutorialEnemySince=now;tutorialPath=List.of();System.out.println("COMBAT: approaching "+nearest.Mv().getName());}
+                boolean moving=distance>1.4;
+                if(moving&&own.tz().y>55){
+                    float dx=nearest.tz().x-own.tz().x,dy=nearest.tz().y-own.tz().y;
+                    tutorialWalk(view,own,nearest.tz().x-(float)(dx/distance)*1.25f,nearest.tz().y-(float)(dy/distance)*1.25f,now);
+                }else moveToward(view,nearest.tz().x-own.tz().x,nearest.tz().y-own.tz().y,moving);
+                flags(view,(moving?1:0)|((now-tutorialEnemySince)%1_250_000_000L<100_000_000L?4:0));
+                tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;return;
             }
-            tutorialEnemy=0;
+            if(tutorialEnemy!=0){tutorialEnemy=0;tutorialPath=List.of();tutorialCombatAt=now;}
         }
         if(stage==3&&tutorialWaypoint<TUTORIAL_WALK.length){
             var target=TUTORIAL_WALK[tutorialWaypoint];

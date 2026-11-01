@@ -22,7 +22,8 @@ public class PartyCompatibility {
             append(bytes,codec.party((short)4,before,scenes.entry()));
             registry.respond(b,"PARTY_INV:"+before.oid(),1);var joined=registry.view(a);append(bytes,codec.partyChanges(before,joined));
             registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false);var hurt=registry.view(a);append(bytes,codec.partyChanges(joined,hurt));
-            registry.boot(a,alice.name());var remaining=registry.view(b);append(bytes,codec.partyChanges(hurt,remaining));
+            registry.state(b,bob,profile(2),new SceneHealth.State(17,200,0,0),SceneStatus.State.NORMAL,false,10);var heated=registry.view(a);append(bytes,codec.partyChanges(hurt,heated));
+            registry.boot(a,alice.name());var remaining=registry.view(b);append(bytes,codec.partyChanges(heated,remaining));
             append(bytes,codec.partyInvitation(1002,new PartyRegistry.Invitation(before.oid(),List.of(),0,false)));
             var input=new com.threerings.io.v(new ByteArrayInputStream(bytes.toByteArray()));input.qe();input.qe();
             var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)input.qe()).yk();apply(input,player);
@@ -35,10 +36,11 @@ public class PartyCompatibility {
             heat(party,1002);party.heat.f(1001).amount=17;
             apply(input,party);if(party.D(new com.threerings.util.Name(bob.name())).current!=17)throw new AssertionError("Native peer health not updated");
             if(party.heat.f(1001).amount!=17)throw new AssertionError("A health update reset existing native heat");
+            apply(input,party);if(party.heat.f(1002).amount!=10||party.heat.f(1001).amount!=17)throw new AssertionError("Native floor heat updated the wrong owner or reset a peer");
             apply(input,party);if(party.members.size()!=1||party.health.size()!=1||party.status.size()!=1||party.heat.size()!=1||party.heat.f(1001)!=null||party.QN().Qu()!=1002)throw new AssertionError("Native leave/leader succession differs");
             apply(input,player);if(!player.notifications.isEmpty()||input.available()!=0)throw new AssertionError("Native notification removal or framing differs");
         }
-        System.out.println("PASS: stock party invitation, LevelPartyObject, capacity/leader, ordered member/vitals/heat join and leave, heat retention, peer health and notification removal");
+        System.out.println("PASS: stock party invitation, LevelPartyObject, capacity/leader, ordered member/vitals/heat join and leave, native positive heat update/peer retention, peer health and notification removal");
     }
     private static Knight knight(String name){return new Knight(1,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static WorldProfile profile(int id){return new WorldProfile(id,id,1,0,0,1,List.of());}

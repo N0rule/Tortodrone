@@ -114,6 +114,7 @@ public final class SceneSimulation {
         private int interactionTarget;
         private int lift,dropAt;
         private final SceneHealth health=new SceneHealth(instance.map().content());
+        private float floorHeat;
         private boolean revivePending;
         private org.tortodrone.town.TownState.Sprite sprite;
         private org.tortodrone.town.TownState.Harness harness;
@@ -210,6 +211,17 @@ public final class SceneSimulation {
         }
         public int takeInteraction(){synchronized(SceneSimulation.this){check();int target=interactionTarget;interactionTarget=0;return target;}}
         public List<SceneEntities.Pickup> takePickups(){synchronized(SceneSimulation.this){check();return entities.takePickups(appearance.id());}}
+        public float floorHeat(){synchronized(SceneSimulation.this){check();return floorHeat;}}
+        /** Consume a scene-owned claim and credit the floor atomically, before publication. */
+        public boolean collectHeat(int entity){synchronized(SceneSimulation.this){
+            check();if(!entered||portal!=null||!health.alive())return false;
+            int amount=entities.heatClaim(appearance.id(),entity);if(amount<=0)return false;
+            var recipients=members.values().stream().filter(m->m.entered&&!m.detached).toList();
+            if(recipients.stream().anyMatch(m->m.floorHeat>1_000_000-amount))return false;
+            if(!entities.activateHeat(appearance.id(),entity))return false;
+            for(var member:recipients)member.floorHeat+=amount;
+            return true;
+        }}
         public String pickupReceipt(int entity){return pickupEpoch+":"+entity;}
         public void completePickup(int entity,boolean success){synchronized(SceneSimulation.this){entities.completePickup(appearance.id(),entity,success);}}
         private Membership(ActorState actor,Consumer<Snapshot> publish) {

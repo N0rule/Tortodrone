@@ -86,7 +86,7 @@ final class WorldSession implements AutoCloseable {
     private boolean partyRefreshQueued,partyOverflow;
     private int partyOid()throws IOException{return scenes.parties().view(partyMember).oid();}
     private SceneRegistry.Instance destination(int template)throws IOException{return scenes.destination(template,profile.worldId(),partyMember);}
-    private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null);}
+    private void partyState()throws IOException{if(partyMember!=null&&membership!=null)scenes.parties().state(partyMember,knight,profile,membership.health(),membership.status(),scene.map().town()&&portalMove==null,membership.floorHeat());}
     private void offerParty(PartyRegistry.Event event){synchronized(publications){
         if(deliveryStopped)return;if(event instanceof PartyRegistry.Refresh){if(partyRefreshQueued)return;partyRefreshQueued=true;}
         if(partyEvents.size()>=64)partyOverflow=true;else partyEvents.addLast(event);publications.notifyAll();
@@ -185,6 +185,7 @@ final class WorldSession implements AutoCloseable {
         for(var pickup:membership.takePickups()){
             boolean success=false;
             try{
+                if(pickup.heat()>0){success=membership.collectHeat(pickup.entityId());continue;}
                 var before=visibleProfile();
                 if(pickup.temporary()){
                     if(pickup.equippedSlot()!=null){
@@ -1906,8 +1907,11 @@ final class WorldSession implements AutoCloseable {
         var next=destination(route.camp().id());
         if(next.map()!=route.camp()||!floorReport.valid())return false;
         profile=loadProfile(profile);
-        profile=characters.completeTutorial(knight.id(),authRevision,profile);
+        var before=profile;
+        profile=characters.completeTutorial(knight.id(),authRevision,profile,membership.health().current()>0?membership.floorHeat():0,scenes.town());
         floorReport.finish();floorReport=null;
+        var settled=profile;
+        if(!before.items().equals(settled.items()))output.send(()->codec.itemChanges(oid,knight,before,settled));
         closeConversation();closeTownDialog();
         portalMove=new PortalMove(next,route.entrance());departedSceneOid=scene.oid();
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();

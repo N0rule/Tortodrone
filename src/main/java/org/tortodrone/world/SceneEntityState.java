@@ -2,7 +2,8 @@ package org.tortodrone.world;
 
 /** Immutable native scene entity fields; these are never authenticated player occupants. */
 public record SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,
-        int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift,SceneStatus.State status,int affectedType,int affectedTime,boolean entrySource) {
+        int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift,SceneStatus.State status,int affectedType,int affectedTime,boolean entrySource,ScenePickupState pickup) {
+    public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift,SceneStatus.State status,int affectedType,int affectedTime,boolean entrySource){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,lift,status,affectedType,affectedTime,entrySource,null);}
     public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift,SceneStatus.State status,int affectedType,int affectedTime){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,lift,status,affectedType,affectedTime,false);}
     public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift,SceneStatus.State status){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,lift,status,0,0);}
     public SceneEntityState(String kind,int destroyed,float speed,float maxStep,float health,int state,int stateEntered,int count,int hitTime,String key,SceneLiftState lift){this(kind,destroyed,speed,maxStep,health,state,stateEntered,count,hitTime,key,lift,SceneStatus.State.NORMAL);}

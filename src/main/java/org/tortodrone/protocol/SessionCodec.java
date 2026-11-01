@@ -1011,7 +1011,7 @@ public final class SessionCodec {
     }
     private void partyHealth(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var health=member.health();type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(member.playerOid());out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());}
     /** Every native level member requires a Heat entry, including an empty floor. */
-    private void partyHeat(DataOutputStream out,PartyRegistry.Participant member)throws IOException {type(out,"com.threerings.projectx.dungeon.data.Heat");out.writeInt(member.playerOid());out.writeFloat(0);out.writeFloat(0);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(false);}
+    private void partyHeat(DataOutputStream out,PartyRegistry.Participant member)throws IOException {type(out,"com.threerings.projectx.dungeon.data.Heat");out.writeInt(member.playerOid());out.writeFloat(member.heat());out.writeFloat(0);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(false);}
     private void partyStatus(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var status=member.status();type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(member.playerOid());conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(member.health().reviveFlags());}
     public byte[] partyChanges(PartyRegistry.View before,PartyRegistry.View after)throws IOException {
         var events=new ArrayList<Writer>();var old=new HashMap<Integer,PartyRegistry.Participant>();for(var m:before.members())old.put(m.playerOid(),m);
@@ -1023,7 +1023,7 @@ public final class SessionCodec {
             current.add(member.playerOid());var previous=old.get(member.playerOid());
             if(previous==null||!previous.health().equals(member.health()))events.add(out->{partyEntry(out,after.oid(),"health",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyHealth(out,member);});
             if(previous==null||!previous.status().equals(member.status())||previous.health().reviveFlags()!=member.health().reviveFlags())events.add(out->{partyEntry(out,after.oid(),"status",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyStatus(out,member);});
-            if(previous==null)events.add(out->{partyEntry(out,after.oid(),"heat","EntryAddedEvent");partyHeat(out,member);});
+            if(previous==null||previous.heat()!=member.heat())events.add(out->{partyEntry(out,after.oid(),"heat",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyHeat(out,member);});
             // Member listeners construct HUD rows synchronously and require both vitals entries.
             if(previous==null||!previous.knight().equals(member.knight())||previous.order()!=member.order()||partyAppearanceChanged(previous,member))events.add(out->{partyEntry(out,after.oid(),"members",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyMember(out,member);});
         }
@@ -1430,7 +1430,7 @@ public final class SessionCodec {
             case "Block" -> out.writeInt(e.hitTime());
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(e.maxStep());out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());primitiveInts(out,e.lift()==null?null:e.lift().excluded());}
-            case "Pickup" -> {out.writeBoolean(false);out.writeBoolean(false);}
+            case "Pickup" -> {primitiveInts(out,null);primitiveInts(out,e.pickup()==null?null:new int[]{e.pickup().playerOid(),e.pickup().activated()});}
             case "Trap" -> {type(out,"com.threerings.projectx.dungeon.data.actor.Trap$State");out.writeByte(e.state());out.writeInt(e.stateEntered());}
             case "Bomb" -> {out.writeInt(0);out.writeInt(0);out.writeFloat(org.tortodrone.world.ProjectileState.UNSPECIFIED_Z);}
             case "Actor" -> { }
@@ -1452,6 +1452,7 @@ public final class SessionCodec {
         }else{
             mask|=e.kind().equals("Switch")?0xc0:(e.kind().equals("Actor")||e.kind().equals("Bomb"))?0:e.kind().equals("DungeonLift")?0x7c0:e.kind().equals("Block$Stateful")?0xe0:0x20;
             if(e.kind().equals("Trap"))mask|=0x40;
+            if(e.kind().equals("Pickup")&&e.pickup()!=null)mask|=0x40;
             out.writeByte(mask);if(e.kind().equals("DungeonLift"))out.writeByte(mask>>>8);
         }
         out.writeInt(e.destroyed());vector(out,a.x(),a.y());out.writeFloat(a.rotation());out.writeInt(a.flags());
@@ -1461,7 +1462,7 @@ public final class SessionCodec {
         }else switch(e.kind()){
             case "Generator" -> out.writeInt(e.count());case "Door" -> out.writeInt(e.stateEntered());
             case "Switch" -> {out.writeInt(e.state());out.writeInt(e.stateEntered());}
-            case "Block" -> out.writeInt(e.hitTime());case "Pickup" -> out.writeShort(0);
+            case "Block" -> out.writeInt(e.hitTime());case "Pickup" -> {out.writeShort(0);if(e.pickup()!=null){type(out,"[I");out.writeInt(2);out.writeInt(e.pickup().playerOid());out.writeInt(e.pickup().activated());}}
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());
                 int[] ids=e.lift()==null?null:e.lift().excluded();if(ids==null)out.writeShort(0);else{type(out,"[I");out.writeInt(ids.length);for(int id:ids)out.writeInt(id);}}
