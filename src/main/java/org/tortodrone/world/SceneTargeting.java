@@ -5,7 +5,7 @@ import java.util.random.RandomGenerator;
 import org.tortodrone.resources.Json;
 
 /** Allowlisted native Targeting with single or distance-weighted PathAttack choices. */
-public record SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes,int idleAttack) {
+public record SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes,int idleAttack,int monsterMask) {
     public record Mode(int attack,float minimum,float maximum,float range,float weight,boolean faces,float turnSnap) {
         public Mode {
             if(attack<0||attack>255||!Float.isFinite(minimum)||!Float.isFinite(maximum)||minimum<0||maximum<minimum
@@ -15,13 +15,14 @@ public record SceneTargeting(float expansion,int evaluation,int interval,List<Mo
         boolean eligible(float distance){return distance>=minimum&&distance<=maximum;}
     }
     public SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes){this(expansion,evaluation,interval,modes,-1);}
+    public SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes,int idleAttack){this(expansion,evaluation,interval,modes,idleAttack,0);}
     public SceneTargeting(float expansion,int evaluation,int attack,int interval,float range,float turnSnap){
         this(expansion,evaluation,interval,List.of(new Mode(attack,0,Float.MAX_VALUE,range,1,true,turnSnap)));
     }
     public SceneTargeting {
         modes=List.copyOf(modes);
         if(!Float.isFinite(expansion)||expansion<0||expansion>4096||evaluation<1||evaluation>3_600_000||interval<0||interval>3_600_000
-                ||idleAttack< -1||idleAttack>255||modes.isEmpty()||modes.size()>64||modes.stream().noneMatch(m->m.weight()>0))throw new IllegalArgumentException("Invalid native targeting policy");
+                ||idleAttack< -1||idleAttack>255||monsterMask<0||monsterMask>255||modes.isEmpty()||modes.size()>64||modes.stream().noneMatch(m->m.weight()>0))throw new IllegalArgumentException("Invalid native targeting policy");
     }
     // Single-head adapters retained for the simple policy and its native-data oracle.
     public int attack(){return modes.getFirst().attack();}
@@ -50,7 +51,7 @@ public record SceneTargeting(float expansion,int evaluation,int interval,List<Mo
                         modes.add(new Mode((int)attack,number(fields,"minimum"),number(fields,"maximum"),number(fields,"range"),number(fields,"weight"),faces,number(fields,"turn-snap")));
                     }
                 }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid native targeting metadata",invalid);}
-                policy=new SceneTargeting(spec.number("targeting.expansion",-1),spec.integer("targeting.evaluation",-1),spec.integer("targeting.interval",-1),modes,spec.integer("targeting.idle-attack",-1));
+                policy=new SceneTargeting(spec.number("targeting.expansion",-1),spec.integer("targeting.evaluation",-1),spec.integer("targeting.interval",-1),modes,spec.integer("targeting.idle-attack",-1),spec.integer("targeting.monster-mask",0));
             }
             default -> throw new IllegalArgumentException("Unsupported native targeting policy");
         }

@@ -461,9 +461,13 @@ public final class CombatRenderingCheck {
     private final Map<String,org.tortodrone.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
     private String tutorialDialog="";
     private int tutorialEnemy;
+    private float tutorialEnemyGoalX,tutorialEnemyGoalY;
+    private float tutorialEnemyPoseX,tutorialEnemyPoseY;
     private float tutorialCollectedHeat;
     private long tutorialDeathAt;
     private final Set<String> tutorialEnemyAttacks=new HashSet<>();
+    private final Set<String> tutorialHelperAttacks=new HashSet<>(),tutorialHelperDamage=new HashSet<>();
+    private com.threerings.projectx.dungeon.data.PartyObject tutorialObservedParty;
     private float tutorialLastX,tutorialLastY;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
     private void tutorialPlayTick(View view,long now)throws Exception {
@@ -471,10 +475,17 @@ public final class CombatRenderingCheck {
             if(!tutorialEnemyAttacks.containsAll(Set.of("Character/NPC/Monster/Slime/Jelly Cube (Intro)","Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)","Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)")))throw new AssertionError("Tutorial did not exercise all three sourced enemy families: "+tutorialEnemyAttacks);
             boolean heated=false;for(var item:app.CT().items)if(item instanceof com.threerings.projectx.item.data.LevelItem&&field(item,"_heatProgress").getFloat(item)>0)heated=true;
             if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Camp");
+            if(!tutorialHelperAttacks.containsAll(Set.of("Bygs","Warden","Wend"))||tutorialHelperDamage.isEmpty())throw new AssertionError("Original helper combat missing: attacks="+tutorialHelperAttacks+" Giant damage="+tutorialHelperDamage);
             capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){
+            if(tutorialObservedParty!=party){tutorialObservedParty=party;party.a(new com.threerings.projectx.dungeon.data.PartyObject.b(){public void a(com.threerings.projectx.dungeon.data.PartyObject.DamageEvent event){
+                var target=authoritative.get(event.QU());var source=authoritative.get(event.Qx());
+                if(event.QZ()>0&&target!=null&&source!=null&&target.Mv().getName().contains("Ironwood Giant")&&source.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
+                    String role=source.Mv().getName().substring(source.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperDamage.add(role))System.out.println("HELPER DAMAGE: "+role+" -> Giant amount="+event.QZ());
+                }
+            }},false);}
             var heat=party.heat.f(app.CT().xL());
             if(heat!=null&&heat.amount>tutorialCollectedHeat){if(tutorialCollectedHeat==0)capture("tutorial-heat-collected");tutorialCollectedHeat=heat.amount;System.out.println("HEAT: native floor amount="+heat.amount);}
             var health=party.health.f(app.CT().xL());
@@ -486,6 +497,12 @@ public final class CombatRenderingCheck {
             return;
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
+        for(var actor:authoritative.values()){
+            if(actor.Mv().getName().contains("Ironwood Giant"))tutorialBoss=actor.vw();
+            if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adU()>=4&&actor.bR(16)&&actor.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
+                String role=actor.Mv().getName().substring(actor.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperAttacks.add(role)){capture("tutorial-helper-"+role);System.out.println("HELPER ATTACK: "+role+" activity="+monster.adU());}
+            }
+        }
         if(stage==3||stage==4){
             // Fight nearby live enemies with the stock controller. Do not drive through
             // them or change health/actor state in order to keep the route moving.
@@ -495,15 +512,22 @@ public final class CombatRenderingCheck {
                 if(monster.adU()>=4&&tutorialEnemyAttacks.add(actor.Mv().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.Mv().getName()+" activity="+monster.adU()+" at="+actor.tz());}
                 double d=Math.hypot(actor.tz().x-own.tz().x,actor.tz().y-own.tz().y);if(d<distance){distance=d;nearest=actor;}
             }
+            var locked=authoritative.get(tutorialEnemy);
+            if(locked!=null&&monsterHealth(locked)>0){double d=Math.hypot(locked.tz().x-own.tz().x,locked.tz().y-own.tz().y);if(d<(own.tz().y>55?14:4.2)){nearest=locked;distance=d;}}
             if(nearest!=null){
-                if(tutorialEnemy!=nearest.vw()){tutorialEnemy=nearest.vw();tutorialEnemySince=now;tutorialPath=List.of();System.out.println("COMBAT: approaching "+nearest.Mv().getName());}
+                if(tutorialEnemy!=nearest.vw()||Math.hypot(nearest.tz().x-tutorialEnemyPoseX,nearest.tz().y-tutorialEnemyPoseY)>.35){
+                    tutorialEnemy=nearest.vw();tutorialEnemySince=now;tutorialPath=List.of();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;
+                    tutorialEnemyPoseX=nearest.tz().x;tutorialEnemyPoseY=nearest.tz().y;
+                    tutorialEnemyGoalX=nearest.tz().x-(float)((nearest.tz().x-own.tz().x)/distance)*1.25f;
+                    tutorialEnemyGoalY=nearest.tz().y-(float)((nearest.tz().y-own.tz().y)/distance)*1.25f;
+                    System.out.println("COMBAT: approaching "+nearest.Mv().getName()+" id="+tutorialEnemy);
+                }
                 boolean moving=distance>1.4;
                 if(moving&&own.tz().y>55){
-                    float dx=nearest.tz().x-own.tz().x,dy=nearest.tz().y-own.tz().y;
-                    tutorialWalk(view,own,nearest.tz().x-(float)(dx/distance)*1.25f,nearest.tz().y-(float)(dy/distance)*1.25f,now);
+                    tutorialWalk(view,own,tutorialEnemyGoalX,tutorialEnemyGoalY,now);
                 }else moveToward(view,nearest.tz().x-own.tz().x,nearest.tz().y-own.tz().y,moving);
                 flags(view,(moving?1:0)|((now-tutorialEnemySince)%1_250_000_000L<100_000_000L?4:0));
-                tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;return;
+                if(!moving){tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}return;
             }
             if(tutorialEnemy!=0){tutorialEnemy=0;tutorialPath=List.of();tutorialCombatAt=now;}
         }
@@ -514,7 +538,10 @@ public final class CombatRenderingCheck {
         }
         if(stage==3){
             var boss=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")).findFirst().orElse(null);
-            if(boss==null){if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;}
+            if(boss==null){
+                if(tutorialBoss!=0&&!tutorialHelperDamage.isEmpty()){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
+                if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;
+            }
             tutorialBoss=boss.vw();if(tutorialWalk(view,own,boss.tz().x,boss.tz().y-1.75f,now)){flags(view,0);stage=4;tutorialCombatAt=now;capture("ironwood-giant-encounter");}return;
         }
         if(stage==4){var boss=authoritative.get(tutorialBoss);
@@ -534,7 +561,10 @@ public final class CombatRenderingCheck {
         if(Math.hypot(own.tz().x-x,own.tz().y-y)<.35){flags(view,0);return true;}
         if(tutorialPath.isEmpty()){
             if(now<tutorialRouteRetryAt){flags(view,0);return false;}
-            if(tutorialSpecs.isEmpty())for(var e:tutorialMap.content().entries())tutorialSpecs.putIfAbsent(e.spec().config().name(),e.spec());
+            if(tutorialSpecs.isEmpty())for(var e:tutorialMap.content().entries()){
+                tutorialSpecs.putIfAbsent(e.spec().config().name(),e.spec());
+                if(!e.spec().text("action","").isEmpty())tutorialSpawnSpecs(org.tortodrone.world.SceneActions.parse(e.spec().text("action","")));
+            }
             int mask=Math.round(tutorialMap.content().stats().get("player.collision-mask"));
             tutorialPath=org.tortodrone.world.ScenePathing.route(own.tz().x,own.tz().y,x,y,(sx,sy,tx,ty)->{
                 int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.1));
@@ -559,6 +589,14 @@ public final class CombatRenderingCheck {
         if(now-tutorialProgressAt>500_000_000L)flags(view,(now-tutorialProgressAt)%1_250_000_000L<150_000_000L?4:1);
         if(now-tutorialProgressAt>15_000_000_000L)throw new AssertionError("Normal tutorial input blocked at "+own.tz()+" toward "+point+" waypoint="+tutorialWaypoint);
         return false;
+    }
+    private void tutorialSpawnSpecs(org.tortodrone.world.SceneActions.Action action){
+        if(action==null)return;
+        if(action instanceof org.tortodrone.world.SceneActions.Spawn spawn){var spec=new org.tortodrone.world.SceneContent.Spec(spawn.fields());tutorialSpecs.putIfAbsent(spec.config().name(),spec);}
+        else if(action instanceof org.tortodrone.world.SceneActions.Delay delay)tutorialSpawnSpecs(delay.action());
+        else if(action instanceof org.tortodrone.world.SceneActions.Sequence sequence)sequence.actions().forEach(this::tutorialSpawnSpecs);
+        else if(action instanceof org.tortodrone.world.SceneActions.Choice choice)choice.actions().forEach(this::tutorialSpawnSpecs);
+        else if(action instanceof org.tortodrone.world.SceneActions.Limited limited){tutorialSpawnSpecs(limited.action());tutorialSpawnSpecs(limited.otherwise());}
     }
     private void readyRoomTick(long now)throws Exception{
         if(app.CT()==null||app.Gu()==null)return;

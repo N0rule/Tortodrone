@@ -52,7 +52,29 @@ public final class TutorialEnemyCompatibility {
         check((control.actors().getFirst().flags()&16)==0,"outside native acquisition expansion does not acquire");
         weighted(cm,"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",false);
         weighted(cm,"Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)",true);
+        for(String ally:List.of("Bygs","Warden","Wend"))companion(cm,ally);
         System.out.println("PASS: original Intro Jelly -> sourced targeting -> collision/speed pursuit -> native Roundhouse graph -> real player damage; target retention, departure and acquisition-boundary controls (synthetic terrain)");
+    }
+    private static void companion(ConfigManager cm,String role)throws Exception {
+        String name="Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/"+role;
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var ally=new SceneContent.Spec(prepared.fields());var policy=SceneTargeting.read(ally);
+        check(policy!=null&&policy.monsterMask()==2&&policy.expansion()==11.652f,"source helper acquires hostile monsters: "+role);
+        var follow=SceneFollow.read(ally);check(follow!=null&&follow.evaluation()==500&&follow.minimum()==0&&follow.maximum()==3,"source helper's idle Follow routine: "+role);
+        spawn.actor=new ConfigReference<>("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant");
+        var giant=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        for(double draw:role.equals("Bygs")?new double[]{.2}:new double[]{.2,.99}){
+            var content=new SceneContent(List.of(new SceneContent.Entry("helper",0,0,0,ally),new SceneContent.Entry("giant",3,0,0,new SceneContent.Spec(giant.fields()))),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+            var terrain=open();var world=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(0){@Override public double nextDouble(){return draw;}});
+            var weapons=new SceneWeapons(terrain);weapons.targets(world);var health=new SceneHealth(content);int[] stamp={SceneClock.now()};var fired=new ArrayList<Boolean>();
+            world.attacks((actor,fire)->fired.add(weapons.fire(fire,actor,stamp[0])));world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+            var boss=world.actors().stream().filter(a->a.config().name().contains("Ironwood Giant")).findFirst().orElseThrow();
+            for(int tick=0;tick<480;tick++){stamp[0]+=50;world.advance(stamp[0],List.of(player(219,0,-1)));weapons.advance(stamp[0],List.of(player(219,0,-1)));if(world.actor(boss.id())==null||world.actor(boss.id()).entity().health()<1)break;}
+            check(!fired.isEmpty()&&fired.stream().allMatch(Boolean::booleanValue)&&(world.actor(boss.id())==null||world.actor(boss.id()).entity().health()<1),"native helper "+role+" draw="+draw+" must damage the real Giant through its actual attack graph; accepted="+fired);
+            check(health.state().current()==200,"helper cannot damage the nearby player");
+        }
+        System.out.println("PASS: native "+role+" -> sourced hostile-monster acquisition -> actual attack heads/graphs -> real Giant damage; friendly knight unchanged (synthetic terrain)");
     }
     private static void weighted(ConfigManager cm,String name,boolean whelp)throws Exception {
         var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);

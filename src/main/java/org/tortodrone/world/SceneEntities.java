@@ -19,6 +19,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final SceneTargeting targeting;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
+        final SceneFollow follow;
+        int nextFollow,followTarget;
         ScenePickupState pickupState;
         final Map<Integer,SceneAttackMotion> attackMotion;
         int wanderPhase,wanderNext;float wanderRotation;
@@ -44,7 +46,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
-            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            if(follow!=null&&(targeting==null||targeting.monsterMask()==0||script!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
             if(script!=null&&(targeting!=null||wander!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
             victims=targeting==null?Map.of():new LinkedHashMap<>();
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
@@ -635,17 +638,59 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(moveEntity(e,e.x+(float)Math.cos(e.direction)*step,e.y+(float)Math.sin(e.direction)*step))e.flags|=2;
         else {e.flags&=~2;e.wanderPhase=0;}
     }
-    private void move(Entity e,int stamp,float elapsed,List<ActorState> players){
+    private List<ActorState> targetCandidates(Entity e,List<ActorState> occupants){
+        if(e.targeting==null||e.targeting.monsterMask()==0)return occupants;
+        return entities.values().stream().filter(v->v!=e&&v.kind.equals("Monster")&&v.health>0&&v.destroyed==Integer.MAX_VALUE
+            &&v.status.state().modifiers().canBeTargeted()&&(v.spec.integer("damage-mask",0)&e.targeting.monsterMask())!=0).map(Entity::snapshot).toList();
+    }
+    private void follow(Entity e,int stamp,float elapsed,List<ActorState> occupants){
+        if(e.activity!=0)return;
+        if(stamp>=e.nextFollow){
+            var target=occupants.stream().filter(p->playerActive.test(p.id())).min(Comparator.comparingDouble(p->Math.hypot(p.x()-e.x,p.y()-e.y))).orElse(null);
+            e.followTarget=target==null?0:target.id();e.path=List.of();e.nextFollow=stamp+e.follow.evaluation();
+            if(target!=null){
+                float distance=(float)Math.hypot(target.x()-e.x,target.y()-e.y);
+                if(distance<e.follow.minimum()||distance>e.follow.maximum()){
+                    var path=ScenePathing.route(e.x,e.y,target.x(),target.y(),(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                    double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
+                    if(length<=8)e.path=path;
+                }
+            }
+        }
+        var target=occupants.stream().filter(p->p.id()==e.followTarget&&playerActive.test(p.id())).findFirst().orElse(null);if(target==null){e.path=List.of();return;}
+        while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.05)e.path=e.path.subList(1,e.path.size());
+        float tx=e.path.isEmpty()?target.x():e.path.getFirst().x(),ty=e.path.isEmpty()?target.y():e.path.getFirst().y();
+        float angle=(float)Math.atan2(ty-e.y,tx-e.x),delta=(float)Math.IEEEremainder(angle-e.rotation,2*Math.PI),step=e.spec.number("turn-rate",0)*elapsed;
+        if(e.status.state().modifiers().canRotate())e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);
+        if(e.path.isEmpty()||!e.status.state().modifiers().canMove()||Math.abs(delta)>step+.0001f)return;
+        float walk=Math.min((float)Math.hypot(tx-e.x,ty-e.y),e.speed*e.status.state().modifiers().speed()*elapsed);
+        if(moveEntity(e,e.x+(float)Math.cos(angle)*walk,e.y+(float)Math.sin(angle)*walk))e.flags|=2;else{e.path=List.of();}
+    }
+    private boolean targetActive(ActorState actor){return actor.entity()!=null?entities.containsKey(actor.id()):playerActive.test(actor.id())&&playerTargetable.test(actor.id());}
+    private boolean acquireIntersects(Entity e,ActorState target){
+        var victim=target.entity()==null?null:entities.get(target.id());
+        if(victim!=null&&e.shape!=null&&victim.shape!=null)return SceneCollision.overlaps(e.shape,e.x,e.y,e.rotation,victim.shape,victim.x,victim.y,victim.rotation,e.targeting.expansion());
+        return e.spec.contains(e.x,e.y,e.rotation,target.x(),target.y(),e.targeting.expansion()+(victim==null?ScenePortals.PAWN_RADIUS:victim.spec.number("radius",0)));
+    }
+    private float targetDistance(Entity source,ActorState target){
+        if(target.entity()==null)return Math.max(0,(float)Math.hypot(target.x()-source.x,target.y()-source.y)-ScenePortals.PAWN_RADIUS);
+        var victim=entities.get(target.id());if(victim==null)return Float.POSITIVE_INFINITY;
+        var body=victim.pawnShape==null?SceneCollision.pawnShape(victim.spec,victim.shape):victim.pawnShape;
+        return body.at(victim.x,victim.y,victim.rotation).distance(source.x,source.y);
+    }
+    private void move(Entity e,int stamp,float elapsed,List<ActorState> occupants){
+        var players=targetCandidates(e,occupants);
+        int previousTarget=e.target;
         float distance=e.spec.number("acquire-distance",0);if(distance<=0&&e.targeting==null&&e.wander==null&&e.activity<4)return;
         if(e.targeting!=null&&e.activity==3)return;
         if(e.targeting!=null){
-            e.victims.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id&&playerActive.test(id)&&playerTargetable.test(id)));
+            e.victims.keySet().removeIf(id->players.stream().noneMatch(p->p.id()==id&&targetActive(p)));
             if(stamp>=e.nextAcquire){
-                for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())
-                        &&e.spec.contains(e.x,e.y,e.rotation,player.x(),player.y(),ScenePortals.PAWN_RADIUS+e.targeting.expansion())&&e.victims.size()<256)e.victims.putIfAbsent(player.id(),new Entity.Threat(0,0));
+                for(var player:players)if(targetActive(player)
+                        &&acquireIntersects(e,player)&&e.victims.size()<256)e.victims.putIfAbsent(player.id(),new Entity.Threat(0,0));
                 double best=Double.NEGATIVE_INFINITY;e.target=0;
                 for(var player:players){var threat=e.victims.get(player.id());if(threat==null)continue;
-                    double rank=10.0*threat.hits()+10.0*threat.damage()-Math.max(0,Math.hypot(player.x()-e.x,player.y()-e.y)-ScenePortals.PAWN_RADIUS);
+                    double rank=10.0*threat.hits()+10.0*threat.damage()-targetDistance(e,player);
                     if(rank>best){best=rank;e.target=player.id();}
                 }
                 e.nextAcquire=stamp+e.targeting.evaluation();e.targetModeUpdate=true;
@@ -655,7 +700,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             for(var player:players)if(playerActive.test(player.id())&&playerTargetable.test(player.id())){float d=(float)Math.hypot(player.x()-e.x,player.y()-e.y);if(d<nearest){nearest=d;e.target=player.id();}}
             e.nextAcquire=stamp+e.spec.integer("acquisition-interval",0);
         }
-        ActorState target=players.stream().filter(p->p.id()==e.target&&playerActive.test(p.id())&&playerTargetable.test(p.id())).findFirst().orElse(null);
+        ActorState target=players.stream().filter(p->p.id()==e.target&&targetActive(p)).findFirst().orElse(null);
+        if(e.follow!=null&&previousTarget!=e.target){e.path=List.of();e.nextFollow=stamp;}
         float nearest=target==null?Float.POSITIVE_INFINITY:(float)Math.hypot(target.x()-e.x,target.y()-e.y);
         e.flags&=~18;if(target!=null)e.flags|=16;
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
@@ -665,7 +711,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 e.targetMode=e.targeting.choose(nearest,random);e.targetModeUpdate=false;
                 e.targetRotation=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
             }
-            if(target!=null&&e.targetMode!=null&&Math.max(0,nearest-ScenePortals.PAWN_RADIUS)<=e.targetMode.range())
+            if(target!=null&&e.targetMode!=null&&targetDistance(e,target)<=e.targetMode.range())
                 e.targetRotation=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
             if(target!=null&&e.targetMode!=null&&e.status.state().modifiers().canRotate()&&(e.activity<4||e.spec.flag("attack."+(e.activity-4)+".blended",false))){
                 float delta=(float)Math.IEEEremainder(e.targetRotation-e.rotation,2*Math.PI),step=e.spec.number("turn-rate",0)*elapsed;
@@ -709,9 +755,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(stamp-e.activityStarted>=Math.round(e.spec.integer(prefix+"clear",0)/e.attackSpeed))e.activity=0;
             return;
         }
+        if(target==null&&e.follow!=null){follow(e,stamp,elapsed,occupants);return;}
         if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
         if(target!=null)e.wanderPhase=0;
-        float attackDistance=e.targeting==null?nearest:Math.max(0,nearest-ScenePortals.PAWN_RADIUS);
+        float attackDistance=e.targeting==null?nearest:target==null?Float.POSITIVE_INFINITY:targetDistance(e,target);
         float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:e.targetMode.range();
         if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
@@ -1078,7 +1125,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Monster")){
                 amount+=e.status.damaged(amount,stamp);e.status.apply(accepted,stamp);if(amount>0){
                     int dealt=(int)Math.ceil(amount);hurt(e,dealt,stamp);
-                    if(e.targeting!=null&&players.stream().anyMatch(p->p.id()==owner&&playerActive.test(owner)&&playerTargetable.test(owner))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
+                    if(e.targeting!=null&&targetCandidates(e,players).stream().anyMatch(p->p.id()==owner&&targetActive(p))&&(e.victims.containsKey(owner)||e.victims.size()<256)){
                         var previous=e.victims.getOrDefault(owner,new Entity.Threat(0,0));
                         e.victims.put(owner,new Entity.Threat(Math.min(1_000_000,previous.hits()+1),Math.min(1_000_000_000f,previous.damage()+dealt)));e.nextAcquire=stamp;
                     }

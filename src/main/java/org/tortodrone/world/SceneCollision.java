@@ -42,6 +42,20 @@ public final class SceneCollision {
             for(var part:parts)if(part.bounds.near(x,y,radius))result=result.deepest(SceneCollision.penetration(part.geometry,center,radius));
             return result;
         }
+        /** Distance from an agent's center to the nearest point of the victim body. */
+        public float distance(float x,float y){
+            var point=new Point(x,y);double best=Double.POSITIVE_INFINITY;
+            for(var part:parts){
+                var g=part.geometry;double distance;
+                if(g instanceof Circle c)distance=Math.max(0,Math.sqrt(distance2(point,c.center))-c.radius);
+                else if(g instanceof Capsule c)distance=Math.max(0,Math.sqrt(pointSegment2(point,c.a,c.b))-c.radius);
+                else if(g instanceof Rail r)distance=Math.sqrt(pointSegment2(point,r.a,r.b));
+                else {var polygon=(Polygon)g;if(inside(point,polygon))return 0;distance=Double.POSITIVE_INFINITY;
+                    for(int i=0;i<polygon.points.size();i++)distance=Math.min(distance,Math.sqrt(pointSegment2(point,polygon.points.get(i),polygon.points.get((i+1)%polygon.points.size()))));}
+                best=Math.min(best,distance);
+            }
+            return (float)best;
+        }
     }
     public static PawnShape pawnShape(Object shape){return new PawnShape(fromData(shape,0));}
     static PawnShape pawnShape(SceneContent.Spec spec,Object shape){

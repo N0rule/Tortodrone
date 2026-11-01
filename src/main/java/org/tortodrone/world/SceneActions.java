@@ -48,6 +48,7 @@ public final class SceneActions {
             var spec=new SceneContent.Spec(fields);
             var script=SceneMovementScript.read(spec);
             var targeting=SceneTargeting.read(spec);var wander=SceneWander.read(spec);
+            var follow=SceneFollow.read(spec);if(follow!=null&&(!monster||targeting==null||targeting.monsterMask()==0||script!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
             if(!SceneAttackMotion.readAll(spec).isEmpty()&&!monster)throw new IllegalArgumentException("Attack motion requires a monster actor");
             if((targeting!=null||wander!=null)&&(!monster||script!=null))throw new IllegalArgumentException("Conflicting native targeting actor");
             if(script!=null&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
