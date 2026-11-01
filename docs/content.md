@@ -705,6 +705,51 @@ See the [evidence matrix](research.md#economy-parity-baseline-2026-10-18).
 
 ## Native map import
 
+### Local Crash Site playtest
+
+The original tutorial can be entered manually by a GM for testing; new-knight
+onboarding is not enabled. Use a separate deployment and disposable account.
+The locally prepared `build/tutorial-playtest/` deployment includes Crash Site
+398 (version 2008859103) and initial Rescue Camp 217 (version 373), imported from
+reference inputs `reference/observations/scenes-cache-2026-10-22/{398,217}`. These generated
+maps and original assets are local build files, not tracked repository content.
+On another checkout, build that deployment with
+`./gradlew build -PdeploymentOutput=build/tutorial-playtest`, then use the native
+import procedure below with Crash Site zone **50332041**, name
+`%dungeon:m.tutorial_b`, map directory `crash_site`, and Camp zone **16777221**,
+name `%town:m.rescue_camp_state_1`, directory `rescue_camp`.
+
+With other servers using the same ports stopped, start this deployment:
+
+```sh
+java -jar build/tutorial-playtest/tortodrone.jar
+```
+
+In its server terminal, use `account create TutorialTester`, then
+`gm TutorialTester true`. Log into that account with the stock client, create a
+knight and enter Haven (or Return to Game from Ready Room). In game chat enter
+`/sgo 398`. This is the stock GM scene command, not a new chat command. It uses
+the normal movement handshake and starts a private scene at entrance 2659,
+`(-21, -69.5)`. Ordinary accounts cannot use it. Existing client preferences,
+owner saves and the normal server deployment need no changes.
+
+Walk the map, click through Rhendon's localized conversations, break shrubs,
+activate the button and reach the ambush. Its closing response should spawn the
+miniboss encounter. Fight with normal attacks. After Giant removal, both final
+doors should open after five seconds; walk through them to the original portal.
+This is a manual acceptance procedure, not a claim that it has passed visually.
+Boss targeting/retaliation, full companion behavior and the continuous successful
+combat-to-Camp session still require implementation or verification. Record the
+first failure and the test deployment's `data/logs/latest.log`.
+
+For independent Camp rendering/collision inspection, a GM can use `/sgo 217`;
+that admin shortcut does not prove tutorial completion. Disconnecting releases
+the private tutorial instance. Use a fresh disposable knight to retry progression.
+The focused `StockTools tutorial-floor-check GAME build/tutorial-playtest` checks
+the imported pair and authenticated `/sgo 398` session entry at its original spawn.
+
+### Import procedure
+
 Reuse the verified read-only native exporters, then validate and publish into the
 same unified tree. From a built source checkout:
 

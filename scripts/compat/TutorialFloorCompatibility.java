@@ -107,9 +107,31 @@ public final class TutorialFloorCompatibility {
                 check(characters.lastTownScene(knight.id(),1)==217,"Camp entry acknowledges the persisted destination");
             }
             check(registry.destination(217,profile.worldId()).simulation().playerCount()==0,"Camp reconnect fixture leaves no pawn or subscription");
+            gmPreview(db,registry);
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}}
         System.out.println("PASS: original 398/217 route; stock-reader tutorial GateSummary/LevelPartyObject, ordered final-floor report and original Camp callback; production session rejects premature/repeated/foreign/malformed completion and direct Camp travel; separate saved-Camp Ready Room return fixture attaches one pawn and cleans up");
         System.out.println("NOT VERIFIED: full fresh-knight gameplay, real boss AI/retaliation, successful session handoff after combat, graphical tutorial/Camp rendering");
+    }
+    /** Native /sgo 398 test entry: no position or progression mutation. */
+    private static void gmPreview(Database db,SceneRegistry registry)throws Exception {
+        int account=db.create("PreviewOwner",new Passwords.Protection(new byte[16],new byte[32]),true);
+        var characters=new CharacterStore(db,account,"PreviewOwner");
+        var knight=characters.create(new Knight(0,"Preview-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
+        int worldId=characters.worldProfile(knight.name(),1).worldId();
+        var socket=new RecordingSocket();
+        try(var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(),1558,1,m->{},registry,
+                ()->{var identity=db.identity("PreviewOwner");return identity!=null&&identity.gameMaster()&&identity.authRevision()==1;})){
+            world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)20);world.entered();
+            var listener=new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)21);
+            check(world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,28,List.of("398",listener))),"native /sgo request accepted");
+            move(world,registry.tutorial().source().zone(),398);world.subscribeInteriorParty((short)22);world.subscribe((short)23);world.entered();
+            var scene=registry.destination(398,worldId,world.partyMemberSnapshot());
+            var pawn=scene.simulation().snapshot().players().stream().filter(p->p.id()==worldId).findFirst().orElseThrow();
+            check(world.ownsScene(scene.oid())&&scene.simulation().playerCount()==1&&pawn.x()==-21&&pawn.y()==-69.5f,"GM scene command enters original private tutorial at its authored spawn");
+            check(characters.lastTownScene(knight.id(),1)!=217,"GM entry does not award tutorial completion or Camp arrival");
+        }
+        check(registry.statuses().stream().noneMatch(s->s.templateId()==398),"GM preview disconnect releases its private instance");
+        System.out.println("PASS: authenticated native /sgo 398 -> zone/scene handshake -> one private pawn at entrance 2659; no completion grant; disconnect cleanup");
     }
     private static void checkParty(LevelPartyObject p,boolean pending){
         check(p.gateId==397&&p.memberLimit==1&&p.depth==0&&p.floor==0&&p.difficulty.name().equals("MEDIUM")&&p.floorType==LevelPartyObject.FloorType.TUTORIAL&&p.inviteOnly&&!p.allowFriends&&!p.allowGuild&&!p.restricted&&!p.hasPickups&&!p.playFanfare&&!p.showLoot&&!p.showElevatorChoice,"native tutorial party shape and no fabricated reward presentation");
