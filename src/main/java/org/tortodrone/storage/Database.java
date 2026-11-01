@@ -246,6 +246,25 @@ public final class Database {
             return WorldProfiles.load(c,accountId,knightId,authRevision);
         });
     }
+    public record MemoryState(WorldProfile profile,Set<String> memories){public MemoryState{memories=Set.copyOf(memories);}}
+    public Set<String> knightMemories(int accountId,int knightId,long authRevision)throws IOException {
+        return read(c->{c.setAutoCommit(false);requirePreferenceOwner(c,accountId,authRevision);var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
+            var result=KnightMemories.load(c,profile.worldId());c.commit();return result;});
+    }
+    public MemoryState knightMemories(int accountId,int knightId,long authRevision,int worldId,long revision,List<org.tortodrone.character.KnightMemory> operations)throws IOException {
+        var changes=List.copyOf(operations);if(changes.size()>256)throw new IOException("Too many knight memory operations");
+        return write(c->{
+            requirePreferenceOwner(c,accountId,authRevision);
+            var profile=WorldProfiles.load(c,accountId,knightId,authRevision);
+            if(profile.worldId()!=worldId||profile.revision()!=revision)throw new IOException("Knight memory ownership or revision changed");
+            var before=KnightMemories.load(c,worldId);var after=KnightMemories.apply(c,worldId,before,changes);
+            if(!before.equals(after))try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
+                s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);
+                if(s.executeUpdate()!=1)throw new IOException("Knight memory revision changed");
+            }
+            return new MemoryState(WorldProfiles.load(c,accountId,knightId,authRevision),after);
+        });
+    }
     private static Identity identity(ResultSet r) throws SQLException {
         return new Identity(r.getInt("id"), r.getString("username"), r.getBoolean("game_master"), r.getLong("auth_revision"), r.getBytes("salt"), r.getBytes("verifier"));
     }

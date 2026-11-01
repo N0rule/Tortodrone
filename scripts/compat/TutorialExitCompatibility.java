@@ -23,6 +23,8 @@ public final class TutorialExitCompatibility {
     private final TownMovement movement;
     private final List<Dialog> dialogs=new ArrayList<>();
     private final List<FloorAdvance> floorAdvances=new ArrayList<>();
+    private record Memory(int player,KnightMemory mutation,ActorState source,int stamp) { }
+    private final List<Memory> memories=new ArrayList<>();
     private int now=1000,attacks;
     private java.util.function.IntSupplier attackCount=()->attacks;
     private boolean entranceTraversed;
@@ -55,20 +57,23 @@ public final class TutorialExitCompatibility {
         dialogs.add(new Dialog(opening,source,stamp));
         world.conversations((definition,origin,time,target)->{if(target!=0&&target!=219)throw new AssertionError("Wrong dialogue owner");dialogs.add(new Dialog(definition,origin,time));return true;});
     }
-    private void floorAdvanceSink(){world.floorAdvances((player,source,stamp)->{floorAdvances.add(new FloorAdvance(player.id(),source,stamp));return true;});}
+    private void floorAdvanceSink(){
+        world.floorAdvances((player,source,stamp)->{floorAdvances.add(new FloorAdvance(player.id(),source,stamp));return true;});
+        world.memories((player,operation,source,stamp)->{memories.add(new Memory(player.id(),operation,source,stamp));return true;});
+    }
     public static void main(String[] args)throws Exception {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        if(!hash.equals("c43f6fe662c56c7f6d56efe855387e5b55e6723144a2fd2b8e49f18fcc600ecc"))throw new AssertionError("Unverified tutorial revision");
+        int version=TutorialRoute.sourceVersion(bytes);
         Path pack=Path.of(args[2]);TutorialExitCompatibility test;
         if(Files.isRegularFile(pack.resolve("map.yml"))){
             var defaults=org.tortodrone.resources.ContentManager.load(pack.toAbsolutePath().getParent().getParent().getParent());var scene=defaults.scenes().scene(398);
-            if(scene.version()!=2008845103||!Arrays.equals(scene.layout(),bytes))throw new AssertionError("Imported scene identity/revision differs from the original");
+            if(scene.version()!=version||!Arrays.equals(scene.layout(),bytes))throw new AssertionError("Imported scene identity/revision differs from the original");
             test=new TutorialExitCompatibility(scene.content(),scene.collision(),scene.staticCollision(),defaults);
             System.out.println("SOURCE: real scene 398 after unified MapImport and production ContentManager loading");
         }else{
             var metadata=new Properties();try(var input=Files.newInputStream(pack.resolve("map.properties"))){metadata.load(input);}
-            if(!metadata.getProperty("scene-id").equals("398")||!metadata.getProperty("version").equals("2008845103")||!hash.equals(metadata.getProperty("scene-sha256"))||Files.mismatch(Path.of(args[1]),pack.resolve("scene.dat"))!=-1)throw new AssertionError("Prepared scene identity/revision differs from the original");
+            if(!metadata.getProperty("scene-id").equals("398")||!metadata.getProperty("version").equals(Integer.toString(version))||!hash.equals(metadata.getProperty("scene-sha256"))||Files.mismatch(Path.of(args[1]),pack.resolve("scene.dat"))!=-1)throw new AssertionError("Prepared scene identity/revision differs from the original");
             var defaults=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("tortodrone.deployment")));
             test=new TutorialExitCompatibility(SceneContent.load(pack,hash),CollisionMap.read(pack.resolve("walkability.gz")),SceneCollision.load(pack,hash),defaults);
             System.out.println("SOURCE: real scene 398 native export (unified import not exercised)");
@@ -87,6 +92,7 @@ public final class TutorialExitCompatibility {
         boolean escaped=walk(13.5f,90.5f,20000);
         if(escaped||movement.y()>=75.5f||openDoors()!=0)throw new AssertionError("Player passed the unopened native exit");
         if(!floorAdvances.isEmpty())throw new AssertionError("Closed exit allowed premature native NextFloor activation");
+        if(!memories.isEmpty())throw new AssertionError("Closed exit allowed premature native exit memory");
         System.out.println("PASS: live-boss control walk blocked at "+position()+" by both original closed exit doors");
         if(!walk(13.5f,70,10000)||!walk(14.5f,65,10000)||!walk(boss.x(),boss.y()-1.75f,10000))throw new AssertionError("Legal return to sword range failed at "+position());
         int killTime=0;
@@ -126,6 +132,10 @@ public final class TutorialExitCompatibility {
         if(floorAdvances.size()!=1||floorAdvances.getFirst().player()!=219||!floorAdvances.getFirst().source().entity().entrySource()
                 ||!floorAdvances.getFirst().source().entity().key().equals("1943")||floorAdvances.getFirst().timestamp()<removed+5000)throw new AssertionError("Original portal did not perform exactly one native NextFloor action for its activating pawn");
         advanceTo(now+1000);if(floorAdvances.size()!=1)throw new AssertionError("Held portal intersection replayed NextFloor");
+        if(memories.size()!=1||memories.getFirst().player()!=219||!memories.getFirst().mutation().equals(new KnightMemory("talkto_rhendon_icon",true))
+                ||!memories.getFirst().source().entity().entrySource()||!memories.getFirst().source().entity().key().equals("2977")||memories.getFirst().stamp()<removed+5000)
+            throw new AssertionError("Walked native 2977 area did not mark its activating knight exactly once after the doors opened");
+        System.out.println("PASS: normal post-boss exit walk -> original area 2977 -> KNIGHT memory talkto_rhendon_icon for its activating pawn, exactly once; storage/publication have separate focused tests");
         System.out.println("PASS: "+(attackCount.getAsInt()-previousAttacks)+" production Proto Sword attack starts -> real Giant damage/death/removal -> complete captured 3306 graph -> exact 5000-ms door opening/closing dialogue -> normal movement to original portal 1943 -> its actual NextFloor action exactly once at "+position());
         System.out.println("NOT VERIFIED: fresh knight creation"+(entranceTraversed?"":"/entrance traversal")+", Giant targeting/retaliation, complete squad behavior, NextFloor/Rescue Camp settlement, persistence and graphical playthrough. Fixture "+(entranceTraversed?"continues the same world/pawn from the authored entrance":"starts at the ambush strip")+" with an owned-equipment profile, without an account or network session.");
     }

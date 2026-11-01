@@ -11,13 +11,18 @@ public record TutorialRoute(SceneCatalog.MapScene source,SceneCatalog.MapScene c
     public static final int ENTRANCE=2659;
     public static final String SOURCE_HASH="c43f6fe662c56c7f6d56efe855387e5b55e6723144a2fd2b8e49f18fcc600ecc";
     public static final String CAMP_HASH="2b33dcb4c8d98eb8a049e59c6ef86ef6fe153f42a00cd3ece167d22a645a803f";
+    private static final Map<String,Integer> SOURCE_REVISIONS=Map.of(SOURCE_HASH,2008845103,"2770fdbe0905a6dc0b565d756a851b768caab8c776ab090a181f72a66e424500",2008859103);
+    private static final Map<String,Integer> CAMP_REVISIONS=Map.of(CAMP_HASH,359,"280e87c4cf2ba341381f8f1a59b2ecab54ea8af158fc41c3082cd1f5ec73a3fe",373);
+    public static int sourceVersion(byte[] layout){return version(SOURCE_REVISIONS,layout);}
+    public static int campVersion(byte[] layout){return version(CAMP_REVISIONS,layout);}
+    private static int version(Map<String,Integer> revisions,byte[] layout){var version=revisions.get(hash(layout));if(version==null)throw new IllegalArgumentException("Unverified tutorial scene revision");return version;}
     public TutorialRoute {
         Objects.requireNonNull(source);Objects.requireNonNull(camp);
-        if(source.id()!=398||!source.kind().equals("level")||source.version()!=2008845103||source.zone()>>>24!=3
-                ||source.spawnX()!=-21||source.spawnY()!=-69.5f||!hash(source.layout()).equals(SOURCE_HASH)||source.staticCollision().isEmpty()
+        if(source.id()!=398||!source.kind().equals("level")||source.version()!=sourceVersion(source.layout())||source.zone()>>>24!=3
+                ||source.spawnX()!=-21||source.spawnY()!=-69.5f||source.staticCollision().isEmpty()
                 ||!source.collision().walkable(source.spawnX(),source.spawnY())||!source.staticCollision().floorSupported(source.spawnX(),source.spawnY())||!source.portals().triggers().isEmpty()
-                ||camp.id()!=CAMP||!camp.town()||camp.zone()!=CAMP_ZONE||camp.version()!=359||camp.spawnX()!=.5f||camp.spawnY()!=-.5f
-                ||!hash(camp.layout()).equals(CAMP_HASH)||camp.staticCollision().isEmpty()
+                ||camp.id()!=CAMP||!camp.town()||camp.zone()!=CAMP_ZONE||camp.version()!=campVersion(camp.layout())||camp.spawnX()!=.5f||camp.spawnY()!=-.5f
+                ||camp.staticCollision().isEmpty()
                 ||!camp.collision().walkable(.5f,-.5f)||!camp.staticCollision().floorSupported(.5f,-.5f)
                 ||camp.portals().triggers().stream().anyMatch(t->t.intersects(camp.spawnX(),camp.spawnY())))throw new IllegalArgumentException("Unverified tutorial route content");
         var entrance=source.portals().entrances().get("level_start");

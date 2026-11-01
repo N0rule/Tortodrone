@@ -24,7 +24,8 @@ public final class TutorialFloorCompatibility {
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var registry=ContentManager.load(Path.of(args[1])).createScenes();SceneRegistry.install(registry);
         var route=registry.tutorial();check(route!=null,"exact original scene pair and entrance must be available");
-        check(route.source().version()==2008845103&&route.camp().version()==359&&route.entrance().id()==2017,"source revisions and native Camp entrance");
+        memoryWire();
+        check(route.source().version()==TutorialRoute.sourceVersion(route.source().layout())&&route.camp().version()==TutorialRoute.campVersion(route.camp().layout())&&route.entrance().id()==2017,"pinned source revisions and native Camp entrance");
         check(!route.camp().staticCollision().isEmpty(),"Camp collision is retained; rail primitives have a separate stock collision regression");
         Path home=Files.createTempDirectory("tortodrone-tutorial-floor-oracle-");
         try {
@@ -75,7 +76,7 @@ public final class TutorialFloorCompatibility {
                 var move=(InvocationResponseEvent)((EventNotification)reader.qe()).yj();
                 check(Arrays.stream(move.yd()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Camp town scene config");
                 var model=Arrays.stream(move.yd()).filter(v->v instanceof com.threerings.tudey.data.TudeySceneModel).map(v->(com.threerings.tudey.data.TudeySceneModel)v).findFirst().orElseThrow();
-                check(model.sceneId==217&&model.version==359&&reader.available()==0,"native Camp callback carries the original scene/version without trailing bytes");
+                check(model.sceneId==217&&model.version==route.camp().version()&&reader.available()==0,"native Camp callback carries the original scene/version without trailing bytes");
                 registry.release(scene,profile.worldId());
             }
             var socket=new RecordingSocket();
@@ -113,6 +114,28 @@ public final class TutorialFloorCompatibility {
     private static void checkParty(LevelPartyObject p,boolean pending){
         check(p.gateId==397&&p.memberLimit==1&&p.depth==0&&p.floor==0&&p.difficulty.name().equals("MEDIUM")&&p.floorType==LevelPartyObject.FloorType.TUTORIAL&&p.inviteOnly&&!p.allowFriends&&!p.allowGuild&&!p.restricted&&!p.hasPickups&&!p.playFanfare&&!p.showLoot&&!p.showElevatorChoice,"native tutorial party shape and no fabricated reward presentation");
         check(p.pendingFloorName==null&&p.pendingFloorDepth==(pending?-1:0)&&p.pendingFloorType==(pending?LevelPartyObject.FloorType.NORMAL:LevelPartyObject.FloorType.NO_DEPTH),"native pending final-floor state");
+    }
+    private static void memoryWire()throws Exception {
+        var codec=new SessionCodec();var wire=new ByteArrayOutputStream();
+        append(wire,HandshakeCodec.response((short)1,"0123456789abcdef0123456789abcdef"));
+        append(wire,HandshakeCodec.authenticationResponse((short)2,true,"fixture","MemoryOwner"));
+        append(wire,codec.player((short)3,1555,1,"MemoryOwner"));
+        append(wire,codec.knightMemories(1555,Set.of("talkto_rhendon_icon")));
+        append(wire,codec.knightMemoryChanges(1555,Set.of("talkto_rhendon_icon"),Set.of("talkto_rhendon_icon","fixture_other")));
+        append(wire,codec.knightMemoryChanges(1555,Set.of("talkto_rhendon_icon","fixture_other"),Set.of("fixture_other")));
+        append(wire,codec.knightMemoryChanges(1555,Set.of("fixture_other"),Set.of()));
+        var in=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));in.qe();in.qe();
+        var player=(com.threerings.projectx.data.PlayerObject)((ObjectResponse<?>)in.qe()).yk();
+        ((EventNotification)in.qe()).yj().b(player);
+        var memory=player.memories.f("talkto_rhendon_icon");
+        check(player.memories.size()==1&&memory!=null&&memory.persistence==com.threerings.projectx.config.Persistence.KNIGHT&&memory.lj().equals("talkto_rhendon_icon"),"stock Memory persistence/identity and native DSet snapshot");
+        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        check(player.memories.size()==2&&player.memories.f("fixture_other")!=null,"native EntryAddedEvent informs memory observers");
+        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        check(player.memories.size()==1&&player.memories.f("talkto_rhendon_icon")==null,"native erase removes the named memory without changing its peer");
+        for(var child:((CompoundEvent)((EventNotification)in.qe()).yj()).xE())child.b(player);
+        check(player.memories.isEmpty()&&in.available()==0,"native clear and stream alignment");
+        System.out.println("PASS: stock reader accepts KNIGHT Memory DSet snapshot and native add/remove observer events");
     }
     private static Object field(Object object,String name)throws Exception {for(Class<?> c=object.getClass();c!=null;c=c.getSuperclass())try{var f=c.getDeclaredField(name);f.setAccessible(true);return f.get(object);}catch(NoSuchFieldException missing){}throw new NoSuchFieldException(name);}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}

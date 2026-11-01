@@ -40,16 +40,16 @@ public final class TutorialOpeningCompatibility {
     public static void main(String[] args)throws Exception{
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         Path source=Path.of(args[1]),pack=Path.of(args[2]);byte[] layout=Files.readAllBytes(source);String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(layout));
-        if(!hash.equals("c43f6fe662c56c7f6d56efe855387e5b55e6723144a2fd2b8e49f18fcc600ecc"))throw new AssertionError("Unverified tutorial revision");
+        int version=TutorialRoute.sourceVersion(layout);
         TutorialOpeningCompatibility test;
         if(Files.isRegularFile(pack.resolve("map.yml"))){
             var defaults=org.tortodrone.resources.ContentManager.load(pack.toAbsolutePath().getParent().getParent().getParent());var scene=defaults.scenes().scene(398);
-            if(scene.version()!=2008845103||scene.spawnX()!=-21||scene.spawnY()!=-69.5f||!Arrays.equals(scene.layout(),layout))throw new AssertionError("Imported tutorial entrance/revision changed");
+            if(scene.version()!=version||scene.spawnX()!=-21||scene.spawnY()!=-69.5f||!Arrays.equals(scene.layout(),layout))throw new AssertionError("Imported tutorial entrance/revision changed");
             test=new TutorialOpeningCompatibility(scene.content(),scene.collision(),scene.staticCollision(),defaults);
             System.out.println("SOURCE: real scene 398 after unified MapImport and production ContentManager loading");
         }else{
             var p=new Properties();try(var input=Files.newInputStream(pack.resolve("map.properties"))){p.load(input);}
-            if(Files.mismatch(source,pack.resolve("scene.dat"))!=-1||!p.getProperty("scene-id").equals("398")||!p.getProperty("version").equals("2008845103")||!p.getProperty("spawn-x").equals("-21.0")||!p.getProperty("spawn-y").equals("-69.5"))throw new AssertionError("Unverified tutorial entrance/revision");
+            if(Files.mismatch(source,pack.resolve("scene.dat"))!=-1||!p.getProperty("scene-id").equals("398")||!p.getProperty("version").equals(Integer.toString(version))||!p.getProperty("spawn-x").equals("-21.0")||!p.getProperty("spawn-y").equals("-69.5"))throw new AssertionError("Unverified tutorial entrance/revision");
             var defaults=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("tortodrone.deployment")));
             test=new TutorialOpeningCompatibility(SceneContent.load(pack,hash),CollisionMap.read(pack.resolve("walkability.gz")),SceneCollision.load(pack,hash),defaults);
             System.out.println("SOURCE: real scene 398 native export (unified import not exercised)");

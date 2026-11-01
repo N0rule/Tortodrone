@@ -512,6 +512,28 @@ public final class SessionCodec {
             attribute(out,oid,"knightId",o -> value(o,profile.worldId()));
         });
     }
+    /** Whole native set after a durable commit, also used when activating a saved knight. */
+    public byte[] knightMemories(int oid,java.util.Set<String> names)throws IOException {
+        var sorted=names.stream().sorted().toList();if(sorted.size()>256)throw new IOException("Too many knight memories");
+        for(String name:sorted)new org.tortodrone.character.KnightMemory(name,true);
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"memories");
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(sorted.size());
+            for(String name:sorted)knightMemory(out,name);
+        });
+    }
+    private void knightMemory(DataOutputStream out,String name)throws IOException {
+        type(out,"com.threerings.projectx.data.Memory");type(out,"com.threerings.projectx.config.Persistence");out.writeByte(3);string(out,name);
+    }
+    public byte[] knightMemoryChanges(int oid,java.util.Set<String> before,java.util.Set<String> after)throws IOException {
+        var removed=before.stream().filter(n->!after.contains(n)).sorted().toList();var added=after.stream().filter(n->!before.contains(n)).sorted().toList();
+        if(before.size()>256||after.size()>256)throw new IOException("Too many knight memories");
+        for(String name:before)new org.tortodrone.character.KnightMemory(name,true);
+        for(String name:after)new org.tortodrone.character.KnightMemory(name,true);
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(removed.size()+added.size());
+            for(String name:removed){partyEntry(out,oid,"memories","EntryRemovedEvent");value(out,name);}
+            for(String name:added){partyEntry(out,oid,"memories","EntryAddedEvent");knightMemory(out,name);}
+        });
+    }
     public byte[] knightName(int oid,String knight)throws IOException {
         return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"knight");name(out,knight);});
     }

@@ -383,6 +383,12 @@ public final class SceneContentExport {
             if(!(next.target instanceof com.threerings.tudey.config.TargetConfig.Activator))throw new IOException("Unsupported NextFloor target");
             return Map.of("kind","next-floor");
         }
+        if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.SetMemory memory){
+            if(!pawnActivator||!(memory.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
+                    ||memory.persistence!=null&&memory.persistence!=com.threerings.projectx.config.Persistence.KNIGHT)throw new IOException("Unsupported scene memory scope/target");
+            var fields=Map.<String,Object>of("kind","knight-memory","name",memory.name,"remember",memory.persistence!=null);
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+        }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
             if(cm==null||!pawnTarget(status.target))throw new IOException("Unsupported scripted status target");
             org.tortodrone.world.FireCatalog.Action prepared;

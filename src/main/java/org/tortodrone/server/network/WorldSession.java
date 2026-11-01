@@ -59,6 +59,7 @@ final class WorldSession implements AutoCloseable {
     private StarterCatalog.Model appearance;
     private Knight knight;
     private WorldProfile profile;
+    private Set<String> memories=Set.of();
     private int acknowledge, created, reference, lastStamp;
     private volatile int sceneGeneration;
     private short ping;
@@ -971,7 +972,9 @@ final class WorldSession implements AutoCloseable {
         if(readyRoom)friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
         else attach();
         partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);partyState();
+        if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile));
+        output.send(() -> codec.knightMemories(oid,memories));
         output.send(() -> codec.townState(oid,profile));
         publishStyles();
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
@@ -1834,6 +1837,13 @@ final class WorldSession implements AutoCloseable {
         }
         if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot)){int party=partyOid();output.send(()->codec.partyDamage(party,event));}
         lastStamp=reference=stamp;lastSnapshot=current;
+        var memoryChanges=membership.takeMemories();
+        if(!memoryChanges.isEmpty()){
+            profile=loadProfile(profile);
+            var result=characters.knightMemories(knight.id(),authRevision,profile,memoryChanges.stream().map(SceneSimulation.MemoryRequest::operation).toList());
+            profile=result.profile();
+            if(!memories.equals(result.memories())){var before=memories;memories=result.memories();output.send(()->codec.knightMemoryChanges(oid,before,memories));}
+        }
         collectPickups();
         for(long id:membership.takeUsedItems()){
             var item=temporaryItems.get(id);if(item==null)continue;var before=visibleProfile();

@@ -21,10 +21,10 @@ public final class TutorialConversationCompatibility {
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         byte[] bytes=Files.readAllBytes(Path.of(args[1]));
         String hash=HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        if(!hash.equals("c43f6fe662c56c7f6d56efe855387e5b55e6723144a2fd2b8e49f18fcc600ecc"))throw new AssertionError("Unverified tutorial revision");
+        int version=org.tortodrone.world.TutorialRoute.sourceVersion(bytes);
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(bytes);scene.init(cm);
         Path pack=Path.of(args[2]);var metadata=new Properties();try(var input=Files.newInputStream(pack.resolve("map.properties"))){metadata.load(input);}
-        if(scene.sceneId!=398||scene.version!=2008845103||!hash.equals(metadata.getProperty("scene-sha256"))||!metadata.getProperty("spawn-x").equals("-21.0")||!metadata.getProperty("spawn-y").equals("-69.5"))throw new AssertionError("Tutorial identity or original entrance changed");
+        if(scene.sceneId!=398||scene.version!=version||!hash.equals(metadata.getProperty("scene-sha256"))||!metadata.getProperty("spawn-x").equals("-21.0")||!metadata.getProperty("spawn-y").equals("-69.5"))throw new AssertionError("Tutorial identity or original entrance changed");
         var content=SceneContent.load(pack,hash);
         var sensor=content.entries().stream().filter(e->e.key().equals("3280")&&e.spec().flag("scene-sensor",false)).findFirst().orElseThrow();
         TudeySceneModel.AreaEntry original=null;for(var candidate:scene.ci(TudeySceneModel.AreaEntry.class))if(candidate.getKey().equals(3280))original=candidate;

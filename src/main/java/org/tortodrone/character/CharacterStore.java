@@ -236,6 +236,14 @@ public final class CharacterStore {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid tutorial owner");
         return database.completeTutorial(accountId,knightId,authRevision,expected.worldId(),expected.revision());
     }
+    public Set<String> knightMemories(int knightId,long authRevision)throws IOException {
+        if(database==null)throw new IOException("Knight memories require SQLite storage");
+        return database.knightMemories(accountId,knightId,authRevision);
+    }
+    public Database.MemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
+        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid knight memory owner");
+        return database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);
+    }
     public void inspectionHidden(long authRevision,boolean hidden)throws IOException {
         if(database==null)throw new IOException("Preferences require SQLite storage");
         database.inspectionHidden(accountId,authRevision,hidden);
