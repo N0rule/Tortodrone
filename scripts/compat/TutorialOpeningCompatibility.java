@@ -88,6 +88,15 @@ public final class TutorialOpeningCompatibility {
         System.out.println("PASS: twelve original Clockworks startup actors -> native collision stops the route -> normal Proto Sword input destroys block 2298 -> walk through its original position");
         route(11.5f,56.25f);
         for(int i=0;i<42;i++)step(0,0);
+        for(String key:List.of("3325","3332","3333")){
+            var squad=world.actors().stream().filter(a->a.entity().key().equals(key)).findFirst().orElseThrow();
+            var script=SceneMovementScript.read(world.specification(squad.id()));
+            var goal=content.entries().stream().filter(e->e.spec().text("kind","").equals("SceneAnchor")&&Arrays.asList(e.spec().text("source-tags","").split(",")).contains(script.goal())).findFirst().orElseThrow();
+            if(Math.hypot(squad.x()-goal.x(),squad.y()-goal.y())>.01||Math.abs(Math.IEEEremainder(squad.rotation()-script.rotation(),2*Math.PI))>.001)
+                throw new AssertionError("Original squad "+key+" did not walk to its authored Goal/facing: "+squad.x()+","+squad.y()+" goal="+goal.x()+","+goal.y());
+            if(!Arrays.asList(world.specification(squad.id()).text("tags","").split(",")).contains("actor_sksquad_1"))throw new AssertionError("Squad wave tag missing");
+        }
+        System.out.println("PASS: all three original scripted squad knights walk to their real Goal markers and authored final facings, retaining actor_sksquad_1");
         if(dialogs.stream().filter(d->d.definition().actor().endsWith("Ambushed Knights A")).count()!=1||health.status().modifiers().canMove())throw new AssertionError("Entrance traversal never reached the real ambush/Stop/dialogue chain");
         System.out.println("PASS: original area 2955 spawns music at its live Activator; continued collision-checked movement reaches the ambush and its authored delayed conversation/Stop");
     }

@@ -97,6 +97,7 @@ public final class TutorialExitCompatibility {
         if(!walk(13.5f,70,10000)||!walk(14.5f,65,10000)||!walk(boss.x(),boss.y()-1.75f,10000))throw new AssertionError("Legal return to sword range failed at "+position());
         int killTime=0;
         for(int swing=0;swing<600&&killTime==0;swing++){
+            if(swing>0&&swing%100==0)System.out.println("COMBAT: swings="+swing+" Giant health="+boss(bossId).entity().health()+" player="+position());
             float facing=(float)Math.atan2(boss.y()-movement.y(),boss.x()-movement.x());
             step(50,4,facing,0); // fresh normal attack, followed by a release (never synthetic damage)
             for(int tick=0;tick<24;tick++){
@@ -107,7 +108,8 @@ public final class TutorialExitCompatibility {
         if(killTime==0)throw new AssertionError("Proto Sword input did not defeat the Giant; attacks="+(attackCount.getAsInt()-previousAttacks)+" health="+boss(bossId).entity().health()+" at "+position());
         var dying=boss(bossId);int destroyed=dying.entity().destroyed();
         if(dying.activity()!=2||destroyed<=killTime||openDoors()!=0)throw new AssertionError("Native boss death/exit eligibility failed");
-        while(boss(bossId)!=null)step(50,0,movement.rotation(),0);
+        while(boss(bossId)!=null&&now<=destroyed+1000)step(50,0,movement.rotation(),0);
+        if(boss(bossId)!=null)throw new AssertionError("Giant was not removed after its authored death deadline");
         int removed=now;
         var chain=weapons.effects().stream().filter(e->Integer.valueOf(3307).equals(e.targetEntry())).findFirst().orElseThrow(()->new AssertionError("Original removed-wave handler did not fire its tagged chain effect"));
         if(chain.timestamp()!=removed||chain.x()!=12.5f||chain.y()!=66.5f)throw new AssertionError("Chain effect lost original marker identity/transform");

@@ -633,6 +633,10 @@ public final class SceneContentExport {
             out.put(prefix+"pickup-equip-slot",Integer.toString(slot));
         }
         writeTags(out, prefix, field(original, "tags"));
+        if(field(original,"tags") instanceof com.threerings.tudey.config.TagConfig tags){
+            var resolved=resolvedActor(cm,reference);var resolvedConfig=resolved.a(cm,ActorConfig.class);
+            out.put(prefix+"tags",String.join(",",sceneTags(resolvedConfig,resolved.kW(),tags)));
+        }
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster){
             var death=new ArrayList<org.tortodrone.world.FireCatalog.Action>();
             deathActions(cm,monster.handlers,death,0);
@@ -645,6 +649,7 @@ public final class SceneContentExport {
         writeArguments(out, prefix + "config.argument.", reference);
 
         if (isKind(original, "Monster")) writeMonster(cm, out, prefix, original);
+        writeMovementScript(config,reference,original,out,prefix);
         if (isKind(original, "Trap")) writeTrap(out, prefix, original);
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Block){
             for(String field:List.of("fuse","color","hits"))addOptionalNumber(out,prefix+"block-"+field,field(original,field));
@@ -672,6 +677,27 @@ public final class SceneContentExport {
         writeMechanism(cm,out,prefix,reference,original);
     }
 
+    /** Recover nested script bindings only from the preserved native parameter paths. */
+    private static void writeMovementScript(ActorConfig config,ConfigReference<ActorConfig> reference,Object original,Map<String,String> out,String prefix)throws IOException {
+        if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster)
+                ||!(config.implementation instanceof ActorConfig.Derived derived)
+                ||!(derived.actor.kW().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] steps)
+                ||!scriptParameter(config,"Goal","implementation.actor[\"Behavior Script\"][2].target.tag"))return;
+        if(steps.length!=4||!(steps[0] instanceof com.threerings.tudey.config.ScriptConfig.Condition condition)||!(condition.condition instanceof com.threerings.tudey.config.ConditionConfig.Always)
+                ||!(steps[1] instanceof com.threerings.tudey.config.ScriptConfig.Wait wait)||!(steps[2] instanceof com.threerings.tudey.config.ScriptConfig.Move move)
+                ||!(move.target instanceof com.threerings.tudey.config.TargetConfig.Source||move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged)
+                ||!(steps[3] instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)||rotate.relative||rotate.rotationVariance!=0
+                ||!scriptParameter(config,"Wait","implementation.actor[\"Behavior Script\"][1].wait")
+                ||!scriptParameter(config,"End Orientation","implementation.actor[\"Behavior Script\"][3].direction"))throw new IOException("Unsupported complete native movement script: "+reference.getName());
+        Object goal=reference.kW().getOrDefault("Goal",move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged?tagged.tag:"");
+        Object delay=reference.kW().getOrDefault("Wait",wait.wait),direction=reference.kW().getOrDefault("End Orientation",rotate.direction);
+        if(!(goal instanceof String tag)||!(delay instanceof Number millis)||millis.doubleValue()!=millis.intValue()||!(direction instanceof Number angle))throw new IOException("Invalid native movement script parameters");
+        var script=new org.tortodrone.world.SceneMovementScript(millis.intValue(),tag,move.maxPathLength,angle.floatValue(),monster.turnRate);
+        out.put(prefix+"script.kind","wait-move-rotate");out.put(prefix+"script.wait",Integer.toString(script.waitMillis()));out.put(prefix+"script.goal",script.goal());out.put(prefix+"script.max-path",Float.toString(script.maxPath()));out.put(prefix+"script.rotation",Float.toString(script.rotation()));out.put(prefix+"script.turn-rate",Float.toString(script.turnRate()));
+    }
+    private static boolean scriptParameter(ActorConfig config,String name,String path){
+        var parameter=config.getParameter(name);return parameter instanceof com.threerings.config.Parameter.Direct direct&&direct.paths.length==1&&direct.paths[0].equals(path);
+    }
     private static void deathActions(ConfigManager cm,HandlerConfig[] handlers,
             List<org.tortodrone.world.FireCatalog.Action> actions,int depth)throws Exception {
         if(handlers==null)return;

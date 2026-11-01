@@ -46,13 +46,15 @@ public final class SceneActions {
             if(fields.size()>1024||!(monster||cosmetic||breakable)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
+            var script=SceneMovementScript.read(spec);
+            if(script!=null&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
             if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");
             for(String key:fields.keySet())if(key.endsWith(".chain-next")){
                 int slot=spec.integer(key,-1),rearm=spec.integer(key.substring(0,key.length()-10)+"chain-rearm",-1);
                 if(slot<0||slot>255||!fields.containsKey("attack."+slot+".clear")||rearm<0||rearm>3_600_000)throw new IllegalArgumentException("Invalid prepared attack chain");
             }
             for(String key:List.of("health","speed","radius","width","height","bounds-min-x","bounds-min-y","bounds-max-x","bounds-max-y"))if(!Float.isFinite(spec.number(key,0)))throw new IllegalArgumentException("Non-finite spawn actor value");
-            if(monster&&spec.number("health",0)<=0||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
+            if(monster&&(spec.number("health",0)<0||spec.number("health",0)==0&&script==null)||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
             spec.config();
             int collision=spec.integer("collision-flags",0);spec.integer("activate-time",0);
             var model=spec.model("source-shape");

@@ -13,6 +13,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
         boolean claimTaken,ignited,scriptDestroyed;
         String scriptSource="";
+        final SceneMovementScript script;
+        int scriptStep,scriptStarted=Integer.MIN_VALUE;ActorState scriptGoal;
         int target,nextAcquire,nextAttack,nextSwitch,nextHeal,carrier,owner,ownerOid,thrownAt,faction,detonateAt,affectedType,affectedTime;float z;int[] excluded;
         List<ScenePathing.Point> path=List.of();float pathX,pathY;int nextPath;
         SceneLiftState.Point dropPoint;
@@ -32,6 +34,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
+            script=SceneMovementScript.read(spec);
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
             interactive=content.conversations().containsKey(spec.text("dialogue",config.name()))||spec.fields().containsKey("town-station")||spec.fields().containsKey("town-kind");
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
@@ -386,7 +389,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
                 e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
-                if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
+                if(e.script!=null)scriptedMovement(e,stamp,elapsed);
+                else if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
             }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
             if(e.activity==1&&stamp-e.activityStarted>=e.spec.integer("react-time",0)||e.activity==3&&stamp-e.activityStarted>=e.spec.integer("activate-time",0))e.activity=0;
@@ -541,6 +545,44 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(terrain.walkableSegment(e.x,e.y,x,y)){e.x=x;e.y=y;}
             return;
         }
+    }
+    private void scriptedMovement(Entity e,int stamp,float elapsed){
+        e.flags&=~2;if(e.scriptStep>=4)return;
+        if(e.scriptStep==0){e.scriptStep++;return;}
+        if(e.scriptStarted==Integer.MIN_VALUE)e.scriptStarted=stamp;
+        if(e.scriptStep==1){if(stamp-e.scriptStarted>e.script.waitMillis()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;}return;}
+        if(e.scriptStep==2){
+            if(e.scriptGoal==null){
+                if(e.script.goal().isEmpty()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;return;}
+                e.scriptGoal=taggedSources(e.script.goal(),stamp).stream().min(Comparator.comparingDouble(a->Math.hypot(a.x()-e.x,a.y()-e.y))).orElse(null);
+                if(e.scriptGoal==null){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;return;}
+            }
+            if(!e.status.state().modifiers().canMove())return;
+            float tx=e.scriptGoal.x(),ty=e.scriptGoal.y(),speed=e.speed*e.status.state().modifiers().speed();
+            if(Math.hypot(tx-e.x,ty-e.y)>e.script.maxPath())return;
+            if(Math.hypot(tx-e.x,ty-e.y)<=speed*elapsed){
+                moveEntity(e,tx,ty);
+                if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.path=List.of();return;}
+            }
+            if(e.path.isEmpty()&&stamp>=e.nextPath){
+                var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+                double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
+                if(length<=e.script.maxPath())e.path=path;e.nextPath=stamp+250;
+            }
+            while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.01)e.path=e.path.subList(1,e.path.size());
+            if(e.path.isEmpty())return;var point=e.path.getFirst();float angle=(float)Math.atan2(point.y()-e.y,point.x()-e.x);
+            if(!scriptRotate(e,angle,elapsed))return;
+            float distance=(float)Math.hypot(point.x()-e.x,point.y()-e.y),step=Math.min(distance,speed*elapsed);
+            if(moveEntity(e,e.x+(float)Math.cos(angle)*step,e.y+(float)Math.sin(angle)*step))e.flags|=2;
+            else {e.path=List.of();e.nextPath=stamp+250;}return;
+        }
+        if(scriptRotate(e,e.script.rotation(),elapsed))e.scriptStep++;
+    }
+    private static boolean scriptRotate(Entity e,float target,float elapsed){
+        if(!e.status.state().modifiers().canRotate())return false;
+        float delta=(float)Math.IEEEremainder(target-e.rotation,2*Math.PI),step=e.script.turnRate()*elapsed;
+        if(Math.abs(delta)<.0001f){e.rotation=e.direction=target;return true;}
+        e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return false;
     }
     private void move(Entity e,int stamp,float elapsed,List<ActorState> players){
         float distance=e.spec.number("acquire-distance",0);if(distance<=0&&e.activity<4)return;

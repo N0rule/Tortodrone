@@ -117,6 +117,12 @@ public final class SceneActionCompatibility {
         try{SceneContentExport.sceneAction(nativeChoice,0,cm);throw new AssertionError("Unsupported zero-weight sibling dropped");}catch(IOException expected){}
         System.out.println("PASS: native Random/WeightedAction -> all prepared branches and exact weights; Clockworks block destruction; unsupported sibling refused even at zero weight");
         var recursive=new ActionConfig.SpawnActor();recursive.actor=new com.threerings.config.ConfigReference<>("Character/NPC/Companions/Knights/Immortal/Sword Knight/Tier 1");
+        var squadSpawn=new ActionConfig.SpawnActor();squadSpawn.actor=new com.threerings.config.ConfigReference<>("Character/Scripted/Missions/Tutorial/Final Test/Knight Squad/Spiral Knight");
+        squadSpawn.actor.kW().put("Goal","waypoint_sk1");squadSpawn.actor.kW().put("Wait",500);squadSpawn.actor.kW().put("End Orientation",(float)Math.PI/2);
+        var squadAction=(SceneActions.Spawn)SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(squadSpawn,0,cm)));
+        var movement=org.tortodrone.world.SceneMovementScript.read(new org.tortodrone.world.SceneContent.Spec(squadAction.fields()));
+        if(movement==null||!movement.goal().equals("waypoint_sk1")||movement.waitMillis()!=500||movement.rotation()!=(float)Math.PI/2)throw new AssertionError("Native nested Goal/Wait/End Orientation script bindings were lost");
+        System.out.println("PASS: original squad script preserves nested Goal, Wait and final rotation without fabricating a combat policy");
         try{FireCatalogExport.readSceneAction(cm,recursive);throw new AssertionError("Recursive companion graph was embedded into projectile metadata");}catch(IOException expected){if(!expected.getMessage().contains("scene actor graph"))throw expected;}
         if(FireCatalogExport.readSceneAction(cm,new ActionConfig.SpawnActor()).kind()!=org.tortodrone.world.FireCatalog.Kind.COMPOUND)throw new AssertionError("Refusal poisoned later action preparation");
         delayed.variance=50;
