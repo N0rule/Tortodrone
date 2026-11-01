@@ -973,7 +973,8 @@ public final class SessionCodec {
             emptyDSet(out);emptyCollection(out);out.writeInt(0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
             primitiveInts(out,new int[]{0});out.writeBoolean(tutorial||inviteOnly);out.writeBoolean(!tutorial&&allowFriends);out.writeBoolean(!tutorial&&allowGuild);out.writeBoolean(!tutorial&&!managed);
-            emptyDSet(out);string(out,null);out.writeInt(reporting?-1:0);
+            type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHeat(out,member);
+            string(out,null);out.writeInt(reporting?-1:0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(tutorial?1:4);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(reporting?0:4);
             out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(false);emptyDSet(out);
@@ -1009,6 +1010,8 @@ public final class SessionCodec {
             ||!java.util.Arrays.equals(partyWeapons(before.profile()),partyWeapons(after.profile()));
     }
     private void partyHealth(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var health=member.health();type(out,"com.threerings.projectx.dungeon.data.Health");out.writeInt(member.playerOid());out.writeInt(health.current());out.writeInt(health.maximum());out.writeInt(health.bonus());}
+    /** Every native level member requires a Heat entry, including an empty floor. */
+    private void partyHeat(DataOutputStream out,PartyRegistry.Participant member)throws IOException {type(out,"com.threerings.projectx.dungeon.data.Heat");out.writeInt(member.playerOid());out.writeFloat(0);out.writeFloat(0);out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(false);}
     private void partyStatus(DataOutputStream out,PartyRegistry.Participant member)throws IOException {var status=member.status();type(out,"com.threerings.projectx.dungeon.data.Status");out.writeInt(member.playerOid());conditions(out,status);primitiveInts(out,status.expires().isEmpty()?null:status.expires().stream().mapToInt(Integer::intValue).toArray());out.writeByte(member.health().reviveFlags());}
     public byte[] partyChanges(PartyRegistry.View before,PartyRegistry.View after)throws IOException {
         var events=new ArrayList<Writer>();var old=new HashMap<Integer,PartyRegistry.Participant>();for(var m:before.members())old.put(m.playerOid(),m);
@@ -1020,10 +1023,11 @@ public final class SessionCodec {
             current.add(member.playerOid());var previous=old.get(member.playerOid());
             if(previous==null||!previous.health().equals(member.health()))events.add(out->{partyEntry(out,after.oid(),"health",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyHealth(out,member);});
             if(previous==null||!previous.status().equals(member.status())||previous.health().reviveFlags()!=member.health().reviveFlags())events.add(out->{partyEntry(out,after.oid(),"status",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyStatus(out,member);});
+            if(previous==null)events.add(out->{partyEntry(out,after.oid(),"heat","EntryAddedEvent");partyHeat(out,member);});
             // Member listeners construct HUD rows synchronously and require both vitals entries.
             if(previous==null||!previous.knight().equals(member.knight())||previous.order()!=member.order()||partyAppearanceChanged(previous,member))events.add(out->{partyEntry(out,after.oid(),"members",previous==null?"EntryAddedEvent":"EntryUpdatedEvent");partyMember(out,member);});
         }
-        for(var member:before.members())if(!current.contains(member.playerOid()))for(String field:List.of("members","health","status"))events.add(out->{partyEntry(out,after.oid(),field,"EntryRemovedEvent");value(out,member.playerOid());});
+        for(var member:before.members())if(!current.contains(member.playerOid()))for(String field:List.of("members","health","status","heat"))events.add(out->{partyEntry(out,after.oid(),field,"EntryRemovedEvent");value(out,member.playerOid());});
         return frame(out->{eventHeader(out,"CompoundEvent",after.oid());type(out,"com.threerings.util.StreamableArrayList");out.writeInt(events.size());for(var event:events)event.write(out);});
     }
     private void partyEntry(DataOutputStream out,int party,String field,String event)throws IOException {type(out,"com.threerings.presents.dobj."+event);out.writeInt(party);string(out,field);}

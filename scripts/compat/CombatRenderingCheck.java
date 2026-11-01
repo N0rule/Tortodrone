@@ -96,6 +96,7 @@ public final class CombatRenderingCheck {
     private Confirm equip;
     private String lastAnimation="";
     private Throwable failure;
+    private boolean fullscreenApplied;
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
@@ -570,6 +571,11 @@ public final class CombatRenderingCheck {
         if(done)return;
         try{
             long now=System.nanoTime();
+            if(!fullscreenApplied&&!peer&&!multiplayerOnly&&!equipmentGroups&&app.getWindow()!=0){
+                long monitor=GLFW.glfwGetPrimaryMonitor();var mode=GLFW.glfwGetVideoMode(monitor);
+                if(mode==null)throw new AssertionError("No video mode for the isolated test client's monitor");
+                GLFW.glfwSetWindowMonitor(app.getWindow(),monitor,0,0,mode.width(),mode.height(),mode.refreshRate());fullscreenApplied=true;
+            }
             if(now>deadline)throw new AssertionError("Timed out at stage "+stage+", action "+index);
             if(!app.zr().isLoggedOn())return;
             // Fresh disposable preferences show Uplink automatically. Close that native
