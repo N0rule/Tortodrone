@@ -15,7 +15,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         String scriptSource="";
         final SceneMovementScript script;
         final SceneTargeting targeting;
+        SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
+        final Map<Integer,SceneAttackMotion> attackMotion;
         int wanderPhase,wanderNext;float wanderRotation;
         final Map<Integer,Threat> victims;
         private record Threat(int hits,float damage) { }
@@ -39,10 +41,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
-            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);
+            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
             if(script!=null&&(targeting!=null||wander!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
             victims=targeting==null?Map.of():new LinkedHashMap<>();
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
+            if((targeting!=null||wander!=null||!attackMotion.isEmpty())&&!kind.equals("Monster"))throw new IllegalArgumentException("Native combat behavior requires a monster actor");
             interactive=content.conversations().containsKey(spec.text("dialogue",config.name()))||spec.fields().containsKey("town-station")||spec.fields().containsKey("town-kind");
             x=binding.x();y=binding.y();rotation=binding.rotation();health=spec.number("health",0);
             maximumHealth=health;
@@ -163,7 +166,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         this(content,terrain,SceneCollision.empty());
     }
     public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision){this(content,terrain,staticCollision,new Random());}
-    SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random){
+    public SceneEntities(SceneContent content,CollisionMap terrain,SceneCollision staticCollision,java.util.random.RandomGenerator random){
         this.random=Objects.requireNonNull(random);
         this.content=content;this.terrain=terrain;this.staticCollision=Objects.requireNonNull(staticCollision);pawnCollisionMask=Math.round(content.stats().getOrDefault("player.collision-mask",43f));int stamp=SceneClock.now();
         var rules=new ArrayList<SceneActions.Rule>();var anchorKeys=new HashSet<String>();
@@ -630,7 +633,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                     double rank=10.0*threat.hits()+10.0*threat.damage()-Math.max(0,Math.hypot(player.x()-e.x,player.y()-e.y)-ScenePortals.PAWN_RADIUS);
                     if(rank>best){best=rank;e.target=player.id();}
                 }
-                e.nextAcquire=stamp+e.targeting.evaluation();
+                e.nextAcquire=stamp+e.targeting.evaluation();e.targetModeUpdate=true;
             }
         }else if(stamp>=e.nextAcquire){
             float nearest=distance;e.target=0;
@@ -639,16 +642,41 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         ActorState target=players.stream().filter(p->p.id()==e.target&&playerActive.test(p.id())&&playerTargetable.test(p.id())).findFirst().orElse(null);
         float nearest=target==null?Float.POSITIVE_INFINITY:(float)Math.hypot(target.x()-e.x,target.y()-e.y);
-        if(e.targeting==null)e.flags=target==null?0:16;
-        else {e.flags&=~18;if(target!=null)e.flags|=16;}
+        e.flags&=~18;if(target!=null)e.flags|=16;
         e.speed=target==null?e.spec.number("speed",0):e.spec.number("targeted-speed",e.spec.number("speed",0));
-        int slot=e.activity>=4?e.activity-4:(e.targeting==null?e.spec.integer("attack",-1):e.targeting.attack());String prefix="attack."+slot+".";
+        if(e.targeting!=null){
+            if(target==null){e.targetMode=null;e.targetModeUpdate=false;}
+            else if(e.targetModeUpdate&&e.activity<4&&stamp>=e.nextAttack){
+                e.targetMode=e.targeting.choose(nearest,random);e.targetModeUpdate=false;
+                e.targetRotation=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
+            }
+            if(target!=null&&e.targetMode!=null&&Math.max(0,nearest-ScenePortals.PAWN_RADIUS)<=e.targetMode.range())
+                e.targetRotation=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
+            if(target!=null&&e.targetMode!=null&&e.status.state().modifiers().canRotate()&&(e.activity<4||e.spec.flag("attack."+(e.activity-4)+".blended",false))){
+                float delta=(float)Math.IEEEremainder(e.targetRotation-e.rotation,2*Math.PI),step=e.spec.number("turn-rate",0)*elapsed;
+                e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);
+            }
+        }
+        int slot=e.activity>=4?e.activity-4:(e.targeting==null?e.spec.integer("attack",-1):e.targetMode==null?-1:e.targetMode.attack());String prefix="attack."+slot+".";
         var modifiers=e.status.state().modifiers();
         if(!modifiers.canAttack()||modifiers.shocked()){
             if(e.activity>=4){e.activity=0;e.fired.clear();}
             e.flags&=~2;return;
         }
+        if(e.targeting!=null&&target==null&&e.activity==0&&e.targeting.idleAttack()>=0&&!e.idleAttackDone){
+            if(beginAttack(e,e.targeting.idleAttack(),stamp))e.idleAttackDone=true;return;
+        }
+        if(target!=null)e.idleAttackDone=false;
         if(e.activity>=4){
+            var motion=e.attackMotion.get(slot);
+            if(motion!=null&&stamp>=e.activityStarted+motion.delay()&&e.fired.add("@impulse")){
+                if(modifiers.canMove()&&(motion.x()!=0||motion.y()!=0)){
+                    float c=(float)Math.cos(e.rotation),s=(float)Math.sin(e.rotation);
+                    var impulse=new KnightCombat.Impulse(e.activityStarted+motion.delay(),motion.duration(),motion.x()*c-motion.y()*s,motion.x()*s+motion.y()*c);
+                    e.impulse=SceneDamage.combine(impulse,e.impulse);e.impulseAdvanced=e.activityStarted+motion.delay();advanceImpulse(e,stamp);
+                }
+                e.flags|=64;
+            }
             for(String fire:e.spec.text(prefix+"fires","").split(",")){
                 if(fire.isBlank()||e.fired.contains(fire))continue;
                 String fp=prefix+"fire."+fire+".";
@@ -669,23 +697,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(target==null&&e.wander!=null){wander(e,stamp,elapsed);return;}
         if(target!=null)e.wanderPhase=0;
         float attackDistance=e.targeting==null?nearest:Math.max(0,nearest-ScenePortals.PAWN_RADIUS);
-        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targeting.range();
+        float attackRange=e.targeting==null?e.spec.number("attack-distance",0):e.targetMode==null?0:e.targetMode.range();
         if(target!=null&&e.activity==0&&slot>=0&&(e.targeting==null?stamp>=e.nextAttack:stamp>e.nextAttack)&&attackDistance<=attackRange&&modifiers.attackSpeed()>0
                 &&sight(e,target.x(),target.y())){
-            if(e.targeting!=null&&modifiers.canRotate()){
+            if(e.targeting!=null&&e.targetMode.faces()&&modifiers.canRotate()){
                 float angle=(float)Math.atan2(target.y()-e.y,target.x()-e.x),delta=(float)Math.IEEEremainder(angle-e.rotation,2*Math.PI);
-                if(Math.abs(delta)>e.targeting.turnSnap()+.001f){
-                    float step=e.spec.number("turn-rate",0)*elapsed;
-                    e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return;
-                }
+                if(Math.abs(delta)>e.targetMode.turnSnap()+.001f)return;
             }
             if(beginAttack(e,slot,stamp)){
-                if(modifiers.canRotate())e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
+                if(modifiers.canRotate()&&(e.targeting==null||e.targetMode.faces()))e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
                 e.nextAttack=stamp+Math.round((e.targeting==null?e.spec.integer("attack-interval",0):e.targeting.interval())/e.attackSpeed);
             }
             return;
         }
-        if(e.targeting!=null&&attackDistance<=attackRange)return;
+        if(e.targeting!=null&&(e.targetMode==null||attackDistance<=attackRange))return;
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
         float tx=target.x(),ty=target.y();
         if(!entitySegment(e,e.x,e.y,tx,ty)){
@@ -709,7 +734,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(slot<0||slot>255||!e.status.state().modifiers().canAttack()||e.status.state().modifiers().attackSpeed()<=0)return false;
         float curse=e.status.used(0);if(curse>0){hurt(e,curse,stamp);if(e.health<=0)return false;}
         // Activity changes reset fire receipts; a chained activity owns its own fire table and speed.
-        e.attackSpeed=e.status.state().modifiers().attackSpeed();e.activity=4+slot;e.activityStarted=stamp;e.fired.clear();return true;
+        e.attackSpeed=e.status.state().modifiers().attackSpeed();e.activity=4+slot;e.activityStarted=stamp;e.fired.clear();e.flags&=~64;return true;
     }
     private boolean sight(Entity e,float tx,float ty){
         if(!staticCollision.clearSegment(129,POINT,e.x,e.y,tx,ty,0))return false;

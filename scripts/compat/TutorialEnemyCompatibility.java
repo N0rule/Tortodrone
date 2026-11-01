@@ -7,7 +7,7 @@ import com.threerings.tudey.config.ActionConfig;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.world.*;
 
-/** Native Intro Jelly config/actions on synthetic open terrain; not a level playthrough. */
+/** Native Jelly, Gun Puppy and Whelp actions on synthetic terrain; not a level playthrough. */
 public final class TutorialEnemyCompatibility {
     public static void main(String[] args)throws Exception {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
@@ -50,7 +50,35 @@ public final class TutorialEnemyCompatibility {
         check((world.actor(enemy).flags()&16)==0,"departed knight cannot remain targeted");
         var control=new SceneEntities(content,terrain);control.advance(stamp[0],List.of(player(220,6.71f,0)));stamp[0]+=50;control.advance(stamp[0],List.of(player(220,6.71f,0)));
         check((control.actors().getFirst().flags()&16)==0,"outside native acquisition expansion does not acquire");
+        weighted(cm,"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",false);
+        weighted(cm,"Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)",true);
         System.out.println("PASS: original Intro Jelly -> sourced targeting -> collision/speed pursuit -> native Roundhouse graph -> real player damage; target retention, departure and acquisition-boundary controls (synthetic terrain)");
+    }
+    private static void weighted(ConfigManager cm,String name,boolean whelp)throws Exception {
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(prepared.fields());var policy=SceneTargeting.read(spec);
+        check(policy!=null&&policy.modes().size()==(whelp?12:14),"exact archive weighted mode count: "+name);
+        var content=new SceneContent(List.of(new SceneContent.Entry("native",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",200f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var random=new Random(0){@Override public double nextDouble(){return whelp?.75:.2;}};
+        var world=new SceneEntities(content,terrain,SceneCollision.empty(),random);var weapons=new SceneWeapons(terrain);weapons.targets(world);var health=new SceneHealth(content);
+        int[] stamp={SceneClock.now()};world.attacks((actor,fire)->weapons.fire(fire,actor,stamp[0]));world.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+        var knight=player(219,whelp?1:3,0);boolean moved=false,dodge=false;
+        for(int tick=0;tick<300;tick++){
+            stamp[0]+=50;world.advance(stamp[0],List.of(knight));weapons.advance(stamp[0],List.of(knight));var actor=world.actors().getFirst();
+            moved|=Math.hypot(actor.x(),actor.y())>.1;dodge|=actor.activity()==6;
+            if(whelp&&moved&&dodge||!whelp&&health.state().current()<200)break;
+        }
+        if(whelp)check(moved&&dodge,"native Whelp chooses its sourced Dodge Back and moves through its attack impulse");
+        else check(health.state().current()<200,"native Gun Puppy emits real projectiles that damage a knight");
+        if(whelp){
+            check(policy.idleAttack()==1,"native Whelp idle routine uses camouflage head 1");
+            var idle=new SceneEntities(content,terrain);int starts=0,previous=0;var effects=new SceneWeapons(terrain);effects.targets(idle);int[] time={SceneClock.now()};
+            var accepted=new ArrayList<Boolean>();idle.attacks((actor,fire)->accepted.add(effects.fire(fire,actor,time[0])));
+            for(int tick=0;tick<240;tick++){time[0]+=50;idle.advance(time[0],List.of());effects.advance(time[0],List.of());int activity=idle.actors().getFirst().activity();if(activity==5&&previous!=5)starts++;previous=activity;}
+            check(starts==1&&!accepted.isEmpty()&&accepted.stream().allMatch(Boolean::booleanValue),"native idle camouflage fires once and executes its actual graph");
+        }
+        System.out.println("PASS: native "+name+" -> exact conditional modes -> "+(whelp?"real Dodge Back displacement and one idle camouflage action":"real projectile damage"));
     }
     private static ActorState player(int id,float x,float y){return new ActorState(id,1001,"Fixture",0,1,x,y,0,0,0,new StarterCatalog.Model("Player",Map.of()));}
     private static void check(boolean condition,String message){if(!condition)throw new AssertionError(message);}

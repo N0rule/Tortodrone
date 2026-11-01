@@ -459,10 +459,14 @@ public final class CombatRenderingCheck {
     private double tutorialBestDistance=Double.POSITIVE_INFINITY;
     private final Map<String,org.tortodrone.world.SceneContent.Spec> tutorialSpecs=new HashMap<>();
     private String tutorialDialog="";
+    private int tutorialEnemy;
+    private final Set<String> tutorialEnemyAttacks=new HashSet<>();
     private float tutorialLastX,tutorialLastY;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
     private void tutorialPlayTick(View view,long now)throws Exception {
-        if(view.sceneId()==217){if(stage!=6){stage=6;started=now;capture("rescue-camp-arrival");}if(now-started>5_000_000_000L){capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
+        if(view.sceneId()==217){if(stage!=6){stage=6;started=now;capture("rescue-camp-arrival");}if(now-started>5_000_000_000L){
+            if(!tutorialEnemyAttacks.containsAll(Set.of("Character/NPC/Monster/Slime/Jelly Cube (Intro)","Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)","Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)")))throw new AssertionError("Tutorial did not exercise all three sourced enemy families: "+tutorialEnemyAttacks);
+            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families -> original doors/portal -> Rescue Camp arrival; fresh onboarding and boss retaliation remain separate gaps");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
@@ -471,6 +475,23 @@ public final class CombatRenderingCheck {
             return;
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
+        if(stage==3){
+            // Fight nearby live enemies with the stock controller. Do not drive through
+            // them or change health/actor state in order to keep the route moving.
+            Actor nearest=null;double distance=4.2;
+            for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
+                    &&actor.Mv().getName().startsWith("Character/NPC/Monster/")&&!actor.Mv().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0){
+                if(monster.adU()>=4&&tutorialEnemyAttacks.add(actor.Mv().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.Mv().getName()+" activity="+monster.adU()+" at="+actor.tz());}
+                double d=Math.hypot(actor.tz().x-own.tz().x,actor.tz().y-own.tz().y);if(d<distance){distance=d;nearest=actor;}
+            }
+            if(nearest!=null){
+                if(tutorialEnemy!=nearest.vw()){tutorialEnemy=nearest.vw();tutorialCombatAt=now;System.out.println("COMBAT: approaching "+nearest.Mv().getName());}
+                boolean moving=distance>1.4;moveToward(view,nearest.tz().x-own.tz().x,nearest.tz().y-own.tz().y,moving);
+                flags(view,(moving?1:0)|((now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0));
+                tutorialPath=List.of();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;return;
+            }
+            tutorialEnemy=0;
+        }
         if(stage==3&&tutorialWaypoint<TUTORIAL_WALK.length){
             var target=TUTORIAL_WALK[tutorialWaypoint];
             if(tutorialWalk(view,own,target[0],target[1],now)){System.out.println("WALK: "+tutorialWaypoint+" -> "+own.tz());tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;}

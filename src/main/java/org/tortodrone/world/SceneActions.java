@@ -48,6 +48,7 @@ public final class SceneActions {
             var spec=new SceneContent.Spec(fields);
             var script=SceneMovementScript.read(spec);
             var targeting=SceneTargeting.read(spec);var wander=SceneWander.read(spec);
+            if(!SceneAttackMotion.readAll(spec).isEmpty()&&!monster)throw new IllegalArgumentException("Attack motion requires a monster actor");
             if((targeting!=null||wander!=null)&&(!monster||script!=null))throw new IllegalArgumentException("Conflicting native targeting actor");
             if(script!=null&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
             if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");

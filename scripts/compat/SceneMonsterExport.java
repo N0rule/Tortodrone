@@ -23,6 +23,15 @@ public final class SceneMonsterExport {
                     out.put(p+"chain-next",Integer.toString(chain.attack));out.put(p+"chain-rearm",Integer.toString(attack.Qg()));
                 }else out.put(p+"chain-unsupported",chain.condition==null?"null":chain.condition.getClass().getName());
             }
+            out.put(p+"blended",Boolean.toString(attack.blended));
+            out.put(p+"monster-movement",Boolean.toString(attack.monsterMovement));
+            var impulse=attack.impulseReceived;
+            if(impulse!=null){
+                if(impulse.translation==null)throw new java.io.IOException("Missing native attack motion translation");
+                new org.tortodrone.world.SceneAttackMotion(impulse.delay,impulse.duration,impulse.translation.x,impulse.translation.y);
+                out.put(p+"impulse-delay",Integer.toString(impulse.delay));out.put(p+"impulse-duration",Integer.toString(impulse.duration));
+                out.put(p+"impulse-x",Float.toString(impulse.translation.x));out.put(p+"impulse-y",Float.toString(impulse.translation.y));
+            }
             out.put(p+"fire-speed",Float.toString(attack.fireSpeed));
             var fires=new ArrayList<String>();
             if(attack.fireRefs!=null)for(int f=0;f<attack.fireRefs.length;f++){
