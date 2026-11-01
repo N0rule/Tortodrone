@@ -17,6 +17,7 @@ public final class RespawnLifecycleTest {
             world.advance(now+1000,List.of(player));var claim=world.takePickups(player.id()).getFirst();
             world.completePickup(player.id(),claim.entityId(),true);
             int removed=world.actors().stream().filter(a->a.id()==claim.entityId()).findFirst().orElseThrow().entity().destroyed();
+            check(removed==now+1000,"pickup settlement uses its authoritative scene tick, not wall time");
             int pad=world.actors().stream().filter(a->a.entity().kind().equals("Generator")).findFirst().orElseThrow().id();
             world.advance(removed+250,List.of());
             world.advance(removed+2999,List.of());check((world.actor(pad).flags()&2)==0,"no premature countdown");

@@ -42,7 +42,10 @@ public final class DungeonConsumablesTest {
                         check(items.size()==1&&items.values().iterator().next().count()==3&&entities.actor(refused)!=null,"fourth use remains in the scene");
                         check(entities.pendingPickups(player.id()).isEmpty(),"full stack cannot reserve the shared pickup");
                         int distant=spawn(entities,player,"Pickup/Vial/Fire Vial",1);
-                        entities.advance(SceneClock.now()+50,List.of(player));entities.advance(SceneClock.now()+100,List.of(player));
+                        // This session fixture shares the live simulation clock. Do not
+                        // advance into the future and then resume with wall-clock ticks.
+                        Thread.sleep(50);entities.advance(SceneClock.now(),List.of(player));
+                        Thread.sleep(50);entities.advance(SceneClock.now(),List.of(player));
                         check(entities.actor(distant).x()==player.x()+1,"full stack cannot attract a nearby vial");
                         long fireId=items.keySet().iterator().next();var fireStack=items.get(fireId);
                         items.put(fireId,new WorldProfile.Item(fireId,fireStack.slot(),fireStack.config(),null,0,null,false,false,false,2,false));

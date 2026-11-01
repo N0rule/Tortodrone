@@ -279,7 +279,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public void reconsiderPickups(int player){for(var e:entities.values())e.refusedPickups.remove(player);}
     public void completePickup(int player,int actor,boolean success){
         var e=entities.get(actor);if(e==null||e.claim!=player)return;
-        e.claim=0;e.claimTaken=false;if(success)e.destroyed=SceneClock.now();else e.refusedPickups.add(player);
+        // Claims are produced by advance: settle on that scene tick, including under
+        // a deterministic clock. Wall time can precede an explicitly advanced tick.
+        e.claim=0;e.claimTaken=false;if(success)e.destroyed=lastStamp;else e.refusedPickups.add(player);
     }
     public void cancelClaims(int player){for(var e:entities.values()){if(e.claim==player&&!e.claimTaken)e.claim=0;e.refusedPickups.remove(player);}}
     public int interactionDuration(int id){var e=entities.get(id);return e==null?670:e.spec.integer("interaction-duration",Set.of("Talk","Shop").contains(interactionAction(e))?1667:670);}
