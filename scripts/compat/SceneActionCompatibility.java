@@ -66,6 +66,22 @@ public final class SceneActionCompatibility {
         var stop=new com.threerings.tudey.config.HandlerConfig.SignalStop();stop.name="activate";
         if(!SceneContentExport.sceneSignal(stop).equals(Map.of("event","signal-stop","signal","activate")))throw new AssertionError("SignalStop fields changed");
         var emptySpawn=new ActionConfig.SpawnActor();emptySpawn.actor=null;
+        var variable=new ActionConfig.SetVariable();variable.name="firing";variable.target=target;
+        var constant=new com.threerings.tudey.config.ExpressionConfig.Constant();constant.value="FaLsE";variable.value=constant;
+        var nativeWrite=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(variable,0)));
+        if(!(nativeWrite instanceof SceneActions.SetVariable write)||write.value()||!write.target().equals(new SceneActions.LogicTarget("tagged","door end")))throw new AssertionError("Native boolean variable target/value lost");
+        constant.value="1";try{SceneContentExport.sceneAction(variable,0);throw new AssertionError("Unimplemented numeric expression accepted");}catch(IOException expected){}
+        var reference=new com.threerings.tudey.config.ExpressionConfig.Reference();reference.name="activate";reference.target=new TargetConfig.Source();
+        var evaluate=new com.threerings.tudey.config.ConditionConfig.Evaluate();evaluate.expression=reference;
+        var guarded=new ActionConfig.Conditional();guarded.condition=evaluate;guarded.action=new ActionConfig.None();guarded.elseAction=null;
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(guarded,0))) instanceof SceneActions.VariableCondition condition)||!condition.name().equals("activate"))throw new AssertionError("Native reference condition lost");
+        var timer=new com.threerings.tudey.config.HandlerConfig.Timer();timer.interval=.1f;timer.offset=-.025f;timer.limit=3;
+        var timed=SceneActions.parse(Json.stringify(SceneContentExport.timerAction(timer,Map.of("kind","sequence","actions",List.of(),"stopOnFailure",false))));
+        if(!(timed instanceof SceneActions.Timer repeat)||repeat.interval()!=100||repeat.offset()!=-25||repeat.limit()!=3)throw new AssertionError("Native timer timing changed");
+        var clear=new com.threerings.projectx.config.ProjectXActionConfig.ClearDialog();var pawns=new TargetConfig.InstanceOf();pawns.logicClass="com.threerings.tudey.server.logic.PawnLogic";clear.target=pawns;
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(clear,0))).equals(new SceneActions.ClearDialog(false)))throw new AssertionError("Native pawn dialog clear lost");
+        clear.target=new TargetConfig.Source();try{SceneContentExport.sceneAction(clear,0);throw new AssertionError("Unsupported clear target accepted");}catch(IOException expected){}
+        System.out.println("PASS: installed native SetVariable/Evaluate(Reference), Timer rounding and pawn ClearDialog export to bounded scene actions");
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(emptySpawn,0))) instanceof SceneActions.Sequence empty)||!empty.actions().isEmpty())throw new AssertionError("Null spawn should succeed without an actor");
         emptySpawn.actor=new com.threerings.config.ConfigReference<>("Fixture/Monster");emptySpawn.location=new TargetConfig.Tagged();
         try{SceneContentExport.sceneAction(emptySpawn,0);throw new AssertionError("Unsupported spawn location accepted");}catch(IOException expected){}

@@ -98,6 +98,7 @@ public final class SceneSimulation {
             return new Delta(List.copyOf(added),List.copyOf(updated),removed,List.copyOf(changed),previous.byId);
         }
     }
+    /** A null definition is the native ClearDialog operation, delivered on the session thread. */
     public record ConversationRequest(SceneConversation definition,ActorState source,int timestamp) { }
     public record MemoryRequest(org.tortodrone.character.KnightMemory operation,ActorState source,int timestamp) { }
     public record ObjectiveRequest(org.tortodrone.character.KnightObjective operation,ActorState source,int timestamp) { }
@@ -258,7 +259,7 @@ public final class SceneSimulation {
             publish=Objects.requireNonNull(publication);
             if(!arrived){arrived=true;if(!instance.map().town())health.protectEntry(SceneClock.now());}
             entered=true;start();}}
-        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
+        public void pause(){synchronized(SceneSimulation.this){if(detached)return;entered=false;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.releaseLifts(appearance.id(),SceneClock.now());lift=dropAt=0;pendingItem=0;itemSpec=null;pendingAnimated=null;movement.resetInput(SceneClock.now());stopIfIdle();}}
         public void resetInput(){synchronized(SceneSimulation.this){check();pendingAnimated=null;weapons.cancelAttacks(appearance.id());movement.resetInput(SceneClock.now());}}
         public boolean teleport(float x,float y,float rotation){synchronized(SceneSimulation.this){
             check();if(!entered||portal!=null||lift!=0||pendingItem!=0||!health.alive())return false;
@@ -360,7 +361,7 @@ public final class SceneSimulation {
         public boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationValid(definition,node,choice,source,appearance.id(),SceneClock.now());}}
         public boolean conversationStart(SceneConversation definition,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationStart(definition,source,appearance.id(),SceneClock.now());}}
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
-        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
+        @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;pendingConversation=null;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
     }
     private final SceneRegistry.Instance instance;
     private final Map<Integer,Membership> members=new LinkedHashMap<>();
@@ -414,6 +415,10 @@ public final class SceneSimulation {
         }});
         entities.conversations((definition,source,stamp,target)->{
             for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(definition,source,stamp);
+            return true;
+        });
+        entities.dialogClears((target,stamp)->{
+            for(var member:members.values())if(member.entered&&(target==0||target==member.appearance.id()))member.pendingConversation=new ConversationRequest(null,null,stamp);
             return true;
         });
         entities.floorAdvances((player,source,stamp)->{

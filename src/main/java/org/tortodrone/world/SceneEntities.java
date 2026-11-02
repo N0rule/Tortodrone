@@ -126,6 +126,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneActions actions;
     private final Map<String,List<SceneContent.Entry>> anchors=new LinkedHashMap<>();
     private final Map<String,ActorState> effectSources=new LinkedHashMap<>();
+    private final Map<String,Map<String,Boolean>> logicVariables=new LinkedHashMap<>();
+    private int variableCount;
     private long nextEffectSource;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
@@ -161,6 +163,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface ConversationSink { boolean start(SceneConversation conversation,ActorState source,int stamp,int target); }
     private ConversationSink conversationSink=(conversation,source,stamp,target)->false;
     public void conversations(ConversationSink sink){conversationSink=Objects.requireNonNull(sink);}
+    @FunctionalInterface public interface DialogClearSink {boolean clear(int target,int stamp);}
+    private DialogClearSink dialogClearSink=(target,stamp)->false;
+    public void dialogClears(DialogClearSink sink){dialogClearSink=Objects.requireNonNull(sink);}
     @FunctionalInterface public interface EffectSink { void fire(org.tortodrone.character.StarterCatalog.Model config,ActorState source,int stamp); }
     private EffectSink effectSink=(config,source,stamp)->{};
     public void effects(EffectSink sink){effectSink=Objects.requireNonNull(sink);}
@@ -197,6 +202,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
         actions.nearestSignals(this::nearestSignal);
+        actions.variables(this::setVariable,this::variable);
+        actions.dialogClears((only,time,source,activator)->{
+            if(scriptSource(source,time)==null)return false;
+            int target=0;
+            if(only){var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);if(player==null)return true;target=player.id();}
+            return dialogClearSink.clear(target,time);
+        });
         actions.gameplayEffects(this::gameplayEffect);
         actions.impulses((operation,time,source)->{var origin=scriptSource(source,time);if(origin==null)return false;impulse(operation.config(),origin.x(),origin.y(),origin.rotation(),time,0);return true;});
         actions.objectives((operation,time,source,activator)->{
@@ -370,6 +382,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Retain one short publication grace, rather than counting it twice.
                 if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
                     entities.remove(e.id);
+                    var removedVariables=logicVariables.remove("actor:"+e.id);if(removedVariables!=null)variableCount-=removedVariables.size();
                     actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
                         tag->entities.values().stream().anyMatch(other->Arrays.asList(other.spec.text("tags","").split(",")).contains(tag)),stamp,"actor:"+e.id);
                     if(e.pad!=null)e.pad.nextGeneration=e.destroyed+e.pad.spec.integer("delay",0);
@@ -969,6 +982,28 @@ public final class SceneEntities implements SceneWeapons.Targets {
         // Native Tagged maps retain a destroyed actor until its actual removal.
         for(var entity:entities.values())if(Arrays.asList(entity.spec.text("tags","").split(",")).contains(tag))result.add(entity.snapshot());
         return result;
+    }
+    private List<String> variableTargets(SceneActions.LogicTarget target,int stamp,String source,String activator){
+        return switch(target.mode()){
+            case "source"->scriptSource(source,stamp)==null?List.of():List.of(source);
+            case "activator"->scriptSource(activator,stamp)!=null||players.stream().anyMatch(p->activator.equals("actor:"+p.id()))?List.of(activator):List.of();
+            case "tagged"->taggedSources(target.tag(),stamp).stream().map(SceneEntities::logicIdentity).distinct().toList();
+            default->throw new IllegalArgumentException("Invalid variable target");
+        };
+    }
+    private boolean setVariable(SceneActions.SetVariable operation,int stamp,String source,String activator){
+        if(scriptSource(source,stamp)==null)return false;
+        var targets=variableTargets(operation.target(),stamp,source,activator);
+        int additions=0;
+        for(String target:targets){var values=logicVariables.get(target);if(values==null||!values.containsKey(operation.name())){if(values!=null&&values.size()>=256)return false;additions++;}}
+        if(variableCount+additions>4096)return false;
+        for(String target:targets)logicVariables.computeIfAbsent(target,key->new LinkedHashMap<>()).put(operation.name(),operation.value());
+        variableCount+=additions;return true;
+    }
+    private boolean variable(String name,SceneActions.LogicTarget target,int stamp,String source,String activator){
+        for(String identity:variableTargets(target,stamp,source,activator)){
+            var values=logicVariables.get(identity);if(values!=null&&values.containsKey(name))return values.get(name);
+        }return false;
     }
     private ActorState entrySource(SceneContent.Entry binding,int stamp){
         var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,binding.key(),null,SceneStatus.State.NORMAL,0,0,true);

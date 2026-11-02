@@ -211,12 +211,18 @@ public final class SceneContentExport {
                     if(handler instanceof HandlerConfig.ActorRemoved removed){
                         if(!(removed.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged))throw new IOException("ActorRemoved target is not Tagged");
                         fields.put("event","removed");fields.put("all",Boolean.toString(removed.all));tags=List.of(tagged.tag);
+                    }else if(handler.getClass()==HandlerConfig.Timer.class){
+                        fields.put("event","signal-start");fields.put("signal","startup");fields.put("scene-startup","true");
+                        tags=List.of("startup:"+key(entry.getKey())+":"+hi);
                     }else{
                         fields.putAll(sceneSignal(handler));
                         tags=sceneTags(config,reference.kW(),original.tags);
                         if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
                     }
-                    fields.put("action",org.tortodrone.resources.Json.stringify(sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm)));
+                    var graph=sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm);
+                    if(handler.getClass()==HandlerConfig.Timer.class){var timer=(HandlerConfig.Timer)handler;graph=timerAction(timer,graph);}
+                    org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+                    fields.put("action",org.tortodrone.resources.Json.stringify(graph));
                     for(int ti=0;ti<tags.size();ti++){
                         if(tags.get(ti).isBlank())throw new IOException("Handler tag is empty");
                         String index=Integer.toString(indexes.size());indexes.add(index);
@@ -340,7 +346,13 @@ public final class SceneContentExport {
         }
         return handler;
     }
-    private static boolean sceneHandler(HandlerConfig handler){return handler instanceof HandlerConfig.ActorRemoved||handler instanceof HandlerConfig.Signal||handler instanceof HandlerConfig.SignalStart||handler instanceof HandlerConfig.SignalStop;}
+    private static boolean sceneHandler(HandlerConfig handler){return handler instanceof HandlerConfig.ActorRemoved||handler instanceof HandlerConfig.Signal||handler instanceof HandlerConfig.SignalStart||handler instanceof HandlerConfig.SignalStop||handler.getClass()==HandlerConfig.Timer.class;}
+    static Map<String,Object> timerAction(HandlerConfig.Timer timer,Map<String,Object> action)throws IOException {
+        if(!Float.isFinite(timer.interval)||!Float.isFinite(timer.offset)||timer.interval<.001f||timer.interval>3600||Math.abs(timer.offset)>3600||timer.limit<0||timer.limit>1_000_000)throw new IOException("Unsupported native timer bounds");
+        // Native casts the float seconds to milliseconds. Preserve combined initial rounding.
+        int interval=(int)(timer.interval*1000f),initial=(int)(Math.max(0,timer.interval+timer.offset)*1000f);
+        return Map.of("kind","timer","interval",interval,"offset",initial-interval,"limit",timer.limit,"action",action);
+    }
     static Map<String,String> sceneSignal(HandlerConfig handler)throws IOException {
         if(handler instanceof HandlerConfig.Signal signal){
             if(signal.refractoryPeriod!=0)throw new IOException("Signal refractory period is not implemented");
@@ -355,6 +367,16 @@ public final class SceneContentExport {
     static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.None)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
+        if(action instanceof ActionConfig.SetVariable variable){
+            if(!(variable.value instanceof com.threerings.tudey.config.ExpressionConfig.Constant constant)
+                    ||!(constant.value.equalsIgnoreCase("true")||constant.value.equalsIgnoreCase("false")))throw new IOException("Unsupported native variable expression");
+            return Map.of("kind","set-variable","name",variable.name,"value",Boolean.parseBoolean(constant.value),"target",logicTarget(variable.target));
+        }
+        if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear){
+            boolean only=clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator;
+            if(!only&&!pawnTarget(clear.target))throw new IOException("Unsupported native ClearDialog target");
+            return Map.of("kind","clear-dialog","activator",only);
+        }
         if(action instanceof ActionConfig.Random choice){
             if(choice.actions==null||choice.actions.length==0||choice.actions.length>256)throw new IOException("Invalid native weighted choice");
             var actions=new ArrayList<Object>();var weights=new ArrayList<Float>();
@@ -476,12 +498,23 @@ public final class SceneContentExport {
             return Map.of("kind","limited","limit",limit.limit,"action",sceneAction(conditional.action,depth+1,cm,pawnActivator),"otherwise",
                 conditional.elseAction==null?Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()):sceneAction(conditional.elseAction,depth+1,cm,pawnActivator));
         }
+        if(action instanceof ActionConfig.Conditional conditional&&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Evaluate evaluate
+                &&evaluate.expression instanceof com.threerings.tudey.config.ExpressionConfig.Reference reference){
+            return Map.of("kind","variable-condition","name",reference.name,"target",logicTarget(reference.target),"action",sceneAction(conditional.action,depth+1,cm,pawnActivator),"otherwise",
+                conditional.elseAction==null?Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()):sceneAction(conditional.elseAction,depth+1,cm,pawnActivator));
+        }
         throw new IOException("Unsupported scene action "+(action==null?"null":action.getClass().getName()));
     }
 
     private static boolean pawnTarget(com.threerings.tudey.config.TargetConfig target){
         return target instanceof com.threerings.tudey.config.TargetConfig.InstanceOf instance
             &&instance.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic");
+    }
+    private static Map<String,String> logicTarget(com.threerings.tudey.config.TargetConfig target)throws IOException {
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("mode","source","tag","");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Activator)return Map.of("mode","activator","tag","");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank())return Map.of("mode","tagged","tag",tagged.tag);
+        throw new IOException("Unsupported native variable target");
     }
     private static void destructionTags(com.threerings.tudey.config.TargetConfig target,List<String> tags,int depth)throws IOException {
         if(depth>16||tags.size()>256)throw new IOException("Scene destruction target graph exceeds bounds");

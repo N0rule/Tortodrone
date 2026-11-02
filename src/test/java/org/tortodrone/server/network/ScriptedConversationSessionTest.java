@@ -23,7 +23,7 @@ public final class ScriptedConversationSessionTest {
             var original=SceneRegistry.system().entry().map();
             String id="@conversation/Fixture";
             var nodes=Map.of("first",new SceneConversation.Node("first","m.first",List.of(new SceneConversation.Response("r.next","last")),null,null),
-                "last",new SceneConversation.Node("last","m.last",List.of(new SceneConversation.Response("r.finish","","","",new SceneActions.Signal("boss","activate"))),null,null));
+                "last",new SceneConversation.Node("last","m.last",List.of(new SceneConversation.Response("r.finish","","","",new SceneActions.Sequence(List.of(new SceneActions.Signal("boss","activate"),new SceneActions.Delay(1000,new SceneActions.ClearDialog(false))),false))),null,null));
             var definition=new SceneConversation(id,"n.fixture","conversation","first",null,nodes);
             String start=Json.stringify(Map.of("kind","delay","millis",100,"action",Map.of("kind","conversation","id",id,"activator",true)));
             var area=new SceneContent.Entry("500",original.spawnX(),original.spawnY(),0,new SceneContent.Spec(Map.ofEntries(Map.entry("config","Fixture/Area"),Map.entry("kind","SceneTrigger"),Map.entry("event","signal-start"),Map.entry("watch-tag","area:500"),Map.entry("signal","intersection"),Map.entry("scene-sensor","true"),Map.entry("sensor-mask","4"),Map.entry("width","2"),Map.entry("height","2"),Map.entry("action",start))));
@@ -55,12 +55,15 @@ public final class ScriptedConversationSessionTest {
                 refuse(()->first.conversationInvocation(response(oid,0,12)));
                 second.subscribe((short)2);second.entered();await(()->"first".equals(node(second)));
                 check(node(first)==null,"delayed Activator conversation stays with the entering knight");
+                await(()->node(second)==null);
+                refuse(()->second.conversationInvocation(response(oid,0,20)));
+                check(opened(registry),"scene cleanup closes the native panel without answering it or repeating encounter actions");
                 check(registry.entry().simulation().snapshot().actors().stream().noneMatch(actor->actor.id()==0),"entry presentation never creates a phantom actor");
                 first.unsubscribe();check(!first.conversationInvocation(response(oid+1,0,13)),"departed ownership cannot target another scene");
             }
             check(registry.entry().simulation().playerCount()==0,"disconnect cleans conversation ownership and scene occupants");
         }finally{try(var paths=Files.walk(home)){for(var file:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
-        System.out.println("PASS: authored sensor -> delayed Activator dialogue -> native response -> scene action, ownership, invalid choice, duplicate response/terminal and cleanup");
+        System.out.println("PASS: authored sensor -> delayed Activator dialogue -> native response -> scene action and delayed pawn ClearDialog, ownership, invalid choice, duplicate response/terminal and cleanup");
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static SessionDecoder.Invocation response(int oid,int choice,int request){return new SessionDecoder.Invocation(oid,SceneConversation.SERVICE,1,List.of(choice,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)request)));}

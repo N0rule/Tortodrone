@@ -1926,6 +1926,7 @@ final class WorldSession implements AutoCloseable {
         if(townDialog!=null&&(own==null||Math.hypot(own.x()-townX,own.y()-townY)>1))closeTownDialog();
         if(conversation!=null&&(own==null||Math.hypot(own.x()-conversationX,own.y()-conversationY)>1))closeConversation();
         var scripted=membership.takeConversation();
+        if(scripted!=null&&scripted.definition()==null){closeConversation();scripted=null;}
         if(scripted!=null&&own!=null){
             if(scripted.definition().initialAction()!=null&&!membership.conversationStart(scripted.definition(),scripted.source()))return;
             closeTownDialog();conversation=scripted.definition();conversationSource=scripted.source();conversationNode=conversation.initial();

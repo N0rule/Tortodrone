@@ -7,7 +7,30 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    /** Native logic variables belong to Source, Activator or resolved Tagged logics, never a client object. */
+    public record LogicTarget(String mode,String tag) {
+        public LogicTarget {if(!Set.of("source","activator","tagged").contains(mode)||tag==null||mode.equals("tagged")==tag.isEmpty())throw new IllegalArgumentException("Invalid logic target");if(!tag.isEmpty())text(tag);}
+    }
+    public record SetVariable(String name,boolean value,LogicTarget target) implements Action {
+        public SetVariable{text(name);Objects.requireNonNull(target);}
+    }
+    /** Evaluate(Reference), with native missing-reference=false behavior. */
+    public record VariableCondition(String name,LogicTarget target,Action action,Action otherwise) implements Action {
+        public VariableCondition{text(name);Objects.requireNonNull(target);Objects.requireNonNull(action);Objects.requireNonNull(otherwise);}
+    }
+    public record Timer(int interval,int offset,int limit,Action action) implements Action {
+        public Timer {if(interval<1||interval>3_600_000||offset< -3_600_000||offset>3_600_000||limit<0||limit>1_000_000)throw new IllegalArgumentException("Invalid scene timer");Objects.requireNonNull(action);}
+    }
+    public record ClearDialog(boolean activatorOnly) implements Action { }
+    @FunctionalInterface public interface Variables {boolean set(SetVariable operation,int stamp,String source,String activator);}
+    @FunctionalInterface public interface VariableReads {boolean get(String name,LogicTarget target,int stamp,String source,String activator);}
+    @FunctionalInterface public interface DialogClears {boolean clear(boolean activatorOnly,int stamp,String source,String activator);}
+    private Variables variables=(operation,stamp,source,activator)->false;
+    private VariableReads variableReads=(name,target,stamp,source,activator)->false;
+    private DialogClears dialogClears=(only,stamp,source,activator)->false;
+    public void variables(Variables writes,VariableReads reads){variables=Objects.requireNonNull(writes);variableReads=Objects.requireNonNull(reads);}
+    public void dialogClears(DialogClears sink){dialogClears=Objects.requireNonNull(sink);}
     /** A native effect's server action has a distinct, frozen source logic at its fire location. */
     public record GameplayEffect(StarterCatalog.Model config,Action action,String locationTag) implements Action {
         public GameplayEffect{Objects.requireNonNull(config);text(config.name());Objects.requireNonNull(action);Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag);}
@@ -160,7 +183,7 @@ public final class SceneActions {
     @FunctionalInterface public interface SourcedSignals { boolean apply(String tag,String name,int stamp,String source); }
     private static SourcedSpawnActors sourced(SpawnActors spawn){Objects.requireNonNull(spawn);return (actor,stamp,source,activator)->spawn.apply(actor,stamp,source);}
     private static final class Node {
-        final Action action;final List<Node> children;int remaining;
+        final Action action;final List<Node> children;int remaining;boolean started;
         Node(Action action){
             this.action=action;
             children=switch(action){
@@ -168,6 +191,8 @@ public final class SceneActions {
                 case Sequence sequence->sequence.actions().stream().map(Node::new).toList();
                 case Choice choice->choice.actions().stream().map(Node::new).toList();
                 case Limited limited->{remaining=limited.limit();yield List.of(new Node(limited.action()),new Node(limited.otherwise()));}
+                case VariableCondition condition->List.of(new Node(condition.action()),new Node(condition.otherwise()));
+                case Timer timer->{remaining=timer.limit();yield List.of(new Node(timer.action()));}
                 default->List.of();
             };
         }
@@ -290,6 +315,15 @@ public final class SceneActions {
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
             case NearestSignal signal -> nearestSignals.apply(signal,Math.toIntExact(due),source);
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
+            case ClearDialog clear -> dialogClears.clear(clear.activatorOnly(),Math.toIntExact(due),source,activator);
+            case SetVariable variable -> variables.set(variable,Math.toIntExact(due),source,activator);
+            case VariableCondition condition -> execute(node.children.get(variableReads.get(condition.name(),condition.target(),Math.toIntExact(due),source,activator)?0:1),due,source,activator,budget);
+            case Timer timer -> {
+                if(!node.started){node.started=true;yield enqueue(node,Math.addExact(due,Math.max(0,timer.interval()+timer.offset())),source,activator);}
+                boolean success=execute(node.children.getFirst(),due,source,activator,budget);
+                if(timer.limit()==0||--node.remaining>0)success=enqueue(node,Math.addExact(due,timer.interval()),source,activator)&&success;
+                yield success;
+            }
             case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
             case GameplayEffect effect -> gameplayEffects.apply(effect,Math.toIntExact(due),source);
             case Impulse impulse -> impulses.apply(impulse,Math.toIntExact(due),source);
@@ -346,6 +380,8 @@ public final class SceneActions {
             case Sequence sequence->{for(var child:sequence.actions())conversationIds(child,ids);}
             case Choice choice->{for(var child:choice.actions())conversationIds(child,ids);}
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
+            case VariableCondition condition->{conversationIds(condition.action(),ids);conversationIds(condition.otherwise(),ids);}
+            case Timer timer->conversationIds(timer.action(),ids);
             default->{}
         }
     }
@@ -358,7 +394,7 @@ public final class SceneActions {
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
-        switch(action){case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
+        switch(action){case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
         try{
@@ -370,6 +406,10 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("clear-dialog".equals(kind)&&map.keySet().equals(Set.of("kind","activator"))&&map.get("activator") instanceof Boolean only)return new ClearDialog(only);
+        if("set-variable".equals(kind)&&map.keySet().equals(Set.of("kind","name","value","target"))&&map.get("value") instanceof Boolean bool)return new SetVariable(tag(map.get("name")),bool,logicTarget(map.get("target")));
+        if("variable-condition".equals(kind)&&map.keySet().equals(Set.of("kind","name","target","action","otherwise")))return new VariableCondition(tag(map.get("name")),logicTarget(map.get("target")),decode(map.get("action"),depth+1,count),decode(map.get("otherwise"),depth+1,count));
+        if("timer".equals(kind)&&map.keySet().equals(Set.of("kind","interval","offset","limit","action")))return new Timer(integer(map.get("interval")),integer(map.get("offset")),integer(map.get("limit")),decode(map.get("action"),depth+1,count));
         if("gameplay-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","action","tag")))return new GameplayEffect(FireCatalog.modelJson(string(map.get("config"))),decode(map.get("action"),depth+1,count),string(map.get("tag")));
         if("source-impulse".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new Impulse(FireCatalog.modelJson(string(map.get("config"))));
         if("nearest-signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name","count","excludeSource"))&&map.get("count") instanceof Number number&&map.get("excludeSource") instanceof Boolean exclude){
@@ -421,6 +461,8 @@ public final class SceneActions {
         throw new IllegalArgumentException("Unsupported scene action or fields");
     }
     private static String string(Object value){if(!(value instanceof String text))throw new IllegalArgumentException("Expected scene action text");return text;}
+    private static int integer(Object value){if(!(value instanceof Number n)||n.doubleValue()!=n.longValue())throw new IllegalArgumentException("Expected scene action integer");return Math.toIntExact(n.longValue());}
+    private static LogicTarget logicTarget(Object value){if(!(value instanceof Map<?,?> target)||!target.keySet().equals(Set.of("mode","tag")))throw new IllegalArgumentException("Invalid logic target");return new LogicTarget(string(target.get("mode")),string(target.get("tag")));}
     private static String tag(Object value){String result=string(value);text(result);return result;}
     public static Rule rule(SceneContent.Entry entry)throws IOException {
         var spec=entry.spec();
