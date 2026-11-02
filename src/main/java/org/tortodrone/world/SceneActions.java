@@ -7,7 +7,11 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public record Objective(org.tortodrone.character.KnightObjective mutation) implements Action {public Objective{Objects.requireNonNull(mutation);}}
+    @FunctionalInterface public interface Objectives {boolean apply(org.tortodrone.character.KnightObjective operation,int stamp,String source,String activator);}
+    private Objectives objectives=(operation,stamp,source,activator)->false;
+    public void objectives(Objectives sink){objectives=Objects.requireNonNull(sink);}
     public record Choice(List<Action> actions,List<Float> weights) implements Action {
         public Choice {
             actions=List.copyOf(actions);weights=List.copyOf(weights);
@@ -255,6 +259,7 @@ public final class SceneActions {
             }
             case NextFloor ignored -> floorAdvances.apply(Math.toIntExact(due),source,activator);
             case Memory memory -> memories.apply(memory.mutation(),Math.toIntExact(due),source,activator);
+            case Objective objective -> objectives.apply(objective.mutation(),Math.toIntExact(due),source,activator);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
             case DestroyMany destruction -> {
                 boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
@@ -324,6 +329,7 @@ public final class SceneActions {
             return new Choice(children,numbers);
         }
         if("next-floor".equals(kind)&&map.keySet().equals(Set.of("kind")))return new NextFloor();
+        if("knight-objective".equals(kind)&&map.keySet().equals(Set.of("kind","name","text")))return new Objective(new org.tortodrone.character.KnightObjective(string(map.get("name")),map.get("text")==null?null:string(map.get("text"))));
         if("knight-memory".equals(kind)&&map.keySet().equals(Set.of("kind","name","remember"))&&map.get("remember") instanceof Boolean remember)return new Memory(new org.tortodrone.character.KnightMemory(string(map.get("name")),remember));
         if("progress-event".equals(kind)&&map.keySet().equals(Set.of("kind","level","progress")))return new ProgressEvent(string(map.get("level")),string(map.get("progress")));
         if("source-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new SourceEffect(FireCatalog.modelJson(string(map.get("config"))));

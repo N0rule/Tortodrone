@@ -141,6 +141,18 @@ public final class SceneActionCompatibility {
         try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"");throw new AssertionError("Unsourced closing response converted into a jump");}catch(IOException expected){}
         close.target=new TargetConfig.Source();
         try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"clear-dialog-activator");throw new AssertionError("Changed native response target accepted");}catch(IOException expected){}
+        var objective=new com.threerings.projectx.config.ProjectXActionConfig.SetObjective();
+        objective.name="findRhendon";objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;
+        objective.objective=new com.threerings.projectx.config.ObjectiveConfig.Simple();
+        ((com.threerings.projectx.config.ObjectiveConfig.Simple)objective.objective).text="m.find_rhendon";
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.character.KnightObjective("findRhendon","m.find_rhendon"))))throw new AssertionError("Native KNIGHT objective lost its message");
+        objective.objective=null;
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(objective,0,null,true))).equals(new SceneActions.Objective(new org.tortodrone.character.KnightObjective("findRhendon",null))))throw new AssertionError("Null objective config with KNIGHT persistence must erase the objective");
+        objective.persistence=com.threerings.projectx.config.Persistence.SCENE;
+        try{SceneContentExport.sceneAction(objective,0,null,true);throw new AssertionError("Unimplemented objective scope accepted");}catch(IOException expected){}
+        objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;objective.target=new TargetConfig.Source();
+        try{SceneContentExport.sceneAction(objective,0,null,true);throw new AssertionError("Arbitrary objective target accepted");}catch(IOException expected){}
+        System.out.println("PASS: native SetObjective KNIGHT set/erase, including retained KNIGHT persistence with null config; unsupported scope/target refused");
         var progress=new com.threerings.projectx.dungeon.config.DungeonActionConfig.ProgressEvent();progress.level="tutorial";progress.progress="10_Move";
         if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(progress,0))).equals(new SceneActions.ProgressEvent("tutorial","10_Move")))throw new AssertionError("Native analytics vocabulary lost");
         progress.level="";

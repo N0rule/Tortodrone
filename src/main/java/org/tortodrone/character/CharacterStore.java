@@ -251,6 +251,13 @@ public final class CharacterStore {
         if(database==null)throw new IOException("Knight memories require SQLite storage");
         return database.knightMemories(accountId,knightId,authRevision);
     }
+    public Map<String,KnightObjective.State> knightObjectives(int knightId,long authRevision)throws IOException {
+        if(database==null)throw new IOException("Objectives require SQLite storage");return database.knightObjectives(accountId,knightId,authRevision);
+    }
+    public Database.StoryState knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
+        if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");
+        return database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);
+    }
     public Database.MemoryState knightMemories(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> operations)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid knight memory owner");
         return database.knightMemories(accountId,knightId,authRevision,expected.worldId(),expected.revision(),operations);

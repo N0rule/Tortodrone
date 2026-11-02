@@ -13,6 +13,12 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "camp-story-check" -> {
+                if(args.length!=3)throw new IllegalArgumentException("camp-story-check expects game-directory deployment-with-original-Camp");
+                fixture="org.tortodrone.server.network.CampStoryCompatibility";fixtureArgs.clear();fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/CampStoryCompatibility.java"));
+            }
+            case "objectives-check" -> fixture="ObjectiveCompatibility";
             case "opening-sessions-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("opening-sessions-check expects game-directory deployment-directory");
                 fixture="org.tortodrone.server.network.OpeningSessionCheck";fixtureArgs.clear();fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

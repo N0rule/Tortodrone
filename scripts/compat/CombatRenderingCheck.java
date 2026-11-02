@@ -52,6 +52,9 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
     private boolean freshOpening;
+    private boolean campStory,campStoryReturn;
+    private int campPanel;
+    private long campResponseAt;
     private int readyRoomDestination=1;
     private Confirm openingCreation;
     private boolean dialogueOnly;
@@ -103,6 +106,17 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
+        if(args.length==2&&args[0].equals("--seed-camp")){
+            // A disposable completed-tutorial checkpoint isolates the changed Camp interaction.
+            try(var store=new AccountStore(Path.of(args[1]))){
+                store.create("LanPlayer","lan-test-password".toCharArray());
+                char[] password=AccountStore.transform("lan-test-password".toCharArray());
+                try{var characters=store.authenticate("LanPlayer",password).characters();
+                    var knight=characters.createForOpening(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),1);
+                    characters.completeTutorial(knight.id(),1,characters.worldProfile(knight.name(),1));
+                }finally{Arrays.fill(password,'\0');}
+            }return;
+        }
         if(args.length==2&&args[0].equals("--seed-opening")){
             try(var store=new AccountStore(Path.of(args[1]))){store.create("LanPlayer","lan-test-password".toCharArray());}return;
         }
@@ -130,7 +144,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -145,12 +159,13 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,Arrays.asList(args).contains("--opening-tutorial-only")?null:peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
+        probe.campStory=Arrays.asList(args).contains("--camp-story-only");probe.campStoryReturn=Arrays.asList(args).contains("--camp-story-return-only");
         probe.freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
-        if(Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
+        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
+        if(probe.campStory||probe.campStoryReturn||Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
@@ -620,6 +635,30 @@ public final class CombatRenderingCheck {
         else if(action instanceof org.tortodrone.world.SceneActions.Choice choice)choice.actions().forEach(this::tutorialSpawnSpecs);
         else if(action instanceof org.tortodrone.world.SceneActions.Limited limited){tutorialSpawnSpecs(limited.action());tutorialSpawnSpecs(limited.otherwise());}
     }
+    private void checkCampObjective(){
+        if(app.CT().objectives.size()!=1)throw new AssertionError("Expected one persistent Camp objective");
+        var objective=app.CT().objectives.iterator().next();
+        if(objective.jz()!=0||objective.persistence!=com.threerings.projectx.config.Persistence.KNIGHT||!(objective.config instanceof com.threerings.projectx.config.ObjectiveConfig.Simple simple)||!simple.text.equals("m.find_rhendon"))throw new AssertionError("Native Camp objective fields differ");
+    }
+    private void campStoryTick(View view,long now)throws Exception{
+        var own=authoritative.get(app.CT().pawnId);if(own==null||view.sceneId()!=217)return;
+        if(stage==2){GLFW.glfwFocusWindow(app.getWindow());capture("camp-initial");tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(217);tutorialPath=List.of();tutorialSpecs.clear();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;stage=7;}
+        var greta=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Rescue Camp/Greta 2")).findFirst().orElseThrow();
+        if(stage==7){if(now-started<2_000_000_000L)return;if(now-started>4_000_000_000L&&now-started<4_100_000_000L)capture("camp-walk");if(!tutorialWalk(view,own,greta.tz().x,greta.tz().y-1.15f,now))return;moveToward(view,greta.tz().x-own.tz().x,greta.tz().y-own.tz().y,false);flags(view,0);stage=8;started=now;return;}
+        if(stage==8&&now-started>500_000_000L){flags(view,4);stage=9;started=now;return;}
+        if(stage==9){flags(view,0);
+            if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
+                if(campPanel<3&&info.message.equals("m.rc_greet2_"+(campPanel+1)+"a")&&now>=campResponseAt){
+                    capture("camp-greta-panel-"+(campPanel+1));System.out.println("DIALOG: "+info.name+":"+info.message);
+                    info.conversationService.f(0,new Confirm());campPanel++;campResponseAt=now+1_000_000_000L;
+                }
+            }else if(campPanel==3&&!app.CT().objectives.isEmpty()&&now>=campResponseAt){
+                checkCampObjective();capture("camp-find-rhendon-objective");finishImages();passed=done=true;
+                System.out.println("PASS: original Camp entry -> normal collision walk -> native Greta interaction -> all three localized panels/image -> KNIGHT findRhendon objective; completed-tutorial checkpoint fixture, reconnect checked separately");app.shutdown();
+            }
+            if(now-started>15_000_000_000L)throw new AssertionError("Greta conversation/objective did not finish; panel="+campPanel);
+        }
+    }
     private void readyRoomTick(long now)throws Exception{
         if(app.CT()==null||app.Gu()==null)return;
         if(stage==0&&app.CT().zoneId==org.tortodrone.world.ReadyRoom.ZONE&&Class.forName("com.threerings.projectx.client.dR").isInstance(app.Gu())&&!app.GF().mG()){
@@ -638,6 +677,7 @@ public final class CombatRenderingCheck {
                 String shot="ready-room-return-"+readyRoomDestination;capture(shot);finishImages();
                 var image=ImageIO.read(output.resolve(shot+".png").toFile());
                 if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
+                if(campStoryReturn)checkCampObjective();
                 passed=done=true;System.out.println("PASS: stock graphical Ready Room returns to saved scene "+readyRoomDestination+" and renders its controlled pawn");app.shutdown();
         }
     }
@@ -673,7 +713,7 @@ public final class CombatRenderingCheck {
                     +(stage==20?konwayState(viewPawn()):""));
             }
             if(tutorialEntryOnly){if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
-            if(readyRoomOnly){readyRoomTick(now);return;}
+            if(readyRoomOnly){if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gu()),now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
@@ -1004,7 +1044,7 @@ public final class CombatRenderingCheck {
             // settle before saving the return image and reporting completion.
             if(stage==7&&view.sceneId()==1){started=now;stage=10;return;}
             if(stage==10&&view.sceneId()==1&&now-started>2_000_000_000L){capture("haven-return");finishImages();Files.writeString(output.resolve("primary-complete"),"");passed=done=true;System.out.println("PASS: two stock graphical clients, seven modern Haven scenes and return transitions, eighteen combat actions, native animations and server projectile sprites");app.shutdown();}
-        }catch(Throwable error){failure=error;done=true;error.printStackTrace();images.shutdown();
+        }catch(Throwable error){try{capture("acceptance-failed-stage-"+stage);}catch(Throwable ignored){}failure=error;done=true;error.printStackTrace();images.shutdown();
             try{images.awaitTermination(15,TimeUnit.SECONDS);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();}
             images.shutdownNow();app.shutdown();}
     }

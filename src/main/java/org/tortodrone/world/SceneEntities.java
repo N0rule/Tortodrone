@@ -169,6 +169,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     @FunctionalInterface public interface MemorySink {boolean apply(ActorState player,org.tortodrone.character.KnightMemory operation,ActorState source,int stamp);}
     private MemorySink memorySink=(player,operation,source,stamp)->false;
     public void memories(MemorySink sink){memorySink=Objects.requireNonNull(sink);}
+    @FunctionalInterface public interface ObjectiveSink {boolean apply(ActorState player,org.tortodrone.character.KnightObjective operation,ActorState source,int stamp);}
+    private ObjectiveSink objectiveSink=(player,operation,source,stamp)->false;
+    public void objectives(ObjectiveSink sink){objectiveSink=Objects.requireNonNull(sink);}
     private List<ActorState> players=List.of();
     public SceneEntities(SceneContent content,CollisionMap terrain){
         this(content,terrain,SceneCollision.empty());
@@ -191,6 +194,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }else spawn(binding,binding.spec(),null,stamp);
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
+        actions.objectives((operation,time,source,activator)->{
+            var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=scriptSource(source,time);
+            return player!=null&&origin!=null&&objectiveSink.apply(player,operation,origin,time);
+        });
         boolean startup=false;
         for(var entry:content.entries())if(entry.spec().flag("scene-startup",false)){startup=true;actions.signal(entry.spec().text("watch-tag",""),"startup",stamp,"entry:"+entry.key());}
         if(startup)actions.advance(stamp);

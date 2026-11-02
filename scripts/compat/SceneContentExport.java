@@ -352,7 +352,7 @@ public final class SceneContentExport {
     }
     static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {return sceneAction(action,depth,null);}
     static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm)throws IOException {return sceneAction(action,depth,cm,false);}
-    private static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
+    static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.None)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
         if(action instanceof ActionConfig.Random choice){
@@ -422,6 +422,18 @@ public final class SceneContentExport {
             if(!pawnActivator||!(memory.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
                     ||memory.persistence!=null&&memory.persistence!=com.threerings.projectx.config.Persistence.KNIGHT)throw new IOException("Unsupported scene memory scope/target");
             var fields=Map.<String,Object>of("kind","knight-memory","name",memory.name,"remember",memory.persistence!=null);
+            org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
+        }
+        if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.SetObjective objective){
+            if(!pawnActivator||!(objective.target instanceof com.threerings.tudey.config.TargetConfig.Activator)
+                ||objective.persistence!=null&&objective.persistence!=com.threerings.projectx.config.Persistence.KNIGHT)throw new IOException("Unsupported objective scope/target");
+            String text=null;
+            if(objective.objective!=null){
+                if(objective.persistence==null||!(objective.objective instanceof com.threerings.projectx.config.ObjectiveConfig.Simple simple)||simple.userInterface!=null
+                    ||simple.childX!=.5f||simple.childY!=.5f||simple.parentX!=.5f||simple.parentY!=.5f)throw new IOException("Unsupported objective configuration");
+                text=simple.text;
+            }
+            var fields=new LinkedHashMap<String,Object>();fields.put("kind","knight-objective");fields.put("name",objective.name);fields.put("text",text);
             org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(fields));return fields;
         }
         if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ApplyStatus status){
@@ -882,6 +894,8 @@ public final class SceneContentExport {
             String reference=rules.getProperty(prefix+"reference");
             var conversation=cm.d(com.threerings.projectx.config.ConversationConfig.class,reference);
             if(conversation==null)throw new IOException("Unresolved authored conversation binding");
+            boolean verify=Boolean.parseBoolean(rules.getProperty(prefix+"verify-actions","false"));
+            if(verify)verifyConversationInitial(conversation.initialAction,rules.getProperty(prefix+"initial"));
             Object model=script==null?field(cm.d(ActorConfig.class,actorName).ai(cm).sprite,"model"):script.model;
             String speaker=script==null?rules.getProperty(prefix+"name"):script.name.isBlank()?conversation.speakerName:script.name;
             if(speaker==null||speaker.isBlank())throw new IOException("Missing authored conversation speaker");
@@ -907,7 +921,7 @@ public final class SceneContentExport {
                     String rp=np+"response."+j+".";
                     if(!response.text.equals(rules.getProperty(rp+"text")))throw new IOException("Authored conversation response changed");
                     put(out,rp+"text",response.text);put(out,rp+"destination",rules.getProperty(rp+"destination",""));
-                    if(script!=null){
+                    if(script!=null||verify){
                         String restored=rules.getProperty(rp+"action");String destination=rules.getProperty(rp+"destination","");
                         try{verifyConversationResponse(response.action,destination,restored,rules.getProperty(rp+"stripped-action",""));}catch(IOException invalid){throw new IOException("Conversation "+reference+" / "+node.name+" / "+j+": "+invalid.getMessage(),invalid);}
                         if(restored!=null){org.tortodrone.world.SceneActions.parse(restored);put(out,rp+"action",restored);}
@@ -948,7 +962,7 @@ public final class SceneContentExport {
         if(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==1){verifyConversationResponse(compound.actions[0],destination,restored,"");return;}
         if(!destination.isEmpty()&&restored==null&&action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump
                 &&jump.target instanceof com.threerings.tudey.config.TargetConfig.Activator&&jump.node.equals(destination))return;
-        if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(action,0)))))return;
+        if(destination.isEmpty()&&restored!=null&&org.tortodrone.world.SceneActions.parse(restored).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(action,0,null,true)))))return;
         throw new IOException("Scripted conversation response changed ("+(action==null?"null":action.getClass().getName())
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump?", node="+jump.node+", target="+jump.target.getClass().getName():"")
             +(action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear?", target="+clear.target.getClass().getName():"")+"); refusing to omit authored siblings");

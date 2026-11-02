@@ -159,6 +159,7 @@ final class WorldSession implements AutoCloseable {
     private long townShopCycle,townTradeGeneration;
     private float townX,townY;
     private SceneConversation conversation;
+    private Map<String,org.tortodrone.character.KnightObjective.State> objectives=Map.of();
     private final Set<Short> conversationResponses=new LinkedHashSet<>();
     private String conversationNode;
     private ActorState conversationSource;
@@ -984,8 +985,10 @@ final class WorldSession implements AutoCloseable {
         if(profile.progress().crashSiteIncomplete())scenes.parties().enterTutorial(partyMember);
         partyState();
         if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
+        if(characters.hasWorldStorage())objectives=characters.knightObjectives(knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.knightMemories(oid,memories));
+        output.send(() -> codec.knightObjectives(oid,objectives));
         output.send(() -> codec.townState(oid,profile));
         publishStyles();
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
@@ -1850,12 +1853,13 @@ final class WorldSession implements AutoCloseable {
         }
         if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot)){int party=partyOid();output.send(()->codec.partyDamage(party,event));}
         lastStamp=reference=stamp;lastSnapshot=current;
-        var memoryChanges=membership.takeMemories();
-        if(!memoryChanges.isEmpty()){
+        var story=membership.takeStory();
+        if(!story.memories().isEmpty()||!story.objectives().isEmpty()){
             profile=loadProfile(profile);
-            var result=characters.knightMemories(knight.id(),authRevision,profile,memoryChanges.stream().map(SceneSimulation.MemoryRequest::operation).toList());
+            var result=characters.knightStory(knight.id(),authRevision,profile,story.memories().stream().map(SceneSimulation.MemoryRequest::operation).toList(),story.objectives().stream().map(SceneSimulation.ObjectiveRequest::operation).toList());
             profile=result.profile();
             if(!memories.equals(result.memories())){var before=memories;memories=result.memories();output.send(()->codec.knightMemoryChanges(oid,before,memories));}
+            if(!objectives.equals(result.objectives())){objectives=result.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
         }
         collectPickups();
         for(long id:membership.takeUsedItems()){

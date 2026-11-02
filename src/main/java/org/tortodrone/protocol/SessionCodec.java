@@ -534,6 +534,17 @@ public final class SessionCodec {
     private void knightMemory(DataOutputStream out,String name)throws IOException {
         type(out,"com.threerings.projectx.data.Memory");type(out,"com.threerings.projectx.config.Persistence");out.writeByte(3);string(out,name);
     }
+    public byte[] knightObjectives(int oid,java.util.Map<String,org.tortodrone.character.KnightObjective.State> objectives)throws IOException {
+        if(objectives.size()>256)throw new IOException("Too many objectives");
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"objectives");type(out,"com.threerings.presents.dobj.DSet");out.writeInt(objectives.size());
+            for(var objective:objectives.values().stream().sorted(java.util.Comparator.comparingInt(org.tortodrone.character.KnightObjective.State::index)).toList()){
+                type(out,"com.threerings.projectx.data.Objective");
+                type(out,"com.threerings.projectx.config.ObjectiveConfig$Simple");
+                string(out,objective.text());for(int i=0;i<4;i++)out.writeFloat(.5f);value(out,null);
+                type(out,"com.threerings.projectx.config.Persistence");out.writeByte(3);out.writeBoolean(true);out.writeInt(objective.index());string(out,objective.name());
+            }
+        });
+    }
     public byte[] knightMemoryChanges(int oid,java.util.Set<String> before,java.util.Set<String> after)throws IOException {
         var removed=before.stream().filter(n->!after.contains(n)).sorted().toList();var added=after.stream().filter(n->!before.contains(n)).sorted().toList();
         if(before.size()>256||after.size()>256)throw new IOException("Too many knight memories");

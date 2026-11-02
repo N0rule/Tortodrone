@@ -125,6 +125,7 @@ final class WorldProfiles {
     }
     static String progressKey(int world,String field){return "knight.progress."+world+"."+field;}
     static void cleanProgress(Connection c)throws SQLException{
+        KnightObjectives.clean(c);
         try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.opening-stage' AND key NOT IN (SELECT 'world.'||world_id||'.opening-stage' FROM world_characters)");}
         try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.last-town-scene' AND key NOT IN (SELECT 'world.'||world_id||'.last-town-scene' FROM world_characters)");}
         FriendStore.clean(c);
