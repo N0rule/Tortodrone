@@ -13,6 +13,8 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "mission-protocol-check" -> fixture="MissionProtocolCompatibility";
+            case "opening-missions-check" -> fixture="OpeningMissionCompatibility";
             case "camp-story-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("camp-story-check expects game-directory deployment-with-original-Camp");
                 fixture="org.tortodrone.server.network.CampStoryCompatibility";fixtureArgs.clear();fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());

@@ -60,6 +60,7 @@ final class WorldSession implements AutoCloseable {
     private Knight knight;
     private WorldProfile profile;
     private Set<String> memories=Set.of();
+    private Map<OpeningMission,OpeningCompletion> completedOpening=Map.of();
     private int acknowledge, created, reference, lastStamp;
     private volatile int sceneGeneration;
     private short ping;
@@ -164,6 +165,7 @@ final class WorldSession implements AutoCloseable {
     private String conversationNode;
     private ActorState conversationSource;
     private long conversationCreated;
+    private long missionDialogCreated;
     private float conversationX,conversationY;
     private final Map<Long,WorldProfile.Item> temporaryItems=new LinkedHashMap<>();
     private long nextTemporaryItem=-1;
@@ -294,6 +296,7 @@ final class WorldSession implements AutoCloseable {
     private final Map<Integer,org.tortodrone.storage.DepotStore.Quote> depotOffers=new HashMap<>();
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=16)return false;
+        if(!Set.of(4,5,6,10).contains(request.method()))return openingMissionInvocation(request);
         var a=request.arguments();int method=request.method();boolean purchase=method==10;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(purchase?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid depot listener");
         try{
@@ -313,6 +316,25 @@ final class WorldSession implements AutoCloseable {
                 output.send(()->codec.townResult(oid,listener.requestId(),new org.tortodrone.town.TownCatalog.DepotOffers(offers),profile));
             }
         }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}return true;
+    }
+    private boolean openingMissionInvocation(SessionDecoder.Invocation request)throws IOException {
+        var args=request.arguments();int method=request.method();
+        if(method==8){
+            if(args.size()!=1||!(args.getFirst() instanceof List<?> values)||values.size()>128||values.stream().anyMatch(v->!(v instanceof SessionDecoder.ConfigReference)))throw new SessionDecoder.Rejected("Invalid mission crafting intent");
+            return true; // Native no-listener operation; no unsupported item mutation.
+        }
+        boolean result=method==7;
+        if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
+        boolean valid=switch(method){
+            case 1->args.size()==3&&args.getFirst() instanceof String&&args.get(1) instanceof long[];
+            case 2,7->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
+            case 3,9->args.size()==2&&args.getFirst() instanceof String;
+            default->false;
+        };
+        if(!valid)throw new SessionDecoder.Rejected("Invalid mission arguments");
+        // A served object/service must fail unsupported cards through the native listener.
+        // Gate start is enabled only when its actual floor gameplay/route is implemented.
+        output.send(()->codec.invocationFailure(oid,listener.requestId(),"m.internal_error"));return true;
     }
     synchronized boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException {
         if(request.oid()!=SessionCodec.INVOCATION_OID)return false;var a=request.arguments();int method=request.method();
@@ -654,7 +676,9 @@ final class WorldSession implements AutoCloseable {
         if(townDialog!=null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1){
             if(a.size()!=1||!(a.getFirst() instanceof Long created))throw new SessionDecoder.Rejected("Invalid Town dialog close");if(created!=townCreated)return true;closeTownDialog();return true;
         }
-        if(townDialog==null&&conversation==null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1&&a.size()==1&&a.getFirst() instanceof Long){
+        if(townDialog==null&&conversation==null&&ownsScene(request.oid())&&request.service()==6&&request.method()==1&&a.size()==1&&a.getFirst() instanceof Long created){
+            if(missionDialogCreated!=0&&created!=missionDialogCreated)return true;
+            missionDialogCreated=0;
             // A stale close from a client still holding a replaced dialog: acknowledge idempotently.
             output.send(()->codec.conversationDialog(oid,scene.oid(),null,null,null,0));return true;
         }
@@ -773,6 +797,30 @@ final class WorldSession implements AutoCloseable {
         var responses=conversation.nodes().get(conversationNode).responses();
         if(choice<0||choice>=responses.size()){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Invalid conversation choice"));return true;}
         var response=responses.get(choice);String destination=response.destination();
+        if(scene.map().id()==217&&conversation.actor().equals(RHENDON_CAMP)&&conversationNode.equals("part 3a")&&choice==0){
+            var own=scene.simulation().snapshot().players().stream().filter(a->a.id()==profile.worldId()).findFirst().orElse(null);
+            if(own==null||Math.hypot(own.x()-conversationX,own.y()-conversationY)>1||!membership.conversationValid(conversation,conversationNode,choice,conversationSource)){
+                output.send(()->codec.invocationFailure(oid,listener.requestId(),"Conversation source is unavailable"));return true;
+            }
+            try{
+                var expectedTerminal=new SceneActions.Sequence(List.of(new SceneActions.Memory(new KnightMemory("talkto_rhendon_icon",false)),new SceneActions.Objective(new KnightObjective("findRhendon",null))),false);
+                if(!expectedTerminal.equals(response.action()))throw new IOException("Unsupported mission terminal action graph");
+                profile=loadProfile(profile);var before=profile;boolean firstEver=completedOpening.isEmpty();
+                var settled=characters.openingMissions(scenes.town()).complete(characters.accountId(),knight.id(),authRevision,profile,OpeningMission.SECURING_CAMP,null);
+                closeConversation();profile=settled.profile();
+                if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
+                if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                if(settled.first()){
+                    var completed=new EnumMap<OpeningMission,OpeningCompletion>(OpeningMission.class);completed.putAll(completedOpening);completed.put(OpeningMission.SECURING_CAMP,settled.completion());completedOpening=Map.copyOf(completed);
+                    membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
+                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),conversationCreated));
+                    output.send(()->codec.itemChanges(oid,knight,before,profile));
+                    if(firstEver)output.send(()->codec.controllerAction(oid,"new_mission",own));partyState();
+                }
+                rememberConversationResponse(listener.requestId());output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
+            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+            return true;
+        }
         if(response.action()!=null&&!membership.conversationResponse(conversation,conversationNode,choice,conversationSource)){
             output.send(()->codec.invocationFailure(oid,listener.requestId(),"Conversation source is unavailable"));return true;
         }
@@ -785,10 +833,11 @@ final class WorldSession implements AutoCloseable {
         }else if(destination.isEmpty())closeConversation();else{
             conversationNode=destination;output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
         }
-        conversationResponses.add(listener.requestId());
-        if(conversationResponses.size()>256){var oldest=conversationResponses.iterator();oldest.next();oldest.remove();}
+        rememberConversationResponse(listener.requestId());
         output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
     }
+    private void rememberConversationResponse(short id){conversationResponses.add(id);if(conversationResponses.size()>256){var oldest=conversationResponses.iterator();oldest.next();oldest.remove();}}
+    private static final String RHENDON_CAMP="Character/NPC/Rescue Camp/Rhendon, Rescue Camp";
     private void closeConversation()throws IOException {
         if(conversation==null)return;conversation=null;conversationSource=null;conversationNode=null;
         output.send(()->codec.conversationDialog(oid,scene.oid(),null,null,null,conversationCreated));
@@ -986,9 +1035,11 @@ final class WorldSession implements AutoCloseable {
         partyState();
         if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
         if(characters.hasWorldStorage())objectives=characters.knightObjectives(knight.id(),authRevision);
+        if(characters.hasWorldStorage())completedOpening=characters.openingMissions(scenes.town()).load(characters.accountId(),knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.knightMemories(oid,memories));
         output.send(() -> codec.knightObjectives(oid,objectives));
+        output.send(()->codec.completedMissions(oid,completedOpening.values()));
         output.send(() -> codec.townState(oid,profile));
         publishStyles();
         output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
@@ -1876,6 +1927,7 @@ final class WorldSession implements AutoCloseable {
         if(conversation!=null&&(own==null||Math.hypot(own.x()-conversationX,own.y()-conversationY)>1))closeConversation();
         var scripted=membership.takeConversation();
         if(scripted!=null&&own!=null){
+            if(scripted.definition().initialAction()!=null&&!membership.conversationStart(scripted.definition(),scripted.source()))return;
             closeTownDialog();conversation=scripted.definition();conversationSource=scripted.source();conversationNode=conversation.initial();
             conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
             output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
@@ -1890,7 +1942,12 @@ final class WorldSession implements AutoCloseable {
             if(sourceSpec!=null)binding=scene.map().content().conversations().get(sourceSpec.text("dialogue",source.config().name()));
             if(station!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){openTownDialog(station,source);}
             else if(binding!=null&&(trades==null||!trades.active(tradeMember))&&own.interaction()!=null&&own.interaction().actorId()==target){
+                if(binding.actor().equals(RHENDON_CAMP)&&!completedOpening.containsKey(OpeningMission.SECURING_CAMP)&&!OpeningMission.SECURING_CAMP.eligible(profile.progress(),completedOpening.keySet()))return;
+                if(binding.initialAction()!=null&&!membership.conversationStart(binding,source))return;
                 closeTownDialog();conversation=binding;conversationNode=binding.initial();conversationSource=source;
+                // Repeat node is the archive's documented interim HasCompletedMission branch;
+                // it cannot pay or set the mission completed merely by opening.
+                if(binding.actor().equals(RHENDON_CAMP)&&completedOpening.containsKey(OpeningMission.SECURING_CAMP))conversationNode="part 4a";
                 conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
                 output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,source,conversationCreated));
             }

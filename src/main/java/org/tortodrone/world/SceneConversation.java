@@ -6,7 +6,8 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Authored conversation graph; bindings and node jumps are prepared data, not guessed nodes. */
 public record SceneConversation(String actor,String name,String bundle,String initial,
-        StarterCatalog.Model model,Map<String,Node> nodes,StarterCatalog.Model sourceCloseAnimation,StarterCatalog.Model music) {
+        StarterCatalog.Model model,Map<String,Node> nodes,StarterCatalog.Model sourceCloseAnimation,StarterCatalog.Model music,SceneActions.Action initialAction) {
+    public SceneConversation(String actor,String name,String bundle,String initial,StarterCatalog.Model model,Map<String,Node> nodes,StarterCatalog.Model sourceCloseAnimation,StarterCatalog.Model music){this(actor,name,bundle,initial,model,nodes,sourceCloseAnimation,music,null);}
     public SceneConversation(String actor,String name,String bundle,String initial,StarterCatalog.Model model,Map<String,Node> nodes){this(actor,name,bundle,initial,model,nodes,null,null);}
     public static final int SERVICE=21;
     public record Response(String text,String destination,String station,String command,SceneActions.Action action) {
@@ -39,7 +40,7 @@ public record SceneConversation(String actor,String name,String bundle,String in
             String initial=required(p,prefix+"initial");if(!nodes.containsKey(initial))throw new IOException("Conversation initial jump is absent");
             for(var node:nodes.values())for(var response:node.responses())if(!response.destination().isEmpty()&&!nodes.containsKey(response.destination()))throw new IOException("Broken conversation jump");
             String actor=required(p,prefix+"actor");
-            var conversation=new SceneConversation(actor,required(p,prefix+"name"),required(p,prefix+"bundle"),initial,model(p,prefix+"model"),nodes,model(p,prefix+"source-close-animation"),model(p,prefix+"music"));
+            var conversation=new SceneConversation(actor,required(p,prefix+"name"),required(p,prefix+"bundle"),initial,model(p,prefix+"model"),nodes,model(p,prefix+"source-close-animation"),model(p,prefix+"music"),action(p,prefix+"initial-action"));
             if(result.putIfAbsent(actor,conversation)!=null)throw new IOException("Duplicate NPC binding");
         }
         return Map.copyOf(result);

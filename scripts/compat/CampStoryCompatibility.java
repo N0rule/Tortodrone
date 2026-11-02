@@ -56,15 +56,44 @@ public final class CampStoryCompatibility {
                 player.world.conversationInvocation(terminal);Thread.sleep(150);
                 check(owner.worldProfile(knight.name(),1).equals(settled),"duplicate terminal has no extra revision/reward");
                 check(settled.items().equals(before.items())&&settled.progress().equals(before.progress()),"Greta cannot fabricate mission rewards or rank");
+                player.world.townInvocation(new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.MISSION_SERVICE,3,List.of("arbitrary_mission",new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)19))));
+                check(owner.worldProfile(knight.name(),1).equals(settled)&&player.socket.contains("m.internal_error"),"unsupported native mission attempt fails through its listener without arbitrary completion");
+                var rhendon=place.simulation().snapshot().actors().stream().filter(a->a.config().name().equals("Character/NPC/Rescue Camp/Rhendon, Rescue Camp")).findFirst().orElseThrow();
+                walk(player.world,place,before.worldId(),rhendon.x(),rhendon.y()-1.15f);
+                pawn=pawn(place,before.worldId());face=(float)Math.atan2(rhendon.y()-pawn.y(),rhendon.x()-pawn.x());
+                input(player.world,place,face,0);Thread.sleep(150);input(player.world,place,face,4);
+                await(()->player.socket.contains("m.securing_camp_1a"));input(player.world,place,face,0);
+                await(()->owner.knightMemories(knight.id(),1).contains("talkedRhendonRC"));
+                check(owner.worldProfile(knight.name(),1).progress().rankPair().equals("1-1")&&owner.openingMissions(scenes.town()).load(1,knight.id(),1).isEmpty(),"Rhendon opener remembers the briefing without completing it");
+                player.world.conversationInvocation(response(place,0,(short)20));await(()->player.socket.contains("m.securing_camp_2a"));
+                player.world.conversationInvocation(response(place,0,(short)21));await(()->player.socket.contains("m.securing_camp_3a"));
+                var briefing=owner.worldProfile(knight.name(),1);
+                String receipt="world."+before.worldId()+".mission.securing_camp";
+                db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_mission BEFORE INSERT ON metadata WHEN NEW.key='"+receipt+"' BEGIN SELECT RAISE(ABORT,'injected terminal failure'); END");}return null;});
+                player.world.conversationInvocation(response(place,0,(short)22));
+                check(owner.worldProfile(knight.name(),1).equals(briefing)&&!player.socket.missionPublished&&owner.knightObjectives(knight.id(),1).containsKey("findRhendon"),"terminal rollback keeps briefing, objective, inventory and rank consistent without publishing completion");
+                db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_mission");}return null;});
+                var finalResponse=response(place,0,(short)23);player.world.conversationInvocation(finalResponse);await(()->player.socket.missionPublished);
+                var completed=owner.worldProfile(knight.name(),1);
+                check(completed.progress().rankPair().equals("1-2")&&completed.progress().prestige()==10&&owner.knightObjectives(knight.id(),1).isEmpty(),"only the correct terminal clears objective and grants native rank/prestige");
+                player.world.conversationInvocation(finalResponse);Thread.sleep(150);check(owner.worldProfile(knight.name(),1).equals(completed),"duplicate terminal never pays twice");
+                var dialogField=WorldSession.class.getDeclaredField("missionDialogCreated");dialogField.setAccessible(true);long dialog=dialogField.getLong(player.world);
+                player.world.townInvocation(new SessionDecoder.Invocation(place.oid(),6,1,List.of(0L)));
+                check(dialog>0&&dialogField.getLong(player.world)==dialog,"a stale conversation close cannot dismiss the new completion window");
+                player.world.townInvocation(new SessionDecoder.Invocation(place.oid(),6,1,List.of(dialog)));
+                check(dialogField.getLong(player.world)==0,"the exact current completion close succeeds");
+                Thread.sleep(1800);input(player.world,place,face,4);await(()->player.socket.contains("m.securing_camp_4a"));input(player.world,place,face,0);
+                player.world.conversationInvocation(response(place,0,(short)24));Thread.sleep(150);
+                check(owner.worldProfile(knight.name(),1).equals(completed),"completed Rhendon follow-up closes without rewards or repeated revision");
             }
             try(var player=new Player(owner,knight.id(),scenes,1002)){
-                player.world.select(knight.name(),RECEIVERS,true);await(()->player.socket.objectivePublished);
-                check(player.socket.contains("talkedGreta2"),"Ready Room reconnect restores both durable story attributes");
+                player.world.select(knight.name(),RECEIVERS,true);await(()->player.socket.missionPublished);
+                check(player.socket.contains("talkedGreta2")&&owner.knightObjectives(knight.id(),1).isEmpty(),"Ready Room reconnect restores completed briefing with objective cleared");
             }
             check(peer.worldProfile(other.name(),1).equals(untouched)&&peer.knightObjectives(other.id(),1).isEmpty(),"peer identity/progression unchanged");
             check(scenes.destination(217,before.worldId()).simulation().playerCount()==0,"disconnect and Ready Room leave no Camp occupants");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
-        System.out.println("PASS: original Camp 217/v373 -> legal movement -> Greta interaction -> all three authored panels -> atomic KNIGHT memory/objective -> duplicate/invalid response protection -> Ready Room reconnect; no position/story mutation in success path (tutorial checkpoint setup only)");
+        System.out.println("PASS: original Camp 217/v373 -> legal movement -> Greta -> objective -> Rhendon three-panel briefing -> rollback/retry -> native mission completion, exact rewards/rank/prestige -> duplicate protection -> Ready Room reconnect (tutorial checkpoint setup only; no success-path position/story mutation)");
     }
     private static void walk(WorldSession world,SceneRegistry.Instance place,int id,float x,float y)throws Exception {
         var start=pawn(place,id);var simulation=place.simulation();
@@ -90,12 +119,16 @@ public final class CampStoryCompatibility {
         public void close()throws IOException{world.close();output.close();socket.close();}
     }
     private static final class RecordingSocket extends Socket {
-        final ByteArrayOutputStream frames=new ByteArrayOutputStream();final CharacterStore characters;final int knight;volatile boolean objectivePublished;
+        final ByteArrayOutputStream frames=new ByteArrayOutputStream();final CharacterStore characters;final int knight;volatile boolean objectivePublished,missionPublished;
         RecordingSocket(CharacterStore characters,int knight){this.characters=characters;this.knight=knight;}
         synchronized boolean contains(String value){return frames.toString(StandardCharsets.ISO_8859_1).contains(value);}
         @Override public OutputStream getOutputStream(){return new OutputStream(){public void write(int b){throw new AssertionError("Whole frames required");}
             public void write(byte[] bytes)throws IOException{String text=new String(bytes,StandardCharsets.ISO_8859_1);
                 if(text.contains("findRhendon")){check(characters.knightObjectives(knight,1).containsKey("findRhendon")&&characters.knightMemories(knight,1).contains("talkedGreta2"),"story publication follows commit");objectivePublished=true;}
+                if(text.contains("com.threerings.projectx.mission.data.MissionCompletion")){
+                    WorldProfile p;try{p=characters.worldProfile("Camp-Knight",1);}catch(CharacterStore.Refused failure){throw new IOException(failure);}check(p.progress().rankPair().equals("1-2")&&p.progress().prestige()==10&&characters.knightObjectives(knight,1).isEmpty(),"mission presentation follows rank/objective commit");
+                    check(p.items().stream().filter(i->i.config().equals("Rarity/Fire Crystal/Cracked")).mapToInt(WorldProfile.Item::count).sum()==15&&p.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")).mapToInt(WorldProfile.Item::count).sum()==5,"rewards committed before native mission publication");missionPublished=true;
+                }
                 synchronized(RecordingSocket.this){frames.write(bytes);}
             }};
         }

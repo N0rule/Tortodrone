@@ -956,12 +956,24 @@ public final class SceneEntities implements SceneWeapons.Targets {
         var state=new SceneEntityState("Actor",Integer.MAX_VALUE,0,0,-1,0,stamp,0,0,binding.key(),null,SceneStatus.State.NORMAL,0,0,true);
         return new ActorState(0,0,"",0,stamp,binding.x(),binding.y(),binding.rotation(),0,0,0,stamp,binding.spec().config(),false,null,null,state);
     }
-    boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
-        if(content.conversations().get(definition.actor())!=definition||source==null)return false;
-        var current=definition.nodes().get(node);if(current==null||choice<0||choice>=current.responses().size())return false;
+    private String conversationSource(SceneConversation definition,ActorState source,int responder,int stamp){
+        if(content.conversations().get(definition.actor())!=definition||source==null)return null;
+        if(players.stream().noneMatch(p->p.id()==responder)||!playerActive.test(responder))return null;
         String identity;
         if(source.entity()!=null&&source.entity().entrySource())identity="entry:"+source.entity().key();else identity="actor:"+source.id();
-        if(scriptSource(identity,stamp)==null)return false;
+        return scriptSource(identity,stamp)==null?null:identity;
+    }
+    boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
+        var current=definition.nodes().get(node);return current!=null&&choice>=0&&choice<current.responses().size()&&conversationSource(definition,source,responder,stamp)!=null;
+    }
+    boolean conversationStart(SceneConversation definition,ActorState source,int responder,int stamp){
+        String identity=conversationSource(definition,source,responder,stamp);if(identity==null)return false;
+        if(definition.initialAction()==null)return true;
+        return actions.perform(definition.initialAction(),stamp,identity,"actor:"+responder);
+    }
+    boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source,int responder,int stamp){
+        if(!conversationValid(definition,node,choice,source,responder,stamp))return false;
+        var current=definition.nodes().get(node);String identity=source.entity()!=null&&source.entity().entrySource()?"entry:"+source.entity().key():"actor:"+source.id();
         var action=current.responses().get(choice).action();return action==null||actions.perform(action,stamp,identity,"actor:"+responder);
     }
     private boolean pawnStatuses(SceneActions.PawnStatus operation,int stamp,String source){

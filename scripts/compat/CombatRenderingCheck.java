@@ -52,7 +52,7 @@ public final class CombatRenderingCheck {
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
     private boolean freshOpening;
-    private boolean campStory,campStoryReturn;
+    private boolean campStory,campStoryReturn,campProgression,campProgressionReturn;
     private int campPanel;
     private long campResponseAt;
     private int readyRoomDestination=1;
@@ -144,7 +144,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--camp-progression-only")||Arrays.asList(args).contains("--camp-progression-return-only")||Arrays.asList(args).contains("--camp-story-only")||Arrays.asList(args).contains("--camp-story-return-only")||Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -159,13 +159,14 @@ public final class CombatRenderingCheck {
         var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,Arrays.asList(args).contains("--opening-tutorial-only")?null:peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
-        probe.campStory=Arrays.asList(args).contains("--camp-story-only");probe.campStoryReturn=Arrays.asList(args).contains("--camp-story-return-only");
+        probe.campProgression=Arrays.asList(args).contains("--camp-progression-only");probe.campProgressionReturn=Arrays.asList(args).contains("--camp-progression-return-only");
+        probe.campStory=probe.campProgression||Arrays.asList(args).contains("--camp-story-only");probe.campStoryReturn=Arrays.asList(args).contains("--camp-story-return-only");
         probe.freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
         probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
-        if(probe.campStory||probe.campStoryReturn||Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
+        probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
+        if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
@@ -653,11 +654,34 @@ public final class CombatRenderingCheck {
                     info.conversationService.f(0,new Confirm());campPanel++;campResponseAt=now+1_000_000_000L;
                 }
             }else if(campPanel==3&&!app.CT().objectives.isEmpty()&&now>=campResponseAt){
-                checkCampObjective();capture("camp-find-rhendon-objective");finishImages();passed=done=true;
+                checkCampObjective();capture("camp-find-rhendon-objective");if(campProgression){stage=10;campPanel=0;tutorialPath=List.of();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;return;}finishImages();passed=done=true;
                 System.out.println("PASS: original Camp entry -> normal collision walk -> native Greta interaction -> all three localized panels/image -> KNIGHT findRhendon objective; completed-tutorial checkpoint fixture, reconnect checked separately");app.shutdown();
             }
             if(now-started>15_000_000_000L)throw new AssertionError("Greta conversation/objective did not finish; panel="+campPanel);
         }
+        if(stage==10){
+            var rhendon=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Rescue Camp/Rhendon, Rescue Camp")).findFirst().orElseThrow();
+            if(!tutorialWalk(view,own,rhendon.tz().x,rhendon.tz().y-1.15f,now))return;
+            moveToward(view,rhendon.tz().x-own.tz().x,rhendon.tz().y-own.tz().y,false);flags(view,0);stage=11;started=now;return;
+        }
+        if(stage==11&&now-started>500_000_000L){flags(view,4);stage=12;started=now;return;}
+        if(stage==12){flags(view,0);
+            if(app.CT().sceneDialog instanceof com.threerings.projectx.data.ConversationDialogInfo info){
+                if(campPanel<3&&info.message.equals("m.securing_camp_"+(campPanel+1)+"a")&&now>=campResponseAt){
+                    capture("camp-rhendon-panel-"+(campPanel+1));System.out.println("DIALOG: "+info.name+":"+info.message);
+                    info.conversationService.f(0,new Confirm());campPanel++;campResponseAt=now+1_500_000_000L;
+                }
+            }else if(campPanel==3&&app.CT().sceneDialog instanceof com.threerings.projectx.mission.data.MissionCompleteDialogInfo info&&now>=campResponseAt){
+                checkCampMission();if(!info.missionId.equals("securing_camp")||!info.immediate||!info.newRank||info.prestige!=10||info.rewards.size()!=20)throw new AssertionError("Native mission completion dialog differs");
+                capture("camp-securing-mission-complete");finishImages();passed=done=true;
+                System.out.println("PASS: native Camp walk/Greta objective -> Rhendon full briefing -> Securing Camp completion window, exact rewards, rank 1-2, prestige 10 and Missions button; checkpoint fixture, reconnect checked separately");app.shutdown();
+            }
+            if(now-started>20_000_000_000L)throw new AssertionError("Rhendon briefing/mission did not complete; panel="+campPanel+" dialog="+app.CT().sceneDialog);
+        }
+    }
+    private void checkCampMission(){
+        var player=app.CT();var receipt=player.completedMissions.f("securing_camp");
+        if(receipt==null||receipt.completed<=0||receipt.difficulty!=null||player.rank.rank!=1||player.rank.subrank!=2||player.prestige!=10||!player.objectives.isEmpty()||itemCount("Rarity/Fire Crystal/Cracked")!=15||itemCount("Rarity/Spark of Life")!=5)throw new AssertionError("Native Securing Camp state/rewards differ");
     }
     private void readyRoomTick(long now)throws Exception{
         if(app.CT()==null||app.Gu()==null)return;
@@ -677,7 +701,7 @@ public final class CombatRenderingCheck {
                 String shot="ready-room-return-"+readyRoomDestination;capture(shot);finishImages();
                 var image=ImageIO.read(output.resolve(shot+".png").toFile());
                 if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
-                if(campStoryReturn)checkCampObjective();
+                if(campStoryReturn)checkCampObjective();if(campProgressionReturn)checkCampMission();
                 passed=done=true;System.out.println("PASS: stock graphical Ready Room returns to saved scene "+readyRoomDestination+" and renders its controlled pawn");app.shutdown();
         }
     }

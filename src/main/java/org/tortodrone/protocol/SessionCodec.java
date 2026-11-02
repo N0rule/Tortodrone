@@ -29,6 +29,7 @@ public final class SessionCodec {
     public static final int CONFIG_OID = 2;
     public static final int INVOCATION_OID = 3;
     public static final int EXCHANGE_OID = 4, EXCHANGE_SERVICE = 1;
+    public static final int MISSION_OID = 5, MISSION_SERVICE = 16;
     /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
     public static final int ADMIN_SERVICE = 13;
     /** Handles needed by current login observers; operations remain explicitly limited. */
@@ -92,7 +93,7 @@ public final class SessionCodec {
             // admin, status, place browser, client timings.
             out.writeInt(SERVER_OID);
             out.writeInt(EXCHANGE_OID); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
-            out.writeInt(0); out.writeInt(0); // mission, open hall
+            out.writeInt(MISSION_OID); out.writeInt(0); // registered mission object, open hall
             // Stock ProjectXSession only names the admin object for ADMIN-tier accounts. A
             // support-plus account keeps zero and still reaches the admin service, which is
             // addressed through the bootstrap service entry above.
@@ -222,6 +223,34 @@ public final class SessionCodec {
             objectHeader(out, messageId, "com.threerings.config.dist.data.DConfigObject", CONFIG_OID);
             out.writeShort(0); // No remote configuration editing service.
             emptyDSet(out); emptyDSet(out); emptyDSet(out); // added, updated, removed
+        });
+    }
+    public byte[] missionObject(short messageId)throws IOException {
+        return frame(out->{objectHeader(out,messageId,"com.threerings.projectx.mission.data.MissionObject",MISSION_OID);emptyDSet(out);});
+    }
+    public byte[] completedMissions(int oid,java.util.Collection<org.tortodrone.character.OpeningCompletion> completions)throws IOException {
+        if(completions.size()>org.tortodrone.character.OpeningMission.values().length)throw new IOException("Too many opening receipts");
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"completedMissions");type(out,"com.threerings.presents.dobj.DSet");out.writeInt(completions.size());for(var receipt:completions.stream().sorted(java.util.Comparator.comparing(r->r.mission().id())).toList())missionCompletion(out,receipt);});
+    }
+    private void missionCompletion(DataOutputStream out,org.tortodrone.character.OpeningCompletion receipt)throws IOException {
+        type(out,"com.threerings.projectx.mission.data.MissionCompletion");string(out,receipt.mission().id());out.writeLong(receipt.completed());
+        if(receipt.difficulty()==null)value(out,null);else{type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(java.util.List.of("EASY","MEDIUM","HARD").indexOf(receipt.difficulty()));}
+    }
+    public byte[] missionSettlement(int oid,WorldProfile before,WorldProfile after,org.tortodrone.character.OpeningCompletion receipt,long created)throws IOException {
+        var mission=receipt.mission();
+        return frame(out->{eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(6);
+            rank(out,oid,after);attribute(out,oid,"prestige",o->value(o,after.progress().prestige()));attribute(out,oid,"progressFlags",o->value(o,after.progress().progressFlags()));
+            partyEntry(out,oid,"completedMissions","EntryAddedEvent");missionCompletion(out,receipt);
+            attribute(out,oid,"sceneDialogCreated",o->value(o,created));
+            attribute(out,oid,"sceneDialog",o->{
+                type(o,"com.threerings.projectx.mission.data.MissionCompleteDialogInfo");
+                o.writeShort(0);o.writeShort(0);o.writeFloat(0);o.writeShort(0);o.writeShort(0);
+                string(o,mission.id());o.writeBoolean(true);o.writeInt(mission.rewards().stream().mapToInt(org.tortodrone.character.OpeningMission.Reward::count).sum());
+                for(var reward:mission.rewards())for(int i=0;i<reward.count();i++)value(o,new StarterCatalog.Model(reward.config(),java.util.Map.of("_createLocked",true)));
+                o.writeInt(mission.prestige());o.writeBoolean(!mission.gate());
+                type(o,"com.threerings.projectx.mission.data.RankPair");o.writeInt(before.progress().rank());o.writeInt(before.progress().subrank());o.writeBoolean(true);
+                string(o,"ui/icon/difficulty/"+(receipt.difficulty()==null?"hard":receipt.difficulty().toLowerCase(java.util.Locale.ROOT))+".png");
+            });
         });
     }
 
@@ -563,7 +592,7 @@ public final class SessionCodec {
     }
     /** TudeyBodyObject.FORCE_CLIENT_ACTION, as emitted by ForceClientAction logic. */
     public byte[] controllerAction(int oid,String command,ActorState source)throws IOException {
-        if(!java.util.Set.of("forge","show_arsenal_station","auction").contains(command))throw new IOException("Unsupported controller action");
+        if(!java.util.Set.of("forge","show_arsenal_station","auction","new_mission").contains(command))throw new IOException("Unsupported controller action");
         return frame(out->{eventHeader(out,"MessageEvent",oid);string(out,"forceClientAction");
             out.writeBoolean(true);out.writeInt(2); // MessageEvent's declared Object[] field.
             type(out,"com.threerings.tudey.config.ClientActionConfig$ControllerAction");string(out,command);string(out,"");

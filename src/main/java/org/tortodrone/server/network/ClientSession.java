@@ -96,6 +96,8 @@ final class ClientSession {
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
+                            } else if (request.objectId() == SessionCodec.MISSION_OID) {
+                                output.send(()->outgoing.missionObject(request.messageId()));
                             } else if (request.objectId() == SessionCodec.EXCHANGE_OID) {
                                 try{world.subscribeExchange(request.messageId());}catch(IOException unavailable){output.send(()->outgoing.subscriptionFailure(request.messageId(),request.objectId(),unavailable.getMessage()));}
                             } else if(world.ownsChannel(request.objectId())) {

@@ -117,7 +117,7 @@ final class UnifiedExport {
     }
     private Map<String,Object> exportNpc(Properties original,String id,Path target)throws IOException {
         String prefix="dialogue."+id+".";var properties=section(original,prefix);String bundle=properties.get("bundle");if(bundle.equals("npc"))bundle="conversation";
-        var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model","source-close-animation","music"))if(properties.containsKey(key))fixed.put(key,properties.get(key));fixed.put("bundle",bundle);
+        var fixed=new LinkedHashMap<String,Object>();for(String key:List.of("actor","bundle","name","model","source-close-animation","music","initial-action"))if(properties.containsKey(key))fixed.put(key,properties.get(key));fixed.put("bundle",bundle);
         String speaker=properties.get("name");
         if(game!=null&&speaker!=null&&!speaker.startsWith("~")&&!speaker.startsWith("%")&&!bundle(bundle).containsKey(speaker)){
             String found=null;for(String candidate:List.of("shop","conversation","mission"))if(bundle(candidate).containsKey(speaker)){if(found!=null){found=null;break;}found=candidate;}

@@ -357,6 +357,8 @@ public final class SceneSimulation {
         public boolean conversationResponse(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){
             check();return entered&&entities.conversationResponse(definition,node,choice,source,appearance.id(),SceneClock.now());
         }}
+        public boolean conversationValid(SceneConversation definition,String node,int choice,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationValid(definition,node,choice,source,appearance.id(),SceneClock.now());}}
+        public boolean conversationStart(SceneConversation definition,ActorState source){synchronized(SceneSimulation.this){check();return entered&&health.alive()&&portal==null&&entities.conversationStart(definition,source,appearance.id(),SceneClock.now());}}
         private void check(){if(detached)throw new IllegalStateException("Scene membership is closed");}
         @Override public void close(){synchronized(SceneSimulation.this){if(detached)return;detached=true;pendingMemories.clear();pendingObjectives.clear();activeFloorAdvance=pendingFloorAdvance=null;weapons.cancel(appearance.id());weapons.cancel(petId);entities.cancelClaims(appearance.id());entities.releaseLifts(appearance.id(),SceneClock.now());members.remove(appearance.id(),this);stopIfIdle();}}
     }

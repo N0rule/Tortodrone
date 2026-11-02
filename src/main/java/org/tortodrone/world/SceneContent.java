@@ -74,6 +74,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         while(!pending.isEmpty()){
             String id=pending.removeFirst();if(!reached.add(id))continue;
             var definition=conversations.get(id);if(definition==null)throw new IOException("Missing scripted conversation: "+id);
+            if(definition.initialAction()!=null)pending.addAll(SceneActions.conversationIds(definition.initialAction()));
             for(var node:definition.nodes().values())for(var response:node.responses())if(response.action()!=null)pending.addAll(SceneActions.conversationIds(response.action()));
         }
         for(var conversation:conversations.values())if(conversation.actor().startsWith("@conversation/")&&!reached.contains(conversation.actor()))throw new IOException("Unreferenced scripted conversation: "+conversation.actor());

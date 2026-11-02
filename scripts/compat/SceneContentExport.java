@@ -895,7 +895,14 @@ public final class SceneContentExport {
             var conversation=cm.d(com.threerings.projectx.config.ConversationConfig.class,reference);
             if(conversation==null)throw new IOException("Unresolved authored conversation binding");
             boolean verify=Boolean.parseBoolean(rules.getProperty(prefix+"verify-actions","false"));
-            if(verify)verifyConversationInitial(conversation.initialAction,rules.getProperty(prefix+"initial"));
+            if(verify)verifyConversationInitial(conversation.initialAction,rules.getProperty(prefix+"initial"),rules.getProperty(prefix+"initial-footprint",""));
+            if(rules.containsKey(prefix+"initial-action")){
+                if(!rules.getProperty(prefix+"initial-footprint","").equals("rhendon-rc-intro"))throw new IOException("Unverified conversation initial action");
+                String initialAction=rules.getProperty(prefix+"initial-action");
+                var original=((ActionConfig.Compound)((ActionConfig.Conditional)conversation.initialAction).elseAction).actions[0];
+                if(!org.tortodrone.world.SceneActions.parse(initialAction).equals(org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(sceneAction(original,0,cm,true)))))throw new IOException("Conversation initial memory changed");
+                put(out,prefix+"initial-action",initialAction);
+            }
             Object model=script==null?field(cm.d(ActorConfig.class,actorName).ai(cm).sprite,"model"):script.model;
             String speaker=script==null?rules.getProperty(prefix+"name"):script.name.isBlank()?conversation.speakerName:script.name;
             if(speaker==null||speaker.isBlank())throw new IOException("Missing authored conversation speaker");
@@ -940,6 +947,17 @@ public final class SceneContentExport {
 
     private static boolean strippedConversationAction(ActionConfig action){return action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==0;}
     private static void verifyConversationInitial(ActionConfig action,String initial)throws IOException {
+        verifyConversationInitial(action,initial,"");
+    }
+    private static void verifyConversationInitial(ActionConfig action,String initial,String footprint)throws IOException {
+        if(!footprint.isEmpty()){
+            if(footprint.equals("rhendon-rc-intro")&&initial.equals("part 1a")&&action instanceof ActionConfig.Conditional conditional
+                    &&conditional.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source
+                    &&conditional.action instanceof ActionConfig.SpawnActor spawn&&spawn.actor==null&&spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source
+                    &&conditional.elseAction instanceof ActionConfig.Compound compound&&!compound.stopOnFailure&&compound.actions!=null&&compound.actions.length==1
+                    &&compound.actions[0] instanceof com.threerings.projectx.config.ProjectXActionConfig.SetMemory memory&&memory.name.equals("talkedRhendonRC")&&memory.persistence==com.threerings.projectx.config.Persistence.KNIGHT&&memory.target instanceof com.threerings.tudey.config.TargetConfig.Activator)return;
+            throw new IOException("Conversation initial footprint changed");
+        }
         if(strippedConversationAction(action))return;
         // The installed stripped config retains a blank Jump. The allowlisted rule's
         // destination is backed by the archive XML and the observed first panel;

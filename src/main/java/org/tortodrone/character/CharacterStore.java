@@ -254,6 +254,9 @@ public final class CharacterStore {
     public Map<String,KnightObjective.State> knightObjectives(int knightId,long authRevision)throws IOException {
         if(database==null)throw new IOException("Objectives require SQLite storage");return database.knightObjectives(accountId,knightId,authRevision);
     }
+    public org.tortodrone.storage.OpeningMissionStore openingMissions(org.tortodrone.town.TownCatalog rules)throws IOException {
+        if(database==null)throw new IOException("Opening missions require SQLite storage");return new org.tortodrone.storage.OpeningMissionStore(database,catalog,rules);
+    }
     public Database.StoryState knightStory(int knightId,long authRevision,WorldProfile expected,List<KnightMemory> memories,List<KnightObjective> objectives)throws IOException {
         if(database==null||expected.accountId()!=accountId||expected.knightId()!=knightId)throw new IOException("Invalid story owner");
         return database.knightStory(accountId,knightId,authRevision,expected.worldId(),expected.revision(),memories,objectives);

@@ -13,6 +13,9 @@ public final class SceneConversationBindingTest {
         String graph=Json.stringify(Map.of("kind","delay","millis",10,"action",Map.of("kind","limited","limit",1,"action",Map.of("kind","conversation","id",first,"activator",true),"otherwise",Map.of("kind","sequence","stopOnFailure",false,"actions",List.of()))));
         var trigger=new SceneContent.Entry("500",0,0,0,new SceneContent.Spec(Map.of("kind","SceneTrigger","config","Fixture/Trigger","event","signal","watch-tag","start","signal","activate","action",graph)));
         var good=content(List.of(trigger),Map.of(first,firstDefinition,last,lastDefinition));good.validateConversations();
+        var initialDefinition=new SceneConversation(first,"n.fixture","conversation","first",null,definition(first,null).nodes(),null,null,new SceneActions.Conversation(last));
+        content(List.of(trigger),Map.of(first,initialDefinition,last,lastDefinition)).validateConversations();
+        reject(()->content(List.of(trigger),Map.of(first,initialDefinition)).validateConversations(),"Missing scripted conversation");
         reject(()->content(List.of(trigger),Map.of(first,firstDefinition)).validateConversations(),"Missing scripted conversation");
         reject(()->content(List.of(trigger),Map.of(first,definition(first,null),last,lastDefinition)).validateConversations(),"Unreferenced scripted conversation");
         reject(()->content(List.of(),Map.of(first,firstDefinition,last,definition(last,new SceneActions.Conversation(first)))).validateConversations(),"Unreferenced scripted conversation");
