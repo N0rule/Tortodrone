@@ -13,6 +13,10 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "gameplay-effects-check" -> {
+                fixture="GameplayEffectCompatibility";
+                for(String source:List.of("GameplayEffectCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "scene-entry-inspect" -> {
                 if(args.length<4)throw new IllegalArgumentException("scene-entry-inspect expects game-directory original-scene entry-keys...");
                 fixture="SceneEntryInspect";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.addAll(Arrays.asList(args).subList(3,args.length));

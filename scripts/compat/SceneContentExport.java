@@ -367,8 +367,15 @@ public final class SceneContentExport {
             if(effect.effect==null){importReport.add("Native null scene effect (no fire); presentation data may be stripped");return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());}
             if(cm==null)throw new IOException("Scene effect requires native preparation");
             var config=effect.effect.a(cm,com.threerings.tudey.config.EffectConfig.class);
-            if(config==null||!cosmeticEffect(config))throw new IOException("Unimplemented scene effect gameplay action or native subtype");
+            if(config==null||config.a(effect.effect,0,new com.threerings.tudey.data.EntityKey.Entry(1),new com.threerings.math.Vector2f(),0).getClass()!=com.threerings.tudey.data.effect.Effect.class)throw new IOException("Unsupported native scene effect subtype");
             String model=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(effect.effect));
+            if(!cosmeticEffect(config)){
+                String tag;
+                if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source)tag="";
+                else if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank())tag=tagged.tag;
+                else throw new IOException("Unsupported gameplay effect location");
+                return Map.of("kind","gameplay-effect","config",model,"tag",tag,"action",sceneEffectAction(config.action,depth+1,cm,config.shape));
+            }
             if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("kind","source-effect","config",model);
             if(effect.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&!tagged.tag.isBlank())return Map.of("kind","tagged-effect","config",model,"tag",tagged.tag);
             throw new IOException("Unsupported scene effect location");
@@ -487,6 +494,29 @@ public final class SceneContentExport {
         if(action!=null&&!(action.getClass()==ActionConfig.SpawnActor.class&&((ActionConfig.SpawnActor)action).actor==null)
                 &&!(action instanceof ActionConfig.Compound compound&&compound.actions!=null&&compound.actions.length==0))return false;
         return config.a(new ConfigReference<>("Basic"),0,new com.threerings.tudey.data.EntityKey.Entry(1),new com.threerings.math.Vector2f(),0).getClass()==com.threerings.tudey.data.effect.Effect.class;
+    }
+    /** Retain every gameplay sibling and original delay. Default regions use this
+     * effect logic's authored shape, not a player-sized replacement. */
+    private static Map<String,Object> sceneEffectAction(ActionConfig action,int depth,ConfigManager cm,com.threerings.tudey.shape.config.ShapeConfig shape)throws IOException {
+        if(depth>16)throw new IOException("Effect action graph is too deep");
+        if(action instanceof ActionConfig.Compound compound){
+            if(compound.actions==null||compound.actions.length>256)throw new IOException("Invalid effect compound");
+            var children=new ArrayList<Object>();for(var child:compound.actions)children.add(sceneEffectAction(child,depth+1,cm,shape));
+            return Map.of("kind","sequence","stopOnFailure",compound.stopOnFailure,"actions",children);
+        }
+        if(action instanceof ActionConfig.Delayed delay)return Map.of("kind","delay","millis",delay.delay,"variance",delay.variance,"action",sceneEffectAction(delay.action,depth+1,cm,shape));
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ImpartImpulse impulse){
+            if(!(impulse.location instanceof com.threerings.tudey.config.TargetConfig.Source)||!(impulse.region instanceof com.threerings.tudey.config.RegionConfig.Default)
+                    ||!(shape instanceof com.threerings.tudey.shape.config.ShapeConfig.Point))throw new IOException("Unsupported effect impulse region/location");
+            try{
+                var prepared=FireCatalogExport.readAction(cm,impulse);var data=new TreeMap<>(prepared.config().arguments());data.put("shape",FireCatalogExport.argumentValue(shape));
+                var model=new org.tortodrone.character.StarterCatalog.Model("ImpartImpulse",data);new org.tortodrone.world.SceneActions.Impulse(model);
+                return Map.of("kind","source-impulse","config",org.tortodrone.world.FireCatalog.modelJson(model));
+            }catch(Exception invalid){throw new IOException("Unsupported native effect impulse",invalid);}
+        }
+        if(action instanceof ActionConfig.None||action!=null&&action.getClass()==ActionConfig.SpawnActor.class
+                ||action!=null&&action.getClass()==com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn.class)return sceneAction(action,depth,cm,false);
+        throw new IOException("Unsupported complete gameplay effect action: "+(action==null?"null":action.getClass().getName()));
     }
     private static Map<String,Object> preparedSpawn(ConfigManager cm,ConfigReference<ActorConfig> actor,boolean activate)throws IOException {
         var fields=new TreeMap<String,String>();fields.put("config",actor.getName());

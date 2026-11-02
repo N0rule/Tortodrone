@@ -125,6 +125,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneContent content;private final CollisionMap terrain;
     private final SceneActions actions;
     private final Map<String,List<SceneContent.Entry>> anchors=new LinkedHashMap<>();
+    private final Map<String,ActorState> effectSources=new LinkedHashMap<>();
+    private long nextEffectSource;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
@@ -195,6 +197,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
         actions.nearestSignals(this::nearestSignal);
+        actions.gameplayEffects(this::gameplayEffect);
+        actions.impulses((operation,time,source)->{var origin=scriptSource(source,time);if(origin==null)return false;impulse(operation.config(),origin.x(),origin.y(),origin.rotation(),time,0);return true;});
         actions.objectives((operation,time,source,activator)->{
             var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=scriptSource(source,time);
             return player!=null&&origin!=null&&objectiveSink.apply(player,operation,origin,time);
@@ -444,6 +448,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 actions.signal(sensor.spec().text("watch-tag",""),sensor.spec().text("signal",""),stamp,"actor:"+player.id());
         }
         actions.advance(stamp);
+        if(!effectSources.isEmpty())effectSources.keySet().retainAll(actions.workSources());
     }
     /** Secondary burn/spasm damage retains its collision mask and excludes the affected source. */
     public void statusPulse(int source,SceneStatus.Pulse pulse,float x,float y,int stamp){
@@ -907,6 +912,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         attack.accept(e.snapshot(),new FireCatalog.Action(FireCatalog.Kind.FIRE_EFFECT,effect,null,"Source","","",0,0,0,0,false,0,0,0,0,false,List.of(),""));
     }
     private ActorState scriptSource(String source,int stamp){
+        if(source.startsWith("effect:"))return effectSources.get(source);
         if(source.startsWith("actor:"))try{return actor(Integer.parseInt(source.substring(6)));}catch(NumberFormatException invalid){return null;}
         if(!source.startsWith("entry:"))return null;
         String key=source.substring(6);var binding=content.entries().stream().filter(entry->entry.key().equals(key)).findFirst().orElse(null);
@@ -945,6 +951,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
             for(var origin:origins)effectSink.fire(operation.config(),origin,stamp);
         }
         return true; // Native FireEffect succeeds even when its Tagged selection is empty.
+    }
+    private boolean gameplayEffect(SceneActions.GameplayEffect operation,int stamp,String source){
+        List<ActorState> origins;
+        if(operation.locationTag().isEmpty()){var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
+        else origins=taggedSources(operation.locationTag(),stamp);
+        if(origins.size()>256||effectSources.size()+origins.size()>4096||nextEffectSource>Long.MAX_VALUE-origins.size())return false;
+        for(var origin:origins){
+            String identity="effect:"+(++nextEffectSource);effectSources.put(identity,origin);
+            if(!actions.perform(operation.action(),stamp,identity,logicIdentity(origin))){effectSources.remove(identity);return false;}
+            effectSink.fire(operation.config(),origin,stamp);
+        }return true;
     }
     private List<ActorState> taggedSources(String tag,int stamp){
         var result=new ArrayList<ActorState>();

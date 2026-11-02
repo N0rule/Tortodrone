@@ -7,7 +7,36 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    /** A native effect's server action has a distinct, frozen source logic at its fire location. */
+    public record GameplayEffect(StarterCatalog.Model config,Action action,String locationTag) implements Action {
+        public GameplayEffect{Objects.requireNonNull(config);text(config.name());Objects.requireNonNull(action);Objects.requireNonNull(locationTag);if(!locationTag.isEmpty())text(locationTag);}
+    }
+    public record Impulse(StarterCatalog.Model config) implements Action {
+        public Impulse{
+            Objects.requireNonNull(config);
+            if(!config.name().equals("ImpartImpulse")||!config.arguments().keySet().equals(Set.of("region","impulse","impulse-origin","flags","shape"))
+                    ||!(config.arguments().get("region") instanceof FireCatalog.DataValue region)||!region.type().equals("com.threerings.tudey.config.RegionConfig$Default")
+                    ||!(config.arguments().get("shape") instanceof FireCatalog.DataValue shape)||!shape.type().equals("com.threerings.tudey.shape.config.ShapeConfig$Point")
+                    ||!(config.arguments().get("flags") instanceof Number flags)||flags.doubleValue()!=flags.intValue()||flags.intValue()<0||flags.intValue()>65535
+                    ||!(config.arguments().get("impulse") instanceof FireCatalog.DataValue impulse)||!impulse.type().equals("com.threerings.projectx.dungeon.config.ImpulseConfig$DamageImpulse"))throw new IllegalArgumentException("Unsupported scripted point impulse");
+            vector(SceneDamage.field(impulse,"translation"));vector(config.arguments().get("impulse-origin"));
+            bounded(impulse,"duration",3_600_000,true);bounded(impulse,"level",1_000_000,true);bounded(region,"expansion",1_000_000,false);
+        }
+        private static void vector(Object value){
+            if(!(value instanceof FireCatalog.DataValue data)||!data.type().equals("com.threerings.math.Vector2f"))throw new IllegalArgumentException("Invalid impulse vector");
+            for(String axis:List.of("x","y"))if(!(SceneDamage.field(data,axis) instanceof Number n)||!Double.isFinite(n.doubleValue())||Math.abs(n.doubleValue())>1_000_000)throw new IllegalArgumentException("Invalid impulse vector component");
+        }
+        private static void bounded(Object data,String field,int limit,boolean integral){
+            if(!(SceneDamage.field(data,field) instanceof Number n)||!Double.isFinite(n.doubleValue())||n.doubleValue()<0||n.doubleValue()>limit||integral&&n.doubleValue()!=n.longValue())throw new IllegalArgumentException("Invalid impulse "+field);
+        }
+    }
+    @FunctionalInterface public interface GameplayEffects {boolean apply(GameplayEffect effect,int stamp,String source);}
+    @FunctionalInterface public interface Impulses {boolean apply(Impulse impulse,int stamp,String source);}
+    private GameplayEffects gameplayEffects=(effect,stamp,source)->false;
+    private Impulses impulses=(impulse,stamp,source)->false;
+    public void gameplayEffects(GameplayEffects sink){gameplayEffects=Objects.requireNonNull(sink);}
+    public void impulses(Impulses sink){impulses=Objects.requireNonNull(sink);}
     public record NearestSignal(String tag,String name,int count,boolean excludeSource) implements Action {
         public NearestSignal{text(tag);text(name);if(count<0||count>256)throw new IllegalArgumentException("Invalid signal subset size");}
     }
@@ -262,6 +291,8 @@ public final class SceneActions {
             case NearestSignal signal -> nearestSignals.apply(signal,Math.toIntExact(due),source);
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
             case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
+            case GameplayEffect effect -> gameplayEffects.apply(effect,Math.toIntExact(due),source);
+            case Impulse impulse -> impulses.apply(impulse,Math.toIntExact(due),source);
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
             case Spawn actor -> spawn.apply(actor,Math.toIntExact(due),source,activator);
             case ProgressEvent event -> {
@@ -311,6 +342,7 @@ public final class SceneActions {
         switch(action){
             case Conversation conversation->ids.add(conversation.id());
             case Delay delay->conversationIds(delay.action(),ids);
+            case GameplayEffect effect->conversationIds(effect.action(),ids);
             case Sequence sequence->{for(var child:sequence.actions())conversationIds(child,ids);}
             case Choice choice->{for(var child:choice.actions())conversationIds(child,ids);}
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
@@ -318,11 +350,15 @@ public final class SceneActions {
         }
     }
     public long rejected(){return rejected;}
+    public Set<String> workSources(){
+        var result=new HashSet<String>();if(closed)return result;
+        for(var p:pending){result.add(p.source());result.add(p.activator());}for(var state:states)result.addAll(state.active.keySet());return result;
+    }
     public void close(){closed=true;pending.clear();for(var state:states)state.active.clear();activeSources=0;}
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
-        switch(action){case Delay delay->validate(delay.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
+        switch(action){case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
         try{
@@ -334,6 +370,8 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("gameplay-effect".equals(kind)&&map.keySet().equals(Set.of("kind","config","action","tag")))return new GameplayEffect(FireCatalog.modelJson(string(map.get("config"))),decode(map.get("action"),depth+1,count),string(map.get("tag")));
+        if("source-impulse".equals(kind)&&map.keySet().equals(Set.of("kind","config")))return new Impulse(FireCatalog.modelJson(string(map.get("config"))));
         if("nearest-signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name","count","excludeSource"))&&map.get("count") instanceof Number number&&map.get("excludeSource") instanceof Boolean exclude){
             long size=number.longValue();if(number.doubleValue()!=size)throw new IllegalArgumentException("Fractional target count");return new NearestSignal(tag(map.get("tag")),tag(map.get("name")),Math.toIntExact(size),exclude);
         }
