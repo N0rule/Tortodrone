@@ -110,8 +110,14 @@ final class WorldProfiles {
             s.setString(1,progressKey(worldId,"rank"));s.setString(2,progressKey(worldId,"prestige"));
             try(var r=s.executeQuery()){while(r.next()){long value=r.getLong(2);if(value<0||value>Integer.MAX_VALUE)throw new IOException("Invalid saved knight progress");if(r.getString(1).endsWith(".rank"))rank=(int)value;else prestige=(int)value;}}
         }
+        int opening=-1;
+        try(var s=c.prepareStatement("SELECT value,typeof(value) FROM metadata WHERE key=?")){
+            s.setString(1,"world."+worldId+".opening-stage");try(var r=s.executeQuery()){if(r.next()){
+                long value=r.getLong(1);if(!r.getString(2).equals("integer")||value<0||value>3)throw new IOException("Invalid saved opening checkpoint");opening=(int)value;
+            }}
+        }
         try{
-            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige),TownStore.load(c,worldId));
+            var profile=new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,items,new org.tortodrone.character.KnightProgress(rank/10,rank%10,prestige,opening),TownStore.load(c,worldId));
             var visible=items.stream().map(item->item.equippedSlot()!=null&&!org.tortodrone.character.SlotUpgrades.unlocked(profile,item.equippedSlot())?item.withEquippedSlot(null):item).toList();
             return new WorldProfile(worldId,accountId,knightId,crowns,energy,revision,visible,profile.progress(),profile.town());
         }
@@ -119,6 +125,7 @@ final class WorldProfiles {
     }
     static String progressKey(int world,String field){return "knight.progress."+world+"."+field;}
     static void cleanProgress(Connection c)throws SQLException{
+        try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.opening-stage' AND key NOT IN (SELECT 'world.'||world_id||'.opening-stage' FROM world_characters)");}
         try(var s=c.createStatement()){s.executeUpdate("DELETE FROM metadata WHERE key GLOB 'world.*.last-town-scene' AND key NOT IN (SELECT 'world.'||world_id||'.last-town-scene' FROM world_characters)");}
         FriendStore.clean(c);
         NamedLoadouts.clean(c);

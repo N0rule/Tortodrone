@@ -297,7 +297,10 @@ final class ClientSession {
                     Knight choices = new Knight(0, (String) args.get(1), (String) args.get(2), (String) args.get(3),
                         (String) args.get(4), (String) args.get(5), (String) args.get(6), (Integer) args.get(7),
                         ((SessionDecoder.EnumValue) args.get(8)).ordinal(), ((SessionDecoder.EnumValue) args.get(9)).ordinal(), 0);
-                    if (args.get(0) == null) characters.create(choices,authRevision);
+                    if (args.get(0) == null) {
+                        if(!world.openingAvailable())throw new IOException("The opening adventure is unavailable; please try again later");
+                        characters.createForOpening(choices,authRevision);
+                    }
                     else {
                         String old=(String)args.get(0);
                         synchronized(characters) {

@@ -28,8 +28,13 @@ public final class SceneCollisionExport {
             int flags=nativeCells.aY(coord.x,coord.y);if(flags!=0)cells.put(key(coord.x,coord.y),new Cell(coord.x,coord.y,flags));
         }
         if(cells.size()>MAX_CELLS||floors.size()>MAX_CELLS)throw new IOException("Too many native collision cells");
-        var shapes=new LinkedHashSet<String>();
+        var shapes=new LinkedHashSet<String>();var surfaces=new LinkedHashSet<String>();
         for(var entry:scene.ci(TudeySceneModel.PlaceableEntry.class)){
+            if(entry.aB(cm).floorTile){
+                var shape=entry.av(cm);if(shape==null)throw new IOException("Native floor placeable has no shape");
+                var parts=new ArrayList<String>();geometry(shape,parts,0,shape.aeu());surfaces.addAll(parts);
+                if(surfaces.size()>MAX_SHAPES)throw new IOException("Too many native floor shapes");
+            }
             int mask=entry.ax(cm);if(mask==0)continue;
             Shape shape=entry.av(cm);if(shape==null)throw new IOException("Colliding placeable has no native shape");
             var geometries=new ArrayList<String>();
@@ -39,6 +44,7 @@ public final class SceneCollisionExport {
         }
         String digest=sha256(layout);var lines=new ArrayList<String>();
         lines.add("format=1");lines.add("layout-sha256="+digest);lines.add("tile-count="+cells.size());lines.add("floor-count="+floors.size());lines.add("shape-count="+shapes.size());
+        lines.add("floor-shape-count="+surfaces.size());int surface=0;for(String geometry:surfaces)lines.add("floor-shape."+(surface++)+".geometry="+geometry);
         int i=0;for(Cell cell:floors.values()){
             String prefix="floor."+(i++)+".";lines.add(prefix+"x="+cell.x);lines.add(prefix+"y="+cell.y);
         }

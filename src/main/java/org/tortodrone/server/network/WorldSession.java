@@ -937,7 +937,8 @@ final class WorldSession implements AutoCloseable {
         select(name,receivers,false);
     }
 
-    /** The returning-knight picker stages locally; creation still uses the existing intro bypass. */
+    boolean openingAvailable(){return scenes.tutorial()!=null;}
+    /** Incomplete Crash Site knights resume a private floor; completed knights stage locally. */
     synchronized void select(String name, Map<String, Short> receivers, boolean stageInReadyRoom)
             throws IOException, CharacterStore.Refused {
         long selectionStarted=System.nanoTime();
@@ -958,6 +959,13 @@ final class WorldSession implements AutoCloseable {
             int saved=characters.lastTownScene(choice.id(),authRevision);
             int destination=scenes.catalog().scenes().stream().filter(map->map.id()==saved&&map.town())
                 .mapToInt(SceneCatalog.MapScene::id).findFirst().orElse(scenes.catalog().entry().id());
+            if(loaded.progress().crashSiteIncomplete()){
+                if(scenes.tutorial()==null)throw new IOException("The opening adventure is unavailable; please try again later");
+                destination=scenes.tutorial().source().id();stageInReadyRoom=false;
+            }else if(loaded.progress().openingStage()==1||loaded.progress().openingStage()==2){
+                destination=loaded.progress().openingStage()==1?217:218;
+                if(!scenes.catalog().scene(destination).town())throw new IOException("The opening camp is unavailable; please try again later");
+            }
             synchronized (ACTIVE) {
                 if (ACTIVE.containsKey(loaded.worldId())) throw new IOException("This knight is already online");
                 profile = loaded;
@@ -972,13 +980,15 @@ final class WorldSession implements AutoCloseable {
         readyRoom=stageInReadyRoom;
         if(readyRoom)friendLocation=new FriendPresence("~",ReadyRoom.ZONE,0);
         else attach();
-        partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);partyState();
+        partyMember=scenes.parties().join(oid,knight,profile,this::offerParty);
+        if(profile.progress().crashSiteIncomplete())scenes.parties().enterTutorial(partyMember);
+        partyState();
         if(characters.hasWorldStorage())memories=characters.knightMemories(knight.id(),authRevision);
         output.send(() -> codec.selected(oid, knight, profile));
         output.send(() -> codec.knightMemories(oid,memories));
         output.send(() -> codec.townState(oid,profile));
         publishStyles();
-        output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
+        output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
         if(characters.hasWorldStorage())refreshFriends(null,characters.friends().snapshot(),friendPresence(characters.worldStorageFile()));
         refreshParty();
         receiverChanged(receivers);
@@ -993,7 +1003,7 @@ final class WorldSession implements AutoCloseable {
         if (selected()) {
             var visible=visibleProfile();output.send(() -> codec.selected(oid, knight, visible));
             publishQuickbar();
-            output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden));
+            output.send(() -> codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
             if (subscribed) output.send(() -> codec.sceneLocation(oid,scene,scenes.channelOid(scene.map().zone(),false),scenes.channelOid(scene.map().zone(),true)));
         }
     }
@@ -1072,7 +1082,7 @@ final class WorldSession implements AutoCloseable {
             if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))throw new SessionDecoder.Rejected("Invalid inspect privacy request");
             characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
             gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
-            output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden));return true;
+            output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));return true;
         }
         if ((service == 4 || service == 5) && request.method() == 1) {
             move(args, service == 5);
@@ -1233,6 +1243,7 @@ final class WorldSession implements AutoCloseable {
             int target=zone?(Integer)args.get(1):(Integer)args.get(0);
             if(zone&&args.get(0).equals(ReadyRoom.ZONE)){
                 if(target!=ReadyRoom.SCENE||!(args.get(2) instanceof Integer))throw new IOException("%chat:m.no_such_scene");
+                if(profile.progress().crashSiteIncomplete())throw new IOException("Finish the tutorial through its exit first");
                 if(portalMove!=null||returnRequested)throw new IOException("Finish the current journey first");
                 if(!readyRoom){
                     var returnScene=scene;
@@ -1259,6 +1270,7 @@ final class WorldSession implements AutoCloseable {
                 return;
             }
             if(readyRoom&&(!returnRequested||target!=scene.map().id()))throw new IOException("Return to game before entering a scene");
+            if(profile.progress().openingStage()>=0&&profile.progress().openingStage()<3&&portalMove==null&&target!=scene.map().id())throw new IOException("Continue the opening adventure through its mission or exit");
             if(scene.tutorial()!=null&&target!=scene.map().id()&&portalMove==null)throw new IOException("Finish the tutorial through its exit first");
             var targetMap=scenes.catalog().scene(target);
             if(zone && (!(args.get(2) instanceof Integer) || !args.get(0).equals(targetMap.zone())))
@@ -1916,7 +1928,7 @@ final class WorldSession implements AutoCloseable {
         portalMove=new PortalMove(next,route.entrance());departedSceneOid=scene.oid();
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
         short receiver=forcedReceiver;
-        output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden));
+        output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
         output.send(()->codec.forceScene(oid,receiver,next));
         return true;
     }
@@ -1949,7 +1961,7 @@ final class WorldSession implements AutoCloseable {
         WorldProfile fresh=state.revision()>before.revision()?loadProfile(before):before;
         synchronized(this) {
             if(closed||!entered||persistence!=registration)return;
-            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden));}
+            if(state.gameMaster()!=gameMaster){gameMaster=state.gameMaster();membership.appearance(actorAppearance());output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));}
             // An equip may commit while the read is in flight: never roll back its publication.
             if(fresh.revision()>profile.revision()) {
                 var visibleBefore=visibleProfile();var previous=profile;profile=fresh;

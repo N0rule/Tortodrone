@@ -13,6 +13,15 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "opening-sessions-check" -> {
+                if(args.length!=3)throw new IllegalArgumentException("opening-sessions-check expects game-directory deployment-directory");
+                fixture="org.tortodrone.server.network.OpeningSessionCheck";fixtureArgs.clear();fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/OpeningSessionCheck.java"));
+            }
+            case "scene-floors-check" -> {
+                if(args.length!=4)throw new IllegalArgumentException("scene-floors-check expects game-directory original-scene prepared-scene-directory");
+                fixture="SceneFloorCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
+            }
             case "webui-presentation" -> {
                 if(args.length!=4)throw new IllegalArgumentException("webui-presentation expects game-directory content-directory fresh-output-file");
                 fixture="WebUiPresentationExport";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());

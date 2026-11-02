@@ -12,12 +12,17 @@ public final class SceneCollision {
     private static final int MAX_BYTES = 4 * 1024 * 1024, MAX_TILES = 1_000_000, MAX_FLOORS=1_000_000, MAX_SHAPES = 100_000;
     private final Map<Long,Integer> tiles;
     private final Set<Long> floorCells;
+    private final List<Obstacle> floorShapes;
     private final List<Obstacle> obstacles;
     private final boolean present;
 
     private SceneCollision(Map<Long,Integer> tiles, Set<Long> floorCells, List<Obstacle> obstacles,boolean present) {
+        this(tiles,floorCells,List.of(),obstacles,present);
+    }
+    private SceneCollision(Map<Long,Integer> tiles,Set<Long> floorCells,List<Obstacle> floorShapes,List<Obstacle> obstacles,boolean present){
         this.tiles = Map.copyOf(tiles);
         this.floorCells=Set.copyOf(floorCells);
+        this.floorShapes=List.copyOf(floorShapes);
         this.obstacles = List.copyOf(obstacles);
         this.present=present;
     }
@@ -149,10 +154,14 @@ public final class SceneCollision {
     }
     /** True only when this scene pack has no collision metadata (legacy fallback case). */
     public boolean isEmpty() { return !present; }
-    /** True when the native scene contains a tile at floor(x), floor(y); absent metadata returns false. */
+    /** Native floor tiles and floorTile placeables; absence never becomes invented ground. */
     public boolean floorSupported(float x,float y){
         if(!present||!Float.isFinite(x)||!Float.isFinite(y))return false;
-        try{return floorCells.contains(key(floor(x),floor(y)));}catch(IllegalArgumentException outOfRange){return false;}
+        try{
+            if(floorCells.contains(key(floor(x),floor(y))))return true;
+            var point=new Circle(new Point(x,y),0);
+            return floorShapes.stream().anyMatch(shape->shape.bounds.near(x,y,0)&&intersects(shape.geometry,point));
+        }catch(IllegalArgumentException outOfRange){return false;}
     }
 
     /** Loads an optional prepared collision file and verifies it belongs to this scene layout. */
@@ -185,7 +194,10 @@ public final class SceneCollision {
             if(mask==0)throw new IOException("Invalid static collision shape mask");
             shapes.add(new Obstacle(mask,parseGeometry(required(p,prefix+"geometry"))));
         }
-        return new SceneCollision(tiles,floorCells,shapes,true);
+        int floorShapeCount=p.containsKey("floor-shape-count")?count(p,"floor-shape-count",MAX_SHAPES):0;
+        var surfaces=new ArrayList<Obstacle>(floorShapeCount);
+        for(int i=0;i<floorShapeCount;i++)surfaces.add(new Obstacle(0,parseGeometry(required(p,"floor-shape."+i+".geometry"))));
+        return new SceneCollision(tiles,floorCells,surfaces,shapes,true);
     }
 
     /** Returns true when this actor-local shape clears native static geometry at the pose. */

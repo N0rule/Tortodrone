@@ -15,7 +15,8 @@ public final class CheckCombatRendering {
         if (args.length < 1 || args.length > 3) {
             throw new IllegalArgumentException("Usage: java scripts/compat/CheckCombatRendering.java \"/path/to/Spiral Knights\" [output-dir] [--tutorial-entry-only|--tutorial-only|--ready-room-only|--equipment-groups|--items-only|--arsenal-blink-only|--boxes-only|--town-dialogs-only|--dialogue-only|--training-only|--health-only|--movement-only|--depot-only|--hazards-only|--vortex-shield-only|--multiplayer-only|--multiplayer-world-only]");
         }
-        boolean tutorialOnly=Arrays.asList(args).contains("--tutorial-only");
+        boolean freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
+        boolean tutorialOnly=freshOpening||Arrays.asList(args).contains("--tutorial-only");
         boolean tutorialEntryOnly=tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         boolean readyRoomOnly=Arrays.asList(args).contains("--ready-room-only");
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
@@ -94,7 +95,7 @@ public final class CheckCombatRendering {
             Files.createDirectories(outputDir);
             var base = graphicsBase(game, app, scratch);
             var seed = new ArrayList<>(base);
-            seed.addAll(List.of("CombatRenderingCheck", equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":"--seed", scratch.resolve("data").toString()));
+            seed.addAll(List.of("CombatRenderingCheck", freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":"--seed", scratch.resolve("data").toString()));
             run(seed, "seed", 45, scratch);
 
             Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog, scratch);
@@ -124,7 +125,7 @@ public final class CheckCombatRendering {
 
             var graphical = new ArrayList<>(base);
             graphical.addAll(List.of("CombatRenderingCheck", port, publicKey.toString(), outputDir.toString()));
-            if(trainingOnly)graphical.add(tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
+            if(trainingOnly)graphical.add(freshOpening?"--opening-tutorial-only":tutorialOnly?"--tutorial-only":tutorialEntryOnly?"--tutorial-entry-only":readyRoomOnly?"--ready-room-only":equipmentGroups?"--equipment-groups":itemsOnly?"--items-only":sharedWorldOnly?"--multiplayer-world-only":multiplayerOnly?"--multiplayer-only":arsenalBlinkOnly?(arsenalStationOnly?"--arsenal-station-only":"--arsenal-blink-only"):boxesOnly?"--boxes-only":townDialogsOnly?"--town-dialogs-only":dialogueOnly?"--dialogue-only":vortexShieldOnly?"--vortex-shield-only":hazardsOnly?"--hazards-only":depotOnly?"--depot-only":healthOnly?"--health-only":movementOnly?"--movement-only":"--training-only");
             Path clientLog = output.resolve("client.log");
             Process client = start(graphical, clientLog, scratch);
             if(multiplayerOnly&&!sharedWorldOnly){
@@ -140,6 +141,12 @@ public final class CheckCombatRendering {
             if((itemsOnly||readyRoomOnly)&&(log.contains("NullPointerException")||log.contains("ClassCastException")))throw new IOException("Native controller error: "+tail(clientLog));
             if (client.exitValue() != 0 || !log.lines().anyMatch(line -> line.startsWith("PASS:"))) {
                 throw new IOException("Graphical combat probe did not pass (exit " + client.exitValue() + "):\n" + tail(clientLog) + "\nServer:\n" + tail(serverLog));
+            }
+            if(freshOpening){
+                var reconnect=new ArrayList<>(base);Path captures=outputDir.resolve("reconnect");Files.createDirectories(captures);
+                reconnect.addAll(List.of("CombatRenderingCheck",port,publicKey.toString(),captures.toString(),"--opening-return-only"));
+                Path reconnectLog=output.resolve("reconnect.log");Process resumed=start(reconnect,reconnectLog,scratch);
+                if(!resumed.waitFor(100,TimeUnit.SECONDS)||resumed.exitValue()!=0||!Files.readString(reconnectLog).lines().anyMatch(l->l.startsWith("PASS:")))throw new IOException("Opening reconnect failed: "+tail(reconnectLog));
             }
             if(peer!=null&&(!peer.waitFor(15,TimeUnit.SECONDS)||peer.exitValue()!=0
                     ||!Files.readString(peerLog).lines().anyMatch(line->line.startsWith("PASS:"))))

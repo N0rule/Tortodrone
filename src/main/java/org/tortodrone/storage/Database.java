@@ -240,6 +240,9 @@ public final class Database {
             }
             if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
             if(heat>0)TownStore.applyHeat(c,profile,rules,heat);
+            if(profile.progress().crashSiteIncomplete())try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=? AND value=0")){
+                s.setString(1,"world."+worldId+".opening-stage");if(s.executeUpdate()!=1)throw new IOException("Opening checkpoint changed");
+            }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
                 s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.CAMP);s.executeUpdate();
@@ -674,10 +677,19 @@ public final class Database {
     }
 
     public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision) throws IOException {
+        saveRoster(id,knights,next,revision,rosterRevision,0);
+    }
+    public void saveRoster(int id,List<Knight> knights,int next,long revision,long rosterRevision,int openingKnight)throws IOException {
         write(c -> {
             try(var s=c.prepareStatement("SELECT revision FROM accounts WHERE id=?")) {
                 s.setInt(1,id);try(var r=s.executeQuery()) {
                     if(!r.next()||r.getLong(1)!=rosterRevision)throw new IOException("Roster changed; refresh or reconnect before saving characters");
+                }
+            }
+            if(openingKnight!=0){
+                if(openingKnight<1||knights.stream().noneMatch(k->k.id()==openingKnight))throw new IOException("Invalid opening knight");
+                try(var s=c.prepareStatement("SELECT 1 FROM knights WHERE account_id=? AND id=?")){
+                    s.setInt(1,id);s.setInt(2,openingKnight);try(var r=s.executeQuery()){if(r.next())throw new IOException("Existing knight cannot restart onboarding");}
                 }
             }
             replaceRoster(c,id,knights,next,revision);
@@ -688,6 +700,9 @@ public final class Database {
                 WorldProfiles.ensure(c,id,knight);
                 if(fresh)try(PreparedStatement statement=c.prepareStatement("UPDATE inventory_items SET bound=1,starter=1,equipped_slot=CASE slot WHEN 'HELM' THEN 0 WHEN 'ARMOR' THEN 1 WHEN 'SHIELD' THEN 2 WHEN 'SWORD' THEN 6 WHEN 'GUN' THEN 7 END WHERE world_id=(SELECT world_id FROM world_characters WHERE account_id=? AND knight_id=?)")) {statement.setInt(1,id);statement.setInt(2,knight.id());statement.executeUpdate();}
                 WorldProfiles.appearance(c,id,knight); }
+            if(openingKnight!=0)try(var s=c.prepareStatement("INSERT INTO metadata(key,value) SELECT 'world.'||world_id||'.opening-stage',0 FROM world_characters WHERE account_id=? AND knight_id=?")){
+                s.setInt(1,id);s.setInt(2,openingKnight);if(s.executeUpdate()!=1)throw new IOException("Opening owner was not created");
+            }
             return null;
         });
     }

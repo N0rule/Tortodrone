@@ -51,6 +51,9 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
+    private boolean freshOpening;
+    private int readyRoomDestination=1;
+    private Confirm openingCreation;
     private boolean dialogueOnly;
     private boolean townDialogsOnly;
     private boolean depotOnly,boxesOnly,multiplayerOnly,sharedWorldOnly,itemsOnly;
@@ -100,6 +103,9 @@ public final class CombatRenderingCheck {
 
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
+        if(args.length==2&&args[0].equals("--seed-opening")){
+            try(var store=new AccountStore(Path.of(args[1]))){store.create("LanPlayer","lan-test-password".toCharArray());}return;
+        }
         if(args.length==2&&(args[0].equals("--seed-equipment")||args[0].equals("--seed-items")||args[0].equals("--seed-multiplayer")||args[0].equals("--seed-boxes")||args[0].equals("--seed")||args[0].equals("--seed-depot"))){
             seed(Path.of(args[1]));
             if(args[0].equals("--seed-equipment"))seedEquipment(Path.of(args[1]));
@@ -124,7 +130,7 @@ public final class CombatRenderingCheck {
         if(peer)args=Arrays.copyOfRange(args,1,args.length);
         boolean sharedWorldOnly=Arrays.asList(args).contains("--multiplayer-world-only");
         boolean multiplayerOnly=sharedWorldOnly||Arrays.asList(args).contains("--multiplayer-only");
-        boolean trainingOnly=Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
+        boolean trainingOnly=Arrays.asList(args).contains("--opening-tutorial-only")||Arrays.asList(args).contains("--opening-return-only")||Arrays.asList(args).contains("--tutorial-only")||Arrays.asList(args).contains("--tutorial-entry-only")||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--equipment-groups")||multiplayerOnly||!peer&&args.length==4&&(args[3].equals("--items-only")||(args[3].equals("--arsenal-blink-only")||args[3].equals("--arsenal-station-only"))||args[3].equals("--boxes-only")||args[3].equals("--town-dialogs-only")||args[3].equals("--dialogue-only")||args[3].equals("--training-only")||args[3].equals("--health-only")||args[3].equals("--movement-only")||args[3].equals("--depot-only")||args[3].equals("--hazards-only")||args[3].equals("--vortex-shield-only"));
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
@@ -136,13 +142,15 @@ public final class CombatRenderingCheck {
         // Native startup re-applies this preference after construction. This is
         // the launcher's disposable preferences root, never the owner's settings.
         com.threerings.projectx.client.ProjectXPrefs.setVSyncEnabled(false);
-        var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,peer?"Peer-Knight":"Town-Knight",null,null,null,null);
+        var app=new ProjectXApp(peer?"PeerPlayer":"LanPlayer","lan-test-password",false,Arrays.asList(args).contains("--opening-tutorial-only")?null:peer?"Peer-Knight":"Town-Knight",null,null,null,null);
         app.setTitle(peer?"Tortodrone disposable peer rendering check":"Tortodrone disposable combat rendering check");app.setVSyncEnabled(false);
         var probe=new CombatRenderingCheck(app,Path.of(args[2]),peer,trainingOnly);probe.dialogueOnly=!peer&&args.length==4&&args[3].equals("--dialogue-only");
-        probe.tutorialOnly=Arrays.asList(args).contains("--tutorial-only");
+        probe.freshOpening=Arrays.asList(args).contains("--opening-tutorial-only");
+        probe.tutorialOnly=probe.freshOpening||Arrays.asList(args).contains("--tutorial-only");
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
-        probe.readyRoomOnly=Arrays.asList(args).contains("--ready-room-only");
+        probe.readyRoomOnly=Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
+        if(Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
@@ -448,7 +456,7 @@ public final class CombatRenderingCheck {
         if(app.GF().mG()||!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu()))return;
         var view=new View(app.Gu());
         if(stage<=1&&view.sceneId()==1&&view.PO()!=null){GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(398);stage=2;started=now;System.out.println("CHECK: native scene travel to original Crash Site 398");return;}
-        if(stage==2&&view.sceneId()==398&&view.PO()!=null&&view.PO().acU() instanceof Dungeoneer){stage=3;started=now;}
+        if((stage==2||freshOpening&&stage==0)&&view.sceneId()==398&&view.PO()!=null&&view.PO().acU() instanceof Dungeoneer){stage=3;started=now;}
         if(tutorialOnly&&stage>=3){tutorialPlayTick(view,now);return;}
         if(stage==3&&now-started>5_000_000_000L){capture("crash-site-entrance");finishImages();passed=done=true;System.out.println("PASS: stock graphical Crash Site entry and controlled Dungeoneer remain connected for five seconds");app.shutdown();}
     }
@@ -479,7 +487,7 @@ public final class CombatRenderingCheck {
             if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Camp");
             if(!tutorialHelperAttacks.containsAll(Set.of("Bygs","Warden","Wend"))||tutorialHelperDamage.isEmpty())throw new AssertionError("Original helper combat missing: attacks="+tutorialHelperAttacks+" Giant damage="+tutorialHelperDamage);
             if(!tutorialGiantHeads.containsAll(Set.of(0,1))||!tutorialGiantDamage)throw new AssertionError("Giant retaliation missing: native heads="+tutorialGiantHeads+" damage="+tutorialGiantDamage);
-            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println("PASS: stock graphical normal movement/conversations/sword combat -> three sourced enemy families + all helpers + calibrated Giant native warning/strike and damage -> original doors/portal -> Rescue Camp arrival; fresh onboarding/reconnect and original targeting parity remain unverified");app.shutdown();}return;}
+            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println(freshOpening?"PASS: native fresh-account knight creation -> automatic private Crash Site -> real movement/conversations/combat/helpers/Giant -> original doors/portal -> Camp and native heat settlement; reconnect checked by parent scenario":"PASS: stock graphical GM preview -> native combat/helpers/calibrated Giant -> original doors/portal -> Camp and heat; fresh creation/reconnect are separate scenarios");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){
@@ -559,7 +567,9 @@ public final class CombatRenderingCheck {
         if(stage==4){var boss=authoritative.get(tutorialBoss);
             if(boss==null){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
             moveToward(view,boss.tz().x-own.tz().x,boss.tz().y-own.tz().y,false);
-            flags(view,(now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0);
+            boolean guard=tutorialGiantDamage&&boss instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
+                &&(monster.adU()==4||monster.adU()==5&&lastStamp-monster.adV()<2800);
+            flags(view,guard?64:(now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0);
             if(now-tutorialCombatAt>180_000_000_000L)throw new AssertionError("Normal stock sword input failed to defeat Giant; health="+monsterHealth(boss));return;
         }
         if(stage==5){float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
@@ -581,11 +591,11 @@ public final class CombatRenderingCheck {
             tutorialPath=org.tortodrone.world.ScenePathing.route(own.tz().x,own.tz().y,x,y,(sx,sy,tx,ty)->{
                 int count=Math.max(1,(int)Math.ceil(Math.hypot(tx-sx,ty-sy)/.1));
                 for(int i=1;i<=count;i++){float px=sx+(tx-sx)*i/count,py=sy+(ty-sy)*i/count;
-                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,.35f).present())return false;
+                    if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS).present())return false;
                     for(var obstacle:authoritative.values())if(obstacle.vw()!=own.vw()){
                         var spec=tutorialSpecs.get(obstacle.Mv().getName());
                         if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bR(2))continue;
-                        if(spec.contains(obstacle.tz().x,obstacle.tz().y,obstacle.tA(),px,py,.35f))return false;
+                        if(spec.contains(obstacle.tz().x,obstacle.tz().y,obstacle.tA(),px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS))return false;
                     }
                 }return true;
             });tutorialNode=0;
@@ -621,14 +631,14 @@ public final class CombatRenderingCheck {
             if(now-started>20_000_000_000L)throw new AssertionError("Ready Room return did not load Haven; zone="+app.CT().zoneId+" loading="+app.GF().mG());
             if(!Class.forName("com.threerings.projectx.town.a.c").isInstance(app.Gu()))return;
             var model=(com.threerings.tudey.data.TudeySceneModel)app.Gu().getClass().getMethod("Sn").invoke(app.Gu());
-            if(model!=null&&model.sceneId==1&&!app.GF().mG()&&new View(app.Gu()).PO()!=null&&new View(app.Gu()).PO().acU().vw()==app.CT().pawnId){
+            if(model!=null&&model.sceneId==readyRoomDestination&&!app.GF().mG()&&new View(app.Gu()).PO()!=null&&new View(app.Gu()).PO().acU().vw()==app.CT().pawnId){
                 stage=2;started=now;
             }
         }else if(stage==2&&now-started>3_000_000_000L){
-                capture("ready-room-return-haven");finishImages();
-                var image=ImageIO.read(output.resolve("ready-room-return-haven.png").toFile());
+                String shot="ready-room-return-"+readyRoomDestination;capture(shot);finishImages();
+                var image=ImageIO.read(output.resolve(shot+".png").toFile());
                 if(Arrays.stream(image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth())).distinct().limit(33).count()<33)throw new AssertionError("Haven framebuffer remained blank after the transition");
-                passed=done=true;System.out.println("PASS: stock graphical Ready Room town action returns to Haven and renders its controlled pawn");app.shutdown();
+                passed=done=true;System.out.println("PASS: stock graphical Ready Room returns to saved scene "+readyRoomDestination+" and renders its controlled pawn");app.shutdown();
         }
     }
     private void tick(){
@@ -642,6 +652,14 @@ public final class CombatRenderingCheck {
             }
             if(now>deadline)throw new AssertionError("Timed out at stage "+stage+", action "+index);
             if(!app.zr().isLoggedOn())return;
+            if(freshOpening&&app.CT()!=null&&app.CT().bagId==0){
+                if(openingCreation==null){
+                    openingCreation=new Confirm();
+                    ((com.threerings.projectx.client.aU)app.zr().bU(com.threerings.projectx.client.aU.class)).a(null,new com.threerings.util.Name("Town-Knight"),"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,com.threerings.projectx.data.ProjectXCodes.KnightHeight.BASE,com.threerings.projectx.data.ProjectXCodes.EyeType.DEFAULT,null,List.of(),null,openingCreation);
+                    System.out.println("CHECK: native knight creation on a fresh ordinary account");
+                }else if(openingCreation.done&&openingCreation.reason!=null)throw new AssertionError("Native creation refused: "+openingCreation.reason);
+                return;
+            }
             // Fresh disposable preferences show Uplink automatically. Close that native
             // startup window through its normal API before exercising the controller.
             var root=app.getRoot();

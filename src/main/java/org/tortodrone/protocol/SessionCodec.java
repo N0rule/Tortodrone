@@ -363,12 +363,13 @@ public final class SessionCodec {
         return playerFlags(clientOid,enabled,false);
     }
     public byte[] playerFlags(int clientOid,boolean enabled,boolean inspectionHidden)throws IOException {
+        return playerFlags(clientOid,enabled,inspectionHidden,true);
+    }
+    public byte[] playerFlags(int clientOid,boolean enabled,boolean inspectionHidden,boolean tutorialComplete)throws IOException {
         return frame(out->{
             eventHeader(out,"CompoundEvent",clientOid);
             type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
-            // The stock HUD requires TUTORIAL (32) before exposing notification
-            // controls. Knights enter Haven directly here, bypassing the intro.
-            attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt(32|(enabled?256:0)|(inspectionHidden?1024:0));});
+            attribute(out,clientOid,"flags",o->{type(o,"java.lang.Integer");o.writeInt((tutorialComplete?32:0)|(enabled?256:0)|(inspectionHidden?1024:0));});
             attribute(out,clientOid,"tokens",o->{type(o,"com.threerings.projectx.data.ProjectXTokenRing");o.writeInt(enabled?8:0);});
         });
     }
@@ -508,7 +509,11 @@ public final class SessionCodec {
             attribute(out,oid,"crowns",o -> value(o,profile.crowns()));
             attribute(out,oid,"energy",o -> value(o,profile.energy()));
             attribute(out,oid,"showEnergy",o -> value(o,true));
-            attribute(out,oid,"homeTown",this::townSummary);
+            attribute(out,oid,"homeTown",o->{
+                var opening=SceneRegistry.system().tutorial();
+                if(profile.progress().openingStage()>=0&&profile.progress().openingStage()<3&&opening!=null)townSummary(o,opening.camp());
+                else townSummary(o);
+            });
             rank(out,oid,profile);
             attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));
             attribute(out,oid,"progressFlags",o->value(o,profile.progress().progressFlags()));

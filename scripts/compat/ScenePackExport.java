@@ -42,13 +42,13 @@ public final class ScenePackExport {
         float spawnX=targetX,spawnY=targetY;
         for(int row=0;row<height;row++)for(int col=0;col<width;col++) {
             float x=minX+col*.25f,y=minY+row*.25f;
-            if(scene.aQ((int)Math.floor(x),(int)Math.floor(y))==null
+            if(!Float.isFinite(scene.q(x,y,Float.NaN))
                     ||scene.a(actor,shape.d(new Transform2D(new Vector2f(x,y),0))))continue;
             bits.set(row*width+col);
         }
         int spawnCol=Math.round((spawnX-minX)*4),spawnRow=Math.round((spawnY-minY)*4);
         if(spawnCol<0||spawnCol>=width||spawnRow<0||spawnRow>=height||!bits.get(spawnRow*width+spawnCol)
-                ||scene.aQ((int)Math.floor(spawnX),(int)Math.floor(spawnY))==null
+                ||!Float.isFinite(scene.q(spawnX,spawnY,Float.NaN))
                 ||scene.a(actor,shape.d(new Transform2D(new Vector2f(spawnX,spawnY),0))))
             throw new IOException("Native or requested spawn is not walkable at "+spawnX+","+spawnY+" (native entrance "+entrance.id+"); refusing an invented arrival");
         // Stage only after all configuration/collision validation succeeds.

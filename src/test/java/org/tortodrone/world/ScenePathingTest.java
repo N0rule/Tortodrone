@@ -37,6 +37,14 @@ public final class ScenePathingTest {
             (x,y,tx,ty)->Math.hypot(5-tx,ty)>1.5);
         check(!approach.isEmpty()&&approach.getLast().x()<=3.5&&Math.hypot(5-approach.getLast().x(),approach.getLast().y())<=3,"occupied target is approached to attack range without entering its body");
         check(ScenePathing.region(0,0,(x,y)->1,(x,y,tx,ty)->false).isEmpty(),"unreachable attack region terminates within its search budget");
+        ScenePathing.Traversal narrow=(x,y,tx,ty)->{
+            for(int i=0;i<=100;i++){float px=x+(tx-x)*i/100,py=y+(ty-y)*i/100;
+                if(!(px>=5&&px<=8&&py>=39.4&&py<=39.8||px>=7.4&&px<=7.6&&py>=39.7&&py<=51))return false;
+            }return true;
+        };
+        var narrowRoute=ScenePathing.route(7.735f,39.7f,7.5f,50.5f,narrow);
+        check(!narrowRoute.isEmpty(),"fractional start must find the authored narrow corridor on a world-aligned lattice");
+        float px=7.735f,py=39.7f;for(var point:narrowRoute){check(narrow.clear(px,py,point.x(),point.y()),"every fallback path segment still clears authoritative collision");px=point.x();py=point.y();}
         System.out.println("PASS: bounded routing, closed-gate attack occlusion, Shufflebot obstacle pursuit and gate-open traversal");
     }
 }

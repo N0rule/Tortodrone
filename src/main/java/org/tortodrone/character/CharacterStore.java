@@ -138,6 +138,14 @@ public final class CharacterStore {
     }
 
     public synchronized Knight create(Knight choices, long authRevision) throws IOException, Refused {
+        return create(choices,authRevision,false);
+    }
+    /** Native creator: first-run state and the starter inventory share one roster transaction. */
+    public synchronized Knight createForOpening(Knight choices,long authRevision)throws IOException,Refused {
+        if(database==null||authRevision<0)throw new IOException("Authenticated opening owner required");
+        return create(choices,authRevision,true);
+    }
+    private Knight create(Knight choices,long authRevision,boolean opening)throws IOException,Refused {
         refresh();
         String error = nameFailure(choices.name());
         if (error != null) throw new Refused(error);
@@ -148,7 +156,7 @@ public final class CharacterStore {
         Knight created = new Knight(nextId, choices.name(), choices.helm(), choices.armor(), choices.helmAccessory(),
             choices.armorAccessory(), choices.costume(), choices.color(), choices.height(), choices.eye(), System.currentTimeMillis());
         List<Knight> updated = new ArrayList<>(knights); updated.add(created);
-        save(updated, nextId + 1, authRevision); // Acknowledge only after persistence succeeds.
+        save(updated, nextId + 1, authRevision,opening?created.id():0); // Commit before acknowledgement.
         knights = List.copyOf(updated); nextId++;
         notifyListeners();
         return created;
@@ -266,8 +274,11 @@ public final class CharacterStore {
     }
 
     private void save(List<Knight> updated, int next, long authRevision) throws IOException, Refused {
+        save(updated,next,authRevision,0);
+    }
+    private void save(List<Knight> updated,int next,long authRevision,int openingKnight)throws IOException,Refused {
         if (database != null) {
-            try { database.saveRoster(accountId, updated, next, authRevision,storageRevision); }
+            try { database.saveRoster(accountId, updated, next, authRevision,storageRevision,openingKnight); }
             catch(Database.KnightNameInUse conflict){throw new Refused(conflict.getMessage());}
             storageRevision++;return;
         }
