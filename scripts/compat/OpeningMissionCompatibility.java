@@ -36,9 +36,9 @@ public final class OpeningMissionCompatibility {
         }
         System.out.println("PASS: five opening mission configs, current native prestige lookups and retained conversation footprints resolved (not a gameplay test)");
     }
-    private static Object data(Object value,int depth)throws Exception {
+    static Object data(Object value,int depth)throws Exception {
         if(value==null||value instanceof Number||value instanceof Boolean||value instanceof String)return value;
-        if(value instanceof Enum<?> e)return e.name();if(depth>=7)return value.getClass().getName();
+        if(value instanceof Enum<?> e)return e.name();if(depth>=12)return value.getClass().getName();
         if(value instanceof ConfigReference<?> ref)return Map.of("reference",ref.getName(),"arguments",data(ref.kW(),depth+1));
         if(value instanceof Map<?,?> map){var result=new TreeMap<String,Object>();for(var e:map.entrySet())result.put(e.getKey().toString(),data(e.getValue(),depth+1));return result;}
         if(value.getClass().isArray()){var result=new ArrayList<>();for(int i=0;i<Array.getLength(value);i++)result.add(data(Array.get(value,i),depth+1));return result;}

@@ -194,6 +194,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }else spawn(binding,binding.spec(),null,stamp);
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
+        actions.nearestSignals(this::nearestSignal);
         actions.objectives((operation,time,source,activator)->{
             var player=players.stream().filter(p->activator.equals("actor:"+p.id())&&playerActive.test(p.id())).findFirst().orElse(null);var origin=scriptSource(source,time);
             return player!=null&&origin!=null&&objectiveSink.apply(player,operation,origin,time);
@@ -1018,16 +1019,35 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private void signal(String tag,String name,int stamp,String source){
         if(tag.isEmpty()||name.isEmpty())return;
         actions.signal(tag,name,stamp,source);
-        for(var target:entities.values())if(Arrays.asList(target.spec.text("tags","").split(",")).contains(tag)){
-            if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
-                boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
-                for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}
-            }else if(target.kind.equals("Trap")){
-                if(name.equals("RESET")){target.cycle=target.spec.text("cycle","");int split=target.cycle.lastIndexOf('|');if(split>=0)target.cycle=target.cycle.substring(split+1);}
-                else if(name.equals("TOGGLE")){var cycle=content.cycles().get(target.cycle);if(cycle!=null)target.cycle=cycle.text("inverse",target.cycle);}
-                else if(content.cycles().containsKey(name))target.cycle=name;
-                cycle(target,stamp);
-            }
+        for(var target:entities.values())if(Arrays.asList(target.spec.text("tags","").split(",")).contains(tag))entitySignal(target,name,stamp);
+    }
+    private static String logicIdentity(ActorState actor){return actor.entity()!=null&&actor.entity().entrySource()?"entry:"+actor.entity().key():"actor:"+actor.id();}
+    private boolean nearestSignal(SceneActions.NearestSignal operation,int stamp,String source){
+        var origin=scriptSource(source,stamp);if(origin==null)return false;
+        var targets=new LinkedHashMap<String,ActorState>();
+        for(var target:taggedSources(operation.tag(),stamp)){
+            String identity=logicIdentity(target);if(!operation.excludeSource()||!identity.equals(source))targets.putIfAbsent(identity,target);
+        }
+        if(targets.size()>2048)return false;
+        // Clyde DistanceSubset sorts float distances from Source. Excluding removes
+        // source identity, not its position. Equal distances retain server content
+        // order; original tie ordering has no capture witness.
+        var selected=targets.values().stream().sorted(Comparator.comparingDouble(a->{float dx=a.x()-origin.x(),dy=a.y()-origin.y();return (float)Math.sqrt(dx*dx+dy*dy);})).limit(operation.count()).toList();
+        for(var target:selected){
+            actions.signalTo(operation.tag(),operation.name(),stamp,source,logicIdentity(target));
+            if(!target.entity().entrySource()){var entity=entities.get(target.id());if(entity!=null)entitySignal(entity,operation.name(),stamp);}
+        }
+        return true; // Native Signal succeeds for an empty resolved target set.
+    }
+    private void entitySignal(Entity target,String name,int stamp){
+        if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
+            boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
+            for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}
+        }else if(target.kind.equals("Trap")){
+            if(name.equals("RESET")){target.cycle=target.spec.text("cycle","");int split=target.cycle.lastIndexOf('|');if(split>=0)target.cycle=target.cycle.substring(split+1);}
+            else if(name.equals("TOGGLE")){var cycle=content.cycles().get(target.cycle);if(cycle!=null)target.cycle=cycle.text("inverse",target.cycle);}
+            else if(content.cycles().containsKey(name))target.cycle=name;
+            cycle(target,stamp);
         }
     }
     public boolean walkable(float x,float y,int ignore){

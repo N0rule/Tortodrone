@@ -141,6 +141,14 @@ public final class SceneActionCompatibility {
         try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"");throw new AssertionError("Unsourced closing response converted into a jump");}catch(IOException expected){}
         close.target=new TargetConfig.Source();
         try{SceneContentExport.verifyConversationResponse(close,"part 2a",null,"clear-dialog-activator");throw new AssertionError("Changed native response target accepted");}catch(IOException expected){}
+        var nearest=new TargetConfig.NearestSubset();nearest.size=2;nearest.location=new TargetConfig.Source();
+        var candidates=new TargetConfig.Tagged();candidates.tag="splode1_chain";var excluding=new TargetConfig.Excluding();excluding.target=candidates;excluding.excluding=new TargetConfig.Source();nearest.target=excluding;
+        signal.target=nearest;signal.name="activate";
+        if(!SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(signal,0))).equals(new SceneActions.NearestSignal("splode1_chain","activate",2,true)))throw new AssertionError("Native nearest Source-excluding tagged selection changed");
+        nearest.location=new TargetConfig.Activator();try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported nearest reference accepted");}catch(IOException expected){}
+        nearest.location=new TargetConfig.Source();excluding.excluding=new TargetConfig.Activator();try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported nearest exclusion accepted");}catch(IOException expected){}
+        signal.target=new TargetConfig.Source();
+        System.out.println("PASS: native NearestSubset size/location, Excluding(Source), tagged candidates and unsupported selector refusal");
         var objective=new com.threerings.projectx.config.ProjectXActionConfig.SetObjective();
         objective.name="findRhendon";objective.persistence=com.threerings.projectx.config.Persistence.KNIGHT;
         objective.objective=new com.threerings.projectx.config.ObjectiveConfig.Simple();

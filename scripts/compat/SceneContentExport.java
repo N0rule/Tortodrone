@@ -587,6 +587,17 @@ public final class SceneContentExport {
     private static Map<String,Object> sceneSignalAction(com.threerings.tudey.config.TargetConfig target,String name,int depth)throws IOException {
         if(depth>16)throw new IOException("Scene signal target graph is too deep");
         if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","signal","tag",tagged.tag,"name",name);
+        if(target instanceof com.threerings.tudey.config.TargetConfig.NearestSubset nearest){
+            if(!(nearest.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported nearest signal reference location");
+            var selection=nearest.target;boolean exclude=false;
+            if(selection instanceof com.threerings.tudey.config.TargetConfig.Excluding excluding){
+                if(!(excluding.excluding instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported nearest signal exclusion");
+                exclude=true;selection=excluding.target;
+            }
+            if(!(selection instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged))throw new IOException("Unsupported nearest signal candidate selection");
+            new org.tortodrone.world.SceneActions.NearestSignal(tagged.tag,name,nearest.size,exclude);
+            return Map.of("kind","nearest-signal","tag",tagged.tag,"name",name,"count",nearest.size,"excludeSource",exclude);
+        }
         if(target instanceof com.threerings.tudey.config.TargetConfig.Compound compound){
             if(compound.targets==null||compound.targets.length>256)throw new IOException("Invalid scene signal targets");
             var actions=new ArrayList<Object>();

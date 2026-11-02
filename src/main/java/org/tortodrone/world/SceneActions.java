@@ -7,7 +7,13 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,SourceEffect,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public record NearestSignal(String tag,String name,int count,boolean excludeSource) implements Action {
+        public NearestSignal{text(tag);text(name);if(count<0||count>256)throw new IllegalArgumentException("Invalid signal subset size");}
+    }
+    @FunctionalInterface public interface NearestSignals {boolean apply(NearestSignal signal,int stamp,String source);}
+    private NearestSignals nearestSignals=(signal,stamp,source)->false;
+    public void nearestSignals(NearestSignals sink){nearestSignals=Objects.requireNonNull(sink);}
     public record Objective(org.tortodrone.character.KnightObjective mutation) implements Action {public Objective{Objects.requireNonNull(mutation);}}
     @FunctionalInterface public interface Objectives {boolean apply(org.tortodrone.character.KnightObjective operation,int stamp,String source,String activator);}
     private Objectives objectives=(operation,stamp,source,activator)->false;
@@ -212,10 +218,14 @@ public final class SceneActions {
         signal(tag,name,stamp,"external");
     }
     public void signal(String tag,String name,int stamp,String source){
+        signalTo(tag,name,stamp,source,null);
+    }
+    /** Native subset selection addresses a receiver logic, not every logic sharing its tag. */
+    public void signalTo(String tag,String name,int stamp,String source,String receiver){
         if(closed)return;
         text(source);
         for(var compiled:rules){var rule=compiled.rule();var state=compiled.state();
-            if(rule.event().equals("removed")||!rule.tag().equals(tag)||!rule.name().equals(name))continue;
+            if(rule.event().equals("removed")||!rule.tag().equals(tag)||!rule.name().equals(name)||receiver!=null&&!rule.source().equals(receiver))continue;
             if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source(),source);continue;}
             boolean already=state.active.containsKey(source);
             if(!already&&activeSources>=MAX_PENDING){rejected++;continue;}
@@ -249,6 +259,7 @@ public final class SceneActions {
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case NearestSignal signal -> nearestSignals.apply(signal,Math.toIntExact(due),source);
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
             case SourceEffect effect -> effects.apply(effect,Math.toIntExact(due),source);
             case PawnStatus status -> pawnStatuses.apply(status,Math.toIntExact(due),source);
@@ -323,6 +334,9 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("nearest-signal".equals(kind)&&map.keySet().equals(Set.of("kind","tag","name","count","excludeSource"))&&map.get("count") instanceof Number number&&map.get("excludeSource") instanceof Boolean exclude){
+            long size=number.longValue();if(number.doubleValue()!=size)throw new IllegalArgumentException("Fractional target count");return new NearestSignal(tag(map.get("tag")),tag(map.get("name")),Math.toIntExact(size),exclude);
+        }
         if("weighted-choice".equals(kind)&&map.keySet().equals(Set.of("kind","actions","weights"))&&map.get("actions") instanceof List<?> actions&&map.get("weights") instanceof List<?> weights){
             var children=new ArrayList<Action>();var numbers=new ArrayList<Float>();for(var child:actions)children.add(decode(child,depth+1,count));
             for(var weight:weights){if(!(weight instanceof Number number))throw new IllegalArgumentException("Invalid weight");numbers.add(number.floatValue());}
