@@ -29,12 +29,36 @@ public final class OpeningMissionCompatibility {
         }
         for(String name:List.of("Mission/Rank/Rhendon RC Intro","Mission/Rank/First Contact B","Mission/Rank/Welcome to Haven")){
             var conversation=cm.d(ConversationConfig.class,name);
+            if(!name.endsWith("Rhendon RC Intro"))verifyComlink(cm,conversation,name.endsWith("First Contact B")?org.tortodrone.character.OpeningMission.FIRST_CONTACT:org.tortodrone.character.OpeningMission.WELCOME_HAVEN);
             System.out.println("CONVERSATION "+name+" initial="+Json.stringify(data(conversation.initialAction,0)));
             for(var raw:conversation.nodes){var node=(ConversationConfig.SimpleNode)raw;System.out.println("NODE "+node.name+" "+node.message);
                 for(var response:node.responses)System.out.println("RESPONSE "+Json.stringify(data(response,0)));
             }
         }
         System.out.println("PASS: five opening mission configs, current native prestige lookups and retained conversation footprints resolved (not a gameplay test)");
+    }
+    private static void verifyComlink(ConfigManager cm,ConversationConfig nativeConversation,org.tortodrone.character.OpeningMission mission)throws Exception {
+        var prepared=org.tortodrone.world.OpeningComlinks.get(mission);
+        var config=(MissionConfig.Conversation)((MissionConfig.Rank)cm.d(MissionConfig.class,mission.config()).S(cm)).requirement;
+        var start=config.conversation;
+        if(!(nativeConversation.initialAction instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump)||!jump.node.equals(mission==org.tortodrone.character.OpeningMission.FIRST_CONTACT?"node_1":"")||!prepared.bundle().equals(nativeConversation.bundle)||!nativeConversation.speakerName.isEmpty()&&!prepared.name().equals(nativeConversation.speakerName)
+            ||!prepared.model().equals(model(start.model))||!prepared.music().equals(model(start.music))||start.sourceCloseAnimation!=null)throw new AssertionError("Opening comlink initial footprint/presentation changed: speaker="+nativeConversation.speakerName);
+        for(var node:prepared.nodes().values()){
+            var original=Arrays.stream(nativeConversation.nodes).filter(n->n.name.equals(node.id())).map(n->(ConversationConfig.SimpleNode)n).findFirst().orElseThrow();
+            if(!node.message().equals(original.message)||node.responses().size()!=original.responses.length||original.animation!=null||original.sourceTransient!=null||!node.userInterface().equals(model(original.userInterface)))throw new AssertionError("Opening comlink panel/presentation changed: "+node.id());
+            for(int i=0;i<original.responses.length;i++){
+                var response=(ConversationConfig.SimpleResponse)original.responses[i];
+                if(!response.text.equals(node.responses().get(i).text()))throw new AssertionError("Opening comlink choice changed");
+                if(org.tortodrone.world.OpeningComlinks.terminal(mission,prepared,node.id(),i)){
+                    if(!(response.action instanceof com.threerings.tudey.config.ActionConfig.Compound compound)||compound.actions.length!=0||compound.stopOnFailure)throw new AssertionError("Opening comlink terminal footprint changed");
+                }else if(!(response.action instanceof com.threerings.projectx.config.ProjectXActionConfig.ClearDialog clear)||!(clear.target instanceof com.threerings.tudey.config.TargetConfig.Activator))throw new AssertionError("Opening comlink stripped response footprint changed");
+            }
+        }
+        System.out.println("PASS: installed "+mission.id()+" opener, all six localized panels/choices, exact Kora portrait, music, image/UI references and stripped response footprints");
+    }
+    private static org.tortodrone.character.StarterCatalog.Model model(ConfigReference<?> reference){
+        var args=new HashMap<String,Object>();reference.kW().forEach((key,value)->{if(value!=null&&!(value instanceof String))throw new AssertionError("Unimplemented comlink reference argument");args.put(key,value==null?org.tortodrone.world.FireCatalog.NullValue.INSTANCE:value);});
+        return new org.tortodrone.character.StarterCatalog.Model(reference.getName(),args);
     }
     static Object data(Object value,int depth)throws Exception {
         if(value==null||value instanceof Number||value instanceof Boolean||value instanceof String)return value;
