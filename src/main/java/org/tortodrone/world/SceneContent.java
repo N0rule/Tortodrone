@@ -66,6 +66,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
     public void validateConversations()throws IOException {
         var pending=new ArrayDeque<String>();var reached=new HashSet<String>();
         for(var entry:entries)if(entry.spec().text("kind","").equals("SceneTrigger"))pending.addAll(SceneActions.conversationIds(SceneActions.rule(entry).action()));
+        else pending.addAll(SceneScript.conversations(entry.spec()));
         for(var conversation:conversations.values())if(!conversation.actor().startsWith("@conversation/")){
             long count=entries.stream().filter(e->!Set.of("SceneTrigger","SceneAnchor").contains(e.spec().text("kind",""))&&e.spec().text("dialogue",e.spec().text("config","")).equals(conversation.actor())).count();
             if(count!=1)throw new IOException("Missing or ambiguous NPC actor binding: "+conversation.actor());

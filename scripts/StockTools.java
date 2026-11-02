@@ -13,6 +13,13 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "entry-state-check" -> {
+                fixture="EntryStateCompatibility";for(String source:List.of("EntryStateCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
+            case "generator-script-check" -> {
+                if(args.length!=3)throw new IllegalArgumentException("generator-script-check expects game-directory original-exported-337-directory");
+                fixture="GeneratorScriptCompatibility";fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
+            }
             case "gameplay-effects-check" -> {
                 fixture="GameplayEffectCompatibility";
                 for(String source:List.of("GameplayEffectCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));

@@ -6,7 +6,11 @@ import org.tortodrone.world.FireCatalog;
 /** Stock attack timings and action graphs; AI choices remain separate prepared rules. */
 public final class SceneMonsterExport {
     private SceneMonsterExport() { }
+    @FunctionalInterface public interface ScriptedTalks {Map<String,Object> prepare(com.threerings.projectx.config.ProjectXActionConfig.StartConversation start)throws java.io.IOException;}
     public static void export(ConfigManager cm,Map<String,String> out,String prefix,DungeonActorConfig.Monster monster)throws Exception {
+        export(cm,out,prefix,monster,null);
+    }
+    public static void export(ConfigManager cm,Map<String,String> out,String prefix,DungeonActorConfig.Monster monster,ScriptedTalks talks)throws Exception {
         if(monster.attacks==null)return;
         var indexes=new ArrayList<String>();
         for(int i=0;i<monster.attacks.length;i++){
@@ -38,7 +42,13 @@ public final class SceneMonsterExport {
                 var fireRef=attack.fireRefs[f];if(fireRef==null||fireRef.ref==null)continue;
                 var fire=cm.a(FireActionConfig.class,fireRef.ref);String fp=p+"fire."+f+".";fires.add(Integer.toString(f));
                 out.put(fp+"delay",Integer.toString(fire.delay));
-                out.put(fp+"action",FireCatalog.actionJson(FireCatalogExport.readFireAction(cm,fireRef.ref,fire)));
+                if(talks!=null&&ref.ref.getName().equals("Character/NPC/Scripted/Knights/Talk, Conversation")){
+                    if(!(fire.action instanceof com.threerings.projectx.config.ProjectXActionConfig.StartConversation start)||!(start.target instanceof com.threerings.tudey.config.TargetConfig.Activator)||start.conversation==null)throw new java.io.IOException("Native scripted Talk footprint changed");
+                    // Archive check_npc_scripts.py/talk: attack activators are the NPC,
+                    // not a knight; the recorded Talk target is its PartyMembers.
+                    var restored=(com.threerings.projectx.config.ProjectXActionConfig.StartConversation)start.clone();restored.target=new DungeonTargetConfig.PartyMembers();
+                    out.put(fp+"scene-action",org.tortodrone.resources.Json.stringify(talks.prepare(restored)));
+                }else out.put(fp+"action",FireCatalog.actionJson(FireCatalogExport.readFireAction(cm,fireRef.ref,fire)));
             }
             out.put(p+"fires",String.join(",",fires));
         }

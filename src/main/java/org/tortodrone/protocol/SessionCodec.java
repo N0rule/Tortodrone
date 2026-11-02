@@ -1471,7 +1471,7 @@ public final class SessionCodec {
         }else switch(e.kind()){
             case "Generator" -> out.writeInt(e.count());
             case "Door" -> out.writeInt(e.stateEntered());
-            case "Switch" -> {value(out,sceneEntryKey(e.key()));out.writeInt(e.state());out.writeInt(e.stateEntered());}
+            case "Switch","EntryState" -> {value(out,sceneEntryKey(e.key()));out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "Block" -> out.writeInt(e.hitTime());
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(e.maxStep());out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());primitiveInts(out,e.lift()==null?null:e.lift().excluded());}
@@ -1495,7 +1495,7 @@ public final class SessionCodec {
             out.writeByte(mask);out.writeByte(mask>>>8);
             if(e.kind().equals("Monster"))out.writeByte(mask>>>16);
         }else{
-            mask|=e.kind().equals("Switch")?0xc0:(e.kind().equals("Actor")||e.kind().equals("Bomb"))?0:e.kind().equals("DungeonLift")?0x7c0:e.kind().equals("Block$Stateful")?0xe0:0x20;
+            mask|=(e.kind().equals("Switch")||e.kind().equals("EntryState"))?0xc0:(e.kind().equals("Actor")||e.kind().equals("Bomb"))?0:e.kind().equals("DungeonLift")?0x7c0:e.kind().equals("Block$Stateful")?0xe0:0x20;
             if(e.kind().equals("Trap"))mask|=0x40;
             if(e.kind().equals("Pickup")&&e.pickup()!=null)mask|=0x40;
             out.writeByte(mask);if(e.kind().equals("DungeonLift"))out.writeByte(mask>>>8);
@@ -1506,7 +1506,7 @@ public final class SessionCodec {
             if(e.kind().equals("Monster")){out.writeInt(e.affectedType());out.writeInt(e.affectedTime());conditions(out,e.status());out.writeFloat(e.health());statusModifiers(out,e.status().modifiers());}
         }else switch(e.kind()){
             case "Generator" -> out.writeInt(e.count());case "Door" -> out.writeInt(e.stateEntered());
-            case "Switch" -> {out.writeInt(e.state());out.writeInt(e.stateEntered());}
+            case "Switch","EntryState" -> {out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "Block" -> out.writeInt(e.hitTime());case "Pickup" -> {out.writeShort(0);if(e.pickup()!=null){type(out,"[I");out.writeInt(2);out.writeInt(e.pickup().playerOid());out.writeInt(e.pickup().activated());}}
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "DungeonLift" -> {out.writeFloat(a.direction());out.writeFloat(e.lift()==null?0:e.lift().z());dropPoint(out,e.lift());out.writeInt(e.lift()==null?0:e.lift().faction());

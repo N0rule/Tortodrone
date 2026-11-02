@@ -38,6 +38,7 @@ public final class SceneContentExport {
     private static com.threerings.projectx.dungeon.data.LevelSceneConfig levelContext;
     private static final Map<String,com.threerings.projectx.config.ProjectXActionConfig.StartConversation> scriptedConversations=new TreeMap<>();
     private SceneContentExport() { }
+    static boolean scriptedActor(String name){return rules!=null&&Boolean.parseBoolean(rules.getProperty("actor."+name+".script.restore-program","false"));}
 
     /** Writes deterministic content metadata next to an already-staged scene.dat. */
     public static void export(Path game, ConfigManager cm, TudeySceneModel scene, Path output)
@@ -221,7 +222,9 @@ public final class SceneContentExport {
                     }
                     var graph=sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm);
                     if(handler.getClass()==HandlerConfig.Timer.class){var timer=(HandlerConfig.Timer)handler;graph=timerAction(timer,graph);}
-                    org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+                    var parsed=org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+                    try{for(String tag:tags)new org.tortodrone.world.SceneActions.Rule(key(entry.getKey())+":"+hi,fields.get("event"),tag,fields.getOrDefault("signal",""),Boolean.parseBoolean(fields.getOrDefault("all","false")),parsed,fields.get("state-key"),"entry:"+key(entry.getKey()));}
+                    catch(IllegalArgumentException invalid){throw new IOException("Invalid complete native handler: "+invalid.getMessage(),invalid);}
                     fields.put("action",org.tortodrone.resources.Json.stringify(graph));
                     for(int ti=0;ti<tags.size();ti++){
                         if(tags.get(ti).isBlank())throw new IOException("Handler tag is empty");
@@ -356,10 +359,11 @@ public final class SceneContentExport {
     static Map<String,String> sceneSignal(HandlerConfig handler)throws IOException {
         if(handler instanceof HandlerConfig.Signal signal){
             if(signal.refractoryPeriod!=0)throw new IOException("Signal refractory period is not implemented");
+            if(signal.name.isBlank())throw new IOException("Native signal name is stripped or empty");
             return Map.of("event","signal","signal",signal.name);
         }
-        if(handler instanceof HandlerConfig.SignalStart signal)return Map.of("event","signal-start","signal",signal.name);
-        if(handler instanceof HandlerConfig.SignalStop signal)return Map.of("event","signal-stop","signal",signal.name);
+        if(handler instanceof HandlerConfig.SignalStart signal){if(signal.name.isBlank())throw new IOException("Native signal name is stripped or empty");return Map.of("event","signal-start","signal",signal.name);}
+        if(handler instanceof HandlerConfig.SignalStop signal){if(signal.name.isBlank())throw new IOException("Native signal name is stripped or empty");return Map.of("event","signal-stop","signal",signal.name);}
         throw new IOException("Unsupported signal handler");
     }
     static Map<String,Object> sceneAction(ActionConfig action,int depth)throws IOException {return sceneAction(action,depth,null);}
@@ -429,7 +433,8 @@ public final class SceneContentExport {
         }
 
         if(action instanceof com.threerings.projectx.config.ProjectXActionConfig.StartConversation start){
-            if(cm==null||start.conversation==null||!(pawnTarget(start.target)||pawnActivator&&start.target instanceof com.threerings.tudey.config.TargetConfig.Activator)||rules==null)throw new IOException("Unsupported scripted conversation source/target");
+            boolean party=start.target instanceof com.threerings.projectx.dungeon.config.DungeonTargetConfig.PartyMembers members&&members.target instanceof com.threerings.tudey.config.TargetConfig.Source&&members.filter==com.threerings.projectx.dungeon.config.DungeonTargetConfig.PartyMembers.Filter.ALL;
+            if(cm==null||start.conversation==null||!(pawnTarget(start.target)||party||pawnActivator&&start.target instanceof com.threerings.tudey.config.TargetConfig.Activator)||rules==null)throw new IOException("Unsupported scripted conversation source/target");
             for(String id:rules.getProperty("dialogues","").split(","))if(start.conversation.getName().equals(rules.getProperty("dialogue."+id+".reference"))
                     &&rules.getProperty("dialogue."+id+".actor","").startsWith("@conversation/")){
                 if(!start.conversation.kW().isEmpty())throw new IOException("Parameterized scripted conversation is not implemented");
@@ -479,6 +484,7 @@ public final class SceneContentExport {
         }
         if(action instanceof ActionConfig.DestroyActor destruction){
             if(destruction.endScene)throw new IOException("Scene-ending destruction is not implemented");
+            if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("kind","destroy-source");
             if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","destroy","tag",tagged.tag);
             if(destruction.target instanceof com.threerings.tudey.config.TargetConfig.Compound){var tags=new ArrayList<String>();destructionTags(destruction.target,tags,0);return Map.of("kind","destroy-many","tags",tags);}
             throw new IOException("Unsupported actor destruction target");
@@ -724,18 +730,23 @@ public final class SceneContentExport {
             out.put(prefix+"tags",String.join(",",sceneTags(resolvedConfig,resolved.kW(),tags)));
         }
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster){
-            var death=new ArrayList<org.tortodrone.world.FireCatalog.Action>();
-            deathActions(cm,monster.handlers,death,0);
-            if(!death.isEmpty()){
-                var action=new org.tortodrone.world.FireCatalog.Action(org.tortodrone.world.FireCatalog.Kind.COMPOUND,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,death,"");
-                put(out,prefix+"death-action",org.tortodrone.world.FireCatalog.actionJson(action));
+            if(scriptedActor(reference.getName())){
+                var shutdown=new ArrayList<Object>();sceneShutdown(cm,monster.handlers,shutdown,scriptShutdownArguments(config,reference),0);
+                if(!shutdown.isEmpty())put(out,prefix+"scene-shutdown-action",org.tortodrone.resources.Json.stringify(Map.of("kind","sequence","actions",shutdown,"stopOnFailure",false)));
+            }else{
+                var death=new ArrayList<org.tortodrone.world.FireCatalog.Action>();deathActions(cm,monster.handlers,death,0);
+                if(!death.isEmpty()){
+                    var action=new org.tortodrone.world.FireCatalog.Action(org.tortodrone.world.FireCatalog.Kind.COMPOUND,null,null,"Source","","",0,0,0,0,true,0,0,0,0,false,death,"");
+                    put(out,prefix+"death-action",org.tortodrone.world.FireCatalog.actionJson(action));
+                }
             }
         }
         if(reference.kW().get("Tag") instanceof String tag&&!tag.isBlank()&&!tag.startsWith("("))out.put(prefix+"tags",tag);
         writeArguments(out, prefix + "config.argument.", reference);
 
         if (isKind(original, "Monster")) writeMonster(cm, out, prefix, original);
-        writeMovementScript(config,reference,original,out,prefix);
+        if(scriptedActor(reference.getName()))writeSceneScript(cm,config,reference,original,out,prefix);
+        else writeMovementScript(config,reference,original,out,prefix);
         if (isKind(original, "Trap")) writeTrap(out, prefix, original);
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Block){
             for(String field:List.of("fuse","color","hits"))addOptionalNumber(out,prefix+"block-"+field,field(original,field));
@@ -764,6 +775,58 @@ public final class SceneContentExport {
     }
 
     /** Recover nested script bindings only from the preserved native parameter paths. */
+    private static void writeSceneScript(ConfigManager cm,ActorConfig config,ConfigReference<ActorConfig> reference,Object original,Map<String,String> out,String prefix)throws IOException {
+        if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster)||!(config.implementation instanceof ActorConfig.Derived derived)
+                ||!(derived.actor.kW().get("Behavior Script") instanceof com.threerings.tudey.config.ScriptConfig[] nativeSteps))throw new IOException("Native script footprint changed");
+        String rp="actor."+reference.getName()+".script.";var steps=new ArrayList<Object>();
+        int expected=Integer.parseInt(rules.getProperty(rp+"steps","-1"));if(nativeSteps.length!=expected)throw new IOException("Native script step count changed");
+        for(int i=0;i<nativeSteps.length;i++){
+            var step=nativeSteps[i];Map<String,Object> value;
+            String base=rp+"step."+i+".";
+            if(step instanceof com.threerings.tudey.config.ScriptConfig.Wait wait)value=Map.of("kind","wait","millis",wait.wait);
+            else if(step instanceof com.threerings.tudey.config.ScriptConfig.Move move){
+                String goal=rules.getProperty(base+"goal","");
+                if(!(move.target instanceof com.threerings.tudey.config.TargetConfig.Source)||goal.isBlank())throw new IOException("Unverified script Move target at "+i);
+                value=Map.of("kind","move","tag",goal,"maxPath",move.maxPathLength);
+            }else if(step instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)value=Map.of("kind","rotate","direction",rotate.direction,"variance",rotate.rotationVariance,"relative",rotate.relative);
+            else if(step.getClass()==com.threerings.tudey.config.ScriptConfig.Condition.class){
+                var condition=(com.threerings.tudey.config.ScriptConfig.Condition)step;
+                if(!(condition.condition instanceof com.threerings.tudey.config.ConditionConfig.Always)||i!=0||!rules.getProperty(base+"condition","").equals("activate"))throw new IOException("Unverified script Condition at "+i);
+                if(Arrays.stream(((ActorConfig.Original)original).handlers).noneMatch(h->h instanceof HandlerConfig.SignalStart signal&&signal.name.isEmpty()&&signal.action instanceof ActionConfig.SpawnActor spawn&&spawn.actor==null&&spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Native activation handler footprint changed");
+                value=Map.of("kind","condition","name","activate");out.put(prefix+"script.activate-signal","activate");
+            }else if(step.getClass()==com.threerings.projectx.dungeon.config.DungeonScriptConfig.Attack.class)value=Map.of("kind","attack","index",((com.threerings.projectx.dungeon.config.DungeonScriptConfig.Attack)step).attack);
+            else if(step instanceof com.threerings.tudey.config.ScriptConfig.Action action){
+                if(!(action.action instanceof ActionConfig.SetVariable variable)||!variable.name.isEmpty()||!(variable.target instanceof com.threerings.tudey.config.TargetConfig.Source)||!(variable.value instanceof com.threerings.tudey.config.ExpressionConfig.Constant constant)||!constant.value.isEmpty())throw new IOException("Native stripped script Action footprint changed");
+                String restored=rules.getProperty(base+"action");if(restored==null)throw new IOException("Unverified stripped script Action at "+i);
+                org.tortodrone.world.SceneActions.parse(restored);value=Map.of("kind","action","action",org.tortodrone.resources.Json.parse(restored));
+            }else throw new IOException("Unsupported complete native script step "+step.getClass().getName());
+            steps.add(value);
+        }
+        out.put(prefix+"script.program",org.tortodrone.resources.Json.stringify(steps));
+        var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.world.SceneScript.read(new org.tortodrone.world.SceneContent.Spec(fields));
+    }
+    static Map<String,Object> scriptShutdownArguments(ActorConfig config,ConfigReference<ActorConfig> reference)throws IOException {
+        var bindings=new LinkedHashMap<String,Object>();String start="implementation.actor[\"Shutdown Action\"].actor[\"";
+        for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+            if(!path.startsWith(start)||!path.endsWith("\"]"))continue;
+            if(direct.paths.length!=1)throw new IOException("Unsupported shutdown parameter siblings");
+            String argument=path.substring(start.length(),path.length()-2);Object value=reference.kW().get(parameter.name);
+            if(argument.isBlank()||argument.length()>256||value==null||bindings.putIfAbsent(argument,value)!=null)throw new IOException("Invalid or ambiguous shutdown argument binding");
+        }return Map.copyOf(bindings);
+    }
+    private static void sceneShutdown(ConfigManager cm,HandlerConfig[] handlers,List<Object> actions,Map<String,Object> bindings,int depth)throws IOException {
+        if(depth>16)throw new IOException("Scene shutdown handler references exceed limit");
+        for(var handler:handlers){
+            if(handler instanceof HandlerConfig.Shutdown shutdown){
+                var action=shutdown.action;
+                if(!bindings.isEmpty()){
+                    if(action==null||action.getClass()!=ActionConfig.SpawnActor.class||((ActionConfig.SpawnActor)action).actor==null)throw new IOException("Bound native shutdown SpawnActor footprint changed");
+                    var spawn=(ActionConfig.SpawnActor)action;var restored=(ActionConfig.SpawnActor)spawn.clone();var actor=new ConfigReference<ActorConfig>(spawn.actor.getName());actor.kW().putAll(spawn.actor.kW());actor.kW().putAll(bindings);restored.actor=actor;action=restored;
+                }
+                actions.add(sceneAction(action,0,cm));
+            }else if(handler instanceof HandlerConfig.Reference reference&&reference.handler!=null){var config=cm.a(com.threerings.tudey.config.ParameterizedHandlerConfig.class,reference.handler);if(config==null)throw new IOException("Missing scene shutdown reference");sceneShutdown(cm,config.handlers,actions,bindings,depth+1);}
+        }
+    }
     private static void writeMovementScript(ActorConfig config,ConfigReference<ActorConfig> reference,Object original,Map<String,String> out,String prefix)throws IOException {
         if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster)
                 ||!(config.implementation instanceof ActorConfig.Derived derived)
@@ -815,7 +878,8 @@ public final class SceneContentExport {
 
     private static void writeMonster(ConfigManager cm, Map<String, String> out, String prefix,
                                      Object original) throws Exception {
-        SceneMonsterExport.export(cm,out,prefix,(com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster)original);
+        SceneMonsterExport.export(cm,out,prefix,(com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster)original,
+            scriptedActor(out.get(prefix+"config"))?start->sceneAction(start,0,cm):null);
         for (String name : List.of("showHealth", "minReactPercent", "reactTime", "deathTime", "activateTime", "turnRate")) {
             addOptional(out, prefix + kebab(name), field(original, name));
         }
@@ -979,6 +1043,7 @@ public final class SceneContentExport {
             }
             Object model=script==null?field(cm.d(ActorConfig.class,actorName).ai(cm).sprite,"model"):script.model;
             String speaker=script==null?rules.getProperty(prefix+"name"):script.name.isBlank()?conversation.speakerName:script.name;
+            if(speaker!=null&&speaker.isBlank())speaker=rules.getProperty(prefix+"name");
             if(speaker==null||speaker.isBlank())throw new IOException("Missing authored conversation speaker");
             put(out,prefix+"actor",actorName);put(out,prefix+"name",speaker);
             if(script!=null){

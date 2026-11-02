@@ -8,7 +8,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
-    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift");
+    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift");
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -16,6 +16,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
         boolean claimTaken,ignited,scriptDestroyed;
         String scriptSource="";
         final SceneMovementScript script;
+        final SceneScript program;
+        final Map<Integer,SceneActions.Prepared> scriptActions=new HashMap<>();
+        final Map<String,SceneActions.Action> sceneFireActions=new HashMap<>();
+        final SceneActions.Action shutdown;
+        float scriptRotation;
         final SceneTargeting targeting;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
         final SceneWander wander;
@@ -46,9 +51,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
-            script=SceneMovementScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            try{
+                String graph=spec.text("scene-shutdown-action","");shutdown=graph.isEmpty()?null:SceneActions.parse(graph);
+                for(var field:spec.fields().entrySet())if(field.getKey().startsWith("attack.")&&field.getKey().endsWith(".scene-action"))sceneFireActions.put(field.getKey(),SceneActions.parse(field.getValue()));
+            }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid native actor scene action",invalid);}
             if(follow!=null&&(targeting==null||targeting.monsterMask()==0||script!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
-            if(script!=null&&(targeting!=null||wander!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
+            if((script!=null||program!=null)&&(targeting!=null||wander!=null||follow!=null))throw new IllegalArgumentException("Conflicting scene actor behaviors");
             victims=targeting==null?Map.of():new LinkedHashMap<>();
             config=spec.config();String type=spec.text("native-type","");kind=type.substring(type.lastIndexOf('.')+1);
             int heat=spec.integer("pickup-heat",0);
@@ -202,6 +211,13 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
         actions.nearestSignals(this::nearestSignal);
+        actions.sourceDestruction((time,source)->{
+            if(!source.startsWith("actor:"))return false;
+            int id;try{id=Integer.parseInt(source.substring(6));}catch(NumberFormatException invalid){return false;}
+            var target=entities.get(id);if(target==null)return false;
+            if(target.destroyed==Integer.MAX_VALUE){target.destroyed=time;target.scriptDestroyed=true;target.status.clear();target.path=List.of();target.impulse=null;}
+            return true;
+        });
         actions.variables(this::setVariable,this::variable);
         actions.dialogClears((only,time,source,activator)->{
             if(scriptSource(source,time)==null)return false;
@@ -381,6 +397,12 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 // Monster destroyed time already includes the native death animation.
                 // Retain one short publication grace, rather than counting it twice.
                 if(e.scriptDestroyed?stamp>e.destroyed:stamp-e.destroyed>=100){
+                    actions.cancelSource("actor:"+e.id);
+                    if(e.shutdown!=null){
+                        if(effectSources.size()>=4096||nextEffectSource==Long.MAX_VALUE)throw new IllegalStateException("Too many scene shutdown contexts");
+                        String identity="effect:"+(++nextEffectSource);effectSources.put(identity,e.snapshot());
+                        if(!actions.perform(e.shutdown,stamp,identity,"actor:"+e.id))effectSources.remove(identity);
+                    }
                     entities.remove(e.id);
                     var removedVariables=logicVariables.remove("actor:"+e.id);if(removedVariables!=null)variableCount-=removedVariables.size();
                     actions.removed(new HashSet<>(Arrays.asList(e.spec.text("tags","").split(","))),
@@ -446,7 +468,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Pickup")&&e.claim==0&&stamp-e.created>=1000)collect(e,elapsed,players);
             if(e.kind.equals("Monster")){
                 e.status.advance(stamp,(int)(elapsed*1000),(e.flags&2)!=0,amount->{if(e.health>0)hurt(e,(float)amount,stamp);},amount->{if(e.health>0)e.health=Math.min(e.maximumHealth,e.health+(float)amount*e.status.state().modifiers().heal());});
-                if(e.script!=null)scriptedMovement(e,stamp,elapsed);
+                if(e.program!=null)scriptedProgram(e,stamp,elapsed);
+                else if(e.script!=null)scriptedMovement(e,stamp,elapsed);
                 else if(e.health==0)e.status.clear();else {if(e.status.state().modifiers().canMove())advanceImpulse(e,stamp);else e.impulse=null;move(e,stamp,elapsed,players);}
             }
             if(e.kind.equals("DungeonLift"))lift(e,stamp,elapsed,players);
@@ -610,38 +633,66 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(e.scriptStep==0){e.scriptStep++;return;}
         if(e.scriptStarted==Integer.MIN_VALUE)e.scriptStarted=stamp;
         if(e.scriptStep==1){if(stamp-e.scriptStarted>e.script.waitMillis()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;}return;}
-        if(e.scriptStep==2){
-            if(e.scriptGoal==null){
-                if(e.script.goal().isEmpty()){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;return;}
-                e.scriptGoal=taggedSources(e.script.goal(),stamp).stream().min(Comparator.comparingDouble(a->Math.hypot(a.x()-e.x,a.y()-e.y))).orElse(null);
-                if(e.scriptGoal==null){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;return;}
-            }
-            if(!e.status.state().modifiers().canMove())return;
-            float tx=e.scriptGoal.x(),ty=e.scriptGoal.y(),speed=e.speed*e.status.state().modifiers().speed();
-            if(Math.hypot(tx-e.x,ty-e.y)>e.script.maxPath())return;
-            if(Math.hypot(tx-e.x,ty-e.y)<=speed*elapsed){
-                moveEntity(e,tx,ty);
-                if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.path=List.of();return;}
-            }
-            if(e.path.isEmpty()&&stamp>=e.nextPath){
-                var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
-                double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
-                if(length<=e.script.maxPath())e.path=path;e.nextPath=stamp+250;
-            }
-            while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.01)e.path=e.path.subList(1,e.path.size());
-            if(e.path.isEmpty())return;var point=e.path.getFirst();float angle=(float)Math.atan2(point.y()-e.y,point.x()-e.x);
-            if(!scriptRotate(e,angle,elapsed))return;
-            float distance=(float)Math.hypot(point.x()-e.x,point.y()-e.y),step=Math.min(distance,speed*elapsed);
-            if(moveEntity(e,e.x+(float)Math.cos(angle)*step,e.y+(float)Math.sin(angle)*step))e.flags|=2;
-            else {e.path=List.of();e.nextPath=stamp+250;}return;
-        }
-        if(scriptRotate(e,e.script.rotation(),elapsed))e.scriptStep++;
+        if(e.scriptStep==2){if(scriptMove(e,e.script.goal(),e.script.maxPath(),e.script.turnRate(),stamp,elapsed,false)){e.scriptStep++;e.scriptStarted=Integer.MIN_VALUE;e.scriptGoal=null;}return;}
+        if(scriptRotate(e,e.script.rotation(),elapsed,e.script.turnRate()))e.scriptStep++;
     }
-    private static boolean scriptRotate(Entity e,float target,float elapsed){
+    private boolean scriptMove(Entity e,String goal,float maxPath,float turnRate,int stamp,float elapsed,boolean partial){
+        if(e.scriptGoal==null){
+            if(goal.isEmpty())return true;
+            e.scriptGoal=taggedSources(goal,stamp).stream().min(Comparator.comparingDouble(a->Math.hypot(a.x()-e.x,a.y()-e.y))).orElse(null);
+            if(e.scriptGoal==null)return true;
+        }
+        if(!e.status.state().modifiers().canMove())return false;
+        float tx=e.scriptGoal.x(),ty=e.scriptGoal.y(),speed=e.speed*e.status.state().modifiers().speed();
+        if(!partial&&Math.hypot(tx-e.x,ty-e.y)>maxPath)return false;
+        if(Math.hypot(tx-e.x,ty-e.y)<=speed*elapsed){
+            moveEntity(e,tx,ty);
+            if(Math.hypot(tx-e.x,ty-e.y)<.0001){e.path=List.of();return true;}
+        }
+        if(e.path.isEmpty()&&stamp>=e.nextPath){
+            var path=ScenePathing.route(e.x,e.y,tx,ty,(x,y,nx,ny)->entitySegment(e,x,y,nx,ny));
+            double length=0;float px=e.x,py=e.y;for(var point:path){length+=Math.hypot(point.x()-px,point.y()-py);px=point.x();py=point.y();}
+            if(length<=maxPath)e.path=path;
+            else if(partial){
+                // Native Move requests partial paths and replans when each bounded
+                // path ends. maxPathLength is not a maximum distance to its goal.
+                var prefix=new ArrayList<ScenePathing.Point>();float remaining=maxPath;px=e.x;py=e.y;
+                for(var point:path){float distance=(float)Math.hypot(point.x()-px,point.y()-py);if(distance<=remaining){prefix.add(point);remaining-=distance;px=point.x();py=point.y();}
+                    else{if(remaining>0)prefix.add(new ScenePathing.Point(px+(point.x()-px)*remaining/distance,py+(point.y()-py)*remaining/distance));break;}}
+                e.path=List.copyOf(prefix);
+            }e.nextPath=stamp+250;
+        }
+        while(!e.path.isEmpty()&&Math.hypot(e.path.getFirst().x()-e.x,e.path.getFirst().y()-e.y)<.01)e.path=e.path.subList(1,e.path.size());
+        if(e.path.isEmpty())return false;var point=e.path.getFirst();float angle=(float)Math.atan2(point.y()-e.y,point.x()-e.x);
+        if(!scriptRotate(e,angle,elapsed,turnRate))return false;
+        float distance=(float)Math.hypot(point.x()-e.x,point.y()-e.y),step=Math.min(distance,speed*elapsed);
+        if(moveEntity(e,e.x+(float)Math.cos(angle)*step,e.y+(float)Math.sin(angle)*step))e.flags|=2;
+        else {e.path=List.of();e.nextPath=stamp+250;}return false;
+    }
+    private static boolean scriptRotate(Entity e,float target,float elapsed,float turnRate){
         if(!e.status.state().modifiers().canRotate())return false;
-        float delta=(float)Math.IEEEremainder(target-e.rotation,2*Math.PI),step=e.script.turnRate()*elapsed;
+        float delta=(float)Math.IEEEremainder(target-e.rotation,2*Math.PI),step=turnRate*elapsed;
         if(Math.abs(delta)<.0001f){e.rotation=e.direction=target;return true;}
         e.rotation=e.direction=(float)Math.IEEEremainder(e.rotation+Math.copySign(Math.min(Math.abs(delta),step),delta),2*Math.PI);return false;
+    }
+    private void scriptedProgram(Entity e,int stamp,float elapsed){
+        e.flags&=~2;if(e.scriptStep>=e.program.steps().size())return;
+        var step=e.program.steps().get(e.scriptStep);boolean starting=e.scriptStarted==Integer.MIN_VALUE;
+        if(starting){
+            e.scriptStarted=stamp;e.scriptGoal=null;e.path=List.of();
+            if(step instanceof SceneScript.Rotate rotate)e.scriptRotation=(float)Math.IEEEremainder(rotate.direction()+(rotate.relative()?e.rotation:0)+(rotate.variance()==0?0:(random.nextFloat()*2-1)*rotate.variance()),2*Math.PI);
+            if(step instanceof SceneScript.Attack attack)beginAttack(e,attack.index(),stamp);
+        }
+        boolean complete=switch(step){
+            case SceneScript.Wait wait->stamp-e.scriptStarted>wait.millis();
+            case SceneScript.Condition condition->condition.name().isEmpty()||variable(condition.name(),new SceneActions.LogicTarget("source",""),stamp,"actor:"+e.id,"actor:"+e.id);
+            case SceneScript.Move move->scriptMove(e,move.tag(),move.maxPath(),e.spec.number("turn-rate",0),stamp,elapsed,true);
+            case SceneScript.Rotate ignored->scriptRotate(e,e.scriptRotation,elapsed,e.spec.number("turn-rate",0));
+            case SceneScript.Action action->{var prepared=e.scriptActions.computeIfAbsent(e.scriptStep,index->actions.prepare(action.action()));actions.perform(prepared,stamp,"actor:"+e.id,"actor:"+e.id);yield true;}
+            case SceneScript.Attack ignored->{if(e.activity>=4)move(e,stamp,elapsed,players);yield e.activity==0;}
+            case SceneScript.Goto ignored->true;
+        };
+        if(complete){e.scriptStep=step instanceof SceneScript.Goto jump?jump.step():e.scriptStep+1;e.scriptStarted=Integer.MIN_VALUE;e.scriptGoal=null;e.path=List.of();}
     }
     private void wander(Entity e,int stamp,float elapsed){
         if(e.activity!=0||!e.status.state().modifiers().canMove())return;
@@ -774,7 +825,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 String fp=prefix+"fire."+fire+".";
                 int due=e.activityStarted+Math.round((e.spec.integer(prefix+"land",0)+e.spec.integer(fp+"delay",0)/e.spec.number(prefix+"fire-speed",1))/e.attackSpeed);
                 if(stamp>=due){
-                    try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text(fp+"action","")));}
+                    var sceneAction=e.sceneFireActions.get(fp+"scene-action");
+                    if(sceneAction!=null)actions.perform(sceneAction,stamp,"actor:"+e.id,"actor:"+e.id);
+                    else try{attack.accept(e.snapshot(),FireCatalog.actionJson(e.spec.text(fp+"action","")));}
                     catch(java.io.IOException invalid){throw new IllegalStateException("Invalid prepared monster attack",invalid);}
                     e.fired.add(fire);
                 }
@@ -1092,6 +1145,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return true; // Native Signal succeeds for an empty resolved target set.
     }
     private void entitySignal(Entity target,String name,int stamp){
+        if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
         if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
             boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
             for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}

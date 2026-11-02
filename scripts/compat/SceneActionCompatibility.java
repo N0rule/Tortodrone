@@ -25,6 +25,10 @@ public final class SceneActionCompatibility {
         parameter.paths=new String[]{"implementation.model"};
         if(!SceneContentExport.sceneTags(marker,Map.of("Tag","must not infer"),tags).equals(List.of("inherited")))throw new AssertionError("Tag name guessed without native path");
         parameter.paths=new String[]{"implementation.tags.tags[0]"};
+        var scriptedConfig=new com.threerings.tudey.config.ActorConfig();var outgoing=new com.threerings.config.Parameter.Direct();outgoing.name="Wave Tag (Outro)";outgoing.paths=new String[]{"implementation.actor[\"Shutdown Action\"].actor[\"Wave Tag\"]"};scriptedConfig.parameters=new com.threerings.config.Parameter[]{outgoing};
+        var scriptedRef=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Fixture/Intro","Wave Tag (Outro)","outro_miniboss1");
+        if(!SceneContentExport.scriptShutdownArguments(scriptedConfig,scriptedRef).equals(Map.of("Wave Tag","outro_miniboss1")))throw new AssertionError("Nested native shutdown argument lost");
+        outgoing.paths=new String[]{outgoing.paths[0],"unimplemented.sibling"};try{SceneContentExport.scriptShutdownArguments(scriptedConfig,scriptedRef);throw new AssertionError("Unsupported shutdown parameter sibling ignored");}catch(IOException expected){}
         try{SceneContentExport.sceneTags(marker,Map.of("Tag",42),tags);throw new AssertionError("Non-text tag accepted");}catch(IOException expected){}
         parameter.paths=new String[]{"implementation.tags.tags[256]"};
         try{SceneContentExport.sceneTags(marker,Map.of("Tag","oversized"),tags);throw new AssertionError("Unbounded slot accepted");}catch(IOException expected){}
@@ -91,7 +95,7 @@ public final class SceneActionCompatibility {
         destroy.endScene=true;
         try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported shutdown mode accepted");}catch(IOException expected){}
         destroy.endScene=false;destroy.target=new TargetConfig.Source();
-        try{SceneContentExport.sceneAction(destroy,0);throw new AssertionError("Unsupported destruction target accepted");}catch(IOException expected){}
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(destroy,0))) instanceof SceneActions.DestroySource))throw new AssertionError("Native Source destruction lost");
         var destructionTargets=new TargetConfig.Compound();var absent=new TargetConfig.Tagged();absent.tag="missing";
         destructionTargets.targets=new TargetConfig[]{absent,target,target};destroy.target=destructionTargets;
         var many=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(destroy,0)));

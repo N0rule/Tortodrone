@@ -22,5 +22,15 @@ public final class SceneEntryInspect {
             else{System.out.println("TYPE "+raw.getClass().getName());continue;}
             System.out.println(Json.stringify(OpeningMissionCompatibility.data(original,0)));
         }
+        for(String key:keys)if(key.startsWith("actor:")){
+            String name=key.substring(6);var config=cm.d(com.threerings.tudey.config.ActorConfig.class,name);
+            if(config==null)throw new java.io.IOException("Missing native actor: "+name);
+            System.out.println("ACTOR "+name);
+            if(config.implementation instanceof com.threerings.tudey.config.ActorConfig.Derived derived){
+                System.out.println("DERIVED "+Json.stringify(OpeningMissionCompatibility.data(derived.actor,0)));
+                System.out.println("PARAMETERS "+Json.stringify(OpeningMissionCompatibility.data(config.parameters,0)));
+            }
+            var original=config.ai(cm);System.out.println("HANDLERS "+Json.stringify(OpeningMissionCompatibility.data(original.handlers,0)));
+        }
     }
 }

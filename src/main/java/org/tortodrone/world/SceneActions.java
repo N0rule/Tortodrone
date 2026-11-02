@@ -7,7 +7,11 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroySource,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public record DestroySource() implements Action { }
+    @FunctionalInterface public interface SourceDestruction {boolean destroy(int stamp,String source);}
+    private SourceDestruction sourceDestruction=(stamp,source)->false;
+    public void sourceDestruction(SourceDestruction sink){sourceDestruction=Objects.requireNonNull(sink);}
     /** Native logic variables belong to Source, Activator or resolved Tagged logics, never a client object. */
     public record LogicTarget(String mode,String tag) {
         public LogicTarget {if(!Set.of("source","activator","tagged").contains(mode)||tag==null||mode.equals("tagged")==tag.isEmpty())throw new IllegalArgumentException("Invalid logic target");if(!tag.isEmpty())text(tag);}
@@ -109,18 +113,19 @@ public final class SceneActions {
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
             var script=SceneMovementScript.read(spec);
+            var program=SceneScript.read(spec);
             var targeting=SceneTargeting.read(spec);var wander=SceneWander.read(spec);
-            var follow=SceneFollow.read(spec);if(follow!=null&&(!monster||targeting==null||targeting.monsterMask()==0||script!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
+            var follow=SceneFollow.read(spec);if(follow!=null&&(!monster||targeting==null||targeting.monsterMask()==0||script!=null||program!=null||wander!=null))throw new IllegalArgumentException("Conflicting native follow routine");
             if(!SceneAttackMotion.readAll(spec).isEmpty()&&!monster)throw new IllegalArgumentException("Attack motion requires a monster actor");
-            if((targeting!=null||wander!=null)&&(!monster||script!=null))throw new IllegalArgumentException("Conflicting native targeting actor");
-            if(script!=null&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
+            if((targeting!=null||wander!=null)&&(!monster||script!=null||program!=null))throw new IllegalArgumentException("Conflicting native targeting actor");
+            if((script!=null||program!=null)&&!monster)throw new IllegalArgumentException("Movement script requires a monster actor");
             if(cosmetic&&(spec.integer("collision-flags",0)!=0||spec.integer("collision-mask",0)!=0||!spec.text("damage-action","").isEmpty()))throw new IllegalArgumentException("Cosmetic scene block can collide or react to damage");
             for(String key:fields.keySet())if(key.endsWith(".chain-next")){
                 int slot=spec.integer(key,-1),rearm=spec.integer(key.substring(0,key.length()-10)+"chain-rearm",-1);
                 if(slot<0||slot>255||!fields.containsKey("attack."+slot+".clear")||rearm<0||rearm>3_600_000)throw new IllegalArgumentException("Invalid prepared attack chain");
             }
             for(String key:List.of("health","speed","radius","width","height","bounds-min-x","bounds-min-y","bounds-max-x","bounds-max-y"))if(!Float.isFinite(spec.number(key,0)))throw new IllegalArgumentException("Non-finite spawn actor value");
-            if(monster&&(spec.number("health",0)<0||spec.number("health",0)==0&&script==null)||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
+            if(monster&&(spec.number("health",0)<0||spec.number("health",0)==0&&script==null&&program==null)||spec.number("radius",0)<0||spec.number("speed",0)<0)throw new IllegalArgumentException("Invalid spawn actor values");
             spec.config();
             int collision=spec.integer("collision-flags",0);spec.integer("activate-time",0);
             var model=spec.model("source-shape");
@@ -196,6 +201,16 @@ public final class SceneActions {
                 default->List.of();
             };
         }
+    }
+    /** A native script step retains its action's condition counters across Goto loops. */
+    public final class Prepared {
+        private final Node root;
+        private Prepared(Action action){root=new Node(action);}
+        private SceneActions owner(){return SceneActions.this;}
+    }
+    public Prepared prepare(Action action){validate(action,0,new int[]{0});return new Prepared(action);}
+    public boolean perform(Prepared prepared,int stamp,String source,String activator){
+        text(source);text(activator);if(prepared.owner()!=this)throw new IllegalArgumentException("Foreign scene action");return enqueue(prepared.root,stamp,source,activator);
     }
     private static final class State {
         final Rule definition;final Node root;
@@ -337,6 +352,7 @@ public final class SceneActions {
             case Memory memory -> memories.apply(memory.mutation(),Math.toIntExact(due),source,activator);
             case Objective objective -> objectives.apply(objective.mutation(),Math.toIntExact(due),source,activator);
             case Destroy destruction -> destroy.apply(destruction.tag(),Math.toIntExact(due),source);
+            case DestroySource ignored -> sourceDestruction.destroy(Math.toIntExact(due),source);
             case DestroyMany destruction -> {
                 boolean found=false;for(String tag:destruction.tags())found=destroy.apply(tag,Math.toIntExact(due),source)|found;
                 yield found;
@@ -369,6 +385,10 @@ public final class SceneActions {
         text(source);text(activator);validate(action,0,new int[]{0});return enqueue(new Node(action),stamp,source,activator);
     }
     public int pending(){return pending.size();}
+    public void cancelSource(String source){
+        text(source);pending.removeIf(task->task.source().equals(source));
+        for(var state:states)if(state.active.remove(source)!=null)activeSources--;
+    }
     public static Set<String> conversationIds(Action action){
         validate(action,0,new int[]{0});var ids=new LinkedHashSet<String>();conversationIds(action,ids);return Set.copyOf(ids);
     }
@@ -382,6 +402,7 @@ public final class SceneActions {
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
             case VariableCondition condition->{conversationIds(condition.action(),ids);conversationIds(condition.otherwise(),ids);}
             case Timer timer->conversationIds(timer.action(),ids);
+            case Spawn spawn->{try{ids.addAll(SceneScript.conversations(new SceneContent.Spec(spawn.fields())));}catch(IOException invalid){throw new IllegalArgumentException("Invalid spawned actor dialogue",invalid);}}
             default->{}
         }
     }
@@ -406,6 +427,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("destroy-source".equals(kind)&&map.keySet().equals(Set.of("kind")))return new DestroySource();
         if("clear-dialog".equals(kind)&&map.keySet().equals(Set.of("kind","activator"))&&map.get("activator") instanceof Boolean only)return new ClearDialog(only);
         if("set-variable".equals(kind)&&map.keySet().equals(Set.of("kind","name","value","target"))&&map.get("value") instanceof Boolean bool)return new SetVariable(tag(map.get("name")),bool,logicTarget(map.get("target")));
         if("variable-condition".equals(kind)&&map.keySet().equals(Set.of("kind","name","target","action","otherwise")))return new VariableCondition(tag(map.get("name")),logicTarget(map.get("target")),decode(map.get("action"),depth+1,count),decode(map.get("otherwise"),depth+1,count));
