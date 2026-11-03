@@ -1470,6 +1470,7 @@ public final class SessionCodec {
             }
         }else switch(e.kind()){
             case "Generator" -> out.writeInt(e.count());
+            case "TerritoryProp" -> out.writeByte(e.state());
             case "Door" -> out.writeInt(e.stateEntered());
             case "Switch","EntryState" -> {value(out,sceneEntryKey(e.key()));out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "Block" -> out.writeInt(e.hitTime());
@@ -1507,6 +1508,7 @@ public final class SessionCodec {
             if(e.kind().equals("Monster")){out.writeInt(e.affectedType());out.writeInt(e.affectedTime());conditions(out,e.status());out.writeFloat(e.health());statusModifiers(out,e.status().modifiers());}
         }else switch(e.kind()){
             case "Generator" -> out.writeInt(e.count());case "Door" -> out.writeInt(e.stateEntered());
+            case "TerritoryProp" -> out.writeByte(e.state());
             case "Switch","EntryState" -> {out.writeInt(e.state());out.writeInt(e.stateEntered());}
             case "Block" -> out.writeInt(e.hitTime());case "Pickup" -> {out.writeShort(0);if(e.pickup()!=null){type(out,"[I");out.writeInt(2);out.writeInt(e.pickup().playerOid());out.writeInt(e.pickup().activated());}}
             case "Block$Stateful" -> {out.writeInt(e.hitTime());out.writeInt(e.state());out.writeInt(e.stateEntered());}

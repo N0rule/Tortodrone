@@ -822,6 +822,11 @@ public final class SceneContentExport {
         if (config == null) throw new IOException("Unresolved actor " + reference.getName());
         Object original = config.ai(cm);
         if (original == null) throw new IOException("Actor has no original config: " + reference.getName());
+        if(original instanceof com.threerings.projectx.dungeon.arena.config.ArenaActorConfig.TerritoryProp){
+            if(((ActorConfig.Original)original).handlers.length!=0)throw new IOException("Territory lighting handlers require implementation");
+            var nativeLight=(com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp)((ActorConfig.Original)original).a(reference,1,0,new com.threerings.math.Vector2f(),0);
+            out.put(prefix+"territory-color",Byte.toString(nativeLight.colorId));
+        }
         put(out, prefix + "kind", original.getClass().getSimpleName());
         put(out,prefix+"native-type",((ActorConfig.Original)original).a(reference,1,0,new com.threerings.math.Vector2f(),0).getClass().getName());
         addOptionalString(out, prefix + "is-static", field(original, "isStatic"));

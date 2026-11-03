@@ -24,7 +24,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     public record Pickup(int entityId,String item,boolean temporary,Integer equippedSlot,int heat) {
         public Pickup(int entityId,String item,boolean temporary,Integer equippedSlot){this(entityId,item,temporary,equippedSlot,0);}
     }
-    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift");
+    private static final Set<String> SUPPORTED=Set.of("Actor","Agent","Stranger","Monster","Generator","Door","Switch","EntryState","Block","Block$Stateful","Pickup","Trap","Bomb","DungeonLift","TerritoryProp");
     private static final class Entity {
         final int id,created;final SceneContent.Spec spec;final SceneContent.Entry binding;
         final String kind;final StarterCatalog.Model config;final Entity pad;
@@ -98,6 +98,11 @@ public final class SceneEntities implements SceneWeapons.Targets {
             pawnShape=collisionFlags==0?null:SceneCollision.pawnShape(spec,shape);
             speed=spec.number("speed",0);
             faction=spec.integer("faction",0);
+            if(kind.equals("TerritoryProp")){
+                if(!type.equals("com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp")||!config.name().startsWith("Static/PvP/Territory Props/Lamps and Lighting/")||!spec.flag("is-static",false)||!spec.text("shape","").equals("Point")
+                    ||collisionFlags!=0||spec.integer("collision-mask",0)!=0||spec.integer("territory-color",99)!=99)throw new IllegalArgumentException("Unsupported territory control actor; only neutral static lighting is implemented");
+                state=99; // Installed native TerritoryProp constructor's neutral colorId.
+            }
             if(kind.equals("Switch"))flags|=2; // Native Switch constructor's START flag, including help bubbles.
             if(spec.flag("start-open",false))flags|=2;
             cycle=spec.text("cycle","");int split=cycle.lastIndexOf('|');if(split>=0)cycle=cycle.substring(split+1);

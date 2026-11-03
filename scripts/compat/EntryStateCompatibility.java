@@ -18,7 +18,18 @@ public final class EntryStateCompatibility {
         var pawn=new ActorState(219,1001,"Fixture",0,100,136.5f,197.5f,0,0,0,TownMovement.IDLE,200,new StarterCatalog.Model("Character/PC/Level",Map.of()));
         var frozen=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,200,(short)50,List.of(pawn),List.of(),new int[0],Map.of(),true)).aej()[0];
         check(frozen.getClass()==com.threerings.projectx.dungeon.data.actor.Dungeoneer.class&&(int)FireCompatibility.field(frozen,"_activity")==285&&(int)FireCompatibility.field(frozen,"_activityStarted")==200,"current native frozen elevator pawn activity and timestamp");
+        check(new com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp().colorId==99,"installed native neutral territory color");
+        var light=light(100,0.5f);var lightFrame=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(light),List.of(),new int[0],Map.of(),true));
+        var nativeLight=lightFrame.aej()[0];check(nativeLight.getClass()==com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp.class&&((com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp)nativeLight).colorId==99,"native lighting class and full color byte");
+        var movedLight=light(200,1.5f);var lightDelta=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,100,(short)0,100,200,(short)50,List.of(),List.of(movedLight),new int[0],Map.of(light.id(),light),true));
+        var updatedLight=(com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp)lightDelta.aek()[0].apply(nativeLight);
+        check(updatedLight.colorId==99&&((com.threerings.math.Vector2f)FireCompatibility.field(updatedLight,"_translation")).x==1.5f,"native territory color delta bit and following stream fields");
+        System.out.println("PASS: stock TerritoryProp constructor, full neutral-light actor and applied color/position delta framing (no PvP control or graphical lighting claim)");
         System.out.println("PASS: stock EntryState phases 0-4, applied state/time deltas, original entry key, Dungeoneer transit activity 285 and exact stream framing (serialization fixtures; no rendered ride or world travel)");
+    }
+    private static ActorState light(int stamp,float x){
+        var entity=new SceneEntityState("TerritoryProp",Integer.MAX_VALUE,0,0,0,99,stamp,0,0,"751");
+        return new ActorState(1_000_000_001,0,"",0,100,x,.5f,-(float)Math.PI/2,0,0,0,100,new StarterCatalog.Model("Static/PvP/Territory Props/Lamps and Lighting/Lights/Spot Lights/24 x 24",Map.of("Intensity","Strong")),false,null,null,entity);
     }
     private static ActorState actor(int state,int stamp){
         var entity=new SceneEntityState("EntryState",Integer.MAX_VALUE,0,0,-1,state,stamp,0,0,"2930");
