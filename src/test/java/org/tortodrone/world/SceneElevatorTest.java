@@ -51,6 +51,16 @@ public final class SceneElevatorTest {
             check(first.authorizeElevator("2930"),"a fresh server preflight may retry");
             walkUntilRide(first,simulation,frames);
             var retry=awaitRequest(first,frames);check(retry.sequence()>request.sequence()&&!first.ownsFloorAdvance(request),"retry gets a fresh generation; stale settlement never revives");
+            int[] commits={0};
+            try{first.settleSoloElevator(retry,()->++commits[0]);throw new AssertionError("Premature settlement accepted");}catch(java.io.IOException expected){}
+            check(commits[0]==0&&first.dropElevator(retry,true),"premature preflight performs no storage work");
+            await(simulation,frames,s->first.elevatorReady(retry),"solo return drop becomes ready");
+            try{first.settleSoloElevator(retry,()->{throw new java.io.IOException("fixture rollback");});throw new AssertionError("Failed commit accepted");}catch(java.io.IOException expected){}
+            check(first.ownsFloorAdvance(retry)&&first.elevatorReady(retry),"failed transaction preserves an owned retryable ride");
+            check(first.settleSoloElevator(retry,()->++commits[0])==1&&!first.ownsFloorAdvance(retry),"successful commit retires ride before another completion can enter");
+            try{first.settleSoloElevator(retry,()->++commits[0]);throw new AssertionError("Duplicate commit accepted");}catch(java.io.IOException expected){}
+            check(commits[0]==1,"duplicate completion cannot execute storage twice");
+            Thread.sleep(100);check(!intent(first,0,1)&&state(simulation.snapshot())==4,"settled pawn stays controlled through publication/travel preparation");
             first.pause();check(!first.ownsFloorAdvance(retry)&&first.takeFloorAdvance()==null,"travel/pause invalidates pending requests and clears the grant");
         }finally{first.close();second.close();foreign.close();}
         check(simulation.playerCount()==0&&isolated.playerCount()==0,"disposable scene memberships/timers released");

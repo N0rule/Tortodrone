@@ -348,6 +348,7 @@ public final class SceneSimulation {
         private String elevatorEntry="";
         private Set<Integer> elevatorMembers=Set.of();
         private SceneEntities.ElevatorTrip elevatorTrip;
+        private boolean elevatorSettled;
         /** Server-only exit grant after party/route preflight; no native request accepts a key. */
         public boolean authorizeElevator(String key){synchronized(SceneSimulation.this){
             return authorizeElevator(key,members.values().stream().filter(m->!m.detached&&m.entered&&m.health.alive()&&m.movement.activity()!=TownMovement.RESURRECT).map(m->m.appearance.id()).collect(java.util.stream.Collectors.toSet()));
@@ -367,6 +368,16 @@ public final class SceneSimulation {
         }}
         public SceneElevator elevatorConfiguration(FloorAdvanceRequest request){synchronized(SceneSimulation.this){
             return ownsFloorAdvance(request)&&elevatorTrip!=null&&request.source()==elevatorTrip.source()?elevatorTrip.configuration():null;
+        }}
+        /** Pin the exact live ride through the SQLite transaction. No publication or
+         * socket work is allowed in commit. A failure leaves the request retryable. */
+        public <T> T settleSoloElevator(FloorAdvanceRequest request,RevivePayment<T> commit)throws java.io.IOException {synchronized(SceneSimulation.this){
+            if(!elevatorReady(request)||elevatorTrip.members().size()!=1)throw new java.io.IOException("Solo elevator settlement is not ready");
+            T result=Objects.requireNonNull(commit).commit();
+            // Retire before releasing the scene lock: a competing callback cannot
+            // reuse a successful settlement while the session prepares its travel.
+            activeFloorAdvance=pendingFloorAdvance=null;elevatorSettled=true;elevatorEntry="";elevatorMembers=Set.of();
+            return result;
         }}
         private long floorSequence;
         public FloorAdvanceRequest takeFloorAdvance(){synchronized(SceneSimulation.this){check();var request=pendingFloorAdvance;pendingFloorAdvance=null;return request;}}
@@ -456,7 +467,7 @@ public final class SceneSimulation {
         entities.elevators(new SceneEntities.ElevatorControl(){
             private boolean allowed(Membership member,SceneEntities.ElevatorTrip trip){
                 return member!=null&&!member.detached&&member.entered&&member.health.alive()&&member.portal==null
-                    &&member.movement.activity()!=TownMovement.RESURRECT&&member.elevatorEntry.equals(trip.source().entity().key())&&member.elevatorMembers.equals(new HashSet<>(trip.members()));
+                    &&member.movement.activity()!=TownMovement.RESURRECT&&(member.elevatorSettled&&member.elevatorTrip==trip||member.elevatorEntry.equals(trip.source().entity().key())&&member.elevatorMembers.equals(new HashSet<>(trip.members())));
             }
             @Override public boolean begin(SceneEntities.ElevatorTrip trip,int stamp){
                 if(!instance.map().kind().equals("level"))return false;
@@ -464,7 +475,7 @@ public final class SceneSimulation {
                     var member=members.get(id);if(!allowed(member,trip)||member.elevatorTrip!=null||member.movement.inTransit()||member.activeFloorAdvance!=null)return false;
                 }
                 for(int id:trip.members()){
-                    var member=members.get(id);member.elevatorTrip=trip;
+                    var member=members.get(id);member.elevatorTrip=trip;member.elevatorSettled=false;
                     if(!member.movement.transit(true,stamp)){cancel(trip,stamp);return false;}
                     weapons.cancelAttacks(id);
                     if(member.lift!=0){entities.dropLift(member.lift,member.actor(),stamp);member.lift=member.dropAt=0;}
@@ -486,7 +497,7 @@ public final class SceneSimulation {
             @Override public void cancel(SceneEntities.ElevatorTrip trip,int stamp){
                 for(int id:trip.members()){
                     var member=members.get(id);if(member==null||member.elevatorTrip!=trip)continue;
-                    member.elevatorTrip=null;member.movement.transit(false,stamp);
+                    member.elevatorTrip=null;member.elevatorSettled=false;member.movement.transit(false,stamp);
                     if(member.activeFloorAdvance!=null&&member.activeFloorAdvance.source()==trip.source())member.activeFloorAdvance=member.pendingFloorAdvance=null;
                 }
             }

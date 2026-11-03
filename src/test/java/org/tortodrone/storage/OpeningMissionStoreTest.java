@@ -43,8 +43,31 @@ public final class OpeningMissionStoreTest {
             check(count(first,"Rarity/Fire Crystal/Cracked")==15&&count(first,"Rarity/Spark of Life")==5&&first.items().stream().filter(i->!i.starter()).allMatch(WorldProfile.Item::bound),"exact native locked rewards");
             WorldProfile current=first;int prestige=10;
             for(var mission:List.of(OpeningMission.ANCIENT_GENERATOR,OpeningMission.FIRST_CONTACT,OpeningMission.CROSSING_CHASM,OpeningMission.WELCOME_HAVEN)){
-                var settled=store.complete(account,knight.id(),1,current,mission,mission.gate()?"EASY":null);prestige+=mission.prestige();
+                if(mission==OpeningMission.ANCIENT_GENERATOR){
+                    var expected=current;
+                    for(float invalid:new float[]{Float.NaN,Float.POSITIVE_INFINITY,-1,1_000_001})refused(()->store.complete(account,knight.id(),1,expected,mission,"EASY",invalid));
+                    String gateReceipt="world."+expected.worldId()+".mission."+mission.id();
+                    db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_floor_receipt BEFORE INSERT ON metadata WHEN NEW.key='"+gateReceipt+"' BEGIN SELECT RAISE(ABORT,'reject after heat and rewards'); END");}return null;});
+                    refused(()->store.complete(account,knight.id(),1,expected,mission,"EASY",25));
+                    check(owner.worldProfile(knight.name(),1).equals(expected),"failed gate receipt rolls back heat, rewards and progression together");
+                    db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_floor_receipt");}return null;});
+                }
+                OpeningMissionStore.Settlement settled;
+                if(mission==OpeningMission.ANCIENT_GENERATOR){
+                    var expected=current;var heatStart=new CountDownLatch(1);var heatResults=new LinkedBlockingQueue<OpeningMissionStore.Settlement>();var heatErrors=new LinkedBlockingQueue<Throwable>();
+                    Runnable finishFloor=()->{try{heatStart.await();heatResults.add(store.complete(account,knight.id(),1,expected,mission,"EASY",25));}catch(Throwable failure){heatErrors.add(failure);}};
+                    var one=Thread.ofVirtual().start(finishFloor);var two=Thread.ofVirtual().start(finishFloor);heatStart.countDown();one.join();two.join();
+                    check(heatErrors.isEmpty()&&heatResults.size()==2&&heatResults.stream().filter(OpeningMissionStore.Settlement::first).count()==1,"concurrent gate settlement grants floor heat and rewards once");
+                    settled=heatResults.stream().filter(OpeningMissionStore.Settlement::first).findFirst().orElseThrow();
+                }else settled=store.complete(account,knight.id(),1,current,mission,mission.gate()?"EASY":null);
+                prestige+=mission.prestige();
                 check(settled.first()&&settled.profile().progress().prestige()==prestige&&settled.profile().revision()==current.revision()+1,"each verified definition pays once in route order");current=settled.profile();
+                if(mission==OpeningMission.ANCIENT_GENERATOR){
+                    var expected=current;
+                    check(current.items().stream().filter(i->i.starter()&&i.equippedSlot()!=null&&Set.of(0,1,2,6,7).contains(i.equippedSlot())).allMatch(i->i.heatProgress()>0),"collected floor heat reaches the carried equipment");
+                    check(current.items().stream().filter(i->i.config().equals("Gear/Armor/Vitasuit")).allMatch(i->i.heatProgress()==0),"new mission reward does not absorb the previous floor's heat");
+                    check(!store.complete(account,knight.id(),1,expected,mission,"HARD",100).first()&&owner.worldProfile(knight.name(),1).equals(expected),"receipt prevents repeated heat or difficulty upgrades");
+                }
             }
             var finalState=current;var receipts=store.load(account,knight.id(),1);
             check(receipts.size()==5&&current.progress().rankPair().equals("2-1")&&current.progress().openingStage()==3&&owner.lastTownScene(knight.id(),1)==1,"all opening storage transitions preserve the Haven checkpoint");

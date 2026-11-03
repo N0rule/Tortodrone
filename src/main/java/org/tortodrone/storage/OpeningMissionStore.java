@@ -9,8 +9,8 @@ import org.tortodrone.town.TownCatalog;
 /** Authenticated, atomic opening settlement. Only production scene/conversation terminal
  * handlers may call complete; there is no client completion RPC. Uses the existing schema. */
 public final class OpeningMissionStore {
-    private final Database database;private final TownStore inventory;
-    public OpeningMissionStore(Database database,ItemCatalog items,TownCatalog town){this.database=database;inventory=new TownStore(database,items,town);}
+    private final Database database;private final TownStore inventory;private final TownCatalog town;
+    public OpeningMissionStore(Database database,ItemCatalog items,TownCatalog town){this.database=database;this.town=Objects.requireNonNull(town);inventory=new TownStore(database,items,town);}
     public record Settlement(WorldProfile profile,OpeningCompletion completion,boolean first,Set<String> memories,Map<String,KnightObjective.State> objectives){public Settlement{memories=Set.copyOf(memories);objectives=Map.copyOf(objectives);}}
     private static String prefix(int world){return "world."+world+".mission.";}
     public Map<OpeningMission,OpeningCompletion> load(int account,int knight,long auth)throws IOException {
@@ -25,7 +25,12 @@ public final class OpeningMissionStore {
         }}}return Collections.unmodifiableMap(result);
     }
     public Settlement complete(int account,int knight,long auth,WorldProfile expected,OpeningMission mission,String difficulty)throws IOException {
+        return complete(account,knight,auth,expected,mission,difficulty,0);
+    }
+    /** The scene supplies collected heat, never the client. The receipt covers heat and rewards. */
+    public Settlement complete(int account,int knight,long auth,WorldProfile expected,OpeningMission mission,String difficulty,float floorHeat)throws IOException {
         requireAuth(auth);Objects.requireNonNull(mission);Objects.requireNonNull(expected);
+        if(!Float.isFinite(floorHeat)||floorHeat<0||floorHeat>1_000_000||floorHeat>0&&!mission.gate())throw new IOException("Invalid mission floor heat");
         if(expected.accountId()!=account||expected.knightId()!=knight)throw new IOException("Invalid mission owner");
         return database.write(c->{
             var profile=WorldProfiles.load(c,account,knight,auth);
@@ -42,6 +47,9 @@ public final class OpeningMissionStore {
             }
             // All currently sourced VariantItemEntry rows have a null variant table.
             // Grant exact references once; never invent UVs or sample at presentation time.
+            // Heat belongs to the equipment carried through this floor, not the
+            // newly granted mission reward. Both mutations roll back with the receipt.
+            if(floorHeat>0)TownStore.applyHeat(c,profile,town,floorHeat);
             for(var reward:mission.rewards())inventory.create(c,profile,reward.config(),reward.count(),true,0,0,List.of());
             long prestige=(long)profile.progress().prestige()+mission.prestige();if(prestige>Integer.MAX_VALUE)throw new IOException("Prestige limit reached");
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
