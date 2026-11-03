@@ -15,6 +15,8 @@ public final class TutorialEnemyCompatibility {
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         if(args.length>1&&args[1].equals("constructs")){
             construct(cm,"Character/NPC/Monster/Construct/Scuttlebot/Scuttlebot (TG)",.5);
+            construct(cm,"Character/NPC/Monster/Construct/Lumber/Lumber (TG)",.5);
+            battlepod(cm);
             construct(cm,"Character/NPC/Monster/Construct/Retrode/Retrode (TG)",0);
             construct(cm,"Character/NPC/Monster/Construct/Retrode/Retrode (TG)",.999999);
             return;
@@ -75,6 +77,19 @@ public final class TutorialEnemyCompatibility {
         check(chained&&warningSpawned&&!accepted.isEmpty()&&accepted.stream().allMatch(Boolean::booleanValue)&&health.state().current()<200,"actual Giant warning actor/strike chain must execute and damage a knight; accepted="+accepted);
         System.out.println("PASS: provisional capture-calibrated Giant targeting -> native warning/strike chain -> actual knight damage (synthetic terrain; targeting parity limits remain)");
     }
+    private static void battlepod(ConfigManager cm)throws Exception {
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Character/NPC/Monster/Construct/Blastcore/Presets/BP Training Grounds");
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(prepared.fields());var script=SceneScript.read(spec);
+        check(script!=null&&script.steps().size()==15&&script.steps().getLast().equals(new SceneScript.Goto(0)),"complete native looping training-ground Battlepod program");
+        var content=new SceneContent(List.of(new SceneContent.Entry("boss",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",2000f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var scene=new SceneEntities(content,terrain);var weapons=new SceneWeapons(terrain);weapons.targets(scene);var health=new SceneHealth(content);int[] now={SceneClock.now()};var fires=new ArrayList<Boolean>();var heads=new LinkedHashMap<Integer,Integer>();
+        scene.attacks((actor,action)->{heads.put(actor.activityStarted(),actor.activity()-4);fires.add(weapons.fire(action,actor,now[0]));});scene.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+        var pawn=player(219,5,0);
+        for(int tick=0;tick<1800;tick++){now[0]+=50;scene.advance(now[0],List.of(pawn));weapons.advance(now[0],List.of(pawn));}
+        var order=new ArrayList<>(heads.values());check(order.size()>=8&&order.subList(0,8).equals(List.of(0,2,3,2,3,2,3,0))&&!fires.isEmpty()&&fires.stream().allMatch(Boolean::booleanValue)&&health.state().current()<2000,"authored expose and alternating volleys execute real damaging graphs and repeat in authored order: heads="+heads+", fires="+fires+", health="+health.state().current());
+        System.out.println("PASS: native training-ground Battlepod -> complete authored Wait/Attack/Goto loop -> expose/alternating volleys -> actual player damage (synthetic terrain; hatch interaction and floor not verified)");
+    }
     private static void construct(ConfigManager cm,String name,double draw)throws Exception {
         var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);
         var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
@@ -84,6 +99,11 @@ public final class TutorialEnemyCompatibility {
             check(carrier!=null&&carrier.timers().size()==1,"beam retains exactly one trail timer");
             var timer=carrier.timers().getFirst();check(timer.delay()==50&&timer.interval()==50&&timer.limit()==9&&timer.action().actor().fuse()==1000,"bounded calibrated beam cadence and native trail lifetime");
             check(Objects.equals(timer.action().actor().config().arguments().get("Color"),carrier.config().arguments().get("Color"))&&timer.action().actor().config().arguments().get("Damage (Status)")==FireCatalog.NullValue.INSTANCE,"trail preserves color and the TG beam's explicit lack of status damage");
+        }
+        if(name.contains("Lumber")){
+            var graph=FireCatalog.actionJson(spec.text("attack.0.fire.0.action",""));
+            var shape=graph.children().get(0).config().arguments().get("shape");
+            check(SceneShape.intersects(shape,3,.312f,0)&&SceneShape.intersects(shape,1.5f,.312f,0)&&!SceneShape.intersects(shape,0,0,0),"native slam preserves supplied circle and original point, with no invented source radius");
         }
         var content=new SceneContent(List.of(new SceneContent.Entry("construct",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",2000f),Map.of(),Map.of(),Map.of());
         var terrain=open();var scene=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(1){@Override public double nextDouble(){return draw;}});var weapons=new SceneWeapons(terrain);weapons.targets(scene);var health=new SceneHealth(content);int[] now={SceneClock.now()};var fires=new ArrayList<Boolean>();

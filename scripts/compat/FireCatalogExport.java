@@ -439,6 +439,23 @@ public final class FireCatalogExport {
                 action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),
                 action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),action.children(),action.unsupportedType(),action.parameter(),action.values());
         }
+        if(reference.getName().equals("Character/NPC/Monster/Construct/Lumber/Slam, Lumber")){
+            // The original fire_action.xml has a point at (1.5,.312) plus the
+            // supplied Attack Shape for damage, and that supplied shape for pushback.
+            // Retail strips both regions, but retains this exact two-path binding.
+            var parameter=fire.getParameter("Attack Shape");Object rawShape=reference.kW().get("Attack Shape");
+            if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)
+                ||!Arrays.equals(direct.paths,new String[]{"action.actions[0].region.shape.shapes[1]","action.actions[1].region.shape.shapes[0]"})
+                ||!(rawShape instanceof com.threerings.tudey.shape.config.ShapeConfig.TransformedShape)
+                ||action.kind()!=Kind.COMPOUND||action.children().size()!=2||action.children().get(0).kind()!=Kind.DAMAGE_REGION||action.children().get(1).kind()!=Kind.IMPULSE_REGION)throw new IOException("Native Lumber slam shape footprint changed: parameter="+parameter+", paths="+(parameter instanceof com.threerings.config.Parameter.Direct d?Arrays.toString(d.paths):"none")+", shape="+rawShape+", children="+action.children().stream().map(Action::kind).toList());
+            Object shape=argumentValue(rawShape);
+            var point=new DataValue("com.threerings.tudey.shape.config.ShapeConfig$TransformedShape",Map.of(
+                "shape",new DataValue("com.threerings.tudey.shape.config.ShapeConfig$Point",Map.of()),
+                "transform",new DataValue("com.threerings.math.Transform2D",Map.of("_translation",new DataValue("com.threerings.math.Vector2f",Map.of("x",1.5f,"y",.312f)),"_rotation",0f,"_scale",1f))));
+            var damageShape=new DataValue("com.threerings.tudey.shape.config.ShapeConfig$Compound",Map.of("shapes",new ListValue("com.threerings.tudey.shape.config.ShapeConfig",List.of(point,shape))));
+            var children=List.of(withShape(action.children().get(0),damageShape),withShape(action.children().get(1),shape));
+            action=new Action(action.kind(),action.config(),action.actor(),action.targetType(),action.facingType(),action.collisionSourceType(),action.x(),action.y(),action.rotation(),action.rotationVariance(),action.relative(),action.count(),action.stepSize(),action.steps(),action.collisionMask(),action.stopOnFailure(),children,action.unsupportedType(),action.parameter(),action.values());
+        }
         // SpawnRotatedActor.relative is stripped to the class default (false) in the
         // stock client. The original named base action explicitly has relative=true
         // in both the local original and 2026 fire_action.xml. Restore that one binding;

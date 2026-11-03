@@ -42,6 +42,15 @@ public final class SceneScriptTest {
         var noOp=new SceneActions.Sequence(List.of(),false);var events=new ArrayList<String>();var actions=new SceneActions(List.of(),(tag,name,stamp)->{events.add(name);return true;});var prepared=actions.prepare(new SceneActions.Limited(1,new SceneActions.Signal("out","once"),noOp));
         actions.perform(prepared,1,"actor:1","actor:1");actions.advance(1);actions.perform(prepared,2,"actor:1","actor:1");actions.advance(2);check(events.equals(List.of("once")),"prepared script steps retain condition state across loops");
         var foreign=new SceneActions(List.of(),(tag,name,stamp)->true);try{foreign.perform(prepared,2,"actor:1","actor:1");throw new AssertionError("Foreign scene program accepted");}catch(IllegalArgumentException expected){}
+        // A stationary attack script needs no turning. Execute its real attack
+        // through several Goto cycles, rather than merely accepting the metadata.
+        var stationary=new HashMap<>(fields);stationary.put("turn-rate","0");stationary.remove("scene-shutdown-action");stationary.put("attack.0.fires","0");
+        stationary.put("script.program",Json.stringify(List.of(Map.of("kind","wait","millis",100),Map.of("kind","attack","index",0),Map.of("kind","goto","step",0))));
+        var loop=new SceneEntities(new SceneContent(List.of(entry("5",0,0,stationary)),Map.of()),SceneWeaponsTest.openTerrain());var loopFires=new ArrayList<Integer>();
+        loop.attacks((actor,action)->loopFires.add(actor.activityStarted()));
+        for(int stamp=1000;stamp<=4000;stamp+=50)loop.advance(stamp,List.of());
+        check(loopFires.size()>=3&&new HashSet<>(loopFires).size()==loopFires.size()&&loop.actors().getFirst().x()==0,"zero-turn stationary scripts execute bounded attack/Goto cycles without duplicate fire or movement");
+        var cannotTurn=new HashMap<>(fields);cannotTurn.put("turn-rate","0");try{SceneScript.read(new SceneContent.Spec(cannotTurn));throw new AssertionError("Immobile Move/Rotate script accepted");}catch(IllegalArgumentException expected){}
         for(String bad:List.of("[{\"kind\":\"goto\",\"step\":99}]","[{\"kind\":\"wait\",\"millis\":-1}]","[{\"kind\":\"attack\",\"index\":9}]","[{\"kind\":\"java\",\"class\":\"arbitrary\"}]")){var invalid=new HashMap<>(fields);invalid.put("script.program",bad);try{SceneScript.read(new SceneContent.Spec(invalid));throw new AssertionError("Invalid native script accepted");}catch(IllegalArgumentException expected){}}
         System.out.println("PASS: bounded native scripted behavior activation, strict waits, legal movement, relative rotation, actual attack/damage and dialogue, Source removal, shutdown replacement, cancellation, per-step counters and scene ownership (synthetic geometry)");
     }

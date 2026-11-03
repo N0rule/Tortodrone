@@ -34,7 +34,8 @@ public record SceneScript(List<Step> steps) {
                 else throw new IOException("Unsupported complete script step");
             }
             var program=new SceneScript(steps);float turn=spec.number("turn-rate",Float.NaN);
-            if(!Float.isFinite(turn)||turn<=0||turn>1_000_000)throw new IOException("Invalid scripted turn rate");
+            boolean turns=steps.stream().anyMatch(step->step instanceof Move||step instanceof Rotate);
+            if(!Float.isFinite(turn)||turn<0||turn>1_000_000||turns&&turn==0)throw new IOException("Invalid scripted turn rate");
             for(var step:steps)if(step instanceof Attack attack&&!spec.fields().containsKey("attack."+attack.index()+".clear"))throw new IOException("Missing scripted attack");
             return program;
         }catch(IOException invalid){throw new IllegalArgumentException("Invalid native script",invalid);}

@@ -741,7 +741,9 @@ public final class SceneContentExport {
             out.put(prefix+"tags",String.join(",",sceneTags(resolvedConfig,resolved.kW(),tags)));
         }
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster monster){
-            if(scriptedActor(reference.getName())){
+            String shutdownMode=rules.getProperty("actor."+reference.getName()+".script.shutdown-mode","scene");
+            if(!java.util.Set.of("scene","fire").contains(shutdownMode))throw new IOException("Unsupported script shutdown mode");
+            if(scriptedActor(reference.getName())&&shutdownMode.equals("scene")){
                 var shutdown=new ArrayList<Object>();sceneShutdown(cm,monster.handlers,shutdown,scriptShutdownArguments(config,reference),0);
                 if(!shutdown.isEmpty())put(out,prefix+"scene-shutdown-action",org.tortodrone.resources.Json.stringify(Map.of("kind","sequence","actions",shutdown,"stopOnFailure",false)));
             }else{
@@ -799,7 +801,8 @@ public final class SceneContentExport {
                 String goal=rules.getProperty(base+"goal","");
                 if(!(move.target instanceof com.threerings.tudey.config.TargetConfig.Source)||goal.isBlank())throw new IOException("Unverified script Move target at "+i);
                 value=Map.of("kind","move","tag",goal,"maxPath",move.maxPathLength);
-            }else if(step instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)value=Map.of("kind","rotate","direction",rotate.direction,"variance",rotate.rotationVariance,"relative",rotate.relative);
+            }else if(step instanceof com.threerings.tudey.config.ScriptConfig.Goto jump)value=Map.of("kind","goto","step",jump.step);
+            else if(step instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)value=Map.of("kind","rotate","direction",rotate.direction,"variance",rotate.rotationVariance,"relative",rotate.relative);
             else if(step.getClass()==com.threerings.tudey.config.ScriptConfig.Condition.class){
                 var condition=(com.threerings.tudey.config.ScriptConfig.Condition)step;
                 if(!(condition.condition instanceof com.threerings.tudey.config.ConditionConfig.Always)||i!=0||!rules.getProperty(base+"condition","").equals("activate"))throw new IOException("Unverified script Condition at "+i);
