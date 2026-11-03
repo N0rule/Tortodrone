@@ -109,7 +109,7 @@ public final class SceneActionCompatibility {
             (tag,name,stamp)->{events.add(tag);return true;});
         multiple.signal("in","activate",1);multiple.advance(1);
         if(!events.equals(List.of("door end","boss music","door end")))throw new AssertionError("Native compound target ordering or multiplicity lost");
-        targets.targets=new TargetConfig[]{target,new TargetConfig.Source()};
+        targets.targets=new TargetConfig[]{target,new TargetConfig.Activator()};
         try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported target sibling dropped");}catch(IOException expected){}
         signal.target=target;
         var stripped=new com.threerings.tudey.config.HandlerConfig.SignalStart();stripped.name="";
@@ -139,7 +139,7 @@ public final class SceneActionCompatibility {
         var zero=new ActionConfig.WeightedAction();zero.weight=0;zero.action=new ActionConfig.None();nativeChoice.actions=new ActionConfig.WeightedAction[]{option,zero};
         var preparedChoice=SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(nativeChoice,0,cm)));
         if(!(preparedChoice instanceof SceneActions.Choice weights)||!weights.weights().equals(List.of(2.5f,0f))||!(weights.actions().getFirst() instanceof SceneActions.Spawn block)||!block.fields().get("damage-action").equals("destroy"))throw new AssertionError("Native weighted block spawn lost weights, branch or native damage action");
-        var unsupportedSibling=new ActionConfig.Signal();unsupportedSibling.target=new TargetConfig.Source();unsupportedSibling.name="unsupported";zero.action=unsupportedSibling;
+        var unsupportedSibling=new ActionConfig.Signal();unsupportedSibling.target=new TargetConfig.Activator();unsupportedSibling.name="unsupported";zero.action=unsupportedSibling;
         try{SceneContentExport.sceneAction(nativeChoice,0,cm);throw new AssertionError("Unsupported zero-weight sibling dropped");}catch(IOException expected){}
         System.out.println("PASS: native Random/WeightedAction -> all prepared branches and exact weights; Clockworks block destruction; unsupported sibling refused even at zero weight");
         var recursive=new ActionConfig.SpawnActor();recursive.actor=new com.threerings.config.ConfigReference<>("Character/NPC/Companions/Knights/Immortal/Sword Knight/Tier 1");
@@ -154,7 +154,7 @@ public final class SceneActionCompatibility {
         delayed.variance=50;
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(delayed,0))) instanceof SceneActions.Delay varying)||varying.variance()!=50)throw new AssertionError("Native variance field lost");
         signal.target=new TargetConfig.Source();
-        try{SceneContentExport.sceneAction(signal,0);throw new AssertionError("Unsupported target accepted");}catch(IOException expected){}
+        if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(signal,0))) instanceof SceneActions.SourceSignal))throw new AssertionError("Native Source signal missing");
         var close=new com.threerings.projectx.config.ProjectXActionConfig.ClearDialog();close.target=new TargetConfig.Activator();
         SceneContentExport.verifyConversationResponse(close,"part 2a",null,"clear-dialog-activator");
         SceneContentExport.verifyConversationResponse(close,"",null,"");

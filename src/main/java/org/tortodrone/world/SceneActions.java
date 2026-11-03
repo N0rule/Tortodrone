@@ -7,7 +7,21 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,NearestSignal,Destroy,DestroySource,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,SourceSignal,Failure,Targeted,DefaultEntrance,NearestSignal,Destroy,DestroySource,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public record SourceSignal(String name) implements Action {public SourceSignal{text(name);}}
+    /** A natively resolved empty WarpActor location fails without moving anything. */
+    public record Failure() implements Action { }
+    public record Targeted(LogicTarget target,Action action) implements Action {public Targeted{Objects.requireNonNull(target);Objects.requireNonNull(action);}}
+    public record DefaultEntrance(LogicTarget target) implements Action {public DefaultEntrance{Objects.requireNonNull(target);}}
+    @FunctionalInterface public interface TargetResolution {List<String> resolve(LogicTarget target,int stamp,String source,String activator);}
+    @FunctionalInterface public interface SourceSignals {boolean signal(String name,int stamp,String source);}
+    @FunctionalInterface public interface Entrances {boolean set(LogicTarget target,int stamp,String source,String activator);}
+    private TargetResolution targetResolution=(target,stamp,source,activator)->List.of();
+    private SourceSignals sourceSignals=(name,stamp,source)->false;
+    private Entrances entrances=(target,stamp,source,activator)->false;
+    public void targets(TargetResolution sink){targetResolution=Objects.requireNonNull(sink);}
+    public void sourceSignals(SourceSignals sink){sourceSignals=Objects.requireNonNull(sink);}
+    public void entrances(Entrances sink){entrances=Objects.requireNonNull(sink);}
     public record DestroySource() implements Action { }
     @FunctionalInterface public interface SourceDestruction {boolean destroy(int stamp,String source);}
     private SourceDestruction sourceDestruction=(stamp,source)->false;
@@ -109,9 +123,11 @@ public final class SceneActions {
             boolean block="com.threerings.projectx.dungeon.data.actor.Block".equals(fields.get("native-type"))&&"Block".equals(fields.get("kind"))&&!activate;
             boolean cosmetic=block&&"Global".equals(fields.get("shape"));
             boolean breakable=block&&"destroy".equals(fields.get("damage-action"));
-            if(fields.size()>1024||!(monster||cosmetic||breakable)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
+            boolean platform="com.threerings.projectx.dungeon.data.actor.Switch".equals(fields.get("native-type"))&&"Switch".equals(fields.get("kind"))&&"party".equals(fields.get("switch-mode"))&&!activate;
+            if(fields.size()>1024||!(monster||cosmetic||breakable||platform)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
             for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
+            if(platform)ScenePartyPlatform.read(spec);
             var script=SceneMovementScript.read(spec);
             var program=SceneScript.read(spec);
             var targeting=SceneTargeting.read(spec);var wander=SceneWander.read(spec);
@@ -198,6 +214,7 @@ public final class SceneActions {
                 case Limited limited->{remaining=limited.limit();yield List.of(new Node(limited.action()),new Node(limited.otherwise()));}
                 case VariableCondition condition->List.of(new Node(condition.action()),new Node(condition.otherwise()));
                 case Timer timer->{remaining=timer.limit();yield List.of(new Node(timer.action()));}
+                case Targeted targeted->List.of(new Node(targeted.action()));
                 default->List.of();
             };
         }
@@ -303,6 +320,18 @@ public final class SceneActions {
             if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source(),source);
         }
     }
+    /** Signal(Source) addresses each of the receiver's handlers once, regardless of tag aliases. */
+    public void signalSource(String receiver,String name,int stamp,String source){
+        if(closed)return;text(receiver);text(name);text(source);
+        for(var state:states){var rule=state.definition;
+            if(rule.event().equals("removed")||!rule.source().equals(receiver)||!rule.name().equals(name))continue;
+            if(rule.event().equals("signal")){enqueue(state.root,stamp,rule.source(),source);continue;}
+            boolean already=state.active.containsKey(source);
+            if(!already&&activeSources>=MAX_PENDING){rejected++;continue;}
+            if(!already)activeSources++;state.active.put(source,true);
+            if(!already&&rule.event().equals("signal-start"))enqueue(state.root,stamp,rule.source(),source);
+        }
+    }
     /** Equal-time actions retain authored order; overdue work executes on the current scene tick. */
     public void advance(int stamp){
         if(closed)return;
@@ -328,6 +357,17 @@ public final class SceneActions {
         if(--budget[0]<0){rejected++;return false;}
         return switch(node.action){
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
+            case SourceSignal signal -> sourceSignals.signal(signal.name(),Math.toIntExact(due),source);
+            case Failure ignored -> false;
+            case DefaultEntrance entrance -> entrances.set(entrance.target(),Math.toIntExact(due),source,activator);
+            case Targeted targeted -> {
+                var targets=targetResolution.resolve(targeted.target(),Math.toIntExact(due),source,activator);
+                if(targets.size()>256){rejected++;yield false;}
+                // TargetedAction executes in target order, ignores each child's result
+                // and succeeds even when its target set is empty (native ActionLogic).
+                for(String target:targets){text(target);execute(node.children.getFirst(),due,source,target,budget);}
+                yield true;
+            }
             case NearestSignal signal -> nearestSignals.apply(signal,Math.toIntExact(due),source);
             case Conversation conversation -> conversations.apply(conversation,Math.toIntExact(due),source,activator);
             case ClearDialog clear -> dialogClears.clear(clear.activatorOnly(),Math.toIntExact(due),source,activator);
@@ -402,6 +442,7 @@ public final class SceneActions {
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
             case VariableCondition condition->{conversationIds(condition.action(),ids);conversationIds(condition.otherwise(),ids);}
             case Timer timer->conversationIds(timer.action(),ids);
+            case Targeted targeted->conversationIds(targeted.action(),ids);
             case Spawn spawn->{try{ids.addAll(SceneScript.conversations(new SceneContent.Spec(spawn.fields())));}catch(IOException invalid){throw new IllegalArgumentException("Invalid spawned actor dialogue",invalid);}}
             default->{}
         }
@@ -415,7 +456,7 @@ public final class SceneActions {
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
-        switch(action){case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
+        switch(action){case Targeted targeted->validate(targeted.action(),depth+1,count);case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
         try{
@@ -427,6 +468,10 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("failure".equals(kind)&&map.keySet().equals(Set.of("kind")))return new Failure();
+        if("source-signal".equals(kind)&&map.keySet().equals(Set.of("kind","name")))return new SourceSignal(tag(map.get("name")));
+        if("default-entrance".equals(kind)&&map.keySet().equals(Set.of("kind","target")))return new DefaultEntrance(logicTarget(map.get("target")));
+        if("targeted".equals(kind)&&map.keySet().equals(Set.of("kind","target","action")))return new Targeted(logicTarget(map.get("target")),decode(map.get("action"),depth+1,count));
         if("destroy-source".equals(kind)&&map.keySet().equals(Set.of("kind")))return new DestroySource();
         if("clear-dialog".equals(kind)&&map.keySet().equals(Set.of("kind","activator"))&&map.get("activator") instanceof Boolean only)return new ClearDialog(only);
         if("set-variable".equals(kind)&&map.keySet().equals(Set.of("kind","name","value","target"))&&map.get("value") instanceof Boolean bool)return new SetVariable(tag(map.get("name")),bool,logicTarget(map.get("target")));

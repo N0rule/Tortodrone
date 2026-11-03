@@ -43,6 +43,7 @@ public record SceneScript(List<Step> steps) {
     public static Set<String> conversations(SceneContent.Spec spec)throws IOException {
         var ids=new LinkedHashSet<String>();var program=read(spec);if(program!=null)ids.addAll(program.conversations());
         for(var field:spec.fields().entrySet())if(field.getKey().equals("scene-shutdown-action")||field.getKey().startsWith("attack.")&&field.getKey().endsWith(".scene-action"))ids.addAll(SceneActions.conversationIds(SceneActions.parse(field.getValue())));
+        var platform=ScenePartyPlatform.read(spec);if(platform!=null){ids.addAll(SceneActions.conversationIds(platform.intersection()));ids.addAll(SceneActions.conversationIds(platform.pressed()));}
         return Set.copyOf(ids);
     }
     private static int integer(Object value){if(!(value instanceof Number n)||n.doubleValue()!=n.longValue())throw new IllegalArgumentException("Invalid script integer");return Math.toIntExact(n.longValue());}

@@ -491,6 +491,7 @@ public final class SceneSimulation {
         return new Companion(member.sprite==null?0:member.sprite.id(),actor==null?null:actor.pet(),SceneClock.now());
     }
     public synchronized int playerCount(){return members.size();}
+    public synchronized ActorState defaultEntrance(){return entities.defaultEntrance();}
     public synchronized long tickCount(){return tickCount;}
     private Snapshot capture(int stamp,Snapshot baseline) {
         var portals=new HashMap<Integer,ScenePortals.Trigger>();

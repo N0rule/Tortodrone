@@ -371,6 +371,15 @@ public final class SceneContentExport {
     static Map<String,Object> sceneAction(ActionConfig action,int depth,ConfigManager cm,boolean pawnActivator)throws IOException {
         if(depth>16)throw new IOException("Scene action graph is too deep");
         if(action instanceof ActionConfig.None)return Map.of("kind","sequence","stopOnFailure",false,"actions",List.of());
+        if(action instanceof ActionConfig.TargetedAction targeted)return Map.of("kind","targeted","target",logicTarget(targeted.target),"action",sceneAction(targeted.action,depth+1,cm,pawnActivator));
+        if(action instanceof ActionConfig.WarpActor warp&&warp.location instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged&&tagged.tag.isEmpty())return Map.of("kind","failure");
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.OverrideDefaultEntrance entrance)return Map.of("kind","default-entrance","target",logicTarget(entrance.target));
+        if(action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction wrapper){
+            if(cm==null||wrapper.fireAction==null)throw new IOException("Unresolved scene fire action");
+            var fire=cm.a(com.threerings.projectx.dungeon.config.FireActionConfig.class,wrapper.fireAction);
+            if(fire==null||fire.getClass()!=com.threerings.projectx.dungeon.config.FireActionConfig.class||fire.refractory!=0||fire.delay<0||fire.delay>3_600_000)throw new IOException("Unsupported scene fire timing/subtype");
+            var graph=sceneAction(fire.action,depth+1,cm,pawnActivator);return fire.delay==0?graph:Map.of("kind","delay","millis",fire.delay,"variance",0,"action",graph);
+        }
         if(action instanceof ActionConfig.SetVariable variable){
             if(!(variable.value instanceof com.threerings.tudey.config.ExpressionConfig.Constant constant)
                     ||!(constant.value.equalsIgnoreCase("true")||constant.value.equalsIgnoreCase("false")))throw new IOException("Unsupported native variable expression");
@@ -655,6 +664,8 @@ public final class SceneContentExport {
     }
     private static Map<String,Object> sceneSignalAction(com.threerings.tudey.config.TargetConfig target,String name,int depth)throws IOException {
         if(depth>16)throw new IOException("Scene signal target graph is too deep");
+        if(name==null||name.isBlank()||name.length()>256||name.chars().anyMatch(Character::isISOControl))throw new IOException("Invalid or stripped native signal name");
+        if(target instanceof com.threerings.tudey.config.TargetConfig.Source)return Map.of("kind","source-signal","name",name);
         if(target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged)return Map.of("kind","signal","tag",tagged.tag,"name",name);
         if(target instanceof com.threerings.tudey.config.TargetConfig.NearestSubset nearest){
             if(!(nearest.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported nearest signal reference location");
@@ -910,6 +921,34 @@ public final class SceneContentExport {
 
     private static void writeMechanism(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,Object original)throws Exception {
         var args=reference.kW();String mode=out.get(prefix+"switch-mode");
+        if(reference.getName().equals("Dynamic/Switch/Party Platform/Base")){
+            if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch platform)||platform.handlers.length!=3||platform.stateActions.length!=2
+                ||!(platform.handlers[0] instanceof HandlerConfig.IntersectionStop)||!(platform.handlers[1] instanceof HandlerConfig.IntersectionStart)
+                ||!(platform.handlers[2] instanceof com.threerings.projectx.dungeon.config.DungeonHandlerConfig.PartyIntersection party)||(party.mask!=4&&party.mask!=65535)
+                ||!(party.condition instanceof com.threerings.tudey.config.ConditionConfig.Always||party.condition instanceof com.threerings.tudey.config.ConditionConfig.InstanceOf stripped&&(stripped.logicClass.isEmpty()||stripped.logicClass.equals("com.threerings.tudey.server.logic.PawnLogic"))&&!stripped.all&&stripped.target instanceof com.threerings.tudey.config.TargetConfig.Source)
+                ||!(platform.stateActions[1] instanceof ActionConfig.Compound state)||state.actions.length!=2
+                ||!(state.actions[1] instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.OverrideDefaultEntrance)
+                ||!(args.get("Action") instanceof ActionConfig supplied))throw new IOException("Native party platform footprint changed");
+            if(!(state.actions[0] instanceof ActionConfig.Compound placeholder&&placeholder.actions.length==0)&&!state.actions[0].equals(supplied))throw new IOException("Native platform action slot changed");
+            var parameter=reference.a(cm,ActorConfig.class).getParameter("Action");
+            if(!(parameter instanceof com.threerings.config.Parameter.Direct direct)||!Arrays.equals(direct.paths,new String[]{"implementation.state_actions[1].actions[0]"}))throw new IOException("Native platform action binding changed");
+            var pressed=(ActionConfig.Compound)state.clone();pressed.actions=state.actions.clone();pressed.actions[0]=supplied;
+            if(!(party.action instanceof ActionConfig.Compound outer)||outer.actions.length!=1||!(outer.actions[0] instanceof ActionConfig.Conditional guard)||guard.elseAction!=null
+                ||!(guard.condition instanceof com.threerings.tudey.config.ConditionConfig.Limit||guard.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tagged&&tagged.tag.isEmpty()&&!tagged.all&&tagged.target instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Native party intersection guard footprint changed");
+            ActionConfig.Compound inner;
+            if(guard.action instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction retained&&retained.fireAction!=null
+                &&retained.fireAction.getName().equals("Base/Warp (with Poof Cloud)")&&retained.fireAction.kW().size()==1&&"White".equals(retained.fireAction.kW().get("Cloud FX Variant"))){
+                inner=new ActionConfig.Compound();var next=new ActionConfig.Signal();next.name="next";inner.actions=new ActionConfig[]{retained,next};
+            }else if(guard.action instanceof ActionConfig.Compound compound&&compound.actions.length==2)inner=compound;
+            else throw new IOException("Native party intersection action footprint changed");
+            if(!(inner.actions[0] instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.FireAction)||!(inner.actions[1] instanceof ActionConfig.Signal next)
+                ||!(next.target instanceof com.threerings.tudey.config.TargetConfig.Source)||!java.util.Set.of("","next").contains(next.name))throw new IOException("Native party next-state signal changed");
+            var restoredInner=(ActionConfig.Compound)inner.clone();restoredInner.actions=inner.actions.clone();var restoredNext=(ActionConfig.Signal)next.clone();restoredNext.name="next";restoredInner.actions[1]=restoredNext;
+            var restoredGuard=(ActionConfig.Conditional)guard.clone();var limit=new com.threerings.tudey.config.ConditionConfig.Limit();limit.limit=1;restoredGuard.condition=limit;restoredGuard.action=restoredInner;
+            var restoredOuter=(ActionConfig.Compound)outer.clone();restoredOuter.actions=outer.actions.clone();restoredOuter.actions[0]=restoredGuard;
+            out.put(prefix+"switch-mode","party");out.put(prefix+"party-intersection-action",org.tortodrone.resources.Json.stringify(sceneAction(restoredOuter,0,cm)));
+            out.put(prefix+"state.1.scene-action",org.tortodrone.resources.Json.stringify(sceneAction(pressed,0,cm)));
+        }
         if(reference.getName().startsWith("Dynamic/Breakable Objects/")&&original instanceof ActorConfig.Original actor){
             for(var handler:actor.handlers)if(handler instanceof com.threerings.projectx.dungeon.config.DungeonHandlerConfig.Damage damage){
                 out.put(prefix+"damage-mask",Integer.toString(damage.mask));out.put(prefix+"damage-action","destroy");

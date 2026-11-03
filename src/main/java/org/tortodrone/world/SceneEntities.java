@@ -20,6 +20,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Map<Integer,SceneActions.Prepared> scriptActions=new HashMap<>();
         final Map<String,SceneActions.Action> sceneFireActions=new HashMap<>();
         final SceneActions.Action shutdown;
+        final ScenePartyPlatform platform;
+        SceneActions.Prepared partyIntersection;
         float scriptRotation;
         final SceneTargeting targeting;
         SceneTargeting.Mode targetMode;boolean targetModeUpdate,idleAttackDone;float targetRotation;
@@ -52,6 +54,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
             script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
+            platform=ScenePartyPlatform.read(spec);
             try{
                 String graph=spec.text("scene-shutdown-action","");shutdown=graph.isEmpty()?null:SceneActions.parse(graph);
                 for(var field:spec.fields().entrySet())if(field.getKey().startsWith("attack.")&&field.getKey().endsWith(".scene-action"))sceneFireActions.put(field.getKey(),SceneActions.parse(field.getValue()));
@@ -137,6 +140,8 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final Map<String,ActorState> effectSources=new LinkedHashMap<>();
     private final Map<String,Map<String,Boolean>> logicVariables=new LinkedHashMap<>();
     private int variableCount;
+    private ActorState entranceOverride;
+    public ActorState defaultEntrance(){return entranceOverride;}
     private long nextEffectSource;
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
@@ -211,6 +216,20 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         actions=new SceneActions(rules,(tag,name,time,source)->{signal(tag,name,time,source);return true;},random,this::destroyTagged,this::spawnScripted,this::pawnStatuses,this::startConversation,this::sourceEffect,this::nextFloor,this::setMemory);
         actions.nearestSignals(this::nearestSignal);
+        actions.targets(this::variableTargets);
+        actions.sourceSignals((name,time,source)->{
+            var receiver=scriptSource(source,time);if(receiver==null)return false;
+            actions.signalSource(source,name,time,source);
+            if(source.startsWith("actor:")){var target=entities.get(receiver.id());if(target!=null)entitySignal(target,name,time);}
+            return true;
+        });
+        actions.entrances((target,time,source,activator)->{
+            var resolved=variableTargets(target,time,source,activator);if(resolved.isEmpty())return false;
+            var point=scriptSource(resolved.getFirst(),time);if(point==null)return false;
+            // Never accept a checkpoint outside the authoritative floor/collision.
+            if(!terrain.walkable(point.x(),point.y())||!walkable(point.x(),point.y(),point.id())||staticCollision.penetration(pawnCollisionMask,point.x(),point.y(),ScenePortals.PAWN_RADIUS).present())return false;
+            entranceOverride=point;return true;
+        });
         actions.sourceDestruction((time,source)->{
             if(!source.startsWith("actor:"))return false;
             int id;try{id=Integer.parseInt(source.substring(6));}catch(NumberFormatException invalid){return false;}
@@ -948,7 +967,17 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void switches(Entity e,int stamp,List<ActorState> players){
         String mode=e.spec.text("switch-mode","");
-        if(mode.equals("pressure")){
+        if(e.platform!=null){
+            var living=players.stream().filter(p->playerActive.test(p.id())).toList();
+            int count=(int)living.stream().filter(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS)).count();
+            if(count!=e.count){
+                e.count=count;
+                if(count>0&&count==living.size()){
+                    if(e.partyIntersection==null)e.partyIntersection=actions.prepare(e.platform.intersection());
+                    actions.perform(e.partyIntersection,stamp,"actor:"+e.id,"actor:"+e.id);
+                }
+            }
+        }else if(mode.equals("pressure")){
             boolean pressed=players.stream().anyMatch(p->e.spec.contains(e.x,e.y,e.rotation,p.x(),p.y(),ScenePortals.PAWN_RADIUS))
                 ||entities.values().stream().anyMatch(other->other.kind.equals("DungeonLift")&&Arrays.asList(other.spec.text("tags","").split(",")).contains(e.spec.text("pressure-tag",""))&&other.carrier==0&&other.destroyed==Integer.MAX_VALUE
                     &&e.spec.contains(e.x,e.y,e.rotation,other.x,other.y,other.spec.number("radius",0)));
@@ -965,6 +994,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void setSwitch(Entity e,int state,int stamp){
         e.state=state;e.stateEntered=stamp;
+        if(e.platform!=null&&state==1)actions.perform(e.platform.pressed(),stamp,"actor:"+e.id,"actor:"+e.id);
         String effect=e.spec.text("state."+state+".effect","");if(!effect.isBlank())fireEffect(e,new StarterCatalog.Model(effect,Map.of()),stamp);
         var condition=e.spec.model("state."+state+".status");
         if(condition!=null){
@@ -1146,6 +1176,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     private void entitySignal(Entity target,String name,int stamp){
         if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
+        if(target.platform!=null&&name.equals("next")&&target.state==0)setSwitch(target,1,stamp);
         if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
             boolean open=name.equals("open")||name.equals("toggle")&&(target.flags&2)==0;target.flags=(open?2:0)|4;target.stateEntered=stamp;
             for(var mover:entities.values())if(mover.kind.equals("Monster")){mover.path=List.of();mover.nextPath=0;}

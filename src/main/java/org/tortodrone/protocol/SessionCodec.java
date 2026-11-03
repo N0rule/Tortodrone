@@ -1483,6 +1483,7 @@ public final class SessionCodec {
         }
     }
     private Object sceneEntryKey(String key)throws IOException {
+        if(key.matches("spawn:[0-9]+"))return null; // Native dynamically spawned switches have no scene-entry key.
         try{return Integer.valueOf(key.split("/",2)[0]);}catch(NumberFormatException invalid){throw new IOException("Unsupported switch entry key: "+key,invalid);}
     }
     private void sceneEntityDelta(DataOutputStream out,ActorState a)throws IOException {

@@ -13,6 +13,10 @@ public final class StockTools {
         var sources=new ArrayList<Path>();
         var fixtureArgs = new ArrayList<String>(List.of(game.toString()));
         switch (args[0]) {
+            case "party-platform-check" -> {
+                fixture="PartyPlatformCompatibility";
+                for(String source:List.of("PartyPlatformCompatibility","FireCompatibility","SceneContentExport","SceneItemExport","ScenePlayerStatsExport","SceneStatusExport","SceneMonsterExport","FireCatalogExport"))sources.add(project.resolve("scripts/compat/"+source+".java"));
+            }
             case "entry-state-check" -> {
                 fixture="EntryStateCompatibility";for(String source:List.of("EntryStateCompatibility","FireCompatibility"))sources.add(project.resolve("scripts/compat/"+source+".java"));
             }

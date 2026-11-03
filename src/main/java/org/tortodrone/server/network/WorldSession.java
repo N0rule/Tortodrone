@@ -2101,9 +2101,10 @@ final class WorldSession implements AutoCloseable {
     }
     private void updateAppearance(){rebuildAppearance();if(membership!=null){membership.equipment(visibleProfile());membership.appearance(actorAppearance());}}
     private ActorState actorAppearance() {
+        var checkpoint=arrival==null?scene.simulation().defaultEntrance():null;
         return new ActorState(profile.worldId(),oid,knight.name(),256|knight.color(),created,
-            arrival==null?scene.map().spawnX():arrival.x(),arrival==null?scene.map().spawnY():arrival.y(),
-            arrival==null?scene.map().spawnRotation():arrival.rotation(),0,0,0,created,appearance,gameMaster);
+            arrival==null?checkpoint==null?scene.map().spawnX():checkpoint.x():arrival.x(),arrival==null?checkpoint==null?scene.map().spawnY():checkpoint.y():arrival.y(),
+            arrival==null?checkpoint==null?scene.map().spawnRotation():checkpoint.rotation():arrival.rotation(),0,0,0,created,appearance,gameMaster);
     }
 
     private static long monotonicTime() { return System.nanoTime() / 1_000_000L; }
