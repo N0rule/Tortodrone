@@ -124,9 +124,15 @@ public final class SceneActions {
             boolean cosmetic=block&&"Global".equals(fields.get("shape"));
             boolean breakable=block&&"destroy".equals(fields.get("damage-action"));
             boolean platform="com.threerings.projectx.dungeon.data.actor.Switch".equals(fields.get("native-type"))&&"Switch".equals(fields.get("kind"))&&"party".equals(fields.get("switch-mode"))&&!activate;
-            if(fields.size()>1024||!(monster||cosmetic||breakable||platform)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
-            for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
             var spec=new SceneContent.Spec(fields);
+            boolean heat="com.threerings.projectx.dungeon.data.actor.Pickup".equals(fields.get("native-type"))&&"Pickup".equals(fields.get("kind"))&&!activate&&spec.integer("pickup-heat",0)>0;
+            if(fields.size()>1024||!(monster||cosmetic||breakable||platform||heat)||fields.getOrDefault("config","").isBlank())throw new IllegalArgumentException("Unsupported scene spawn actor");
+            for(var field:fields.entrySet())if(field.getKey().endsWith(".chain-unsupported")||field.getKey().length()>256||field.getValue().length()>262144)throw new IllegalArgumentException("Unsupported or oversized spawn metadata");
+            if(heat){
+                if(spec.integer("pickup-heat",0)>1_000_000||!spec.text("pickup-item","").isEmpty()||fields.containsKey("pickup-equip-slot")
+                    ||spec.integer("collision-flags",0)!=16||spec.integer("collision-mask",0)!=3||spec.integer("lifespan",0)<0||spec.integer("lifespan",0)>3_600_000)throw new IllegalArgumentException("Invalid scene heat pickup");
+                for(String key:List.of("vacuum-speed","vacuum-expansion"))if(!Float.isFinite(spec.number(key,0))||spec.number(key,0)<0||spec.number(key,0)>4096)throw new IllegalArgumentException("Invalid scene pickup vacuum");
+            }
             if(platform)ScenePartyPlatform.read(spec);
             var script=SceneMovementScript.read(spec);
             var program=SceneScript.read(spec);

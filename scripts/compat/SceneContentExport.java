@@ -22,6 +22,7 @@ import java.util.TreeMap;
 import com.threerings.config.ConfigManager;
 import com.threerings.config.ConfigReference;
 import com.threerings.projectx.dungeon.config.DepthScaleConfig;
+import com.threerings.projectx.dungeon.config.SpawnTableConfig;
 import com.threerings.tudey.config.ActionConfig;
 import com.threerings.tudey.config.ActorConfig;
 import com.threerings.tudey.config.HandlerConfig;
@@ -435,9 +436,12 @@ public final class SceneContentExport {
         }
         if(action!=null&&action.getClass()==com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn.class){
             var spawn=(com.threerings.projectx.dungeon.config.DungeonActionConfig.TableSpawn)action;
-            if(cm==null||spawn.spawnTable==null||spawn.warp||spawn.rotation!=0||!spawn.relative||spawn.translation.x!=0||spawn.translation.y!=0||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Unsupported plain table spawn transform");
-            var table=spawn.spawnTable.a(cm,com.threerings.projectx.dungeon.config.SpawnTableConfig.class);
-            try{return preparedSpawn(cm,singleSceneTableActor(cm,table,spawn.spawnTable.kW(),0),false);}
+            if(cm==null||spawn.spawnTable==null||spawn.warp||spawn.topLevel||spawn.rotation!=0||!spawn.relative||spawn.translation.x!=0||spawn.translation.y!=0
+                ||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source||spawn.location instanceof com.threerings.tudey.config.TargetConfig.Tagged))throw new IOException("Unsupported plain table spawn transform");
+            // A native table draws independently for each resolved location. Keep
+            // the Choice inside TargetedAction, never one export-time random draw
+            // or one runtime draw shared by all tagged locations.
+            try{return Map.of("kind","targeted","target",logicTarget(spawn.location),"action",sceneTableAction(cm,spawn.spawnTable,0));}
             catch(IOException unsupported){throw new IOException("Unsupported scene table "+spawn.spawnTable.getName()+": "+unsupported.getMessage(),unsupported);}
         }
 
@@ -622,6 +626,48 @@ public final class SceneContentExport {
             return singleSceneTableActor(cm,next,reference.kW(),depth+1);
         }
         return singleTableActor(table,arguments);
+    }
+
+    /** Depth-zero preparation, matching the existing scene stat/scale export context.
+     * Random branches remain typed runtime choices; no table is sampled by this exporter. */
+    private static Map<String,Object> sceneTableAction(ConfigManager cm,ConfigReference<SpawnTableConfig> reference,int depth)throws IOException {
+        if(depth>16||reference==null)throw new IOException("Recursive or missing scene table");
+        var table=reference.a(cm,SpawnTableConfig.class);if(table==null)throw new IOException("Missing referenced scene table");
+        if(table instanceof SpawnTableConfig.Original original&&original.root instanceof SpawnTableConfig.RandomEntry random){
+            if(!reference.kW().isEmpty()||table.parameters.length!=0)throw new IOException("Unimplemented random table parameters");
+            return sceneTableEntry(cm,random,depth+1);
+        }
+        if(reference.getName().equals("Treasure/Heat/Scaled Ember")){
+            if(!(table instanceof SpawnTableConfig.Original original)||!(original.root instanceof SpawnTableConfig.DepthListEntry list)
+                ||!reference.kW().isEmpty()||table.parameters.length!=0||list.offset!=0||list.bottomLimit!=.25f||list.topLimit!=.25f||list.entries.length!=6)throw new IOException("Scaled Ember depth-zero footprint changed");
+            int[] depths={0,6,11,16,21,26};
+            for(int i=0;i<depths.length;i++)if(list.entries[i]==null||list.entries[i].depth!=depths[i]||!(list.entries[i].entry instanceof SpawnTableConfig.TableEntry child)||child.getClass()!=SpawnTableConfig.TableEntry.class
+                ||child.spawnTable==null||!child.spawnTable.kW().isEmpty()||!child.spawnTable.getName().equals("Treasure/Heat/Random Heat/Random Heat "+(i+1)))throw new IOException("Scaled Ember depth bands changed");
+            // At zero the first band has weight one; every other band's lower
+            // bound is strictly positive. This selection is deterministic.
+            importReport.add("Prepared Scaled Ember for the scene export's depth-zero context; higher-depth selection is not implemented");
+            return sceneTableEntry(cm,list.entries[0].entry,depth+1);
+        }
+        var prepared=new TreeMap<String,Object>(preparedSpawn(cm,singleSceneTableActor(cm,table,reference.kW(),depth+1),false));prepared.put("activator",true);return prepared;
+    }
+    private static Map<String,Object> sceneTableEntry(ConfigManager cm,SpawnTableConfig.Entry entry,int depth)throws IOException {
+        if(depth>16||entry==null)throw new IOException("Recursive or missing scene table entry");
+        if(entry.getClass()==SpawnTableConfig.TableEntry.class)return sceneTableAction(cm,((SpawnTableConfig.TableEntry)entry).spawnTable,depth+1);
+        if(entry.getClass()==SpawnTableConfig.ActorEntry.class){
+            var actor=((SpawnTableConfig.ActorEntry)entry).actor;if(actor==null)return Map.of("kind","sequence","actions",List.of(),"stopOnFailure",false);
+            var prepared=new TreeMap<String,Object>(preparedSpawn(cm,actor,false));prepared.put("activator",true);return prepared;
+        }
+        if(entry.getClass()==SpawnTableConfig.RandomEntry.class){
+            var random=(SpawnTableConfig.RandomEntry)entry;
+            if(random.entries==null||random.entries.length==0||random.entries.length>256)throw new IOException("Invalid random table size");
+            var actions=new ArrayList<Object>();var weights=new ArrayList<Float>();
+            for(var child:random.entries){
+                if(child==null||!Float.isFinite(child.weight)||child.weight<0||!child.dropModifierTag.isEmpty())throw new IOException("Unimplemented random table weight modifier");
+                actions.add(sceneTableEntry(cm,child.entry,depth+1));weights.add(child.weight);
+            }
+            var result=Map.<String,Object>of("kind","weighted-choice","actions",actions,"weights",weights);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(result));return result;
+        }
+        throw new IOException("Unsupported complete scene table entry: "+entry.getClass().getName());
     }
 
     private static ConfigReference<ActorConfig> resolvedActor(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {
