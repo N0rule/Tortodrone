@@ -822,6 +822,14 @@ public final class SceneContentExport {
             if (startOpen == null) startOpen = field(original, "open");
             addOptionalString(out, prefix + "start-open", startOpen);
         }
+        if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Elevator elevator){
+            if(elevator.splitParty||elevator.pushGate==null||!elevator.pushGate.isEmpty()||elevator.popGate||elevator.newFloor!=0||elevator.logicalFloor!=(elevator.dissolveParty?26:29)||elevator.returnFloorOffset!=1)
+                importReport.add("Unsupported elevator routing variant retained idle: "+reference.getName());
+            else{
+                out.put(prefix+"elevator-mode","standard");out.put(prefix+"elevator-advance",elevator.dissolveParty?"-1":"1");out.put(prefix+"elevator-completes",Boolean.toString(!elevator.noComplete));
+                var fields=new TreeMap<String,String>();out.forEach((key,value)->{if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),value);});org.tortodrone.world.SceneElevator.read(new org.tortodrone.world.SceneContent.Spec(fields));
+            }
+        }
         if (field(original, "actor") instanceof ConfigReference<?> && field(original, "delay") != null
             && field(original, "warning") != null) writeGenerator(cm, out, prefix, original);
         // Client exports strip server actions. Only explicitly sourced config bindings

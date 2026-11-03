@@ -17,6 +17,7 @@ public final class TownMovement {
     public static final int SIT = 26, SIT_END = 46, SIT_END_MILLIS = 1333;
     // Current stock Dungeoneer activities; never use the archive's 2011 numbering.
     public static final int HURT=274, SHOCKED=278, DYING=280, DEAD=281, RESURRECT=282;
+    public static final int IDLE=285; // Current Dungeoneer frozen elevator pose.
     // DungeoneerAdvancer registers HURT_SOFT as Activity(true, 500):
     // movement and rotation continue during the reaction, independently of its animation.
     public static final int HURT_MILLIS=500, DYING_MILLIS=1290, RESURRECT_MILLIS=400;
@@ -30,6 +31,21 @@ public final class TownMovement {
     private int flags, inputFlags, activity, activityStarted, lastTimestamp, timestamp;
     private long lastInputAt;
     private boolean inputSeen;
+    private boolean inTransit;
+    public boolean inTransit(){return inTransit;}
+    /** Server-owned elevator control. Departure clears it through resetInput. */
+    public boolean transit(boolean active,int stamp){
+        if(active==inTransit)return false;
+        if(active){
+            if(dead()||activity==RESURRECT||portal!=null)return false;
+            int watermark=inputSeen&&lastTimestamp-stamp>0?lastTimestamp:stamp;
+            resetInput(stamp);lastTimestamp=watermark;inputSeen=true;inTransit=true;setActivity(IDLE,stamp);
+        }else{
+            inTransit=false;pending.clear();inputFlags=flags=0;timestamp=stamp;if(stamp-lastTimestamp>0)lastTimestamp=stamp;inputSeen=true;
+            if(activity==IDLE)setActivity(0,stamp);
+        }
+        return true;
+    }
     private int warpUntil;
     private int interactionChange=-1;
     private int interactionMillis=670;
@@ -150,6 +166,7 @@ public final class TownMovement {
 
     /** Clear input on scene entry/re-entry without moving the character. */
     public void resetInput(int sceneTime) {
+        inTransit=false;
         pending.clear();
         timestamp = sceneTime;
         flags = 0;
@@ -178,7 +195,7 @@ public final class TownMovement {
         return accept(stamp,facing,heading,inputFlags,stamp,sceneTime,now);
     }
     public boolean accept(int stamp,float facing,float heading,int inputFlags,int actionChanged,int sceneTime,long now) {
-        if (portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
+        if (inTransit||portal!=null || !Float.isFinite(facing) || !Float.isFinite(heading)
                 || Math.abs((long) (stamp - sceneTime)) > 10000
                 || (inputSeen && stamp - lastTimestamp <= 0)
                 || pending.size() >= MAX_PENDING) return false;
@@ -199,7 +216,7 @@ public final class TownMovement {
     public boolean emote(PlayerEmotes.Descriptor emote, int sceneTime, long now) {
         if(!PlayerEmotes.isCatalogued(emote))return false;
         advance(sceneTime, now);
-        if(portal!=null||dead()||activity==RESURRECT)return false;
+        if(inTransit||portal!=null||dead()||activity==RESURRECT)return false;
         // Text-only emotes use the normal chat bubble path and must not clear a pose.
         if (!emote.animated()) return true;
         if (activity == INVENTORY || activity == INVENTORY_END || activity==OPEN_BOX || activity==ANIMATED_ITEM || combat!=null&&!combat.canOverride()) return false;
@@ -213,6 +230,7 @@ public final class TownMovement {
     /** Integrate each input segment only when its timestamp is due. */
     public void advance(int sceneTime, long now) {
         if (sceneTime - timestamp < 0) return;
+        if(inTransit){timestamp=sceneTime;return;}
         if(portal!=null||!dead()&&detectPortal(sceneTime))return;
         while (!pending.isEmpty() && sceneTime - pending.peekFirst().timestamp() >= 0) {
             var frame = pending.removeFirst();
