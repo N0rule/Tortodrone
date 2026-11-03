@@ -190,12 +190,15 @@ public final class SceneActions {
     public record Limited(int limit,Action action,Action otherwise) implements Action {
         public Limited { if(limit<0||limit>1_000_000)throw new IllegalArgumentException("Invalid condition limit");Objects.requireNonNull(action);Objects.requireNonNull(otherwise); }
     }
-    public record Rule(String key,String event,String tag,String name,boolean all,Action action,String stateKey,String source) {
+    public record Rule(String key,String event,String tag,String name,boolean all,Action action,String stateKey,String source,List<String> removedGroup) {
+        public Rule(String key,String event,String tag,String name,boolean all,Action action,String stateKey,String source){this(key,event,tag,name,all,action,stateKey,source,List.of());}
         public Rule(String key,String event,String tag,String name,boolean all,Action action){this(key,event,tag,name,all,action,key,key);}
         public Rule {
             text(key);text(tag);text(stateKey);text(source);Objects.requireNonNull(action);
             if(!Set.of("removed","signal","signal-start","signal-stop").contains(event))throw new IllegalArgumentException("Unsupported scene handler");
             if(!event.equals("removed"))text(name);
+            removedGroup=List.copyOf(removedGroup);removedGroup.forEach(SceneActions::text);
+            if(removedGroup.size()>16||new HashSet<>(removedGroup).size()!=removedGroup.size()||!removedGroup.isEmpty()&&(!event.equals("removed")||!all||!removedGroup.contains(tag)))throw new IllegalArgumentException("Invalid actor-removal group");
         }
     }
     @FunctionalInterface public interface Conversations { boolean apply(Conversation operation,int stamp,String source,String activator); }
@@ -238,6 +241,7 @@ public final class SceneActions {
     private static final class State {
         final Rule definition;final Node root;
         final Map<String,Boolean> active=new LinkedHashMap<>();
+        final Set<String> removed=new HashSet<>();
         State(Rule rule){definition=rule;root=new Node(rule.action());}
     }
     private record Compiled(Rule rule,State state) { }
@@ -296,7 +300,7 @@ public final class SceneActions {
         for(var rule:rules){
             var state=shared.computeIfAbsent(rule.stateKey(),key->new State(rule));var original=state.definition;
             if(!original.event().equals(rule.event())||!original.name().equals(rule.name())||original.all()!=rule.all()
-                    ||!original.source().equals(rule.source())||!original.action().equals(rule.action()))throw new IllegalArgumentException("Conflicting scene handler aliases");
+                    ||!original.source().equals(rule.source())||!original.action().equals(rule.action())||!original.removedGroup().equals(rule.removedGroup()))throw new IllegalArgumentException("Conflicting scene handler aliases");
             compiled.add(new Compiled(rule,state));
         }
         this.rules=List.copyOf(compiled);states=List.copyOf(shared.values());
@@ -304,7 +308,15 @@ public final class SceneActions {
     public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp){removed(tags,remaining,stamp,"removed");}
     public void removed(Set<String> tags,java.util.function.Predicate<String> remaining,int stamp,String activator){
         if(closed)return;
-        for(var compiled:rules){var rule=compiled.rule();if(rule.event().equals("removed")&&tags.contains(rule.tag())&&(!rule.all()||!remaining.test(rule.tag())))enqueue(compiled.state().root,stamp,rule.source(),activator);}
+        for(var compiled:rules){
+            var rule=compiled.rule();if(!rule.event().equals("removed")||!tags.contains(rule.tag())||rule.all()&&remaining.test(rule.tag()))continue;
+            // Native two-tag marker: each ActorRemoved(Limit(1)) increments its
+            // shared counter once; VariableChanged runs the action at counter=2.
+            // A cleared wave stays latched even if that tag is spawned again.
+            var state=compiled.state();
+            if(!rule.removedGroup().isEmpty()&&(!state.removed.add(rule.tag())||!state.removed.containsAll(rule.removedGroup())))continue;
+            enqueue(state.root,stamp,rule.source(),activator);
+        }
     }
     public void signal(String tag,String name,int stamp){
         signal(tag,name,stamp,"external");
@@ -458,7 +470,7 @@ public final class SceneActions {
         var result=new HashSet<String>();if(closed)return result;
         for(var p:pending){result.add(p.source());result.add(p.activator());}for(var state:states)result.addAll(state.active.keySet());return result;
     }
-    public void close(){closed=true;pending.clear();for(var state:states)state.active.clear();activeSources=0;}
+    public void close(){closed=true;pending.clear();for(var state:states){state.active.clear();state.removed.clear();}activeSources=0;}
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
@@ -541,6 +553,7 @@ public final class SceneActions {
         var spec=entry.spec();
         if(!Set.of("true","false").contains(spec.text("all","false")))throw new IOException("Invalid actor-removal all flag");
         String key=entry.key()+":"+spec.text("handler-index","");
-        return new Rule(key,spec.text("event",""),spec.text("watch-tag",""),spec.text("signal",""),spec.flag("all",false),parse(spec.text("action","")),spec.text("state-key",key),"entry:"+entry.key());
+        String group=spec.text("removed-group","");
+        return new Rule(key,spec.text("event",""),spec.text("watch-tag",""),spec.text("signal",""),spec.flag("all",false),parse(spec.text("action","")),spec.text("state-key",key),"entry:"+entry.key(),group.isEmpty()?List.of():Arrays.asList(group.split(",",-1)));
     }
 }

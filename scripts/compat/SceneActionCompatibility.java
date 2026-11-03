@@ -134,6 +134,16 @@ public final class SceneActionCompatibility {
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(new ActionConfig.None(),0))) instanceof SceneActions.Sequence noop)||!noop.actions().isEmpty())throw new AssertionError("Native None must succeed without an effect");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var twoTags=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Actor Removed (2 Tags)");
+        var groupOpen=new ActionConfig.Signal();groupOpen.name="open";var groupTarget=new TargetConfig.Tagged();groupTarget.tag="door end";groupOpen.target=groupTarget;
+        twoTags.kW().put("Actor Tag","wave 5d");twoTags.kW().put("Actor Tag 2","wave 4d");twoTags.kW().put("Action",groupOpen);
+        var twoTagConfig=twoTags.a(cm,com.threerings.tudey.config.PlaceableConfig.class);var twoTagOriginal=twoTagConfig.q(cm);
+        var nativeRemovedGroup=SceneContentExport.twoTagRemoval(cm,twoTags,twoTagConfig,twoTagOriginal);
+        if(!nativeRemovedGroup.tags().equals(List.of("wave 5d","wave 4d"))||!SceneActions.parse(Json.stringify(nativeRemovedGroup.action())).equals(new SceneActions.Signal("door end","open")))throw new AssertionError("Native two-tag removal lost its distinct waves or authored action");
+        var invalidGroup=(com.threerings.tudey.config.PlaceableConfig.Original)twoTagOriginal.clone();
+        ((com.threerings.tudey.config.HandlerConfig.ActorRemoved)invalidGroup.handlers[0]).all=false;
+        try{SceneContentExport.twoTagRemoval(cm,twoTags,twoTagConfig,invalidGroup);throw new AssertionError("Partial-wave observer accepted as all-wave latch");}catch(IOException expected){}
+        System.out.println("PASS: installed two-tag removal parameters, stripped counter footprint and complete authored action; partial-wave observer refused");
         var nativeChoice=new ActionConfig.Random();var option=new ActionConfig.WeightedAction();option.weight=2.5f;
         var blockSpawn=new ActionConfig.SpawnActor();blockSpawn.actor=new com.threerings.config.ConfigReference<>("Block/Breakable/Clockworks, base");option.action=blockSpawn;
         var zero=new ActionConfig.WeightedAction();zero.weight=0;zero.action=new ActionConfig.None();nativeChoice.actions=new ActionConfig.WeightedAction[]{option,zero};

@@ -69,6 +69,13 @@ public final class SceneCatalog {
         return Collections.unmodifiableMap(result);
     }
     public static SceneCatalog load(Map<Integer,Path> folders,int entry)throws IOException {
+        return of(readTemplates(folders),entry);
+    }
+    /** Inspect one prepared template before assembling a catalog with a valid town entry. */
+    public static MapScene loadTemplate(int id,Path folder)throws IOException {
+        return readTemplates(Map.of(id,folder)).get(id);
+    }
+    private static NavigableMap<Integer,MapScene> readTemplates(Map<Integer,Path> folders)throws IOException {
         if(folders.size()>64)throw new IOException("Too many map templates");
         var scenes=new TreeMap<Integer,MapScene>();
         for(var registered:new TreeMap<>(folders).entrySet()) {
@@ -84,7 +91,7 @@ public final class SceneCatalog {
             if(layout.length<16 || layout[0]!=(byte)0xfa || layout[1]!=(byte)0xce || layout[2]!=(byte)0xaf || layout[3]!=0x0e)
                 throw new IOException("Invalid archived scene header");
             checked(folder,"walkability.gz",required(p,"collision-sha256"),1024*1024);
-            if(p.containsKey("content-sha256"))checked(folder,"content.properties",required(p,"content-sha256"),4_000_000);
+            if(p.containsKey("content-sha256"))checked(folder,"content.properties",required(p,"content-sha256"),SceneContent.MAX_BYTES);
             else if(Files.exists(folder.resolve("content.properties")))throw new IOException("Scene content requires a pinned checksum");
             if(p.containsKey("static-collision-sha256"))checked(folder,"static-collision.properties",required(p,"static-collision-sha256"),4_000_000);
             else if(Files.exists(folder.resolve("static-collision.properties")))throw new IOException("Static collision requires a pinned checksum");
@@ -96,7 +103,7 @@ public final class SceneCatalog {
                 ScenePortals.load(folder,required(p,"scene-sha256"),collision),SceneContent.load(folder,required(p,"scene-sha256")),SceneCollision.load(folder,required(p,"scene-sha256")));
             if(scenes.putIfAbsent(id,scene)!=null)throw new IOException("Duplicate scene ID");
         }
-        return of(scenes,entry);
+        return scenes;
     }
     public static SceneCatalog of(NavigableMap<Integer,MapScene> scenes,int entry)throws IOException {
         scenes=new TreeMap<>(scenes);

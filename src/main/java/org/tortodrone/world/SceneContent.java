@@ -7,6 +7,8 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Prepared native actor bindings. Runtime instances never depend on client resources. */
 public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons,Map<String,Spec> actorTemplates) {
+    /** Original 314 has 4.89 MB of bounded actor/action metadata; keep a hard file cap. */
+    public static final int MAX_BYTES=8_000_000;
     public record MapIcon(String icon,float x,float y) { }
     public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons){this(entries,scales,conversations,stats,items,cycles,statuses,mapIcons,Map.of());}
     public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses){this(entries,scales,conversations,stats,items,cycles,statuses,List.of());}
@@ -86,7 +88,7 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
     }
     public static SceneContent load(Path folder,String layoutHash)throws IOException {
         Path file=folder.resolve("content.properties");if(!Files.exists(file))return empty();
-        if(Files.isSymbolicLink(file)||!Files.isRegularFile(file)||Files.size(file)>4_000_000)throw new IOException("Invalid scene content");
+        if(Files.isSymbolicLink(file)||!Files.isRegularFile(file)||Files.size(file)>MAX_BYTES)throw new IOException("Invalid scene content");
         var p=new Properties();try(var in=Files.newInputStream(file)){p.load(in);}
         return load(p,layoutHash);
     }

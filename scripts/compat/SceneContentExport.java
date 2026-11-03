@@ -227,6 +227,26 @@ public final class SceneContentExport {
             var config=reference.a(cm,PlaceableConfig.class);
             var original=config.q(cm);
             if(original.handlers==null)continue;
+            if(reference.getName().equals("Trigger/Actor Removed (2 Tags)")){
+                String source=key(entry.getKey());
+                try{
+                    var group=twoTagRemoval(cm,reference,config,original);
+                    var point=entry.au(cm);var q=entry.transform.tE();
+                    float rotation=(float)Math.IEEEremainder(Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))-Math.PI/2,2*Math.PI);
+                    for(int i=0;i<2;i++){
+                        var fields=new TreeMap<String,String>();
+                        fields.put("kind","SceneTrigger");fields.put("config",reference.getName());fields.put("source-key",source);fields.put("handler-index",Integer.toString(i));
+                        fields.put("state-key",source+":removed-group");fields.put("event","removed");fields.put("all","true");fields.put("watch-tag",group.tags().get(i));fields.put("removed-group",String.join(",",group.tags()));
+                        fields.put("x",Float.toString(finite(point.x,"trigger x")));fields.put("y",Float.toString(finite(point.y,"trigger y")));fields.put("rotation",Float.toString(finite(rotation,"trigger rotation")));
+                        fields.put("action",org.tortodrone.resources.Json.stringify(group.action()));
+                        org.tortodrone.world.SceneActions.rule(new org.tortodrone.world.SceneContent.Entry(source,point.x,point.y,rotation,new org.tortodrone.world.SceneContent.Spec(fields)));
+                        String index=Integer.toString(indexes.size());indexes.add(index);fields.forEach((k,v)->values.put("entry."+index+"."+k,v));
+                    }
+                    importReport.remove("Unsupported handler at "+source+" / 2: "+HandlerConfig.VariableChanged.class.getName());
+                    importReport.add("Restored native two-tag removal counter/Limit/VariableChanged at "+source);
+                }catch(IOException|IllegalArgumentException unsupported){importReport.add("Unsupported complete two-tag removal at "+source+": "+unsupported.getMessage());}
+                continue;
+            }
             for(int hi=0;hi<original.handlers.length;hi++){
                 var handler=restoreSceneHandler(reference.getName(),original.handlers[hi]);
                 if(!sceneHandler(handler))continue;
@@ -264,6 +284,30 @@ public final class SceneContentExport {
                 }catch(IOException unsupported){importReport.add("Unsupported complete scene handler at "+key(entry.getKey())+" / "+hi+": "+unsupported.getMessage());}
             }
         }
+    }
+    record RemovedGroup(List<String> tags,Map<String,Object> action) { }
+    /** Native parameter paths survive; the archived marker retains the stripped counter=2 graph. */
+    static RemovedGroup twoTagRemoval(ConfigManager cm,ConfigReference<PlaceableConfig> reference,PlaceableConfig config,PlaceableConfig.Original original)throws IOException {
+        if(!reference.getName().equals("Trigger/Actor Removed (2 Tags)")||original.handlers.length!=3
+            ||!(original.handlers[2] instanceof HandlerConfig.VariableChanged changed)||!strippedGuard(changed.action))throw new IOException("Two-tag removal footprint changed");
+        for(var binding:Map.of("Actor Tag","implementation.handlers[0].target.tag","Actor Tag 2","implementation.handlers[1].target.tag","Action","implementation.handlers[2].action.action").entrySet()){
+            if(!(config.getParameter(binding.getKey()) instanceof com.threerings.config.Parameter.Direct direct)||direct.paths.length!=1||!direct.paths[0].equals(binding.getValue()))throw new IOException("Two-tag removal parameter path changed");
+        }
+        var tags=new ArrayList<String>();
+        for(int i=0;i<2;i++){
+            if(!(original.handlers[i] instanceof HandlerConfig.ActorRemoved removed)||!removed.all||!(removed.target instanceof com.threerings.tudey.config.TargetConfig.Tagged target)
+                ||target.tag.isBlank()||target.tag.contains(",")||!strippedGuard(removed.action)||!(((ActionConfig.Conditional)removed.action).action instanceof ActionConfig.SpawnActor spawn)
+                ||spawn.actor!=null||!(spawn.location instanceof com.threerings.tudey.config.TargetConfig.Source))throw new IOException("Two-tag removal latch footprint changed");
+            tags.add(target.tag);
+        }
+        var action=((ActionConfig.Conditional)changed.action).action;
+        if(!(reference.kW().get("Action") instanceof ActionConfig supplied)||!Objects.equals(supplied,action))throw new IOException("Two-tag removal action binding changed");
+        var graph=sceneAction(action,0,cm);org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
+        return new RemovedGroup(List.copyOf(tags),graph);
+    }
+    private static boolean strippedGuard(ActionConfig action){
+        return action instanceof ActionConfig.Conditional gate&&gate.elseAction==null&&gate.condition instanceof com.threerings.tudey.config.ConditionConfig.Tagged tag
+            &&tag.tag.isEmpty()&&!tag.all&&tag.target instanceof com.threerings.tudey.config.TargetConfig.Source;
     }
     private static void collectAreaTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
         for(var entry:scene.ci(TudeySceneModel.AreaEntry.class)){
