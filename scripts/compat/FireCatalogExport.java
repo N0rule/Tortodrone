@@ -553,6 +553,21 @@ public final class FireCatalogExport {
                 attachment=actor(manager,orbital,definition.ai(manager));
             }
         }
+        if(refName.equals("Bullet/Monster/Mecha Zombie Beam")){
+            // The retained carrier lays damaging trail bombs; it has no impact damage.
+            // Retail strips the Timer's interval to 1000 ms, beyond its 450 ms fuse.
+            // Capture-calibrated delivery: first trail on the next 50 ms scene tick,
+            // then one per tick until collision/fuse. Archive family-live-behaviour.json
+            // records trail spawns at +50 ms and throughout the carrier's lifetime.
+            // This cadence is a reconstruction, not recovered original timing.
+            if(!(actor instanceof DungeonActorConfig.Bullet)||fuse!=450||speed!=16||actor.handlers.length!=1
+                ||!(actor.handlers[0] instanceof HandlerConfig.Timer timer)||timer.interval!=1||timer.offset!=0||timer.limit!=0
+                ||!(timer.action instanceof ActionConfig.SpawnActor spawn)||spawn.actor==null
+                ||!spawn.actor.getName().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"))throw new IOException("Mecha beam stripped timer footprint changed");
+            var trail=new ActionConfig.SpawnActor();trail.location=spawn.location;trail.actor=new ConfigReference<>(spawn.actor.getName());trail.actor.kW().putAll(spawn.actor.kW());
+            for(String key:List.of("Color","Damage (Status)","Signal (Status)"))if(reference.kW().containsKey(key))trail.actor.kW().put(key,reference.kW().get(key));
+            timers.add(new ActorTimer(50,50,9,readAction(manager,trail),null));
+        }
         for(var handler:actor.handlers)if(handler instanceof HandlerConfig.Shutdown ended){
             Action action=readAction(manager,ended.action);
             if(type.equals("ORBITAL_BULLET")||type.equals("COMPOUND_ORBITAL_BULLET"))action=orbitalShutdown(action);

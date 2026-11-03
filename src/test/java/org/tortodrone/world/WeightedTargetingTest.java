@@ -37,6 +37,17 @@ public final class WeightedTargetingTest {
         var blended=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("enemy",0,0,0,new SceneContent.Spec(fields))),Map.of()),SceneWeaponsTest.openTerrain());
         blended.advance(1000,List.of(player(1)));blended.advance(1050,List.of(player(0,1)));
         check(Math.abs(blended.actors().getFirst().rotation()-.05f)<.001,"a blended attack follows the current target using one native turn-rate step");
+        for(int cooldown:List.of(1499,2999)){
+            var timed=new LinkedHashMap<>(row(1,0,1000,false));timed.put("interval",cooldown);fields.put("targeting.modes",Json.stringify(List.of(timed)));fields.put("targeting.interval","99999");
+            var scoped=new SceneEntities(new SceneContent(List.of(new SceneContent.Entry("enemy",0,0,0,new SceneContent.Spec(fields))),Map.of()),SceneWeaponsTest.openTerrain());
+            var starts=new ArrayList<Integer>();int previous=-1;
+            for(int stamp=1000;stamp<9000;stamp+=50){scoped.advance(stamp,List.of(player(1)));var state=scoped.actors().getFirst();if(state.activity()>=4&&state.activityStarted()!=previous){starts.add(state.activityStarted());previous=state.activityStarted();}}
+            check(starts.size()>1&&starts.get(1)-starts.get(0)==cooldown+1,"each chosen mode owns its actual minimum interval, overriding the policy fallback");
+        }
+        for(Object bad:List.of(-1,1.5,3_600_001,"1000")){
+            var timed=new LinkedHashMap<>(row(1,0,1000,false));timed.put("interval",bad);fields.put("targeting.modes",Json.stringify(List.of(timed)));
+            try{SceneTargeting.read(new SceneContent.Spec(fields));throw new AssertionError("Invalid mode cooldown accepted");}catch(IllegalArgumentException expected){}
+        }
         var invalid=new LinkedHashMap<>(row(255,0,1000,false));invalid.put("weight",0);
         fields.put("targeting.modes",Json.stringify(List.of(row(0,0,1000,true),invalid)));
         try{SceneTargeting.read(new SceneContent.Spec(fields));throw new AssertionError("Unsupported zero-weight sibling ignored");}catch(IllegalArgumentException expected){}

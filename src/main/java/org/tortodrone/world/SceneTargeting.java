@@ -6,11 +6,12 @@ import org.tortodrone.resources.Json;
 
 /** Allowlisted native Targeting with single or distance-weighted PathAttack choices. */
 public record SceneTargeting(float expansion,int evaluation,int interval,List<Mode> modes,int idleAttack,int monsterMask,boolean includePlayers) {
-    public record Mode(int attack,float minimum,float maximum,float range,float weight,boolean faces,float turnSnap) {
+    public record Mode(int attack,float minimum,float maximum,float range,float weight,boolean faces,float turnSnap,int interval) {
+        public Mode(int attack,float minimum,float maximum,float range,float weight,boolean faces,float turnSnap){this(attack,minimum,maximum,range,weight,faces,turnSnap,-1);}
         public Mode {
             if(attack<0||attack>255||!Float.isFinite(minimum)||!Float.isFinite(maximum)||minimum<0||maximum<minimum
                     ||!Float.isFinite(range)||range<0||range>4096||!Float.isFinite(weight)||weight<0||weight>1_000_000
-                    ||!Float.isFinite(turnSnap)||turnSnap<0||turnSnap>Math.PI)throw new IllegalArgumentException("Invalid native targeting mode");
+                    ||!Float.isFinite(turnSnap)||turnSnap<0||turnSnap>Math.PI||interval< -1||interval>3_600_000)throw new IllegalArgumentException("Invalid native targeting mode");
         }
         boolean eligible(float distance){return distance>=minimum&&distance<=maximum;}
     }
@@ -47,9 +48,10 @@ public record SceneTargeting(float expansion,int evaluation,int interval,List<Mo
                     Object value=Json.parse(spec.text("targeting.modes",""),16);
                     if(!(value instanceof List<?> rows)||rows.isEmpty()||rows.size()>64)throw new IllegalArgumentException("Invalid targeting mode list");
                     for(Object row:rows){
-                        if(!(row instanceof Map<?,?> fields)||!fields.keySet().equals(Set.of("attack","minimum","maximum","range","weight","faces","turn-snap"))||!(fields.get("faces") instanceof Boolean faces))throw new IllegalArgumentException("Unsupported targeting mode fields");
+                        if(!(row instanceof Map<?,?> fields)||!(fields.keySet().equals(Set.of("attack","minimum","maximum","range","weight","faces","turn-snap"))||fields.keySet().equals(Set.of("attack","minimum","maximum","range","weight","faces","turn-snap","interval")))||!(fields.get("faces") instanceof Boolean faces))throw new IllegalArgumentException("Unsupported targeting mode fields");
                         float attack=number(fields,"attack");if(attack!=(int)attack)throw new IllegalArgumentException("Invalid targeting attack index");
-                        modes.add(new Mode((int)attack,number(fields,"minimum"),number(fields,"maximum"),number(fields,"range"),number(fields,"weight"),faces,number(fields,"turn-snap")));
+                        int interval=-1;if(fields.containsKey("interval")){float valueInterval=number(fields,"interval");if(valueInterval!=(int)valueInterval||valueInterval<0)throw new IllegalArgumentException("Invalid mode cooldown");interval=(int)valueInterval;}
+                        modes.add(new Mode((int)attack,number(fields,"minimum"),number(fields,"maximum"),number(fields,"range"),number(fields,"weight"),faces,number(fields,"turn-snap"),interval));
                     }
                 }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid native targeting metadata",invalid);}
                 policy=new SceneTargeting(spec.number("targeting.expansion",-1),spec.integer("targeting.evaluation",-1),spec.integer("targeting.interval",-1),modes,spec.integer("targeting.idle-attack",-1),spec.integer("targeting.monster-mask",0),spec.flag("targeting.include-players",false));

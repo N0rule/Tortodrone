@@ -871,7 +871,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             }
             if(beginAttack(e,slot,stamp)){
                 if(modifiers.canRotate()&&(e.targeting==null||e.targetMode.faces()))e.rotation=e.direction=(float)Math.atan2(target.y()-e.y,target.x()-e.x);
-                e.nextAttack=stamp+Math.round((e.targeting==null?e.spec.integer("attack-interval",0):e.targeting.interval())/e.attackSpeed);
+                e.nextAttack=stamp+Math.round((e.targeting==null?e.spec.integer("attack-interval",0):e.targetMode.interval()>=0?e.targetMode.interval():e.targeting.interval())/e.attackSpeed);
             }
             return;
         }

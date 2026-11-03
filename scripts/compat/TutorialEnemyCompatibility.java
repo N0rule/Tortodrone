@@ -7,12 +7,18 @@ import com.threerings.tudey.config.ActionConfig;
 import org.tortodrone.character.StarterCatalog;
 import org.tortodrone.world.*;
 
-/** Native Jelly, Gun Puppy and Whelp actions on synthetic terrain; not a level playthrough. */
+/** Native tutorial enemy graphs on synthetic terrain; not a level playthrough. */
 public final class TutorialEnemyCompatibility {
     public static void main(String[] args)throws Exception {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        if(args.length>1&&args[1].equals("constructs")){
+            construct(cm,"Character/NPC/Monster/Construct/Scuttlebot/Scuttlebot (TG)",.5);
+            construct(cm,"Character/NPC/Monster/Construct/Retrode/Retrode (TG)",0);
+            construct(cm,"Character/NPC/Monster/Construct/Retrode/Retrode (TG)",.999999);
+            return;
+        }
         var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Character/NPC/Monster/Slime/Jelly Cube (Intro)");
         var action=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
         var spec=new SceneContent.Spec(action.fields());var policy=SceneTargeting.read(spec);
@@ -68,6 +74,31 @@ public final class TutorialEnemyCompatibility {
         for(int tick=0;tick<400;tick++){stamp[0]+=50;world.advance(stamp[0],List.of(pawn));weapons.advance(stamp[0],List.of(pawn));chained|=world.actors().getFirst().activity()==5;warningSpawned|=weapons.actors().stream().anyMatch(a->a.config().name().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Parts/Warning")&&a.projectile().nativeType().equals("ACTOR"));if(health.state().current()<200)break;}
         check(chained&&warningSpawned&&!accepted.isEmpty()&&accepted.stream().allMatch(Boolean::booleanValue)&&health.state().current()<200,"actual Giant warning actor/strike chain must execute and damage a knight; accepted="+accepted);
         System.out.println("PASS: provisional capture-calibrated Giant targeting -> native warning/strike chain -> actual knight damage (synthetic terrain; targeting parity limits remain)");
+    }
+    private static void construct(ConfigManager cm,String name,double draw)throws Exception {
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(prepared.fields());var policy=SceneTargeting.read(spec);check(policy!=null,"missing construct policy");
+        if(name.contains("Retrode")){
+            var graph=FireCatalog.actionJson(spec.text("attack.1.fire.0.action",""));var carrier=graph.actor();
+            check(carrier!=null&&carrier.timers().size()==1,"beam retains exactly one trail timer");
+            var timer=carrier.timers().getFirst();check(timer.delay()==50&&timer.interval()==50&&timer.limit()==9&&timer.action().actor().fuse()==1000,"bounded calibrated beam cadence and native trail lifetime");
+            check(Objects.equals(timer.action().actor().config().arguments().get("Color"),carrier.config().arguments().get("Color"))&&timer.action().actor().config().arguments().get("Damage (Status)")==FireCatalog.NullValue.INSTANCE,"trail preserves color and the TG beam's explicit lack of status damage");
+        }
+        var content=new SceneContent(List.of(new SceneContent.Entry("construct",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",2000f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var scene=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(1){@Override public double nextDouble(){return draw;}});var weapons=new SceneWeapons(terrain);weapons.targets(scene);var health=new SceneHealth(content);int[] now={SceneClock.now()};var fires=new ArrayList<Boolean>();
+        scene.attacks((actor,action)->fires.add(weapons.fire(action,actor,now[0])));scene.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+        var pawn=player(219,name.contains("Retrode")?(draw==0?5.2f:1):5,0);boolean acquired=false,moved=false,trail=false;
+        for(int tick=0;tick<1000&&health.state().current()==2000;tick++){
+            now[0]+=50;scene.advance(now[0],List.of(pawn));weapons.advance(now[0],List.of(pawn));
+            var actor=scene.actors().getFirst();acquired|=(actor.flags()&16)!=0;moved|=actor.x()>.1;
+            trail|=weapons.actors().stream().anyMatch(a->a.config().name().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"));
+        }
+        check(acquired&&!fires.isEmpty()&&fires.stream().allMatch(Boolean::booleanValue)&&health.state().current()<2000,"native construct must acquire and execute real damaging fire graphs: "+name+", draw="+draw+", fires="+fires+", health="+health.state().current());
+        if(name.contains("Scuttlebot"))check(moved,"Scuttlebot must pursue through normal movement");
+        if(name.contains("Retrode")&&draw==0)check(trail,"beam must spawn actual delayed-damage trail bombs");
+        check(SceneWander.read(spec)!=null,"native idle Wander/Base binding");
+        System.out.println("PASS: native "+name+" draw="+draw+" -> capture-calibrated acquisition/attack choice -> actual graph/player damage"+(moved?" and pursuit":"")+" (synthetic terrain; original targeting parity not claimed)");
     }
     private static void companion(ConfigManager cm,String role)throws Exception {
         String name="Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/"+role;
