@@ -32,5 +32,23 @@ public final class SceneEntryInspect {
             }
             var original=config.ai(cm);System.out.println("HANDLERS "+Json.stringify(OpeningMissionCompatibility.data(original.handlers,0)));
         }
+        for(String key:keys)if(key.startsWith("conversation:")){
+            String name=key.substring(13);var config=cm.d(com.threerings.projectx.config.ConversationConfig.class,name);
+            if(config==null)throw new java.io.IOException("Missing native conversation: "+name);
+            System.out.println("CONVERSATION "+name);System.out.println(Json.stringify(OpeningMissionCompatibility.data(config,0)));
+            var rules=new Properties();try(var input=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(input);}
+            for(String id:rules.getProperty("dialogues","").split(",")){
+                String prefix="dialogue."+id+".";if(!name.equals(rules.getProperty(prefix+"reference"))||!Boolean.parseBoolean(rules.getProperty(prefix+"verify-answerless","false")))continue;
+                if(!config.bundle.equals("mission")||!(config.initialAction instanceof com.threerings.projectx.config.ProjectXActionConfig.ConversationJump jump)
+                    ||!(jump.target instanceof com.threerings.tudey.config.TargetConfig.Activator)||!jump.node.isEmpty()&&!jump.node.equals(rules.getProperty(prefix+"initial")))throw new AssertionError("Authored dialogue opener changed");
+                int rows=0;for(String property:rules.stringPropertyNames())if(property.startsWith(prefix+"node.")&&property.endsWith(".name"))rows++;
+                if(rows!=config.nodes.length)throw new AssertionError("Authored dialogue node count changed");
+                for(int i=0;i<rows;i++){
+                    if(!(config.nodes[i] instanceof com.threerings.projectx.config.ConversationConfig.SimpleNode node)||!node.name.equals(rules.getProperty(prefix+"node."+i+".name"))
+                        ||!node.message.equals(rules.getProperty(prefix+"node."+i+".message"))||node.responses.length!=0||node.animation!=null||node.sourceTransient!=null||node.userInterface!=null)throw new AssertionError("Answerless authored dialogue changed");
+                }
+                System.out.println("PASS: installed answerless conversation matches allowlisted opener, bundle, all nodes/messages and empty responses/presentation: "+id);
+            }
+        }
     }
 }

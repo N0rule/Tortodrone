@@ -298,6 +298,11 @@ public final class FireCatalogExport {
             ActorConfig.Original actor = config == null ? null : config.ai(manager);
             if (actor == null) throw new IOException("Unresolved actor reference " + spawn.actor.getName());
             if(actor instanceof DungeonActorConfig.Pickup pickup)return pickupSpawn(manager,spawn,pickup);
+            if(sceneActors&&actor instanceof DungeonActorConfig.Monster&&action.getClass()==ActionConfig.SpawnActor.class
+                    &&spawn.location instanceof TargetConfig.Source){
+                String template=SceneContentExport.deferSceneActor(spawn.actor);
+                return new Action(Kind.SPAWN_SCENE_ACTOR,new StarterCatalog.Model("SceneActorTemplate",Map.of("template",template)),null,"Source","","",0,0,0,0,true,0,0,0,0,false,List.of(),"");
+            }
             ActorSpec spec = actor(manager,spawn.actor,actor);
             Kind kind = isProjectile(spec.nativeType()) ? Kind.EMIT_PROJECTILE
                 : action instanceof ActionConfig.SpawnRandomTranslatedActor ? Kind.RANDOM_TRANSLATED

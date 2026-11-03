@@ -17,6 +17,8 @@ public final class SceneWeapons {
         default void impulse(org.tortodrone.character.StarterCatalog.Model region,float x,float y,float rotation,int stamp,int owner){ }
         default boolean monsters(Object region,float x,float y,float rotation){return false;}
         default boolean spawnPickup(org.tortodrone.character.StarterCatalog.Model specification,float x,float y,float rotation,int stamp){return false;}
+        default Object sceneActorSource(int source){return null;}
+        default boolean spawnSceneActor(String template,float x,float y,float rotation,int stamp,Object source){return false;}
     }
     public record PetAction(FireCatalog.Kind kind,org.tortodrone.character.StarterCatalog.Model config,int owner,int timestamp) { }
     private java.util.function.Consumer<PetAction> petActions=ignored->{};
@@ -24,7 +26,8 @@ public final class SceneWeapons {
     private Targets targets;
     public void targets(Targets value){targets=value;}
     private static final int MAX_ACTORS=512, MAX_EFFECTS=1024, MAX_RUNS=256;
-    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage) {
+    private record Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage,Object sceneSource) {
+        Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId,GearStats.Damage damage){this(x,y,rotation,ownerId,ownerOid,shape,actorId,damage,null);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape,int actorId){this(x,y,rotation,ownerId,ownerOid,shape,actorId,GearStats.Damage.NONE);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid,Object shape){this(x,y,rotation,ownerId,ownerOid,shape,ownerId);}
         Pose(float x,float y,float rotation,int ownerId,int ownerOid){this(x,y,rotation,ownerId,ownerOid,null);}
@@ -95,7 +98,7 @@ public final class SceneWeapons {
     }
     public void cancel(int owner){runs.remove(owner);cooldowns.remove(owner);shots.values().removeIf(s->s.source.ownerId==owner);delayed.removeIf(d->d.source().ownerId==owner);}
     public void cancelAttacks(int owner){runs.remove(owner);}
-    public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0),stamp,0);}
+    public boolean fire(FireCatalog.Action action,ActorState source,int stamp){return execute(action,new Pose(source.x(),source.y(),source.rotation(),source.id(),0,null,source.id(),GearStats.Damage.NONE,targets==null?null:targets.sceneActorSource(source.id())),stamp,0);}
     /** Refuse an unusable consumable before animation or consumption, including nested actions. */
     public static boolean usable(FireCatalog.Action action){
         return supportedItemAction(action)&&meaningfulItemAction(action);
@@ -211,7 +214,7 @@ public final class SceneWeapons {
     private static boolean sourceBound(FireCatalog.ActorSpec spec){
         return spec.nativeType().equals("ACTOR")&&spec.fuse()==0&&spec.timers().isEmpty()&&spec.startup()==null&&spec.shutdown()==null&&spec.detonation()==null&&spec.attachment()==null&&spec.activation()==null&&spec.collisionMask()==0;
     }
-    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage);}
+    private Pose shotPose(Shot shot){Object shape=shot.contactShape!=null?shot.contactShape:shot.spec.nativeType().equals("LASER")?new FireCatalog.DataValue("com.threerings.tudey.shape.config.ShapeConfig$Segment",Map.of("length",shot.spec.speed())):shot.spec.collisionShape();return new Pose(shot.x,shot.y,shot.rotation,shot.source.ownerId,0,shape,shot.id,shot.source.damage,shot.source.sceneSource);}
     private void advanceShot(Shot shot,int end,ActorState home){
         if(end<=shot.advanced)return;
         if(shot.spec.nativeType().equals("ORBITAL")){
@@ -343,6 +346,8 @@ public final class SceneWeapons {
             if(!sourceTarget(action.targetType()))return false;
             petActions.accept(new PetAction(action.kind(),action.config(),source.ownerId,stamp));return true;}
         if(!sourceTarget(action.targetType()))return false;
+        if(action.kind()==FireCatalog.Kind.SPAWN_SCENE_ACTOR)
+            return targets!=null&&targets.spawnSceneActor((String)action.config().arguments().get("template"),source.x,source.y,source.rotation,stamp,source.sceneSource);
         if(action.kind()==FireCatalog.Kind.SPAWN_PICKUP){
             float c=(float)Math.cos(source.rotation),s=(float)Math.sin(source.rotation);
             float rotation=(action.relative()?source.rotation:0)+action.rotation();
@@ -387,7 +392,7 @@ public final class SceneWeapons {
             }
             float rc=(float)Math.cos(rotation),rs=(float)Math.sin(rotation);
             float ox=spec.offsetX()*rc-spec.offsetY()*rs,oy=spec.offsetX()*rs+spec.offsetY()*rc;
-            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage):source;
+            var controller=action.config()!=null&&action.config().name().equals("ServerSpawned")?new Pose(source.x,source.y,source.rotation,source.ownerId,0,source.shape,source.actorId,source.damage,source.sceneSource):source;
             var shot=new Shot(allocateId(),spec,controller,stamp,x,y,rotation);
             shots.put(shot.id,shot);
             if(spec.startup()!=null)execute(spec.startup(),shotPose(shot),stamp,depth+1,seed);

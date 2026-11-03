@@ -36,6 +36,8 @@ public final class SceneContentExport {
     private static final List<String> importReport=new ArrayList<>();
     private record Startup(String key,int handler,float x,float y,float rotation,Map<String,Object> action) { }
     private static final List<Startup> startups=new ArrayList<>();
+    private static final Map<String,String> actorTemplateIds=new java.util.LinkedHashMap<>();
+    private static final List<ConfigReference<ActorConfig>> actorTemplates=new ArrayList<>();
     private static com.threerings.projectx.dungeon.data.LevelSceneConfig levelContext;
     private static final Map<String,com.threerings.projectx.config.ProjectXActionConfig.StartConversation> scriptedConversations=new TreeMap<>();
     private SceneContentExport() { }
@@ -53,7 +55,7 @@ public final class SceneContentExport {
         Path target = output.resolve("content.properties");
         if (Files.exists(target)) throw new IOException("Refusing to replace content.properties");
 
-        importReport.clear();scriptedConversations.clear();startups.clear();
+        importReport.clear();scriptedConversations.clear();startups.clear();actorTemplateIds.clear();actorTemplates.clear();
         levelContext=scene.adD() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
@@ -92,11 +94,37 @@ public final class SceneContentExport {
         collectAreaTriggers(cm,scene,values,indexes);
         collectAnchors(cm,scene,values,indexes);
         values.put("entries", String.join(",", indexes));
+        writeActorTemplates(cm,values);
         writeDialogues(cm,values,bindings);
         Files.writeString(target, propertiesText(values), StandardCharsets.UTF_8,
             java.nio.file.StandardOpenOption.CREATE_NEW);
         importReport.add(0,"Supported extracted actor bindings: "+bindings.size());
         Files.writeString(output.resolve("import-source-report.txt"),String.join("\n",importReport)+"\n",StandardCharsets.UTF_8,java.nio.file.StandardOpenOption.CREATE_NEW);
+    }
+
+    static void writeActorTemplates(ConfigManager cm,Map<String,String> values)throws Exception {
+        for(int i=0;i<actorTemplates.size();i++){
+            var fields=new TreeMap<String,String>();var reference=actorTemplates.get(i);
+            fields.put("config",reference.getName());
+            writeActor(cm,fields,"",reference);
+            new org.tortodrone.world.SceneActions.Spawn(fields);
+            for(var field:fields.entrySet())values.put("actor-template.spawn_"+i+"."+field.getKey(),field.getValue());
+            // Do not imply parity merely because a cyclic config can now be represented.
+            importReport.add("Deferred scene actor template spawn_"+i+": "+reference.getName()+"; retained death graph, other actor handlers still require separate verification");
+        }
+        values.put("actor-templates",String.join(",",java.util.stream.IntStream.range(0,actorTemplates.size()).mapToObj(i->"spawn_"+i).toList()));
+        var prepared=new Properties();prepared.setProperty("format","1");prepared.setProperty("layout-sha256","template-validation");
+        values.forEach((key,value)->{if(key.equals("actor-templates")||key.startsWith("actor-template."))prepared.setProperty(key,value);});
+        org.tortodrone.world.SceneContent.load(prepared,"template-validation");
+    }
+
+    /** Reserve identity before expanding definitions so legitimate respawn cycles stay finite. */
+    static String deferSceneActor(ConfigReference<ActorConfig> actor)throws IOException {
+        String key=org.tortodrone.world.FireCatalog.modelJson(FireCatalogExport.model(actor));
+        var existing=actorTemplateIds.get(key);if(existing!=null)return existing;
+        if(actorTemplates.size()>=128)throw new IOException("Too many deferred scene actors");
+        String id="spawn_"+actorTemplates.size();actorTemplateIds.put(key,id);
+        var copy=new ConfigReference<ActorConfig>(actor.getName());copy.kW().putAll(actor.kW());actorTemplates.add(copy);return id;
     }
 
     private static List<Binding> collectBindings(ConfigManager cm, TudeySceneModel scene)
@@ -905,9 +933,9 @@ public final class SceneContentExport {
                 ||!(move.target instanceof com.threerings.tudey.config.TargetConfig.Source||move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged)
                 ||!(steps[3] instanceof com.threerings.tudey.config.ScriptConfig.Rotate rotate)||rotate.relative||rotate.rotationVariance!=0
                 ||!scriptParameter(config,"Wait","implementation.actor[\"Behavior Script\"][1].wait")
-                ||!scriptParameter(config,"End Orientation","implementation.actor[\"Behavior Script\"][3].direction"))throw new IOException("Unsupported complete native movement script: "+reference.getName());
+                ||config.getParameter("End Orientation")!=null&&!scriptParameter(config,"End Orientation","implementation.actor[\"Behavior Script\"][3].direction"))throw new IOException("Unsupported complete native movement script: "+reference.getName());
         Object goal=reference.kW().getOrDefault("Goal",move.target instanceof com.threerings.tudey.config.TargetConfig.Tagged tagged?tagged.tag:"");
-        Object delay=reference.kW().getOrDefault("Wait",wait.wait),direction=reference.kW().getOrDefault("End Orientation",rotate.direction);
+        Object delay=reference.kW().getOrDefault("Wait",wait.wait),direction=config.getParameter("End Orientation")==null?rotate.direction:reference.kW().getOrDefault("End Orientation",rotate.direction);
         if(!(goal instanceof String tag)||!(delay instanceof Number millis)||millis.doubleValue()!=millis.intValue()||!(direction instanceof Number angle))throw new IOException("Invalid native movement script parameters");
         var script=new org.tortodrone.world.SceneMovementScript(millis.intValue(),tag,move.maxPathLength,angle.floatValue(),monster.turnRate);
         out.put(prefix+"script.kind","wait-move-rotate");out.put(prefix+"script.wait",Integer.toString(script.waitMillis()));out.put(prefix+"script.goal",script.goal());out.put(prefix+"script.max-path",Float.toString(script.maxPath()));out.put(prefix+"script.rotation",Float.toString(script.rotation()));out.put(prefix+"script.turn-rate",Float.toString(script.turnRate()));

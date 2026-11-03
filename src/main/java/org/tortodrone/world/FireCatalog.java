@@ -10,7 +10,7 @@ import org.tortodrone.resources.Json;
 /** Numeric/reference-only stock action graphs for player weapon attacks. */
 public final class FireCatalog {
     private static final int MAX_BYTES = 128 * 1024 * 1024, MAX_ENTRIES = 100_000, MAX_NODES = 2_000_000;
-    public enum Kind { COMPOUND, CONDITIONAL, DELAYED, MULTI_PRESPAWNED, RANDOM_EQUAL, RANDOM_WEIGHTED, SPAWN_ACTOR, SPAWN_PICKUP, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, HEAL, CLEAR_STATUS, APPLY_STATUS, START_SPRITE_SHIELD, END_SPRITE_SHIELD, FAIL, UNSUPPORTED }
+    public enum Kind { COMPOUND, CONDITIONAL, DELAYED, MULTI_PRESPAWNED, RANDOM_EQUAL, RANDOM_WEIGHTED, SPAWN_ACTOR, SPAWN_PICKUP, SPAWN_SCENE_ACTOR, SPAWN_FACING, RANDOM_TRANSLATED, FIRE_EFFECT, EMIT_PROJECTILE, DAMAGE_REGION, SWEEP_DAMAGE, IMPULSE_REGION, DESTROY_SOURCE, HEAL, CLEAR_STATUS, APPLY_STATUS, START_SPRITE_SHIELD, END_SPRITE_SHIELD, FAIL, UNSUPPORTED }
     public enum NullValue { INSTANCE }
     public record EnumValue(String type, String name, int ordinal) {
         public EnumValue(String type,String name){this(type,name,-1);}
@@ -96,6 +96,12 @@ public final class FireCatalog {
             if (values.size() > 10_000 || values.stream().anyMatch(value -> value == null || value.length() > 65536 || value.chars().anyMatch(c -> c < 32)))
                 throw new IllegalArgumentException("Invalid action argument values");
             if (kind == Kind.EMIT_PROJECTILE && actor == null) throw new IllegalArgumentException("Projectile action has no actor");
+            if (kind == Kind.SPAWN_SCENE_ACTOR && (config == null || !config.name().equals("SceneActorTemplate")
+                || !config.arguments().keySet().equals(Set.of("template")) || !(config.arguments().get("template") instanceof String id)
+                || !id.matches("spawn_[0-9]{1,3}") || !targetType.equals("Source") || actor != null || !children.isEmpty()
+                || !facingType.isEmpty() || !collisionSourceType.isEmpty() || x!=0 || y!=0 || rotation!=0 || rotationVariance!=0
+                || count!=0 || steps!=0 || stepSize!=0 || collisionMask!=0 || !parameter.isEmpty() || !values.isEmpty()))
+                throw new IllegalArgumentException("Invalid deferred scene actor spawn");
             if (kind == Kind.UNSUPPORTED && unsupportedType.isBlank()) throw new IllegalArgumentException("Unsupported action has no type");
         }
     }

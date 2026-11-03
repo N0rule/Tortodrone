@@ -165,6 +165,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
     private final SceneCollision staticCollision;
     private final int pawnCollisionMask;
     private final Map<Integer,Entity> entities=new LinkedHashMap<>();
+    private final ArrayDeque<Entity> pendingActors=new ArrayDeque<>();
+    private int sceneSpawnStamp,sceneSpawnCount;
+    private record SpawnSource(SceneEntities scene,int id,int faction,String identity) { }
     private final Map<Entity,List<Entity>> arsenalProps=new LinkedHashMap<>();
     private int nextId=1_000_000_000,lastStamp;
     private final java.util.random.RandomGenerator random;
@@ -287,7 +290,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return entity;
     }
     @Override public boolean spawnPickup(StarterCatalog.Model specification,float x,float y,float rotation,int stamp){
-        if(specification==null||!(specification.arguments().get("fields") instanceof String json)||entities.size()>=4096)return false;
+        if(specification==null||!(specification.arguments().get("fields") instanceof String json)||entities.size()+pendingActors.size()>=4096)return false;
         try{
             if(!(org.tortodrone.resources.Json.parse(json) instanceof Map<?,?> raw))return false;
             var fields=new HashMap<String,String>();for(var entry:raw.entrySet()){
@@ -298,6 +301,22 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(!spec.text("native-type","").equals("com.threerings.projectx.dungeon.data.actor.Pickup")||spec.text("pickup-item","").isBlank())return false;
             spawn(new SceneContent.Entry("loot:"+nextId,x,y,rotation,spec),spec,null,stamp);return true;
         }catch(java.io.IOException invalid){throw new IllegalArgumentException("Invalid prepared loot actor",invalid);}
+    }
+    /** A lifecycle graph may request a prepared entity, never an arbitrary native class.
+     * Stage the actor: death callbacks may run while the damage target set is being iterated. */
+    @Override public Object sceneActorSource(int source){
+        var parent=entities.get(source);return parent==null||!parent.kind.equals("Monster")?null:new SpawnSource(this,source,parent.faction,"actor:"+source);
+    }
+    @Override public boolean spawnSceneActor(String template,float x,float y,float rotation,int stamp,Object source){
+        var spec=content.actorTemplates().get(template);
+        if(spec==null||!(source instanceof SpawnSource parent)||parent.scene()!=this||!entities.containsKey(parent.id())||!Float.isFinite(x)||!Float.isFinite(y)||!Float.isFinite(rotation)
+            ||entities.size()+pendingActors.size()>=4096||nextId==Integer.MAX_VALUE)return false;
+        if(sceneSpawnStamp!=stamp){sceneSpawnStamp=stamp;sceneSpawnCount=0;}
+        if(sceneSpawnCount>=128)return false;
+        var binding=new SceneContent.Entry("spawn:"+nextId,x,y,rotation,spec);
+        var entity=new Entity(nextId,stamp,binding,spec,null,content);entity.faction=parent.faction();entity.scriptSource=parent.identity();
+        if(spec.integer("activate-time",0)>0)entity.activity=3;
+        pendingActors.addLast(entity);nextId++;sceneSpawnCount++;return true;
     }
     private void generate(Entity pad,int stamp){
         var damage=pad.spec.model("generated-damage");
@@ -416,6 +435,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
             nearest.entrySource()?nearest.binding.key():null);
     }
     public void advance(int stamp,List<ActorState> occupants){
+        // Publish only the batch staged before this tick. Work queued by spawned
+        // actors cannot recursively drain this batch; capacity also bounds later ticks.
+        for(int count=pendingActors.size();count>0;count--){var entity=pendingActors.removeFirst();entities.put(entity.id,entity);}
         var players=occupants.stream().filter(p->p.activity()!=TownMovement.DYING&&p.activity()!=TownMovement.DEAD&&p.activity()!=TownMovement.RESURRECT).toList();
         this.players=players;
         for(var station:arsenalProps.entrySet()){
@@ -1184,7 +1206,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 if(entry==null)return false;origins=List.of(entrySource(entry,stamp));
             }else{var origin=scriptSource(source,stamp);if(origin==null)return false;origins=List.of(origin);}
         }else origins=taggedSources(actor.locationTag(),stamp);
-        if(origins.isEmpty()||origins.size()>256||entities.size()+origins.size()>4096)return false;
+        if(origins.isEmpty()||origins.size()>256||entities.size()+pendingActors.size()+origins.size()>4096)return false;
         var spec=new SceneContent.Spec(actor.fields());
         var staged=new ArrayList<Entity>();int next=nextId;
         for(var origin:origins){

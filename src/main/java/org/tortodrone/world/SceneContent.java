@@ -6,8 +6,9 @@ import java.util.*;
 import org.tortodrone.character.StarterCatalog;
 
 /** Prepared native actor bindings. Runtime instances never depend on client resources. */
-public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons) {
+public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons,Map<String,Spec> actorTemplates) {
     public record MapIcon(String icon,float x,float y) { }
+    public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses,List<MapIcon> mapIcons){this(entries,scales,conversations,stats,items,cycles,statuses,mapIcons,Map.of());}
     public SceneContent(List<Entry> entries,Map<String,Float> scales,Map<String,SceneConversation> conversations,Map<String,Float> stats,Map<String,Spec> items,Map<String,Spec> cycles,Map<String,Spec> statuses){this(entries,scales,conversations,stats,items,cycles,statuses,List.of());}
     public SceneContent(List<Entry> entries,Map<String,Float> scales){this(entries,scales,Map.of(),Map.of(),Map.of(),Map.of(),Map.of());}
     public static final class Spec {
@@ -60,7 +61,10 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
         }
     }
     public record Entry(String key,float x,float y,float rotation,Spec spec) { }
-    public SceneContent { entries=List.copyOf(entries);scales=Map.copyOf(scales);conversations=Map.copyOf(conversations);stats=Map.copyOf(stats);items=Map.copyOf(items);cycles=Map.copyOf(cycles);statuses=Map.copyOf(statuses);mapIcons=List.copyOf(mapIcons); }
+    public SceneContent {
+        entries=List.copyOf(entries);scales=Map.copyOf(scales);conversations=Map.copyOf(conversations);stats=Map.copyOf(stats);items=Map.copyOf(items);cycles=Map.copyOf(cycles);statuses=Map.copyOf(statuses);mapIcons=List.copyOf(mapIcons);actorTemplates=Map.copyOf(actorTemplates);
+        SceneActorTemplates.validate(entries,actorTemplates);
+    }
     public static SceneContent empty(){return new SceneContent(List.of(),Map.of());}
     /** Placed NPCs own one actor binding; scene-started dialogues require reachable authored actions. */
     public void validateConversations()throws IOException {
@@ -129,7 +133,15 @@ public record SceneContent(List<Entry> entries, Map<String,Float> scales,Map<Str
                 icons.add(new MapIcon(icon,finite(Float.parseFloat(p.getProperty(prefix+"x"))),finite(Float.parseFloat(p.getProperty(prefix+"y")))));
             }
             if(icons.size()>2048)throw new IllegalArgumentException("Too many minimap icons");
-            var content=new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons));content.validateConversations();return content;
+            var templates=new TreeMap<String,Spec>();
+            for(String id:p.getProperty("actor-templates","").split(",")){
+                if(id.isBlank())continue;
+                if(templates.size()>=128||!id.matches("spawn_[0-9]{1,3}"))throw new IllegalArgumentException("Invalid or oversized scene actor template table");
+                var fields=new TreeMap<String,String>();String prefix="actor-template."+id+".";
+                for(String key:p.stringPropertyNames())if(key.startsWith(prefix))fields.put(key.substring(prefix.length()),p.getProperty(key));
+                if(templates.putIfAbsent(id,new Spec(fields))!=null)throw new IllegalArgumentException("Duplicate scene actor template");
+            }
+            var content=new SceneContent(entries,scales,SceneConversation.load(p),stats,items,cycles,statuses,List.copyOf(icons),templates);content.validateConversations();return content;
         }catch(IllegalArgumentException invalid){throw new IOException("Invalid prepared scene content",invalid);}
     }
     private static float finite(float f){if(!Float.isFinite(f)||Math.abs(f)>1_000_000)throw new IllegalArgumentException("Invalid content number");return f;}
