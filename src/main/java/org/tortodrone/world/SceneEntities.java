@@ -944,6 +944,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         if(e.targeting!=null&&(e.targetMode==null||attackDistance<=attackRange&&sight(e,target.x(),target.y())))return;
         if(target==null||!e.status.state().modifiers().canMove()||e.activity!=0||nearest<=e.spec.number("radius",0)+ScenePortals.PAWN_RADIUS)return;
+        // Turning/attacking above still applies to stationary sentries. Pursuit
+        // cannot translate them and must not search or publish MOVING for a zero step.
+        if(e.speed*modifiers.speed()<=0)return;
         float tx=target.x(),ty=target.y();
         if(!entitySegment(e,e.x,e.y,tx,ty)){
             if(e.path.isEmpty()&&stamp<e.nextPath)return;

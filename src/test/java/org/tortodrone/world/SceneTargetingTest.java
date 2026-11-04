@@ -32,9 +32,25 @@ public final class SceneTargetingTest {
         hitWorld.damage(hit(),0,0,0,1100,damager.id());hitWorld.advance(1150,List.of(damager,peer));hitWorld.advance(1200,List.of(damager,peer));
         check((hitWorld.actors().getFirst().flags()&16)!=0&&hitWorld.actors().getFirst().x()>0,"actual incoming damage participates in authoritative targeting");
         try{new SceneTargeting(Float.NaN,1000,0,1999,2,1);throw new AssertionError("Non-finite policy accepted");}catch(IllegalArgumentException expected){}
+        stationary(fields);
         fields.put("targeting.kind","client-code");
         try{SceneTargeting.read(new SceneContent.Spec(fields));throw new AssertionError("Unknown behavior accepted");}catch(IllegalArgumentException expected){}
         System.out.println("PASS: bounded native targeting, shape acquisition, pursuit, real attack emission/cooldown, victim retention/departure, damage admission and unknown-policy refusal");
+    }
+    private static void stationary(Map<String,String> source)throws Exception {
+        var fields=new HashMap<>(source);fields.put("speed","0");fields.put("targeted-speed","0");
+        var turret=new SceneContent.Entry("turret",0,0,0,new SceneContent.Spec(fields));
+        var wall=new SceneContent.Entry("wall",2,0,0,new SceneContent.Spec(Map.of("native-type","Door","config","Fixture/Wall","width",".5","height","4","collision-flags","1")));
+        var terrain=SceneWeaponsTest.openTerrain();var blocked=new SceneEntities(new SceneContent(List.of(turret,wall),Map.of()),terrain);
+        var target=new ActorState(219,1001,"Fixture",0,1,5,1,0,0,0,new StarterCatalog.Model("Player",Map.of()));
+        var emissions=new ArrayList<Integer>();blocked.attacks((actor,action)->emissions.add(actor.activityStarted()));
+        for(int time=1000;time<2000;time+=50)blocked.advance(time,List.of(target));
+        var actor=blocked.actors().getFirst();
+        check((actor.flags()&16)!=0&&(actor.flags()&2)==0&&actor.x()==0&&actor.y()==0&&emissions.isEmpty(),"stationary acquired enemy neither pursues nor advertises movement through an occluding wall");
+        check(Math.abs(actor.rotation()-Math.atan2(1,5))<.001,"stationary enemy turns toward its knight instead of a route around the wall");
+        var clear=new SceneEntities(new SceneContent(List.of(turret),Map.of()),terrain);clear.attacks((pose,action)->emissions.add(pose.activityStarted()));
+        for(int time=1000;time<2000;time+=50)clear.advance(time,List.of(player(219,1.5f)));
+        check(!emissions.isEmpty()&&(clear.actors().getFirst().flags()&2)==0,"zero movement speed preserves native attack execution in range");
     }
     private static ActorState player(int id,float x){return new ActorState(id,1001,"Fixture",0,1,x,0,0,0,0,new StarterCatalog.Model("Player",Map.of()));}
     private static StarterCatalog.Model hit(){

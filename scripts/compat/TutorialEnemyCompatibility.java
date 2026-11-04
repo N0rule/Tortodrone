@@ -14,6 +14,7 @@ public final class TutorialEnemyCompatibility {
         resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
         if(args.length>1&&args[1].equals("sentries")){
+            weighted(cm,"Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)",false);
             construct(cm,"Character/NPC/Monster/Beast/Dust Bunny (TG)",.5);
             noLootSentry(cm);
             return;

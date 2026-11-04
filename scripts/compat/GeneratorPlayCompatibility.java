@@ -29,7 +29,8 @@ public final class GeneratorPlayCompatibility {
             try(var socket=new SinkSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,characters,output,new SessionCodec(content.items()),1901,1,System.out::println,registry)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),true);
                 world.townInvocation(request(2,"ancient_generator",0,true,false,false,101));enter(world,registry,initial.worldId());
-                var driver=new Driver(world,initial.worldId());driver.play();
+                var driver=new Driver(world,initial.worldId(),characters);driver.play();
+                System.out.println("INPUT MODE: "+(driver.steered?"interactive original-area waypoints; not an unattended acceptance":"unattended original-area waypoints"));
                 var after=characters.worldProfile(knight.name(),1);
                 check(driver.scene().map().id()==218&&after.progress().openingStage()==2&&after.progress().rankPair().equals("1-3"),"actual mission play must reach original powered Camp with its saved rank");
                 check(characters.lastTownScene(knight.id(),1)==218&&characters.openingMissions(registry.town()).load(account,knight.id(),1).containsKey(OpeningMission.ANCIENT_GENERATOR),"durable original mission receipt and destination");
@@ -44,34 +45,51 @@ public final class GeneratorPlayCompatibility {
         }finally{try(var paths=Files.walk(folder)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.delete(path);}}
     }
     private static final class Driver {
-        final WorldSession world;final int id;int request=1000,ticks,cursor,fightId;long logged,planned,encounterSearch;
+        private record Target(int id,float x,float y,float rotation,String kind,SceneContent.Spec spec,ActorState actor) { }
+        final WorldSession world;final int id;final CharacterStore characters;int request=1000,ticks,cursor,fightId,revives;long logged,planned,encounterSearch;
         String routeKey="",progressKey="";List<ScenePathing.Point> route=List.of();
         float progressX,progressY;double healthTotal;long progressAt;int entityCount,stateTotal;
-        Driver(WorldSession world,int id){this.world=world;this.id=id;}
+        final StringBuilder command=new StringBuilder();String via;boolean steered,discardCommand;
+        SceneSimulation.Snapshot combatSnapshot;
+        Driver(WorldSession world,int id,CharacterStore characters){this.world=world;this.id=id;this.characters=characters;}
         SceneRegistry.Instance scene()throws Exception{return (SceneRegistry.Instance)field(world,"scene");}
         ActorState pawn(SceneSimulation.Snapshot snapshot){return snapshot.players().stream().filter(a->a.id()==id).findFirst().orElseThrow();}
         void play()throws Exception {
             // Authored entry IDs, resolved from the verified original content at runtime.
-            var goals=List.of("160","2388","3263","3427","604","3283","3183","2345","3532","2930");int goal=0;long until=System.nanoTime()+750_000_000_000L;
+            var goals=List.of("160","2388","3263","3317","3427","604","2493","2995","3283","3183","2345","3532","2930");int goal=0;long until=System.nanoTime()+750_000_000_000L;
             while(System.nanoTime()<until){
                 if(travel())continue;var place=scene();if(place.map().id()==218)return;
-                var snapshot=place.simulation().snapshot();var own=pawn(snapshot);check(snapshot.health(id).current()>0,"driver died at "+own.x()+","+own.y()+" (a gameplay failure, never a scripted successful kill)");
+                commands(place);
+                if(place.simulation().failure()!=null)throw new AssertionError("Original scene simulation failed",place.simulation().failure());
+                var snapshot=place.simulation().snapshot();var own=pawn(snapshot);
+                if(snapshot.health(id).current()==0){
+                    if((snapshot.health(id).reviveFlags()&8)!=0){Thread.sleep(50);continue;}
+                    revive(place,own);continue;
+                }
+                for(var hit:snapshot.combatEventsSince(combatSnapshot))if(hit.actor()==id&&hit.source()!=id&&snapshot.actors().stream().anyMatch(a->a.id()==hit.source()&&hostile(place,a)))fightId=hit.source();
+                combatSnapshot=snapshot;
                 if(dialogue(place))continue;
                 if(field(world,"floorReport")!=null){
                     long dialog=(long)field(world,"missionDialogCreated");if(dialog!=0)world.townInvocation(new SessionDecoder.Invocation(place.oid(),6,1,List.of(dialog)));
                     world.interiorPartyInvocation(new SessionDecoder.Invocation(SceneRegistry.system().parties().view((PartyRegistry.Member)field(world,"partyMember")).oid(),SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(false)));Thread.sleep(50);continue;
                 }
-                String key=goals.get(Math.min(goal,goals.size()-1));var target=entry(snapshot,key);
-                if(target==null){throw new AssertionError("Required original entry is missing: "+key);}
+                String key=via==null?goals.get(Math.min(goal,goals.size()-1)):via;var target=target(place,snapshot,key);
                 progress(snapshot,own,key);
-                if(done(own,target,place)){
+                if(done(own,target)){
+                    if(via!=null){System.out.println("VIA "+via+" physically reached at "+own.x()+","+own.y());via=null;continue;}
                     if(goal<goals.size()-1){System.out.println("GOAL "+key+" completed at "+own.x()+","+own.y());goal++;continue;}
                 }
                 var carried=own.sceneKnight().lift()==0?null:place.simulation().interactionSource(own.sceneKnight().lift()).specification();
                 boolean carryingKey=carried!=null&&carried.text("actionable-signal","").equals("gold_unlock");
                 ActorState enemy=carryingKey?null:enemy(place,snapshot,own);
-                boolean damageSwitch=place.simulation().interactionSource(target.id()).specification().text("switch-mode","").startsWith("damage-");
-                if(enemy!=null&&enemy.entity().kind().startsWith("Block")&&damageSwitch&&Math.hypot(target.x()-own.x(),target.y()-own.y())<6&&visible(place,snapshot,own.x(),own.y(),target))enemy=null;
+                var fight=carryingKey?null:snapshot.actors().stream().filter(a->a.id()==fightId&&hostile(place,a)).findFirst().orElse(null);
+                if(fight==null)fightId=0;
+                ActorState covered=null;
+                if(!carryingKey&&fight!=null&&enemy!=null&&enemy.entity().kind().startsWith("Block")){
+                    covered=enemy;enemy=Math.hypot(fight.x()-own.x(),fight.y()-own.y())<6.5&&visible(place,snapshot,own.x(),own.y(),fight)?fight:null;
+                }
+                boolean damageSwitch=target.spec().text("switch-mode","").startsWith("damage-");
+                if(enemy!=null&&enemy.entity().kind().startsWith("Block")&&damageSwitch&&Math.hypot(target.x()-own.x(),target.y()-own.y())<6&&visible(place,snapshot,own.x(),own.y(),target.actor()))enemy=null;
                 float face=(float)Math.atan2(target.y()-own.y(),target.x()-own.x());int flags=8;
                 // Proto bullets travel 7.5 units after their native .85-unit
                 // muzzle offset. Aim from safely inside that range, with sight
@@ -79,18 +97,16 @@ public final class GeneratorPlayCompatibility {
                 // Leave room for an aligned half-unit planning cell outside a
                 // resting lift's own collider. The server still decides whether
                 // the forward native pickup prompt is actually in reach.
-                float margin=target.entity().kind().equals("Door")?1f:damageSwitch?6f:target.entity().kind().equals("DungeonLift")?.8f:.2f;
-                var fight=snapshot.actors().stream().filter(a->a.id()==fightId&&hostile(place,a)).findFirst().orElse(null);
-                if(fight==null)fightId=0;
+                float margin=target.kind().equals("Door")?1f:damageSwitch?6f:target.kind().equals("DungeonLift")?.8f:.2f;
                 var opponent=enemy!=null&&enemy.entity().kind().equals("Monster")?enemy:fight;
-                var destination=opponent==null?target:opponent;
+                var destination=opponent==null?target:target(place,opponent);
                 String navigation=opponent==null?key:"fight:"+opponent.id();
                 if(opponent!=null)margin=4;
                 final float reach=margin;
                 if(enemy!=null){face=(float)Math.atan2(enemy.y()-own.y(),enemy.x()-own.x());if(ticks%4==0)flags|=4;
                     if(enemy.entity().kind().equals("Monster")&&Math.hypot(enemy.x()-own.x(),enemy.y()-own.y())<3){float away=(float)Math.atan2(own.y()-enemy.y(),own.x()-enemy.x());input(place,face,away,flags|1);Thread.sleep(50);ticks++;continue;}
                 }else if(own.interaction()!=null&&(own.interaction().actorId()==target.id()||own.interaction().action().equals("UnlockGold"))){if(ticks%4==0)flags|=4;}
-                else if(damageSwitch&&Math.hypot(target.x()-own.x(),target.y()-own.y())<6.5&&visible(place,snapshot,own.x(),own.y(),target)){if(ticks%4==0)flags|=4;}
+                else if(damageSwitch&&Math.hypot(target.x()-own.x(),target.y()-own.y())<6.5&&visible(place,snapshot,own.x(),own.y(),target.actor())){if(ticks%4==0)flags|=4;}
                 float heading=face;
                 // Approach a future gated room along a partial live path. This
                 // reaches its authored entry triggers without ignoring props,
@@ -99,15 +115,21 @@ public final class GeneratorPlayCompatibility {
                     routeKey=navigation;cursor=0;
                     route=ScenePathing.region(own.x(),own.y(),(x,y)->{
                         float remaining=(float)Math.hypot(destination.x()-x,destination.y()-y)-reach;
-                        return remaining>0?remaining:(damageSwitch||fightId!=0)&&!visible(place,snapshot,x,y,destination)?.01f:0;
+                        return remaining>0?remaining:(damageSwitch||fightId!=0)&&!visible(place,snapshot,x,y,destination.actor())?.01f:0;
                     },(x,y,tx,ty)->clear(place.simulation(),x,y,tx,ty));
                     if(route.isEmpty()&&fight==null)route=ScenePathing.partialRegion(own.x(),own.y(),(x,y)->Math.max(0,(float)Math.hypot(destination.x()-x,destination.y()-y)-reach),(x,y,tx,ty)->clear(place.simulation(),x,y,tx,ty));
                     planned=System.nanoTime();
                 }
-                while(cursor<route.size()&&Math.hypot(route.get(cursor).x()-own.x(),route.get(cursor).y()-own.y())<.18)cursor++;
+                while(cursor<route.size()&&Math.hypot(route.get(cursor).x()-own.x(),route.get(cursor).y()-own.y())<.18){
+                    // A nearby seed can still be a required corner. Skipping it
+                    // would cut a blocked diagonal from the actual pawn pose.
+                    if(cursor+1<route.size()&&!clear(place.simulation(),own.x(),own.y(),route.get(cursor+1).x(),route.get(cursor+1).y()))break;
+                    cursor++;
+                }
+                if(enemy==null&&covered!=null&&cursor>=route.size()){enemy=covered;face=(float)Math.atan2(enemy.y()-own.y(),enemy.x()-own.x());if(ticks%4==0)flags|=4;}
                 // Finish a visible fight before leaving its room. Running past
                 // every shooter strands the driver at an authentic wave gate.
-                if((enemy==null||opponent!=null&&Math.hypot(opponent.x()-own.x(),opponent.y()-own.y())>4.5)&&cursor<route.size()){var point=route.get(cursor);if(clear(place.simulation(),own.x(),own.y(),point.x(),point.y())){heading=(float)Math.atan2(point.y()-own.y(),point.x()-own.x());flags|=1;}}
+                if((enemy==null||enemy.entity().kind().startsWith("Block")||opponent!=null&&Math.hypot(opponent.x()-own.x(),opponent.y()-own.y())>4.5)&&cursor<route.size()){var point=route.get(cursor);if(clear(place.simulation(),own.x(),own.y(),point.x(),point.y())){heading=(float)Math.atan2(point.y()-own.y(),point.x()-own.x());flags|=1;}}
                 if(enemy==null&&(flags&1)==0&&fightId==0&&System.nanoTime()-encounterSearch>5_000_000_000L&&(route.isEmpty()||cursor<route.size()&&!clear(place.simulation(),own.x(),own.y(),route.get(cursor).x(),route.get(cursor).y()))){
                     // A native wave door can require a side-room encounter. Find
                     // a reachable firing position for a living enemy instead of
@@ -118,7 +140,7 @@ public final class GeneratorPlayCompatibility {
                         if(!approach.isEmpty()){fightId=candidate.id();routeKey="";System.out.println("SIDE ENCOUNTER "+candidate.config().name()+" at="+candidate.x()+","+candidate.y());break;}
                     }
                 }
-                if(System.nanoTime()-logged>5_000_000_000L){logged=System.nanoTime();System.out.println("PLAY goal="+key+" pawn="+own.x()+","+own.y()+" hp="+snapshot.health(id).current()+" activity="+own.activity()+" weapon="+(own.combat()==null||own.combat().weapon()==null?"none":own.combat().weapon().config())+" path="+(route.size()-cursor)+" next="+(cursor<route.size()?route.get(cursor):"none")+" lift="+own.sceneKnight().lift()+" enemy="+(enemy==null?"none":enemy.config().name()+" at="+enemy.x()+","+enemy.y()+" health="+enemy.entity().health()));
+                if(System.nanoTime()-logged>5_000_000_000L){logged=System.nanoTime();System.out.println("PLAY goal="+key+" pawn="+own.x()+","+own.y()+" hp="+snapshot.health(id).current()+" activity="+own.activity()+" ticks="+place.simulation().tickCount()+" flags="+own.flags()+" can-move="+own.sceneKnight().status().modifiers().canMove()+" weapon="+(own.combat()==null||own.combat().weapon()==null?"none":own.combat().weapon().config())+" path="+(route.size()-cursor)+" next="+(cursor<route.size()?route.get(cursor):"none")+" lift="+own.sceneKnight().lift()+" enemy="+(enemy==null?"none":enemy.config().name()+" at="+enemy.x()+","+enemy.y()+" health="+enemy.entity().health()));
                     if(cursor<route.size()&&!clear(place.simulation(),own.x(),own.y(),route.get(cursor).x(),route.get(cursor).y()))for(var obstacle:snapshot.actors())if(obstacle.entity()!=null&&Math.hypot(obstacle.x()-own.x(),obstacle.y()-own.y())<3)System.out.println("NEAR "+obstacle.entity().key()+" "+obstacle.config().name()+" at="+obstacle.x()+","+obstacle.y()+" flags="+obstacle.flags());
                 }
                 // A gun activity can lock facing until rearm. Release attack
@@ -129,10 +151,39 @@ public final class GeneratorPlayCompatibility {
             }
             throw new AssertionError("Generator input driver timed out; full gameplay not established");
         }
-        boolean done(ActorState own,ActorState target,SceneRegistry.Instance place){
-            var kind=target.entity().kind();if(kind.equals("Door"))return (target.flags()&2)!=0;
+        void revive(SceneRegistry.Instance place,ActorState own)throws Exception {
+            check(revives<2,"driver exhausted its bounded native revive attempts at "+own.x()+","+own.y());
+            int before=sparks(characters.worldProfile(own.name(),1));check(before>0,"driver died without an owned Spark; gameplay not completed");
+            int party=SceneRegistry.system().parties().view((PartyRegistry.Member)field(world,"partyMember")).oid();
+            world.interiorPartyInvocation(new SessionDecoder.Invocation(party,20,4,List.of(own.name(),-1,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller",(short)++request))));
+            check(sparks(characters.worldProfile(own.name(),1))==before-1&&place.simulation().snapshot().health(id).current()>0,"native self-revive must commit exactly one owned Spark and restore health through the production service");
+            revives++;fightId=0;routeKey="";System.out.println("NATIVE REVIVE "+revives+": one persisted Spark consumed");Thread.sleep(50);
+        }
+        int sparks(WorldProfile profile){return profile.items().stream().filter(i->i.config().equals("Rarity/Spark of Life")).mapToInt(WorldProfile.Item::count).sum();}
+        void commands(SceneRegistry.Instance place)throws IOException {
+            for(int budget=0;budget<128&&System.in.available()>0;budget++){
+                int next=System.in.read();if(next<0)return;if(next=='\r')continue;
+                if(next!='\n'){if(command.length()<64&&!discardCommand)command.append((char)next);else discardCommand=true;continue;}
+                String line=command.toString().trim();command.setLength(0);
+                if(discardCommand){discardCommand=false;System.out.println("COMMAND REFUSED: length");continue;}
+                if(!line.matches("via [0-9]{1,9}")){System.out.println("COMMAND REFUSED: only 'via <original area entry id>' is supported");continue;}
+                String key=line.substring(4);
+                if(place.map().content().entries().stream().noneMatch(e->e.key().equals(key)&&e.spec().flag("scene-sensor",false))){System.out.println("COMMAND REFUSED: missing original area");continue;}
+                via=key;steered=true;routeKey="";fightId=0;
+                System.out.println("STEERING: walk through original area "+via+" using production input; no actor/progression mutation");
+            }
+        }
+        boolean done(ActorState own,Target target){
+            if(target.actor()==null)return Math.hypot(target.x()-own.x(),target.y()-own.y())<.25;
+            var kind=target.kind();if(kind.equals("Door"))return (target.actor().flags()&2)!=0;
             if(kind.equals("DungeonLift"))return own.sceneKnight().lift()==target.id();
-            if(kind.equals("Switch"))return target.entity().state()!=0;return false;
+            if(kind.equals("Switch"))return target.actor().entity().state()!=0&&(!target.spec().text("switch-mode","").equals("party")||Math.hypot(target.x()-own.x(),target.y()-own.y())<.5);return false;
+        }
+        Target target(SceneRegistry.Instance place,ActorState actor){return new Target(actor.id(),actor.x(),actor.y(),actor.rotation(),actor.entity().kind(),place.simulation().interactionSource(actor.id()).specification(),actor);}
+        Target target(SceneRegistry.Instance place,SceneSimulation.Snapshot snapshot,String key){
+            var actor=entry(snapshot,key);if(actor!=null)return target(place,actor);
+            var sensor=place.map().content().entries().stream().filter(e->e.key().equals(key)&&e.spec().flag("scene-sensor",false)).findFirst().orElseThrow(()->new AssertionError("Required original entry is missing: "+key));
+            return new Target(0,sensor.x(),sensor.y(),sensor.rotation(),"Area",sensor.spec(),null);
         }
         void progress(SceneSimulation.Snapshot snapshot,ActorState own,String key){
             var actors=snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().destroyed()==Integer.MAX_VALUE).toList();

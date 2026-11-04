@@ -419,6 +419,7 @@ public final class SceneSimulation {
     }
     public synchronized void fires(FireCatalog catalog){weapons.catalog(catalog);}
     private ScheduledExecutorService timer;
+    private Throwable tickFailure;
     private Snapshot previous;
     private long tickCount;
     private final List<SceneContent.Entry> arsenalZones;
@@ -572,6 +573,8 @@ public final class SceneSimulation {
     public synchronized int playerCount(){return members.size();}
     public synchronized ActorState defaultEntrance(){return entities.defaultEntrance();}
     public synchronized long tickCount(){return tickCount;}
+    /** Scheduled executors otherwise hide exceptions in their cancelled future. */
+    public synchronized Throwable failure(){return tickFailure;}
     private Snapshot capture(int stamp,Snapshot baseline) {
         var portals=new HashMap<Integer,ScenePortals.Trigger>();
         for(var member:members.values())if(member.portal!=null)portals.put(member.appearance.id(),member.portal);
@@ -581,9 +584,17 @@ public final class SceneSimulation {
     }
     private void start() {
         if(timer!=null)return;
+        tickFailure=null;
         timer=Executors.newSingleThreadScheduledExecutor(r->{var thread=new Thread(r,"Scene-"+instance.oid());thread.setDaemon(true);return thread;});
         // Never burst missed ticks. Integration uses actual elapsed scene time.
-        timer.scheduleWithFixedDelay(this::tick,50,50,TimeUnit.MILLISECONDS);
+        timer.scheduleWithFixedDelay(()->{
+            try{tick();}
+            catch(RuntimeException|Error failure){
+                synchronized(this){tickFailure=failure;}
+                System.getLogger(SceneSimulation.class.getName()).log(System.Logger.Level.ERROR,"Scene simulation stopped: template="+instance.map().id()+", instance="+instance.oid(),failure);
+                throw failure;
+            }
+        },50,50,TimeUnit.MILLISECONDS);
     }
     private void stopIfIdle() {
         if(members.values().stream().anyMatch(m->m.entered))return;
