@@ -121,22 +121,22 @@ public final class OpeningGateCompatibility {
             }finally{registry.release(scene,profile.worldId());}
         }
     }
-    private static WorldProfile checkpoint(CharacterStore store,Knight knight,SceneRegistry registry)throws Exception {
+    static WorldProfile checkpoint(CharacterStore store,Knight knight,SceneRegistry registry)throws Exception {
         var p=store.completeTutorial(knight.id(),1,store.worldProfile(knight.name(),1),0,registry.town());
         p=store.knightStory(knight.id(),1,p,List.of(new KnightMemory("talkedRhendonRC",true)),List.of()).profile();
         return store.openingMissions(registry.town()).complete(store.accountId(),knight.id(),1,p,OpeningMission.SECURING_CAMP,null).profile();
     }
-    private static void enter(WorldSession world,SceneRegistry registry,int id)throws Exception {
+    static void enter(WorldSession world,SceneRegistry registry,int id)throws Exception {
         var map=registry.catalog().scene(337);
         world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),337,1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)31))));
         world.subscribeInteriorParty((short)32);world.subscribe((short)33);world.entered();
     }
-    private static SessionDecoder.Invocation request(int method,String id,int band,boolean solo,boolean friends,boolean guild,int request){return new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.MISSION_SERVICE,method,List.of(id,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty",band),solo,friends,guild,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$"+(method==7?"ResultMarshaller":"ConfirmMarshaller"),(short)request)));}
-    private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
+    static SessionDecoder.Invocation request(int method,String id,int band,boolean solo,boolean friends,boolean guild,int request){return new SessionDecoder.Invocation(SessionCodec.INVOCATION_OID,SessionCodec.MISSION_SERVICE,method,List.of(id,new SessionDecoder.EnumValue("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty",band),solo,friends,guild,new SessionDecoder.Listener("com.threerings.presents.data.InvocationMarshaller$"+(method==7?"ResultMarshaller":"ConfirmMarshaller"),(short)request)));}
+    static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private static long active(SceneRegistry registry,int template){return registry.statuses().stream().filter(s->s.templateId()==template).count();}
     private static void invoke(WorldSession world,SessionDecoder.Invocation request){try{world.townInvocation(request);}catch(IOException e){throw new CompletionException(e);}}
     private static void append(ByteArrayOutputStream out,byte[] frame){out.write(frame,4,frame.length-4);}
-    private static Object field(Object object,String name)throws Exception {for(Class<?> type=object.getClass();type!=null;type=type.getSuperclass())try{var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(object);}catch(NoSuchFieldException ignored){}throw new NoSuchFieldException(name);}
+    static Object field(Object object,String name)throws Exception {for(Class<?> type=object.getClass();type!=null;type=type.getSuperclass())try{var field=type.getDeclaredField(name);field.setAccessible(true);return field.get(object);}catch(NoSuchFieldException ignored){}throw new NoSuchFieldException(name);}
     private static void check(boolean valid,String message){if(!valid)throw new AssertionError(message);}
     private static final class RecordingSocket extends Socket {private final ByteArrayOutputStream bytes=new ByteArrayOutputStream();@Override public OutputStream getOutputStream(){return bytes;}}
 }

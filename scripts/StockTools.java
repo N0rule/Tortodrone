@@ -48,6 +48,12 @@ public final class StockTools {
                 for(int i=2;i<5;i++)fixtureArgs.add(Path.of(args[i]).toAbsolutePath().toString());
                 sources.add(project.resolve("scripts/compat/OpeningGateCompatibility.java"));
             }
+            case "generator-play-check" -> {
+                if(args.length!=5)throw new IllegalArgumentException("generator-play-check expects game-directory base-deployment original-337-export original-218-export");
+                fixture="org.tortodrone.server.network.GeneratorPlayCompatibility";
+                for(int i=2;i<5;i++)fixtureArgs.add(Path.of(args[i]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/GeneratorPlayCompatibility.java"));sources.add(project.resolve("scripts/compat/OpeningGateCompatibility.java"));
+            }
             case "opening-missions-check" -> fixture="OpeningMissionCompatibility";
             case "camp-story-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("camp-story-check expects game-directory deployment-with-original-Camp");
