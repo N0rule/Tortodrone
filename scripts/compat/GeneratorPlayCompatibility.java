@@ -76,7 +76,10 @@ public final class GeneratorPlayCompatibility {
                 // Proto bullets travel 7.5 units after their native .85-unit
                 // muzzle offset. Aim from safely inside that range, with sight
                 // of the lever; proximity alone is not a firing position.
-                float margin=target.entity().kind().equals("Door")?1f:damageSwitch?6f:target.entity().kind().equals("DungeonLift")?.65f:.2f;
+                // Leave room for an aligned half-unit planning cell outside a
+                // resting lift's own collider. The server still decides whether
+                // the forward native pickup prompt is actually in reach.
+                float margin=target.entity().kind().equals("Door")?1f:damageSwitch?6f:target.entity().kind().equals("DungeonLift")?.8f:.2f;
                 var fight=snapshot.actors().stream().filter(a->a.id()==fightId&&hostile(place,a)).findFirst().orElse(null);
                 if(fight==null)fightId=0;
                 var opponent=enemy!=null&&enemy.entity().kind().equals("Monster")?enemy:fight;
@@ -89,37 +92,23 @@ public final class GeneratorPlayCompatibility {
                 }else if(own.interaction()!=null&&(own.interaction().actorId()==target.id()||own.interaction().action().equals("UnlockGold"))){if(ticks%4==0)flags|=4;}
                 else if(damageSwitch&&Math.hypot(target.x()-own.x(),target.y()-own.y())<6.5&&visible(place,snapshot,own.x(),own.y(),target)){if(ticks%4==0)flags|=4;}
                 float heading=face;
-                // Plan toward a future gated room using static terrain, but execute
-                // only legal live steps. This exposes encounters along the way;
-                // it never changes or bypasses the authoritative collider.
+                // Approach a future gated room along a partial live path. This
+                // reaches its authored entry triggers without ignoring props,
+                // doors or enemies that make the final destination unreachable.
                 if(!routeKey.equals(navigation)||System.nanoTime()-planned>2_000_000_000L){
                     routeKey=navigation;cursor=0;
                     route=ScenePathing.region(own.x(),own.y(),(x,y)->{
                         float remaining=(float)Math.hypot(destination.x()-x,destination.y()-y)-reach;
                         return remaining>0?remaining:(damageSwitch||fightId!=0)&&!visible(place,snapshot,x,y,destination)?.01f:0;
                     },(x,y,tx,ty)->clear(place.simulation(),x,y,tx,ty));
-                    if(route.isEmpty()&&fight==null){
-                        var obstacles=new ArrayList<SceneContent.Spec>();
-                        var positions=new ArrayList<ActorState>();
-                        for(var actor:snapshot.actors())if(actor.entity()!=null&&actor.entity().destroyed()==Integer.MAX_VALUE&&!Set.of("Door","Monster").contains(actor.entity().kind())){
-                            var spec=place.simulation().interactionSource(actor.id()).specification();
-                            if(spec==null||(spec.integer("collision-flags",0)&43)==0||breakable(spec))continue;
-                            obstacles.add(spec);positions.add(actor);
-                        }
-                        route=ScenePathing.region(own.x(),own.y(),(x,y)->Math.max(0,(float)Math.hypot(destination.x()-x,destination.y()-y)-reach),(x,y,tx,ty)->{
-                            if(!staticClear(place.map(),x,y,tx,ty))return false;
-                            int steps=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));
-                            for(int i=0;i<obstacles.size();i++){var actor=positions.get(i);var spec=obstacles.get(i);for(int j=1;j<=steps;j++)if(spec.contains(actor.x(),actor.y(),actor.rotation(),x+(tx-x)*j/steps,y+(ty-y)*j/steps,ScenePortals.PAWN_RADIUS))return false;}
-                            return true;
-                        });
-                    }
+                    if(route.isEmpty()&&fight==null)route=ScenePathing.partialRegion(own.x(),own.y(),(x,y)->Math.max(0,(float)Math.hypot(destination.x()-x,destination.y()-y)-reach),(x,y,tx,ty)->clear(place.simulation(),x,y,tx,ty));
                     planned=System.nanoTime();
                 }
                 while(cursor<route.size()&&Math.hypot(route.get(cursor).x()-own.x(),route.get(cursor).y()-own.y())<.18)cursor++;
                 // Finish a visible fight before leaving its room. Running past
                 // every shooter strands the driver at an authentic wave gate.
                 if((enemy==null||opponent!=null&&Math.hypot(opponent.x()-own.x(),opponent.y()-own.y())>4.5)&&cursor<route.size()){var point=route.get(cursor);if(clear(place.simulation(),own.x(),own.y(),point.x(),point.y())){heading=(float)Math.atan2(point.y()-own.y(),point.x()-own.x());flags|=1;}}
-                if(enemy==null&&(flags&1)==0&&fightId==0&&System.nanoTime()-encounterSearch>5_000_000_000L&&cursor<route.size()&&!clear(place.simulation(),own.x(),own.y(),route.get(cursor).x(),route.get(cursor).y())){
+                if(enemy==null&&(flags&1)==0&&fightId==0&&System.nanoTime()-encounterSearch>5_000_000_000L&&(route.isEmpty()||cursor<route.size()&&!clear(place.simulation(),own.x(),own.y(),route.get(cursor).x(),route.get(cursor).y()))){
                     // A native wave door can require a side-room encounter. Find
                     // a reachable firing position for a living enemy instead of
                     // waiting against the door or fabricating its completion.
@@ -191,7 +180,6 @@ public final class GeneratorPlayCompatibility {
         void input(SceneRegistry.Instance place,float facing,float heading,int flags)throws IOException {int t=SceneClock.now();world.input(new SessionDecoder.Input(place.oid(),0,t,List.of(new SessionDecoder.InputFrame(t,facing,heading,flags,t))));}
         ActorState entry(SceneSimulation.Snapshot snapshot,String key){return snapshot.actors().stream().filter(a->a.entity()!=null&&a.entity().key().equals(key)).findFirst().orElse(null);}
         boolean clear(SceneSimulation simulation,float x,float y,float tx,float ty){int n=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));for(int i=1;i<=n;i++)if(!simulation.placement(x+(tx-x)*i/n,y+(ty-y)*i/n))return false;return true;}
-        boolean staticClear(SceneCatalog.MapScene map,float x,float y,float tx,float ty){int n=Math.max(1,(int)Math.ceil(Math.hypot(tx-x,ty-y)/.1));for(int i=1;i<=n;i++){float px=x+(tx-x)*i/n,py=y+(ty-y)*i/n;if(!map.collision().walkable(px,py)||!map.staticCollision().floorSupported(px,py)||map.staticCollision().penetration(43,px,py,ScenePortals.PAWN_RADIUS).present())return false;}return true;}
     }
     private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}
     private static final class SinkSocket extends Socket {@Override public OutputStream getOutputStream(){return OutputStream.nullOutputStream();}}

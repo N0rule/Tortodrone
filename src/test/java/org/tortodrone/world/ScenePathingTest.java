@@ -45,6 +45,24 @@ public final class ScenePathingTest {
         var narrowRoute=ScenePathing.route(7.735f,39.7f,7.5f,50.5f,narrow);
         check(!narrowRoute.isEmpty(),"fractional start must find the authored narrow corridor on a world-aligned lattice");
         float px=7.735f,py=39.7f;for(var point:narrowRoute){check(narrow.clear(px,py,point.x(),point.y()),"every fallback path segment still clears authoritative collision");px=point.x();py=point.y();}
-        System.out.println("PASS: bounded routing, closed-gate attack occlusion, Shufflebot obstacle pursuit and gate-open traversal");
+        var closed=new java.util.concurrent.atomic.AtomicBoolean(true);
+        ScenePathing.Traversal corridor=(x,y,tx,ty)->{
+            for(int i=0;i<=100;i++){float qx=x+(tx-x)*i/100,qy=y+(ty-y)*i/100;
+                if(qx< -1||qx>10||Math.abs(qy)>1||closed.get()&&qx>=4&&qx<=6)return false;
+            }return true;
+        };
+        ScenePathing.Distance far=(x,y)->(float)Math.hypot(9-x,y);
+        check(ScenePathing.region(0,0,far,corridor).isEmpty(),"complete-region search must still refuse the disconnected far room");
+        var partial=ScenePathing.partialRegion(0,0,far,corridor);
+        check(!partial.isEmpty()&&partial.getLast().x()>3&&partial.getLast().x()<4,"optional partial path approaches the closed gate without claiming to reach the far room");
+        px=0;py=0;for(var point:partial){check(corridor.clear(px,py,point.x(),point.y()),"every partial edge preserves live collision");px=point.x();py=point.y();}
+        check(ScenePathing.partialRegion(px,py,far,corridor).isEmpty(),"already closest reachable pose does not return a futile loop");
+        closed.set(false);var opened=ScenePathing.partialRegion(px,py,far,corridor);
+        check(!opened.isEmpty()&&opened.getLast().equals(new ScenePathing.Point(9,0)),"replanning uses the newly opened gate without cached collision");
+        check(ScenePathing.partialRegion(0,0,(x,y)->0,corridor).isEmpty(),"already reached region needs no movement");
+        check(ScenePathing.partialRegion(0,0,far,(x,y,tx,ty)->false).isEmpty(),"isolated source cannot fabricate a partial route");
+        int[] calls={0};var bounded=ScenePathing.partialRegion(0,0,(x,y)->(float)Math.hypot(10000-x,y),(x,y,tx,ty)->{calls[0]++;return true;});
+        check(!bounded.isEmpty()&&calls[0]<=32780&&bounded.getLast().x()<10000,"partial paths retain the fixed search budget");
+        System.out.println("PASS: bounded complete/partial routing, live closed/open gate edges, no-progress refusal, narrow corridors, attack occlusion and obstacle pursuit");
     }
 }
