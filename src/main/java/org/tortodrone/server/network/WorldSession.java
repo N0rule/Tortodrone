@@ -1659,7 +1659,10 @@ final class WorldSession implements AutoCloseable {
         if(portalMove!=null)return; // A source readiness RPC may already be queued before forceScene.
         if (!subscribed || closed) throw new IOException("Subscribe to town before entering it");
         if (entered) return;
-        if(scene.map().town())characters.lastTownScene(knight.id(),authRevision,scene.map().id());
+        if(scene.map().town()){
+            characters.lastTownScene(knight.id(),authRevision,scene.map().id());
+            if(profile.progress().openingStage()>=0)output.send(()->codec.homeTown(oid,profile));
+        }
         entered = true;
         friendLocation=presence(scenes.parties().view(partyMember));
         departedSceneOid=0;

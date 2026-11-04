@@ -181,7 +181,7 @@ public final class SessionCodec {
             var tutorial=soloInteriors?SceneRegistry.system().tutorial():null;
             var registry=soloInteriors?SceneRegistry.system():null;
             var openingGate=registry==null?null:registry.openingGate(org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);
-            var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().scenes().stream().filter(m->m.town()&&(m.id()==registry.entry().map().id()||tutorial!=null&&m.id()==217||openingGate!=null&&m.id()==218)).toList();
+            var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().scenes().stream().filter(m->m.town()&&(m.id()==registry.entry().map().id()||m.id()==217||m.id()==218)).toList();
             if(soloInteriors){type(out,"com.threerings.presents.dobj.DSet");out.writeInt(towns.size());for(var town:towns)townSummary(out,town);}
             else emptyDSet(out);
             if(soloInteriors) {
@@ -559,11 +559,7 @@ public final class SessionCodec {
             attribute(out,oid,"crowns",o -> value(o,profile.crowns()));
             attribute(out,oid,"energy",o -> value(o,profile.energy()));
             attribute(out,oid,"showEnergy",o -> value(o,true));
-            attribute(out,oid,"homeTown",o->{
-                var opening=SceneRegistry.system().tutorial();
-                if(profile.progress().openingStage()>=0&&profile.progress().openingStage()<3&&opening!=null)townSummary(o,opening.camp());
-                else townSummary(o);
-            });
+            attribute(out,oid,"homeTown",o->homeTown(o,profile));
             rank(out,oid,profile);
             attribute(out,oid,"prestige",o->value(o,profile.progress().prestige()));
             attribute(out,oid,"progressFlags",o->value(o,profile.progress().progressFlags()));
@@ -1361,7 +1357,19 @@ public final class SessionCodec {
     private void townSummary(DataOutputStream out,SceneCatalog.MapScene entry)throws IOException {
         type(out,"com.threerings.projectx.town.data.TownSummary");string(out,entry.townName());string(out,"town");
         emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);string(out,null);
-        out.writeInt(0);out.writeInt(entry.id());out.writeInt(entry.zone());
+        // TownSummary carries the unqualified town ID; its native zR() qualifies it.
+        // Captured initial Camp alone carries the intro-town flag.
+        out.writeInt(entry.id()==217?1:0);out.writeInt(entry.id());out.writeInt(entry.zone()&0x00ffffff);
+    }
+    private void homeTown(DataOutputStream out,WorldProfile profile)throws IOException {
+        var registry=SceneRegistry.system();int stage=profile.progress().openingStage();
+        if(stage==2)townSummary(out,registry.catalog().scene(218));
+        else if(stage>=0&&stage<2)townSummary(out,registry.catalog().scene(217));
+        else townSummary(out);
+    }
+    /** Native home changes after successful town entry, not on a floor-complete request. */
+    public byte[] homeTown(int oid,WorldProfile profile)throws IOException {
+        return frame(out->{eventHeader(out,"AttributeChangedEvent",oid);string(out,"homeTown");homeTown(out,profile);});
     }
     private void occupant(DataOutputStream out,ActorState actor)throws IOException {
         type(out,"com.threerings.projectx.data.ProjectXOccupantInfo");out.writeBoolean(true);out.writeInt(actor.clientOid());name(out,actor.name());out.writeByte(0);out.writeInt(actor.id());
