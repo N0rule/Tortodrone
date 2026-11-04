@@ -264,9 +264,11 @@ public final class TownMovement {
             updateFlags();
         }
         if (now - lastInputAt > 500) {
-            inputFlags = 0;
+            // Selection bits are persistent client state, not held buttons.
+            // Timing out movement/attack must not invent a switch back to slot zero.
+            inputFlags &= 56;
             if (activity == INVENTORY) setActivity(INVENTORY_END, timestamp);
-            if(combat!=null)combat.input(0,timestamp,timestamp,rotation,direction,activity==0&&status.canAttack());
+            if(combat!=null)combat.input(inputFlags,timestamp,timestamp,rotation,direction,activity==0&&status.canAttack());
             updateFlags();
         }
         moveTo(sceneTime);

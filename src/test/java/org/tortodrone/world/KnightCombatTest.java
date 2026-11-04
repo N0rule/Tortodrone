@@ -5,13 +5,14 @@ import org.tortodrone.character.WorldProfile;
 
 /** Bounded input/state regression. Timings are fixture data, never production defaults. */
 public final class KnightCombatTest {
-    public static void main(String[] args) {
+    public static void main(String[] args)throws Exception {
         var hit=new WeaponCatalog.Attack(100,200,600,false,-1,-1,0,0);
         var gunHit=new WeaponCatalog.Attack(50,100,300,true,-1,-1,0,0);
         var sword=new WeaponCatalog.Weapon("Sword",1000,3,500,true,false,1,1,List.of(hit,hit,hit),hit,hit,hit);
         var gun=new WeaponCatalog.Weapon("Gun",1200,0,0,false,true,1,1,List.of(gunHit),gunHit,gunHit,null);
         var bomb=new WeaponCatalog.Weapon("Bomb",1500,0,0,true,true,1,.5f,List.of(),hit,hit,null);
         var catalog=new WeaponCatalog(List.of(sword,gun,bomb),List.of(new WeaponCatalog.Shield("Shield",40,5000,7000,-.5f,0,hit)),2000);
+        idleSelection(catalog);
         var controller=new KnightCombat(catalog);
         controller.equipment(profile("Sword","Gun"));controller.reset(100);
         controller.input(4,100,100,0,0,true);
@@ -73,6 +74,19 @@ public final class KnightCombatTest {
         check(starts.size()==1&&starts.getFirst().land()==200&&starts.getFirst().clear()==1200&&starts.getFirst().attackSpeed()==.5f,
             "status attack speed scales both attack animation and weapon fire deadlines");
         System.out.println("KnightCombatTest passed");
+    }
+    private static void idleSelection(WeaponCatalog catalog)throws Exception {
+        var combat=new KnightCombat(catalog);combat.equipment(profile("Sword","Gun"));
+        var movement=new TownMovement(SceneWeaponsTest.openTerrain(),0,0,0);movement.combat(combat);
+        check(movement.accept(1000,0,0,8|1,1000,1000),"owned gun/movement intent accepted");movement.advance(1000,1000);
+        check(combat.state().weapon().config().equals("Gun"),"native input selects the owned second weapon");
+        movement.advance(1601,1601);
+        check(combat.state().weapon().config().equals("Gun")&&(movement.flags()&1)==0&&movement.x()==0,"stale input stops walking without inventing a slot-zero selection");
+        movement.accept(1602,0,0,8|64,1602,1602);movement.advance(1602,1602);
+        check(combat.activity()==KnightCombat.DEFENSE,"shield held with the selected gun");movement.advance(2203,2203);
+        check(combat.activity()==0&&combat.state().weapon().config().equals("Gun"),"timeout releases held defense while retaining weapon selection");
+        movement.accept(2204,0,0,0,2204,2204);movement.advance(2204,2204);
+        check(combat.state().weapon().config().equals("Sword"),"a real subsequent client slot-zero intent still selects the sword");
     }
     private static WorldProfile profile(String first,String second) {
         return new WorldProfile(10,1,1,0,0,1,List.of(
