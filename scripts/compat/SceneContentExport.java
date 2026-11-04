@@ -814,6 +814,17 @@ public final class SceneContentExport {
         }
         throw new IOException("Door counter derivation exceeds limit");
     }
+    static boolean goldDoor(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {
+        var resolved=resolvedActor(cm,reference);
+        if(!(resolved.kW().get("Action Desc") instanceof com.threerings.projectx.config.ActionDesc.UnlockGold))return false;
+        if(!resolved.getName().equals("Door/Base")||!"gold_unlock".equals(resolved.kW().get("Actionable Signal"))
+            ||!(resolved.kW().get("Handlers") instanceof HandlerConfig[] handlers)||handlers.length!=2
+            ||!(handlers[0] instanceof HandlerConfig.SignalStart start)||!start.name.isEmpty()||!strippedGuard(start.action)
+            ||!(((ActionConfig.Conditional)start.action).action instanceof ActionConfig.Compound compound)||compound.stopOnFailure||compound.actions.length!=1
+            ||!(compound.actions[0] instanceof com.threerings.projectx.dungeon.config.DungeonActionConfig.ClearMinimap)
+            ||!(handlers[1] instanceof com.threerings.projectx.config.ProjectXHandlerConfig.MinimapIcon))throw new IOException("Native gold door footprint changed");
+        return true;
+    }
     /** Recover only explicit preserved scalar tag paths; never infer a binding from argument names. */
     static List<String> sceneTags(com.threerings.config.ParameterizedConfig config,Map<String,Object> arguments,
                                   com.threerings.tudey.config.TagConfig nativeTags)throws IOException {
@@ -951,6 +962,10 @@ public final class SceneContentExport {
         }
         if (isKind(original, "Door")) {
             int increments=doorCounter(cm,reference);if(increments>0)out.put(prefix+"door-increments",Integer.toString(increments));
+            if(goldDoor(cm,reference)){
+                out.put(prefix+"door-lock","gold");
+                importReport.add("Gold door "+reference.getName()+": physical key/drop handling restored; native ClearMinimap icon removal is not implemented");
+            }
             addOptionalNumber(out,prefix+"door-speed",field(original,"doorSpeed"));
             Object startOpen = field(original, "startOpen");
             if (startOpen == null) startOpen = field(original, "open");
@@ -1071,7 +1086,7 @@ public final class SceneContentExport {
             out.put(prefix+"kind",lift.getClass().getSimpleName());writeGeometry(out,prefix,lift.shape);
             out.put(prefix+"speed",Float.toString(lift.speed));
         }
-        for(String name:List.of("canThrow","throwTime","fallSpeed","thrownCollisionFlags","thrownCollisionMask","fuse","explodeOnImpact","snapTag"))addOptional(out,prefix+kebab(name),field(lift,name));
+        for(String name:List.of("canThrow","throwTime","fallSpeed","thrownCollisionFlags","thrownCollisionMask","fuse","explodeOnImpact","snapTag","actionableSignal"))addOptional(out,prefix+kebab(name),field(lift,name));
         if(lift.description!=null)out.put(prefix+"description",lift.description.getName());
         for(var handler:lift.handlers)if(handler instanceof HandlerConfig.Signal signal&&signal.action!=null){
             out.put(prefix+"land-action",org.tortodrone.world.FireCatalog.actionJson(FireCatalogExport.readAction(cm,signal.action)));break;

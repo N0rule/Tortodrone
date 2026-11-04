@@ -21,6 +21,8 @@ public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene so
         for(var map:List.of(source,destination))if(!map.collision().walkable(map.spawnX(),map.spawnY())||!map.staticCollision().floorSupported(map.spawnX(),map.spawnY()))throw new IllegalArgumentException("Unsupported opening gate entrance");
         var exits=source.content().entries().stream().filter(e->e.key().equals(Integer.toString(GENERATOR_EXIT))&&e.spec().fields().containsKey("elevator-mode")).toList();
         if(exits.size()!=1||!new SceneElevator(1,true).equals(SceneElevator.read(exits.getFirst().spec())))throw new IllegalArgumentException("Missing native Generator exit");
+        var gold=entry(source,"604","Door");var key=entry(source,"3427","DungeonLift");var counter=entry(source,"3563","Door");
+        if(!gold.spec().text("door-lock","").equals("gold")||!key.spec().text("actionable-signal","").equals("gold_unlock")||key.spec().flag("can-throw",true)||counter.spec().integer("door-increments",0)!=2)throw new IllegalArgumentException("Generator key/door controls require current preparation");
     }
     public static OpeningGate available(SceneCatalog catalog,OpeningMission mission){
         if(mission!=OpeningMission.ANCIENT_GENERATOR)return null;
@@ -32,6 +34,10 @@ public record OpeningGate(OpeningMission mission,int id,SceneCatalog.MapScene so
     public boolean exit(SceneSimulation.FloorAdvanceRequest request){return request!=null&&request.source().entity()!=null&&request.source().entity().entrySource()&&request.source().entity().key().equals(Integer.toString(GENERATOR_EXIT));}
     private static ScenePortals.Entrance entrance(SceneCatalog.MapScene map,int id){
         return map.portals().entrances().values().stream().filter(e->e.id()==id&&e.x()==map.spawnX()&&e.y()==map.spawnY()&&Math.abs(e.rotation()-map.spawnRotation())<.00001f).findFirst().orElseThrow(()->new IllegalArgumentException("Missing authored gate entrance"));
+    }
+    private static SceneContent.Entry entry(SceneCatalog.MapScene map,String key,String kind){
+        var matches=map.content().entries().stream().filter(e->e.key().equals(key)&&e.spec().text("kind","").equals(kind)).toList();
+        if(matches.size()!=1)throw new IllegalArgumentException("Missing original Generator control "+key);return matches.getFirst();
     }
     private static String hash(byte[] layout){try{return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(layout));}catch(NoSuchAlgorithmException impossible){throw new AssertionError(impossible);}}
     /** Server-issued solo attempt; never deserialized from the client. */

@@ -240,7 +240,7 @@ public final class SceneSimulation {
             movement.resetInput(actor.created());
             movement.dynamicPenetration((x,y)->entities.penetration(x,y,actor.id()));
             movement.staticCollision(instance.map().staticCollision(),Math.round(instance.map().content().stats().getOrDefault("player.collision-mask",43f)));
-            movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation());
+            movement.interaction(stamp->{var prompt=entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift);
                 if(prompt==null)return false;
                 if(prompt.action().equals("Lift")){
                     if(lift!=0||!movement.lift(stamp))return false;
@@ -337,7 +337,7 @@ public final class SceneSimulation {
             var a=appearance;
             return new ActorState(a.id(),a.clientOid(),a.name(),a.color(),a.created(),movement.x(),movement.y(),
                 movement.rotation(),movement.direction(),movement.flags()|(!instance.map().town()&&health.invulnerable(SceneClock.now())?SceneHealth.INVULNERABLE_FLAG:0)|(health.cloaked()?32:0),movement.activity(),movement.activityStarted(),a.config(),a.gameMaster(),movement.combatState(),null,null,
-                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation()),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
+                    !health.alive()||movement.activity()==TownMovement.RESURRECT?null:entities.interaction(movement.x(),movement.y(),movement.rotation(),appearance.id(),lift),new SceneKnightState(movement.activityData(),lift,health.status(),progress,sprite,harness,instance.map().town()||sprite==null?0:petId,knightSkill,health.hitTime()));
         }
         private ConversationRequest pendingConversation;
         private final ArrayDeque<MemoryRequest> pendingMemories=new ArrayDeque<>();

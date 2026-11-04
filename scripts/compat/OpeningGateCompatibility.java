@@ -27,6 +27,17 @@ public final class OpeningGateCompatibility {
         maps.put(337,SceneCatalog.loadTemplate(337,Path.of(args[2])));maps.put(218,SceneCatalog.loadTemplate(218,Path.of(args[3])));
         var registry=new SceneRegistry(SceneCatalog.of(maps,base.catalog().entry().id()));registry.town(base.town());registry.weapons(base.weapons());registry.equipment(base.equipment());registry.fires(base.fires());registry.petFires(content.petFires());SceneRegistry.install(registry);
         var gate=registry.openingGate(OpeningMission.ANCIENT_GENERATOR);check(gate!=null,"original Generator, powered Camp, entrances and native elevator required");
+        for(var control:Map.of("604","door-lock","3427","actionable-signal","3563","door-increments").entrySet()){
+            var original=gate.source();var originalContent=original.content();var bindings=new ArrayList<SceneContent.Entry>();
+            for(var binding:originalContent.entries()){
+                if(binding.key().equals(control.getKey())&&binding.spec().fields().containsKey(control.getValue())){var fields=new TreeMap<>(binding.spec().fields());fields.remove(control.getValue());bindings.add(new SceneContent.Entry(binding.key(),binding.x(),binding.y(),binding.rotation(),new SceneContent.Spec(fields)));}
+                else bindings.add(binding);
+            }
+            var incomplete=new SceneContent(bindings,originalContent.scales(),originalContent.conversations(),originalContent.stats(),originalContent.items(),originalContent.cycles(),originalContent.statuses(),originalContent.mapIcons(),originalContent.actorTemplates());
+            var changed=new SceneCatalog.MapScene(original.id(),original.zone(),original.zoneName(),original.name(),original.image(),original.kind(),original.version(),original.spawnX(),original.spawnY(),original.spawnRotation(),original.instances(),original.collision(),original.layout(),original.portals(),incomplete,original.staticCollision());
+            var invalid=new TreeMap<>(maps);invalid.put(337,changed);
+            check(OpeningGate.available(SceneCatalog.of(invalid,base.catalog().entry().id()),OpeningMission.ANCIENT_GENERATOR)==null,"a pinned layout alone cannot advertise a gate with missing control mechanics: "+control.getValue());
+        }
         var home=Files.createTempDirectory("tortodrone-opening-gate-");
         try{
             var db=new Database(home,true);var protection=new Passwords.Protection(new byte[16],new byte[32]);

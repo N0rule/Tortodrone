@@ -18,6 +18,11 @@ public final class EntryStateCompatibility {
         var pawn=new ActorState(219,1001,"Fixture",0,100,136.5f,197.5f,0,0,0,TownMovement.IDLE,200,new StarterCatalog.Model("Character/PC/Level",Map.of()));
         var frozen=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,200,(short)50,List.of(pawn),List.of(),new int[0],Map.of(),true)).aej()[0];
         check(frozen.getClass()==com.threerings.projectx.dungeon.data.actor.Dungeoneer.class&&(int)FireCompatibility.field(frozen,"_activity")==285&&(int)FireCompatibility.field(frozen,"_activityStarted")==200,"current native frozen elevator pawn activity and timestamp");
+        var keyHolder=new ActorState(219,1001,"Fixture",0,100,0,0,0,0,0,269,200,new StarterCatalog.Model("Character/PC/Level",Map.of()),false,null,null,null,new InteractionState(1234,null,"UnlockGold"),null);
+        var unlock=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,200,(short)50,List.of(keyHolder),List.of(),new int[0],Map.of(),true)).aej()[0];
+        check(FireCompatibility.field(unlock,"_actionDesc") instanceof com.threerings.projectx.config.ActionDesc.UnlockGold
+            &&FireCompatibility.field(unlock,"_actionEntity") instanceof com.threerings.tudey.data.EntityKey.Actor&&FireCompatibility.field(unlock,"_description")==null,"native gold-unlock prompt, actor entity key and absent native description");
+        System.out.println("PASS: stock reader accepts UnlockGold action description with a scene-owned actor key (serialization fixture)");
         check(new com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp().colorId==99,"installed native neutral territory color");
         var light=light(100,0.5f);var lightFrame=FireCompatibility.read(new SessionCodec().sceneDelta(1001,140,0,(short)0,100,100,(short)50,List.of(light),List.of(),new int[0],Map.of(),true));
         var nativeLight=lightFrame.aej()[0];check(nativeLight.getClass()==com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp.class&&((com.threerings.projectx.dungeon.arena.data.actor.TerritoryProp)nativeLight).colorId==99,"native lighting class and full color byte");

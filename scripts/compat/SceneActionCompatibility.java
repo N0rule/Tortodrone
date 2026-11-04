@@ -163,6 +163,13 @@ public final class SceneActionCompatibility {
         var leverOriginal=leverReference.a(cm,com.threerings.tudey.config.ActorConfig.class).ai(cm);
         if(!SceneContentExport.oneTimeLever(cm,leverReference,leverOriginal).equals(new SceneActions.Signal("action 1a","increment")))throw new AssertionError("One-time lever outgoing action lost");
         System.out.println("PASS: installed stripped one-time lever footprint/mask/parameter paths; archive-backed one-use damage behavior");
+        var goldReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Door/Iron Gate/Gold 5");
+        if(!SceneContentExport.goldDoor(cm,goldReference))throw new AssertionError("Native gold door descriptor/signal/handler binding lost");
+        var keyReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Dynamic/Lift Objects/Gold Key");
+        var keyOriginal=keyReference.a(cm,com.threerings.tudey.config.ActorConfig.class).ai(cm);var keyFields=new TreeMap<String,String>();
+        SceneContentExport.writeLift(cm,keyFields,"",keyReference,(com.threerings.projectx.config.ProjectXActorConfig.Lift)keyOriginal,false);
+        if(!keyFields.get("actionable-signal").equals("gold_unlock")||!keyFields.get("can-throw").equals("false"))throw new AssertionError("Native carried key capability lost");
+        System.out.println("PASS: installed gold-door stripped footprint, UnlockGold/gold_unlock binding and nonthrowable key lift capability");
         var twoTags=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Actor Removed (2 Tags)");
         var groupOpen=new ActionConfig.Signal();groupOpen.name="open";var groupTarget=new TargetConfig.Tagged();groupTarget.tag="door end";groupOpen.target=groupTarget;
         twoTags.kW().put("Actor Tag","wave 5d");twoTags.kW().put("Actor Tag 2","wave 4d");twoTags.kW().put("Action",groupOpen);

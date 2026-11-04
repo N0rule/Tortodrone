@@ -1452,7 +1452,7 @@ public final class SessionCodec {
     }
     private void interaction(DataOutputStream out,org.tortodrone.world.InteractionState interaction)throws IOException {
         if(interaction==null){out.writeShort(0);out.writeShort(0);out.writeShort(0);return;}
-        if(!java.util.Set.of("Interact","Talk","Shop","Lift","Resurrect").contains(interaction.action()))throw new IOException("Unsupported interaction action");
+        if(!java.util.Set.of("Interact","Talk","Shop","Lift","Resurrect","UnlockGold").contains(interaction.action()))throw new IOException("Unsupported interaction action");
         type(out,"com.threerings.projectx.config.ActionDesc$"+interaction.action());
         if(interaction.entryKey()!=null){type(out,"com.threerings.tudey.data.EntityKey$Entry");value(out,Integer.parseInt(interaction.entryKey()));}
         else{type(out,"com.threerings.tudey.data.EntityKey$Actor");out.writeInt(interaction.actorId());}

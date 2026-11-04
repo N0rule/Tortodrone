@@ -76,6 +76,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
                 doorIncrements=spec.integer("door-increments",0);
                 if(!spec.text("kind","").equals("Door")||doorIncrements<1||doorIncrements>1_000_000)throw new IllegalArgumentException("Invalid native door counter");
             }
+            if(spec.fields().containsKey("door-lock")&&(!spec.text("kind","").equals("Door")||!spec.text("door-lock","").equals("gold")))throw new IllegalArgumentException("Unsupported scene door lock");
             script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
             platform=ScenePartyPlatform.read(spec);
             elevator=SceneElevator.read(spec);
@@ -381,6 +382,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
     }
     public void dropLift(int id,ActorState player,int stamp){
         var e=entities.get(id);if(e==null||e.carrier!=player.id())return;
+        // Native Dungeoneer.drop invokes the current actionable with the dropped
+        // lift as Activator. Test that owned prompt before releasing the carrier.
+        var prompt=interaction(player.x(),player.y(),player.rotation(),player.id(),id);
+        var unlock=e.spec.text("actionable-signal","").equals("gold_unlock")&&prompt!=null&&prompt.action().equals("UnlockGold")?entities.get(prompt.actorId()):null;
         e.carrier=0;e.flags&=~6;e.z=0;
         float distance=(ScenePortals.PAWN_RADIUS+e.spec.number("radius",0))*1.01f;
         var target=snapTarget(e,player);
@@ -389,6 +394,9 @@ public final class SceneEntities implements SceneWeapons.Targets {
         if(terrain.walkable(x,y)&&walkable(x,y,e.id)){e.x=x;e.y=y;}else {e.x=player.x();e.y=player.y();}
         e.dropPoint=new SceneLiftState.Point(e.x,e.y);
         e.rotation=e.direction=player.rotation();e.faction=player.id();e.excluded=new int[0];
+        if(unlock!=null&&unlock.kind.equals("Door")&&unlock.spec.text("door-lock","").equals("gold")&&(unlock.flags&2)==0){
+            entitySignal(unlock,"open",stamp);e.destroyed=stamp;e.scriptDestroyed=true;e.status.clear();return;
+        }
         if(e.vial!=null)land(e,stamp);
     }
     public void releaseLifts(int player,int stamp){
@@ -430,8 +438,14 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return e.spec.text("interaction-action",fallback);
     }
     public InteractionState interaction(float x,float y,float rotation){
+        return interaction(x,y,rotation,0,0);
+    }
+    /** Carried keys can address only a compatible closed door in this scene. */
+    public InteractionState interaction(float x,float y,float rotation,int owner,int lift){
+        var carried=lift==0?null:entities.get(lift);
+        boolean key=carried!=null&&carried.destroyed==Integer.MAX_VALUE&&carried.carrier==owner&&carried.kind.equals("DungeonLift")&&carried.spec.text("actionable-signal","").equals("gold_unlock");
         Entity nearest=null;float best=Float.POSITIVE_INFINITY;
-        for(var e:entities.values())if((e.interactive||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
+        for(var e:entities.values())if((key?e.kind.equals("Door")&&e.spec.text("door-lock","").equals("gold")&&(e.flags&2)==0:e.interactive||e.kind.equals("DungeonLift")&&(e.flags&6)==0)&&e.destroyed==Integer.MAX_VALUE){
             float ox=e.spec.number("interaction-offset-x",.7f),oy=e.spec.number("interaction-offset-y",0);
             float c=(float)Math.cos(rotation),s=(float)Math.sin(rotation);
             float distance=(float)Math.hypot(x+ox*c-oy*s-e.x,y+ox*s+oy*c-e.y);
@@ -440,7 +454,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         }
         if(nearest==null)return null;
         String description=nearest.spec.text("description","");
-        String action=interactionAction(nearest);
+        String action=key?"UnlockGold":interactionAction(nearest);
         return new InteractionState(nearest.id,description.isEmpty()?null:new StarterCatalog.Model(description,Map.of()),action,
             nearest.entrySource()?nearest.binding.key():null);
     }
