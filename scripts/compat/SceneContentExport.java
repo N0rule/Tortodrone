@@ -56,7 +56,7 @@ public final class SceneContentExport {
         if (Files.exists(target)) throw new IOException("Refusing to replace content.properties");
 
         importReport.clear();scriptedConversations.clear();startups.clear();actorTemplateIds.clear();actorTemplates.clear();
-        levelContext=scene.adD() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
+        levelContext=scene.adG() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level?level:null;
         TreeMap<String, String> values = new TreeMap<>();
         rules=new Properties();
         try(var in=Files.newInputStream(Path.of("content/_internal/provenance/actor-rules.properties"))){rules.load(in);}
@@ -132,8 +132,8 @@ public final class SceneContentExport {
         List<Binding> result = new ArrayList<>();
         var state=new com.threerings.projectx.dungeon.config.SpawnTableConfig.a();
         state.depth=0;state.difficulty=com.threerings.projectx.dungeon.data.DungeonCodes.Difficulty.MEDIUM;
-        if(scene.adD() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level)state.bkg=level;
-        for (Object raw : scene.adH()) {
+        if(scene.adG() instanceof com.threerings.projectx.dungeon.data.LevelSceneConfig level)state.bkh=level;
+        for (Object raw : scene.adK()) {
             HandlerConfig[] handlers;
             String sourceKey;
             float x, y, rotation;
@@ -222,7 +222,7 @@ public final class SceneContentExport {
 
     /** Whole-graph extraction only: an unsupported sibling must never disappear from a compound. */
     private static void collectTriggers(ConfigManager cm,TudeySceneModel scene,Map<String,String> values,List<String> indexes)throws Exception {
-        for(Object raw:scene.adH())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
+        for(Object raw:scene.adK())if(raw instanceof TudeySceneModel.PlaceableEntry entry){
             var reference=resolvedPlaceable(cm,entry.placeable);
             var config=reference.a(cm,PlaceableConfig.class);
             var original=config.q(cm);
@@ -726,7 +726,7 @@ public final class SceneContentExport {
         if(depth>16)throw new IOException("Recursive scene table");
         if(table instanceof com.threerings.projectx.dungeon.config.SpawnTableConfig.Prefab prefab){
             if(levelContext!=null){
-                Object types=levelContext.bkI?levelContext.bkG:levelContext.bkF;
+                Object types=levelContext.bkJ?levelContext.bkH:levelContext.bkG;
                 if(types instanceof Map<?,?> map&&!map.isEmpty()||types instanceof java.util.Set<?> set&&!set.isEmpty())throw new IOException("Themed prefab selection needs runtime type handling");
             }
             if(prefab.root==null||prefab.root.spawnTable==null||prefab.root.getClass()!=com.threerings.projectx.dungeon.config.SpawnTableConfig.SpawnTypeListEntry.class)throw new IOException("Unsupported prefab root");
@@ -843,7 +843,7 @@ public final class SceneContentExport {
             }
         }
         var result=new ArrayList<String>(slots.values());
-        if(nativeTags.derived!=null)result.addAll(Arrays.asList(nativeTags.derived.adx()));
+        if(nativeTags.derived!=null)nativeTags.derived.forEach(result::add);
         for(String tag:result)if(tag==null||tag.length()>256||tag.contains(",")||tag.chars().anyMatch(Character::isISOControl))throw new IOException("Unrepresentable native scene tag");
         return result.stream().filter(tag->!tag.isBlank()).distinct().toList();
     }
@@ -906,7 +906,7 @@ public final class SceneContentExport {
         if(description instanceof ConfigReference<?> r)put(out,prefix+"description",r.getName());
         if(original instanceof com.threerings.projectx.config.ProjectXActorConfig.Stranger){
             var knight=(com.threerings.projectx.config.ProjectXActorConfig.Knight)cm.d(ActorConfig.class,"Character/PC/Default").ai(cm);
-            var bounds=knight.interactionShape.acP().aeu();
+            var bounds=knight.interactionShape.acS().aex();
             putFloat(out,prefix+"interaction-radius",Math.min(bounds.tu().x-bounds.tt().x,bounds.tu().y-bounds.tt().y)/2);
             putFloat(out,prefix+"interaction-offset-x",(bounds.tu().x+bounds.tt().x)/2);
             putFloat(out,prefix+"interaction-offset-y",(bounds.tu().y+bounds.tt().y)/2);
@@ -915,13 +915,13 @@ public final class SceneContentExport {
             put(out,prefix+"pickup-item",item.getName());
             @SuppressWarnings("unchecked") var itemRef=(ConfigReference<com.threerings.projectx.item.config.ItemConfig>)item;
             var nativeItem=itemRef.a(cm,com.threerings.projectx.item.config.ItemConfig.class).w(cm);
-            put(out,prefix+"pickup-transient",Boolean.toString(nativeItem.Qm()));
+            put(out,prefix+"pickup-transient",Boolean.toString(nativeItem.Qp()));
         }
         if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Pickup&&reference.kW().get("Dungeon Item") instanceof ConfigReference<?> item){
             out.put(prefix+"pickup-item",item.getName());
             @SuppressWarnings("unchecked") var nativeItem=((ConfigReference<com.threerings.projectx.item.config.ItemConfig>)item).a(cm,com.threerings.projectx.item.config.ItemConfig.class).w(cm);
-            out.put(prefix+"pickup-transient",Boolean.toString(nativeItem.Qm()));
-            int slot=nativeItem.UZ();
+            out.put(prefix+"pickup-transient",Boolean.toString(nativeItem.Qp()));
+            int slot=nativeItem.Vc();
             if(slot<0||!nativeItem.h(slot,false))throw new IOException("Unsupported prepared dungeon equipment slot");
             out.put(prefix+"pickup-equip-slot",Integer.toString(slot));
         }
@@ -984,6 +984,11 @@ public final class SceneContentExport {
         // Client exports strip server actions. Only explicitly sourced config bindings
         // in the checked-in rule data may restore those missing fields.
         String rulePrefix="actor."+reference.getName()+".";
+        if(reference.getName().equals("Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (No Loot)")&&rules.containsKey(rulePrefix+"script.program")){
+            if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster sentry)||sentry.attacks.length!=1||sentry.attacks[0]==null||sentry.attacks[0].ref==null
+                ||!sentry.attacks[0].ref.getName().equals("Character/NPC/Monster/Construct/Gun Puppy")||Float.parseFloat(out.getOrDefault(prefix+"speed","NaN"))!=0||Float.parseFloat(out.getOrDefault(prefix+"targeted-speed","NaN"))!=0
+                ||!out.getOrDefault(prefix+"attack.0.clear","").equals("1852")||!out.getOrDefault(prefix+"attack.0.land","").equals("769"))throw new IOException("No-loot sentry native stationary/attack footprint changed: speed="+out.get(prefix+"speed")+", targeted-speed="+out.get(prefix+"targeted-speed")+", clear="+out.get(prefix+"attack.0.clear")+", land="+out.get(prefix+"attack.0.land")+", heads="+(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Monster m?Arrays.stream(m.attacks).map(a->a==null||a.ref==null?"none":a.ref.getName()).toList():List.of()));
+        }
         for(String key:rules.stringPropertyNames())if(key.startsWith(rulePrefix))out.put(prefix+key.substring(rulePrefix.length()),rules.getProperty(key));
         String appended=out.get(prefix+"append-tags");
         if(appended!=null)out.put(prefix+"tags",out.getOrDefault(prefix+"tags","")+(out.getOrDefault(prefix+"tags","").isBlank()?"":",")+appended);
@@ -1279,7 +1284,7 @@ public final class SceneContentExport {
         addOptionalNumber(out, prefix + "width", field(shape, "width"));
         addOptionalNumber(out, prefix + "height", field(shape, "height"));
         if(shape instanceof com.threerings.tudey.shape.config.ShapeConfig config){
-            var bounds=config.acP().aeu();
+            var bounds=config.acS().aex();
             putFloat(out,prefix+"bounds-min-x",bounds.tt().x);putFloat(out,prefix+"bounds-min-y",bounds.tt().y);
             putFloat(out,prefix+"bounds-max-x",bounds.tu().x);putFloat(out,prefix+"bounds-max-y",bounds.tu().y);
         }

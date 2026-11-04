@@ -13,6 +13,11 @@ public final class TutorialEnemyCompatibility {
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");
         resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        if(args.length>1&&args[1].equals("sentries")){
+            construct(cm,"Character/NPC/Monster/Beast/Dust Bunny (TG)",.5);
+            noLootSentry(cm);
+            return;
+        }
         if(args.length>1&&args[1].equals("constructs")){
             construct(cm,"Character/NPC/Monster/Construct/Scuttlebot/Scuttlebot (TG)",.5);
             construct(cm,"Character/NPC/Monster/Construct/Lumber/Lumber (TG)",.5);
@@ -90,6 +95,26 @@ public final class TutorialEnemyCompatibility {
         var order=new ArrayList<>(heads.values());check(order.size()>=8&&order.subList(0,8).equals(List.of(0,2,3,2,3,2,3,0))&&!fires.isEmpty()&&fires.stream().allMatch(Boolean::booleanValue)&&health.state().current()<2000,"authored expose and alternating volleys execute real damaging graphs and repeat in authored order: heads="+heads+", fires="+fires+", health="+health.state().current());
         System.out.println("PASS: native training-ground Battlepod -> complete authored Wait/Attack/Goto loop -> expose/alternating volleys -> actual player damage (synthetic terrain; hatch interaction and floor not verified)");
     }
+    private static void noLootSentry(ConfigManager cm)throws Exception {
+        var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>("Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (No Loot)");
+        var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
+        var spec=new SceneContent.Spec(prepared.fields());var script=SceneScript.read(spec);
+        check(SceneTargeting.read(spec)==null&&SceneWander.read(spec)==null&&spec.number("speed",-1)==0,"stationary no-loot sentries must not inherit ordinary Gun Puppy targeting");
+        check(script.steps().equals(List.of(new SceneScript.Rotate(0,0,true),new SceneScript.Wait(658),new SceneScript.Attack(0),new SceneScript.Goto(0))),"exact archive timer binding, including its relative zero turn");
+        var content=new SceneContent(List.of(new SceneContent.Entry("sentry",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",2000f),Map.of(),Map.of(),Map.of());
+        var terrain=open();var scene=new SceneEntities(content,terrain);var weapons=new SceneWeapons(terrain);weapons.targets(scene);var health=new SceneHealth(content);int[] now={SceneClock.now()};
+        var heads=new TreeSet<Integer>();var fires=new ArrayList<Boolean>();
+        scene.attacks((actor,action)->{heads.add(actor.activityStarted());fires.add(weapons.fire(action,actor,now[0]));});scene.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
+        var pawn=player(219,5,0);int start=now[0];
+        for(int tick=0;tick<260;tick++){
+            now[0]+=50;scene.advance(now[0],List.of(pawn));weapons.advance(now[0],List.of(pawn));
+            var actor=scene.actors().getFirst();check(actor.x()==0&&actor.y()==0&&actor.rotation()==0&&(actor.flags()&16)==0,"timer sentry neither pursues nor turns toward the fixture knight");
+            if(now[0]-start<=658)check(fires.isEmpty(),"authored wait prevents immediate startup shooting");
+        }
+        check(heads.size()>=4&&!fires.isEmpty()&&fires.stream().allMatch(Boolean::booleanValue)&&health.state().current()<2000,"timer must repeatedly fire its actual native damaging gun graph");
+        var times=new ArrayList<>(heads);for(int i=1;i<times.size();i++)check(times.get(i)-times.get(i-1)>=2510&&times.get(i)-times.get(i-1)<=2850,"native 1852-ms attack plus 658-ms wait, quantized by the 50-ms script clock");
+        System.out.println("PASS: native no-loot Gun Puppy -> sourced non-targeting timer -> repeated real bullet damage, fixed pose/yaw and native wait/attack bounds (synthetic terrain; initial volley activation delay remains a parity assumption)");
+    }
     private static void construct(ConfigManager cm,String name,double draw)throws Exception {
         var spawn=new ActionConfig.SpawnActor();spawn.actor=new ConfigReference<>(name);
         var prepared=(SceneActions.Spawn)SceneActions.parse(org.tortodrone.resources.Json.stringify(SceneContentExport.sceneAction(spawn,0,cm)));
@@ -108,16 +133,16 @@ public final class TutorialEnemyCompatibility {
         var content=new SceneContent(List.of(new SceneContent.Entry("construct",0,0,0,spec)),Map.of(),Map.of(),Map.of("player.base-health",2000f),Map.of(),Map.of(),Map.of());
         var terrain=open();var scene=new SceneEntities(content,terrain,SceneCollision.empty(),new Random(1){@Override public double nextDouble(){return draw;}});var weapons=new SceneWeapons(terrain);weapons.targets(scene);var health=new SceneHealth(content);int[] now={SceneClock.now()};var fires=new ArrayList<Boolean>();
         scene.attacks((actor,action)->fires.add(weapons.fire(action,actor,now[0])));scene.playerHits(hit->health.hit(hit.damage(),hit.timestamp(),hit.multiplier()));
-        var pawn=player(219,name.contains("Retrode")?(draw==0?5.2f:1):5,0);boolean acquired=false,moved=false,trail=false;
+        var pawn=player(219,name.contains("Retrode")?(draw==0?5.2f:1):name.contains("Dust Bunny")?2.5f:5,0);boolean acquired=false,moved=false,trail=false;
         for(int tick=0;tick<1000&&health.state().current()==2000;tick++){
             now[0]+=50;scene.advance(now[0],List.of(pawn));weapons.advance(now[0],List.of(pawn));
             var actor=scene.actors().getFirst();acquired|=(actor.flags()&16)!=0;moved|=actor.x()>.1;
             trail|=weapons.actors().stream().anyMatch(a->a.config().name().equals("Bullet/Monster/Parts/Mecha Zombie Beam Trail"));
         }
         check(acquired&&!fires.isEmpty()&&fires.stream().allMatch(Boolean::booleanValue)&&health.state().current()<2000,"native construct must acquire and execute real damaging fire graphs: "+name+", draw="+draw+", fires="+fires+", health="+health.state().current());
-        if(name.contains("Scuttlebot"))check(moved,"Scuttlebot must pursue through normal movement");
+        if(name.contains("Scuttlebot")||name.contains("Dust Bunny"))check(moved,"native melee actor must pursue through normal movement");
         if(name.contains("Retrode")&&draw==0)check(trail,"beam must spawn actual delayed-damage trail bombs");
-        check(SceneWander.read(spec)!=null,"native idle Wander/Base binding");
+        check(name.contains("Dust Bunny")?SceneWander.read(spec)==null:SceneWander.read(spec)!=null,"native idle routine binding");
         System.out.println("PASS: native "+name+" draw="+draw+" -> capture-calibrated acquisition/attack choice -> actual graph/player damage"+(moved?" and pursuit":"")+" (synthetic terrain; original targeting parity not claimed)");
     }
     private static void companion(ConfigManager cm,String role)throws Exception {

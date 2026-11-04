@@ -146,7 +146,7 @@ public final class FireCatalogExport {
         AttackConfig.Original attack = AttackConfig.b(manager, reference);
         if (attack == null) throw new IOException("Unresolved stock attack " + reference.getName() + " for " + weapon);
         StarterCatalog.Model attackModel = model(reference);
-        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qh());metadata.put("rearm",attack.Qg());metadata.put("clear",attack.Qf());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
+        if(weapon.startsWith("Sprite/")){var metadata=new TreeMap<>(attackModel.arguments());metadata.put("land",attack.Qk());metadata.put("rearm",attack.Qj());metadata.put("clear",attack.Qi());attackModel=new StarterCatalog.Model(attackModel.name(),metadata);}
         var refs = new ArrayList<FireRef>();
         if(attack instanceof AttackConfig.ShieldBash bash&&bash.handler instanceof DungeonHandlerConfig.OneTimeIntersection handler
             &&handler.action instanceof DungeonActionConfig.DamageTargetFromPoint hit){
@@ -156,7 +156,7 @@ public final class FireCatalogExport {
             var shape=new com.threerings.tudey.shape.config.ShapeConfig.Circle();shape.radius=.67f;args.put("shape",argumentValue(shape));
             args.put("impulse",argumentValue(hit.impulseDealt));args.put("impulse-origin",argumentValue(new Vector2f(hit.impulseTranslation.x-.6f,hit.impulseTranslation.y)));
             Action sweep=new Action(Kind.SWEEP_DAMAGE,new StarterCatalog.Model("ShieldBash",args),null,"Source","","",.6f,0,0,0,true,0,0,0,hit.collisionMask,false,List.of(),"");
-            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.Qh()),50,false,0,0,0,sweep,null));
+            refs.add(new FireRef(new StarterCatalog.Model("ShieldBash",Map.of()),Math.max(0,550-attack.Qk()),50,false,0,0,0,sweep,null));
         }
         if (attack.fireRefs != null) for (FireActionConfig.FireActionReference fireRef : attack.fireRefs) {
             if (fireRef == null || fireRef.ref == null) {
@@ -328,7 +328,7 @@ public final class FireCatalogExport {
         if(itemConfig==null)return unsupported(spawn);
         var fields=new TreeMap<String,String>();fields.put("native-type","com.threerings.projectx.dungeon.data.actor.Pickup");
         fields.put("config-json",FireCatalog.modelJson(model(spawn.actor)));fields.put("shape","Circle");fields.put("radius",Float.toString(circle.radius));
-        fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qm()));
+        fields.put("pickup-item",item.getName());fields.put("pickup-transient",Boolean.toString(itemConfig.w(manager).Qp()));
         fields.put("vacuum-expansion",Float.toString(pickup.vacuumExpansion));fields.put("vacuum-speed",Float.toString(pickup.vacuumSpeed));fields.put("lifespan",Integer.toString(pickup.lifespan));
         float x=0,y=0,rotation=0,variance=0;boolean relative=true;
         if(spawn instanceof ActionConfig.SpawnTransformedActor transformed){x=transformed.translation.x;y=transformed.translation.y;}

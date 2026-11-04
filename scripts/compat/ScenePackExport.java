@@ -23,9 +23,9 @@ public final class ScenePackExport {
         var manager=(ConfigManager)ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class)
             .newInstance(resource,null,"config/");manager.init();
         var scene=(TudeySceneModel)com.threerings.export.util.b.e(layout);scene.init(manager);
-        String kind=sceneKind(scene.adD());
+        String kind=sceneKind(scene.adG());
         Entrance entrance=defaultEntrance(scene,manager);
-        var coords=scene.adE();if(coords.isEmpty())throw new IOException("No static tiles");
+        var coords=scene.adH();if(coords.isEmpty())throw new IOException("No static tiles");
         int minX=coords.stream().mapToInt(c->c.x).min().orElseThrow()-1;
         int minY=coords.stream().mapToInt(c->c.y).min().orElseThrow()-1;
         int maxX=coords.stream().mapToInt(c->c.x).max().orElseThrow()+2;
@@ -35,7 +35,7 @@ public final class ScenePackExport {
         var actor=new com.threerings.projectx.data.actor.Knight(new ConfigReference<>("Character/PC/Default"),1,0,new Vector2f(0,0),0);
         actor.init(manager);
         var config=manager.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(manager);
-        var shape=config.shape.acP();var bits=new BitSet(width*height);
+        var shape=config.shape.acS();var bits=new BitSet(width*height);
         float targetX=args.length==7?Float.parseFloat(args[5]):entrance.x;
         float targetY=args.length==7?Float.parseFloat(args[6]):entrance.y;
         if(!Float.isFinite(targetX)||!Float.isFinite(targetY))throw new IOException("Invalid spawn");
@@ -62,9 +62,9 @@ public final class ScenePackExport {
         var p=new Properties();p.setProperty("kind",kind);p.setProperty("scene-id",Integer.toString(scene.sceneId));
         p.setProperty("zone-id",args[3]);p.setProperty("zone-name",args[4]);p.setProperty("name",scene.name);
         p.setProperty("version",Integer.toString(scene.version));
-        if(!(scene.adD() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.Nk()==null)
+        if(!(scene.adG() instanceof com.threerings.projectx.data.ProjectXSceneConfig projectConfig)||projectConfig.Nn()==null)
             throw new IOException("Missing native scene background");
-        p.setProperty("image",projectConfig.Nk());p.setProperty("instances","1");
+        p.setProperty("image",projectConfig.Nn());p.setProperty("instances","1");
         p.setProperty("spawn-rotation",Float.toString(entrance.rotation));
         p.setProperty("spawn-x",Float.toString(spawnX));p.setProperty("spawn-y",Float.toString(spawnY));
         p.setProperty("scene-sha256",digest(out.resolve("scene.dat")));

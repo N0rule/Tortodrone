@@ -16,7 +16,7 @@ public final class SceneMonsterExport {
         for(int i=0;i<monster.attacks.length;i++){
             var ref=monster.attacks[i];if(ref==null||ref.ref==null)continue;
             var attack=AttackConfig.b(cm,ref.ref);String p=prefix+"attack."+i+".";indexes.add(Integer.toString(i));
-            out.put(p+"land",Integer.toString(attack.Qh()));out.put(p+"clear",Integer.toString(attack.Qf()));
+            out.put(p+"land",Integer.toString(attack.Qk()));out.put(p+"clear",Integer.toString(attack.Qi()));
             if(attack instanceof AttackConfig.Chain chain){
                 boolean unconditional=chain.condition instanceof com.threerings.tudey.config.ConditionConfig.Always;
                 // The native default Action condition executes a null SpawnActor, which returns true.
@@ -24,7 +24,7 @@ public final class SceneMonsterExport {
                         &&condition.action!=null&&condition.action.getClass()==com.threerings.tudey.config.ActionConfig.SpawnActor.class
                         &&((com.threerings.tudey.config.ActionConfig.SpawnActor)condition.action).actor==null)unconditional=true;
                 if(unconditional&&chain.attack>=0&&chain.attack<monster.attacks.length&&monster.attacks[chain.attack]!=null){
-                    out.put(p+"chain-next",Integer.toString(chain.attack));out.put(p+"chain-rearm",Integer.toString(attack.Qg()));
+                    out.put(p+"chain-next",Integer.toString(chain.attack));out.put(p+"chain-rearm",Integer.toString(attack.Qj()));
                 }else out.put(p+"chain-unsupported",chain.condition==null?"null":chain.condition.getClass().getName());
             }
             out.put(p+"blended",Boolean.toString(attack.blended));

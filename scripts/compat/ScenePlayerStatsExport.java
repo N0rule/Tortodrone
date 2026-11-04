@@ -28,7 +28,7 @@ public final class ScenePlayerStatsExport {
         var pc=cm.d(com.threerings.tudey.config.ActorConfig.class,"Character/PC/Default").ai(cm);
         put(values,"player.collision-mask",Integer.toString(pc.collisionMask));
         put(values,"player.collision-flags",Integer.toString(pc.collisionFlags));
-        var interaction=((com.threerings.projectx.config.ProjectXActorConfig.Knight)pc).interactionShape.acP().aeu();
+        var interaction=((com.threerings.projectx.config.ProjectXActorConfig.Knight)pc).interactionShape.acS().aex();
         put(values,"player.interaction-offset-x",Float.toString((interaction.tt().x+interaction.tu().x)/2));
         put(values,"player.interaction-offset-y",Float.toString((interaction.tt().y+interaction.tu().y)/2));
         put(values,"player.interaction-radius",Float.toString(Math.min(interaction.tu().x-interaction.tt().x,interaction.tu().y-interaction.tt().y)/2));
