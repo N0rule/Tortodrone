@@ -12,10 +12,13 @@ public final class SceneRegistry {
         private final SceneCatalog.MapScene map;
         private final SceneSimulation simulation;
         private final TutorialRoute tutorial;
+        private final OpeningGate.Attempt opening;
         public Instance(int oid,int index,SceneCatalog.MapScene map){this(oid,index,map,0);}
         private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner){this(oid,index,map,partyOwner,null);}
-        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;simulation=new SceneSimulation(this);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial){this(oid,index,map,partyOwner,tutorial,null);}
+        private Instance(int oid,int index,SceneCatalog.MapScene map,int partyOwner,TutorialRoute tutorial,OpeningGate.Attempt opening){this.oid=oid;this.index=index;this.map=map;this.partyOwner=partyOwner;this.tutorial=tutorial!=null&&tutorial.source()==map?tutorial:null;this.opening=opening;simulation=new SceneSimulation(this);}
         public TutorialRoute tutorial(){return tutorial;}
+        public OpeningGate.Attempt opening(){return opening;}
         public int partyOwner(){return partyOwner;}
         public int oid(){return oid;}
         public int index(){return index;}
@@ -24,7 +27,9 @@ public final class SceneRegistry {
     }
     private final SceneCatalog catalog;
     private final TutorialRoute tutorial;
+    private final OpeningGate generator;
     public TutorialRoute tutorial(){return tutorial;}
+    public OpeningGate openingGate(org.tortodrone.character.OpeningMission mission){return mission==org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR?generator:null;}
     private final PartyRegistry parties=new PartyRegistry();
     public PartyRegistry parties(){return parties;}
     private org.tortodrone.town.TownCatalog town=org.tortodrone.town.TownCatalog.empty();
@@ -61,7 +66,7 @@ public final class SceneRegistry {
     public int channelType(int oid){for(int base:channelZones.values()){if(oid==base)return 6;if(oid==base+1)return 7;}return -1;}
     public SceneChat channel(int oid){var channel=channels.get(oid);if(channel==null)throw new IllegalArgumentException("Unknown chat channel");return channel;}
     public SceneRegistry(SceneCatalog catalog) {
-        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);int oid=10;
+        this.catalog=catalog;tutorial=TutorialRoute.available(catalog);generator=OpeningGate.available(catalog,org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);int oid=10;
         int chatOid=1_500_000_000;
         for(int zone:catalog.scenes().stream().map(SceneCatalog.MapScene::zone).distinct().sorted().toList()) {
             channelZones.put(zone,chatOid);channels.put(chatOid,new SceneChat());channels.put(chatOid+1,new SceneChat());chatOid+=2;
@@ -131,7 +136,22 @@ public final class SceneRegistry {
         var leases=interiorLeases.get(scene);if(leases==null)return;leases.remove(worldId);
         if(leases.isEmpty()&&scene.simulation().playerCount()==0){interiorLeases.remove(scene);interiors.values().removeIf(value->value==scene);interiorOids.addLast(scene.oid());}
     }
+    /** Allocate only an authenticated private party's sourced mission floor. */
+    public synchronized Instance startOpening(OpeningGate gate,int worldId,PartyRegistry.Member member,String difficulty)throws IOException {
+        if(gate==null||gate.source()!=catalog.scene(gate.source().id())||gate.destination()!=catalog.scene(gate.destination().id())||member==null||member.worldId!=worldId)throw new IOException("Invalid mission route owner");
+        var view=parties.view(member);
+        return parties.soloGate(member,view.oid(),()->{
+        var attempt=new OpeningGate.Attempt(gate,worldId,view.oid(),difficulty);
+        var key=new InteriorKey(gate.source().id(),worldId);
+        if(interiors.containsKey(key)||interiorOids.isEmpty())throw new IOException("Mission instance is unavailable");
+        // Construct before changing party state or consuming a reusable place OID.
+        var created=new Instance(interiorOids.getFirst(),0,gate.source(),0,null,attempt);
+        created.simulation().fires(fires);created.simulation().petFires(petFires);created.simulation().town(town);
+        parties.enterOpening(member);interiorOids.removeFirst();interiors.put(key,created);interiorLeases.put(created,new HashSet<>(Set.of(worldId)));return created;
+        });
+    }
     public boolean authorized(Instance scene,int world,PartyRegistry.Member member){
+        if(scene.opening()!=null)return scene.opening().worldId()==world&&parties.owns(member,scene.opening().partyOid());
         if(scene.partyOwner()==0)return true;
         try{return parties.owner(member,world)==scene.partyOwner();}catch(IOException invalid){return false;}
     }

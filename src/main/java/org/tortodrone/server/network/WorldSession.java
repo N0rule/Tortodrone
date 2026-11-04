@@ -70,6 +70,11 @@ final class WorldSession implements AutoCloseable {
     private record PortalMove(SceneRegistry.Instance destination,ScenePortals.Entrance entrance) { }
     private PortalMove portalMove;
     private FloorReport floorReport;
+    private SceneSimulation.FloorAdvanceRequest openingAdvance;
+    private boolean openingDropStarted,openingPayoutWarning;
+    private int openingPayoutRetry;
+    private OpeningGate.Attempt lastGateStart;
+    private Short lastGateStartRequest;
     private ScenePortals.Entrance arrival;
     private boolean auctionAfterArrival;
     private String alchemyTarget;
@@ -126,7 +131,10 @@ final class WorldSession implements AutoCloseable {
         if(scene.map().town()&&portalMove==null)return;
         if(portalMove!=null&&portalMove.destination().map().town())return;
         if(portalMove!=null&&portalMove.destination()!=scene)scenes.release(portalMove.destination(),profile.worldId());
-        var next=destination(scenes.catalog().entry().id());
+        var attempt=scene.opening()!=null?scene.opening():portalMove==null?null:portalMove.destination().opening();
+        if(attempt!=null)profile=loadProfile(profile);
+        int safeTown=attempt==null?scenes.catalog().entry().id():profile.progress().openingStage()>=2?attempt.gate().destination().id():217;
+        var next=destination(safeTown);
         portalMove=new PortalMove(next,new ScenePortals.Entrance(1,next.map().spawnX(),next.map().spawnY(),next.map().spawnRotation()));
         deferredMove=null;departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
         if(forcedReceiver!=null){short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));}
@@ -342,9 +350,40 @@ final class WorldSession implements AutoCloseable {
             }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
             return true;
         }
+        if(method==2||method==7){
+            try{
+                var mission=OpeningMission.byId((String)args.getFirst());int band=((SessionDecoder.EnumValue)args.get(1)).ordinal();
+                if(band<0||band>2||!Boolean.TRUE.equals(args.get(2))||method==2&&(!Boolean.FALSE.equals(args.get(3))||!Boolean.FALSE.equals(args.get(4))))throw new IOException("m.internal_error");
+                String difficulty=List.of("EASY","MEDIUM","HARD").get(band);
+                var active=portalMove!=null&&portalMove.destination().opening()!=null?portalMove.destination():scene;
+                if(method==2&&!closed&&lastGateStartRequest!=null&&listener.requestId()==lastGateStartRequest&&active.opening()==lastGateStart
+                    &&lastGateStart.gate().mission()==mission&&lastGateStart.difficulty().equals(difficulty)&&scenes.authorized(active,profile.worldId(),partyMember)){
+                    profile=loadProfile(profile);
+                    output.send(()->codec.invocationConfirmed(oid,listener.requestId()));return true;
+                }
+                var gate=preflightOpeningGate(mission);
+                if(method==7){output.send(()->codec.townResult(oid,listener.requestId(),Boolean.TRUE,profile));return true;}
+                var next=scenes.startOpening(gate,profile.worldId(),partyMember,difficulty);
+                lastGateStart=next.opening();lastGateStartRequest=listener.requestId();
+                closeConversation();closeTownDialog();portalMove=new PortalMove(next,gate.entrance());departedSceneOid=scene.oid();
+                partyState();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();
+                short receiver=forcedReceiver;
+                output.send(()->codec.invocationConfirmed(oid,listener.requestId()));output.send(()->codec.forceScene(oid,receiver,next));
+            }catch(IOException failure){output.send(()->codec.invocationFailure(oid,listener.requestId(),failure.getMessage()));}
+            return true;
+        }
         // A served object/service must fail unsupported cards through the native listener.
         // Gate start is enabled only when its actual floor gameplay/route is implemented.
         output.send(()->codec.invocationFailure(oid,listener.requestId(),"m.internal_error"));return true;
+    }
+    private OpeningGate preflightOpeningGate(OpeningMission mission)throws IOException {
+        if(closed||!selected()||forcedReceiver==null||portalMove!=null||deferredMove!=null||scene.map().id()!=217||!scene.map().town()
+            ||!readyRoom&&(!entered||!subscribed||membership==null||membership.health().current()<=0))throw new IOException("m.internal_error");
+        if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
+        profile=loadProfile(profile);completedOpening=characters.openingMissions(scenes.town()).load(characters.accountId(),knight.id(),authRevision);
+        var gate=scenes.openingGate(mission);
+        if(gate==null||!mission.eligible(profile.progress(),completedOpening.keySet()))throw new IOException("m.internal_error");
+        scenes.parties().soloGate(partyMember,partyOid(),()->Boolean.TRUE);return gate;
     }
     private void openComlink(OpeningMission mission)throws IOException {
         if(mission==null||OpeningComlinks.get(mission)==null||closed||!selected()||!entered||!subscribed||membership==null||scene.map().id()!=OpeningComlinks.scene(mission))throw new IOException("m.internal_error");
@@ -910,7 +949,7 @@ final class WorldSession implements AutoCloseable {
         partyState();var view=scenes.parties().view(partyMember);
         var health=membership.health();var status=membership.status();output.send(()->codec.party(message,view,scene,floorReport!=null&&floorReport.valid()));
         subscribedPartyOid=view.oid();publishedParty=view;
-        if(floorReport!=null&&floorReport.valid())output.send(()->codec.finalFloorReport(view.oid()));
+        if(floorReport!=null&&floorReport.valid())output.send(()->scene.opening()==null?codec.finalFloorReport(view.oid()):codec.openingFloorReport(view.oid()));
         publishedHealth=health;publishedStatus=status;
         if(deferredMove!=null&&deferredMove.sceneOid()==scene.oid()){
             var move=deferredMove;deferredMove=null;completeMove(move.requestId(),move.zone());
@@ -924,7 +963,10 @@ final class WorldSession implements AutoCloseable {
         if(request.service()==SessionCodec.LEVEL_PARTY_SERVICE&&request.method()==3){
             if(args.size()!=1||!(args.getFirst() instanceof Boolean descend))throw new SessionDecoder.Rejected("Invalid floor report");
             // Native reportComplete has no callback. A late or premature vote does nothing.
-            if(!closed&&subscribed&&entered&&portalMove==null&&scene.tutorial()!=null&&floorReport!=null&&floorReport.report(descend,SceneClock.now()))finishTutorialFloor(SceneClock.now());
+            if(!closed&&subscribed&&entered&&portalMove==null&&floorReport!=null&&floorReport.report(descend,SceneClock.now())){
+                if(scene.tutorial()!=null)finishTutorialFloor(SceneClock.now());
+                else if(scene.opening()!=null)finishOpeningFloor(SceneClock.now());
+            }
             return true;
         }
         if(request.service()==20&&request.method()==4){
@@ -1347,7 +1389,7 @@ final class WorldSession implements AutoCloseable {
                 output.send(()->codec.readyRoomMove(oid,listener.requestId()));
                 return;
             }
-            if(readyRoom&&(!returnRequested||target!=scene.map().id()))throw new IOException("Return to game before entering a scene");
+            if(readyRoom&&portalMove==null&&(!returnRequested||target!=scene.map().id()))throw new IOException("Return to game before entering a scene");
             if(profile.progress().openingStage()>=0&&profile.progress().openingStage()<3&&portalMove==null&&target!=scene.map().id())throw new IOException("Continue the opening adventure through its mission or exit");
             if(scene.tutorial()!=null&&target!=scene.map().id()&&portalMove==null)throw new IOException("Finish the tutorial through its exit first");
             var targetMap=scenes.catalog().scene(target);
@@ -1632,6 +1674,7 @@ final class WorldSession implements AutoCloseable {
         lastStamp = SceneClock.now();
         var placeInstance=scene;
         membership.enter(snapshot->offer(placeInstance,generation,snapshot));
+        if(scene.opening()!=null&&(!scenes.authorized(scene,profile.worldId(),partyMember)||!membership.authorizeElevator(Integer.toString(OpeningGate.GENERATOR_EXIT),Set.of(profile.worldId()))))throw new IOException("Opening mission exit is unavailable");
         arrivalComlink=null;
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
@@ -1959,7 +2002,7 @@ final class WorldSession implements AutoCloseable {
             conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);conversationX=own.x();conversationY=own.y();
             output.send(()->codec.conversationDialog(oid,scene.oid(),conversation,conversationNode,conversationSource,conversationCreated));
         }
-        if(arrivalComlink!=null&&own!=null&&conversation==null&&townDialog==null){
+        if(arrivalComlink!=null&&own!=null&&conversation==null&&townDialog==null&&missionDialogCreated==0){
             var pending=arrivalComlink;arrivalComlink=null;openComlink(pending);
         }
         int target=membership.takeInteraction();
@@ -1998,6 +2041,9 @@ final class WorldSession implements AutoCloseable {
             }
             if(finishTutorialFloor(stamp))return;
         }
+        if(scene.opening()!=null&&forcedReceiver!=null&&subscribedPartyOid==partyOid()){
+            if(processOpeningFloor(stamp))return;
+        }
         var trigger=current.portal(profile.worldId());
         if(trigger!=null&&forcedReceiver!=null)beginPortal(trigger);
     }
@@ -2022,6 +2068,55 @@ final class WorldSession implements AutoCloseable {
         output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));
         output.send(()->codec.forceScene(oid,receiver,next));
         return true;
+    }
+    /** The native 1050 ms NextFloor call pays before it opens the floor report. */
+    private boolean processOpeningFloor(int stamp)throws IOException {
+        var attempt=scene.opening();
+        if(!scenes.authorized(scene,profile.worldId(),partyMember)){forcePartyExit();return true;}
+        if(floorReport!=null&&!floorReport.valid()){floorReport=null;openingDropStarted=false;}
+        if(openingAdvance!=null&&!membership.ownsFloorAdvance(openingAdvance))openingAdvance=null;
+        if(floorReport==null){
+            if(openingAdvance==null)openingAdvance=membership.takeFloorAdvance();
+            if(openingAdvance!=null){
+                var request=openingAdvance;
+                if(!attempt.gate().exit(request)||!new SceneElevator(1,true).equals(membership.elevatorConfiguration(request))){membership.cancelFloorAdvance(request);openingAdvance=null;return false;}
+                if(openingPayoutRetry!=0&&stamp-openingPayoutRetry<0)return false;
+                profile=loadProfile(profile);var before=profile;
+                org.tortodrone.storage.OpeningMissionStore.Settlement settled;
+                try{
+                    settled=scenes.parties().soloGate(partyMember,attempt.partyOid(),()->membership.settleSoloFloor(request,
+                        ()->characters.openingMissions(scenes.town()).complete(characters.accountId(),knight.id(),authRevision,before,attempt.gate().mission(),attempt.difficulty(),membership.floorHeat())));
+                }catch(IOException failure){
+                    openingPayoutRetry=stamp+1000;
+                    if(!openingPayoutWarning){openingPayoutWarning=true;log.warn("Opening mission settlement failed; keeping the owned ride for retry");}
+                    return false;
+                }
+                profile=settled.profile();openingAdvance=null;openingPayoutRetry=0;openingPayoutWarning=false;
+                if(!memories.equals(settled.memories())){var old=memories;memories=settled.memories();output.send(()->codec.knightMemoryChanges(oid,old,memories));}
+                if(!objectives.equals(settled.objectives())){objectives=settled.objectives();output.send(()->codec.knightObjectives(oid,objectives));}
+                if(settled.first()){
+                    var completed=new EnumMap<OpeningMission,OpeningCompletion>(OpeningMission.class);completed.putAll(completedOpening);completed.put(attempt.gate().mission(),settled.completion());completedOpening=Map.copyOf(completed);
+                    closeConversation();closeTownDialog();membership.equipment(visibleProfile());conversationCreated=Math.max(System.currentTimeMillis(),conversationCreated+1);missionDialogCreated=conversationCreated;
+                    output.send(()->codec.missionSettlement(oid,before,profile,settled.completion(),missionDialogCreated));
+                    output.send(()->codec.itemChanges(oid,knight,before,profile));partyState();
+                }
+                floorReport=new FloorReport(membership,request,stamp);openingDropStarted=false;
+                int party=partyOid();output.send(()->codec.openingFloorReport(party));
+            }else membership.authorizeElevator(Integer.toString(OpeningGate.GENERATOR_EXIT),Set.of(profile.worldId()));
+        }
+        return finishOpeningFloor(stamp);
+    }
+    private boolean finishOpeningFloor(int stamp)throws IOException {
+        if(scene.opening()==null||floorReport==null||!floorReport.votedOrTimedOut(stamp)||forcedReceiver==null||!subscribed||!entered||portalMove!=null)return false;
+        var attempt=scene.opening();var request=floorReport.request();
+        if(!scenes.authorized(scene,profile.worldId(),partyMember))return false;
+        if(!openingDropStarted){if(!membership.dropElevator(request,floorReport.returning()))return false;openingDropStarted=true;}
+        if(!membership.elevatorReady(request))return false;
+        var next=destination(attempt.gate().destination().id());
+        scenes.parties().soloGate(partyMember,attempt.partyOid(),()->membership.settleSoloElevator(request,()->Boolean.TRUE));
+        floorReport.finish();floorReport=null;
+        portalMove=new PortalMove(next,attempt.gate().arrival());departedSceneOid=scene.oid();partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();
+        short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,next));return true;
     }
     /** Simulation selects the destination; the normal stock move callback loads its scene. */
     private void beginPortal(ScenePortals.Trigger trigger)throws IOException {
@@ -2081,6 +2176,7 @@ final class WorldSession implements AutoCloseable {
     }
     private void attach() {
         floorReport=null;
+        openingAdvance=null;openingDropStarted=openingPayoutWarning=false;openingPayoutRetry=0;
         if(!scene.map().kind().equals("training")&&partyMember!=null)try{scenes.parties().leaveTraining(partyMember);}catch(IOException invalid){throw new IllegalStateException(invalid);}
         publishedArsenal=null;
         membership=null; // The old scene membership is closed before rebuilding its replacement.

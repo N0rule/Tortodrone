@@ -7,7 +7,7 @@ import org.tortodrone.character.StarterCatalog;
 
 /** Allowlisted scene handlers. Owned and advanced by one SceneEntities simulation, never a timer. */
 public final class SceneActions {
-    public sealed interface Action permits Signal,SourceSignal,Failure,Targeted,DefaultEntrance,NearestSignal,Destroy,DestroySource,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Choice { }
+    public sealed interface Action permits Signal,SourceSignal,Failure,Targeted,DefaultEntrance,NearestSignal,Destroy,DestroySource,DestroyMany,Spawn,PawnStatus,Conversation,ClearDialog,SetVariable,VariableCondition,Timer,SourceEffect,GameplayEffect,Impulse,ProgressEvent,NextFloor,Memory,Objective,Delay,Sequence,Limited,Count,Choice { }
     public record SourceSignal(String name) implements Action {public SourceSignal{text(name);}}
     /** A natively resolved empty WarpActor location fails without moving anything. */
     public record Failure() implements Action { }
@@ -190,6 +190,10 @@ public final class SceneActions {
     public record Limited(int limit,Action action,Action otherwise) implements Action {
         public Limited { if(limit<0||limit>1_000_000)throw new IllegalArgumentException("Invalid condition limit");Objects.requireNonNull(action);Objects.requireNonNull(otherwise); }
     }
+    /** Increment-only native counter followed by Equals(threshold). No reverse policy is implied. */
+    public record Count(int threshold,Action action) implements Action {
+        public Count {if(threshold<1||threshold>1_000_000)throw new IllegalArgumentException("Invalid scene counter threshold");Objects.requireNonNull(action);}
+    }
     public record Rule(String key,String event,String tag,String name,boolean all,Action action,String stateKey,String source,List<String> removedGroup) {
         public Rule(String key,String event,String tag,String name,boolean all,Action action,String stateKey,String source){this(key,event,tag,name,all,action,stateKey,source,List.of());}
         public Rule(String key,String event,String tag,String name,boolean all,Action action){this(key,event,tag,name,all,action,key,key);}
@@ -221,6 +225,7 @@ public final class SceneActions {
                 case Sequence sequence->sequence.actions().stream().map(Node::new).toList();
                 case Choice choice->choice.actions().stream().map(Node::new).toList();
                 case Limited limited->{remaining=limited.limit();yield List.of(new Node(limited.action()),new Node(limited.otherwise()));}
+                case Count counter->{remaining=counter.threshold();yield List.of(new Node(counter.action()));}
                 case VariableCondition condition->List.of(new Node(condition.action()),new Node(condition.otherwise()));
                 case Timer timer->{remaining=timer.limit();yield List.of(new Node(timer.action()));}
                 case Targeted targeted->List.of(new Node(targeted.action()));
@@ -377,6 +382,12 @@ public final class SceneActions {
             case Signal signal -> signals.apply(signal.tag(),signal.name(),Math.toIntExact(due),source);
             case SourceSignal signal -> sourceSignals.signal(signal.name(),Math.toIntExact(due),source);
             case Failure ignored -> false;
+            case Count ignored -> {
+                // Saturate after crossing the threshold; only equality runs the child.
+                // Native false Conditional succeeds, and a failed child does not undo Increment.
+                if(node.remaining<0)yield true;
+                yield --node.remaining==0?execute(node.children.getFirst(),due,source,activator,budget):true;
+            }
             case DefaultEntrance entrance -> entrances.set(entrance.target(),Math.toIntExact(due),source,activator);
             case Targeted targeted -> {
                 var targets=targetResolution.resolve(targeted.target(),Math.toIntExact(due),source,activator);
@@ -460,6 +471,7 @@ public final class SceneActions {
             case Limited limited->{conversationIds(limited.action(),ids);conversationIds(limited.otherwise(),ids);}
             case VariableCondition condition->{conversationIds(condition.action(),ids);conversationIds(condition.otherwise(),ids);}
             case Timer timer->conversationIds(timer.action(),ids);
+            case Count counter->conversationIds(counter.action(),ids);
             case Targeted targeted->conversationIds(targeted.action(),ids);
             case Spawn spawn->{try{ids.addAll(SceneScript.conversations(new SceneContent.Spec(spawn.fields())));}catch(IOException invalid){throw new IllegalArgumentException("Invalid spawned actor dialogue",invalid);}}
             default->{}
@@ -474,7 +486,7 @@ public final class SceneActions {
     private static void text(String value){if(value==null||value.isBlank()||value.length()>256||value.chars().anyMatch(Character::isISOControl))throw new IllegalArgumentException("Invalid scene action name");}
     private static void validate(Action action,int depth,int[] count){
         if(depth>16||++count[0]>1024)throw new IllegalArgumentException("Scene action graph exceeds limit");
-        switch(action){case Targeted targeted->validate(targeted.action(),depth+1,count);case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
+        switch(action){case Count counter->validate(counter.action(),depth+1,count);case Targeted targeted->validate(targeted.action(),depth+1,count);case Timer timer->validate(timer.action(),depth+1,count);case VariableCondition condition->{validate(condition.action(),depth+1,count);validate(condition.otherwise(),depth+1,count);}case Delay delay->validate(delay.action(),depth+1,count);case GameplayEffect effect->validate(effect.action(),depth+1,count);case Sequence sequence->{for(var child:sequence.actions())validate(child,depth+1,count);}case Choice choice->{for(var child:choice.actions())validate(child,depth+1,count);}case Limited limited->{validate(limited.action(),depth+1,count);validate(limited.otherwise(),depth+1,count);}default->{}}
     }
     public static Action parse(String json)throws IOException {
         try{
@@ -486,6 +498,7 @@ public final class SceneActions {
     private static Action decode(Object value,int depth,int[] count)throws IOException{
         if(depth>16||++count[0]>1024||!(value instanceof Map<?,?> map))throw new IllegalArgumentException("Invalid scene action graph");
         Object kind=map.get("kind");
+        if("count".equals(kind)&&map.keySet().equals(Set.of("kind","threshold","action")))return new Count(integer(map.get("threshold")),decode(map.get("action"),depth+1,count));
         if("failure".equals(kind)&&map.keySet().equals(Set.of("kind")))return new Failure();
         if("source-signal".equals(kind)&&map.keySet().equals(Set.of("kind","name")))return new SourceSignal(tag(map.get("name")));
         if("default-entrance".equals(kind)&&map.keySet().equals(Set.of("kind","target")))return new DefaultEntrance(logicTarget(map.get("target")));

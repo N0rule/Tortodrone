@@ -81,8 +81,14 @@ public final class PartyRegistry {
     }
     /** Tutorial gates create one private seat; they never borrow a social/training group. */
     public synchronized void enterTutorial(Member member)throws IOException {
+        enterSoloGate(member,"The tutorial requires a private solo party");
+    }
+    public synchronized void enterOpening(Member member)throws IOException {
+        enterSoloGate(member,"Opening missions currently require a private solo party");
+    }
+    private void enterSoloGate(Member member,String error)throws IOException {
         require(member);var party=member.party;
-        if(party.automatic||party.members.size()!=1)throw new IOException("The tutorial requires a private solo party");
+        if(party.automatic||party.members.size()!=1)throw new IOException(error);
         // An offline social peer must not regain this now-private tutorial seat.
         detached.values().removeIf(claim->claim.party==party);
         if(party.inviteOnly&&!party.allowFriends&&!party.allowGuild&&!party.shared)return;
@@ -95,6 +101,13 @@ public final class PartyRegistry {
     public synchronized int owner(Member member,int world)throws IOException{require(member);if(member.worldId!=world)throw new IOException("Foreign party owner");return member.party.shared?member.party.oid:0;}
     public synchronized boolean owns(Member member,int oid){return member!=null&&online.get(member.worldId)==member&&member.party.oid==oid;}
     @FunctionalInterface public interface ReviveTransaction<T>{T commit(int targetWorld)throws IOException;}
+    @FunctionalInterface public interface GateTransaction<T>{T commit()throws IOException;}
+    /** Pin an exact solo party through a scene/storage operation; callback must not perform network I/O. */
+    public synchronized <T> T soloGate(Member member,int oid,GateTransaction<T> transaction)throws IOException {
+        require(member);
+        if(member.party.oid!=oid||member.party.automatic||member.party.members.size()!=1)throw new IOException("Opening mission party changed");
+        return transaction.commit();
+    }
     /** Pin both current party memberships through the authenticated revive transaction. */
     public synchronized <T> T revive(Member payer,int oid,String name,ReviveTransaction<T> transaction)throws IOException {
         require(payer);if(payer.party.oid!=oid)throw new IOException("m.no_revive");

@@ -179,20 +179,23 @@ public final class SessionCodec {
             string(out, "tortodrone-local"); out.writeByte(0); // node name, coin exchange fee
             out.writeInt(0);out.writeInt(0);out.writeInt(org.tortodrone.storage.TownStore.SPARK_COST);out.writeInt(0); // guild costs, dungeon/PvP spark costs
             var tutorial=soloInteriors?SceneRegistry.system().tutorial():null;
-            boolean addCamp=tutorial!=null&&SceneRegistry.system().entry().map().id()!=tutorial.camp().id();
-            if(soloInteriors){type(out,"com.threerings.presents.dobj.DSet");out.writeInt(addCamp?2:1);townSummary(out);if(addCamp)townSummary(out,tutorial.camp());}
+            var registry=soloInteriors?SceneRegistry.system():null;
+            var openingGate=registry==null?null:registry.openingGate(org.tortodrone.character.OpeningMission.ANCIENT_GENERATOR);
+            var towns=registry==null?java.util.List.<org.tortodrone.world.SceneCatalog.MapScene>of():registry.catalog().scenes().stream().filter(m->m.town()&&(m.id()==registry.entry().map().id()||tutorial!=null&&m.id()==217||openingGate!=null&&m.id()==218)).toList();
+            if(soloInteriors){type(out,"com.threerings.presents.dobj.DSet");out.writeInt(towns.size());for(var town:towns)townSummary(out,town);}
             else emptyDSet(out);
             if(soloInteriors) {
                 // Stock ElevatorProp dereferences the party's gate even in a
                 // peaceful SUBTOWN. This empty transport entry has no floors,
                 // missions or destination; no dungeon gate service is exposed.
-                type(out,"com.threerings.presents.dobj.DSet");out.writeInt(tutorial==null?1:2);
+                type(out,"com.threerings.presents.dobj.DSet");out.writeInt(1+(tutorial==null?0:1)+(openingGate==null?0:1));
                 type(out,"com.threerings.projectx.dungeon.data.GateSummary");out.writeBoolean(true);out.writeInt(0);
                 string(out,"");string(out,"");emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);
                 string(out,"");out.writeInt(SceneRegistry.system().entry().map().zone());
                 for(int i=0;i<5;i++)out.writeInt(0);
                 emptyObjectArray(out,"com.threerings.projectx.dungeon.data.GateSummary$Wheel",false);
                 if(tutorial!=null)tutorialGate(out);
+                if(openingGate!=null)openingGate(out,openingGate);
             } else emptyDSet(out);
             out.writeInt(org.tortodrone.storage.AuctionHouse.MAIL_FEE); out.writeInt(org.tortodrone.storage.AuctionHouse.MAIL_ATTACH_FEE); out.writeFloat(.1f); // mail fees, recovered auction sale fee
             out.writeLong(0); string(out, null); emptyCollection(out); // reboot, disabled achievements
@@ -216,6 +219,24 @@ public final class SessionCodec {
         emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);string(out,"~");
         type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(0);out.writeBoolean(false);
         out.writeFloat(0);out.writeBoolean(true);out.writeInt(1);out.writeFloat((float)(2*Math.PI));out.writeLong(0);
+    }
+    /** Native 2026 captured Generator gate: lobby wheel followed by training grounds. */
+    private void openingGate(DataOutputStream out,org.tortodrone.world.OpeningGate gate)throws IOException {
+        type(out,"com.threerings.projectx.dungeon.data.MissionGateSummary");out.writeBoolean(true);out.writeInt(gate.id());
+        string(out,"%mission:m.ancient_generator");string(out,"pawn");
+        type(out,"[Lcom.threerings.opengl.renderer.config.ColorizationConfig;");out.writeInt(2);
+        for(int color:new int[]{532,787}){type(out,"com.threerings.opengl.renderer.config.ColorizationConfig$Normal");out.writeInt(color);}
+        string(out,"m.training_1_desc");for(int i=0;i<5;i++)out.writeInt(0);out.writeInt(8); // source/dest/priority/tokens/owner/flags
+        type(out,"[Lcom.threerings.projectx.dungeon.data.GateSummary$Wheel;");out.writeInt(2);
+        for(int floor=0;floor<2;floor++){
+            type(out,"com.threerings.projectx.dungeon.data.GateSummary$Constant");out.writeByte(0);
+            type(out,"[Lcom.threerings.projectx.dungeon.data.GateSummary$Wedge;");out.writeInt(1);
+            type(out,"com.threerings.projectx.dungeon.data.GateSummary$Level");string(out,"m.mission|%mission:m.ancient_generator|"+(floor==0?"m.mission_lobby":"m.training_grounds_generator"));string(out,floor==0?"lobby":"clockwork");
+            emptyObjectArray(out,"com.threerings.opengl.renderer.config.ColorizationConfig",false);string(out,floor==0?"m.lobby_desc":"~");
+            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(floor==0?2:0);out.writeBoolean(floor!=0);
+            out.writeFloat(0);out.writeBoolean(true);out.writeInt(1);out.writeFloat((float)(2*Math.PI));out.writeLong(0);
+        }
+        string(out,null);string(out,null); // no expansion/prestige access requirement
     }
 
     public byte[] configuration(short messageId) throws IOException {
@@ -1004,27 +1025,29 @@ public final class SessionCodec {
         return frame(out->{
             boolean training=scene.map().kind().equals("training");
             boolean tutorial=scene.tutorial()!=null;
-            objectHeader(out,message,"com.threerings.projectx.dungeon.data.LevelPartyObject",partyOid);
+            var opening=scene.opening();boolean mission=opening!=null;
+            objectHeader(out,message,"com.threerings.projectx.dungeon.data."+(mission?"MissionPartyObject":"LevelPartyObject"),partyOid);
             type(out,"com.threerings.projectx.dungeon.data.PartyMarshaller");out.writeInt(partyOid);out.writeInt(20);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(partyOid);out.writeInt(org.tortodrone.world.SceneChat.PARTY_SERVICE);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyMember(out,member);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHealth(out,member);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
-            out.writeInt(0);out.writeBoolean(!tutorial&&(automatic||managed||training||!scene.map().content().items().isEmpty()));out.writeLong(0);
-            out.writeShort(0);out.writeInt(tutorial?1:managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(tutorial?org.tortodrone.world.TutorialRoute.GATE:0);
+            out.writeInt(mission?1:0);out.writeBoolean(!tutorial&&(automatic||managed||training||!scene.map().content().items().isEmpty()));out.writeLong(0);
+            out.writeShort(0);out.writeInt(tutorial||mission?1:managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(mission?opening.gate().id():tutorial?org.tortodrone.world.TutorialRoute.GATE:0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyMarshaller");out.writeInt(partyOid);out.writeInt(LEVEL_PARTY_SERVICE);
-            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(tutorial?1:0);
-            emptyDSet(out);emptyCollection(out);out.writeInt(0);
+            type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(mission?opening.difficultyOrdinal():tutorial?1:0);
+            emptyDSet(out);emptyCollection(out);out.writeInt(mission?1:0);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$LevelType");out.writeByte(scene.map().kind().equals("level")?0:3);
-            primitiveInts(out,new int[]{0});out.writeBoolean(tutorial||inviteOnly);out.writeBoolean(!tutorial&&allowFriends);out.writeBoolean(!tutorial&&allowGuild);out.writeBoolean(!tutorial&&!managed);
+            primitiveInts(out,mission?new int[]{0,0}:new int[]{0});out.writeBoolean(tutorial||mission||inviteOnly);out.writeBoolean(!tutorial&&!mission&&allowFriends);out.writeBoolean(!tutorial&&!mission&&allowGuild);out.writeBoolean(mission||!tutorial&&!managed);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHeat(out,member);
             string(out,null);out.writeInt(reporting?-1:0);
-            type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(tutorial?1:4);
+            type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(mission?0:tutorial?1:4);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");out.writeByte(reporting?0:4);
-            out.writeBoolean(false);out.writeBoolean(false);out.writeBoolean(false);emptyDSet(out);
+            out.writeBoolean(mission&&reporting);out.writeBoolean(false);out.writeBoolean(mission&&reporting);emptyDSet(out);
             for(int i=0;i<4;i++)out.writeInt(0);out.writeLong(0);emptyCollection(out);string(out,null);
             out.writeBoolean(true);out.writeInt(0); // Empty typed Multiset<Integer>.
+            if(mission)string(out,opening.gate().mission().id());
         });
     }
     /** The name event deliberately fires even when its value was already null: it opens
@@ -1035,6 +1058,13 @@ public final class SessionCodec {
             attribute(out,party,"pendingFloorDepth",o->value(o,-1));
             attribute(out,party,"pendingFloorName",o->value(o,null));
             attribute(out,party,"returnFloor",o->value(o,0));
+        });
+    }
+    public byte[] openingFloorReport(int party)throws IOException {
+        return frame(out->{eventHeader(out,"CompoundEvent",party);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(6);
+            attribute(out,party,"playFanfare",o->value(o,true));attribute(out,party,"showLoot",o->value(o,true));
+            attribute(out,party,"pendingFloorType",o->{type(o,"com.threerings.projectx.dungeon.data.LevelPartyObject$FloorType");o.writeByte(0);});
+            attribute(out,party,"pendingFloorDepth",o->value(o,-1));attribute(out,party,"pendingFloorName",o->value(o,null));attribute(out,party,"returnFloor",o->value(o,0));
         });
     }
     private void partyMember(DataOutputStream out,PartyRegistry.Participant member)throws IOException {

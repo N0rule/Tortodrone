@@ -67,6 +67,19 @@ public final class SceneActionCompatibility {
         events.clear();startRuntime.signal("start tut_miniboss","activate",1,"entry:3280");startRuntime.signal("start tut_miniboss","activate",1,"entry:3280");
         startRuntime.advance(1);startRuntime.advance(2);startRuntime.signal("start tut_miniboss","activate",3,"entry:3280");startRuntime.advance(3);
         if(!events.equals(List.of("open")))throw new AssertionError("Native one-time trigger replayed");
+        var strippedRepeat=new com.threerings.tudey.config.HandlerConfig.SignalStart();strippedRepeat.name="";strippedRepeat.action=signal;
+        var restoredRepeat=(com.threerings.tudey.config.HandlerConfig.SignalStart)SceneContentExport.restoreSceneHandler("Trigger/Repeat Action",strippedRepeat);
+        if(!restoredRepeat.name.equals("activate")||restoredRepeat.action!=signal||!strippedRepeat.name.isEmpty()
+            ||SceneContentExport.restoreSceneHandler("Unknown/Repeat Action",strippedRepeat)!=strippedRepeat)throw new AssertionError("Repeat restoration changed unrelated handlers/native input");
+        events.clear();var repeatRuntime=new SceneActions(List.of(new SceneActions.Rule("repeat","signal-start","repeat","activate",false,
+            SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(restoredRepeat.action,0))))),(tag,name,stamp)->{events.add(name);return true;});
+        repeatRuntime.signal("repeat","activate",1,"entry:1");repeatRuntime.signal("repeat","activate",1,"entry:1");repeatRuntime.advance(1);
+        repeatRuntime.signal("repeat","activate",2,"entry:1");repeatRuntime.advance(2);repeatRuntime.advance(3);
+        repeatRuntime.signal("repeat","activate",4,"entry:1");repeatRuntime.advance(4);
+        if(!events.equals(List.of("open","open")))throw new AssertionError("Repeat must fire on activation edges, not once forever or once per duplicate signal");
+        repeatRuntime.close();repeatRuntime.signal("repeat","activate",5,"entry:1");repeatRuntime.advance(5);
+        if(events.size()!=2)throw new AssertionError("Closed repeat handler leaked work");
+        System.out.println("PASS: archive Repeat Action retains its original graph and repeatable activate edges, suppresses held/duplicate signals and closes cleanly");
         var stop=new com.threerings.tudey.config.HandlerConfig.SignalStop();stop.name="activate";
         if(!SceneContentExport.sceneSignal(stop).equals(Map.of("event","signal-stop","signal","activate")))throw new AssertionError("SignalStop fields changed");
         var emptySpawn=new ActionConfig.SpawnActor();emptySpawn.actor=null;
@@ -134,6 +147,22 @@ public final class SceneActionCompatibility {
         if(!(SceneActions.parse(Json.stringify(SceneContentExport.sceneAction(new ActionConfig.None(),0))) instanceof SceneActions.Sequence noop)||!noop.actions().isEmpty())throw new AssertionError("Native None must succeed without an effect");
         var resource=Class.forName("com.threerings.b.f").getConstructor(String.class).newInstance("rsrc/");resource.getClass().getMethod("ga",String.class).invoke(resource,args[0]+"/rsrc");
         var cm=(com.threerings.config.ConfigManager)com.threerings.config.ConfigManager.class.getConstructor(Class.forName("com.threerings.b.f"),com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");cm.init();
+        var counterReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Multi Trigger Action");
+        counterReference.kW().put("Tag","action 1a");counterReference.kW().put("Triggers","2");counterReference.kW().put("Action",signal);counterReference.kW().put("Reverse Action",new ActionConfig.None());
+        var counterReferenceConfig=counterReference.a(cm,com.threerings.tudey.config.PlaceableConfig.class);
+        var counted=SceneActions.parse(Json.stringify(SceneContentExport.multiTrigger(cm,counterReference,counterReferenceConfig,counterReferenceConfig.q(cm))));
+        if(!counted.equals(new SceneActions.Count(2,new SceneActions.Signal("door end","open"))))throw new AssertionError("Native multi-trigger argument binding changed");
+        counterReference.kW().put("Reverse Action",signal);
+        try{SceneContentExport.multiTrigger(cm,counterReference,counterReferenceConfig,counterReferenceConfig.q(cm));throw new AssertionError("Unrecovered nonempty reverse operation accepted");}catch(IOException expected){}
+        var counterDoor=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Door/Iron Gate/Multi Trigger 5");counterDoor.kW().put("Triggers","2");
+        if(SceneContentExport.doorCounter(cm,counterDoor)!=2)throw new AssertionError("Native door threshold or derived parameter path lost");
+        counterDoor.kW().put("Triggers","2.5");try{SceneContentExport.doorCounter(cm,counterDoor);throw new AssertionError("Fractional door threshold accepted");}catch(IOException expected){}
+        System.out.println("PASS: installed multi-trigger and door parameter paths/stripped footprints retain exact increment threshold and authored action; unknown reverse behavior refused");
+        var leverReference=new com.threerings.config.ConfigReference<com.threerings.tudey.config.ActorConfig>("Dynamic/Switch/Lever/One-Time");
+        leverReference.kW().put("(Activate Signal)","increment");leverReference.kW().put("(Activate Tag)","action 1a");
+        var leverOriginal=leverReference.a(cm,com.threerings.tudey.config.ActorConfig.class).ai(cm);
+        if(!SceneContentExport.oneTimeLever(cm,leverReference,leverOriginal).equals(new SceneActions.Signal("action 1a","increment")))throw new AssertionError("One-time lever outgoing action lost");
+        System.out.println("PASS: installed stripped one-time lever footprint/mask/parameter paths; archive-backed one-use damage behavior");
         var twoTags=new com.threerings.config.ConfigReference<com.threerings.tudey.config.PlaceableConfig>("Trigger/Actor Removed (2 Tags)");
         var groupOpen=new ActionConfig.Signal();groupOpen.name="open";var groupTarget=new TargetConfig.Tagged();groupTarget.tag="door end";groupOpen.target=groupTarget;
         twoTags.kW().put("Actor Tag","wave 5d");twoTags.kW().put("Actor Tag 2","wave 4d");twoTags.kW().put("Action",groupOpen);

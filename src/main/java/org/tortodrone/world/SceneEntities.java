@@ -30,6 +30,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final String kind;final StarterCatalog.Model config;final Entity pad;
         float x,y,rotation,direction,health,speed,attackSpeed=1;int flags,activity,activityStarted,state,stateEntered,count,hitTime,destroyed=Integer.MAX_VALUE,nextGeneration,claim;
         boolean claimTaken,ignited,scriptDestroyed;
+        int doorIncrements;
         String scriptSource="";
         final SceneMovementScript script;
         final SceneScript program;
@@ -71,6 +72,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         final Set<Integer> refusedPickups=new HashSet<>();
         Entity(int id,int stamp,SceneContent.Entry binding,SceneContent.Spec spec,Entity pad,SceneContent content){
             this.id=id;created=stamp;this.binding=binding;this.spec=spec;this.pad=pad;
+            if(spec.fields().containsKey("door-increments")){
+                doorIncrements=spec.integer("door-increments",0);
+                if(!spec.text("kind","").equals("Door")||doorIncrements<1||doorIncrements>1_000_000)throw new IllegalArgumentException("Invalid native door counter");
+            }
             script=SceneMovementScript.read(spec);program=SceneScript.read(spec);targeting=SceneTargeting.read(spec);wander=SceneWander.read(spec);follow=SceneFollow.read(spec);attackMotion=SceneAttackMotion.readAll(spec);
             platform=ScenePartyPlatform.read(spec);
             elevator=SceneElevator.read(spec);
@@ -1257,6 +1262,10 @@ public final class SceneEntities implements SceneWeapons.Targets {
         return true; // Native Signal succeeds for an empty resolved target set.
     }
     private void entitySignal(Entity target,String name,int stamp){
+        if(target.kind.equals("Door")&&name.equals("increment")){
+            if(target.doorIncrements==0||--target.doorIncrements!=0)return;
+            name="open";
+        }
         if(target.program!=null&&name.equals(target.spec.text("script.activate-signal","")))setVariable(new SceneActions.SetVariable("activate",true,new SceneActions.LogicTarget("source","")),stamp,"actor:"+target.id,"actor:"+target.id);
         if(target.platform!=null&&name.equals("next")&&target.state==0)setSwitch(target,1,stamp);
         if(target.kind.equals("Door")&&Set.of("open","close","toggle").contains(name)){
@@ -1379,7 +1388,7 @@ public final class SceneEntities implements SceneWeapons.Targets {
             if(e.kind.equals("Switch")){
                 String mode=e.spec.text("switch-mode","");
                 Object switchDamage=SceneDamage.prune(damage,e.spec.integer("switch-damage-mask",255));
-                if(mode.startsWith("damage-")&&stamp>=e.nextSwitch&&SceneDamage.amount(switchDamage,content,e.spec,multiplier)>0){
+                if(mode.startsWith("damage-")&&(!mode.equals("damage-once")||e.state==0)&&stamp>=e.nextSwitch&&SceneDamage.amount(switchDamage,content,e.spec,multiplier)>0){
                     setSwitch(e,e.state==0?1:0,stamp);e.nextSwitch=stamp+e.spec.integer(mode.equals("damage-timed")?"switch-delay":"switch-cooldown",0);
                 }
                 continue;

@@ -42,6 +42,12 @@ public final class StockTools {
                 sources.add(project.resolve("scripts/compat/SceneEntryInspect.java"));sources.add(project.resolve("scripts/compat/OpeningMissionCompatibility.java"));
             }
             case "mission-protocol-check" -> fixture="MissionProtocolCompatibility";
+            case "opening-gate-check" -> {
+                if(args.length!=5)throw new IllegalArgumentException("opening-gate-check expects game-directory base-deployment original-337-export original-218-export");
+                fixture="org.tortodrone.server.network.OpeningGateCompatibility";
+                for(int i=2;i<5;i++)fixtureArgs.add(Path.of(args[i]).toAbsolutePath().toString());
+                sources.add(project.resolve("scripts/compat/OpeningGateCompatibility.java"));
+            }
             case "opening-missions-check" -> fixture="OpeningMissionCompatibility";
             case "camp-story-check" -> {
                 if(args.length!=3)throw new IllegalArgumentException("camp-story-check expects game-directory deployment-with-original-Camp");
@@ -300,7 +306,9 @@ public final class StockTools {
         Thread cleanup = new Thread(() -> stop(child));
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
-            if (!child.waitFor(180, TimeUnit.SECONDS)) throw new IOException("Stock tool timed out");
+            int timeout=Integer.getInteger("tortodrone.stockToolTimeoutSeconds",180);
+            if(timeout<1||timeout>900)throw new IOException("Stock tool timeout must be 1-900 seconds");
+            if (!child.waitFor(timeout, TimeUnit.SECONDS)) throw new IOException("Stock tool timed out");
             if (child.exitValue() != 0) throw new IOException("Stock tool failed with exit " + child.exitValue());
         } catch (InterruptedException interrupted) {
             Thread.currentThread().interrupt();

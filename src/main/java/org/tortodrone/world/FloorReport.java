@@ -20,5 +20,9 @@ public final class FloorReport {
         reported=stamp;this.descend=descend;return true;
     }
     public boolean ready(int stamp){return valid()&&(stamp-started>=TIMEOUT||reported!=null&&(descend||stamp-reported>=LEAVE_DELAY));}
+    /** Physical elevators own their drop delay; do not add the portal's leave delay twice. */
+    public boolean votedOrTimedOut(int stamp){return valid()&&(reported!=null||stamp-started>=TIMEOUT);}
+    public boolean returning(){return reported!=null&&!descend;}
+    public SceneSimulation.FloorAdvanceRequest request(){return request;}
     public void finish(){finished=true;}
 }

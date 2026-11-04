@@ -247,10 +247,14 @@ public final class SceneContentExport {
                 }catch(IOException|IllegalArgumentException unsupported){importReport.add("Unsupported complete two-tag removal at "+source+": "+unsupported.getMessage());}
                 continue;
             }
-            for(int hi=0;hi<original.handlers.length;hi++){
+            Map<String,Object> counterGraph=null;
+            if(reference.getName().equals("Trigger/Multi Trigger Action"))try{counterGraph=multiTrigger(cm,reference,config,original);}
+            catch(IOException unsupported){importReport.add("Unsupported complete multi-trigger at "+key(entry.getKey())+": "+unsupported.getMessage());continue;}
+            for(int hi=0;hi<(counterGraph==null?original.handlers.length:1);hi++){
                 var handler=restoreSceneHandler(reference.getName(),original.handlers[hi]);
+                if(counterGraph!=null){var signal=new HandlerConfig.Signal();signal.name="increment";handler=signal;}
                 if(!sceneHandler(handler))continue;
-                if(handler!=original.handlers[hi])importReport.add("Restored archived One Time Action signal/Limit at "+key(entry.getKey())+" / "+hi);
+                if(handler!=original.handlers[hi])importReport.add("Restored archived "+reference.getName()+" handler at "+key(entry.getKey())+" / "+hi);
                 try{
                     var fields=new TreeMap<String,String>();
                     fields.put("kind","SceneTrigger");fields.put("config",entry.placeable.getName());fields.put("source-key",key(entry.getKey()));fields.put("handler-index",Integer.toString(hi));
@@ -269,7 +273,7 @@ public final class SceneContentExport {
                         tags=sceneTags(config,reference.kW(),original.tags);
                         if(tags.isEmpty())throw new IOException("Signal handler has no resolved tags");
                     }
-                    var graph=sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm);
+                    var graph=counterGraph==null?sceneAction(((HandlerConfig.ActionHandlerConfig)handler).action,0,cm):counterGraph;
                     if(handler.getClass()==HandlerConfig.Timer.class){var timer=(HandlerConfig.Timer)handler;graph=timerAction(timer,graph);}
                     var parsed=org.tortodrone.world.SceneActions.parse(org.tortodrone.resources.Json.stringify(graph));
                     try{for(String tag:tags)new org.tortodrone.world.SceneActions.Rule(key(entry.getKey())+":"+hi,fields.get("event"),tag,fields.getOrDefault("signal",""),Boolean.parseBoolean(fields.getOrDefault("all","false")),parsed,fields.get("state-key"),"entry:"+key(entry.getKey()));}
@@ -286,6 +290,33 @@ public final class SceneContentExport {
         }
     }
     record RemovedGroup(List<String> tags,Map<String,Object> action) { }
+    /** Capture 37268/37439 and 37657/38737: increment first, act only on equality.
+     * The stripped reverse branch has no recoverable policy; only an authored no-op is allowed. */
+    static Map<String,Object> multiTrigger(ConfigManager cm,ConfigReference<PlaceableConfig> reference,PlaceableConfig config,PlaceableConfig.Original original)throws IOException {
+        if(!reference.getName().equals("Trigger/Multi Trigger Action")||original.handlers.length!=2)throw new IOException("Multi-trigger footprint changed");
+        counterFootprint(original.handlers);
+        requirePaths(config,"Action","implementation.handlers[0].action.actions[1].action");
+        requirePaths(config,"Reverse Action","implementation.handlers[1].action.actions[1].action");
+        requirePaths(config,"Triggers","implementation.handlers[0].action.actions[1].condition.expression.second_operand.value","implementation.handlers[1].action.actions[1].condition.expression.second_operand.value");
+        if(!(reference.kW().get("Action") instanceof ActionConfig action))throw new IOException("Missing authored counter action");
+        Object reverse=reference.kW().get("Reverse Action");
+        if(reverse!=null&&(!(reverse instanceof ActionConfig reverseAction)||!noAction(reverseAction)))throw new IOException("Multi-trigger reverse policy is not recovered");
+        return Map.of("kind","count","threshold",counterThreshold(reference.kW().get("Triggers")),"action",sceneAction(action,0,cm));
+    }
+    private static boolean noAction(ActionConfig action){return action instanceof ActionConfig.None||action!=null&&action.getClass()==ActionConfig.SpawnActor.class&&((ActionConfig.SpawnActor)action).actor==null;}
+    private static int counterThreshold(Object value)throws IOException {
+        try{String text=String.valueOf(value);if(!text.matches("[1-9][0-9]{0,6}"))throw new NumberFormatException();int result=Integer.parseInt(text);if(result>1_000_000)throw new NumberFormatException();return result;}
+        catch(NumberFormatException invalid){throw new IOException("Invalid or missing native counter threshold",invalid);}
+    }
+    private static void requirePaths(com.threerings.config.ParameterizedConfig config,String name,String... paths)throws IOException {
+        if(!(config.getParameter(name) instanceof com.threerings.config.Parameter.Direct direct)||!Arrays.equals(direct.paths,paths))throw new IOException("Native counter parameter changed: "+name);
+    }
+    private static void counterFootprint(HandlerConfig[] handlers)throws IOException {
+        if(handlers.length!=2)throw new IOException("Counter handler count changed");
+        for(var handler:handlers)if(handler.getClass()!=HandlerConfig.Signal.class||!((HandlerConfig.Signal)handler).name.isEmpty()||((HandlerConfig.Signal)handler).refractoryPeriod!=0
+            ||!(((HandlerConfig.Signal)handler).action instanceof ActionConfig.Compound compound)||compound.actions.length!=1||!strippedGuard(compound.actions[0])
+            ||!noAction(((ActionConfig.Conditional)compound.actions[0]).action))throw new IOException("Stripped counter handler footprint changed");
+    }
     /** Native parameter paths survive; the archived marker retains the stripped counter=2 graph. */
     static RemovedGroup twoTagRemoval(ConfigManager cm,ConfigReference<PlaceableConfig> reference,PlaceableConfig config,PlaceableConfig.Original original)throws IOException {
         if(!reference.getName().equals("Trigger/Actor Removed (2 Tags)")||original.handlers.length!=3
@@ -410,6 +441,11 @@ public final class SceneContentExport {
     }
     /** Exact stripped footprint of the archived One Time Action; do not generalize empty guards. */
     static HandlerConfig restoreSceneHandler(String config,HandlerConfig handler){
+        // The archive preserves this name and the direct Action parameter path.
+        // Preserve the bound graph and edge-trigger semantics; no implicit Limit.
+        if(config.equals("Trigger/Repeat Action")&&handler instanceof HandlerConfig.SignalStart start&&start.name.isEmpty()){
+            var result=new HandlerConfig.SignalStart();result.name="activate";result.action=start.action;return result;
+        }
         // reference inputs placeable.xml: Trigger/One Time Action -> SignalStart("activate"),
         // Conditional(Limit(1)). Scene args retain its authored Action; no native config is mutated.
         if(config.equals("Trigger/One Time Action")&&handler instanceof HandlerConfig.SignalStart start
@@ -758,6 +794,26 @@ public final class SceneContentExport {
         throw new IOException("Actor derivation exceeds limit");
     }
 
+    static int doorCounter(ConfigManager cm,ConfigReference<ActorConfig> reference)throws IOException {
+        for(int depth=0;depth<16;depth++){
+            var config=reference.a(cm,ActorConfig.class);if(config==null)throw new IOException("Unresolved door counter");
+            if(!(config.implementation instanceof ActorConfig.Derived derived))return 0;
+            if(derived.actor==null)throw new IOException("Missing derived door counter");
+            if(reference.getName().equals("Door/Multi Trigger Base")){
+                if(!derived.actor.getName().equals("Door/Base")||!(derived.actor.kW().get("Handlers") instanceof HandlerConfig[] handlers))throw new IOException("Door counter base changed");
+                counterFootprint(handlers);
+                requirePaths(config,"Triggers","implementation.actor[\"Handlers\"][0].action.actions[1].condition.expression.second_operand.value","implementation.actor[\"Handlers\"][1].action.actions[1].condition.expression.second_operand.value");
+                return counterThreshold(reference.kW().get("Triggers"));
+            }
+            var next=new ConfigReference<ActorConfig>(derived.actor.getName());next.kW().putAll(derived.actor.kW());
+            for(var parameter:config.parameters)if(parameter instanceof com.threerings.config.Parameter.Direct direct&&reference.kW().containsKey(parameter.name))for(String path:direct.paths){
+                var match=java.util.regex.Pattern.compile("implementation\\.actor\\[\"([^\"]+)\"\\]").matcher(path);
+                if(match.matches())next.kW().put(match.group(1),reference.kW().get(parameter.name));
+            }
+            reference=next;
+        }
+        throw new IOException("Door counter derivation exceeds limit");
+    }
     /** Recover only explicit preserved scalar tag paths; never infer a binding from argument names. */
     static List<String> sceneTags(com.threerings.config.ParameterizedConfig config,Map<String,Object> arguments,
                                   com.threerings.tudey.config.TagConfig nativeTags)throws IOException {
@@ -894,6 +950,7 @@ public final class SceneContentExport {
             addOptionalNumber(out, prefix + "delay", field(original, "delay"));
         }
         if (isKind(original, "Door")) {
+            int increments=doorCounter(cm,reference);if(increments>0)out.put(prefix+"door-increments",Integer.toString(increments));
             addOptionalNumber(out,prefix+"door-speed",field(original,"doorSpeed"));
             Object startOpen = field(original, "startOpen");
             if (startOpen == null) startOpen = field(original, "open");
@@ -1053,8 +1110,26 @@ public final class SceneContentExport {
         }
     }
 
+    static org.tortodrone.world.SceneActions.Signal oneTimeLever(ConfigManager cm,ConfigReference<ActorConfig> reference,Object original)throws IOException {
+        // The installed export stripped the entire Damage action and state 1.
+        // Archive actor.xml preserves Limit(1) -> Signal(next) and state 1's
+        // Tagged signal; check_multi_trigger.py measures both original levers.
+        if(!reference.getName().equals("Dynamic/Switch/Lever/One-Time")||!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch lever)
+            ||lever.handlers.length!=1||lever.stateActions.length!=1||!(lever.handlers[0] instanceof com.threerings.projectx.dungeon.config.DungeonHandlerConfig.Damage hit)||hit.mask!=2
+            ||hit.action.getClass()!=ActionConfig.SpawnActor.class||!noAction(hit.action)||!(((ActionConfig.SpawnActor)hit.action).location instanceof com.threerings.tudey.config.TargetConfig.Source)
+            ||lever.stateActions[0].getClass()!=ActionConfig.SpawnActor.class||!noAction(lever.stateActions[0]))throw new IOException("Native one-time lever footprint changed");
+        requirePaths(reference.a(cm,ActorConfig.class),"(Activate Signal)","implementation.state_actions[1].name");
+        requirePaths(reference.a(cm,ActorConfig.class),"(Activate Tag)","implementation.state_actions[1].target.tag");
+        if(!(reference.kW().get("(Activate Signal)") instanceof String name)||!(reference.kW().get("(Activate Tag)") instanceof String tag))throw new IOException("Missing authored lever target");
+        try{return new org.tortodrone.world.SceneActions.Signal(tag,name);}catch(IllegalArgumentException invalid){throw new IOException("Invalid lever signal",invalid);}
+    }
     private static void writeMechanism(ConfigManager cm,Map<String,String> out,String prefix,ConfigReference<ActorConfig> reference,Object original)throws Exception {
         var args=reference.kW();String mode=out.get(prefix+"switch-mode");
+        if(reference.getName().equals("Dynamic/Switch/Lever/One-Time")){
+            var operation=oneTimeLever(cm,reference,original);mode="damage-once";
+            out.put(prefix+"switch-mode",mode);out.put(prefix+"switch-damage-mask","2");
+            out.put(prefix+"state.1.signal",operation.name());out.put(prefix+"state.1.tag",operation.tag());return;
+        }
         if(reference.getName().equals("Dynamic/Switch/Party Platform/Base")){
             if(!(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch platform)||platform.handlers.length!=3||platform.stateActions.length!=2
                 ||!(platform.handlers[0] instanceof HandlerConfig.IntersectionStop)||!(platform.handlers[1] instanceof HandlerConfig.IntersectionStart)

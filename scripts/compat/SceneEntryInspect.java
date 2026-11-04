@@ -31,6 +31,7 @@ public final class SceneEntryInspect {
                 System.out.println("PARAMETERS "+Json.stringify(OpeningMissionCompatibility.data(config.parameters,0)));
             }
             var original=config.ai(cm);System.out.println("HANDLERS "+Json.stringify(OpeningMissionCompatibility.data(original.handlers,0)));
+            if(original instanceof com.threerings.projectx.dungeon.config.DungeonActorConfig.Switch stateful)System.out.println("STATE ACTIONS "+Json.stringify(OpeningMissionCompatibility.data(stateful.stateActions,0)));
         }
         for(String key:keys)if(key.startsWith("conversation:")){
             String name=key.substring(13);var config=cm.d(com.threerings.projectx.config.ConversationConfig.class,name);

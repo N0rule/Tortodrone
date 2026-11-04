@@ -38,6 +38,7 @@ public final class SceneElevatorTest {
             int started=activated.actors().stream().filter(a->a.entity()!=null&&a.entity().kind().equals("EntryState")).findFirst().orElseThrow().entity().stateEntered();
             check(request.timestamp()-started>=SceneElevator.ACTIVATE_MILLIS&&request.source().entity().key().equals("2930"),"owned floor request retains original elevator identity and waits 1050 ms");
             check(first.ownsFloorAdvance(request)&&second.ownsFloorAdvance(other)&&!second.ownsFloorAdvance(request)&&!foreign.ownsFloorAdvance(request),"requests are per-member and per-instance despite identical entry/actor numbers");
+            try{first.settleSoloFloor(request,()->Boolean.TRUE);throw new AssertionError("Cooperative ride settled as solo");}catch(java.io.IOException expected){}
             check(!foreign.cancelFloorAdvance(request)&&!second.dropElevator(request,false)&&first.dropElevator(request,false)&&!first.dropElevator(request,false),"only the owning request starts one drop; replays cannot reset its clock");
             check(state(simulation.snapshot())==2||state(simulation.snapshot())==3,"drop state publishes on the simulation boundary");
             check(!first.elevatorReady(request)&&first.elevatorConfiguration(request).equals(definition),"drop delay and native advance/completion policy remain authoritative");
@@ -51,6 +52,13 @@ public final class SceneElevatorTest {
             check(first.authorizeElevator("2930"),"a fresh server preflight may retry");
             walkUntilRide(first,simulation,frames);
             var retry=awaitRequest(first,frames);check(retry.sequence()>request.sequence()&&!first.ownsFloorAdvance(request),"retry gets a fresh generation; stale settlement never revives");
+            int[] payouts={0};
+            try{foreign.settleSoloFloor(retry,()->++payouts[0]);throw new AssertionError("Foreign payout accepted");}catch(java.io.IOException expected){}
+            try{first.settleSoloFloor(retry,()->{throw new java.io.IOException("fixture payout rollback");});throw new AssertionError("Failed payout accepted");}catch(java.io.IOException expected){}
+            check(first.ownsFloorAdvance(retry)&&first.settleSoloFloor(retry,()->++payouts[0])==1,"payout failure is retryable; native NextFloor commits before any drop");
+            try{first.settleSoloFloor(retry,()->++payouts[0]);throw new AssertionError("Duplicate payout accepted");}catch(java.io.IOException expected){}
+            var report=new FloorReport(first,retry,SceneClock.now());check(report.valid()&&payouts[0]==1&&!first.elevatorReady(retry),"paid request remains owned and frozen for its report/drop phases");
+            int voted=SceneClock.now();check(report.report(false,voted)&&report.votedOrTimedOut(voted)&&!report.ready(voted),"physical elevator owns the leave delay; portal reports retain their existing delay");
             int[] commits={0};
             try{first.settleSoloElevator(retry,()->++commits[0]);throw new AssertionError("Premature settlement accepted");}catch(java.io.IOException expected){}
             check(commits[0]==0&&first.dropElevator(retry,true),"premature preflight performs no storage work");
@@ -65,7 +73,7 @@ public final class SceneElevatorTest {
         }finally{first.close();second.close();foreign.close();}
         check(simulation.playerCount()==0&&isolated.playerCount()==0,"disposable scene memberships/timers released");
         var invalid=new HashMap<>(fields);invalid.put("elevator-advance","2");try{SceneElevator.read(new SceneContent.Spec(invalid));throw new AssertionError("Arbitrary elevator direction accepted");}catch(IllegalArgumentException expected){}
-        System.out.println("PASS: native elevator phases/delays, real legal movement, server route grants, all-living-party activation, frozen pawns, owned requests, drop/replay protection, disconnect/pause/retry and scene isolation (synthetic map; no mission settlement or world travel)");
+        System.out.println("PASS: native elevator phases/delays, legal movement, route grants, all-living-party activation, owned payout-before-report/drop, failure/replay protection, frozen pawns, disconnect/pause/retry and scene isolation (synthetic map; no full mission playthrough)");
     }
     private static void deterministic(SceneContent content)throws Exception {
         var world=new SceneEntities(content,SceneWeaponsTest.openTerrain());int[] offers={0},cancels={0};SceneEntities.ElevatorTrip[] trip={null};boolean[] allowed={true};

@@ -76,7 +76,9 @@ public final class ScenePackExport {
             p.setProperty("content-sha256",digest(out.resolve("content.properties")));
         }
         writeProperties(out.resolve("map.properties"),p);
-        if(!kind.equals("town"))writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
+        // Mission returns use the town's real entrance too (powered Camp 218/5158).
+        // Retain the native identity for the same movement handshake as level arrivals.
+        writeEntrance(out,digest(out.resolve("scene.dat")),entrance);
         System.out.println("PASS: kind="+kind+" scene="+scene.sceneId+" version="+scene.version+
             " samples="+bits.cardinality()+" spawn="+spawnX+","+spawnY+
             (" entrance="+entrance.id+" yaw="+entrance.rotation));
