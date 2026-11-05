@@ -17,6 +17,7 @@ public final class SparseContentTest {
             var sceneGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/scene-defaults.json"))),"scene baseline");
             var baseline=ContentManager.load(Path.of("."));ItemCatalog.write(root.resolve("items.json"),baseline.items().entries());check(ContentFiles.digest(root.resolve("items.json")).equals(catalogGolden.get("items")),"all 9,348 indexed item metadata/arguments remain identical");
             for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
+                if(!sceneGolden.containsKey(map.getKey().toString()))continue; // Added opening maps have separate pinned-route regressions.
                 var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());
                 var historical=new Properties();historical.putAll(prepared.content());
                 // Executable capsule graphs are a deliberate additive import. Verify the

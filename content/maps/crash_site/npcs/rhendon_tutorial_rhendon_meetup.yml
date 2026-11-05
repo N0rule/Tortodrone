@@ -1,0 +1,14 @@
+dialogue:
+  nodes:
+    part 1a:
+      text: '{0}! Am I glad to see you!  This place is so alien, I''m happy to see a familiar face and not another hostile.'
+      responses:
+      - text: Glad to see you in one piece as well, Rhendon.  Where are the other survivors?
+        next: part 2a
+    part 2a:
+      text: "I've established a comlink with Knights that have formed a Rescue Camp up ahead.  If you head north, you should eventually reach it. \n\nI'm going to stay here for now and locate any other Knights that have crashed in the area.  I'll meet you at the Rescue Camp before sunset. \n\nAnd should you encounter anything really dangerous, press [[?DEFEND]] to use your shield!"
+      responses:
+      - text: I'll scout ahead then! Be careful, Rhendon.
+        close: true
+  initial: part 1a
+id: tutorial_rhendon_meetup

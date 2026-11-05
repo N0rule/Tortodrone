@@ -1,0 +1,14 @@
+dialogue:
+  nodes:
+    part 1a:
+      text: '...come in, {0}, are you there?  This is Recon Knight Rhendon!'
+      responses:
+      - text: I'm here, what happened?
+        next: part 2a
+    part 2a:
+      text: "You just hit the surface of Cradle.  My escape pod crashed just north of your position.  We should meet up and find the nearest rally point. \n\nBe careful and ready your sword, there are hostile creatures everywhere!"
+      responses:
+      - text: Roger that, Rhendon.  I'm heading your way!
+        close: true
+  initial: part 1a
+id: tutorial_rhendon_intro

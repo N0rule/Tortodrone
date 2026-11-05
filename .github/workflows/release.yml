@@ -69,6 +69,9 @@ jobs:
             test -s "build/webui/assets/css/$stylesheet.css"
           done
           test -f build/content/maps/haven/map.yml
+          test -f build/content/maps/crash_site/native/scene.dat
+          test -f build/content/maps/rescue_camp/native/scene.dat
+          java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
           test -f build/content/items/weapons.yml
           test -d build/config
           test -d build/plugins
@@ -136,5 +139,5 @@ jobs:
             "dist/Tortodrone-$GITHUB_REF_NAME.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag --generate-notes --prerelease \
-            --notes "Development release under PolyForm Noncommercial 1.0.0; preserve the N0rule/Tortodrone attribution notice. JDK 25 required. Extract the complete ZIP and run java -jar tortodrone.jar. WebUI images are prepared locally from your installed client on first startup. Seven town/interior maps are bundled; new-knight creation requires separately imported Crash Site 398 and initial Rescue Camp 217. The complete opening route to Haven remains unfinished. See README.md and docs/content.md before testing." \
+            --notes "Development release under PolyForm Noncommercial 1.0.0; preserve the N0rule/Tortodrone attribution notice. JDK 25 required. Extract the complete ZIP and run java -jar tortodrone.jar. WebUI images are prepared locally from your installed client on first startup. Nine maps are bundled, including Crash Site 398 and initial Rescue Camp 217. New knights enter Crash Site automatically; no separate opening-map import is needed. The complete opening route to Haven remains unfinished. See README.md and docs/content.md before testing." \
             --title "Tortodrone $GITHUB_REF_NAME (development)"

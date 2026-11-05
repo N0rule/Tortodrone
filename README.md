@@ -23,15 +23,15 @@ game account with `account create Alice` in the server console, then follow
 [client connection](#4-connect-the-client) using that key. WebUI is at
 `http://localhost:8080/admin/`; its setup code appears in the console.
 
-**This is a development release.** The ZIP includes seven town/interior maps;
-new-knight creation additionally requires the original Crash Site and initial
-Rescue Camp imports described below. Import tools require a source checkout and
-separately available scene sources. WebUI image preparation does not supply
-those scenes. Dependency notices are included as `THIRD-PARTY.md` in the ZIP.
+**This is a development release.** The ZIP includes nine maps, including Crash
+Site 398 and initial Rescue Camp 217. New knights enter Crash Site automatically;
+no separate scene import is needed. The later full route to Haven remains
+unfinished. WebUI images are prepared from your installed client at startup.
+Dependency notices are included as `THIRD-PARTY.md` in the ZIP.
 
 ## Set up from source
 
-You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client binaries and extracted WebUI artwork are not distributed; bundled scene data has separate [rights limitations](docs/provenance.md).
+You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher. Client binaries and extracted WebUI artwork are not distributed; bundled scene data has separate [rights limitations](docs/provenance.md).
 
 The commands below run from the repository root. On Windows, replace `./gradlew` with `.\gradlew.bat`; the Java commands work in PowerShell too.
 
@@ -46,17 +46,24 @@ java -version
 
 Check that Java reports version 25. The build writes one deployment to `build/`: `tortodrone.jar`, `config/`, `content/`, `webui/` and `plugins/`. It does **not** run tests. Once dependencies are cached, builds can use `--offline`.
 
-### 2. Prepare new-knight content
+### 2. Check bundled opening content (optional)
 
-A clean build includes seven Haven/interior maps. **Creating a new knight also requires original Crash Site 398 and initial Rescue Camp 217.** Without them, creation is refused with “The opening adventure is unavailable”; the server does not silently skip the tutorial.
+Clean builds and releases include Crash Site **398** and initial Rescue Camp
+**217**, with their original layouts, collision, actors and conversations. A
+new knight starts in Crash Site automatically; existing knights retain their
+progression. No manual import is needed for these two maps.
 
-If you already have a local deployment, check it first:
+From a source checkout, you can verify the installed content before starting:
 
 ```sh
 java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 ```
 
-If it passes, keep your existing maps. Otherwise, with the server stopped, follow [opening scene import and playtest](docs/content.md#local-crash-site-playtest). It gives the exact importer commands, required input folders and expected entrances. You need a separately installed official client and the matching scene exports you prepared yourself. Neither a Git clone nor a normal build downloads these files. Do not substitute an arbitrary revision or delete existing maps to force an import.
+This checks the pinned scenes and entrances, not a gameplay playthrough. Follow
+the [Crash Site playtest](docs/content.md#local-crash-site-playtest) to test the
+encounter, exit, Camp arrival and reconnect. If preflight fails on an older
+customized deployment, review `content-updates/` rather than deleting saves,
+keys or existing maps.
 
 ### 3. Start the server and create a game account
 
@@ -126,7 +133,7 @@ build/
 
 ## Supported scope
 
-- **Accounts and world:** knight management, native Ready Room, authoritative movement/collision, seven bundled town/interior maps and locally imported opening scenes.
+- **Accounts and world:** knight management, native Ready Room, authoritative movement/collision, nine bundled maps, including Crash Site and initial Rescue Camp.
 - **Player systems:** persistent inventory and currencies, equipment/costumes, weapon combat, heat and battle sprites. Individual item and action support varies.
 - **Town and social:** supported shops/crafting, auctions, Energy Exchange, chat, friends, parties and eligible friend travel.
 - **Administration:** game account management, inventory/economy tools, News and monitoring through console and WebUI.

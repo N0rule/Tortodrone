@@ -1,0 +1,6 @@
+id: 398
+name: The Crash Site|Waking in a New World
+type: level
+zone: '50332041'
+defaultSpawn: level_start
+instances: 1

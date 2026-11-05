@@ -31,9 +31,10 @@ does not play the tutorial. Follow the linked manual procedure for gameplay.
 - `compat/` contains read-only native readers/exporters and isolated network or
   graphical fixtures. Check the chosen tool's source and usage before running:
   some launch clients or temporary servers and require exact scene revisions.
-- `PrepareOpening.java` builds a **separate, fresh** opening test deployment. It
-  refuses a base that already has opening maps. It is not needed to maintain
-  the normal `build/` deployment; use `MapImport.java` for missing maps there.
+- `PrepareOpening.java` is a legacy helper for importing opening maps into a
+  base without them. Normal builds and releases now bundle the opening maps;
+  this helper is not needed for setup. Use `MapImport.java` only for additional
+  scenes or an explicitly prepared content candidate.
 - `CheckGeneratorControls.java` and `CheckChasm.java` are original-map component
   diagnostics. They do not prove a complete mission playthrough.
 - `BuildTools.java`, `BuildToolsTest.java` and `ProcessCleanupTest.java` support

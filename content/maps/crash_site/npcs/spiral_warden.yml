@@ -1,0 +1,15 @@
+dialogue:
+  nodes:
+    part 1a:
+      text: Hail, knight. You must be {0}, Rhendon radioed us and said you were on your way. Come with us, the Rescue Camp is just ahead.
+      responses:
+      - text: Great, I'm looking forward to a hot meal.
+        next: part 2a
+    part 2a:
+      text: "You and me both. Now let's get- \n\nHold on, something's not right. Brace yourself, I think we've got company!"
+      responses:
+      - text: End conversation
+        close: true
+        action: 0
+  initial: part 1a
+id: tutorial_ambush_a

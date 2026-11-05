@@ -1,0 +1,7 @@
+portals: {
+  }
+entrances:
+  default_spawn:
+    x: 0.5
+    facing: 0
+    y: -0.5

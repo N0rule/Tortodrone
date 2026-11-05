@@ -1,0 +1,9 @@
+dialogue:
+  nodes:
+    part 1a:
+      text: "Nicely done, {0}! It seems you know your way around the battlefield. \n\nCome on, let's head to the camp. Maybe you can help us figure out just what the heck is going on here."
+      responses:
+      - text: End conversation
+        close: true
+  initial: part 1a
+id: tutorial_ambush_b

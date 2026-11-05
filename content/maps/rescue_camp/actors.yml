@@ -1,0 +1,487 @@
+actors:
+  character_npc_rescue_camp_soil_4268_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Soil
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 15.000031153264294
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 27.343029
+    y: 5.302545
+  character_npc_rescue_camp_greta_2_4819_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Greta 2
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: -64.99997334966825
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 1.830585
+    y: 10.835392
+  static_stateful_props_beacons_floor_recolor_on_off_4836_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 15.5
+    y: 4.5
+  static_stateful_props_beacons_floor_recolor_on_off_4837_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 15.5
+    y: 7.09
+  static_stateful_props_beacons_floor_recolor_on_off_4838_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 23.5
+    y: 8.5
+  static_stateful_props_beacons_floor_recolor_on_off_4840_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 23.5
+    y: 4.5
+  static_stateful_props_beacons_floor_recolor_on_off_4843_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 4.8500004
+    y: 18.08
+  static_stateful_props_beacons_floor_recolor_on_off_4844_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 8.39
+    y: 18.08
+  static_stateful_props_beacons_floor_recolor_on_off_4845_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 8.5
+    y: 26.5
+  static_stateful_props_beacons_floor_recolor_on_off_4846_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 4.5
+    y: 26.5
+  static_stateful_props_beacons_floor_recolor_on_off_4847_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 5.7200003
+    y: 37.5
+  static_stateful_props_beacons_floor_recolor_on_off_4848_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 9.5
+    y: 44
+  static_stateful_props_beacons_floor_recolor_on_off_4849_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 5.5
+    y: 44
+  static_stateful_props_beacons_floor_recolor_on_off_4852_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 9.32
+    y: 37.5
+  static_stateful_props_beacons_floor_recolor_on_off_4853_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 9.5
+    y: 57.5
+  static_stateful_props_beacons_floor_recolor_on_off_4854_-1:
+    bounds-max-x: 0.35
+    bounds-max-y: 0.35
+    bounds-min-x: -0.35
+    bounds-min-y: -0.35
+    collision-flags: 0
+    collision-mask: 1
+    is-static: true
+    radius: 0.35
+    facing: -90.00000250447816
+    shape: Circle
+    tags: (Set Tag)
+    x: 5.5
+    y: 57.5
+  character_npc_rescue_camp_firestarter_4859_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Firestarter
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 54.999999253784715
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 15.861515
+    y: 18.136072
+  character_npc_rescue_camp_injured_4886_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Injured
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: -70.0000065013869
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 14.486336
+    y: 22.15908
+  character_npc_rescue_camp_injured_4888_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Injured
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: -155.00001000509226
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 19.3
+    y: 19.7
+  character_npc_rescue_camp_technician_working_4892_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Technician
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 44.9999978371445
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 9.478785
+    y: 26.786978
+  character_npc_rescue_camp_recruit_working_4896_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Recruit
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 149.99999734394112
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 1.2283512
+    y: 26.387026
+  character_npc_rescue_camp_recruit_idle_4903_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Recruit
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 49.999996837917315
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 11.6
+    y: 61.8
+  character_npc_rescue_camp_virgil_4905_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Virgil
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: -74.99999867197056
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 6.26
+    y: 29.5
+  character_npc_rescue_camp_technician_working_5173_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Technician
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: 135.00000034162267
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 6.2560096
+    y: 3.373528
+  character_npc_rescue_camp_rhendon_rescue_camp_5329_0:
+    bounds-max-x: 0.6
+    bounds-max-y: 0.6
+    bounds-min-x: -0.6
+    bounds-min-y: -0.6
+    collision-flags: 8
+    collision-mask: 15
+    description: Conversation/Rescue Camp/Rhendon
+    interaction-offset-x: 0.7
+    interaction-offset-y: 0
+    interaction-radius: 0.4
+    is-static: false
+    radius: 0.6
+    facing: -120.99999767530745
+    shape: Circle
+    speed: 0.66
+    tags: ''
+    x: 13.253805
+    y: 15.411943
+  block_unbreakable_outershell_935_0:
+    block-damage: true
+    bounds-max-x: 0.5
+    bounds-max-y: 0.5
+    bounds-min-x: -0.5
+    bounds-min-y: -0.5
+    collision-flags: 1
+    collision-mask: 0
+    damage-mask: 0
+    height: 1
+    is-static: true
+    facing: -90.00000250447816
+    shape: Rectangle
+    tags: ''
+    width: 1
+    x: 2.5
+    y: -3.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4836_anchor:
+    facing: -90.00000250447816
+    x: 15.5
+    y: 4.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4837_anchor:
+    facing: -90.00000250447816
+    x: 15.5
+    y: 7.09
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4838_anchor:
+    facing: -90.00000250447816
+    x: 23.5
+    y: 8.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4840_anchor:
+    facing: -90.00000250447816
+    x: 23.5
+    y: 4.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4843_anchor:
+    facing: -90.00000250447816
+    x: 4.8500004
+    y: 18.08
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4844_anchor:
+    facing: -90.00000250447816
+    x: 8.39
+    y: 18.08
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4845_anchor:
+    facing: -90.00000250447816
+    x: 8.5
+    y: 26.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4846_anchor:
+    facing: -90.00000250447816
+    x: 4.5
+    y: 26.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4847_anchor:
+    facing: -90.00000250447816
+    x: 5.7200003
+    y: 37.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4848_anchor:
+    facing: -90.00000250447816
+    x: 9.5
+    y: 44
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4849_anchor:
+    facing: -90.00000250447816
+    x: 5.5
+    y: 44
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4852_anchor:
+    facing: -90.00000250447816
+    x: 9.32
+    y: 37.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4853_anchor:
+    facing: -90.00000250447816
+    x: 9.5
+    y: 57.5
+  prop_general_tech_beacons_floor_stateful_beacon_light_beam_on_off_4854_anchor:
+    facing: -90.00000250447816
+    x: 5.5
+    y: 57.5
+  dynamic_portal_level_start_2017_anchor:
+    facing: -90.00000250447816
+    x: 0.5
+    y: -0.5
+  character_monster_generic_rare_spawn_2024_anchor:
+    facing: -90.00000250447816
+    x: -0.5
+    y: 2.5

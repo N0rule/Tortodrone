@@ -49,7 +49,7 @@ The checkout and portable deployment use the same content/configuration layout.
 `build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
-The seven real maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
+The seven town/interior maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
 `advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318).
 There are 9,348 indexed original item definitions, 382 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
@@ -702,14 +702,14 @@ five-minute extension is explicitly interim and is not enabled here.
 
 ### Local Crash Site playtest
 
-Use the normal **`build/` deployment**. This checkout's local build contains
-Crash Site **398/version 2008859103** and initial Rescue Camp **217/version 373**.
-New-knight onboarding is enabled when that verified pair is available. An
-existing knight keeps its progression and is not automatically restarted.
+Normal builds and release ZIPs bundle the original Crash Site
+**398/version 2008859103** and initial Rescue Camp **217/version 373**.
+A fresh knight enters Crash Site automatically. Existing knights retain their
+progression. No manual map import is needed for the opening pair.
 The complete later route to Haven remains unfinished; see the
 [supported scope](../README.md#supported-scope).
 
-First build and check the actual deployment without starting a server:
+For a source-checkout preflight:
 
 ```sh
 ./gradlew build
@@ -719,25 +719,8 @@ java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 The check must print `PASS: verified opening content`, scene 398 at entrance
 2659 / `(-21, -69.5)`, and Camp 217 at entrance 2017 / `(0.5, -0.5)`.
 It validates content and route prerequisites, not a gameplay playthrough.
-Ordinary builds preserve the locally imported maps. Their original assets are
-not committed to Git: a clean clone with only the seven bundled maps needs the
-one-time imports below before new-knight creation can succeed.
-
-With the server stopped, import **only a missing map** into this same build:
-
-```sh
-GAME="/path/to/Spiral Knights"
-SCENES="/path/to/your-scene-exports"
-java scripts/MapImport.java "$GAME" "$SCENES/398" build crash_site 50332041 '%dungeon:m.tutorial_b'
-java scripts/MapImport.java "$GAME" "$SCENES/217" build rescue_camp 16777221 '%town:m.rescue_camp_state_1'
-java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
-```
-
-The importer refuses duplicate maps and live deployments. Do not delete existing
-content, databases or keys to make it run. If a map exists but preflight fails,
-retain it and inspect its `native/import-report.txt` and the reported error.
-Use the read-only installed stock client and your own verified scene sources; do
-not substitute another scene revision or commit the imported assets.
+Existing customized maps are preserved by the build; review proposed updates
+under `content-updates/` if a local revision differs from the bundled defaults.
 
 For the manual playthrough, use a disposable test account in your normal server:
 

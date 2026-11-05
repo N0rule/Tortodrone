@@ -12,7 +12,10 @@ import static org.tortodrone.support.TestWire.check;
 public final class ContentManagerTest {
     public static void main(String[] args)throws Exception {
         var baseline=ContentManager.load(Path.of("."));
-        check(baseline.scenes().scenes().size()==7&&baseline.items().entries().size()==9348,"all verified maps and items retained");
+        check(baseline.scenes().scenes().size()==9&&baseline.items().entries().size()==9348,"all verified maps and items retained");
+        var opening=baseline.createScenes().tutorial();
+        check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
+            &&opening.camp().id()==217&&opening.camp().version()==373,"bundled defaults enable the pinned original opening route without imports");
         check(baseline.weapons().weapons().size()==382&&baseline.weapons().shields().size()==123,"verified combat controls retained");
         check(baseline.scenes().scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,"all directed stock portals retained");
         var training=baseline.scenes().scene(294);var konway=training.content().conversations().get("Character/NPC/Advanced Training Gym/Greeter");

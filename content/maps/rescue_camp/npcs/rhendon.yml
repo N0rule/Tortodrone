@@ -1,0 +1,25 @@
+dialogue:
+  initial: part 1a
+  nodes:
+    part 1a:
+      responses:
+      - text: Missions?
+        next: part 2a
+      text: Well, looks like we're in quite a bind here, {0}. There's plenty of work to be done to get this camp up and running, so you've now been authorized to receive missions! You can find any available missions in the Activities bar.
+    part 2a:
+      responses:
+      - text: Yes, that's right.
+        next: part 3a
+      text: Missions range from dangerous combat engagements to talking to certain people, such as myself.  By completing missions, you'll earn progress towards new ranks, which will in turn give you access to increasingly powerful gear.  Greta informed me that you'll be tackling our power supply problem in the Ancient Generator?
+    part 3a:
+      responses:
+      - text: Thanks, Rhendon.  I'll be careful.
+        close: true
+        action: 0
+      text: Well, keep your wits about you. If the surface of this world is crawling with monsters, who knows what you'll find down there in the dark!
+    part 4a:
+      responses:
+      - text: End conversation
+        close: true
+      text: Remember to accept that mission and be careful down there!
+id: camp_rhendon

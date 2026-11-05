@@ -17,7 +17,7 @@ public final class PackContentTest {
             Path base=deployment(home,"base");
             var registry=PackContent.load(base);
             check(registry.packs().stream().anyMatch(p->p.id().equals("vanilla")),"default selection resolves vanilla");
-            check(registry.scenes().scenes().size()==7&&registry.scenes().entry().id()==1,"all stock scenes and the authored entry load");
+            check(registry.scenes().scenes().size()==9&&registry.scenes().entry().id()==1,"all stock scenes and the authored entry load");
             check(registry.items().entries().size()==9348&&registry.weapons().weapons().size()>300
                 &&registry.equipment().entries().size()>100&&registry.fires().entries().size()>1000,
                 "all four stock catalogs load with substantial indexed definitions");
@@ -51,7 +51,7 @@ public final class PackContentTest {
         writePack(addon,"addon","1.0.0",Map.of("vanilla",vanillaVersion),Map.of("scene.2","vanilla"),resources);
         selection(deployment,"vanilla,addon","disabled");
         ContentRegistry loaded=PackContent.load(deployment);
-        check(loaded.scenes().scenes().size()==8&&loaded.scenes().scene(905).id()==905,
+        check(loaded.scenes().scenes().size()==10&&loaded.scenes().scene(905).id()==905,
             "an explicitly enabled additive scene joins the vanilla catalog");
         check(loaded.scenes().scene(2).name().equals("Bazaar replacement")
             &&loaded.resources().get("scene.2").pack().equals("addon"),
@@ -70,7 +70,7 @@ public final class PackContentTest {
         writePack(wrong,"addon","1.0.0",Map.of("vanilla",vanillaVersion),Map.of("scene.2","other-pack"),Map.of("scene.2","maps/bazaar-replacement"));
         selection(wrongProvider,"vanilla,addon","disabled");
         expectFailure(()->PackContent.load(wrongProvider),"override must name the current resource provider");
-        check(baseline.scenes().scenes().size()==7,"resolving another deployment leaves the published baseline immutable");
+        check(baseline.scenes().scenes().size()==9,"resolving another deployment leaves the published baseline immutable");
     }
 
     private static void ignoredPacks(Path home)throws Exception {
