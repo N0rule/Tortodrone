@@ -1,6 +1,6 @@
 # Editing server content
 
-Version 0.35 uses one `content/` tree and readable YAML under `config/`. Edit a file,
+Tortodrone uses one `content/` tree and readable YAML under `config/`. Edit a file,
 validate it, and restart the server. No pack selection, manifests, manual hashes,
 Java compilation or hot reload is involved. Player inventories, identities and
 progression remain in SQLite. Back up a stopped deployment before upgrading.
@@ -46,7 +46,7 @@ data/                        private runtime state, keys and logs; never in Git
 
 The checkout and portable deployment use the same content/configuration layout.
 `./gradlew build` prepares `build/content`, `build/config` and
-`build/plugins` beside both executable JARs. Ordinary builds are offline once
+`build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
 The seven real maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),

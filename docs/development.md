@@ -10,7 +10,7 @@ Choose the **least expensive check that proves the requested change**. Do not ru
 2. For code changes use `./gradlew testUnit -PunitTests=AffectedTest,OtherAffectedTest` to compile/package and run only directly relevant programs. Use `./gradlew build` when checking compilation/packaging alone. For docs-only changes, review links and diffs instead.
 3. Escalate to focused integration for auth, storage, trades, protocol, cross-client synchronization and other high-risk paths. Include negative cases, ownership and rollback.
 4. Run one isolated stock-client/graphical acceptance scenario only when the change affects behavior that cannot be verified otherwise (rendering, animations, HUD, live scene transitions). Do **not** start repeated graphical sessions for backend-only changes. If graphical acceptance is necessary but unavailable, report it as **not verified**, not passed.
-5. Reserve a complete `./gradlew testAll` for significant cross-cutting changes, explicit release readiness or a requested full regression, **once at the final checkpoint**. A routine patch `VERSION` bump alone does not trigger the full suite. Benchmarks and other expensive checks are opt-in.
+5. Run the complete `./gradlew testAll` only when the owner explicitly authorizes it. A large change, release or `VERSION` bump does not imply permission. Benchmarks and other expensive checks are opt-in.
 
 Stop when the task's acceptance criteria pass. Avoid repeated successful suites, unrelated test coverage, speculative bug hunts and `clean` unless rebuilding from scratch is necessary.
 
@@ -22,7 +22,7 @@ Stop when the task's acceptance criteria pass. Avoid repeated successful suites,
 ./gradlew testUnit               # all standalone unit tests (not a focused filter)
 ./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest # focused compile/package + tests
 ./gradlew testIntegration        # all packaged integration tests
-./gradlew testAll                # complete unit + integration suite; milestone/release verification
+./gradlew testAll                # expensive full suite; only with explicit owner authorization
 ./gradlew testProcessCleanup     # focused cleanup integration task
 ./gradlew prepareContent         # offline source validation/copy
 ./gradlew prepareMaps
@@ -60,7 +60,7 @@ Replace the example classes with the specific tests for your change; do not run 
 
 Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml` pin distribution/dependency integrity. First build needs Gradle/Maven/plugin downloads; cached inputs support `--offline`. `build` and the explicit test tasks **do not** run native stock graphical checks. Unit programs run sequentially in one JVM; packaged integration fixtures use separate processes. A shared build-service slot serializes regression runs; don't run competing builds in the same checkout.
 
-`runServer` operates on **real `build/data/`** and are not disposable tests. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
+`runServer` operates on **real `build/data/`** and is not a disposable test. `clean` removes generated JARs/scratch, but **preserves** `build/data/`, `build/content/` and legacy `build/deps/`. If using headless Linux, `env -u DISPLAY ./gradlew build` is possible; it is not graphical acceptance.
 
 ## Test by change type
 
@@ -73,7 +73,7 @@ Windows: use `.\gradlew.bat`. The wrapper and `gradle/verification-metadata.xml`
 | Items/combat | Targeted catalog, damage/equipment tests | One isolated graphical test if modifying actual client-visible effects |
 | WebUI | Focused HTTP/security/domain tests | Disposable HTTPS browser fixture |
 | Performance/concurrency | Focused correctness/race checks | Benchmark only for explicit performance questions |
-| Major cross-cutting change / release | `./gradlew testAll` once at the end | Relevant stock-client acceptance |
+| Major cross-cutting change / release | Focused checks; full suite only with explicit owner authorization | Relevant stock-client acceptance |
 | Documentation only | Diff and link/source review | No Java tests |
 
 Stop **only test processes you started**, and report which checks were skipped, failed or unavailable. Use `git diff --check` before completion. Never claim graphical parity from a passing network fixture.

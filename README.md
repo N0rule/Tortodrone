@@ -1,140 +1,138 @@
 <p align="center">
-  <img src="docs/assets/banner.png" alt="Tortodrone banner" width="100%">
+  <img src="docs/assets/banner.png" alt="Tortodrone" width="100%">
 </p>
 
 # Tortodrone
 
-**A Java 25 clean-room Spiral Knights server emulator with WebUI and console administration for the unmodified stock client.**
+A Java 25 clean-room Spiral Knights server for the **unmodified official client**, with console and WebUI administration. Accounts use normal usernames and passwords; Steam and guest login are not supported.
 
-Tortodrone is under active development. It is **not** a complete vanilla server. Normal username/password accounts work; Steam and guest login do not.
+**Development status:** login, native Ready Room, Haven, supported interiors and town services work within the limits described below. Crash Site → initial Rescue Camp has an earlier isolated graphical acceptance. The complete opening route to Haven is **unfinished**: Ancient Generator still needs a passing full-floor playthrough, and Crossing the Chasm is incomplete. This is not a complete replacement for the official server.
 
-## Quick start
+## Set up from source
+
+You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client assets are not distributed in this repository.
+
+The commands below run from the repository root. On Windows, replace `./gradlew` with `.\gradlew.bat`; the Java commands work in PowerShell too.
 
 ### 1. Build
 
-Install **JDK 25** and make sure `java` is on `PATH`. The Gradle 9.5.1 wrapper is included, so no system Gradle or separate SQLite service is needed.
-
 ```sh
+git clone https://github.com/N0rule/Tortodrone.git
+cd Tortodrone
+java -version
 ./gradlew build
 ```
 
-`build` creates a working distribution without running tests. On Windows, use `.\gradlew.bat build`.
+Check that Java reports version 25. The build writes one deployment to `build/`: `tortodrone.jar`, `config/`, `content/`, `webui/` and `plugins/`. It does **not** run tests. Once dependencies are cached, builds can use `--offline`.
 
-### 2. Start the server
+### 2. Prepare new-knight content
+
+A clean build includes seven Haven/interior maps. **Creating a new knight also requires original Crash Site 398 and initial Rescue Camp 217.** Without them, creation is refused with “The opening adventure is unavailable”; the server does not silently skip the tutorial.
+
+If you already have a local deployment, check it first:
+
+```sh
+java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
+```
+
+If it passes, keep your existing maps. Otherwise, with the server stopped, follow [opening scene import and playtest](docs/content.md#local-crash-site-playtest). It gives the exact importer commands, pinned reference inputs inputs and expected entrances. You need a separately installed official client and the verified scene files from your local reference inputs. Neither a Git clone nor a normal build downloads these files. Do not substitute an arbitrary revision or delete existing maps to force an import.
+
+### 3. Start the server and create a game account
 
 ```sh
 java -jar build/tortodrone.jar
 ```
 
-Hosting is always headless; `--nogui` remains accepted. Optional WebUI administration shares the News HTTP listener; see [WebUI setup](docs/operations.md#secure-webui-setup). Its first-run page creates your administrator account using a one-time code shown in the server console. Additional WebUI accounts are managed inside **WebUI access**.
+The server runs in the terminal. Default ports are **47624/TCP** for the game and **8080/HTTP** for WebUI and News. Settings are in `build/config/server.yml`; stop the process before editing them.
 
-### 3. Create a player account
-
-In the running server console:
+In the **server console**, enter:
 
 ```text
 account create Alice
 ```
 
-Enter and confirm the password at the prompts, or create a player account in the WebUI. Game accounts are separate from WebUI administrator accounts.
+Follow the password prompts. There is no default game account. Type `help` for console commands. To end the process, enter `shutdown` and follow its confirmation prompt; `stop` only stops the game listener when WebUI is enabled.
 
-## What works today
+### 4. Connect the client
 
-- **Accounts and knights:** local username/password login, GM roles, knight creation, selection, editing and deletion.
-- **Persistence and items:** inventory, currencies, equipment and costumes, item grants and character preview.
-- **Social:** chat, tells, emotes, sitting, parties with open/private controls, and friend travel into eligible Town and shared Training scenes.
-- **Haven:** four connected towns: Town Square, Bazaar, Arcade and Garrison.
-- **Interiors:** Advanced Training Hall, Laboratory and Hall of Heroes, with movement and limited stock-derived weapon, defense and projectile systems.
-- **Training Hall:** public shared instances, prepared scene actors and bounded interactions such as test cubes, switches/doors, traps, pickups, blocks and conversation.
-- **Scenes:** seven bundled scenes with verified modern stock-capture layouts, including Laboratory scene 30893 and Hall of Heroes scene 318. Layouts and collision are external and validated; movement is server-authoritative.
-- **Town services:** merchant purchases, recipe learning/crafting, sprite progression, auctions and the Energy Exchange. Available catalogs and behaviors remain incomplete.
-
-### Not full vanilla parity
-
-Tortodrone does not yet implement general dungeon/gate gameplay, broadly reusable monster AI or NPC services, missions, complete shop/crafting coverage, guilds, PvP, party matchmaking, world-position persistence, or much of combat. The intro is bypassed without granting fictional mission progress.
-
-Actual supported scope is determined by source and tests, not by how much data exists in content definitions.
-
-## Everyday Gradle tasks
-
-```sh
-./gradlew build          # server JAR, WebUI + prepared content; no tests
-./gradlew buildServer    # server JAR + unified content
-./gradlew testUnit       # all standalone unit tests
-./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest  # focused
-./gradlew testIntegration # packaged integration tests
-./gradlew testAll        # unit + integration tests
-./gradlew prepareContent # offline source validation/copy
-./gradlew prepareMaps    # maps only
-./gradlew benchmark --args="--seconds 20 --instances 4 --clients 300"
-```
-
-Tests have explicit names: `testUnit`, `testIntegration` and `testAll`; `build` never runs them. For focused unit runs, pass `-PunitTests=...`; see [Fast focused testing](docs/development.md#running-just-the-affected-tests).
-
-First use downloads the Gradle distribution and verified dependencies. Cached dependencies support `--offline` builds. Benchmarks are opt-in and synthetic; they are not proof of live-client performance.
-
-## Portable deployment
-
-Place these **beside one another**:
-
-```text
-Tortodrone/
-  tortodrone.jar
-  config/                # server.yml and combat.yml
-  content/               # maps/, items/, town/, shared/, _internal/
-  webui/                 # compiled frontend
-  plugins/README.md      # future API placeholder
-  data/                  # keep across updates
-```
-
-The build prepares `build/{config,content,plugins,webui}/` beside the server JAR. Deploy these complete directories. Release archives include defaults and omit private `data/`.
-
-Existing schemas 9–15 require an explicit offline economy upgrade candidate; see [Upgrading](docs/content.md#upgrading). Keep the original Depot YAML until export.
-
-## Client connection
-
-Use a **separate, unmodified** Spiral Knights installation and KnightLauncher. Set the launcher to:
+Use a separately managed, unmodified Spiral Knights installation with KnightLauncher. Set these launcher properties:
 
 ```properties
 game.endpoint=127.0.0.1
 game.port=47624
-game.publicKey=<entire value from data/keys/public.txt>
+game.publicKey=<complete contents of build/data/keys/public.txt>
 ```
 
-For a local build, the key is at `build/data/keys/public.txt` once the server has generated it. For remote hosting use the reachable server address, not `0.0.0.0`; expose the configured **TCP** port as appropriate. Restart the game after changing launcher settings. No default player account exists.
+The server generates the key on first startup. Paste the **entire public value**, including its `#` separator, rather than the filename. Keep private keys on the server. Restart the client after changing launcher settings, then use the game account created above.
 
-## Configuration and safety
+For LAN or remote play, use the server's reachable address instead of `127.0.0.1` and allow the game port through the relevant firewall. `0.0.0.0` is a bind address, not a client destination.
 
-Stop the server before editing `config/server.yml`:
+A fresh knight enters Crash Site automatically when verified opening content is installed. A returning, completed knight enters the native Ready Room; Return to Game uses its saved destination. Use the [Crash Site acceptance procedure](docs/content.md#local-crash-site-playtest) to test combat, the Giant, exit doors, Camp arrival and reconnect. A content preflight alone does not prove gameplay.
 
-```yaml
-server-ip: 0.0.0.0
-server-port: 47624
-max-clients: 16
-log-mode: normal
-log-max-mib: 10
-log-retention: 5
-startup-map: haven
+### 5. Open the WebUI (optional)
+
+Visit `http://localhost:8080/admin/` on the server computer, or use the address printed at startup. Create the first administrator with the one-time setup code shown in the **server console**. WebUI accounts are separate from game accounts and GM roles.
+
+The defaults expose HTTP on local/LAN interfaces. Use a trusted network; configure the documented HTTPS proxy before exposing administration publicly. See [WebUI setup and recovery](docs/operations.md#secure-webui-setup).
+
+## Keep your deployment
+
+Run the JAR with these directories beside it:
+
+```text
+build/
+  tortodrone.jar
+  config/          server and combat settings
+  content/         maps, items and town definitions
+  webui/           prepared administration frontend
+  plugins/         reserved; no plugin loader yet
+  data/            accounts, SQLite databases, keys and logs
 ```
 
-- `--config path/to/server.yml` changes only the settings file. Existing explicitly selected `.properties` listener settings remain compatible.
-- `data/` stays beside the JAR. Type `help` in the server terminal/window for commands; `stop` shuts down terminal hosting. Logs are under `data/logs/`.
-- To edit content, see `content/maps/advanced_training/npcs/konway.yml` for Konway's readable stock dialogue selections (literal text is restricted by the unchanged client), `content/items/weapons.yml` for weapon controls, or `content/town/shops.yml` for ordinary merchant goods.
-- Actor/item YAML inherits native defaults and contains overrides. Save, validate and restart for static content; use the account manager to edit SQLite Depot offers/promotions and auctions live. No manual hashes.
-- See [Content](docs/content.md) for schemas, imports and native limits. Back up the whole stopped `data/`, `config/` and `content/` before changing the deployment.
+`data/` lives beside the JAR regardless of the working directory. Preserve it, your configuration and imported/customized content across updates. Back up the whole deployment while stopped. Normal builds retain imported maps; conflicting default changes are proposed under `content-updates/` for review. Do not delete databases or regenerate keys to fix a login problem. Older database schemas may require an explicit [offline upgrade](docs/content.md#upgrading).
+
+## Supported scope
+
+- **Accounts and world:** knight management, native Ready Room, authoritative movement/collision, seven bundled town/interior maps and locally imported opening scenes.
+- **Player systems:** persistent inventory and currencies, equipment/costumes, weapon combat, heat and battle sprites. Individual item and action support varies.
+- **Town and social:** supported shops/crafting, auctions, Energy Exchange, chat, friends, parties and eligible friend travel.
+- **Administration:** game account management, inventory/economy tools, News and monitoring through console and WebUI.
+
+General mission coverage, the full opening route, many special item effects, guilds, PvP and Arcade gameplay remain incomplete. Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See the [current opening-route status and evidence](docs/research.md#native-ready-room-and-authorized-opening-scope), [item support inventory](docs/item-support.csv) and [box support inventory](docs/box-support.csv).
+
+## Work on the project
+
+```sh
+./gradlew build
+./gradlew testUnit -PunitTests=SceneSimulationTest,MovementCollisionTest
+```
+
+Run tests relevant to your change. `testUnit` without a filter runs all unit programs; `testAll` runs the expensive full suite and is not the default. Tests use disposable data. See [development and verification](docs/development.md) for focused integration and isolated stock-client checks.
+
+```text
+src/main/java/    server implementation
+src/test/         regression programs and fixtures
+src/webui/        administration frontend
+config/          default configuration
+content/         maintained server definitions and bundled maps
+scripts/         import, inspection and compatibility tools
+docs/            operator guides and source evidence
+gradle/          pinned wrapper and dependency verification
+licenses/        third-party license texts
+```
+
+Build output, local research, saves, keys and captures stay outside Git. Client code/assets are not copied into server source; imports require separately available sources and appropriate rights. Dependency notices are in [THIRD-PARTY.md](src/main/resources/THIRD-PARTY.md).
 
 ## Documentation
 
-| Guide | What it covers |
+| Guide | Use it for |
 | --- | --- |
-| [Commands](docs/commands.md) | Player/GM slash commands, examples, console syntax and explicit placeholders. |
-| [Parity](docs/parity.md) | Estimated official parity by system plus the prioritized now/later roadmap. |
-| [Operations](docs/operations.md) | Deployment, accounts, commands, client troubleshooting, backup and releases. |
-| [Content](docs/content.md) | Maps, items, combat defaults, verified imports and current extension limits. |
-| [Architecture](docs/architecture.md) | Identity/storage, protocol, simulation and security invariants. |
-| [Development](docs/development.md) | Build/tests and isolated stock-client checks. |
-| [Research](docs/research.md) | Reference sources, protocol evidence, bundled scene provenance and historical investigation pointers. |
-| [Training Hall](docs/training-hall.md) | Current scene behavior, verification and limits. |
-| [AGENTS.md](AGENTS.md) | Short rules for coding agents. |
-
-Older milestone reports and investigations remain in Git history; they are not maintained product documentation. Licenses and third-party notices are bundled in the JARs.
+| [Operations](docs/operations.md) | Hosting, WebUI security, backups, updates and troubleshooting |
+| [Commands](docs/commands.md) | Console and player/GM command syntax |
+| [Content](docs/content.md) | Opening scene imports/playtests, map and item editing |
+| [Development](docs/development.md) | Focused tests, packaging and client compatibility checks |
+| [Tools](scripts/README.md) | Finding the relevant importer or diagnostic |
+| [Architecture](docs/architecture.md) | Identity, storage, protocol and simulation boundaries |
+| [Research](docs/research.md) | Current opening-route status, provenance and historical evidence |
+| [Training Hall](docs/training-hall.md) | Supported interactions and their limits |
+| [Historical parity assessment](docs/parity.md) | Older estimates; not a current completion score |
