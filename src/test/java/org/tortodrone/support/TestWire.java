@@ -88,7 +88,7 @@ public final class TestWire {
         check(in.readInt() == 1, "server object identity");
         check(in.readInt() == 4,"Energy Exchange object identity");
         check(in.readInt() == 0 && in.readInt() == 0, "unavailable PvP objects");
-        check(in.readInt() == 0, "unavailable love test object");
+        check(in.readInt() == org.tortodrone.protocol.SessionCodec.LOVE_TEST_OID, "love test object identity");
         check(in.readInt() == 5, "mission object identity");
         for (int i = 0; i < 5; i++) check(in.readInt() == 0, "unavailable optional object");
         end(in); return oid;

@@ -96,6 +96,9 @@ final class ClientSession {
                             } else if (request.objectId() == SessionCodec.CONFIG_OID) {
                                 output.send(() -> outgoing.configuration(request.messageId()));
                                 log.debug("DConfigObject snapshot sent");
+                            } else if (request.objectId() == SessionCodec.LOVE_TEST_OID) {
+                                output.send(() -> outgoing.loveTest(request.messageId()));
+                                log.debug("LoveTestObject snapshot sent");
                             } else if (request.objectId() == SessionCodec.MISSION_OID) {
                                 output.send(()->outgoing.missionObject(request.messageId()));
                             } else if (request.objectId() == SessionCodec.EXCHANGE_OID) {

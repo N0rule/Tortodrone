@@ -30,6 +30,7 @@ public final class SessionCodec {
     public static final int INVOCATION_OID = 3;
     public static final int EXCHANGE_OID = 4, EXCHANGE_SERVICE = 1;
     public static final int MISSION_OID = 5, MISSION_SERVICE = 16;
+    public static final int LOVE_TEST_OID = 6;
     /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
     public static final int ADMIN_SERVICE = 13;
     /** Handles needed by current login observers; operations remain explicitly limited. */
@@ -93,7 +94,7 @@ public final class SessionCodec {
             // open hall, admin, status, place browser, client timings.
             out.writeInt(SERVER_OID);
             out.writeInt(EXCHANGE_OID); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
-            out.writeInt(0); // love test
+            out.writeInt(LOVE_TEST_OID); // love test
             out.writeInt(MISSION_OID); out.writeInt(0); // registered mission object, open hall
             // Stock ProjectXSession only names the admin object for ADMIN-tier accounts. A
             // support-plus account keeps zero and still reaches the admin service, which is
@@ -249,6 +250,9 @@ public final class SessionCodec {
     }
     public byte[] missionObject(short messageId)throws IOException {
         return frame(out->{objectHeader(out,messageId,"com.threerings.projectx.mission.data.MissionObject",MISSION_OID);emptyDSet(out);});
+    }
+    public byte[] loveTest(short messageId)throws IOException {
+        return frame(out->{objectHeader(out,messageId,"com.threerings.projectx.love.data.LoveTestObject",LOVE_TEST_OID);emptyDSet(out);});
     }
     public byte[] completedMissions(int oid,java.util.Collection<org.tortodrone.character.OpeningCompletion> completions)throws IOException {
         if(completions.size()>org.tortodrone.character.OpeningMission.values().length)throw new IOException("Too many opening receipts");
