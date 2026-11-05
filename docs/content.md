@@ -769,7 +769,7 @@ onboarding or completion; use a fresh knight for that acceptance test.
 Earlier isolated graphical checks established Crash Site → Camp → reconnect;
 the latest build has not received a new complete graphical acceptance. Giant
 targeting is capture-calibrated, and companion/parity limits remain documented
-in research. Record the first failure, screenshot/client error if available,
+as implementation limits. Record the first failure, screenshot/client error if available,
 and server logs under `build/data/logs/`. Avoid repeated graphical runs for
 unrelated changes.
 

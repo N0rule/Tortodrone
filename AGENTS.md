@@ -4,7 +4,7 @@ Java 25 clean-room server/admin for the **unmodified** Spiral Knights client; no
 
 ## Start
 - Check `git status --short --branch`, recent commits, `VERSION` and **relevant** source/tests. Code and observed stock-client behavior override older docs.
-- Read only task-relevant pages (`README.md`, `docs/{architecture,content,operations,development,research}.md`). Do not preload all docs or create milestone diaries.
+- Read only task-relevant pages (`README.md`, `docs/{architecture,content,operations,development}.md`). Do not preload all docs or create milestone diaries.
 - Change only what the request needs; preserve unrelated Git edits, runtime state and working behavior.
 
 ## Never violate
