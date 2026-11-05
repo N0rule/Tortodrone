@@ -150,7 +150,18 @@ public final class CharacterScenario {
     private static DataInputStream event(Socket peer, TestWire wire, int oid, String type) throws IOException {
         DataInputStream in = wire.frame(peer.getInputStream());
         TestWire.check(wire.type(in).equals(TestWire.NET + "EventNotification") && in.readShort() == -1, "unsolicited event");
-        TestWire.check(wire.type(in).equals(TestWire.DOB + type) && in.readInt() == oid, "event identity and type"); return in;
+        String actual = wire.type(in); int eventOid = in.readInt();
+        if (!actual.equals(TestWire.DOB + type) || eventOid != oid) {
+            String detail = "";
+            if (actual.equals(TestWire.DOB + "InvocationResponseEvent")) {
+                short callback = in.readShort(); byte method = in.readByte();
+                detail = " callback=" + callback + " method=" + method;
+                if (in.readBoolean()) { in.readInt(); detail += " value=" + wire.object(in); }
+            }
+            throw new AssertionError("event identity and type: expected " + type + "@" + oid
+                + ", got " + actual + "@" + eventOid + detail);
+        }
+        return in;
     }
     private static void confirmation(Socket peer, TestWire wire, int oid, short callback, String failure) throws IOException {
         DataInputStream in = event(peer, wire, oid, "InvocationResponseEvent");

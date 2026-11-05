@@ -103,6 +103,13 @@ public final class TestClient {
         return clientOid;
     }
 
+    /** Closes an authenticated session cleanly when the scenario only needs the handshake. */
+    public static void logoff(Socket peer) throws Exception {
+        TestWire.Writer writer = new TestWire.Writer(PREFIX + "SecureRequest", PREFIX + "PublicKeyCredentials",
+            "[Ljava.lang.String;", PREFIX + "AESAuthRequest");
+        writer.send(peer.getOutputStream(), out -> writer.message(out, "LogoffRequest", 30));
+    }
+
     private static void session(Socket peer, TestWire wire, int clientOid) throws Exception {
         TestWire.Writer writer = new TestWire.Writer(PREFIX + "SecureRequest", PREFIX + "PublicKeyCredentials",
             "[Ljava.lang.String;", PREFIX + "AESAuthRequest");

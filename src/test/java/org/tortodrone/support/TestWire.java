@@ -87,7 +87,9 @@ public final class TestWire {
         check(in.readBoolean() && in.readInt() == 0, "no UDP endpoints");
         check(in.readInt() == 1, "server object identity");
         check(in.readInt() == 4,"Energy Exchange object identity");
-        for (int i = 2; i < 10; i++) check(in.readInt() == 0, "unavailable optional object");
+        check(in.readInt() == 0 && in.readInt() == 0, "unavailable PvP objects");
+        check(in.readInt() == 5, "mission object identity");
+        for (int i = 0; i < 5; i++) check(in.readInt() == 0, "unavailable optional object");
         end(in); return oid;
     }
 
@@ -102,7 +104,9 @@ public final class TestWire {
             case "com.threerings.presents.client.InvocationReceiver$Registration" -> Map.of("code", string(in), "id", in.readShort());
             case "com.threerings.presents.dobj.DSet" -> {
                 int count = in.readInt(); check(count >= 0 && count <= 128, "snapshot DSet count");
-                List<Object> entries = new ArrayList<>(); for (int i = 0; i < count; i++) entries.add(object(in)); yield entries;
+                List<Object> entries = new ArrayList<>();
+                for (int i = 0; i < count; i++) entries.add(object(in));
+                yield entries;
             }
             case "com.threerings.projectx.data.ProjectXTokenRing" -> in.readInt();
             case "com.threerings.projectx.data.PlayerObject" -> fields(in, PLAYER);
@@ -111,9 +115,22 @@ public final class TestWire {
                 "name:s icon:s colorizations:o description:s flags:i defaultSceneId:i _townId:i");
             case "com.threerings.projectx.dungeon.data.GateSummary" -> fields(in,
                 "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o");
-            case "[Lcom.threerings.opengl.renderer.config.ColorizationConfig;", "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wheel;" -> {
-                check(in.readInt()==0,"empty polymorphic transport array");yield List.of();
+            case "com.threerings.projectx.dungeon.data.MissionGateSummary" -> fields(in,
+                "_gateId:I _name:s _icon:s _colorizations:o _description:s _sourceId:i _destId:i _priority:i _tokens:i _ownerKnightId:i _flags:i _wheels:o expansion:s prestige:s");
+            case "com.threerings.projectx.dungeon.data.GateSummary$Constant" -> in.readUnsignedByte();
+            case "com.threerings.projectx.dungeon.data.GateSummary$Level" -> List.of(string(in), string(in));
+            case "com.threerings.projectx.dungeon.data.DungeonCodes$LevelType" -> in.readUnsignedByte();
+            case "[Lcom.threerings.opengl.renderer.config.ColorizationConfig;" -> array(in, 32, "bounded colorizations");
+            case "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wheel;" -> {
+                int count = in.readInt(); check(count >= 0 && count <= 8, "bounded gate wheels");
+                List<Object> wheels = new ArrayList<>();
+                for (int i = 0; i < count; i++) {
+                    object(in);                 // wheel controller
+                    wheels.add(object(in));     // wedges
+                }
+                yield wheels;
             }
+            case "[Lcom.threerings.projectx.dungeon.data.GateSummary$Wedge;" -> wedgeArray(in);
             case "com.threerings.config.dist.data.DConfigObject" -> fields(in, "_oid:i dconfigService:o added:o updated:o removed:o");
             case "com.threerings.projectx.data.LootReportLevel" -> in.readUnsignedByte();
             case "[Lcom.threerings.projectx.data.AvailableKnight;" -> {
@@ -135,6 +152,27 @@ public final class TestWire {
             }
             default -> throw new AssertionError("Unexpected snapshot class: " + name);
         };
+    }
+
+    private List<Object> array(DataInputStream in, int max, String bound) throws IOException {
+        int count = in.readInt(); check(count >= 0 && count <= max, bound);
+        List<Object> values = new ArrayList<>();
+        for (int i = 0; i < count; i++) values.add(object(in));
+        return values;
+    }
+
+    private List<Object> wedgeArray(DataInputStream in) throws IOException {
+        int count = in.readInt(); check(count >= 0 && count <= 8, "bounded gate wedges");
+        List<Object> wedges = new ArrayList<>();
+        for (int i = 0; i < count; i++) {
+            object(in);   // level reference
+            object(in);   // colorizations
+            string(in);   // description
+            object(in);   // level type
+            in.readBoolean(); in.readFloat(); in.readBoolean(); in.readInt(); in.readFloat(); in.readLong();
+            wedges.add(Map.of());
+        }
+        return wedges;
     }
 
     private Map<String, Object> fields(DataInputStream in, String schema) throws IOException {
