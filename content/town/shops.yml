@@ -664,7 +664,7 @@ catalogs:
   - item: wild_hunting_blade_recipe
     price: 25000
 # Hall of Heroes tier stock: each catalog holds the captured 5-star family's goods whose item
-# rarity is at most N (Hall_of_Heroes.wiki:118-132, proven by reference-inputs
+# rarity is at most N (Hall_of_Heroes.wiki:118-132, verified against stock
 # contrib/check_hoh_stock_rule.py + install_hoh_tier_stock.py). No 2/3/4-star mannequin is
 # placed in the current maps, so these catalogs await a map/station binding change.
 - config: Rule/Hall of Heroes/Bomber 2 Star
@@ -1964,7 +1964,7 @@ catalogs:
   min: 0
   max: 0
   chance: 1
-# Krogmo Coin wares from Sullivan.wiki (reference-inputs contrib/reference/wiki-vendor-stock.tsv);
+# Krogmo Coin wares from Sullivan.wiki (documented vendor stock);
 # the in-game Token Trader, PvP station had no catalog before this binding.
 - config: Documented/Haven/Greave
   goods:

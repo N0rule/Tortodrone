@@ -15,7 +15,6 @@ requires Pillow with WebP support. These are not server runtime dependencies.
 | Import an original scene into a stopped deployment | [MapImport.java](MapImport.java) | [Native map import](../docs/content.md#native-map-import) |
 | Inspect/export stock configuration or run a native compatibility probe | [StockTools.java](StockTools.java), [compat/](compat/) | [Stock client compatibility](../docs/development.md#stock-client-compatibility) |
 | Regenerate item and box support inventories | [index_item_support.py](content/index_item_support.py), [index_box_support.py](content/index_box_support.py) | [Items and weapon controls](../docs/content.md#items-and-weapon-controls); read each script's options first |
-| Audit recovered item definitions | [inspect_items.py](content/inspect_items.py) | Read-only evidence audit; does not implement missing behavior |
 | Prepare optional WebUI artwork locally | [StockTools.java](StockTools.java), [OptimizeWebUiAssets.py](OptimizeWebUiAssets.py) | [WebUI verification](../docs/development.md#webui-verification) |
 
 For the usual opening-content check:
@@ -48,5 +47,5 @@ Keep generated exports, captures, accounts, keys and proprietary artwork out of
 Git. Use separate disposable directories for tests, and never point a fixture
 at live saves or the owner's client preferences. Original scene data must be
 available separately; tools do not supply missing assets or establish rights to
-redistribute them. Provenance and known parity limits are in
-[Research](../docs/research.md).
+redistribute them. Background limitations are in
+[Content](../docs/content.md) and [licensing](../docs/provenance.md).

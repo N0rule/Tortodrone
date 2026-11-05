@@ -4,7 +4,7 @@
 
 # Tortodrone
 
-An independent Java 25 Spiral Knights server reimplementation for the **unmodified official client**, with console and WebUI administration. Accounts use normal usernames and passwords; Steam and guest login are not supported. See the [provenance policy](docs/provenance.md) for research methods and clean-room limits.
+An independent Java 25 Spiral Knights server reimplementation for the **unmodified official client**, with console and WebUI administration. Accounts use normal usernames and passwords; Steam and guest login are not supported. See [licensing and third-party content](docs/provenance.md).
 
 **Development status:** login, native Ready Room, Haven, supported interiors and town services work within the limits described below. Crash Site → initial Rescue Camp has an earlier isolated graphical acceptance. The complete opening route to Haven is **unfinished**: Ancient Generator still needs a passing full-floor playthrough, and Crossing the Chasm is incomplete. This is not a complete replacement for the official server.
 
@@ -31,7 +31,7 @@ those scenes. Dependency notices are included as `THIRD-PARTY.md` in the ZIP.
 
 ## Set up from source
 
-You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client binaries and extracted WebUI artwork are not distributed; bundled captured scene data has separate [provenance and rights limitations](docs/provenance.md).
+You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client binaries and extracted WebUI artwork are not distributed; bundled scene data has separate [rights limitations](docs/provenance.md).
 
 The commands below run from the repository root. On Windows, replace `./gradlew` with `.\gradlew.bat`; the Java commands work in PowerShell too.
 
@@ -56,7 +56,7 @@ If you already have a local deployment, check it first:
 java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 ```
 
-If it passes, keep your existing maps. Otherwise, with the server stopped, follow [opening scene import and playtest](docs/content.md#local-crash-site-playtest). It gives the exact importer commands, pinned reference inputs inputs and expected entrances. You need a separately installed official client and the verified scene files from your local reference inputs. Neither a Git clone nor a normal build downloads these files. Do not substitute an arbitrary revision or delete existing maps to force an import.
+If it passes, keep your existing maps. Otherwise, with the server stopped, follow [opening scene import and playtest](docs/content.md#local-crash-site-playtest). It gives the exact importer commands, required input folders and expected entrances. You need a separately installed official client and the matching scene exports you prepared yourself. Neither a Git clone nor a normal build downloads these files. Do not substitute an arbitrary revision or delete existing maps to force an import.
 
 ### 3. Start the server and create a game account
 
@@ -131,7 +131,7 @@ build/
 - **Town and social:** supported shops/crafting, auctions, Energy Exchange, chat, friends, parties and eligible friend travel.
 - **Administration:** game account management, inventory/economy tools, News and monitoring through console and WebUI.
 
-General mission coverage, the full opening route, many special item effects, guilds, PvP and Arcade gameplay remain incomplete. Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See the [current opening-route status and evidence](docs/research.md#native-ready-room-and-authorized-opening-scope), [item support inventory](docs/item-support.csv) and [box support inventory](docs/box-support.csv).
+General mission coverage, the full opening route, many special item effects, guilds, PvP and Arcade gameplay remain incomplete. Imported definitions and passing serialization tests do not establish full gameplay or visual parity. See [content and opening status](docs/content.md), the [item support inventory](docs/item-support.csv) and the [box support inventory](docs/box-support.csv).
 
 ## Work on the project
 
@@ -154,7 +154,7 @@ gradle/          pinned wrapper and dependency verification
 licenses/        third-party license texts
 ```
 
-Original Tortodrone code and documentation use [PolyForm Noncommercial 1.0.0](LICENSE): noncommercial use and modification are permitted under its terms, and redistributed copies must retain the [N0rule/Tortodrone attribution notice](NOTICE). This is source-available, not OSI open source. Third-party dependencies and original game content retain their own rights; the project license does not license captured maps or extracted artwork. See [provenance and the history audit](docs/provenance.md), [dependency notices](src/main/resources/THIRD-PARTY.md) and [contribution rules](CONTRIBUTING.md). Build output, local research, saves, keys and captures stay outside Git.
+Original Tortodrone code and documentation use [PolyForm Noncommercial 1.0.0](LICENSE): noncommercial use and modification are permitted under its terms, and redistributed copies must retain the [N0rule/Tortodrone attribution notice](NOTICE). This is source-available, not OSI open source. Third-party dependencies and original game content retain their own rights; the project license does not license bundled scene data or extracted artwork. See [licensing and third-party content](docs/provenance.md), [dependency notices](src/main/resources/THIRD-PARTY.md) and [contribution rules](CONTRIBUTING.md). Build output, local notes, saves, keys and test captures stay outside Git.
 
 ## Documentation
 
@@ -166,6 +166,3 @@ Original Tortodrone code and documentation use [PolyForm Noncommercial 1.0.0](LI
 | [Development](docs/development.md) | Focused tests, packaging and client compatibility checks |
 | [Tools](scripts/README.md) | Finding the relevant importer or diagnostic |
 | [Architecture](docs/architecture.md) | Identity, storage, protocol and simulation boundaries |
-| [Research](docs/research.md) | Current opening-route status, provenance and historical evidence |
-| [Training Hall](docs/training-hall.md) | Supported interactions and their limits |
-| [Historical parity assessment](docs/parity.md) | Older estimates; not a current completion score |

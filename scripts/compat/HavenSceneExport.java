@@ -37,10 +37,10 @@ public final class HavenSceneExport {
 
     public static void main(String[] args) throws Exception {
         if(args.length!=3)throw new IllegalArgumentException(
-            "Usage: HavenSceneExport game-directory captured-binaries-directory fresh-maps-output-directory");
+            "Usage: HavenSceneExport game-directory scene-source-directory fresh-maps-output-directory");
         Path project=Path.of("").toAbsolutePath().normalize();
         Path game=Path.of(args[0]).toAbsolutePath().normalize();
-        Path archive=Path.of(args[1]).toRealPath();
+        Path sources=Path.of(args[1]).toRealPath();
         Properties pins=properties(project.resolve("content/_internal/provenance/scene-source.properties"));
         Path output=Path.of(args[2]).toAbsolutePath().normalize();
         if(!Files.isRegularFile(game.resolve("code/projectx-pcode.jar")))throw new IOException("Missing installed stock game JAR");
@@ -52,7 +52,7 @@ public final class HavenSceneExport {
             if(!source.startsWith(archive)||Files.isSymbolicLink(source)||!Files.isRegularFile(source))
                 throw new IOException("Missing or unsafe captured scene: "+pack.id);
             String actual=digest(source);
-            if(!actual.equals(pins.getProperty("capture."+pack.id+".sha256")))
+            if(!actual.equals(pins.getProperty("scene."+pack.id+".sha256")))
                 throw new IOException("Captured scene digest mismatch for "+pack.id);
             sourceFiles.put(pack,source);
         }
@@ -324,12 +324,12 @@ public final class HavenSceneExport {
 
     private static Properties sourceManifest(Path project,Path staging)throws Exception {
         Properties p=new Properties();p.setProperty("format",FORMAT);
-        // The checked-in source keeps its provenance manifest and ownership history; a fresh
-        // generation records this generation's digests as the replacement baseline.
+        // The checked-in manifest keeps source and ownership history; a fresh generation
+        // records this generation's digests as the replacement baseline.
         var existing=project.resolve("content/_internal/provenance/scene-source.properties");
         if(Files.isRegularFile(existing,LinkOption.NOFOLLOW_LINKS)) {
             Properties old=properties(existing);
-            for(String key:old.stringPropertyNames())if(key.startsWith("owned.")||key.startsWith("capture."))p.setProperty(key,old.getProperty(key));
+            for(String key:old.stringPropertyNames())if(key.startsWith("owned.")||key.startsWith("scene."))p.setProperty(key,old.getProperty(key));
             for(Pack pack:PACKS)for(String file:List.of("map.properties","scene.dat","walkability.gz","portals.properties","content.properties","static-collision.properties")) {
                 String rel=pack.folder+"/"+file;String previous=old.getProperty("source."+rel);
                 if(previous!=null)addOwned(p,rel,previous);
@@ -342,7 +342,7 @@ public final class HavenSceneExport {
             if(Files.isRegularFile(original))addOwned(p,rel,digest(original));
             Path current=staging.resolve(rel);if(Files.isRegularFile(current))p.setProperty("source."+rel,digest(current));
         }
-        p.setProperty("provenance","verified-scene-source-2026-10-12");
+        p.setProperty("provenance","verified-scene-exports");
         return p;
     }
     private static void addOwned(Properties properties,String relative,String digest) {

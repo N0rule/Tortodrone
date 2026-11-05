@@ -262,7 +262,7 @@ public final class StockTools {
                 sources.add(project.resolve("scripts/compat/TownSceneExport.java"));
             }
             case "haven" -> {
-                if(args.length!=4)throw new IllegalArgumentException("haven expects game-directory captured-binaries-directory fresh-output-directory");
+                if(args.length!=4)throw new IllegalArgumentException("haven expects game-directory scene-source-directory fresh-output-directory");
                 fixture="HavenSceneExport";
                 fixtureArgs.add(Path.of(args[2]).toAbsolutePath().toString());
                 fixtureArgs.add(Path.of(args[3]).toAbsolutePath().toString());
@@ -271,7 +271,7 @@ public final class StockTools {
             }
             case "scene" -> {
                 int count=args.length-(args[args.length-1].equals("--content")?1:0);
-                if (count != 6 && count != 8) throw new IllegalArgumentException("scene expects game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y] [--content]");
+                if (count != 6 && count != 8) throw new IllegalArgumentException("scene expects game-directory scene-source output-directory zone-id zone-name [spawn-x spawn-y] [--content]");
                 fixture = "ScenePackExport";
                 fixtureArgs.addAll(Arrays.asList(args).subList(2, args.length));
                 sources.add(project.resolve("scripts/compat/ScenePackExport.java"));

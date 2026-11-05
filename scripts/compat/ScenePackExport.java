@@ -14,7 +14,7 @@ public final class ScenePackExport {
         boolean content=args.length>0&&args[args.length-1].equals("--content");
         if(content)args=Arrays.copyOf(args,args.length-1);
         if(args.length!=5&&args.length!=7)throw new IllegalArgumentException(
-            "Usage: ScenePackExport game-directory archived-scene output-directory zone-id zone-name [spawn-x spawn-y]");
+            "Usage: ScenePackExport game-directory scene-source output-directory zone-id zone-name [spawn-x spawn-y]");
         Path source=Path.of(args[1]),out=Path.of(args[2]);
         if(Files.exists(out))throw new IOException("Output already exists; choose a fresh map pack directory");
         byte[] layout=Files.readAllBytes(source);if(layout.length>900_000)throw new IOException("Scene is too large");

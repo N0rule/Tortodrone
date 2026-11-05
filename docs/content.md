@@ -131,9 +131,8 @@ initializing AWT, and shares the HTTP server's 8 MiB file limit. This byte limit
 is a local serving policy.
 `action: depot` opens the native Supply Depot instead of a URL; it also enables
 the tooltip. Other actions and nonempty arguments are rejected in this Town-only
-implementation. The property names and action routing follow reference inputs
-`client/bX.java:40-54`, `client/ds_1.java:369-372` and the captured Depot banner in
-`contrib/check_uplink_news.py`; no archived banner assets are bundled.
+implementation. The property names and action routing follow the stock client's
+native news configuration; no banner assets are bundled.
 The server serves this folder over HTTP on `server-ip:news-port` and refuses
 traversal, non-image paths and unknown files, so point the launcher's `content_url` at the host and `news-port` configured
 in `config/server.yml`.
@@ -414,8 +413,8 @@ limitations: this refactor adds no opening, loot selection or reward behavior.
 
 Item status damage also applies to scene enemies, including status-only hits.
 The 33 chemical bomb variants retain their separate blast and repeating cloud
-areas, recovered from the stock actor parameters corroborated by reference inputs's
-`actor.xml`; their damage areas are independent of the point-shaped actor.
+areas, taken from the stock actor parameters in `actor.xml`; their damage areas
+are independent of the point-shaped actor.
 Enemy stun scales attack land, duration and rearm using the speed captured when
 the attack starts; freeze prevents turning, and poison suppresses regeneration.
 `EnemyItemStatusTest` exercises the actual bomb, sword and handgun graphs against
@@ -500,7 +499,7 @@ Optional `mechanics.yml` contains each map's own rules. Native `destination.*`
 markers moved to immutable bindings: travel uses the single editable arrival in
 `portals.yml`. The retained markers are scene metadata, not a second travel control.
 `shared/combat.yml` owns global player/scaling/status parameters and gear stats.
-The archive/stat-reader import covers 1,012 grantable equipment definitions,
+The checked-in stat import covers 1,012 grantable equipment definitions,
 295 shared level tables and 116 defense, resistance and family-damage variants.
 An item's numeric `table` selects `gear.table.<number>.levels.<zero-based-level>`;
 identical tables are shared, and missing table references fail startup. These
@@ -514,20 +513,19 @@ Existing sparse base values remain the fallback for deployments without a level
 table; omitted values default to zero.
 
 The sprite/harness tables and all 27 base/ultimate attacks (1,728 power/damage
-combinations) are retained from the archive/native reader. A successful skill
+combinations) are retained from the native reader. A successful skill
 uses native knight activity 288 for 750 ms and writes the **used skill's**
 harness-adjusted, minimum-clamped recharge to all three pet cooldown slots,
-matching the archive's streamed live observations. Selected sprite resistance
+matching observed live behavior. Selected sprite resistance
 and family-damage perks now contribute to combat, alongside existing health,
 charge and speed perks.
 
-Reproduce the numeric import with a separate read-only stock installation:
+Reproduce the native portion of the numeric table with a separate read-only
+stock installation:
 
 ```sh
 java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
   gear-stats "/path/to/Spiral Knights" content /tmp/gear-stats-fresh.json
-python3 scripts/content/import_combat_stats.py /path/to/reference-inputs \
-  /tmp/gear-stats-fresh.json content
 java -Dtortodrone.deployment=/tmp/tortodrone-check scripts/StockTools.java \
   gear-stats-check "/path/to/Spiral Knights"
 java --enable-native-access=ALL-UNNAMED -Dtortodrone.deployment=/tmp/tortodrone-check \
@@ -544,7 +542,7 @@ defenses and shield health remain exported for depth zero/MEDIUM; importing
 level bonuses does not establish dungeon-depth progression. Arbitrary stripped
 conditions, sprite defense perks, obsolete Mixer Agent carriers, Sealed Sword
 table summons and delayed developer shield actions remain unsupported. No client
-assets or archive server implementation are copied.
+assets or third-party server implementation are copied.
 
 The isolated two-client `--equipment-groups` acceptance passed all 26 groups.
 Observer captures were reviewed for armor, shield bash, the Cutter charge,
@@ -577,8 +575,7 @@ invented or removed. NPC filenames use verified native names where available;
 The 27 `Rule/Hall of Heroes/<Family> <2|3|4> Star` catalogues filter the existing
 nine captured 5-star families by original item rarity, retaining order, quantities
 and prices (1/2/3/4/5 stars: 250/1,000/4,000/10,000/25,000 crowns). This reuses
-the rule checked by reference inputs `check_hoh_stock_rule.py` and
-`install_hoh_tier_stock.py`. Current Town maps place only 5-star mannequins;
+the stock tier-price rule. Current Town maps place only 5-star mannequins;
 these lower-tier definitions do **not** establish reachable lower-tier gameplay.
 No mission hall or fabricated actor placement is added.
 
@@ -637,18 +634,17 @@ not advertised as a discount. A discount uses native `_originalPrice` / `_sale`;
 featured goods use `RankGood.special`. Active promotions also use that flag and
 join the featured response, including direct-price promotions. Native `promoHeader`
 is `~`; `promoDetail` carries `m.promo_hours_left|~N` below 36 hours, otherwise
-`m.promo_days_left|~N`. These verified wire values come from reference inputs
-`DepotTimedGoods` and its cited native DEFAULT countdown. The quote retains the
+`m.promo_days_left|~N`. These verified wire values follow the native
+`DepotTimedGoods` countdown defaults. The quote retains the
 fixed expiry so countdown changes cannot invalidate a purchase.
 
 **Automatic daily Specials:** `DepotSpecials` overlays two equipment goods at noon
-Pacific, using the twelve exact captured sale-day pairs transcribed as numeric
-facts in `seeds/depot-specials.tsv` from reference inputs `DepotTimedGoods.ROWS`.
-`contrib/check_depot_specials_rotation.py` documents the observed reset and native
-discount defaults. Uncaptured dates use an explicitly **reconstructed**, restart-
+Pacific, using the twelve recorded sale-day pairs stored as numeric facts in
+`seeds/depot-specials.tsv`. The native discount defaults and observed reset
+behavior are retained. Other dates use an explicitly **reconstructed**, restart-
 stable SHA-256 selection: one 150/500-Energy good and one 1,600/3,500-Energy good
 from the immutable seed, discounted 2–8% with a minimum 5-Energy reduction. This
-is not the archive's interim RNG or a recovered official selection algorithm.
+is not the historical interim RNG or a recovered official selection algorithm.
 Winter noon Pacific timing is also reconstructed; only daylight-time resets
 were captured. Calendar boundaries account for daylight-saving transitions.
 
@@ -694,14 +690,13 @@ The existing world-state poller publishes balances, native `PlayerObject.outbid`
 and `auction:m.note_outbid` with item/refund arguments after commit. My Bids clears
 the indicator. Refund notices use integer metadata beside the auction records;
 no database migration is inferred. System-info chat routing and My Bids
-acknowledgement follow the archive's explicitly reconstructed notification behavior.
+acknowledgement follow a reconstructed notification behavior.
 
-Native time-left categories use the archived wiki's approximate 5-minute, 1-hour,
-4-hour and 24-hour boundaries; a two-day listing is Very Long, matching the archive
-capture cited by `AuctionManager.timeLeft`. Exact last-minute extension duration
-and destructive 30-day mail purging remain evidence blocked. The archive's
+Native time-left categories use approximate 5-minute, 1-hour, 4-hour and
+24-hour boundaries; a two-day listing is Very Long, matching the observed
+`AuctionManager.timeLeft` behavior. Exact last-minute extension duration and
+destructive 30-day mail purging remain evidence blocked. The historical
 five-minute extension is explicitly interim and is not enabled here.
-See the [evidence matrix](research.md#economy-parity-baseline-2026-10-18).
 
 ## Native map import
 
@@ -712,7 +707,7 @@ Crash Site **398/version 2008859103** and initial Rescue Camp **217/version 373*
 New-knight onboarding is enabled when that verified pair is available. An
 existing knight keeps its progression and is not automatically restarted.
 The complete later route to Haven remains unfinished; see the
-[current handoff](research.md#native-ready-room-and-authorized-opening-scope).
+[supported scope](../README.md#supported-scope).
 
 First build and check the actual deployment without starting a server:
 
@@ -732,17 +727,17 @@ With the server stopped, import **only a missing map** into this same build:
 
 ```sh
 GAME="/path/to/Spiral Knights"
-ARCHIVE="/path/to/reference-inputs"
-java scripts/MapImport.java "$GAME" "$ARCHIVE/reference/observations/scenes-cache-2026-10-22/398" build crash_site 50332041 '%dungeon:m.tutorial_b'
-java scripts/MapImport.java "$GAME" "$ARCHIVE/reference/observations/scenes-cache-2026-10-22/217" build rescue_camp 16777221 '%town:m.rescue_camp_state_1'
+SCENES="/path/to/your-scene-exports"
+java scripts/MapImport.java "$GAME" "$SCENES/398" build crash_site 50332041 '%dungeon:m.tutorial_b'
+java scripts/MapImport.java "$GAME" "$SCENES/217" build rescue_camp 16777221 '%town:m.rescue_camp_state_1'
 java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 ```
 
 The importer refuses duplicate maps and live deployments. Do not delete existing
 content, databases or keys to make it run. If a map exists but preflight fails,
 retain it and inspect its `native/import-report.txt` and the reported error.
-Use the read-only installed stock client and the pinned archive sources; do not
-substitute another scene revision or commit the imported assets.
+Use the read-only installed stock client and your own verified scene sources; do
+not substitute another scene revision or commit the imported assets.
 
 For the manual playthrough, use a disposable test account in your normal server:
 
@@ -871,7 +866,7 @@ later. Fireworks retain their configured size/color and six-second detached
 effect; fireflies choose among the five equally weighted native colors. Damage,
 shock and departure interrupt a pending release. An accepted use consumes once
 before presentation; interruption does not refund it. This consumption policy
-follows confetti; the archive's old non-consuming fallback did not establish
+follows confetti; an earlier non-consuming fallback did not establish
 live firework consumption semantics.
 
 `AnimatedItemSessionTest` and `SceneItemUseTest` cover ownership, revision,
@@ -1009,15 +1004,14 @@ has its own ID. Stock `item.client.H` passes that multiset to the animated
 Failure uses native method `0` and a reason string; the stock window exits its
 waiting state. There is no client-supplied reward or random seed.
 
-The owner's `source-archive.zip` official Dark Harvest Complete capture establishes the
-shared opening presentation (original protocol lines 665–679, 919): method 12
+The Dark Harvest Complete opening establishes the shared presentation: method 12
 with option `-1`, `itemAcquireDelay=7500` before inventory changes, actor activity
 `265` with a list containing the box config followed by distinct reward configs,
 then `itemAcquireDelay=0` before the successful reward-ID multiset callback.
 The observed bundle was three Dark Harvest Confetti merged into an existing
 stack and one Nova Crescent Helm with a new identity. Service/object numbers
-are assigned by the advertised marshaller mapping; the capture's routing numbers
-differ from Tortodrone's. The private capture is not distributed with the server.
+are assigned by the advertised marshaller mapping and can differ from the
+original assignment. Source recordings are not distributed with the server.
 
 All supported boxes now publish that acquisition-delay/reset sequence after the
 atomic grant commits and start the reveal in the owning scene simulation.
@@ -1040,9 +1034,9 @@ and native success/reward presentation. The full suite was not run for this fix.
 
 Read-only class/config inspection and `scripts/compat/BoxCompatibility.java`
 verify method/argument/listener/result layouts, the three key identities and all
-250 indexed key classifications against the installed build. Its hashes are in
-`content/_internal/provenance/boxes.tsv`; this newer inspection does not replace
-older item-export provenance. `SessionDecoder` and `SessionCodec` already support
+250 indexed key classifications against the installed build. The inspection
+records its input hashes in its local output; it does not replace older
+item-export records. `SessionDecoder` and `SessionCodec` already support
 the required primitive arguments, listeners, multiset and inventory events.
 
 One isolated graphical `--boxes-only` scenario exercised the unchanged Arsenal
@@ -1136,9 +1130,9 @@ The native Style Kit reapplies an unlocked style for 1,000 Crowns; already worn
 or locked styles fail without a charge. Unlocks persist in per-world integer
 metadata, alongside the existing roster appearance and revisions, without schema
 migration. `seeds/style-kits.tsv` records only factual config-to-value mappings
-from reference inputs `rsrc/config/item.xml` and `ProjectXCodes`; behavior was
-checked against `UseLogic.Style`, `KnightManager.applyStyle` and the native
-`ItemConfig` UI rules. No archive implementation or client assets were copied.
+from the stock `rsrc/config/item.xml`; behavior was checked against
+`UseLogic.Style`, `KnightManager.applyStyle` and the native `ItemConfig` UI
+rules. No client assets were copied.
 `StyleSessionTest` verifies native dispatch, ownership and transactional rollback;
 `scripts/compat/StyleCompatibility.java` verifies native marshalling and all saved
 style arrays with the stock reader. Visual appearance has not been verified.
@@ -1259,11 +1253,10 @@ NPCs or private client assets are included.
 
 ### Expansion evidence and probability boundaries
 
-Bulk research used a read-only archived stock `spawn_table.xml` resource export
-and the independent `prize-boxes-game-2026-09-25.tsv` numerical audit. Input hashes
-are in `content/_internal/provenance/box-expansion.tsv`; private resources are not
-shipped. The audit is a separate calculation of archived data, not official pull
-reports or published current-server rates. Additional expectations, indexed by readable IDs in
+Probability expectations were derived from a read-only stock `spawn_table.xml`
+resource export and an independent numerical audit. Private resources are not
+shipped. The audit is a separate calculation of historical data, not official
+pull reports or published current-server rates. Additional expectations, indexed by readable IDs in
 `content/_internal/box-expectations.json`, are verified by `BoxExpansionTest`.
 Derived-table parameters were resolved before import. Weighted alternatives retain
 relative weights; uniform choices are used where the archived resource explicitly

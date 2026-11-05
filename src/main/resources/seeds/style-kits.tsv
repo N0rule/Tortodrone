@@ -1,4 +1,4 @@
-# Factual item-to-style mappings: reference inputs item.xml and ProjectXCodes enums.
+# Factual item-to-style mappings: stock client item.xml and ProjectXCodes enums.
 # No implementation, artwork or other client assets copied. Color values are native.
 Upgrade/Color/Amber	Color	264
 Upgrade/Color/Aquamarine	Color	270

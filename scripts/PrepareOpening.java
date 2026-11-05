@@ -8,16 +8,16 @@ import org.tortodrone.world.TutorialRoute;
 /** Prepare a separate opening deployment; never read/copy private runtime state. */
 public final class PrepareOpening {
     public static void main(String[] args)throws Exception {
-        if(args.length!=4)throw new IllegalArgumentException("Usage: java -cp BASE/tortodrone.jar scripts/PrepareOpening.java GAME ARCHIVE BASE FRESH_OUTPUT");
-        Path game=Path.of(args[0]).toRealPath(),archive=Path.of(args[1]).toRealPath(),base=Path.of(args[2]).toRealPath();
+        if(args.length!=4)throw new IllegalArgumentException("Usage: java -cp BASE/tortodrone.jar scripts/PrepareOpening.java GAME SCENES BASE FRESH_OUTPUT");
+        Path game=Path.of(args[0]).toRealPath(),scenes=Path.of(args[1]).toRealPath(),base=Path.of(args[2]).toRealPath();
         Path requested=Path.of(args[3]).toAbsolutePath().normalize();
         Path output=requested.getParent().toRealPath().resolve(requested.getFileName());
         if(Files.exists(output,LinkOption.NOFOLLOW_LINKS))throw new IOException("Output already exists; nothing replaced");
-        for(Path input:List.of(game,archive,base))if(output.startsWith(input)||input.startsWith(output))throw new IOException("Output must be separate from the client, archive and base deployment");
+        for(Path input:List.of(game,scenes,base))if(output.startsWith(input)||input.startsWith(output))throw new IOException("Output must be separate from the client, scene sources and base deployment");
         if(!Files.isRegularFile(game.resolve("code/projectx-pcode.jar"))||!Files.isRegularFile(base.resolve("tortodrone.jar")))throw new IOException("Installed client and built base deployment required");
         var initial=fingerprint(base);var definitions=ContentManager.load(base);
         if(definitions.scenes().scenes().stream().anyMatch(s->s.id()==398||s.id()==217))throw new IOException("Base already contains opening scenes; use a fresh ordinary build");
-        Path source=archive.resolve("reference/observations/scenes-cache-2026-10-22");
+        Path source=scenes;
         TutorialRoute.sourceVersion(Files.readAllBytes(source.resolve("398")));
         TutorialRoute.campVersion(Files.readAllBytes(source.resolve("217")));
         Files.createDirectories(output.getParent());

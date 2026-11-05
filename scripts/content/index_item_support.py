@@ -24,8 +24,8 @@ def unsupported(action,reasons,reconstructed):
         if actor.get('attachment'):
             unsupported({'kind':'EMIT_PROJECTILE','actor':actor['attachment'],'children':[],'facingType':''},reasons,reconstructed)
         if actor['nativeType']=='AGENT':reconstructed.add('native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified')
-        if actor.get('activation') or actor.get('activatesAttachments'):reconstructed.add('tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md')
-        if actor['nativeType'] in {'ORBITAL_BULLET','COMPOUND_ORBITAL_BULLET'} and actor.get('shutdown'):reconstructed.add('disk shutdown guards and swept damage region reconstructed; see research.md')
+        if actor.get('activation') or actor.get('activatesAttachments'):reconstructed.add('tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md')
+        if actor['nativeType'] in {'ORBITAL_BULLET','COMPOUND_ORBITAL_BULLET'} and actor.get('shutdown'):reconstructed.add('disk shutdown guards and swept damage region reconstructed; see content.md')
         for timer in actor.get('timers',[]):unsupported(timer['action'],reasons,reconstructed);unsupported(timer.get('endAction'),reasons,reconstructed)
 for attack in fires:
     for ref in attack['fireRefs']:unsupported(ref['action'],weapons[attack['weapon']],reconstructions[attack['weapon']])

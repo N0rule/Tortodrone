@@ -446,7 +446,7 @@ public final class SceneContentExport {
         if(config.equals("Trigger/Repeat Action")&&handler instanceof HandlerConfig.SignalStart start&&start.name.isEmpty()){
             var result=new HandlerConfig.SignalStart();result.name="activate";result.action=start.action;return result;
         }
-        // reference inputs placeable.xml: Trigger/One Time Action -> SignalStart("activate"),
+        // Stock placeable.xml: Trigger/One Time Action -> SignalStart("activate"),
         // Conditional(Limit(1)). Scene args retain its authored Action; no native config is mutated.
         if(config.equals("Trigger/One Time Action")&&handler instanceof HandlerConfig.SignalStart start
                 &&start.name.isEmpty()&&start.action instanceof ActionConfig.Conditional conditional

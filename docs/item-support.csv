@@ -656,21 +656,21 @@ Usable/Flawed Snowball,Lift,unusable,no item-use handler for Lift
 Usable/Pile O Pillows,SpawnActor,unusable,no item-use handler for SpawnActor
 Usable/Punkin Pie Pan,SpawnActor,unusable,no item-use handler for SpawnActor
 Usable/Snow Bucket,SpawnActor,unusable,no item-use handler for SpawnActor
-Weapon/Handgun/Biohazard,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Celestial Orbitgun,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
+Weapon/Handgun/Biohazard,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Celestial Orbitgun,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Celestial Orbitgun (OLD),Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
 Weapon/Handgun/Fiery Diskgun,Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
-Weapon/Handgun/Industrial Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Neutralizer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Overcharged Mixmaster,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
+Weapon/Handgun/Industrial Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Neutralizer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Overcharged Mixmaster,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Overcharged Mixmaster (OLD),Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
-Weapon/Handgun/Pollinator,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Slicer/Mandolin,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
-Weapon/Handgun/Slicer/Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
-Weapon/Handgun/Slicer/Thricer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
-Weapon/Handgun/Slicer/Twicer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see research.md
+Weapon/Handgun/Pollinator,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Slicer/Mandolin,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
+Weapon/Handgun/Slicer/Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
+Weapon/Handgun/Slicer/Thricer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
+Weapon/Handgun/Slicer/Twicer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Static Diskgun,Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
-Weapon/Handgun/Toxic Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Virulent Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
-Weapon/Handgun/Volatile Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see research.md
+Weapon/Handgun/Toxic Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Virulent Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Volatile Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md

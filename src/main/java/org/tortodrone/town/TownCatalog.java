@@ -5,7 +5,7 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.resources.Json;
 
-/** Immutable rules extracted from reference inputs; no executable client code or assets. */
+/** Immutable town rules; no executable client code or assets. */
 public final class TownCatalog {
     public record Ingredient(String kind,String item,int count,int rarity,String group,int level,String upgrade,boolean keepHeat,List<String> options) { }
     public record Recipe(String config,String item,int count,boolean locked,List<Integer> crowns,List<Boolean> useOrbs,

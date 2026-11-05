@@ -9,11 +9,11 @@ By submitting original changes, you offer them under the project's
 right to license. Preserve the [Required Notice](NOTICE) and upstream notices.
 Identify third-party material, its source, its license and any modifications.
 
-Do not submit copied proprietary code, unlicensed recovered implementations,
-original client assets, captures, accounts, keys or build outputs. Derive
-behavioral specifications from permitted research, explain their evidence, and
-write implementations independently. Data found in reference inputs is not
-assumed to be freely licensed. See [provenance and audit limits](docs/provenance.md).
+Do not submit copied proprietary code, recovered implementations you cannot
+license, original client assets, private captures, accounts, keys or build
+outputs. Explain the behavior you implement and the evidence supporting it, and
+write implementations independently. Third-party data is not assumed to be
+freely licensed. See [licensing and third-party content](docs/provenance.md).
 
 A change description should explain the resulting behavior, relevant evidence,
 tests actually run and any remaining limits. Passing a headless or serialization

@@ -74,7 +74,7 @@ public final class BuildTools {
         if(!mapsOnly&&ownership!=null)for(String key:new java.util.TreeSet<>(ownership.stringPropertyNames()))if(key.startsWith("owned.")) {
             Path relative=Path.of(key.substring(6)),old=output.resolve(relative);
             if(Files.notExists(contentSource.resolve(relative))&&Files.isRegularFile(old,LinkOption.NOFOLLOW_LINKS)) {
-                if(archiveOwns(ownership,relative,old))removals.add(new Removal(old,fileDigest(old)));
+                if(sourceOwns(ownership,relative,old))removals.add(new Removal(old,fileDigest(old)));
                 else conflicts.add("Customized path removed or renamed upstream: "+old);
             }
         }
@@ -148,7 +148,7 @@ public final class BuildTools {
                 if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))continue;
                 if(Files.mismatch(target,file)==-1)continue;
                 // Only files this source published before are upgraded; edited packs keep their bytes.
-                if(archiveOwns(ownership,relative,target))copies.add(new Copy(file,target,true));
+                if(sourceOwns(ownership,relative,target))copies.add(new Copy(file,target,true));
                 else if(ownership!=null) {
                     Path proposal=inferDeploymentRoot(output).resolve("content-updates").resolve(relative.toString()+".proposed");
                     if(Files.isSymbolicLink(proposal))throw new IOException("Unsafe content proposal path: "+proposal);
@@ -163,31 +163,31 @@ public final class BuildTools {
         Path manifest=maps.resolve(manifestName);
         if(Files.notExists(manifest,LinkOption.NOFOLLOW_LINKS))return null;
         if(Files.isSymbolicLink(manifest)||!Files.isRegularFile(manifest)||Files.size(manifest)>262144)
-            throw new IOException("Invalid archive source manifest: "+manifest);
+            throw new IOException("Invalid source manifest: "+manifest);
         Properties values=properties(manifest);
-        if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported archive source manifest format");
+        if(!"1".equals(values.getProperty("format")))throw new IOException("Unsupported source manifest format");
         if(values.stringPropertyNames().stream().noneMatch(key->key.startsWith("source.")))
-            throw new IOException("Archive source manifest contains no source file checksums");
+            throw new IOException("Source manifest contains no source file checksums");
         for(String key:values.stringPropertyNames())if(key.startsWith("source.")) {
             String relative=key.substring("source.".length());Path rel=Path.of(relative);
             if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
-                throw new IOException("Invalid source path in archive manifest: "+relative);
+                throw new IOException("Invalid source path in source manifest: "+relative);
             String expected=values.getProperty(key);
-            if(expected==null||!expected.matches("[0-9a-f]{64}"))throw new IOException("Invalid source digest in archive manifest: "+relative);
+            if(expected==null||!expected.matches("[0-9a-f]{64}"))throw new IOException("Invalid source digest in source manifest: "+relative);
             Path source=maps.resolve(rel).normalize();
             if(!source.startsWith(maps.normalize())||!Files.isRegularFile(source,LinkOption.NOFOLLOW_LINKS)
-                ||!expected.equals(fileDigest(source)))throw new IOException("Archive map source differs from its manifest: "+relative);
+                ||!expected.equals(fileDigest(source)))throw new IOException("Map source differs from its manifest: "+relative);
         }
         for(String key:values.stringPropertyNames())if(key.startsWith("owned.")) {
             String relative=key.substring("owned.".length());Path rel=Path.of(relative);
             if(rel.isAbsolute()||rel.normalize().startsWith("..")||!rel.normalize().toString().replace('\\','/').equals(relative))
-                throw new IOException("Invalid owned path in archive manifest: "+relative);
+                throw new IOException("Invalid owned path in source manifest: "+relative);
             for(String digest:values.getProperty(key).split(","))if(!digest.matches("[0-9a-f]{64}"))
-                throw new IOException("Invalid owned digest in archive manifest: "+relative);
+                throw new IOException("Invalid owned digest in source manifest: "+relative);
         }
         return values;
     }
-    static boolean archiveOwns(Properties ownership,Path relative,Path target)throws IOException {
+    static boolean sourceOwns(Properties ownership,Path relative,Path target)throws IOException {
         if(ownership==null)return false;
         String key="owned."+relative.toString().replace('\\','/'),expected=ownership.getProperty(key);
         if(expected==null)return false;
