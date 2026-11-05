@@ -64,6 +64,24 @@ public final class SlashCommandsSessionTest {
                 db.password("Master",new Passwords.Protection(new byte[16],new byte[32]),1);
                 try{gm.world.adminPeople(admin(21,"Player"));}catch(IOException revoked){}check(!player.socket.isClosed(),"stale authenticated GM cannot kick after password revocation");
             }
+            try(var gm=person(db,content.items(),scenes,"RoomMaster",true,true);var guest=person(db,content.items(),scenes,"RoomGuest",false,true)) {
+                int count=scenes.entry().simulation().playerCount();
+                guest.world.adminPeople(admin(28,"398"));guest.socket.awaitText("Game Master permission required");
+                check(scenes.entry().simulation().playerCount()==count,"unauthorized Ready Room travel creates no pawn");
+                gm.world.adminPeople(admin(28,"999999"));gm.socket.awaitText("No deployed scene");
+                check(!gm.world.ownsScene(scenes.entry().oid()),"invalid Ready Room travel preserves the pawn-free room");
+                gm.world.adminPeople(admin(28,"1"));gm.drain();
+                check(!gm.world.ownsScene(scenes.entry().oid())&&scenes.entry().simulation().playerCount()==count,"same saved-map travel waits for the native movement handshake");
+                gm.world.adminPeople(admin(28,"2"));gm.socket.awaitText("Finish entering");
+                move(gm,scenes.catalog().entry());
+                check(gm.world.ownsScene(scenes.entry().oid()),"GM /sgo leaves Ready Room for the saved map normally");
+                gm.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(ReadyRoom.ZONE,ReadyRoom.SCENE,1,new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));gm.drain();
+                gm.world.adminPeople(admin(28,"398"));gm.drain();move(gm,scenes.catalog().scene(398));
+                var field=WorldSession.class.getDeclaredField("scene");field.setAccessible(true);
+                var place=(SceneRegistry.Instance)field.get(gm.world);
+                check(place.map().id()==398&&gm.world.ownsScene(place.oid()),"Ready Room /sgo 398 attaches the authorized original tutorial instance");
+                check(scenes.entry().simulation().playerCount()==count,"Ready Room departures leave no duplicate Haven pawn");
+            }
             try(var gm=person(db,content.items(),scenes,"Staff",true);var target=person(db,content.items(),scenes,"Target",false)) {
                 gm.world.adminPeople(new SessionDecoder.Invocation(3,SessionCodec.ADMIN_SERVICE,24,List.of(Integer.MAX_VALUE,Integer.MAX_VALUE,confirm())));gm.socket.awaitText("Destination is blocked");
                 gm.world.adminPeople(admin(30,"haven"));move(gm,scenes.catalog().entry());
@@ -145,10 +163,13 @@ public final class SlashCommandsSessionTest {
         }finally{org.tortodrone.support.ContentFixture.delete(home);}
     }
     private static Person person(Database db,ItemCatalog items,SceneRegistry scenes,String name,boolean gm)throws Exception {
+        return person(db,items,scenes,name,gm,false);
+    }
+    private static Person person(Database db,ItemCatalog items,SceneRegistry scenes,String name,boolean gm,boolean room)throws Exception {
         int id=db.create(name,new Passwords.Protection(new byte[16],new byte[32]),gm);var chars=new CharacterStore(db,id,name,items);
         chars.create(new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0));
         var socket=new RecordingSocket();var output=new SessionOutput(socket);var world=new WorldSession(socket,chars,output,new SessionCodec(items),1200+id,1,m->{},scenes,()->{var identity=db.identity(name);return identity!=null&&identity.gameMaster()&&identity.authRevision()==1;});
-        world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0));world.subscribe((short)1);world.entered();var person=new Person(world,socket,output,chars);person.drain();return person;
+        world.select(name,Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),room);if(!room){world.subscribe((short)1);world.entered();}var person=new Person(world,socket,output,chars);person.drain();return person;
     }
     private static void move(Person person,SceneCatalog.MapScene map)throws Exception {
         person.world.invocation(new SessionDecoder.Invocation(3,5,1,List.of(map.zone(),map.id(),map.version(),new SessionDecoder.Listener("com.threerings.whirled.zone.data.ZoneMarshaller$ZoneMoveMarshaller",(short)9))));

@@ -1431,8 +1431,9 @@ final class WorldSession implements AutoCloseable {
     }
 
     private record AdminLocation(SceneRegistry.Instance scene,int world,String name,float x,float y,float rotation) { }
-    private synchronized void requireAdminReady()throws IOException {
-        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
+    private synchronized void requireAdminReady()throws IOException { requireAdminReady(false); }
+    private synchronized void requireAdminReady(boolean roomTravel)throws IOException {
+        if(closed||socket.isClosed()||!selected()||(!(roomTravel&&readyRoom)&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!roles.gameMaster())throw new IOException("Game Master permission required");
     }
@@ -1448,7 +1449,7 @@ final class WorldSession implements AutoCloseable {
         return new AdminLocation(scene,profile.worldId(),knight.name(),actor.x(),actor.y(),actor.rotation());
     }
     private synchronized void adminTravel(AdminLocation location)throws IOException {
-        if(closed||socket.isClosed()||!selected()||!subscribed||!entered||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
+        if(closed||socket.isClosed()||!selected()||(!readyRoom&&(!subscribed||!entered))||forcedReceiver==null||portalMove!=null||deferredMove!=null)throw new IOException("Finish entering this scene first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(trades!=null&&trades.active(tradeMember))throw new IOException("Finish the trade first");
         var next=location.scene();
@@ -1458,13 +1459,13 @@ final class WorldSession implements AutoCloseable {
             if(!scenes.authorized(next,profile.worldId(),partyMember))throw new IOException("Party membership changed");
         }
         if(!next.simulation().placement(location.x(),location.y()))throw new IOException("Destination is blocked");
-        if(next==scene){
+        if(next==scene&&!readyRoom){
             if(!membership.teleport(location.x(),location.y(),location.rotation()))throw new IOException("Destination is blocked or the knight is busy");
             closeConversation();closeTownDialog();return;
         }
         closeConversation();closeTownDialog();
         portalMove=new PortalMove(next,new ScenePortals.Entrance(1,location.x(),location.y(),location.rotation()));
-        departedSceneOid=scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();short receiver=forcedReceiver;
+        departedSceneOid=readyRoom?0:scene.oid();leaveChat();subscribed=entered=false;sceneGeneration++;if(membership!=null)membership.pause();short receiver=forcedReceiver;
         output.send(()->codec.forceScene(oid,receiver,next));
     }
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
@@ -1476,7 +1477,7 @@ final class WorldSession implements AutoCloseable {
                 ||(method==24?!(args.get(0) instanceof Integer)||!(args.get(1) instanceof Integer):!(args.getFirst() instanceof String)))throw new SessionDecoder.Rejected("Invalid player admin request");
         String name=method==24?null:(String)args.getFirst();
         try {
-            requireAdminReady();
+            requireAdminReady(method==28||method==30);
             if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another command");
             if(method==24) {
                 var own=adminLocation();adminTravel(new AdminLocation(own.scene(),own.world(),own.name(),(Integer)args.get(0),(Integer)args.get(1),own.rotation()));
@@ -1490,7 +1491,7 @@ final class WorldSession implements AutoCloseable {
                 }
                 if(map==null)throw new IOException("No deployed scene or zone matches that name or ID");
                 AdminLocation location;
-                synchronized(this){requireAdminReady();var next=destination(map.id());if(next==scene)throw new IOException("You are already in that scene");location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
+                synchronized(this){requireAdminReady(true);var next=destination(map.id());if(next==scene&&!readyRoom)throw new IOException("You are already in that scene");location=new AdminLocation(next,profile.worldId(),knight.name(),map.spawnX(),map.spawnY(),map.spawnRotation());}
                 adminTravel(location);
             }else {
                 var target=adminTarget(name);var location=target.adminLocation();

@@ -292,3 +292,8 @@ The terminal and server desktop command field accept these forms with an optiona
 | `items [search \| category <type> \| info <reference>] [--page N]` | Search and inspect names, aliases, stock IDs, references and availability. | `items Proto Sword` |
 | `giveitem <knight-name> <1-20> <catalogue ID or exact item config>` | Grant unequipped items by unique knight name. The account-qualified form also works. | `giveitem Jane 2 Weapon/Sword/Proto Sword` |
 | `stop` | Shut down the server cleanly. | `stop` |
+
+GM `/sgo` and `/zgo` scene/zone travel can start directly from the native Ready Room.
+A destination is entered through the normal movement handshake; a second travel
+request is refused while one is pending. Coordinate and player-relative tools
+still require an entered world scene.
