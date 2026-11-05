@@ -51,6 +51,7 @@ public final class CombatRenderingCheck {
     private final boolean peer;
     private final boolean trainingOnly;
     private boolean readyRoomOnly;
+    private boolean initialWorldReturnRequested;
     private boolean freshOpening;
     private boolean campStory,campStoryReturn,campProgression,campProgressionReturn;
     private int campPanel;
@@ -148,7 +149,7 @@ public final class CombatRenderingCheck {
         if(args.length!=(trainingOnly?4:3))throw new IllegalArgumentException("Use CheckCombatRendering.java to launch this fixture");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         // Override only this disposable process, before the native application is constructed.
-        var configField=Class.forName("com.threerings.projectx.util.a").getDeclaredField("bMw");configField.setAccessible(true);
+        var configField=Class.forName("com.threerings.projectx.util.a").getDeclaredField("bMx");configField.setAccessible(true);
         Object config=configField.get(null);Field properties=field(config,"Jf");
         var copy=new Properties();copy.putAll((Properties)properties.get(config));
         copy.setProperty("server_host","127.0.0.1");copy.setProperty("server_ports",args[0]);
@@ -275,14 +276,14 @@ public final class CombatRenderingCheck {
             int current=Integer.parseInt(Files.readString(root.resolve("group-current")).trim());
             if(current!=groupPeerIndex){groupPeerIndex=current;groupActivity=groupProjectile=false;previousActors.clear();previousActors.addAll(authoritative.keySet());}
             var group=EQUIPMENT_GROUPS.get(current);var sprite=view.gk(remote.vw());
-            if(((Dungeoneer)remote).adU()==group.activity&&sprite!=null&&sprite.acL().isVisible()&&(group.activity==0||activityPlaying(sprite,group.activity))){
+            if(((Dungeoneer)remote).adX()==group.activity&&sprite!=null&&sprite.acL().isVisible()&&(group.activity==0||activityPlaying(sprite,group.activity))){
                 if(!groupActivity)System.out.println("OBSERVED ACTIVITY: "+current+" "+group.name+" "+group.activity);groupActivity=true;
             }
-            for(var actor:authoritative.values())if(!previousActors.contains(actor.vw())&&!(actor instanceof Dungeoneer)&&(actor.Mv().getName().startsWith("Bullet/")||actor.Mv().getName().startsWith("Bomb/"))){
+            for(var actor:authoritative.values())if(!previousActors.contains(actor.vw())&&!(actor instanceof Dungeoneer)&&(actor.Mx().getName().startsWith("Bullet/")||actor.Mx().getName().startsWith("Bomb/"))){
                 var rendered=view.gk(actor.vw());if(rendered!=null&&rendered.acL().isVisible()&&rendered.acL().getConfig()!=null)groupProjectile=true;
             }
             if(group.slot==-1){
-                var pet=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor p&&p.adU()==(group.flags>>>7)).findFirst().orElse(null);
+                var pet=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor p&&p.adX()==(group.flags>>>7)).findFirst().orElse(null);
                 if(pet==null||view.gk(pet.vw())==null||view.gk(pet.vw()).acL().getConfig()==null)return;
                 int[] recharge=(int[])field(pet,"_nextSkill").get(pet);
                 if(recharge[0]!=recharge[1]||recharge[1]!=recharge[2])throw new AssertionError("Sprite shared cooldown differs between slots");
@@ -306,11 +307,11 @@ public final class CombatRenderingCheck {
             if(Math.hypot(dx,dy)>.4)return;
             equip=new Confirm();
             if(group.slot<0){
-                int id=0;for(var sprite:app.CT().sprites)if(sprite.Mv().getName().equals(group.item))id=sprite.vw();
+                int id=0;for(var sprite:app.CT().sprites)if(sprite.Mx().getName().equals(group.item))id=sprite.vw();
                 if(id==0)throw new AssertionError("Missing seeded sprite "+group.item);
                 app.zr().bU(com.threerings.projectx.sprites.a.a.class).o(id,equip);
             }else{
-                long id=0;for(var item:app.CT().items)if(item.Vx().getName().equals(group.item))id=item.VA();
+                long id=0;for(var item:app.CT().items)if(item.Mx().getName().equals(group.item))id=item.VD();
                 if(id==0)throw new AssertionError("Missing seeded item "+group.item);
                 app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,group.slot,equip);
             }
@@ -318,8 +319,8 @@ public final class CombatRenderingCheck {
         }
         if(stage==2){
             if(!equip.done)return;if(equip.reason!=null)throw new AssertionError(group.name+": "+equip.reason);
-            var own=(Dungeoneer)view.PO().acU();if(own.adU()!=0)return;
-            if(group.slot==6){var weapon=(Item)field(own,"_weapon").get(own);var rendered=(Item)field(view.PO().implementation(),"_weapon").get(view.PO().implementation());if(weapon==null||rendered==null||!weapon.Vx().getName().equals(group.item)||!rendered.Vx().getName().equals(group.item))return;}
+            var own=(Dungeoneer)view.PO().acU();if(own.adX()!=0)return;
+            if(group.slot==6){var weapon=(Item)field(own,"_weapon").get(own);var rendered=(Item)field(view.PO().implementation(),"_weapon").get(view.PO().implementation());if(weapon==null||rendered==null||!weapon.Mx().getName().equals(group.item)||!rendered.Mx().getName().equals(group.item))return;}
             if(group.slot<0){
                 var pet=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.dungeon.data.actor.SpriteActor).findFirst().orElse(null);
                 if(pet==null)return;int[] cooldown=(int[])field(pet,"_nextSkill").get(pet);if(cooldown[0]>lastStamp)return;
@@ -368,7 +369,7 @@ public final class CombatRenderingCheck {
         }
         String config=BOX_ITEMS[boxIndex];
         if(stage==70&&now-started>1_000_000_000L) {
-            Item item=null;for(var candidate:app.CT().items)if(candidate.Vx().getName().equals(config)){item=candidate;break;}
+            Item item=null;for(var candidate:app.CT().items)if(candidate.Mx().getName().equals(config)){item=candidate;break;}
             if(item==null)throw new AssertionError("Missing fixture box: "+config);
             boxActivitySeen=boxActorCaptured=false;boxBefore=itemCount(config);silverBefore=itemCount("Ticket/Keys/Silver Key");slimeBefore=itemCount("Ticket/Keys/Slime Key");boxInventoryBefore=boxInventory();
             boxMenu=new com.threerings.projectx.item.client.F(app,boxArsenal,item);boxMenu.c(220,220,false);
@@ -391,7 +392,7 @@ public final class CombatRenderingCheck {
         }
         if(stage==72) {
             var own=authoritative.get(app.CT().pawnId);
-            if(!boxActivitySeen&&own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adU()==265){
+            if(!boxActivitySeen&&own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adX()==265){
                 var references=knight.bY(List.class);
                 if(references==null||references.size()<2||!((com.threerings.config.ConfigReference<?>)references.getFirst()).getName().equals(config))throw new AssertionError("Opening actor lacks box/reward references");
                 boxActivitySeen=true;
@@ -410,7 +411,7 @@ public final class CombatRenderingCheck {
                 if(boxIndex==4&&!(held instanceof com.threerings.projectx.item.data.FurniItem))throw new AssertionError("Furniture box returned a different subtype");
                 awarded+=prize.getCount();
             }
-            if(boxIndex==5&&prizes.stream().map(e->app.CT().items.f((Long)((com.google.common.collect.Multiset.Entry<?>)e).getElement())).noneMatch(i->i.VE()!=null&&i.VE()>System.currentTimeMillis()))throw new AssertionError("Disguise bundle lacks persisted native expiration");
+            if(boxIndex==5&&prizes.stream().map(e->app.CT().items.f((Long)((com.google.common.collect.Multiset.Entry<?>)e).getElement())).noneMatch(i->i.VH()!=null&&i.VH()>System.currentTimeMillis()))throw new AssertionError("Disguise bundle lacks persisted native expiration");
             int silverSpent=boxIndex==0||boxIndex==2?1:0,slimeSpent=boxIndex==1?1:0;
             if(itemCount(config)!=boxBefore-1||itemCount("Ticket/Keys/Silver Key")!=silverBefore-silverSpent||itemCount("Ticket/Keys/Slime Key")!=slimeBefore-slimeSpent||boxInventory().values().stream().mapToInt(Integer::intValue).sum()!=boxInventoryBefore.values().stream().mapToInt(Integer::intValue).sum()-1-silverSpent-slimeSpent+awarded)
                 throw new AssertionError("Opening consumed or rewarded the wrong items");
@@ -423,7 +424,7 @@ public final class CombatRenderingCheck {
         }
     }
     private Map<Long,Integer> boxInventory(){
-        var result=new HashMap<Long,Integer>();for(var item:app.CT().items)result.put(item.Mw(),item.getCount());return result;
+        var result=new HashMap<Long,Integer>();for(var item:app.CT().items)result.put(item.VD(),item.getCount());return result;
     }
     private static final String[] ITEM_ACTIONS={"Usable/Fireworks/Small/Small Fireworks, Amber","Usable/Fireworks/Medium/Medium Fireworks, Amber","Usable/Fireworks/Large/Large Fireworks, Amber","Usable/Jar O Fireflies","Usable/Confetti"};
     private int itemActionIndex,itemBefore;
@@ -447,7 +448,7 @@ public final class CombatRenderingCheck {
         if(stage==92){
             if(!itemWindowClosed&&now-started>150_000_000L){boxArsenal.dismiss();itemWindowClosed=true;return;}
             var own=authoritative.get(app.CT().pawnId);
-            if(own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adU()==267){
+            if(own instanceof com.threerings.projectx.data.actor.Knight knight&&knight.adX()==267){
                 itemAnimationSeen=true;
                 if(itemWindowClosed&&!itemCaptured&&activityPlaying(view.gk(own.vw()),267)){capture("item-"+itemActionIndex+"-animation");itemCaptured=true;}
             }
@@ -508,13 +509,13 @@ public final class CombatRenderingCheck {
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){
             if(tutorialObservedParty!=party){tutorialObservedParty=party;party.a(new com.threerings.projectx.dungeon.data.PartyObject.b(){public void a(com.threerings.projectx.dungeon.data.PartyObject.DamageEvent event){
-                var target=authoritative.get(event.QU());var source=authoritative.get(event.Qx());
-                int damage=target instanceof Dungeoneer?event.QZ()>>>20:event.QZ();
-                if(damage>0&&target!=null&&source!=null&&source.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
-                    if(!tutorialGiantDamage)System.out.println("GIANT DAMAGE: target="+event.QU()+" amount="+damage);tutorialGiantDamage=true;
+                var target=authoritative.get(event.QX());var source=authoritative.get(event.QA());
+                int damage=target instanceof Dungeoneer?event.Rc()>>>20:event.Rc();
+                if(damage>0&&target!=null&&source!=null&&source.Mx().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
+                    if(!tutorialGiantDamage)System.out.println("GIANT DAMAGE: target="+event.QX()+" amount="+damage);tutorialGiantDamage=true;
                 }
-                if(event.QZ()>0&&target!=null&&source!=null&&target.Mv().getName().contains("Ironwood Giant")&&source.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
-                    String role=source.Mv().getName().substring(source.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperDamage.add(role))System.out.println("HELPER DAMAGE: "+role+" -> Giant amount="+event.QZ());
+                if(event.Rc()>0&&target!=null&&source!=null&&target.Mx().getName().contains("Ironwood Giant")&&source.Mx().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
+                    String role=source.Mx().getName().substring(source.Mx().getName().lastIndexOf('/')+1);if(tutorialHelperDamage.add(role))System.out.println("HELPER DAMAGE: "+role+" -> Giant amount="+event.Rc());
                 }
             }},false);}
             var heat=party.heat.f(app.CT().xL());
@@ -529,14 +530,14 @@ public final class CombatRenderingCheck {
         }
         if(tutorialProgressAt==0){capture("crash-site-entrance");tutorialProgressAt=now;tutorialLastX=own.tz().x;tutorialLastY=own.tz().y;}
         for(var actor:authoritative.values()){
-            if(actor.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
+            if(actor.Mx().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")){
                 tutorialBoss=actor.vw();
-                if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adU()>=4&&tutorialGiantHeads.add(monster.adU()-4)){
-                    capture("tutorial-giant-head-"+(monster.adU()-4));System.out.println("GIANT ATTACK: native head="+(monster.adU()-4));
+                if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adX()>=4&&tutorialGiantHeads.add(monster.adX()-4)){
+                    capture("tutorial-giant-head-"+(monster.adX()-4));System.out.println("GIANT ATTACK: native head="+(monster.adX()-4));
                 }
             }
-            if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adU()>=4&&actor.bR(16)&&actor.Mv().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
-                String role=actor.Mv().getName().substring(actor.Mv().getName().lastIndexOf('/')+1);if(tutorialHelperAttacks.add(role)){capture("tutorial-helper-"+role);System.out.println("HELPER ATTACK: "+role+" activity="+monster.adU());}
+            if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster&&monster.adX()>=4&&actor.bR(16)&&actor.Mx().getName().startsWith("Character/Scripted/Missions/Tutorial/Crashsite/Mini Boss/Knights/")){
+                String role=actor.Mx().getName().substring(actor.Mx().getName().lastIndexOf('/')+1);if(tutorialHelperAttacks.add(role)){capture("tutorial-helper-"+role);System.out.println("HELPER ATTACK: "+role+" activity="+monster.adX());}
             }
         }
         if(stage==3||stage==4){
@@ -544,8 +545,8 @@ public final class CombatRenderingCheck {
             // them or change health/actor state in order to keep the route moving.
             Actor nearest=null;double distance=own.tz().y>55?14:4.2;
             for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
-                    &&actor.Mv().getName().startsWith("Character/NPC/Monster/")&&!actor.Mv().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0){
-                if(monster.adU()>=4&&tutorialEnemyAttacks.add(actor.Mv().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.Mv().getName()+" activity="+monster.adU()+" at="+actor.tz());}
+                    &&actor.Mx().getName().startsWith("Character/NPC/Monster/")&&!actor.Mx().getName().contains("Ironwood Giant")&&monsterHealth(actor)>0){
+                if(monster.adX()>=4&&tutorialEnemyAttacks.add(actor.Mx().getName())){capture("tutorial-enemy-attack-"+tutorialEnemyAttacks.size());System.out.println("ENEMY: native attack "+actor.Mx().getName()+" activity="+monster.adX()+" at="+actor.tz());}
                 double d=Math.hypot(actor.tz().x-own.tz().x,actor.tz().y-own.tz().y);if(d<distance){distance=d;nearest=actor;}
             }
             var locked=authoritative.get(tutorialEnemy);
@@ -556,7 +557,7 @@ public final class CombatRenderingCheck {
                     tutorialEnemyPoseX=nearest.tz().x;tutorialEnemyPoseY=nearest.tz().y;
                     tutorialEnemyGoalX=nearest.tz().x-(float)((nearest.tz().x-own.tz().x)/distance)*1.25f;
                     tutorialEnemyGoalY=nearest.tz().y-(float)((nearest.tz().y-own.tz().y)/distance)*1.25f;
-                    System.out.println("COMBAT: approaching "+nearest.Mv().getName()+" id="+tutorialEnemy);
+                    System.out.println("COMBAT: approaching "+nearest.Mx().getName()+" id="+tutorialEnemy);
                 }
                 boolean moving=distance>1.4;
                 if(moving&&own.tz().y>55){
@@ -573,7 +574,7 @@ public final class CombatRenderingCheck {
             return;
         }
         if(stage==3){
-            var boss=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")).findFirst().orElse(null);
+            var boss=authoritative.values().stream().filter(a->a.Mx().getName().equals("Character/NPC/Monster/Boss/Tutorial, Ironwood Giant/Ironwood Giant")).findFirst().orElse(null);
             if(boss==null){
                 if(tutorialBoss!=0&&!tutorialHelperDamage.isEmpty()){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
                 if(now-started>90_000_000_000L)throw new AssertionError("Original conversation did not spawn Giant");return;
@@ -584,13 +585,13 @@ public final class CombatRenderingCheck {
             if(boss==null){stage=5;tutorialWaypoint=0;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("ironwood-giant-removed");return;}
             moveToward(view,boss.tz().x-own.tz().x,boss.tz().y-own.tz().y,false);
             boolean guard=tutorialGiantDamage&&boss instanceof com.threerings.projectx.dungeon.data.actor.Monster monster
-                &&(monster.adU()==4||monster.adU()==5&&lastStamp-monster.adV()<2800);
+                &&(monster.adX()==4||monster.adX()==5&&lastStamp-monster.adY()<2800);
             flags(view,guard?64:(now-tutorialCombatAt)%1_250_000_000L<100_000_000L?4:0);
             if(now-tutorialCombatAt>180_000_000_000L)throw new AssertionError("Normal stock sword input failed to defeat Giant; health="+monsterHealth(boss));return;
         }
         if(stage==5){float[][] exit={{13.5f,70},{13.5f,90.5f},{13,96.5f}};
             if(tutorialWaypoint<exit.length){if(tutorialWalk(view,own,exit[tutorialWaypoint][0],exit[tutorialWaypoint][1],now)){tutorialWaypoint++;tutorialPath=List.of();tutorialNode=0;tutorialProgressAt=now;capture("tutorial-exit-walk-"+tutorialWaypoint);}}
-            else {flags(view,0);var root=app.getRoot();for(int i=0;i<root.getWindowCount();i++)if(root.getWindow(i) instanceof com.threerings.projectx.dungeon.client.EndOfLevelWindow report)report.bX(true);}
+            else {flags(view,0);var root=app.getRoot();for(int i=0;i<root.getWindowCount();i++)if(root.getWindow(i) instanceof com.threerings.projectx.dungeon.client.EndOfLevelWindow report)report.bY(true);}
         }
     }
     private boolean tutorialWalk(View view,Actor own,float x,float y,long now)throws Exception {
@@ -609,7 +610,7 @@ public final class CombatRenderingCheck {
                 for(int i=1;i<=count;i++){float px=sx+(tx-sx)*i/count,py=sy+(ty-sy)*i/count;
                     if(!tutorialMap.staticCollision().floorSupported(px,py)||tutorialMap.staticCollision().penetration(mask,px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS).present())return false;
                     for(var obstacle:authoritative.values())if(obstacle.vw()!=own.vw()){
-                        var spec=tutorialSpecs.get(obstacle.Mv().getName());
+                        var spec=tutorialSpecs.get(obstacle.Mx().getName());
                         if(spec==null||(spec.integer("collision-flags",0)&mask)==0||spec.text("damage-action","").equals("destroy")||Set.of("TimedBlock","StoneBlock").contains(spec.text("kind",""))||spec.text("kind","").equals("Door")&&obstacle.bR(2))continue;
                         if(spec.contains(obstacle.tz().x,obstacle.tz().y,obstacle.tA(),px,py,org.tortodrone.world.ScenePortals.PAWN_RADIUS))return false;
                     }
@@ -644,7 +645,7 @@ public final class CombatRenderingCheck {
     private void campStoryTick(View view,long now)throws Exception{
         var own=authoritative.get(app.CT().pawnId);if(own==null||view.sceneId()!=217)return;
         if(stage==2){GLFW.glfwFocusWindow(app.getWindow());capture("camp-initial");tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(217);tutorialPath=List.of();tutorialSpecs.clear();tutorialProgressAt=now;tutorialBestDistance=Double.POSITIVE_INFINITY;stage=7;}
-        var greta=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Rescue Camp/Greta 2")).findFirst().orElseThrow();
+        var greta=authoritative.values().stream().filter(a->a.Mx().getName().equals("Character/NPC/Rescue Camp/Greta 2")).findFirst().orElseThrow();
         if(stage==7){if(now-started<2_000_000_000L)return;if(now-started>4_000_000_000L&&now-started<4_100_000_000L)capture("camp-walk");if(!tutorialWalk(view,own,greta.tz().x,greta.tz().y-1.15f,now))return;moveToward(view,greta.tz().x-own.tz().x,greta.tz().y-own.tz().y,false);flags(view,0);stage=8;started=now;return;}
         if(stage==8&&now-started>500_000_000L){flags(view,4);stage=9;started=now;return;}
         if(stage==9){flags(view,0);
@@ -660,7 +661,7 @@ public final class CombatRenderingCheck {
             if(now-started>15_000_000_000L)throw new AssertionError("Greta conversation/objective did not finish; panel="+campPanel);
         }
         if(stage==10){
-            var rhendon=authoritative.values().stream().filter(a->a.Mv().getName().equals("Character/NPC/Rescue Camp/Rhendon, Rescue Camp")).findFirst().orElseThrow();
+            var rhendon=authoritative.values().stream().filter(a->a.Mx().getName().equals("Character/NPC/Rescue Camp/Rhendon, Rescue Camp")).findFirst().orElseThrow();
             if(!tutorialWalk(view,own,rhendon.tz().x,rhendon.tz().y-1.15f,now))return;
             moveToward(view,rhendon.tz().x-own.tz().x,rhendon.tz().y-own.tz().y,false);flags(view,0);stage=11;started=now;return;
         }
@@ -693,7 +694,7 @@ public final class CombatRenderingCheck {
         }else if(stage==1){
             if(now-started>20_000_000_000L)throw new AssertionError("Ready Room return did not load Haven; zone="+app.CT().zoneId+" loading="+app.GF().mG());
             if(!Class.forName("com.threerings.projectx.town.a.c").isInstance(app.Gu()))return;
-            var model=(com.threerings.tudey.data.TudeySceneModel)app.Gu().getClass().getMethod("Sn").invoke(app.Gu());
+            var model=(com.threerings.tudey.data.TudeySceneModel)app.Gu().getClass().getMethod("Sq").invoke(app.Gu());
             if(model!=null&&model.sceneId==readyRoomDestination&&!app.GF().mG()&&new View(app.Gu()).PO()!=null&&new View(app.Gu()).PO().acU().vw()==app.CT().pawnId){
                 stage=2;started=now;
             }
@@ -739,6 +740,14 @@ public final class CombatRenderingCheck {
             if(tutorialEntryOnly){if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}tutorialEntryTick(now);return;}
             if(readyRoomOnly){if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}if(campStory&&stage>=2)campStoryTick(new View(app.Gu()),now);else readyRoomTick(now);return;}
             if(!listening){listening=true;app.zr().xc().a(new com.threerings.tudey.dobj.a(){public void c(SceneDeltaEvent e){receive(e);}});}
+            if(app.CT()!=null&&app.CT().zoneId==org.tortodrone.world.ReadyRoom.ZONE){
+                if(!initialWorldReturnRequested&&!app.GF().mG()&&Class.forName("com.threerings.projectx.client.dR").isInstance(app.Gu())){
+                    Object controller=new View(app.Gu()).acn();
+                    controller.getClass().getMethod("a",Object.class,String.class,Object.class).invoke(controller,null,"town",null);
+                    initialWorldReturnRequested=true;
+                }
+                return;
+            }
             if(!Class.forName("com.threerings.tudey.a.i").isInstance(app.Gu())||app.GF().mG())return;
             var view=new View(app.Gu());if(view.PO()==null)return;
             if(equipmentGroups){equipmentGroupsTick(view,now);return;}
@@ -751,9 +760,9 @@ public final class CombatRenderingCheck {
             if(hazardsOnly){hazardsTick(view,now);return;}
             if(stage>=3&&stage<=6&&GLFW.glfwGetWindowAttrib(app.getWindow(),GLFW.GLFW_FOCUSED)==0)
                 throw new AssertionError("Keep the disposable combat test window focused; the stock background cap prevents animation/input sampling");
-            if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
+            if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Py())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;if(arsenalBlinkOnly||dialogueOnly||vortexShieldOnly||healthOnly||movementOnly){app.GF().bl(294);stage=2;}else stage=1;return;}
             if(arsenalBlinkOnly&&stage==43&&view.sceneId()==1){
-                if(!app.GQ().Pu())throw new AssertionError("Returning to Haven retained a solo mission party");
+                if(!app.GQ().Py())throw new AssertionError("Returning to Haven retained a solo mission party");
                 app.nk().a(null,"/training",false);blinkHidden=blinkVisible=false;started=now;stage=45;return;
             }
             if(arsenalBlinkOnly&&(view.sceneId()==294||view.sceneId()==318)&&stage>=2){arsenalBlinkTick(view,now);return;}
@@ -817,7 +826,7 @@ public final class CombatRenderingCheck {
                 capture("training-movement");System.out.println("CHECK: native controlled movement and authoritative position");
                 if(movementOnly){stage=4;return;}
                 var stranger=authoritative.values().stream().filter(a->a instanceof com.threerings.projectx.data.actor.Stranger)
-                    .filter(a->a.Mv().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
+                    .filter(a->a.Mx().getName().equals("Character/NPC/Advanced Training Gym/Greeter"))
                     .filter(a->Math.hypot(a.tz().x-5.818864,a.tz().y-2.6403537)<.05).findFirst()
                     .orElseThrow(()->new AssertionError("Authored Konway actor is missing from its verified Training Hall position"));
                 konwayActor=stranger.vw();trainingMap=SceneCatalog.load(Path.of("content/maps")).scene(294);
@@ -900,12 +909,12 @@ public final class CombatRenderingCheck {
                 if(now-vialSearchSince>15_000_000_000L)throw new AssertionError("No native Training Vial pickup became available");
                 var own=authoritative.get(app.CT().pawnId);
                 var pickup=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Pickup"))
-                    .filter(a->a.Mv().getName().startsWith("Item/Pickups/Vial/"))
+                    .filter(a->a.Mx().getName().startsWith("Item/Pickups/Vial/"))
                     .filter(a->(Math.abs(Math.abs(a.tz().x)-9.5)<.1||Math.abs(Math.abs(a.tz().x)-18.5)<.1)
                         &&List.of(.5,2.5,4.5,-1.5).stream().anyMatch(y->Math.abs(a.tz().y-y)<.1))
                     .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElse(null);
                 if(pickup==null)return;
-                vialPickupActor=pickup.vw();vialItemConfig=pickup.Mv().getName().replaceFirst("^Item/Pickups/","Pickup/");
+                vialPickupActor=pickup.vw();vialItemConfig=pickup.Mx().getName().replaceFirst("^Item/Pickups/","Pickup/");
                 vialCountBefore=itemCount(vialItemConfig);vialItemId=0;
                 konwayRoute=routeTo(trainingMap,own.tz().x,own.tz().y,pickup.tz().x,pickup.tz().y);konwayRouteIndex=0;konwayStarted=now;stage=28;return;
             }
@@ -943,7 +952,7 @@ public final class CombatRenderingCheck {
             if(stage==30){
                 if(vialUseReply.reason!=null)throw new AssertionError("Native Vial use refused: "+vialUseReply.reason);
                 var own=authoritative.get(app.CT().pawnId);
-                if(vialUseReply.done&&own instanceof Dungeoneer knight&&field(knight,"_lift").getInt(knight)!=0&&knight.adU()==269){
+                if(vialUseReply.done&&own instanceof Dungeoneer knight&&field(knight,"_lift").getInt(knight)!=0&&knight.adX()==269){
                     capture("training-vial-held");vialLiftActor=field(knight,"_lift").getInt(knight);flags(view,4);started=now;stage=31;return;
                 }
                 if(now-started>8_000_000_000L)throw new AssertionError("Native Vial did not enter held activity 269 with a lift id");
@@ -955,7 +964,7 @@ public final class CombatRenderingCheck {
             if(stage==31||stage==32){
                 var own=authoritative.get(app.CT().pawnId);Actor thrown=null;
                 for(var actor:authoritative.values())if(actor.vw()==vialLiftActor&&actor instanceof com.threerings.projectx.dungeon.data.actor.DungeonLift
-                        &&actor.Mv().getName().equals("Dynamic/Lift Objects/Throwing Vial")&&actor.bR(2)
+                        &&actor.Mx().getName().equals("Dynamic/Lift Objects/Throwing Vial")&&actor.bR(2)
                         &&field(actor,"_faction").getInt(actor)==app.CT().pawnId){thrown=actor;break;}
                 if(thrown!=null){
                     var sprite=view.gk(thrown.vw());if(sprite==null||sprite.acL().getConfig()==null)throw new AssertionError("Thrown native Vial has no rendered sprite");
@@ -990,7 +999,7 @@ public final class CombatRenderingCheck {
                 var action=actions.get(index);
                 if(action.name.equals("blitz-needle-charge")&&!needleFacingReady){moveEast(view,true);started=now;stage=17;return;}
                 equip=new Confirm();long id=0;
-                for(var item:app.CT().items)if(item.Vx().getName().equals(action.weapon)){id=item.VA();break;}
+                for(var item:app.CT().items)if(item.Mx().getName().equals(action.weapon)){id=item.VD();break;}
                 if(id==0)throw new AssertionError("Missing seeded weapon "+action.weapon);
                 app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,6,equip);started=now;stage=5;return;
             }
@@ -998,11 +1007,11 @@ public final class CombatRenderingCheck {
                 if(!equip.done)return;if(equip.reason!=null)throw new AssertionError("Equip refused: "+equip.reason);
                 var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
                 Object impl=view.PO().implementation();var renderedWeapon=(Item)field(impl,"_weapon").get(impl);
-                if(weapon==null||!weapon.Vx().getName().equals(actions.get(index).weapon)||renderedWeapon==null||!renderedWeapon.Vx().getName().equals(actions.get(index).weapon)){
+                if(weapon==null||!weapon.Mx().getName().equals(actions.get(index).weapon)||renderedWeapon==null||!renderedWeapon.Mx().getName().equals(actions.get(index).weapon)){
                     if(now-started>5_000_000_000L)throw new AssertionError("Actor/sprite weapon did not converge to "+actions.get(index).weapon);
                     return;
                 }
-                var body=(com.threerings.config.ConfigReference<?>)view.PO().acU().Mv().kW().get("Model");
+                var body=(com.threerings.config.ConfigReference<?>)view.PO().acU().Mx().kW().get("Model");
                 if(body==null||body.kW().containsKey("Weapon")||body.kW().containsKey("Shield")||body.kW().containsKey("Weapon Idle"))throw new AssertionError("Interior base model duplicates held equipment");
                 activities.clear();renderedActivities.clear();animations.clear();capturedProjectiles.clear();frames=0;burstFrames=0;projectile=false;released=false;aftermath=false;lastAnimation="";
                 previousActors.clear();previousActors.addAll(authoritative.keySet());actionStamp=lastStamp;requiredStarted=Integer.MAX_VALUE;
@@ -1012,7 +1021,7 @@ public final class CombatRenderingCheck {
             if(stage==6){
                 var action=actions.get(index);int elapsed=(int)((now-started)/1_000_000L);
                 if(!released&&elapsed>=action.held){flags(view,0);released=true;frames=0;nextFrame=now+60_000_000L;}
-                var own=view.PO();int activity=((Dungeoneer)own.acU()).adU();
+                var own=view.PO();int activity=((Dungeoneer)own.acU()).adX();
                 var names=new TreeSet<String>();playing(own.acL(),names,0);
                 String state=activity+":"+names;
                 if(!state.equals(lastAnimation)){System.out.println("ANIMATION: "+action.name+" "+elapsed+"ms "+state);lastAnimation=state;}
@@ -1026,7 +1035,7 @@ public final class CombatRenderingCheck {
                 // A held gun press fires normally before entering charge. Only
                 // projectiles born after the required release activity qualify.
                 for(var actor:authoritative.values())if(activities.contains(action.required)
-                    &&!previousActors.contains(actor.vw())&&actor.adX()>=Math.max(actionStamp,requiredStarted)
+                    &&!previousActors.contains(actor.vw())&&((com.threerings.tudey.data.actor.Active)actor).adX()>=Math.max(actionStamp,requiredStarted)
                     &&Set.of("Bullet","Bomb","OrbitalBullet","CompoundOrbitalBullet").contains(actor.getClass().getSimpleName())
                     &&ownedProjectile(actor,action)){
                     var sprite=view.gk(actor.vw());
@@ -1043,7 +1052,7 @@ public final class CombatRenderingCheck {
                                 throw new AssertionError("Blitz Needle normal and charged shots did not use two native controller headings");needleChargedSeen=true;}
                             System.out.println("CHECK: "+action.name+" projectile rotation matches native facing "+facing+" and authored spread");
                         }
-                        projectile=true;System.out.println("PROJECTILE: "+action.name+" "+actor.getClass().getSimpleName()+" "+actor.Mv());
+                        projectile=true;System.out.println("PROJECTILE: "+action.name+" "+actor.getClass().getSimpleName()+" "+actor.Mx());
                         // Validate every projectile, but retain representative
                         // pixels so Needle pellets cannot fill the image-encoding
                         // queue with a full frame for every projectile.
@@ -1051,7 +1060,7 @@ public final class CombatRenderingCheck {
                     }
                 }
                 var server=authoritative.get(app.CT().pawnId);
-                if(elapsed>action.held+2500&&server instanceof Dungeoneer knight&&knight.adU()==0){
+                if(elapsed>action.held+2500&&server instanceof Dungeoneer knight&&knight.adX()==0){
                     if(!activities.contains(action.required)||!renderedActivities.contains(action.required))throw new AssertionError(action.name+" missed authoritative/rendered activity "+action.required+": "+activities+" / "+renderedActivities);
                     if(action.projectile&&!projectile)throw new AssertionError(action.name+" has no rendered server projectile");
                     if(movementOnly){
@@ -1075,7 +1084,7 @@ public final class CombatRenderingCheck {
     private boolean ownedProjectile(Actor actor,Action action)throws Exception {
         if((int)field(actor,"_clientOid").get(actor)==app.CT().xL())return true;
         if(!actor.getClass().getSimpleName().equals("Bomb"))return (int)field(actor,"_faction").get(actor)==app.CT().pawnId;
-        String config=actor.Mv().getName();
+        String config=actor.Mx().getName();
         return action.name.equals("tortofist-charge")&&config.endsWith("Tortodrone Missile")
             ||(action.name.equals("combuster-charge")||action.name.equals("amputator-charge"))&&config.equals("Bullet/Sword/Parts/Burst Trail");
     }
@@ -1107,8 +1116,8 @@ public final class CombatRenderingCheck {
             flags(view,0);
             var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
             var renderedWeapon=(Item)field(view.PO().implementation(),"_weapon").get(view.PO().implementation());
-            if(now-started<800_000_000L||((Dungeoneer)own).adU()!=0||weapon==null||renderedWeapon==null
-                ||!weapon.Vx().getName().equals("Weapon/Bomb/Graviton Vortex")||!renderedWeapon.Vx().getName().equals("Weapon/Bomb/Graviton Vortex"))return;
+            if(now-started<800_000_000L||((Dungeoneer)own).adX()!=0||weapon==null||renderedWeapon==null
+                ||!weapon.Mx().getName().equals("Weapon/Bomb/Graviton Vortex")||!renderedWeapon.Mx().getName().equals("Weapon/Bomb/Graviton Vortex"))return;
             var target=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Monster")&&a.tz().y>own.tz().y+1.7&&Math.abs(a.tz().x-own.tz().x)<.1)
                 .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
             vortexTarget=target.vw();vortexDistance=(float)Math.hypot(target.tz().x-own.tz().x,target.tz().y-own.tz().y);
@@ -1118,10 +1127,10 @@ public final class CombatRenderingCheck {
             long elapsed=now-started;
             if(elapsed>=4_000_000_000L)flags(view,0);
             for(var actor:authoritative.values())if(actor instanceof com.threerings.projectx.dungeon.data.actor.Bomb){
-                String name=actor.Mv().getName();var sprite=view.gk(actor.vw());
+                String name=actor.Mx().getName();var sprite=view.gk(actor.vw());
                 // These invisible carriers render creation/destruction transients,
                 // rather than a persistent actor model. Review the captured pixels too.
-                if(sprite==null||!sprite.acU().Mv().getName().equals(name))continue;
+                if(sprite==null||!sprite.acU().Mx().getName().equals(name))continue;
                 if(name.equals("Bomb/Parts/Gravidos (Implode) (Charged)"))sawVortexImplode=true;
                 if(name.equals("Bomb/Parts/Gravidos (Explode) (Charged)"))sawVortexExplode=true;
             }
@@ -1171,7 +1180,7 @@ public final class CombatRenderingCheck {
             if(arsenalStationOnly&&now-started<1_000_000_000L)return; // Let the native entry HUD finish being added.
             if(arsenalStationOnly&&arsenalStationState()!=0)throw new AssertionError("Arsenal opened before interaction");
             moveEast(view,false);
-            if(own.Ns() instanceof com.threerings.tudey.data.EntityKey.Entry entry&&Integer.valueOf(1955).equals(entry.getKey())){
+            if(own.Nv() instanceof com.threerings.tudey.data.EntityKey.Entry entry&&Integer.valueOf(1955).equals(entry.getKey())){
                 flags(view,4);arsenalPressed=now;stage=42;return;
             }
             return;
@@ -1194,7 +1203,7 @@ public final class CombatRenderingCheck {
         }
     }
     private int arsenalStationState()throws Exception {
-        for(var actor:authoritative.values())if(actor.Mv().getName().startsWith("Dynamic/Misc/Arsenal/")&&actor instanceof com.threerings.projectx.dungeon.data.actor.Switch)
+        for(var actor:authoritative.values())if(actor.Mx().getName().startsWith("Dynamic/Misc/Arsenal/")&&actor instanceof com.threerings.projectx.dungeon.data.actor.Switch)
             return field(actor,"_state").getInt(actor);
         throw new AssertionError("Missing native Arsenal switch");
     }
@@ -1214,23 +1223,23 @@ public final class CombatRenderingCheck {
             if(app.GG().getDisplayWidth()<1024)throw new AssertionError("Health acceptance requires a visible native scene viewport");
             if(!fullCapsuleChecked){
                 if(fullCapsuleReply==null){
-                    for(var item:app.CT().items)if(item.VA()<0&&item.Vx().getName().equals("Pickup/Capsule/Health Capsule"))fullCapsuleId=item.VA();
+                    for(var item:app.CT().items)if(item.VD()<0&&item.Mx().getName().equals("Pickup/Capsule/Health Capsule"))fullCapsuleId=item.VD();
                     if(fullCapsuleId==0){if(now-started>20_000_000_000L)throw new AssertionError("Health Capsule fixture was not collected");return;}
                     fullCapsuleReply=new Confirm();fullCapsuleStarted=now;
                     app.zr().bU(com.threerings.projectx.item.client.L.class).a(fullCapsuleId,(Object)null,fullCapsuleReply);return;
                 }
                 if(fullCapsuleReply.done&&fullCapsuleReply.reason!=null)throw new AssertionError("Full-health capsule rejected: "+fullCapsuleReply.reason);
                 var capsuleActor=authoritative.get(app.CT().pawnId);
-                if(capsuleActor instanceof Dungeoneer knight&&knight.adU()==5&&!fullCapsuleAnimated&&now-fullCapsuleStarted>=300_000_000L&&activityPlaying(view.PO(),5)){capture("full-health-capsule-use");fullCapsuleAnimated=true;}
+                if(capsuleActor instanceof Dungeoneer knight&&knight.adX()==5&&!fullCapsuleAnimated&&now-fullCapsuleStarted>=300_000_000L&&activityPlaying(view.PO(),5)){capture("full-health-capsule-use");fullCapsuleAnimated=true;}
                 if(now-fullCapsuleStarted<2_000_000_000L)return;
-                boolean retained=false;for(var item:app.CT().items)if(item.VA()==fullCapsuleId&&item.getCount()==1)retained=true;
+                boolean retained=false;for(var item:app.CT().items)if(item.VD()==fullCapsuleId&&item.getCount()==1)retained=true;
                 var hp=party.health.iterator().next();
                 if(!fullCapsuleReply.done||!fullCapsuleAnimated||!retained||hp.current!=hp.maximum||sawHealEffect)throw new AssertionError("Full-health capsule did not complete as animation-only use: confirmed="+fullCapsuleReply.done+" animation="+fullCapsuleAnimated+" retained="+retained+" hp="+hp.current+"/"+hp.maximum+" healEffect="+sawHealEffect);
                 fullCapsuleChecked=true;System.out.println("CHECK: native full-health capsule animation, successful confirmation, unchanged inventory/HP and no healing effect");
             }
             if(!healthShieldEquipped){
                 if(equip==null){
-                    long id=0;for(var item:app.CT().items)if(item.Vx().getName().equals("Gear/Shield/Grey Owlite Shield"))id=item.VA();
+                    long id=0;for(var item:app.CT().items)if(item.Mx().getName().equals("Gear/Shield/Grey Owlite Shield"))id=item.VD();
                     if(id==0)throw new AssertionError("Missing reported shield fixture");
                     equip=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(id,2,equip);return;
                 }
@@ -1329,8 +1338,8 @@ public final class CombatRenderingCheck {
             if(stage==1&&view.sceneId()==(mpTour%2==0?2:1)){
                 if(++mpTour==4){mpMark("mp-b-travel");stage=2;}else app.GF().bl(mpTour%2==0?2:1);return;
             }
-            if(stage==2&&remote!=null&&remote.adU()==265){
-                System.out.println("CHECK: remote box activity "+remote.adV()+" rendered="+(view.gk(remote.vw())==null?"missing":((com.threerings.projectx.data.actor.Knight)view.gk(remote.vw()).acU()).adU()));
+            if(stage==2&&remote!=null&&remote.adX()==265){
+                System.out.println("CHECK: remote box activity "+remote.adY()+" rendered="+(view.gk(remote.vw())==null?"missing":((com.threerings.projectx.data.actor.Knight)view.gk(remote.vw()).acU()).adX()));
                 var sprite=view.gk(remote.vw());
                 if(sprite!=null&&activityPlaying(sprite,265)){
                     var data=(List<?>)field(remote,"_activityData").get(remote);
@@ -1341,7 +1350,7 @@ public final class CombatRenderingCheck {
             if(stage==3&&mpHas("mp-confetti-go")){mpUse=new Confirm();app.zr().bU(com.threerings.projectx.item.client.L.class).a(findItemId("Usable/Confetti"),(Object)null,mpUse);stage=4;}
             if(stage==4&&mpUse.done){if(mpUse.reason!=null)throw new AssertionError(mpUse.reason);if(mpHas("mp-training")){app.GF().bl(294);stage=5;}}
             if(stage==5&&view.sceneId()==294&&remote!=null){checkTrainingHud();mpMark("mp-shared");capture("multiplayer-training");stage=6;}
-            if(stage==6&&remote!=null&&remote.adU()>=292){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,remote.adU())){capture("multiplayer-remote-combat");mpMark("mp-combat-seen");stage=7;}}
+            if(stage==6&&remote!=null&&remote.adX()>=292){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,remote.adX())){capture("multiplayer-remote-combat");mpMark("mp-combat-seen");stage=7;}}
             if(stage==7&&mpHas("mp-disconnect-go")){mpMark("mp-disconnected");mpFinish("stock peer retains its camera during travel and renders remote Prize Box and combat; Confetti use confirmed");}
             return;
         }
@@ -1352,7 +1361,7 @@ public final class CombatRenderingCheck {
         if(stage==2&&mpHas("mp-b-travel")&&remote!=null){mpBox=new Result();app.zr().bU(com.threerings.projectx.item.client.L.class).b(findItemId("Upgrade/Prize Box/Surge Prize Box"),-1,mpBox);stage=3;started=now;}
         if(stage==3&&now-started>25_000_000_000L&&!mpHas("mp-box-seen"))throw new AssertionError("Remote box animation did not render");
         if(stage==3&&mpBox.done){if(mpBox.reason!=null)throw new AssertionError(mpBox.reason);if(mpHas("mp-box-seen")&&now-started>9_000_000_000L){mpMark("mp-confetti-go");stage=4;}}
-        if(stage==4&&remote!=null&&remote.adU()==267){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,267)){capture("multiplayer-remote-confetti");mpMark("mp-training");app.GF().bl(294);stage=5;}}
+        if(stage==4&&remote!=null&&remote.adX()==267){var sprite=view.gk(remote.vw());if(sprite!=null&&activityPlaying(sprite,267)){capture("multiplayer-remote-confetti");mpMark("mp-training");app.GF().bl(294);stage=5;}}
         if(stage==5&&view.sceneId()==294&&remote!=null&&mpHas("mp-shared")){
             checkTrainingHud();
             if(authoritative.values().stream().filter(a->a instanceof Dungeoneer).count()!=2)throw new AssertionError("Shared Training has duplicate/missing players");
@@ -1382,7 +1391,7 @@ public final class CombatRenderingCheck {
         if(stage==18&&mpUse.done){
             if(mpUse.reason!=null)throw new AssertionError(mpUse.reason);
             var weapon=(Item)field(view.PO().acU(),"_weapon").get(view.PO().acU());
-            if(weapon==null||!weapon.Vx().getName().equals(GUN))return;
+            if(weapon==null||!weapon.Mx().getName().equals(GUN))return;
             var target=authoritative.values().stream().filter(a->a.getClass().getSimpleName().equals("Monster")&&monsterAlive(a))
                 .min(Comparator.comparingDouble(a->Math.hypot(a.tz().x-own.tz().x,a.tz().y-own.tz().y))).orElseThrow();
             if(Math.hypot(target.tz().x-own.tz().x,target.tz().y-own.tz().y)>4)throw new AssertionError("Missing nearby disposable target");
@@ -1441,13 +1450,13 @@ public final class CombatRenderingCheck {
     private boolean hazardRendered;
     private long hazardSince;
     private void hazardsTick(View view,long now)throws Exception {
-        if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
+        if(stage==0){if(arsenalBlinkOnly||healthOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Py())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());app.GF().bl(294);stage=70;started=now;return;}
         if(view.sceneId()!=294)return;
         var own=authoritative.get(app.CT().pawnId);if(!(own instanceof Dungeoneer knight))return;
         String potConfig="Dynamic/Lift Objects/"+(hazardRound%2==0?"Fire Pot":"Oil Pot");
         String hazardConfig="Bomb/Monster/"+(hazardRound%2==0?"ScorcherTorch":"Oil Slick");
         if(stage==70){
-            var pot=authoritative.values().stream().filter(a->a.Mv().getName().equals(potConfig)&&!a.bR(2)&&!a.bR(4)).findFirst().orElse(null);
+            var pot=authoritative.values().stream().filter(a->a.Mx().getName().equals(potConfig)&&!a.bR(2)&&!a.bR(4)).findFirst().orElse(null);
             if(pot==null){if(now-started>15_000_000_000L)throw new AssertionError("Pot did not respawn: "+potConfig);return;}
             potId=pot.vw();float dx=pot.tz().x-own.tz().x,dy=pot.tz().y-own.tz().y;
             moveToward(view,dx,dy,Math.hypot(dx,dy)>1.1);
@@ -1462,7 +1471,7 @@ public final class CombatRenderingCheck {
         }
         if(stage==72){
             flags(view,0);
-            for(var actor:authoritative.values())if(actor.Mv().getName().equals(hazardConfig)){
+            for(var actor:authoritative.values())if(actor.Mx().getName().equals(hazardConfig)){
                 if(!(actor instanceof com.threerings.projectx.dungeon.data.actor.Bomb))throw new AssertionError("Hazard is not a native Bomb");
                 hazardIds.add(actor.vw());
                 var sprite=view.gk(actor.vw());
@@ -1497,7 +1506,7 @@ public final class CombatRenderingCheck {
     private void townDialogsTick(View view,long now)throws Exception {
         Object place=field(app.Gu(),"bJl").get(app.Gu());
         if(!(place instanceof com.threerings.projectx.town.data.TownSceneObject scene)||view.sceneId()!=1)return;
-        if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Pu())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;stage=80;return;}
+        if(stage==0){if(arsenalBlinkOnly){GLFW.glfwSetWindowSizeLimits(app.getWindow(),1280,800,GLFW.GLFW_DONT_CARE,GLFW.GLFW_DONT_CARE);GLFW.glfwSetWindowSize(app.getWindow(),1280,900);GLFW.glfwMaximizeWindow(app.getWindow());}if(arsenalBlinkOnly&&!app.GQ().Py())throw new AssertionError("Solo Town commands incorrectly require mission-abandonment confirmation");GLFW.glfwFocusWindow(app.getWindow());started=now;stage=80;return;}
         if(stage==80){
             if(now-started<3_000_000_000L)return;
             equip=new Confirm();scene.townSceneService.m(equip);started=now;stage=81;return;
@@ -1596,27 +1605,27 @@ public final class CombatRenderingCheck {
         public void br(Object result){value=result;done=true;}public void aT(String error){reason=error;done=true;}
     }
     private void receive(SceneDeltaEvent event){
-        lastStamp=event.QY();
-        if(itemsOnly&&event.aem()!=null)for(var effect:event.aem()){
-            String ref=effect.Mv().toString();if(ref.contains("fx_fire.dat")||ref.contains("Player/Release Fireflies"))itemEffectSeen=true;
+        lastStamp=event.Rb();
+        if(itemsOnly&&event.aep()!=null)for(var effect:event.aep()){
+            String ref=effect.Mx().toString();if(ref.contains("fx_fire.dat")||ref.contains("Player/Release Fireflies"))itemEffectSeen=true;
         }
-        if(vortexShieldOnly&&event.aem()!=null)for(var effect:event.aem())if(effect.Mv().toString().contains("fx_shieldpush.dat")){
+        if(vortexShieldOnly&&event.aep()!=null)for(var effect:event.aep())if(effect.Mx().toString().contains("fx_shieldpush.dat")){
             try{if(field(effect,"_clientOid").getInt(effect)!=0||field(effect,"_target").get(effect)==null)throw new AssertionError("Shield bump is predicted away or has no source actor target");}
             catch(Exception error){throw new AssertionError(error);}sawShieldBump=true;
         }
-        if(healthOnly&&event.aem()!=null)for(var effect:event.aem()){
-            String reference=effect.Mv().toString();
+        if(healthOnly&&event.aep()!=null)for(var effect:event.aep()){
+            String reference=effect.Mx().toString();
             sawHealEffect|=reference.contains("heart_acquire_01.ogg");sawSparkEffect|=reference.contains("Player/Spark Rez");
         }
-        if(event.aeh()==0)authoritative.clear();
-        if(event.aej()!=null)for(var actor:event.aej())authoritative.put(actor.vw(),(Actor)actor.copy(null));
-        if(event.aek()!=null)for(var delta:event.aek()){Actor old=authoritative.get(delta.vw());if(old!=null)authoritative.put(delta.vw(),(Actor)delta.apply(old));}
-        if(event.ael()!=null)for(int id:event.ael())authoritative.remove(id);
-        if(healthOnly&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own)sawHurt|=own.adU()==274;
+        if(event.aek()==0)authoritative.clear();
+        if(event.aem()!=null)for(var actor:event.aem())authoritative.put(actor.vw(),(Actor)actor.copy(null));
+        if(event.aen()!=null)for(var delta:event.aen()){Actor old=authoritative.get(delta.vw());if(old!=null)authoritative.put(delta.vw(),(Actor)delta.apply(old));}
+        if(event.aeo()!=null)for(int id:event.aeo())authoritative.remove(id);
+        if(healthOnly&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own)sawHurt|=own.adX()==274;
         if(stage==6&&authoritative.get(app.CT().pawnId) instanceof Dungeoneer own){
-            activities.add(own.adU());
-            if(own.adU()==actions.get(index).required)requiredStarted=own.adV();
-            if(movementOnly&&own.Ru()!=null&&own.adU()==actions.get(index).required&&!own.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED))throw new AssertionError("Authoritative lunge is missing its native impulse guard");
+            activities.add(own.adX());
+            if(own.adX()==actions.get(index).required)requiredStarted=own.adY();
+            if(movementOnly&&own.Rx()!=null&&own.adX()==actions.get(index).required&&!own.bR(Dungeoneer.ATTACK_IMPULSE_APPLIED))throw new AssertionError("Authoritative lunge is missing its native impulse guard");
         }
     }
     private static void flags(View view,int flags)throws Exception{
@@ -1625,25 +1634,25 @@ public final class CombatRenderingCheck {
         field(view.acn(),"_flags").setInt(view.acn(),flags);
     }
     private static void moveNorth(View view,boolean moving)throws Exception{
-        // Stock aO(float) derives keyboard heading from bOD[0]-bOD[1] (Y)
-        // and bOD[3]-bOD[2] (X). Exercise the own controller's north axis,
+        // Stock aO(float) derives keyboard heading from bOE[0]-bOE[1] (Y)
+        // and bOE[3]-bOE[2] (X). Exercise the own controller's north axis,
         // away from the authored south portal, before repeated combat lunges.
-        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());
+        float[] axes=(float[])field(view.acn(),"bOE").get(view.acn());
         Arrays.fill(axes,0);axes[0]=1;face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
     }
     private static void moveEast(View view,boolean moving)throws Exception{
-        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());
+        float[] axes=(float[])field(view.acn(),"bOE").get(view.acn());
         Arrays.fill(axes,0);axes[3]=1;face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
     }
     private static void moveToward(View view,float dx,float dy,boolean moving)throws Exception{
-        float[] axes=(float[])field(view.acn(),"bOD").get(view.acn());Arrays.fill(axes,0);
+        float[] axes=(float[])field(view.acn(),"bOE").get(view.acn());Arrays.fill(axes,0);
         float length=(float)Math.hypot(dx,dy);if(length>0){dx/=length;dy/=length;
             if(dy>0)axes[0]=dy;else axes[1]=-dy;if(dx>0)axes[3]=dx;else axes[2]=-dx;}
         if(length>0)face(view,axes);if(!moving)Arrays.fill(axes,0);flags(view,moving?1:0);
     }
     private static void face(View view,float[] axes)throws Exception{
         Object controller=view.acn();for(Class<?> type=controller.getClass();type!=null;type=type.getSuperclass())try{
-            var method=type.getDeclaredMethod("k",float[].class);method.setAccessible(true);method.invoke(controller,(Object)axes);return;
+            var method=type.getDeclaredMethod("l",float[].class);method.setAccessible(true);method.invoke(controller,(Object)axes);return;
         }catch(NoSuchMethodException ignored){}throw new NoSuchMethodException("Native controller facing helper");
     }
     private static List<float[]> routeTo(SceneCatalog.MapScene map,float x,float y,float targetX,float targetY){
@@ -1720,32 +1729,42 @@ public final class CombatRenderingCheck {
     }
     private long findItemId(String config){
         if(config==null)return 0;
-        for(var item:app.CT().items)if(item.Vx().getName().equals(config))return item.VA();
+        for(var item:app.CT().items)if(item.Mx().getName().equals(config))return item.VD();
         return 0;
     }
     private int itemCount(String config){
         if(config==null)return 0;int count=0;
-        for(var item:app.CT().items)if(item.Vx().getName().equals(config))count+=item.getCount();
+        for(var item:app.CT().items)if(item.Mx().getName().equals(config))count+=item.getCount();
         return count;
     }
     // The stock jar contains both a package and a class named tudey.a;
     // Java source cannot name its obfuscated view/sprite types directly.
     private record View(Object value) {
-        Sprite PO()throws Exception{Object sprite=value.getClass().getMethod("PO").invoke(value);return sprite==null?null:new Sprite(sprite);}
+        Sprite PO()throws Exception{Object sprite=value.getClass().getMethod("PR").invoke(value);return sprite==null?null:new Sprite(sprite);}
         Sprite gk(int id)throws Exception{Object sprite=value.getClass().getMethod("gk",int.class).invoke(value,id);return sprite==null?null:new Sprite(sprite);}
-        int sceneId()throws Exception{var model=(com.threerings.tudey.data.TudeySceneModel)value.getClass().getMethod("Sn").invoke(value);return model==null?0:model.sceneId;}
-        Object acn()throws Exception{return value.getClass().getMethod("acn").invoke(value);}
+        int sceneId()throws Exception{var model=(com.threerings.tudey.data.TudeySceneModel)value.getClass().getMethod("Sq").invoke(value);return model==null?0:model.sceneId;}
+        Object acn()throws Exception{return value.getClass().getMethod("acq").invoke(value);}
     }
     private record Sprite(Object value) {
-        Actor acU()throws Exception{return (Actor)value.getClass().getMethod("acU").invoke(value);}
-        com.threerings.opengl.model.h acL()throws Exception{return (com.threerings.opengl.model.h)value.getClass().getMethod("acL").invoke(value);}
-        Object implementation()throws Exception{return value.getClass().getMethod("acT").invoke(value);}
+        Actor acU()throws Exception{return (Actor)value.getClass().getMethod("acX").invoke(value);}
+        com.threerings.opengl.model.h acL()throws Exception{return (com.threerings.opengl.model.h)value.getClass().getMethod("acO").invoke(value);}
+        Object implementation()throws Exception{return value.getClass().getMethod("acW").invoke(value);}
+    }
+    private static Field uniqueField(Object target,Class<?> fieldType)throws Exception{
+        Field found=null;
+        for(Class<?> type=target.getClass();type!=null;type=type.getSuperclass())for(Field candidate:type.getDeclaredFields()){
+            if(java.lang.reflect.Modifier.isStatic(candidate.getModifiers())||!fieldType.isAssignableFrom(candidate.getType()))continue;
+            if(found!=null)throw new IllegalStateException("Ambiguous native field of type "+fieldType.getName()+" on "+target.getClass().getName());
+            found=candidate;
+        }
+        if(found==null)throw new NoSuchFieldException(fieldType.getName()+" on "+target.getClass().getName());
+        found.setAccessible(true);return found;
     }
     private static boolean activityPlaying(Sprite sprite,int activity)throws Exception{
         Object impl=sprite.implementation();
-        var registry=(com.samskivert.util.D<?>)field(impl,"bQO").get(impl);Object current=registry.get(activity);
+        var registry=(com.samskivert.util.D<?>)uniqueField(impl,com.samskivert.util.D.class).get(impl);Object current=registry.get(activity);
         if(current==null)return false;
-        var animations=(com.threerings.opengl.model.a[])field(current,"bQQ").get(current);
+        var animations=(com.threerings.opengl.model.a[])uniqueField(current,com.threerings.opengl.model.a[].class).get(current);
         for(var animation:animations)if(animation!=null&&animation.isPlaying())return true;
         return false;
     }

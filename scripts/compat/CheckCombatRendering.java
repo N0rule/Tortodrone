@@ -100,9 +100,9 @@ public final class CheckCombatRendering {
             seed.addAll(List.of("CombatRenderingCheck", campStory?"--seed-camp":freshOpening?"--seed-opening":equipmentGroups?"--seed-equipment":itemsOnly?"--seed-items":multiplayerOnly?"--seed-multiplayer":boxesOnly?"--seed-boxes":depotOnly?"--seed-depot":"--seed", scratch.resolve("data").toString()));
             run(seed, "seed", 45, scratch);
 
-            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui"), serverLog, scratch);
+            Process server = start(List.of(executable("java"), "-jar", scratch.resolve("tortodrone.jar").toString(),"--nogui","--skip-client-assets"), serverLog, scratch);
             server.getOutputStream().close();
-            String port = ready(server, serverLog, Duration.ofSeconds(30));
+            String port = ready(server, serverLog, Duration.ofSeconds(120));
             Path publicKey = scratch.resolve("data/keys/public.txt");
             long keyDeadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(10);
             while (!Files.isRegularFile(publicKey) && System.nanoTime() < keyDeadline) Thread.sleep(50);
