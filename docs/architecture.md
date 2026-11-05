@@ -110,7 +110,7 @@ The versioned content registry keeps supported scene/catalog definitions outside
 
 ## Source-of-truth and dependency hygiene
 
-`build.gradle.kts` configures Java 25 toolchains and packaging; verified plugin/dependency digests are pinned under `gradle/verification-metadata.xml`. Required redistribution notices live in `src/main/resources/THIRD-PARTY.md`, JAR resources and `licenses/`. Keep private captures, stock game binaries/assets, `data/`, `.build/` and temporary test deployments out of Git.
+`build.gradle.kts` configures Java 25 toolchains and packaging; verified plugin/dependency digests are pinned under `gradle/verification-metadata.xml`. Required redistribution notices live in `src/main/resources/THIRD-PARTY.md`, JAR resources and `src/main/resources/licenses/`; releases assemble them under `licenses/`. Keep private captures, stock game binaries/assets, `data/`, `.build/` and temporary test deployments out of Git.
 
 Use focused regression tests before broad stock-client checks. Avoid expanding this document with one-off milestone reports; Git history retains past investigations.
 

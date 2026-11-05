@@ -376,7 +376,7 @@ content/          maintained server definitions and bundled maps
 scripts/          import, inspection, and compatibility tools
 docs/             operator guides and technical references
 gradle/           pinned wrapper and dependency verification
-licenses/         third-party license texts
+licenses/         third-party notices used by releases
 ```
 
 ## AI assistance
