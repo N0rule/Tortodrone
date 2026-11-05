@@ -121,7 +121,7 @@ gradle/          pinned wrapper and dependency verification
 licenses/        third-party license texts
 ```
 
-Build output, local research, saves, keys and captures stay outside Git. Client code/assets are not copied into server source; imports require separately available sources and appropriate rights. Dependency notices are in [THIRD-PARTY.md](src/main/resources/THIRD-PARTY.md).
+Original Tortodrone code and documentation use [PolyForm Noncommercial 1.0.0](LICENSE): noncommercial use and modification are permitted under its terms, and redistributed copies must retain the [N0rule/Tortodrone attribution notice](NOTICE). This is source-available, not OSI open source. Third-party dependencies and original game content retain their own rights; the project license does not license captured maps or extracted artwork. See [provenance and the history audit](docs/provenance.md), [dependency notices](src/main/resources/THIRD-PARTY.md) and [contribution rules](CONTRIBUTING.md). Build output, local research, saves, keys and captures stay outside Git.
 
 ## Documentation
 

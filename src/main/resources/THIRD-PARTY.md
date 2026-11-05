@@ -1,6 +1,6 @@
 # Dependency notices
 
-Both Tortodrone JARs bundle Xerial SQLite JDBC **3.53.4.0**, including SQLite native
+The Tortodrone JAR bundles Xerial SQLite JDBC **3.53.4.0**, including SQLite native
 libraries. No separately installed SQLite service or library is required.
 
 - Upstream: https://github.com/xerial/sqlite-jdbc
@@ -13,11 +13,11 @@ itself is public domain. Consult the bundled upstream notices for full terms.
 
 The pinned Gradle dependency is verified by `gradle/verification-metadata.xml` and cached in
 Gradle user home. Changing the driver requires updating the version and digest,
-reviewing upstream license notices, and checking both packaged applications.
+reviewing upstream license notices, and checking the packaged server.
 
 ## JLine terminal editing
 
-Both JARs also bundle JLine **4.4.7** (`jdk11` artifact), tested on Java 25. It supplies interactive terminal editing and
+The JAR also bundles JLine **4.4.7** (`jdk11` artifact), tested on Java 25. It supplies interactive terminal editing and
 bounded command history; its native terminal libraries are included.
 
 - Upstream: https://github.com/jline/jline3
@@ -30,4 +30,4 @@ with redirected stdin uses plain input and does not require a native terminal.
 
 ## YAML
 
-Both JARs bundle SnakeYAML **2.5**, Apache License 2.0, for bounded data-only YAML parsing. Upstream: https://github.com/snakeyaml/snakeyaml. The artifact is pinned in `gradle/verification-metadata.xml`; upstream license notices are retained in the packaged dependency.
+The JAR bundles SnakeYAML **2.5**, Apache License 2.0, for bounded data-only YAML parsing. Upstream: https://github.com/snakeyaml/snakeyaml. The artifact is pinned in `gradle/verification-metadata.xml`; upstream license notices are retained in the packaged dependency.
