@@ -60,10 +60,16 @@ public final class BootstrapTest {
         check(server.get("towns").equals(java.util.List.of()) && server.get("spamwords").equals(java.util.List.of()), "server schema");
         var interiorServer=wire.snapshot(input(outgoing.server((short) 17,true)),(short) 17,1);
         var gates=(java.util.List<?>)interiorServer.get("gates");
-        check(gates.size()==1,"solo interior render transport");
+        var tutorial=org.tortodrone.world.SceneRegistry.system().tutorial();
+        check(gates.size()==(tutorial==null?1:2),"solo interior render transport");
         var gate=(java.util.Map<?,?>)gates.getFirst();
         check(gate.get("_gateId").equals(0)&&gate.get("_wheels").equals(java.util.List.of())
             &&gate.get("_destId").equals(0),"interior transport exposes no dungeon floors or destination");
+        if(tutorial!=null) {
+            var tutorialGate=(java.util.Map<?,?>)gates.get(1);
+            check(tutorialGate.get("_gateId").equals(org.tortodrone.world.TutorialRoute.GATE)
+                &&((java.util.List<?>)tutorialGate.get("_wheels")).size()==1,"tutorial transport gate");
+        }
         var config = wire.snapshot(input(outgoing.configuration((short) 15)), (short) 15, 2);
         check(config.get("dconfigService") == null && config.get("removed").equals(java.util.List.of()), "configuration schema");
         player = wire.snapshot(input(outgoing.player((short) 16, 201, 1, "test-player", java.util.Map.of("test-receiver", (short) 0))), (short) 16, 201);

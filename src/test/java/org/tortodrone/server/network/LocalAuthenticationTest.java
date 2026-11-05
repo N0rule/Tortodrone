@@ -1,6 +1,7 @@
 package org.tortodrone.server.network;
 
 import java.net.*;
+import java.util.*;
 import java.security.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -43,10 +44,13 @@ public final class LocalAuthenticationTest {
                 return logs;
             });
             try (Socket peer = new Socket(listener.getInetAddress(), listener.getLocalPort())) {
-                TestClient.authenticate(peer, key.getPublic(), valid);
+                // Authentication is the subject here; creation has its own focused program.
+                if (valid) TestClient.authenticate(peer, key.getPublic(), "tortodrone", "tortodrone",
+                    "success", 30000, (socket, wire, oid) -> TestClient.logoff(socket));
+                else TestClient.authenticate(peer, key.getPublic(), false);
             }
-            List<String> logs = result.get(5, TimeUnit.SECONDS);
-            check(logs.stream().anyMatch(s -> s.contains(valid ? "Authentication accepted by client" : "result=rejected")), "completion evidence");
+            List<String> logs = result.get(40, TimeUnit.SECONDS);
+            check(logs.stream().anyMatch(s -> s.contains(valid ? "Client joined;" : "result=rejected")), "completion evidence");
             check(logs.stream().filter(s->s.startsWith("Client joined;")).count()==(valid?1:0),"join metadata is emitted only after accepted authentication and attachment");
             if(valid)check(logs.stream().anyMatch(s->s.startsWith("Client joined;")&&s.contains("language=\"en\"")&&s.contains("timezone=\"UTC\"")&&s.contains("country=unavailable")),"locale and country availability reach the authenticated debug log");
             check(logs.stream().noneMatch(s -> s.contains("password=") || s.contains("private-test-ident")
@@ -55,6 +59,7 @@ public final class LocalAuthenticationTest {
             executor.shutdownNow();
         }
     }
+
     private static void hardwareExchange(KeyPair key)throws Exception {
         for(boolean foreign:new boolean[]{false,true})try(var workers=Executors.newSingleThreadExecutor();var listener=new ServerSocket(0,1,InetAddress.getLoopbackAddress())){
             var result=workers.submit(()->{

@@ -20,7 +20,8 @@ public final class OpeningComlinkSessionTest {
         var content=ContentManager.load(Path.of("."));var base=content.createScenes();var haven=base.catalog().scene(1);
         var camp=new SceneCatalog.MapScene(218,16777222,"%town:m.fixture","Fixture powered Camp",haven.image(),"town",1,haven.spawnX(),haven.spawnY(),haven.spawnRotation(),1,haven.collision(),haven.layout(),ScenePortals.EMPTY,SceneContent.empty());
         var maps=new TreeMap<Integer,SceneCatalog.MapScene>();for(var map:base.catalog().scenes())maps.put(map.id(),map);maps.put(218,camp);
-        var registry=new SceneRegistry(SceneCatalog.of(maps,1));registry.town(content.town());SceneRegistry.install(registry);
+        var registry=new SceneRegistry(SceneCatalog.of(maps,1));registry.town(content.town());
+        var previous=SceneRegistry.system();SceneRegistry.install(registry);
         Path home=Files.createTempDirectory("tortodrone-comlinks-");
         try{
             var db=new Database(home,true);var protection=new Passwords.Protection(new byte[16],new byte[32]);
@@ -73,7 +74,7 @@ public final class OpeningComlinkSessionTest {
                 check(registry.destination(OpeningComlinks.scene(mission),checkpoint.worldId()).simulation().playerCount()==0,"disconnect releases every owned pawn");
             }
             check(peer.worldProfile(foreign.name(),1).equals(untouched),"foreign account inventory and progress unaffected");
-        }finally{try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
+        }finally{SceneRegistry.install(previous);try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
         System.out.println("PASS: native First Contact B and Welcome to Haven attempts, all captured panels, ownership, eligibility, invalid/duplicate responses, rollback/retry, exact rewards, completion publication and Ready Room reconnect (post-floor checkpoints; synthetic Camp geometry)");
     }
     private static WorldProfile checkpoint(CharacterStore owner,Knight knight,SceneRegistry registry,OpeningMission target)throws Exception {

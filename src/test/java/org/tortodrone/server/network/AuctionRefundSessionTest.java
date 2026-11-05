@@ -21,6 +21,7 @@ public final class AuctionRefundSessionTest {
         public void close(){world.close();output.close();}
     }
     public static void main(String[] args)throws Exception {
+        var previous=SceneRegistry.system();
         Path root=Files.createTempDirectory("tortodrone-outbid-session-");
         try {
             var content=ContentManager.load(Path.of("."));var db=new Database(root,true);
@@ -50,7 +51,7 @@ public final class AuctionRefundSessionTest {
             }
             WorldStatePoller.awaitStopped();check(!WorldSession.auctionPresence(db.file()).containsKey(aw),"closed connection leaves presence");
             System.out.println("PASS: native online outbid credit, deployment presence, poller publication, notification and My Bids acknowledgement");
-        }finally{WorldStatePoller.awaitStopped();ContentFixture.delete(root);}
+        }finally{SceneRegistry.install(previous);WorldStatePoller.awaitStopped();ContentFixture.delete(root);}
     }
     private static Client client(Database db,ItemCatalog items,SceneRegistry scenes,String name,int oid)throws Exception {
         int account=db.create(name,new Passwords.Protection(new byte[16],new byte[32]),false);
