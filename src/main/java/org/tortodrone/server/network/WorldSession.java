@@ -1975,7 +1975,6 @@ final class WorldSession implements AutoCloseable {
             }
             partyState();
         }
-        if(!scene.map().town())for(var event:current.combatEventsSince(lastSnapshot)){int party=partyOid();output.send(()->codec.partyDamage(party,event));}
         lastStamp=reference=stamp;lastSnapshot=current;
         var story=membership.takeStory();
         if(!story.memories().isEmpty()||!story.objectives().isEmpty()){

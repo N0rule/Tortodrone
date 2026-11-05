@@ -89,10 +89,11 @@ public final class SessionCodec {
             out.writeBoolean(true); out.writeUTF(host);
             out.writeBoolean(true); out.writeInt(1); out.writeInt(port);
             out.writeBoolean(true); out.writeInt(0); // No datagram endpoints advertised.
-            // Current build: server, exchange, PvP, PvP info, mission, open hall,
-            // admin, status, place browser, client timings.
+            // Current build: server, exchange, PvP, PvP info, love test, mission,
+            // open hall, admin, status, place browser, client timings.
             out.writeInt(SERVER_OID);
             out.writeInt(EXCHANGE_OID); out.writeInt(0); out.writeInt(0); // exchange, PvP, PvP info
+            out.writeInt(0); // love test
             out.writeInt(MISSION_OID); out.writeInt(0); // registered mission object, open hall
             // Stock ProjectXSession only names the admin object for ADMIN-tier accounts. A
             // support-plus account keeps zero and still reaches the admin service, which is
@@ -977,7 +978,7 @@ public final class SessionCodec {
         return frame(out -> { eventHeader(out,"CompoundEvent",oid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(scene.map().town()?6:5);
             if(scene.map().town())attribute(out,oid,"lastTownSceneId",o->value(o,scene.map().id()));
             attribute(out,oid,"zoneId",o->value(o,scene.map().zone()));
-            attribute(out,oid,"instanceId",o->value(o,scene.map().town()?scene.oid():0));
+            attribute(out,oid,"instanceId",o->value(o,scene.oid()));
             attribute(out,oid,"zoneGeneralOid",o->value(o,general));attribute(out,oid,"zoneTradeOid",o->value(o,trade));
             attribute(out,oid,"location",o->{type(o,"com.threerings.whirled.data.ScenePlace");o.writeInt(scene.oid());o.writeInt(scene.map().id());}); });
     }
@@ -1029,7 +1030,8 @@ public final class SessionCodec {
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyHealth(out,member);
             type(out,"com.threerings.presents.dobj.DSet");out.writeInt(members.size());for(var member:members.stream().sorted(java.util.Comparator.comparingInt(PartyRegistry.Participant::playerOid)).toList())partyStatus(out,member);
             emptyCollection(out);out.writeShort(0); // Native party spawn is unset; the scene owns arrival.
-            out.writeInt(mission?1:0);out.writeBoolean(!tutorial&&(automatic||managed||training||!scene.map().content().items().isEmpty()));out.writeLong(0);
+            out.writeInt(mission?1:0);out.writeInt(scene.map().zone());out.writeInt(scene.oid()); // depth, zone, instance
+            out.writeBoolean(!tutorial&&(automatic||managed||training||!scene.map().content().items().isEmpty()));out.writeLong(0);
             out.writeShort(0);out.writeInt(tutorial||mission?1:managed||automatic?PartyRegistry.CAPACITY:training?8:1);out.writeInt(mission?opening.gate().id():tutorial?org.tortodrone.world.TutorialRoute.GATE:0);
             type(out,"com.threerings.projectx.dungeon.data.LevelPartyMarshaller");out.writeInt(partyOid);out.writeInt(LEVEL_PARTY_SERVICE);
             type(out,"com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty");out.writeByte(mission?opening.difficultyOrdinal():tutorial?1:0);
@@ -1130,15 +1132,6 @@ public final class SessionCodec {
         if(!java.util.Set.of("m.costupdate","m.no_revive","m.nsf_energy").contains(reason))return invocationFailure(playerOid,request,reason);
         return frame(out->{eventHeader(out,"InvocationResponseEvent",playerOid);out.writeShort(request);out.writeByte(0);out.writeBoolean(true);out.writeInt(1);value(out,reason);});
     }
-    public byte[] partyDamage(int partyOid,org.tortodrone.world.SceneCombatEvent event)throws IOException {
-        return frame(out->{type(out,PREFIX+"EventNotification");out.writeShort(-1);
-            type(out,"com.threerings.projectx.dungeon.data.PartyObject$DamageEvent");out.writeInt(partyOid);
-            string(out,"damage");out.writeInt(event.timestamp());out.writeInt(event.actor());out.writeInt(event.amount());out.writeInt(event.source());
-            type(out,"com.threerings.projectx.dungeon.util.DamageSummary$Performance");
-            out.writeByte(switch(event.performance()){case "NORMAL_SMALL"->6;case "NORMAL_MEDIUM"->7;case "NORMAL_LARGE"->8;default->1;});
-        });
-    }
-
     /** Original Crowd place chat message, carrying a server-selected visible name. */
     public byte[] chat(int sceneOid,org.tortodrone.world.SceneChat.Message message)throws IOException {
         return frame(out->{
