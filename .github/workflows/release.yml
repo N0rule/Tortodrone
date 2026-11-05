@@ -75,7 +75,7 @@ jobs:
           # Exclude obsolete generated artifacts from an older checkout.
           rm -f "$root/tortodrone-admin.jar"
           cp -a docs "$root/docs"
-          cp VERSION README.md "$root/"
+          cp VERSION README.md LICENSE NOTICE CONTRIBUTING.md "$root/"
 
           java -cp "$root/tortodrone.jar" org.tortodrone.resources.ContentManager "$root"
 
@@ -93,6 +93,10 @@ jobs:
           fi
           test ! -d "$root/data"
           test ! -d "$root/content-updates"
+          if test -d "$root/webui/assets/game/icons"; then
+            echo "Refusing to publish locally extracted client artwork; use the source-owned fallback pack." >&2
+            exit 1
+          fi
 
           # Package file contents at archive root, not an enclosing folder.
           (

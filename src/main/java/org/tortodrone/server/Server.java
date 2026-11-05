@@ -27,7 +27,7 @@ public final class Server {
         int exitCode = 0;
         try {
             if (args.length == 1 && args[0].equals("--help")) {
-                System.out.println("Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] | --version | --help");
+                System.out.println("Usage: java -jar tortodrone.jar [--nogui] [--config path/to/server.yml] [--client path/to/Spiral Knights | --skip-client-assets] | --version | --help");
                 System.out.println("Type help in the server terminal for commands. Manage accounts through WebUI or the server console.");
                 return;
             }
@@ -53,6 +53,7 @@ public final class Server {
                 log.debug("Configuration: " + config.toAbsolutePath().normalize());
                 log.debug("Data directory: " + dataDirectory);
                 log.configure(settings.logMaxMiB()*1048576L,settings.logRetention());
+                if(settings.webui().enabled())ClientArtworkSetup.prepare(directory,options.client(),options.skipClientAssets(),log::info,log::warn);
                 ServerControl control=new ServerControl(version(),dataDirectory);
                 var content=org.tortodrone.resources.ContentManager.load(directory,settings);
                 try(var adminAccounts=new AccountStore(dataDirectory,true,content.items(),content.town());

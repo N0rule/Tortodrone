@@ -31,6 +31,36 @@ welcome-message: Welcome to Tortodrone!
 
 `max-clients` accepts 1–1024; `log-mode` accepts `normal` or `debug`; `log-max-mib` accepts 1–1024; `log-retention` accepts 1–100 rotated files; `welcome-message` accepts up to 256 characters without control characters and is shown once in chat after a knight enters the world (set `""` to disable). Config file options not recognized by the current server are refused. Runtime logs are in `data/logs/latest.log` with size-based rotation.
 
+## First-start WebUI images
+
+With WebUI enabled, startup prepares missing artwork **before opening HTTP or
+game listeners**. It searches standard Linux Steam directories (including Flatpak)
+and Windows Steam locations, then the additional libraries in Steam's
+`libraryfolders.vdf`. A nonstandard installation can be selected with
+`--client "/path/to/Spiral Knights"`; on Windows, for example,
+`--client "D:\SteamLibrary\steamapps\common\Spiral Knights"`.
+
+If nothing is found, an interactive terminal asks for the client installation
+folder. Blank input remembers a skip; a later `--client` retries. A service or
+redirected terminal never waits for input or consumes console commands: pass
+`--client` explicitly, or `--skip-client-assets` to bypass discovery. Missing
+resources/export failures keep fallback icons and allow normal server startup.
+
+Extraction uses the bundled source exporter and the user's **JDK 25 including
+javac**, with temporary home/preferences/output, software image processing and
+a bounded child process. It reads the installed client's resources without
+changing the installation or launching its game window. No Python/Node runtime
+is needed. `--skip-client-assets` also avoids the one-time work on server hosts
+without a client. WebUI-disabled hosting does not prepare artwork.
+
+The complete image pack is cached in `data/client-artwork/` and served from
+`webui/assets/game/`. Rebuilds can reset that frontend directory; the next startup
+restores it from the private cache without re-exporting. Keep the cache in your
+normal `data/` backup. Generated artwork is original game content, not covered by
+the Tortodrone license; do not commit it or add it to public releases without
+redistribution rights. Map `.dat` files are not client resources and are not
+supplied by this step; see [opening map setup](content.md#local-crash-site-playtest).
+
 ## Secure WebUI setup
 
 Defaults enable WebUI with `webui-tls-mode: http`, `webui-public-url: 0.0.0.0` and the shared port 8080, bound to all interfaces. Set `webui-enabled: false` to disable administration routes. Optional `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to that existing HTTP port. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.

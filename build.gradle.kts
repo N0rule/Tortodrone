@@ -30,6 +30,8 @@ dependencies {
 
 tasks.processResources {
     from("VERSION") { rename { "version.txt" } }
+    from(listOf("LICENSE", "NOTICE")) { into("META-INF/tortodrone") }
+    from("scripts/compat/WebUiAssetsExport.java") { into("tools") }
 }
 tasks.withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false

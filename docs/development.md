@@ -97,6 +97,20 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 ## WebUI verification
 
+For client-artwork startup changes, run
+`./gradlew testUnit -PunitTests=ClientArtworkSetupTest,ClientArtworkStartupTest,MonitoringTest,WebUiTest`.
+These cover Steam discovery, path prompts/skips, cache restoration, unsafe paths,
+cancelled child cleanup, packaged pre-listener publication and real HTTP serving
+using owned synthetic PNG fixtures. Windows paths/discovery are exercised on the
+test host; that is not a Windows execution test.
+
+The 0.39.62 Linux acceptance also used a separately installed stock client to
+export 5,035 unique images (9,341 item mappings, 120 Sprite mappings, 35 UI assets
+and 28 symbols; seven unavailable item icons keep fallbacks). The complete pack
+passed `assets-test.mjs` and was restored/served through a disposable packaged
+server, including PNG hashes and MIME checks. No game window was launched, and
+actual Windows extraction remains unverified.
+
 `./gradlew testUnit -PunitTests=WebIdentityStoreTest,WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest,CompanionInspectionTest` exercises disposable HTTP, credential and domain fixtures. `./gradlew integrationWebUi integrationConsole` verifies packaged first-run setup, WebUI identity management, console recovery while the listener is stopped and ordinary local administration. For browser acceptance, use a disposable deployment with explicitly configured direct HTTP or the same-host TLS proxy described in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
 
 The framework-free WebUI uses shared components in `assets/components/`, page controllers in `assets/pages/`, and CSS tokens/layout/components/pages. A page mounts once; its `refresh` updates existing nodes. Polling refreshes are serialized at the page boundary, obsolete page reads are aborted, stale navigation results are discarded, and polling pauses in hidden tabs. Knight inspection probes revisions and live companion state every six seconds through `knight-state`, fetching the heavy profile only when its identity/revision changes; metric samples are collected server-side every five seconds with one hour of bounded in-memory retention. `MetricHistoryTest` covers retention and session counters. Knight tab filters and open Sprite details survive refreshes. Unsaved page and editor drafts require an explicit discard on navigation; stale revisions preserve drafts and disable saving. Console drafts and history remain in memory until sign-out. Dark/light theme and comfortable/compact density are the only locally persisted UI preferences.
@@ -107,7 +121,7 @@ The framework-free WebUI uses shared components in `assets/components/`, page co
 
 WebUI `equipment` uses the shared equip transaction, owned item/slot checks, unlock rules, bind-on-equip and current world revision. Grant-and-equip allocates and equips in the same SQLite transaction. Saved loadout snapshots remain unchanged. These administrative equipment operations require the account to be signed out: the account attachment lock prevents a login racing the write. Live Arsenal equipment changes remain game-owned and appear through the revision probe; WebUI explicitly refuses online equipment edits. `WebGearTest`, `NamedLoadoutsTest` and `InventoryExpiryTest` cover the affected paths. Accessories use the resolved item-ticket artwork. Sprite inspection exposes owned/selected state and the native icon tier; active deployment, follow state, shield and recharge come from the existing scene-owned companion. Stopped, disconnected, wrong-owner or changed-destination sessions expose no live state. Inspection never advances simulation or allocates an instance; offline selection does not imply deployment. `PetCombatTest` and `CompanionInspectionTest` cover these guards. News provides a visual three-slot editor (570×300, 280×190 twice), an advanced YAML editor, and PNG/JPEG uploads limited to 1 MiB, 128 library images and 32 MiB total. Saves retain schema validation, revisions and atomic publication; a listener restart publishes a changed pack selection.
 
-Optional original artwork preparation is local and read-only with respect to the client:
+Normal first-start hosting prepares missing artwork automatically; see [Operations](operations.md#first-start-webui-images). Use `--skip-client-assets` in isolated server fixtures that should not inspect a host client. The following manual preparation is for maintainer builds and optional optimization, and is read-only with respect to the client:
 
 ```sh
 java scripts/StockTools.java webui-assets "/path/to/Spiral Knights" local/webui-assets

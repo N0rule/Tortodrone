@@ -4,7 +4,7 @@
 
 # Tortodrone
 
-A Java 25 clean-room Spiral Knights server for the **unmodified official client**, with console and WebUI administration. Accounts use normal usernames and passwords; Steam and guest login are not supported.
+An independent Java 25 Spiral Knights server reimplementation for the **unmodified official client**, with console and WebUI administration. Accounts use normal usernames and passwords; Steam and guest login are not supported. See the [provenance policy](docs/provenance.md) for research methods and clean-room limits.
 
 **Development status:** login, native Ready Room, Haven, supported interiors and town services work within the limits described below. Crash Site → initial Rescue Camp has an earlier isolated graphical acceptance. The complete opening route to Haven is **unfinished**: Ancient Generator still needs a passing full-floor playthrough, and Crossing the Chasm is incomplete. This is not a complete replacement for the official server.
 
@@ -43,7 +43,19 @@ If it passes, keep your existing maps. Otherwise, with the server stopped, follo
 java -jar build/tortodrone.jar
 ```
 
-The server runs in the terminal. Default ports are **47624/TCP** for the game and **8080/HTTP** for WebUI and News. Settings are in `build/config/server.yml`; stop the process before editing them.
+The server runs in the terminal. Before opening its listeners, it prepares missing WebUI images from an installed client. It searches standard Steam locations and additional Steam libraries on Linux and Windows. If no client is found, the terminal asks for the installation folder (containing `code/projectx-pcode.jar` and `rsrc/`); leave it blank to skip. The client is read-only, and map scene files are not extracted. This one-time step requires the JDK, including `javac`.
+
+For a custom installation or a service without an interactive terminal:
+
+```sh
+java -jar build/tortodrone.jar --client "/path/to/Spiral Knights"
+# Or host with fallback icons and skip client discovery:
+java -jar build/tortodrone.jar --skip-client-assets
+```
+
+Prepared images are cached under `build/data/client-artwork/` and restored after ordinary builds. An explicit `--client` retries setup after a skip or refreshes the pack. A missing/incompatible client does not prevent hosting; fallback icons remain available.
+
+Default ports are **47624/TCP** for the game and **8080/HTTP** for WebUI and News. Settings are in `build/config/server.yml`; stop the process before editing them.
 
 In the **server console**, enter:
 
