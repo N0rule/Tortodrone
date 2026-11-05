@@ -8,9 +8,30 @@ An independent Java 25 Spiral Knights server reimplementation for the **unmodifi
 
 **Development status:** login, native Ready Room, Haven, supported interiors and town services work within the limits described below. Crash Site → initial Rescue Camp has an earlier isolated graphical acceptance. The complete opening route to Haven is **unfinished**: Ancient Generator still needs a passing full-floor playthrough, and Crossing the Chasm is incomplete. This is not a complete replacement for the official server.
 
+## Run a release ZIP
+
+Install **JDK 25**, extract the complete ZIP into its own folder, open a terminal
+there and run:
+
+```sh
+java -jar tortodrone.jar
+```
+
+Keep `config/`, `content/`, `webui/` and `plugins/` beside the JAR. The server
+creates `data/` there; its public client key is `data/keys/public.txt`. Create a
+game account with `account create Alice` in the server console, then follow
+[client connection](#4-connect-the-client) using that key. WebUI is at
+`http://localhost:8080/admin/`; its setup code appears in the console.
+
+**This is a development release.** The ZIP includes seven town/interior maps;
+new-knight creation additionally requires the original Crash Site and initial
+Rescue Camp imports described below. Import tools require a source checkout and
+separately available scene sources. WebUI image preparation does not supply
+those scenes. Dependency notices are included as `THIRD-PARTY.md` in the ZIP.
+
 ## Set up from source
 
-You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client assets are not distributed in this repository.
+You need **Git** and **JDK 25** on `PATH`. The included Gradle wrapper downloads build dependencies on first use. No system Gradle, database service, Node.js or Python is needed for an ordinary build. Playing also requires your own official client, KnightLauncher and the verified opening scene sources described in step 2. Client binaries and extracted WebUI artwork are not distributed; bundled captured scene data has separate [provenance and rights limitations](docs/provenance.md).
 
 The commands below run from the repository root. On Windows, replace `./gradlew` with `.\gradlew.bat`; the Java commands work in PowerShell too.
 

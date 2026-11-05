@@ -30,4 +30,4 @@ with redirected stdin uses plain input and does not require a native terminal.
 
 ## YAML
 
-The JAR bundles SnakeYAML **2.5**, Apache License 2.0, for bounded data-only YAML parsing. Upstream: https://github.com/snakeyaml/snakeyaml. The artifact is pinned in `gradle/verification-metadata.xml`; upstream license notices are retained in the packaged dependency.
+The JAR bundles SnakeYAML **2.5**, Apache License 2.0, for bounded data-only YAML parsing. Upstream: https://bitbucket.org/snakeyaml/snakeyaml. The artifact is pinned in `gradle/verification-metadata.xml`. The complete Apache license text is included as `licenses/apache-2.0.txt` inside the JAR and portable ZIP. SQLite's original Apache/BSD license files remain under `META-INF/maven/org.xerial/sqlite-jdbc/` in the JAR. Third-party licenses are independent of Tortodrone's noncommercial license.
