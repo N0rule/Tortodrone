@@ -21,7 +21,7 @@ Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a p
 
 ## Highlights
 
-- **Unmodified client** — connect with your own official installation through KnightLauncher. No client patches are required.
+- **Unmodified client** — connect with your own official installation through [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom). No client patches are required.
 - **Portable server** — one JAR plus `config/`, `content/`, `webui/`, and `plugins/`; no external database or runtime services.
 - **Built-in administration** — manage accounts, knights, inventory, economy, and News from the terminal or the WebUI.
 - **Opening content included** — nine bundled maps, including Crash Site 398 and initial Rescue Camp 217. New knights start in Crash Site; no separate import is needed.
@@ -35,7 +35,7 @@ Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a p
 | --- | --- |
 | **Java** | JDK 25 (Temurin recommended). A JRE alone is not enough for first-start WebUI artwork preparation. |
 | **Spiral Knights** | Your own official installation. The client and launcher are not included. |
-| **Launcher** | KnightLauncher, configured to connect to your server. |
+| **Launcher** | [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom) (recommended) or another launcher that can override the server address, port, and public key. |
 | **Network** | TCP `47624` for the game. HTTP `8080` for the WebUI and public News. |
 | **Source builds** | Git and JDK 25. No system Gradle, Node.js, Python, or database server is required. |
 
@@ -115,7 +115,26 @@ Follow the password prompts. There are no default game accounts. Type `help` to 
 
 ### 5. Connect the game client
 
-Use your own unmodified Spiral Knights installation with KnightLauncher. Set these launcher properties:
+Use your own unmodified Spiral Knights installation. [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom) is a KnightLauncher fork that adds manually configured private servers and reuses the installed client, so no second game copy is downloaded.
+
+#### Option A: KnightLauncherCustom (recommended)
+
+1. Download the launcher ZIP from the [latest release](https://github.com/N0rule/KnightLauncherCustom/releases/latest) and extract `KnightLauncher.jar` into your Spiral Knights folder, beside `code/` and `rsrc/`.
+2. Start it from that folder with `java -jar KnightLauncher.jar`.
+3. Click **+** beside the server switcher and add a server:
+   - **Server name** — `Tortodrone` (any name works).
+   - **Server address** — `127.0.0.1` on the server computer; otherwise the server's reachable LAN or public address.
+   - **Port** — `47624`.
+   - **Public key** — the complete contents of `data/keys/public.txt`, including its `#` separator.
+   - **Getdown URL** — leave the default; manually added servers start the installed client directly, without Getdown.
+   - **Content URL** — `http://<server address>:8080/` so Uplink News loads from Tortodrone.
+4. Select **Tortodrone** in the server switcher and click **Launch**.
+
+Connection and platform settings are saved per server, so you can switch back to Official without re-entering anything. If a private client fails to start, see `private-client.log` in the game folder.
+
+#### Option B: Another launcher or manual setup
+
+If you use a different launcher that can override the client's server settings, set:
 
 ```properties
 game.endpoint=127.0.0.1
@@ -125,6 +144,7 @@ game.publicKey=<complete contents of data/keys/public.txt>
 
 - Paste the **entire public value**, including its `#` separator — not the filename.
 - Use `127.0.0.1` when the client runs on the server computer. For another computer, use the server's reachable LAN or public address. `0.0.0.0` is a bind address, not a client destination.
+- Point the launcher's Content URL at `http://<server address>:8080/` to load Tortodrone's Uplink News.
 - Never share the `data/keys/` directory. It contains the matching private key.
 - Restart the client after changing launcher settings.
 
@@ -141,7 +161,7 @@ The first visit asks you to create an administrator. Enter the eight-digit one-t
 1. Keep `server-ip: 0.0.0.0` in `config/server.yml` so the server accepts LAN connections.
 2. Allow TCP `47624` (game) through the server firewall. Allow TCP `8080` only if the WebUI or News must be reachable from other computers. For internet play, forward the game port on your router.
 3. Create a game account for each player with `account create <name>` in the console or through the WebUI.
-4. Give players your reachable server address for `game.endpoint` and the **public** key from `data/keys/public.txt`.
+4. Give players your reachable server address and the **public** key from `data/keys/public.txt`, then have them add the server in KnightLauncherCustom as described above.
 5. Restart the server after changing configuration.
 
 > [!WARNING]
@@ -262,8 +282,9 @@ Imported definitions and passing serialization tests do not establish full gamep
 | Symptom | First check |
 | --- | --- |
 | `java` is not recognized or reports the wrong version | Install JDK 25, open a new terminal, and run `java -version`. |
-| Client cannot connect | Confirm the server is running, `game.endpoint` and `game.port` are correct, and TCP `47624` is allowed through the firewall. |
-| Secure exchange rejected | `game.publicKey` must be the exact contents of `data/keys/public.txt`, including the `#` separator. |
+| Client cannot connect | Confirm the server is running, the launcher points at the correct server address and port, and TCP `47624` is allowed through the firewall. |
+| Secure exchange rejected | The launcher's public key must be the exact contents of `data/keys/public.txt`, including the `#` separator. |
+| Private client closes immediately | Check `private-client.log` in the Spiral Knights folder; it records launcher and client startup errors. |
 | Login refused | Create the account in the server console or verify its password. Game accounts and WebUI accounts are separate. |
 | WebUI does not load | Check `webui-enabled: true` and open `http://localhost:8080/admin/` on the server computer. |
 | WebUI setup code is missing | The code is printed in the server console after startup. Restarting the process generates a new code. |
