@@ -51,7 +51,7 @@ Gradle dependencies are cached and never require a game installation or capture.
 
 Nine maps ship in total. The seven town/interior maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
 `advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318); the opening pair is Crash Site 398 and Rescue Camp 217.
-There are 9,348 indexed original item definitions, 382 weapon controls and 123
+There are 9,355 indexed original item definitions, 386 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the
 [stock support index](item-support.csv); general missions, dungeon AI, rewards,
@@ -189,7 +189,7 @@ Shipped defaults contain resolved text and need no installed client. The
 ## Items and weapon controls
 
 Each family file contains an `items` mapping keyed by stable administrator IDs.
-All 9,348 indexed entries have a readable `name` and `category`. The filename is a
+All 9,355 indexed entries have a readable `name` and `category`. The filename is a
 broad editing family; `category` and optional `subcategory` are administrative
 labels, independent of the native Java class and equipment slot. For example,
 `aggro_aura` has category `Armor` and subcategory `Aura` while retaining native

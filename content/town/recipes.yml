@@ -50707,3 +50707,301 @@ recipes:
     keepHeat: false
     options: [
       ]
+
+- config: Handgun/Toxic Slicer
+  crowns:
+  - 40
+  - 200
+  - 400
+  - 1000
+  - 2500
+  - 5000
+  ingredients:
+  - count: 600
+    group: CRAFT
+    item: monster_spike_2
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 200
+    group: CRAFT
+    item: monster_spike_3
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 5
+    group: CRAFT
+    item: green_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 5
+    group: CRAFT
+    item: dark_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 3
+    group: CRAFT
+    item: beast_scale
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 2
+    group: CRAFT
+    item: nightshade
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: toxic_core
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: slicer
+    keepHeat: false
+    kind: LevelItem
+    level: 5
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  item: toxic_slicer
+  useOrbs:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  variantTable: Item/Handgun, general
+- config: Handgun/Botulent Slicer
+  crowns:
+  - 40
+  - 200
+  - 400
+  - 1000
+  - 2500
+  - 5000
+  ingredients:
+  - count: 1500
+    group: CRAFT
+    item: monster_spike_3
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 500
+    group: CRAFT
+    item: monster_spike_4
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 10
+    group: CRAFT
+    item: green_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 5
+    group: CRAFT
+    item: dark_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 4
+    group: CRAFT
+    item: beast_scale
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 3
+    group: CRAFT
+    item: nightshade
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 2
+    group: CRAFT
+    item: toxic_core
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: corrosive_acid
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: toxic_slicer
+    keepHeat: false
+    kind: LevelItem
+    level: 5
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  item: botulent_slicer
+  useOrbs:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  variantTable: Item/Handgun, general
+- config: Handgun/Queasinart
+  crowns:
+  - 40
+  - 200
+  - 400
+  - 1000
+  - 2500
+  - 5000
+  ingredients:
+  - count: 3000
+    group: CRAFT
+    item: monster_spike_4
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1000
+    group: CRAFT
+    item: monster_spike_5
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 10
+    group: CRAFT
+    item: green_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 10
+    group: CRAFT
+    item: dark_shard
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 5
+    group: CRAFT
+    item: beast_scale
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 4
+    group: CRAFT
+    item: nightshade
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 3
+    group: CRAFT
+    item: toxic_core
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 2
+    group: CRAFT
+    item: corrosive_acid
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: plague_essence
+    keepHeat: false
+    kind: Item
+    level: 1
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  - count: 1
+    group: CRAFT
+    item: botulent_slicer
+    keepHeat: false
+    kind: LevelItem
+    level: 10
+    options: []
+    rarity: -1
+    upgrade: CHOICE
+  item: queasinart
+  useOrbs:
+  - true
+  - true
+  - true
+  - true
+  - true
+  - true
+  variantTable: Item/Handgun, general

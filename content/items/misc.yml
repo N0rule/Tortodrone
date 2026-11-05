@@ -738,6 +738,10 @@ items:
     name: Boosted Plate Shield Recipe
     category: Recipe
     rarity: 3
+  botulent_slicer_recipe:
+    name: Botulent Slicer Recipe
+    category: Recipe
+    rarity: 4
   brandish_recipe:
     name: Brandish Recipe
     category: Recipe
@@ -4006,6 +4010,10 @@ items:
   qqq:
     name: Slime Lockbox
     category: Lockbox
+  queasinart_recipe:
+    name: Queasinart Recipe
+    category: Recipe
+    rarity: 5
   queen_black:
     name: Queen, Black
     category: Actor
@@ -5686,6 +5694,10 @@ items:
     rarity: 3
   toxic_needle_recipe:
     name: Toxic Needle Recipe
+    category: Recipe
+    rarity: 3
+  toxic_slicer_recipe:
+    name: Toxic Slicer Recipe
     category: Recipe
     rarity: 3
   toxic_vaporizer_mk_ii_recipe:

@@ -666,9 +666,12 @@ Weapon/Handgun/Neutralizer,Handgun,reconstructed,tag activation/geometry reconst
 Weapon/Handgun/Overcharged Mixmaster,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Overcharged Mixmaster (OLD),Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
 Weapon/Handgun/Pollinator,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md
+Weapon/Handgun/Slicer/Botulent Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Slicer/Mandolin,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
+Weapon/Handgun/Slicer/Queasinart,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Slicer/Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Slicer/Thricer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
+Weapon/Handgun/Slicer/Toxic Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Slicer/Twicer Slicer,Handgun,reconstructed,disk shutdown guards and swept damage region reconstructed; see content.md
 Weapon/Handgun/Static Diskgun,Handgun,reconstructed,native startup/orbitals restored; stripped carrier flight/cleanup uses a reconstructed 1700 ms bound; original homing/timing unverified
 Weapon/Handgun/Toxic Catalyzer,Handgun,reconstructed,tag activation/geometry reconstructed; exact original blast growth/propagation unverified; see content.md

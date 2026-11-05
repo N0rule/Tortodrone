@@ -12,15 +12,15 @@ import static org.tortodrone.support.TestWire.check;
 public final class ContentManagerTest {
     public static void main(String[] args)throws Exception {
         var baseline=ContentManager.load(Path.of("."));
-        check(baseline.scenes().scenes().size()==9&&baseline.items().entries().size()==9348,"all verified maps and items retained");
+        check(baseline.scenes().scenes().size()==9&&baseline.items().entries().size()==9355,"all verified maps and items retained");
         var opening=baseline.createScenes().tutorial();
         check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
             &&opening.camp().id()==217&&opening.camp().version()==373,"bundled defaults enable the pinned original opening route without imports");
-        check(baseline.weapons().weapons().size()==382&&baseline.weapons().shields().size()==123,"verified combat controls retained");
+        check(baseline.weapons().weapons().size()==386&&baseline.weapons().shields().size()==123,"verified combat controls retained");
         check(baseline.scenes().scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,"all directed stock portals retained");
         var training=baseline.scenes().scene(294);var konway=training.content().conversations().get("Character/NPC/Advanced Training Gym/Greeter");
         check(konway.initial().equals("part 1a")&&konway.nodes().get("part 1a").message().equals("m.atg_greeter_1a"),"default dialogue retains localized wire keys and jumps");
-        check(baseline.town().stations().size()==99&&baseline.town().recipes().size()==668,"Town service and recipe catalogs retained");
+        check(baseline.town().stations().size()==99&&baseline.town().recipes().size()==671,"Town service and recipe catalogs retained");
         check(training.content().cycles().get("A").number("up",0)==4&&training.content().cycles().get("A").text("inverse","").equals("B2"),"shared trap timing and inversion retained");
         check(baseline.news().enabled()&&baseline.news().size()==1&&baseline.news().propertyList(0).contains("news/featured.png"),"Uplink News packs compile into the published snapshot");
         Path home=Files.createTempDirectory("tortodrone-unified-test-");
@@ -63,7 +63,7 @@ public final class ContentManagerTest {
             Files.writeString(portal,portals.replace("destination: haven","destination: absent_map"));failure(()->ContentManager.load(home),"absent_map");Files.writeString(portal,portals);
             Path nativeFile=home.resolve("content/maps/advanced_training/native/bindings.json");String nativeText=Files.readString(nativeFile);Files.writeString(nativeFile,nativeText+" ");failure(()->MapYaml.prepare(npc.getParent().getParent(),home.resolve("content/shared")),"fingerprint");Files.writeString(nativeFile,nativeText);
             Path gear=home.resolve("content/items/materials.yml");var yaml=Yaml.read(gear);var definitions=Yaml.map(yaml.get("items"),"items");var first=definitions.entrySet().iterator().next();var item=Yaml.map(first.getValue(),"item");item.put("stockId","invalid");Files.delete(gear);Yaml.write(gear,yaml);failure(()->ContentManager.load(home),"stockId");item.remove("stockId");Files.delete(gear);Yaml.write(gear,yaml);
-            check(baseline.items().entries().size()==9348&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
+            check(baseline.items().entries().size()==9355&&baseline.scenes().scene(294).content().conversations().get(konway.actor()).equals(konway),"failed loads never mutate an existing snapshot");
             Path mapFile=home.resolve("content/maps/advanced_training/map.yml");String mapText=Files.readString(mapFile);Files.writeString(mapFile,mapText.replace("id: 294","id: 1"));failure(()->MapYaml.folders(home.resolve("content/maps")),"Duplicate");Files.writeString(mapFile,mapText);
             Path misc=home.resolve("content/items/misc.yml");String miscOriginal=Files.readString(misc);var miscYaml=Yaml.read(misc);Yaml.map(miscYaml.get("items"),"items").put(first.getKey(),item);Files.delete(misc);Yaml.write(misc,miscYaml);failure(()->ContentManager.load(home),"duplicate item ID");Files.writeString(misc,miscOriginal);
             var town=TownYaml.data(home.resolve("content/town"));var recipe=Yaml.map(Yaml.list(town.get("recipes"),"recipes").getFirst(),"recipe");recipe.put("item","Missing/Item");failure(()->TownYaml.references(town,baseline.items()),"missing item");

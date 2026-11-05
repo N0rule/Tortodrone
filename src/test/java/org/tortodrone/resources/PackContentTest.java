@@ -18,7 +18,7 @@ public final class PackContentTest {
             var registry=PackContent.load(base);
             check(registry.packs().stream().anyMatch(p->p.id().equals("vanilla")),"default selection resolves vanilla");
             check(registry.scenes().scenes().size()==9&&registry.scenes().entry().id()==1,"all stock scenes and the authored entry load");
-            check(registry.items().entries().size()==9348&&registry.weapons().weapons().size()>300
+            check(registry.items().entries().size()==9355&&registry.weapons().weapons().size()>300
                 &&registry.equipment().entries().size()>100&&registry.fires().entries().size()>1000,
                 "all four stock catalogs load with substantial indexed definitions");
             check(!Files.exists(base.resolve("data"))&&!Files.exists(base.resolve("cache")),

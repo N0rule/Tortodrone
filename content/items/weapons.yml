@@ -1968,6 +1968,65 @@ items:
             startsAfterMs: 0
             durationMs: 175
             forwardImpulse: 1
+  botulent_slicer:
+    name: Botulent Slicer
+    category: Gun
+    rarity: 4
+    bindsWhenEquipped: true
+    combat:
+      movement:
+        whileAttacking: 0.75
+        whileCharging: 1
+        allowMovementInput: true
+      firingSequence:
+        maximumAttacks: 3
+        resetAfterEffectMs: 500
+        attacks:
+          first_shot:
+            step: 1
+            timing:
+              effectStartsAfterMs: 164
+              nextAttackAfterMs: 416
+              actionEndsAfterMs: 948
+            movement:
+              allowMovementInput: true
+          second_shot:
+            step: 2
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+          third_shot:
+            step: 3
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+      charge:
+        fullChargeAfterMs: 2500
+        fullChargeAction:
+          timing:
+            effectStartsAfterMs: 285
+            nextAttackAfterMs: 1002
+            actionEndsAfterMs: 1002
+          movement:
+            startsAfterMs: 286
+            durationMs: 300
+            forwardImpulse: -0.667
+        incompleteChargeAction:
+          timing:
+            nextAttackAfterMs: 252
+            actionEndsAfterMs: 784
+          movement:
+            allowMovementInput: true
+      recoveryAction:
+        timing:
+          nextAttackAfterMs: 944
+          actionEndsAfterMs: 944
+        movement:
+          allowMovementInput: true
   brandish:
     name: Brandish
     category: Sword
@@ -7288,6 +7347,51 @@ items:
     category: Sword
     rarity: 5
     bindsWhenEquipped: true
+  ice_axe_tech_azure:
+    name: Ice Axe, Tech Azure
+    category: Sword
+    rarity: 5
+    bindsWhenEquipped: true
+    combat:
+      movement:
+        whileAttacking: 1
+        whileCharging: 0.83
+      combo:
+        maximumAttacks: 2
+        repeatSequence: true
+        attacks:
+          first_swing:
+            step: 1
+            timing:
+              effectStartsAfterMs: 318
+              nextAttackAfterMs: 706
+              actionEndsAfterMs: 1239
+          second_swing:
+            step: 2
+            timing:
+              effectStartsAfterMs: 318
+              nextAttackAfterMs: 1423
+              actionEndsAfterMs: 1424
+            movement:
+              startsAfterMs: 0
+              durationMs: 350
+              forwardImpulse: 1.5
+      charge:
+        fullChargeAfterMs: 3000
+        fullChargeAction:
+          timing:
+            effectStartsAfterMs: 933
+            nextAttackAfterMs: 1989
+            actionEndsAfterMs: 2489
+          movement:
+            startsAfterMs: 933
+            durationMs: 200
+            forwardImpulse: 3
+        incompleteChargeAction:
+          timing:
+            effectStartsAfterMs: 318
+            nextAttackAfterMs: 706
+            actionEndsAfterMs: 1239
   iceburst_brandish:
     name: Iceburst Brandish
     category: Sword
@@ -12483,6 +12587,65 @@ items:
             actionEndsAfterMs: 633
           movement:
             allowMovementInput: true
+  queasinart:
+    name: Queasinart
+    category: Gun
+    rarity: 5
+    bindsWhenEquipped: true
+    combat:
+      movement:
+        whileAttacking: 0.75
+        whileCharging: 1
+        allowMovementInput: true
+      firingSequence:
+        maximumAttacks: 3
+        resetAfterEffectMs: 500
+        attacks:
+          first_shot:
+            step: 1
+            timing:
+              effectStartsAfterMs: 164
+              nextAttackAfterMs: 416
+              actionEndsAfterMs: 948
+            movement:
+              allowMovementInput: true
+          second_shot:
+            step: 2
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+          third_shot:
+            step: 3
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+      charge:
+        fullChargeAfterMs: 2500
+        fullChargeAction:
+          timing:
+            effectStartsAfterMs: 285
+            nextAttackAfterMs: 1002
+            actionEndsAfterMs: 1002
+          movement:
+            startsAfterMs: 286
+            durationMs: 300
+            forwardImpulse: -0.667
+        incompleteChargeAction:
+          timing:
+            nextAttackAfterMs: 252
+            actionEndsAfterMs: 784
+          movement:
+            allowMovementInput: true
+      recoveryAction:
+        timing:
+          nextAttackAfterMs: 944
+          actionEndsAfterMs: 944
+        movement:
+          allowMovementInput: true
   radiant_pulsar:
     name: Radiant Pulsar
     category: Gun
@@ -16676,6 +16839,65 @@ items:
         timing:
           nextAttackAfterMs: 933
           actionEndsAfterMs: 933
+        movement:
+          allowMovementInput: true
+  toxic_slicer:
+    name: Toxic Slicer
+    category: Gun
+    rarity: 3
+    bindsWhenEquipped: true
+    combat:
+      movement:
+        whileAttacking: 0.75
+        whileCharging: 1
+        allowMovementInput: true
+      firingSequence:
+        maximumAttacks: 3
+        resetAfterEffectMs: 500
+        attacks:
+          first_shot:
+            step: 1
+            timing:
+              effectStartsAfterMs: 164
+              nextAttackAfterMs: 416
+              actionEndsAfterMs: 948
+            movement:
+              allowMovementInput: true
+          second_shot:
+            step: 2
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+          third_shot:
+            step: 3
+            timing:
+              nextAttackAfterMs: 252
+              actionEndsAfterMs: 784
+            movement:
+              allowMovementInput: true
+      charge:
+        fullChargeAfterMs: 2500
+        fullChargeAction:
+          timing:
+            effectStartsAfterMs: 285
+            nextAttackAfterMs: 1002
+            actionEndsAfterMs: 1002
+          movement:
+            startsAfterMs: 286
+            durationMs: 300
+            forwardImpulse: -0.667
+        incompleteChargeAction:
+          timing:
+            nextAttackAfterMs: 252
+            actionEndsAfterMs: 784
+          movement:
+            allowMovementInput: true
+      recoveryAction:
+        timing:
+          nextAttackAfterMs: 944
+          actionEndsAfterMs: 944
         movement:
           allowMovementInput: true
   toxic_vaporizer:

@@ -30,14 +30,22 @@ public final class EnemyItemStatusTest {
                 new Sample("Weapon/Handgun/Stun Gun",292,"Stun",1.6f),
                 new Sample("Weapon/Handgun/Zapper",292,"Shock",1.6f),
                 new Sample("Weapon/Handgun/Obsidian Carbine",292,"Poison",1.6f),
+                new Sample("Weapon/Handgun/Slicer/Toxic Slicer",292,"Poison",1.6f,0,.5f),
+                new Sample("Weapon/Handgun/Slicer/Botulent Slicer",292,"Poison",1.6f,0,.5f),
+                new Sample("Weapon/Handgun/Slicer/Queasinart",292,"Poison",1.6f,0,.5f),
+                new Sample("Weapon/Sword/Ice Axe, Tech Azure",293,"Freeze",1.6f),
                 new Sample("Weapon/Bomb/Cold Snap",290,"Freeze",1.6f)))
             weapon(prepared,fires,controls,terrain,sample);
         System.out.println("PASS: 33 chemical bomb blasts/clouds, cloud timing/range/masks/expiry, sword/gun/bomb statuses and enemy stun/freeze/poison behavior");
     }
-    private record Sample(String weapon,int activity,String kind,float x) { }
-    private static SceneContent.Spec monster(int mask){
+    private record Sample(String weapon,int activity,String kind,float x,float y,float radius) {
+        Sample(String weapon,int activity,String kind,float x){this(weapon,activity,kind,x,0,.2f);}
+        Sample(String weapon,int activity,String kind,float x,float y){this(weapon,activity,kind,x,y,.2f);}
+    }
+    private static SceneContent.Spec monster(int mask){return monster(mask,.2f);}
+    private static SceneContent.Spec monster(int mask,float radius){
         return new SceneContent.Spec(Map.of("native-type","Monster","config","Monster/Fixture","health","10000",
-            "radius",".2","damage-mask",Integer.toString(mask),"collision-flags","8","impulse-level","9"));
+            "radius",Float.toString(radius),"damage-mask",Integer.toString(mask),"collision-flags","8","impulse-level","9"));
     }
     private static SceneContent content(SceneContent prepared,List<SceneContent.Entry> entries){
         var stats=new HashMap<>(prepared.stats());
@@ -84,7 +92,7 @@ public final class EnemyItemStatusTest {
         check(!has(content,world.actor(edge.id()),kind),name+" enemy status expires");
     }
     private static void weapon(SceneContent prepared,FireCatalog fires,WeaponCatalog controls,CollisionMap terrain,Sample sample){
-        var content=content(prepared,List.of(new SceneContent.Entry("target",sample.x(),0,0,monster(2))));
+        var content=content(prepared,List.of(new SceneContent.Entry("target",sample.x(),sample.y(),0,monster(2,sample.radius()))));
         var world=new SceneEntities(content,terrain);int id=world.actors().getFirst().id();
         var scene=new SceneWeapons(terrain);scene.catalog(fires);scene.targets(world);
         int stamp=SceneClock.now()+10;var player=owner(stamp,sample.activity());var players=List.of(player);

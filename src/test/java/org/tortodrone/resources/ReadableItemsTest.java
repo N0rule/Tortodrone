@@ -16,7 +16,7 @@ public final class ReadableItemsTest {
         Path temp=Files.createTempDirectory("readable-items-");
         try {
             var source=ItemYaml.read(Path.of("content/items"),1200);var items=source.items();
-            check(items.entries().size()==9348&&source.weapons().weapons().size()==382&&source.weapons().shields().size()==123,"all indexed records retained");
+            check(items.entries().size()==9355&&source.weapons().weapons().size()==386&&source.weapons().shields().size()==123,"all indexed records retained");
             check(items.resolveConfig("wrench_wand").equals("Weapon/Sword/Wrench Wand"),"friendly IDs resolve exact native paths");
             check(items.resolveConfig("sw:wrench-wand").equals(items.resolveConfig("wrench_wand")),"historic aliases still resolve");
             check(items.inspect("wrench_wand").stockId()==420056402,"original stock ID retained");
@@ -46,7 +46,7 @@ public final class ReadableItemsTest {
             // A second migration preserves all current readable edits and IDs byte for byte.
             Path weapons=candidate.resolve("content/items/weapons.yml");var yaml=read(weapons);var wrench=map(map(yaml.get("items"),"items").get("wrench_wand"),"wrench");wrench.put("name","My Wrench");wrench.put("category","My swords");write(weapons,yaml);
             Path round=temp.resolve("roundtrip");ItemMigration.migrate(candidate,round);equalTrees(candidate.resolve("content"),round.resolve("content"));
-            System.out.println("PASS: 9348 item identities, 382 weapons, 123 shields; deterministic export; legacy/customized roundtrip; native/Town equivalence; strict fields/ranges/order; immutable IDs and offline data safety");
+            System.out.println("PASS: 9355 item identities, 386 weapons, 123 shields; deterministic export; legacy/customized roundtrip; native/Town equivalence; strict fields/ranges/order; immutable IDs and offline data safety");
         } finally {ContentFixture.delete(temp);}
     }
     private static void behavior(ItemYaml.Definitions old,ItemYaml.Definitions migrated) {

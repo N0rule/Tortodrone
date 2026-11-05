@@ -15,7 +15,7 @@ public final class SparseContentTest {
         try {
             var catalogGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/catalog-baseline.json"))),"catalog baseline");
             var sceneGolden=Yaml.map(Json.parseCatalog(Files.readString(Path.of("content/_internal/provenance/scene-defaults.json"))),"scene baseline");
-            var baseline=ContentManager.load(Path.of("."));ItemCatalog.write(root.resolve("items.json"),baseline.items().entries());check(ContentFiles.digest(root.resolve("items.json")).equals(catalogGolden.get("items")),"all 9,348 indexed item metadata/arguments remain identical");
+            var baseline=ContentManager.load(Path.of("."));ItemCatalog.write(root.resolve("items.json"),baseline.items().entries());check(ContentFiles.digest(root.resolve("items.json")).equals(catalogGolden.get("items")),"all 9,355 indexed item metadata/arguments remain identical");
             for(var map:MapYaml.folders(Path.of("content/maps")).entrySet()) {
                 if(!sceneGolden.containsKey(map.getKey().toString()))continue; // Added opening maps have separate pinned-route regressions.
                 var prepared=MapYaml.prepare(map.getValue(),Path.of("content/shared"),baseline.items());
@@ -78,7 +78,7 @@ public final class SparseContentTest {
             var mirakat=baseline.items().find("Gear/Helm/Mirakat Hat");
             check(mirakat!=null&&mirakat.nameKey().equals("~Mirakat Hat"),"missing item bundle keys fall back to readable literal names");
             check(baseline.items().entries().stream().noneMatch(e->e.nameKey().startsWith("~m.")),"no unresolved item bundle keys remain");
-            System.out.println("PASS: seven golden scene/portal snapshots, 9348 exact item definitions, sparse aliases/controls, duplicate/native-identity rejection and discovery names");
+            System.out.println("PASS: seven golden scene/portal snapshots, 9355 exact item definitions, sparse aliases/controls, duplicate/native-identity rejection and discovery names");
         }finally{ContentFixture.delete(root);}
     }
     private static String hash(Properties p)throws Exception {var sorted=new TreeMap<String,Object>();p.forEach((k,v)->sorted.put(k.toString(),v.toString()));return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(Json.stringify(sorted).getBytes(java.nio.charset.StandardCharsets.UTF_8)));}
