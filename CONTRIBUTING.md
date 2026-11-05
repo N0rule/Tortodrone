@@ -4,6 +4,10 @@ Read [development and verification](docs/development.md) and the existing code
 for the area you are changing. Keep changes focused and test them with the
 smallest relevant regression programs. Do not run the full suite by default.
 
+AI-assisted contributions are acceptable. You remain responsible for reviewing,
+testing, and understanding every submitted change; describe material AI
+assistance in the change description.
+
 By submitting original changes, you offer them under the project's
 [PolyForm Noncommercial License 1.0.0](LICENSE). Submit only work you have the
 right to license. Preserve the [Required Notice](NOTICE) and upstream notices.

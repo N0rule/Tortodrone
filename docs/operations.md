@@ -4,7 +4,7 @@ This is the operator reference for the **current implementation**, not a promise
 
 ## Deployment and lifecycle
 
-Install Java 25 and run `java -jar tortodrone.jar`. Create player accounts with `account create Alice` in its console or through the WebUI. Deploy the single JAR beside `config/`, `content/`, `plugins/` and `webui/`. Server settings live in `config/server.yml`. Persistent state stays in **`data/` beside the JAR**, regardless of the current working directory. `./gradlew build` produces `build/tortodrone.jar` and `build/{config,content,plugins,webui}/`; there is no separate admin application.
+Install JDK 25 and run `java -jar tortodrone.jar`. Create player accounts with `account create Alice` in its console or through the WebUI. Deploy the single JAR beside `config/`, `content/`, `plugins/` and `webui/`. Server settings live in `config/server.yml`. Persistent state stays in **`data/` beside the JAR**, regardless of the current working directory. `./gradlew build` produces `build/tortodrone.jar` and `build/{config,content,plugins,webui}/`; there is no separate admin application.
 
 - Hosting is always headless; `--nogui` remains accepted and `--gui` is rejected.
 - `--config path/to/server.yml` selects settings without moving `data/`. Restart the process to apply settings changes.
@@ -65,7 +65,7 @@ supplied by this step; see [opening map setup](content.md#local-crash-site-playt
 
 Defaults enable WebUI with `webui-tls-mode: http`, `webui-public-url: 0.0.0.0` and the shared port 8080, bound to all interfaces. Set `webui-enabled: false` to disable administration routes. Optional `webui-tls-mode: reverse-proxy` uses an HTTPS reverse proxy **on the same host**, forwarding to that existing HTTP port. Both modes use the same listener and keep login, roles, session expiration, CSRF and Host/Origin validation. The shared port is configured once with `webui/content_url-port`; it also serves News when WebUI is disabled. In direct HTTP mode, leave the port out of `webui-public-url` and it is filled from that shared setting. Existing complete HTTP origins still work. Proxy mode uses the exact external HTTPS origin, which may have a different port from the backend listener. Conflicting legacy `news-port` and shared-port values are rejected rather than opening another listener.
 
-When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, a 8–128 character password twice, and the eight-digit one-time setup code printed after the startup messages in the local server console. Ten incorrect code guesses lock setup until process restart; the existing per-minute rate limit also applies. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
+When WebUI is enabled on a fresh deployment, opening `/admin/` shows **Create your administrator account**. Enter a username, an 8–128 character password twice, and the eight-digit one-time setup code printed after the startup messages in the local server console. Ten incorrect code guesses lock setup until process restart; the existing per-minute rate limit also applies. No account-creation command is needed. The code is never included in operational logs, WebUI log streams, static assets or unauthenticated API responses. It changes on process restart and becomes unusable after the first account commits.
 
 Setup creates exactly one administrator, signs that account in, and permanently closes public registration. Competing setup submissions cannot create a second administrator. Existing WebUI identities show the ordinary sign-in page. Revoking every account does not reopen setup; recover access through the local console instead.
 
@@ -132,13 +132,15 @@ webui revoke operator
 
 ## Connecting the unchanged client
 
-Point your separately managed KnightLauncher to:
+Use the [KnightLauncherCustom setup in the README](../README.md#step-5-connect-the-game-client) for the recommended Add Server flow. For a launcher that accepts KnightLauncher's property names, set:
 
 | Key | Value |
 | --- | --- |
 | `game.endpoint` | `127.0.0.1` or the reachable server host |
 | `game.port` | `47624` (or your configured TCP port) |
 | `game.publicKey` | Complete contents of `data/keys/public.txt` beside the deployed server JAR |
+
+To load Uplink News, set the launcher's **Content URL** to `http://<server host>:8080/`, using your configured `webui/content_url-port` when it differs.
 
 The public key is a hexadecimal modulus and exponent separated by `#`; paste the **value**, not a path, PEM header or private key. Preserve `data/keys/` between upgrades. `0.0.0.0` is a listener bind address, never a client destination. Use LAN addressing where appropriate; firewall/router forwarding is needed only when applicable. Restart the client after launcher changes. Use normal username/password; no Steam or guest sign-in.
 
@@ -154,7 +156,7 @@ Run `help` or `help account create` in the server terminal for exact current syn
 | Knights | `knight list Alice`, `knight info Alice Jane`, `knight delete Alice Jane` |
 | Balances | `grant Jane crowns 100`, `set Jane energy 500` |
 | Item lookup/grant | `items Calibur`, `items info Weapon/Sword/Calibur`, `giveitem Jane 2 Weapon/Sword/Calibur` |
-| Listener / process lifecycle | `start`, `stop`, `restart`, `shutdown` (confirmation required) |
+| Listener / process lifecycle | `start`, `stop`, `restart`, `shutdown` (`stop` ends the listener, or the process when WebUI is disabled; `shutdown` requires confirmation) |
 
 Account create/password and destructive deletion require interactive password/confirmation input. Knight names are globally unique without case; different IDs identify sessions, accounts, roster slots, world actors and inventory instances. Never treat them as interchangeable.
 
@@ -164,11 +166,11 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 
 ## Data safety, updates and release builds
 
-1. Stop both server and account manager before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `config/` and the complete `content/` tree.
-2. On update prepare and validate a separate content candidate; **retain your current `data/`**. Schemas 9–15 require [explicit economy upgrade/export](content.md#upgrading) before replacing the legacy Depot YAML. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than altered automatically.
+1. Stop the server before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `config/` and the complete `content/` tree.
+2. On update prepare and validate a separate content candidate; **retain your current `data/`**. The current database schema is 16. Databases on known predecessor schemas 9–15 require the [explicit economy upgrade/export](content.md#upgrading) before replacing legacy Depot YAML. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than altered automatically.
 3. Check `VERSION` and run the focused checks relevant to the release. The GitHub Actions workflow runs **only when a matching `v<VERSION>` tag is pushed**. It builds with Java 25 and publishes **one cross-platform development prerelease ZIP**. Packaging explicitly selects the server JAR, configuration, content, WebUI and plugin placeholder, plus documentation, licenses and attribution notices. It rejects symlinks, runtime data, keys, captures and locally extracted WebUI images; build scratch files and Git bundles are not selected. The workflow does not run regression tests or bundle a JRE/client installation. Nine maps ship with the release, including original Crash Site 398 and initial Rescue Camp 217; new-knight creation needs no separate opening-map import. See [opening setup](content.md#local-crash-site-playtest) and `.github/workflows/release.yml`.
 
-The server does not download missing content at startup. Ship complete unified content and configuration. Depot defaults are bundled inside the JAR; live offers and promotions are edited in the account manager. Customized files receive review proposals under content-updates/, never an automatic semantic merge.
+The server does not download missing content at startup. Ship complete unified content and configuration. Depot defaults are bundled inside the JAR; live offers and promotions are edited in the WebUI's Supply Depot page. Customized files receive review proposals under content-updates/, never an automatic semantic merge.
 
 ## Diagnosis
 
@@ -188,6 +190,6 @@ When the unchanged client sends its existing hardware report, one `Client hardwa
 | Startup rejects settings/schema | Restore supported settings or backup; do not hand-edit saved state to force startup |
 | Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
 
-The CLI is a local trusted surface. The WebUI exposes only typed, authorized operations; arbitrary terminal commands are never available remotely.
+The server console is a local trusted surface. The WebUI exposes only typed, authorized operations; arbitrary terminal commands are never available remotely.
 
 The Administrator-only **Console** page provides `help`, `status`, `players`, `scenes`, `accounts`, `start`, `stop`, `restart`, `kick <session-id>` and `shutdown`, alongside live operational logs. Actions require repeating the command; full shutdown also requires `SHUT DOWN PROCESS`. Commands use the existing typed services, enforce CSRF/role checks and are audited. Setup codes remain console-only and use the normal timestamp prefix.

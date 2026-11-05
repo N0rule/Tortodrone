@@ -49,8 +49,8 @@ The checkout and portable deployment use the same content/configuration layout.
 `build/plugins` beside the single `tortodrone.jar`. Ordinary builds are offline once
 Gradle dependencies are cached and never require a game installation or capture.
 
-The seven town/interior maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
-`advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318).
+Nine maps ship in total. The seven town/interior maps are `haven` (1), `bazaar` (2), `arcade` (3), `garrison` (445),
+`advanced_training` (294), `laboratory` (30893), and `hall_of_heroes` (318); the opening pair is Crash Site 398 and Rescue Camp 217.
 There are 9,348 indexed original item definitions, 382 weapon controls and 123
 shields. Indexed content does not establish gameplay support. The implementation
 still has the limits described in [Architecture](architecture.md) and the
@@ -64,7 +64,7 @@ random vendor stock and many original actions remain incomplete.
 ```yaml
 server-ip: 0.0.0.0
 server-port: 47624
-news-port: 8080
+webui/content_url-port: 8080
 max-clients: 16
 log-mode: normal
 log-max-mib: 10
@@ -72,9 +72,10 @@ log-retention: 5
 startup-map: haven
 ```
 
-`startup-map` names an installed map folder. The current startup flow requires a
-town; Ready Room/progression onboarding is not implemented. `--config path.yml`
-changes the settings file without relocating `data/`. Existing explicitly chosen
+`startup-map` names an installed map folder and must refer to a town. New knights
+begin in Crash Site; existing completed knights return to the native Ready Room,
+as described in the [README](../README.md#step-5-connect-the-game-client).
+`--config path.yml` changes the settings file without relocating `data/`. Existing explicitly chosen
 `.properties` settings remain readable, including their listener overrides.
 `config/combat.yml` holds the verified global dodge cooldown in milliseconds.
 Static merchant rules belong to Town YAML. Depot offers/promotions and auctions
@@ -102,7 +103,7 @@ After a knight logs in the unmodified client requests Uplink News and shows one
 pack of banners. `content/shared/news/news.yml` holds one or more packs, and each
 request shows one at random; the client fetches every image as
 `content_url + news/<file>`, so the launcher's `content_url` must point at this
-server's `news-port`.
+server's `webui/content_url-port`.
 
 ```yaml
 enabled: true
@@ -133,9 +134,11 @@ is a local serving policy.
 the tooltip. Other actions and nonempty arguments are rejected in this Town-only
 implementation. The property names and action routing follow the stock client's
 native news configuration; no banner assets are bundled.
-The server serves this folder over HTTP on `server-ip:news-port` and refuses
-traversal, non-image paths and unknown files, so point the launcher's `content_url` at the host and `news-port` configured
-in `config/server.yml`.
+The server serves this folder over HTTP on `server-ip` and the shared
+`webui/content_url-port`, and refuses traversal, non-image paths and unknown
+files. Point the launcher's `content_url` at the host and
+`webui/content_url-port` configured in `config/server.yml`. Legacy `news-port`
+is accepted as a fallback but must agree with the shared port when both are configured.
 
 ## NPC dialogue
 
@@ -235,8 +238,8 @@ aliases remain valid for references; localized labels are not static IDs. Recipe
 catalog identities, native accessory definitions, variant names, sprite actions,
 models and fire graphs have their own namespaces and are not inventory items.
 Their existing references remain intact. Supply Depot configuration stays in
-SQLite; there is no Depot YAML. The account manager and `items <search>` expose
-the stable IDs alongside stock IDs and native paths.
+SQLite; there is no Depot YAML. The WebUI and the console `items <search>`
+command expose the stable IDs alongside stock IDs and native paths.
 
 The following is the complete shipped Wrench Wand entry:
 
@@ -582,8 +585,7 @@ No mission hall or fabricated actor placement is added.
 Harness merchant definitions in `town/sprites.yml` now include `prerequisite` and
 `crowns`. Prerequisites and recharge modifiers come from installed stock configs;
 the 8,000/32,000/128,000 crown prices are corroborated by the
-[player gameplay guide](https://steamcommunity.com/sharedfiles/filedetails/?id=394352657)
-and [harness reference](https://spiralknights.fandom.com/wiki/Battle_Sprites#Harnesses).
+[harness reference](https://spiralknights.fandom.com/wiki/Battle_Sprites#Harnesses).
 They await a live harness-purchase capture. Purchases check prerequisites and
 ownership inside the currency transaction; upgrades retain shared harness identity.
 GM sprite-level changes fill skipped native perk draws without rerolling earned perks.
@@ -592,9 +594,9 @@ depends on their native ticket type.
 
 ## Live economy administration
 
-The Supply Depot and Auction House are **SQLite-only**. Use the existing account
-manager's Supply Depot and Auctions panels while the server is running. Static
-merchant YAML still requires validation and restart. Game-client GM status does not
+The Supply Depot and Auction House are **SQLite-only**. Use the WebUI's Supply
+Depot and Auction House pages while the server is running. Static merchant YAML
+still requires validation and restart. Game-client GM status does not
 expose the local economy-administration API.
 
 A new database transactionally installs all **328** captured Depot offers from the
@@ -792,13 +794,15 @@ stock client. No proprietary assets/captures belong in Git.
 
 ## Upgrading
 
-SQLite schema 16 requires an **explicit offline candidate** for known schemas
-9–15. Normal startup refuses those predecessors and all unknown versions, leaving
-saved state unchanged. Never reset the database or regenerate keys.
+The current database schema is **16**. A database on known predecessor schemas
+9–15 requires an **explicit offline upgrade candidate**; normal startup refuses
+those versions and all unknown versions, leaving saved state unchanged. Never
+reset the database or regenerate keys.
 
-1. Stop the server and account manager; back up the complete `data/`, `content/`
-   and `config/`, including WAL/SHM and keys. Keep the original Depot YAML until
-   export: preparation refuses to replace it beside an existing database.
+1. Stop the server; back up the complete `data/`, `content/` and `config/`,
+   including WAL/SHM and keys. A legacy deployment that still contains Depot YAML
+   must keep it until export: preparation refuses to replace it beside an existing
+   database.
 2. With the new JAR, export to a fresh directory outside the source deployment:
 
    ```sh
@@ -882,8 +886,8 @@ the item graphical scenario does not exercise auction rendering.
 
 ## Lockboxes and Prize Boxes
 
-Version 0.35.3 enables **243 explicitly labeled approximation pools**, covering
-all indexed non-template stock boxes. The [support matrix](box-support.csv) audits
+The current content set enables **243 explicitly labeled approximation pools**,
+covering all indexed non-template stock boxes. The [support matrix](box-support.csv) audits
 all 250 native definitions. Six internal base/parameter templates and the empty
 Mystery placeholder remain disabled because they have no playable reward pool.
 Every edition has a separate definition, using existing readable item IDs.

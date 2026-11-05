@@ -6,16 +6,17 @@ Tortodrone is a **Java 25**, clean-room server for an unmodified Spiral Knights 
 
 | Responsibility | Current source |
 | --- | --- |
-| Listener, lifecycle, local UI, metrics/logging | `server/{Server,ServerControl,ServerWindow,ServerConsole,ServerLog}` |
+| Listener, lifecycle, terminal console, metrics/logging | `server/{Server,ServerControl,ServerConsole,ServerOptions,ServerLog,ConsoleInput,ConsoleHelp}` |
 | Login/session orchestration | `server/network/{SecureHandshake,ClientSession,WorldSession,SessionOutput,WorldStatePoller}` |
 | Client framing, class tables and serialization | `protocol/{HandshakeCodec,SessionDecoder,SessionCodec}` |
 | Authentication and account/knight services | `account/`, `character/` |
 | Transactions, persisted identity, items and trades | `storage/{Database,WorldProfiles,TradeTransfer}` |
 | Scene templates, instances, movement and tick | `world/{SceneCatalog,SceneRegistry,SceneSimulation,TownMovement,CollisionMap,SceneContent,SceneEntities,SceneCollision}` |
 | Player combat / effects | `world/{KnightCombat,SceneWeapons,WeaponCatalog,EquipmentCatalog,FireCatalog}` |
-| Atomic unified YAML resolution and account-manager GUI | `resources/{ContentManager,ContentRegistry}`, `admin/` |
+| Atomic unified YAML resolution | `resources/{ContentManager,ContentRegistry}` |
+| Browser administration | `web/{AdminHandler,AdminService,WebIdentityStore}` |
 
-Both executable JARs are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
+The executable JAR and packaged WebUI are independent of a running stock game installation. Source imports/compatibility fixtures can read installed client classes read-only in isolated test environments.
 
 ## Critical identities and security
 
@@ -73,8 +74,8 @@ Clients send facing/activity/input intent, **not authoritative coordinates**. Mo
 Knights retain mission rank/subrank and prestige in namespaced rows of schema 9's existing
 integer metadata table. Missing values mean Recruit 1-1 and zero prestige; invalid saved
 values fail closed. Local console commands `rank <knight> <rank> <subrank>` and
-`prestige <knight> <total>` (or admin CLI `--set-rank` / `--set-prestige`) update these
-transactionally with the world revision and audit. Selection, inspection, picker rank and
+`prestige <knight> <total>` update these transactionally with the world revision
+and audit. Selection, inspection, picker rank and
 occupant rank/prestige badges use saved values; connected selected knights receive updates.
 Rank grants the verified gear eligibility bits, without inventing mission completions,
 prestige awards or Arcade clearances. Ordinary helms, armor and shields can occupy native

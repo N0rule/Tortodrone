@@ -255,16 +255,15 @@ Examples containing `<...>` need a verified definition from that missing system;
 | `/toggle_progress <flag>` | `/toggle_progress tier_2_access` | Native progression flags, including tier access and wearable rarity. |
 | `/unlock_achievement <account name> <achievement name>` | `/unlock_achievement Alice <achievement-name>` | Achievement definitions and persistence. |
 
-### Tortodrone GM chat extensions
+### GM administration
 
 Tortodrone does not add GM chat commands. The stock client consumes slash
 command names itself, and ordinary players' leading `!` remains normal chat.
-Item grants are available through the local console, the account manager and
-`tortodrone-admin.jar` (see below).
+Item grants are available through the local console and the WebUI.
 
 ## Local server console
 
-The terminal and server desktop command field accept these forms with an optional leading `/`. These are local administration commands, not additional player slash commands. `ac` aliases `account`. Passwords are entered at hidden prompts; account and knight deletion require confirmation.
+The server terminal accepts these forms with an optional leading `/`. These are local administration commands, not additional player slash commands. `ac` aliases `account`. Passwords are entered at hidden prompts; account and knight deletion require confirmation.
 
 | Syntax | Use | Example |
 |---|---|---|
@@ -291,7 +290,16 @@ The terminal and server desktop command field accept these forms with an optiona
 | `currency withdraw <username> <knight-name> <crowns\|energy> <amount>` | Withdraw currency; the balance cannot become negative. | `currency withdraw Alice Jane energy 5` |
 | `items [search \| category <type> \| info <reference>] [--page N]` | Search and inspect names, aliases, stock IDs, references and availability. | `items Proto Sword` |
 | `giveitem <knight-name> <1-20> <catalogue ID or exact item config>` | Grant unequipped items by unique knight name. The account-qualified form also works. | `giveitem Jane 2 Weapon/Sword/Proto Sword` |
-| `stop` | Shut down the server cleanly. | `stop` |
+| `start` | Start the stopped game listener. | `start` |
+| `stop` | Stop the game listener; when WebUI is disabled, end the process. | `stop` |
+| `restart` | Restart the game listener and disconnect its clients. | `restart` |
+| `shutdown` | Shut down the process after the exact confirmation prompt. | `shutdown` |
+| `webui list` | List separate WebUI accounts and roles. | `webui list` |
+| `webui user <username> <role>` | Create or recover a WebUI account; its password is prompted. | `webui user operator ADMINISTRATOR` |
+| `webui password <username>` | Reset a WebUI password and revoke its sessions. | `webui password operator` |
+| `webui revoke <username>` | Revoke WebUI access after exact-username confirmation. | `webui revoke operator` |
+
+`stop` controls the game listener; only `shutdown` ends the server process. With WebUI disabled, `stop` also ends the process.
 
 GM `/sgo` and `/zgo` scene/zone travel can start directly from the native Ready Room.
 A destination is entered through the normal movement handshake; a second travel

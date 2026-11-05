@@ -104,7 +104,7 @@ cancelled child cleanup, packaged pre-listener publication and real HTTP serving
 using owned synthetic PNG fixtures. Windows paths/discovery are exercised on the
 test host; that is not a Windows execution test.
 
-The 0.39.62 Linux acceptance also used a separately installed stock client to
+A previous 0.39.62 Linux acceptance used a separately installed stock client to
 export 5,035 unique images (9,341 item mappings, 120 Sprite mappings, 35 UI assets
 and 28 symbols; seven unavailable item icons keep fallbacks). The complete pack
 passed `assets-test.mjs` and was restored/served through a disposable packaged

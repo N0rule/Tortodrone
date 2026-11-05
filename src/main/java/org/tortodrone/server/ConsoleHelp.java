@@ -54,7 +54,7 @@ final class ConsoleHelp {
         var lines=new java.util.ArrayList<String>();
         lines.add("Server console commands:");
         lines.add("  help [command] [action]  Show detailed usage and an example.");
-        lines.add("  status | stop           Show status or shut down cleanly.");
+        lines.add("  status | stop           Show status or stop the game listener (exits without WebUI).");
         lines.add("  account (alias: ac)     List, create, check, reset or delete accounts; manage GM roles.");
         lines.add("  webui                   List, create, recover or revoke WebUI accounts.");
         lines.add("  start | restart | shutdown   Control the game listener or confirm full shutdown.");
