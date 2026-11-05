@@ -379,6 +379,10 @@ gradle/           pinned wrapper and dependency verification
 licenses/         third-party license texts
 ```
 
+## AI assistance
+
+Tortodrone is developed with heavy AI assistance. Every code, content, and documentation change is reviewed, tested, and revised by the developer, who takes responsibility for the final result. AI accelerates research, implementation, and verification, but it does not replace human review. The project would not be possible in its current form without that assistance.
+
 ## License
 
 Original Tortodrone code and documentation are licensed under [PolyForm Noncommercial 1.0.0](LICENSE): noncommercial use and modification are permitted under its terms, and redistributed copies must retain the [N0rule/Tortodrone attribution notice](NOTICE). This is source-available, not OSI open source.
