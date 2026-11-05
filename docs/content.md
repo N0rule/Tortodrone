@@ -707,46 +707,76 @@ See the [evidence matrix](research.md#economy-parity-baseline-2026-10-18).
 
 ### Local Crash Site playtest
 
-The original tutorial can be entered manually by a GM for testing; new-knight
-onboarding is not enabled. Use a separate deployment and disposable account.
-The locally prepared `build/tutorial-playtest/` deployment includes Crash Site
-398 (version 2008859103) and initial Rescue Camp 217 (version 373), imported from
-reference inputs `reference/observations/scenes-cache-2026-10-22/{398,217}`. These generated
-maps and original assets are local build files, not tracked repository content.
-On another checkout, build that deployment with
-`./gradlew build -PdeploymentOutput=build/tutorial-playtest`, then use the native
-import procedure below with Crash Site zone **50332041**, name
-`%dungeon:m.tutorial_b`, map directory `crash_site`, and Camp zone **16777221**,
-name `%town:m.rescue_camp_state_1`, directory `rescue_camp`.
+Use the normal **`build/` deployment**. This checkout's local build contains
+Crash Site **398/version 2008859103** and initial Rescue Camp **217/version 373**.
+New-knight onboarding is enabled when that verified pair is available. An
+existing knight keeps its progression and is not automatically restarted.
+The complete later route to Haven remains unfinished; see the
+[current handoff](research.md#native-ready-room-and-authorized-opening-scope).
 
-With other servers using the same ports stopped, start this deployment:
+First build and check the actual deployment without starting a server:
 
 ```sh
-java -jar build/tutorial-playtest/tortodrone.jar
+./gradlew build
+java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 ```
 
-In its server terminal, use `account create TutorialTester`, then
-`gm TutorialTester true`. Log into that account with the stock client, create a
-knight and enter Haven (or Return to Game from Ready Room). In game chat enter
-`/sgo 398`. This is the stock GM scene command, not a new chat command. It uses
-the normal movement handshake and starts a private scene at entrance 2659,
-`(-21, -69.5)`. Ordinary accounts cannot use it. Existing client preferences,
-owner saves and the normal server deployment need no changes.
+The check must print `PASS: verified opening content`, scene 398 at entrance
+2659 / `(-21, -69.5)`, and Camp 217 at entrance 2017 / `(0.5, -0.5)`.
+It validates content and route prerequisites, not a gameplay playthrough.
+Ordinary builds preserve the locally imported maps. Their original assets are
+not committed to Git: a clean clone with only the seven bundled maps needs the
+one-time imports below before new-knight creation can succeed.
 
-Walk the map, click through Rhendon's localized conversations, break shrubs,
-activate the button and reach the ambush. Its closing response should spawn the
-miniboss encounter. Fight with normal attacks. After Giant removal, both final
-doors should open after five seconds; walk through them to the original portal.
-This is a manual acceptance procedure, not a claim that it has passed visually.
-Boss targeting/retaliation, full companion behavior and the continuous successful
-combat-to-Camp session still require implementation or verification. Record the
-first failure and the test deployment's `data/logs/latest.log`.
+With the server stopped, import **only a missing map** into this same build:
 
-For independent Camp rendering/collision inspection, a GM can use `/sgo 217`;
-that admin shortcut does not prove tutorial completion. Disconnecting releases
-the private tutorial instance. Use a fresh disposable knight to retry progression.
-The focused `StockTools tutorial-floor-check GAME build/tutorial-playtest` checks
-the imported pair and authenticated `/sgo 398` session entry at its original spawn.
+```sh
+GAME="/path/to/Spiral Knights"
+ARCHIVE="/path/to/reference-inputs"
+java scripts/MapImport.java "$GAME" "$ARCHIVE/reference/observations/scenes-cache-2026-10-22/398" build crash_site 50332041 '%dungeon:m.tutorial_b'
+java scripts/MapImport.java "$GAME" "$ARCHIVE/reference/observations/scenes-cache-2026-10-22/217" build rescue_camp 16777221 '%town:m.rescue_camp_state_1'
+java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
+```
+
+The importer refuses duplicate maps and live deployments. Do not delete existing
+content, databases or keys to make it run. If a map exists but preflight fails,
+retain it and inspect its `native/import-report.txt` and the reported error.
+Use the read-only installed stock client and the pinned archive sources; do not
+substitute another scene revision or commit the imported assets.
+
+For the manual playthrough, use a disposable test account in your normal server:
+
+1. Start `java -jar build/tortodrone.jar --nogui` (or use the already running
+   normal server; do not launch another on its ports).
+2. In the **server console**, run `account create CrashTester` and follow its
+   password prompt. A GM role is not required for this test.
+3. Log in using the unmodified official client and create a **new knight**.
+   Selection should automatically enter a private Crash Site, not Haven or the
+   Ready Room. Do not reuse an old completed knight to test first-run routing.
+4. Follow Rhendon's original conversations, move through the map, break objects,
+   activate its mechanisms and pick up heat. Finish the ambush conversation to
+   start the encounter; fight the Ironwood Giant with normal combat controls.
+5. After the Giant is removed, wait approximately five seconds for both final
+   doors to open. Walk through the passage, use the original final exit, and
+   acknowledge the native floor-report prompt if shown. Arrival must be in
+   initial Rescue Camp 217. Do not use a teleport to establish this result.
+6. Log out and select the same knight again. It should enter the native Ready
+   Room; choose Return to Game and confirm arrival in Camp without restarting
+   the tutorial or granting heat/progression twice. An interrupted, incomplete
+   tutorial restarts at its entrance; exact mid-floor resume is not implemented.
+
+For a separate **GM preview** with an existing knight, grant its account GM in
+the server console (`gm AccountName true`), enter the world, then type `/sgo 398`
+in **in-game chat**. This uses the native GM movement handshake and original
+entrance. `/sgo 217` previews Camp independently. Neither shortcut proves normal
+onboarding or completion; use a fresh knight for that acceptance test.
+
+Earlier isolated graphical checks established Crash Site → Camp → reconnect;
+the latest build has not received a new complete graphical acceptance. Giant
+targeting is capture-calibrated, and companion/parity limits remain documented
+in research. Record the first failure, screenshot/client error if available,
+and server logs under `build/data/logs/`. Avoid repeated graphical runs for
+unrelated changes.
 
 ### Import procedure
 
