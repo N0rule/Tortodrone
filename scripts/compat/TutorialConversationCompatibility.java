@@ -74,6 +74,7 @@ public final class TutorialConversationCompatibility {
                     ||!dialog.name.equals("n.tut_warden")||!dialog.bundle.equals("conversation")||!dialog.message.equals(prepared.message())
                     ||dialog.model==null||!dialog.model.getName().equals("character/npc/crew/model_warden_companion.dat")
                     ||!Arrays.equals(dialog.responses,prepared.responses().stream().map(SceneConversation.Response::text).toArray(String[]::new))||dialog.conversationService==null
+                    ||dialog.exits==null||dialog.exits.length!=prepared.responses().size()||dialog.exits[0]!=prepared.responses().getFirst().destination().isEmpty()||dialog.seed!=0
                     ||dialog.sourceCloseAnimation!=null||dialog.music!=null||dialog.userInterface!=null||dialog.sourceTransient!=null
                     ||(node.equals("part 1a")?dialog.animation!=null:dialog.animation==null||!dialog.animation.getName().equals("character/pc/idle.dat")))throw new AssertionError("Stock reader rejected original ambush presentation");
         }

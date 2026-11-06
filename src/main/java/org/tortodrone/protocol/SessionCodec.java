@@ -861,6 +861,7 @@ public final class SessionCodec {
                 o.writeShort((count+7)/8);
                 for(int i=0;i<count;i+=8)o.writeByte((1<<Math.min(8,count-i))-1);
                 for(var response:node.responses())o.writeUTF(response.text());
+                o.writeBoolean(true);o.writeInt(count);for(var response:node.responses())o.writeBoolean(response.destination().isEmpty());
                 type(o,"com.threerings.projectx.data.ConversationMarshaller");o.writeInt(sceneOid);o.writeInt(org.tortodrone.world.SceneConversation.SERVICE);o.writeLong(0);
             });});
     }
@@ -971,10 +972,8 @@ public final class SessionCodec {
     public byte[] partyOid(int player,int party)throws IOException{return frame(out->{eventHeader(out,"AttributeChangedEvent",player);string(out,"partyOid");value(out,party);});}
     public byte[] chatChannel(short message,int oid,int chatType)throws IOException {
         if(chatType!=6&&chatType!=7)throw new IOException("Unsupported chat channel type");
-        return frame(out->{objectHeader(out,message,"com.threerings.projectx.data.ChatObject",oid);
+        return frame(out->{objectHeader(out,message,"com.threerings.projectx.data.ZoneInstanceObject",oid);
             type(out,"com.threerings.crowd.chat.data.SpeakMarshaller");out.writeInt(oid);out.writeInt(org.tortodrone.world.SceneChat.SERVICE);
-            type(out,"com.threerings.presents.dobj.OidList");out.writeBoolean(true);out.writeInt(0);out.writeInt(0);
-            type(out,"com.threerings.projectx.data.ChatType");out.writeByte(chatType);
         });
     }
     public byte[] sceneLocation(int oid,SceneRegistry.Instance scene)throws IOException{return sceneLocation(oid,scene,0,0);}
