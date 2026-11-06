@@ -14,7 +14,7 @@ public final class ContentMigrationTest {
             Path root=home.resolve("old"),candidate=home.resolve("candidate");ContentFixture.copy(ContentFixture.path(""),root.resolve("defaults"));
             Files.move(root.resolve("defaults/maps/advanced_training"),root.resolve("defaults/maps/294"));
             Path data=root.resolve("data");Files.createDirectories(data.resolve("keys"));Files.writeString(data.resolve("tortodrone.db"),"sentinel: resolver must not open SQLite");Files.writeString(data.resolve("keys/private.pk8"),"sentinel private key");Files.writeString(data.resolve("server.properties"),"server-port=47699\n");Files.writeString(data.resolve("server.lock"),"");
-            var original=bytes(root);var old=PackContent.load(root);
+            var original=bytes(root);var old=MigrationPackLoader.load(root);
             try(var channel=FileChannel.open(data.resolve("server.lock"),StandardOpenOption.WRITE);var lock=channel.lock()){failure(()->ContentMigration.migrate(root,candidate,null));check(!Files.exists(candidate),"locked source cannot publish a candidate");}
             ContentMigration.migrate(root,candidate,null);unchanged(original,root);
             var converted=ContentManager.load(candidate);

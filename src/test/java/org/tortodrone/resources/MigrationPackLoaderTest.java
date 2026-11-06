@@ -6,7 +6,7 @@ import java.util.*;
 import static org.tortodrone.support.TestWire.check;
 
 /** Isolated versioned-content resolution, adversarial pack validation and read-only resolution. */
-public final class PackContentTest {
+public final class MigrationPackLoaderTest {
     private static Path VANILLA;
     private static Path BAZAAR;
 
@@ -15,7 +15,7 @@ public final class PackContentTest {
         Path home=Files.createTempDirectory("tortodrone-content-test-").toRealPath();
         try {
             Path base=deployment(home,"base");
-            var registry=PackContent.load(base);
+            var registry=MigrationPackLoader.load(base);
             check(registry.packs().stream().anyMatch(p->p.id().equals("vanilla")),"default selection resolves vanilla");
             check(registry.scenes().scenes().size()==9&&registry.scenes().entry().id()==1,"all stock scenes and the authored entry load");
             check(registry.items().entries().size()==9355&&registry.weapons().weapons().size()>300
@@ -50,7 +50,7 @@ public final class PackContentTest {
         String vanillaVersion=packVersion(deployment.resolve("content/packs/vanilla/pack.properties"));
         writePack(addon,"addon","1.0.0",Map.of("vanilla",vanillaVersion),Map.of("scene.2","vanilla"),resources);
         selection(deployment,"vanilla,addon","disabled");
-        ContentRegistry loaded=PackContent.load(deployment);
+        ContentRegistry loaded=MigrationPackLoader.load(deployment);
         check(loaded.scenes().scenes().size()==10&&loaded.scenes().scene(905).id()==905,
             "an explicitly enabled additive scene joins the vanilla catalog");
         check(loaded.scenes().scene(2).name().equals("Bazaar replacement")
@@ -63,13 +63,13 @@ public final class PackContentTest {
         Path bad=undeclared.resolve("content/custom/packs/addon");copyTree(replacement,bad.resolve("maps/bazaar-replacement"));
         writePack(bad,"addon","1.0.0",Map.of(),Map.of(),Map.of("scene.2","maps/bazaar-replacement"));
         selection(undeclared,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(undeclared),"same-key resources cannot silently shadow another pack");
+        expectFailure(()->MigrationPackLoader.load(undeclared),"same-key resources cannot silently shadow another pack");
 
         Path wrongProvider=deployment(home,"wrong-override-provider");
         Path wrong=wrongProvider.resolve("content/custom/packs/addon");copyTree(replacement,wrong.resolve("maps/bazaar-replacement"));
         writePack(wrong,"addon","1.0.0",Map.of("vanilla",vanillaVersion),Map.of("scene.2","other-pack"),Map.of("scene.2","maps/bazaar-replacement"));
         selection(wrongProvider,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(wrongProvider),"override must name the current resource provider");
+        expectFailure(()->MigrationPackLoader.load(wrongProvider),"override must name the current resource provider");
         check(baseline.scenes().scenes().size()==9,"resolving another deployment leaves the published baseline immutable");
     }
 
@@ -78,53 +78,53 @@ public final class PackContentTest {
         Files.createDirectories(deployment.resolve("content/custom/packs/not-enabled"));
         Files.writeString(deployment.resolve("content/custom/packs/not-enabled/pack.properties"),"invalid=ignored\n");
         selection(deployment,"vanilla","disabled");
-        check(PackContent.load(deployment).packs().size()==1,"disabled custom packs are not inspected or auto-enabled");
+        check(MigrationPackLoader.load(deployment).packs().size()==1,"disabled custom packs are not inspected or auto-enabled");
         selection(deployment,"vanilla,missing-pack","disabled");
-        expectFailure(()->PackContent.load(deployment),"an explicitly enabled missing pack is rejected");
+        expectFailure(()->MigrationPackLoader.load(deployment),"an explicitly enabled missing pack is rejected");
     }
 
     private static void dependencies(Path home)throws Exception {
         Path missing=deployment(home,"missing-dependency");
         addScenePack(missing,"addon",905,Map.of("absent","1.0.0"),Map.of(),Map.of());
         selection(missing,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(missing),"a missing exact dependency is rejected");
+        expectFailure(()->MigrationPackLoader.load(missing),"a missing exact dependency is rejected");
 
         Path incompatible=deployment(home,"incompatible-dependency");
         String current=packVersion(incompatible.resolve("content/packs/vanilla/pack.properties"));
         String other=current.equals("0.29.0")?"0.29.1":"0.29.0";
         addScenePack(incompatible,"addon",905,Map.of("vanilla",other),Map.of(),Map.of());
         selection(incompatible,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(incompatible),"a dependency with the wrong version is rejected");
+        expectFailure(()->MigrationPackLoader.load(incompatible),"a dependency with the wrong version is rejected");
 
         Path cycle=deployment(home,"dependency-cycle");
         addScenePack(cycle,"alpha",905,Map.of("beta","1.0.0"),Map.of(),Map.of());
         addScenePack(cycle,"beta",906,Map.of("alpha","1.0.0"),Map.of(),Map.of());
         selection(cycle,"vanilla,alpha,beta","disabled");
-        expectFailure(()->PackContent.load(cycle),"dependency cycles are rejected before resource publication");
+        expectFailure(()->MigrationPackLoader.load(cycle),"dependency cycles are rejected before resource publication");
     }
 
     private static void declarationsAndIds(Path home)throws Exception {
         Path missingTarget=deployment(home,"missing-override-target");
         addScenePack(missingTarget,"addon",905,Map.of("vanilla",packVersion(missingTarget.resolve("content/packs/vanilla/pack.properties"))),Map.of("scene.905","vanilla"),Map.of("scene.905","maps/extra"));
         selection(missingTarget,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(missingTarget),"an override cannot claim a resource absent from earlier packs");
+        expectFailure(()->MigrationPackLoader.load(missingTarget),"an override cannot claim a resource absent from earlier packs");
 
         Path mismatched=deployment(home,"mismatched-scene-id");
         addScenePack(mismatched,"addon",905,Map.of(),Map.of(),Map.of("scene.905","maps/extra"),false);
         selection(mismatched,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(mismatched),"scene resource key must match its native map scene ID");
+        expectFailure(()->MigrationPackLoader.load(mismatched),"scene resource key must match its native map scene ID");
 
         Path duplicate=deployment(home,"duplicate-scene-id");
         Path addon=duplicate.resolve("content/custom/packs/addon");copyTree(BAZAAR,addon.resolve("maps/duplicate"));
         writePack(addon,"addon","1.0.0",Map.of(),Map.of(),Map.of("scene.905","maps/duplicate"));
         selection(duplicate,"vanilla,addon","disabled");
-        expectFailure(()->PackContent.load(duplicate),"two resource keys cannot publish one native scene ID");
+        expectFailure(()->MigrationPackLoader.load(duplicate),"two resource keys cannot publish one native scene ID");
     }
 
     private static void checksumsAndFormats(Path home)throws Exception {
         Path tampered=deployment(home,"tampered-resource");
         Files.writeString(tampered.resolve("content/packs/vanilla/items/catalog.json"),"tampered\n",StandardOpenOption.APPEND);
-        expectFailure(()->PackContent.load(tampered),"tampering with a pinned vanilla resource is rejected");
+        expectFailure(()->MigrationPackLoader.load(tampered),"tampering with a pinned vanilla resource is rejected");
 
         mutateVanilla(home,"bad-checksum",p->p.setProperty("sha256.items","0".repeat(64)));
         mutateVanilla(home,"unsupported-pack-version",p->p.setProperty("format","2"));
@@ -137,7 +137,7 @@ public final class PackContentTest {
         Path unknownSetting=deployment(home,"unknown-selection-setting");
         Files.createDirectories(unknownSetting.resolve("data"));
         Files.writeString(unknownSetting.resolve("data/server.properties"),"content-packs=vanilla\nlegacy-content=disabled\nimplicit=true\n");
-        expectFailure(()->PackContent.load(unknownSetting),"unknown operator selection settings fail closed");
+        expectFailure(()->MigrationPackLoader.load(unknownSetting),"unknown operator selection settings fail closed");
     }
 
     private static void resourcePaths(Path home)throws Exception {
@@ -158,7 +158,7 @@ public final class PackContentTest {
         } catch(UnsupportedOperationException|IOException unavailable) {
             System.out.println("SKIP: content symlink test (symlinks unavailable)");
         }
-        if(available)expectFailure(()->PackContent.load(symlink),"a resource path cannot traverse a symlink");
+        if(available)expectFailure(()->MigrationPackLoader.load(symlink),"a resource path cannot traverse a symlink");
     }
 
     private static void boundedInputs(Path home)throws Exception {
@@ -167,7 +167,7 @@ public final class PackContentTest {
         expectFailure(()->ContentFiles.digest(root),"content trees have a bounded file count before hashing");
         Path duplicate=deployment(home,"duplicate-property");
         Files.writeString(duplicate.resolve("content/packs/vanilla/pack.properties"),"id=other\n",StandardOpenOption.APPEND);
-        expectFailure(()->PackContent.load(duplicate),"duplicate manifest properties are refused rather than silently overwritten");
+        expectFailure(()->MigrationPackLoader.load(duplicate),"duplicate manifest properties are refused rather than silently overwritten");
     }
 
     private static void semanticReferences(Path home)throws Exception {
@@ -175,7 +175,7 @@ public final class PackContentTest {
         Path entry=invalidEntry.resolve("content/packs/vanilla/maps/catalog.properties");
         Properties catalog=properties(entry);catalog.setProperty("entry-scene","999999");writeProperties(entry,catalog);
         refreshResource(invalidEntry,"entry","maps/catalog.properties");
-        expectFailure(()->PackContent.load(invalidEntry),"entry scene must reference an installed town resource");
+        expectFailure(()->MigrationPackLoader.load(invalidEntry),"entry scene must reference an installed town resource");
 
         Path badCombat=deployment(home,"cross-catalog-reference");Path weapons=badCombat.resolve("content/packs/vanilla/combat/weapons.tsv");
         List<String> lines=Files.readAllLines(weapons);boolean changed=false;
@@ -184,13 +184,13 @@ public final class PackContentTest {
         }
         check(changed,"fixture has at least one stock weapon control row");Files.write(weapons,lines);
         refreshResource(badCombat,"weapons","combat/weapons.tsv");
-        expectFailure(()->PackContent.load(badCombat),"combat controls cannot reference an absent item definition");
+        expectFailure(()->MigrationPackLoader.load(badCombat),"combat controls cannot reference an absent item definition");
     }
 
     private static void readOnlyResolution(Path home,Path base,ContentRegistry initial)throws Exception {
         Path data=base.resolve("data");Files.createDirectories(data);Path sentinel=data.resolve("owner-state");
         byte[] original="keep player data byte-for-byte".getBytes(java.nio.charset.StandardCharsets.UTF_8);Files.write(sentinel,original);
-        var reloaded=PackContent.load(base);
+        var reloaded=MigrationPackLoader.load(base);
         check(reloaded.resources().equals(initial.resources()),"reloading content validates the same resources");
         check(!Files.exists(base.resolve("cache")),"content resolution creates no diagnostic cache");
         check(Arrays.equals(original,Files.readAllBytes(sentinel)),"content resolution preserves persistent data bytes");
@@ -232,7 +232,7 @@ public final class PackContentTest {
     }
 
     private static void mutateVanilla(Path home,String name,Mutation mutation)throws Exception {
-        Path deployment=deployment(home,name);mutatePack(deployment,mutation);expectFailure(()->PackContent.load(deployment),name+" manifest is rejected");
+        Path deployment=deployment(home,name);mutatePack(deployment,mutation);expectFailure(()->MigrationPackLoader.load(deployment),name+" manifest is rejected");
     }
     private static void mutatePack(Path deployment,Mutation mutation)throws Exception {
         Path file=deployment.resolve("content/packs/vanilla/pack.properties");Properties p=properties(file);mutation.apply(p);writeProperties(file,p);

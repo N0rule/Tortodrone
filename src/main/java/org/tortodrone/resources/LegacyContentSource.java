@@ -5,9 +5,9 @@ import java.nio.file.*;
 import java.util.*;
 import org.tortodrone.world.SceneCatalog;
 
-/** Read-only compatibility boundary. Old precedence is preserved, never copied into or over live data. */
-final class LegacyContent {
-    private LegacyContent() { }
+/** Read-only legacy layout detection and migration source. Old precedence is preserved, never copied into or over live data. */
+final class LegacyContentSource {
+    private LegacyContentSource() { }
     static boolean present(Path root) {
         return List.of("defaults","maps","items/catalog.json","combat/weapons.tsv","combat/equipment.tsv","combat/fires.json")
             .stream().anyMatch(name->Files.exists(root.resolve(name),LinkOption.NOFOLLOW_LINKS));

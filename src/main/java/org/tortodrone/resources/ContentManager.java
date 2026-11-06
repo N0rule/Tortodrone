@@ -31,7 +31,7 @@ public final class ContentManager {
         Path root=deployment.toAbsolutePath().normalize(),content=root.resolve("content");ContentFiles.safe(content);
         if(!Files.isDirectory(content.resolve("maps")))throw new IOException("Unified content/maps is missing. Use ContentMigration /old-deployment /new-candidate; legacy packs are migration-only.");
         if(!settings.contentPacks().equals("vanilla"))throw new IOException("content-packs selection requires explicit ContentMigration; unified startup never ignores custom selection");
-        if(Files.exists(content.resolve("packs"))||Files.exists(content.resolve("custom/packs"))||LegacyContent.present(root))throw new IOException("Mixed unified and legacy content layouts; prepare and review a separate ContentMigration candidate");
+        if(Files.exists(content.resolve("packs"))||Files.exists(content.resolve("custom/packs"))||LegacyContentSource.present(root))throw new IOException("Mixed unified and legacy content layouts; prepare and review a separate ContentMigration candidate");
         // Fingerprint every input automatically, then recheck after all parsers/validators complete.
         var before=inputs(root);var warnings=new ArrayList<String>();
         try {

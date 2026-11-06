@@ -141,7 +141,7 @@ final class WorldSession implements AutoCloseable {
     }
     boolean partyInvocation(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
-        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==12&&request.method()==5
+        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==SessionCodec.SOCIAL_SERVICE&&request.method()==5
             &&!args.isEmpty()&&args.getFirst() instanceof String key&&key.startsWith("PARTY_INV:");
         boolean operation=request.service()==20&&request.method()>=1&&request.method()<=3;
         if(!response&&!operation)return false;
@@ -305,7 +305,7 @@ final class WorldSession implements AutoCloseable {
     }
     private final Map<Integer,org.tortodrone.storage.DepotStore.Quote> depotOffers=new HashMap<>();
     private boolean depotInvocation(SessionDecoder.Invocation request)throws IOException{
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=16)return false;
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.MISSION_SERVICE)return false;
         if(!Set.of(4,5,6,10).contains(request.method()))return openingMissionInvocation(request);
         var a=request.arguments();int method=request.method();boolean purchase=method==10;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(purchase?"ConfirmMarshaller":"ResultMarshaller")))throw new SessionDecoder.Rejected("Invalid depot listener");
@@ -399,7 +399,7 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized boolean auctionInvocation(SessionDecoder.Invocation request)throws IOException {
         if(request.oid()!=SessionCodec.INVOCATION_OID)return false;var a=request.arguments();int method=request.method();
-        boolean auction=request.service()==15,mail=request.service()==10&&(method==1||method==2||method==4||method==5||method==6||method==11);
+        boolean auction=request.service()==SessionCodec.AUCTION_SERVICE,mail=request.service()==SessionCodec.UPLINK_SERVICE&&(method==1||method==2||method==4||method==5||method==6||method==11);
         if(!auction&&!mail)return false;
         boolean resultListener=auction||method==6;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(resultListener?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid auction/mail listener");
@@ -419,7 +419,7 @@ final class WorldSession implements AutoCloseable {
         // friend request and must fall through to the chat dispatcher instead of being rejected.
         // Current SocialMarshaller: 1 request, 2 party suggestions, 3 join friend, 4 join secret,
         // 6 looking-for-group, 8 unfriend. Methods 5 and 7 are not served yet.
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=12||!Set.of(1,2,3,4,6,8).contains(method))return false;
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.SOCIAL_SERVICE||!Set.of(1,2,3,4,6,8).contains(method))return false;
         var args=request.arguments();
         boolean result=method==2;
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
@@ -459,7 +459,7 @@ final class WorldSession implements AutoCloseable {
     }
     /** Current FeedMarshaller method one; no feed is stored yet, so a bounded empty list is honest. */
     boolean feedInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=11||request.method()!=1)return false;
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.FEED_SERVICE||request.method()!=1)return false;
         var args=request.arguments();
         if(args.size()!=3||!(args.get(0) instanceof Boolean)||!(args.get(1) instanceof Long)
                 ||!(args.getLast() instanceof SessionDecoder.Listener listener)
@@ -635,7 +635,7 @@ final class WorldSession implements AutoCloseable {
     // Stock listener IDs wrap. Keep only recent requests on this connection, never persist a client ID.
     private final java.util.LinkedHashMap<BoxRequest,BoxReply> boxReplies=new java.util.LinkedHashMap<>();
     private boolean boxInvocation(SessionDecoder.Invocation request)throws IOException {
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=9||!Set.of(6,11,12).contains(request.method()))return false;
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ITEM_SERVICE||!Set.of(6,11,12).contains(request.method()))return false;
         var args=request.arguments();
         boolean normal=request.method()==12;
         if(args.size()!=(normal?3:2)||!(args.get(0) instanceof Long id)||normal&&!(args.get(1) instanceof Integer)
@@ -684,9 +684,9 @@ final class WorldSession implements AutoCloseable {
 
     private boolean styleInvocation(SessionDecoder.Invocation request)throws IOException {
         if(request.oid()!=SessionCodec.INVOCATION_OID)return false;
-        boolean apply=request.service()==1&&request.method()==1;
+        boolean apply=request.service()==SessionCodec.KNIGHT_SERVICE&&request.method()==1;
         var args=request.arguments();
-        boolean use=request.service()==9&&request.method()==14&&args.size()==3&&args.getFirst() instanceof Long id&&profile!=null
+        boolean use=request.service()==SessionCodec.ITEM_SERVICE&&request.method()==14&&args.size()==3&&args.getFirst() instanceof Long id&&profile!=null
             &&profile.items().stream().anyMatch(item->item.id()==id&&org.tortodrone.storage.StyleStore.kit(item.config())!=null);
         if(!apply&&!use)return false;
         if(args.size()!=(apply?2:3)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||use&&args.get(1)!=null)
@@ -725,7 +725,7 @@ final class WorldSession implements AutoCloseable {
         var a=request.arguments();boolean global=request.oid()==SessionCodec.INVOCATION_OID;
         if(billingInvocation(request))return true;
         // KnightMarshaller 2 is canRename (30-day window check); 8 is renameKnight [Name, Confirm].
-        if(global&&request.service()==1&&(request.method()==2||request.method()==8)){
+        if(global&&request.service()==SessionCodec.KNIGHT_SERVICE&&(request.method()==2||request.method()==8)){
             boolean rename=request.method()==8;
             if(a.size()!=(rename?2:1)||rename&&!(a.getFirst() instanceof String)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid knight rename request");
             try{
@@ -749,7 +749,7 @@ final class WorldSession implements AutoCloseable {
         }
         // ItemMarshaller 1 is the stock Trash action [itemId, Confirm]; every persistent owned
         // non-permanent item is deletable, whole. Scene-item Use (method 14) stays separate.
-        if(global&&request.service()==9&&request.method()==1){
+        if(global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==1){
             if(a.size()!=2||!(a.getFirst() instanceof Long id)||!(a.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid item deletion request");
             try{
                 if(closed||!selected()||!entered||!subscribed)throw new IOException("Select a knight first");
@@ -777,17 +777,17 @@ final class WorldSession implements AutoCloseable {
         }
         boolean open=ownsScene(request.oid())&&request.service()==11;
         boolean operation=ownsScene(request.oid())&&request.service()>=100;
-        boolean sprite=global&&request.service()==14;
-        boolean hatch=global&&request.service()==9&&request.method()==7;
-        boolean wrap=global&&request.service()==9&&request.method()==15;
-        boolean unwrap=global&&request.service()==9&&request.method()==13;
-        boolean forge=global&&request.service()==9&&request.method()==8;
+        boolean sprite=global&&request.service()==SessionCodec.BATTLE_SPRITE_SERVICE;
+        boolean hatch=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==7;
+        boolean wrap=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==15;
+        boolean unwrap=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==13;
+        boolean forge=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==8;
         // The stock inventory's Use action sends method 14 [item, data, confirm].
         // Method 1 is deleteItem, and must never learn a recipe as a side effect.
-        boolean use=global&&request.service()==9&&request.method()==14&&a.size()==3&&a.get(1)==null;
+        boolean use=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==14&&a.size()==3&&a.get(1)==null;
         boolean learn=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("recipe"));
         boolean harness=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&scenes.town().item(i.config()).containsKey("harness"));
-        boolean extend=global&&request.service()==9&&request.method()==5;
+        boolean extend=global&&request.service()==SessionCodec.ITEM_SERVICE&&request.method()==5;
         boolean slotUpgrade=use&&a.getFirst() instanceof Long id&&selected()&&profile.items().stream().anyMatch(i->i.id()==id&&SlotUpgrades.find(i.config())!=null);
         if(!open&&!operation&&!sprite&&!hatch&&!forge&&!learn&&!harness&&!wrap&&!unwrap&&!slotUpgrade&&!extend)return false;
         if(a.isEmpty()||!(a.getLast() instanceof SessionDecoder.Listener listener))throw new SessionDecoder.Rejected("Missing Town listener");
@@ -1049,7 +1049,7 @@ final class WorldSession implements AutoCloseable {
     boolean tradeInvocation(SessionDecoder.Invocation request)throws IOException {
         boolean invite=request.service()==6&&request.method()==4&&ownsScene(request.oid());
         boolean close=request.service()==6&&request.method()==1&&ownsScene(request.oid());
-        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==12&&request.method()==5;
+        boolean response=request.oid()==SessionCodec.INVOCATION_OID&&request.service()==SessionCodec.SOCIAL_SERVICE&&request.method()==5;
         boolean operation=request.service()==1&&request.oid()>=1001&&(request.oid()&1)==1;
         if(!invite&&!close&&!response&&!operation)return false;
         var args=request.arguments();PlayerTrades broker;PlayerTrades.Member member;
@@ -1181,7 +1181,7 @@ final class WorldSession implements AutoCloseable {
         if(closed||socket.isClosed())throw new IOException("Session is closed");
         int service = request.service();
         var args = request.arguments();
-        if(service==1&&request.method()==11){
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
             if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid return-to-last request");
             if(!selected()||forcedReceiver==null)throw new SessionDecoder.Rejected("Select a knight first");
             try{characters.worldProfile(knight.name(),authRevision,profile);}
@@ -1189,7 +1189,7 @@ final class WorldSession implements AutoCloseable {
             if(readyRoom){returnRequested=true;short receiver=forcedReceiver;output.send(()->codec.forceScene(oid,receiver,scene));}
             return true;
         }
-        if(service==1&&request.method()==7){
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==7){
             if(args.size()!=2||!(args.get(0) instanceof String destination)||!(args.get(1) instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid town destination request");
             try{
                 if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
@@ -1224,7 +1224,7 @@ final class WorldSession implements AutoCloseable {
         }
         // KnightMarshaller 11 is the stock /haven travel (EN()); it carries no arguments or listener,
         // so failures are reported through the native chat-feedback path.
-        if(service==1&&request.method()==11){
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==11){
             if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid haven request");
             try{
                 if(!selected()||!entered||!subscribed||forcedReceiver==null||portalMove!=null)throw new IOException("Finish entering this scene first");characters.worldProfile(knight.name(),authRevision,profile);
@@ -1236,17 +1236,17 @@ final class WorldSession implements AutoCloseable {
             }catch(CharacterStore.Refused|IOException refused){unavailable(refused.getMessage());}
             return true;
         }
-        if(service==1&&request.method()==13) {
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==13) {
             if(args.size()!=1||!(args.getFirst() instanceof Boolean hidden))throw new SessionDecoder.Rejected("Invalid inspect privacy request");
             characters.inspectionHidden(authRevision,hidden);inspectionHidden=hidden;
             gameMaster=roles.gameMaster();if(membership!=null)membership.appearance(actorAppearance());
             output.send(()->codec.playerFlags(oid,gameMaster,inspectionHidden,profile.progress().tutorialComplete()));return true;
         }
-        if ((service == 4 || service == 5) && request.method() == 1) {
-            move(args, service == 5);
+        if ((service == SessionCodec.SCENE_SERVICE || service == SessionCodec.ZONE_SERVICE) && request.method() == 1) {
+            move(args, service == SessionCodec.ZONE_SERVICE);
             return true;
         }
-        if (service == 10 && request.method() == 7) {
+        if (service == SessionCodec.UPLINK_SERVICE && request.method() == 7) {
             if (args.size() != 2 || !(args.get(0) instanceof String)
                     || !(args.get(1) instanceof SessionDecoder.Listener listener)
                     || !listener.type().endsWith("$ResultMarshaller")) {
@@ -1256,7 +1256,7 @@ final class WorldSession implements AutoCloseable {
             else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
             return true;
         }
-        if (service == 11 && request.method() == 1) {
+        if (service == SessionCodec.FEED_SERVICE && request.method() == 1) {
             if (args.size() != 2 || !(args.get(0) instanceof Long)
                     || !(args.get(1) instanceof SessionDecoder.Listener listener)
                     || !listener.type().endsWith("$ResultMarshaller")) {
@@ -1266,7 +1266,7 @@ final class WorldSession implements AutoCloseable {
             else output.send(() -> codec.invocationFailure(oid, listener.requestId(), "Select a knight first"));
             return true;
         }
-        if(service==9&&(request.method()==4||request.method()==10)) {
+        if(service==SessionCodec.ITEM_SERVICE&&(request.method()==4||request.method()==10)) {
             if(args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout request");
             try {
                 if(!selected()||!subscribed||!entered||portalMove!=null)throw new IOException("Enter a scene first");
@@ -1277,18 +1277,18 @@ final class WorldSession implements AutoCloseable {
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
             return true;
         }
-        if(service==9&&request.method()==2){
+        if(service==SessionCodec.ITEM_SERVICE&&request.method()==2){
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=2||!(args.getFirst() instanceof String name)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().endsWith("$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid loadout removal");
             try{if(!selected()||!entered||!subscribed||portalMove!=null)throw new IOException("Enter a scene first");
                 townChanged(characters.town(scenes.town()).removeLoadout(characters.accountId(),knight.id(),authRevision,name));
                 output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
             }catch(IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}return true;
         }
-        if (service == 9 && request.method() == 9) {
+        if (service == SessionCodec.ITEM_SERVICE && request.method() == 9) {
             equip(args);
             return true;
         }
-        if(service==1&&request.method()==15){
+        if(service==SessionCodec.KNIGHT_SERVICE&&request.method()==15){
             if(request.oid()!=SessionCodec.INVOCATION_OID||args.size()!=3||!(args.get(0) instanceof String name)||!(args.get(1) instanceof Boolean enabled)
                     ||!(args.get(2) instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid PvP loadout request");
             try{
@@ -1299,7 +1299,7 @@ final class WorldSession implements AutoCloseable {
             return true;
         }
         // ItemMarshaller 1 (Trash) is dispatched in townInvocation; scene item use is 14 only.
-        if(request.oid()==SessionCodec.INVOCATION_OID&&service==9&&request.method()==14){
+        if(request.oid()==SessionCodec.INVOCATION_OID&&service==SessionCodec.ITEM_SERVICE&&request.method()==14){
             if(args.size()!=3||!(args.getFirst() instanceof Long id)||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")||args.get(1)!=null)throw new SessionDecoder.Rejected("Invalid item use request");
             if(!selected()||!subscribed||!entered||portalMove!=null){output.send(()->codec.invocationFailure(oid,listener.requestId(),"Enter a scene first"));return true;}
             var token=new BoxRequest(profile.worldId(),listener.requestId());var receipt=confettiReplies.get(token);
@@ -1335,7 +1335,7 @@ final class WorldSession implements AutoCloseable {
             else output.send(()->codec.invocationFailure(oid,listener.requestId(),"That item cannot be used now"));return true;
         }
         // Arsenal's equip action uses method 3, distinct from moveItem (method 9).
-        if (service == 9 && request.method() == 3) {
+        if (service == SessionCodec.ITEM_SERVICE && request.method() == 3) {
             if (args.size() != 3 || !(args.get(0) instanceof Long)
                     || !(args.get(1) instanceof Integer) || !(args.get(2) instanceof SessionDecoder.Listener)) {
                 throw new SessionDecoder.Rejected("Invalid equip item request");
@@ -1859,7 +1859,7 @@ final class WorldSession implements AutoCloseable {
     /** Crowd ChatService method 2. ListenerMarshaller has failure only, no success response. */
     void broadcast(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=2
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=2
                 ||args.size()!=2||!(args.get(0) instanceof String text)
                 ||!(args.get(1) instanceof SessionDecoder.Listener listener)
                 ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ListenerMarshaller"))
@@ -1877,7 +1877,7 @@ final class WorldSession implements AutoCloseable {
     }
     synchronized void away(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=1||args.size()!=1||args.getFirst()!=null&&!(args.getFirst() instanceof String))throw new SessionDecoder.Rejected("Invalid away request");
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=1||args.size()!=1||args.getFirst()!=null&&!(args.getFirst() instanceof String))throw new SessionDecoder.Rejected("Invalid away request");
         if(closed||!selected())throw new IOException("Select a knight first");
         try{characters.worldProfile(knight.name(),authRevision);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
         if(!chatRate.allow(System.nanoTime())){unavailable("Please slow down before changing your away message");return;}
@@ -1887,7 +1887,7 @@ final class WorldSession implements AutoCloseable {
     }
     void tell(SessionDecoder.Invocation request)throws IOException {
         var args=request.arguments();
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=3||request.method()!=3
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.CHAT_SERVICE||request.method()!=3
                 ||args.size()!=3||!(args.get(0) instanceof String target)||!(args.get(1) instanceof String text)
                 ||!(args.get(2) instanceof SessionDecoder.Listener listener)
                 ||!listener.type().equals("com.threerings.crowd.chat.data.ChatMarshaller$TellMarshaller"))

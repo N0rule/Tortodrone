@@ -6,12 +6,12 @@ import java.util.*;
 import org.tortodrone.character.ItemCatalog;
 import org.tortodrone.world.*;
 
-/** Offline startup resolution. No downloads, data writes, implicit custom packs or partial publication. */
-final class PackContent {
+/** Offline migration resolution for versioned and legacy packs. No downloads, data writes, implicit custom packs or partial publication. */
+final class MigrationPackLoader {
     private static final Set<String> CATALOGS=Set.of("entry","items","weapons","equipment","fires");
     private record Manifest(ContentRegistry.Pack pack,Map<String,ContentRegistry.Resource> resources,
             Map<String,String> requires,Map<String,String> overrides) { }
-    private PackContent() { }
+    private MigrationPackLoader() { }
     public static ContentRegistry load(Path deployment) throws IOException {
         return load(deployment, org.tortodrone.config.ServerSettings.read(
             org.tortodrone.config.ServerSettings.defaultPath(deployment)));
@@ -26,9 +26,9 @@ final class PackContent {
         var warnings=new ArrayList<String>();
         Map<String,ContentRegistry.Resource> resources=new TreeMap<>();
         var packs=new ArrayList<ContentRegistry.Pack>();
-        if(legacy.equals("auto")&&LegacyContent.present(deployment)) {
+        if(legacy.equals("auto")&&LegacyContentSource.present(deployment)) {
             if(!enabled.equals(List.of("vanilla")))throw new IOException("Legacy resources cannot be mixed with versioned custom packs; migrate them or set legacy-content=disabled");
-            resources.putAll(LegacyContent.resolve(deployment,warnings));
+            resources.putAll(LegacyContentSource.resolve(deployment,warnings));
             packs.add(new ContentRegistry.Pack("legacy","unversioned"));
         } else {
             var manifests=new LinkedHashMap<String,Manifest>();

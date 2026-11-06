@@ -38,10 +38,10 @@ final class UnifiedExport {
         var cycles=new LinkedHashMap<String,Object>();var statuses=new LinkedHashMap<String,Object>();var combat=new LinkedHashMap<String,Object>();
         var names=new HashMap<Integer,String>();var usedNames=new HashSet<String>();
         for(var e:registry.resources().entrySet())if(e.getKey().startsWith("scene.")) {
-            int id=PackContent.sceneId(e.getKey());String name=e.getValue().path().getFileName().toString();if(!name.matches("[a-z][a-z0-9_]{0,63}"))name="scene_"+id;
+            int id=MigrationPackLoader.sceneId(e.getKey());String name=e.getValue().path().getFileName().toString();if(!name.matches("[a-z][a-z0-9_]{0,63}"))name="scene_"+id;
             if(!usedNames.add(name))throw new IOException("Duplicate source map folder name requires review: "+name);names.put(id,name);
         }
-        for(var entry:registry.resources().entrySet())if(entry.getKey().startsWith("scene."))exportMap(entry.getValue().path(),content.resolve("maps/"+names.get(PackContent.sceneId(entry.getKey()))),names,cycles,statuses,combat);
+        for(var entry:registry.resources().entrySet())if(entry.getKey().startsWith("scene."))exportMap(entry.getValue().path(),content.resolve("maps/"+names.get(MigrationPackLoader.sceneId(entry.getKey()))),names,cycles,statuses,combat);
         write(content.resolve("shared/combat.yml"),Map.of("properties",group(combat)));
         write(content.resolve("shared/trap-cycles.yml"),Map.of("cycles",groupCycles(cycles)));write(content.resolve("shared/statuses.yml"),Map.of("properties",statuses));
         ContentPresentation.compact(content);

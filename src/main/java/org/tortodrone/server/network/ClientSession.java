@@ -217,9 +217,9 @@ final class ClientSession {
             if (invocation.oid() != SessionCodec.INVOCATION_OID || invocation.service() > SessionCodec.SERVICES.size()) {
                 throw new SessionDecoder.Rejected("Invalid invocation target");
             }
-            if(invocation.service()==3&&invocation.method()==1){world.away(invocation);return;}
-            if(invocation.service()==3&&invocation.method()==2){world.broadcast(invocation);return;}
-            if(invocation.service()==3&&invocation.method()==3){world.tell(invocation);return;}
+            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==1){world.away(invocation);return;}
+            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==2){world.broadcast(invocation);return;}
+            if(invocation.service()==SessionCodec.CHAT_SERVICE&&invocation.method()==3){world.tell(invocation);return;}
             if(invocation.service()==SessionCodec.ADMIN_SERVICE) {
                 if(invocation.oid()!=SessionCodec.INVOCATION_OID)
                     throw new SessionDecoder.Rejected("Invalid admin invocation target");
@@ -229,8 +229,8 @@ final class ClientSession {
             log.debug("InvocationRequestEvent received; service=" + service.substring(service.lastIndexOf('.') + 1)
                 + "; method=" + invocation.method() + "; arguments=" + invocation.arguments().size());
             if(world.invocation(invocation))return;
-            if (invocation.service() == 1 && invocation.method() == 10) { world.hardware(invocation.arguments());return; }
-            if (invocation.service() == 1 && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
+            if (invocation.service() == SessionCodec.KNIGHT_SERVICE && invocation.method() == 10) { world.hardware(invocation.arguments());return; }
+            if (invocation.service() == SessionCodec.KNIGHT_SERVICE && (invocation.method() == 3 || invocation.method() == 4 || invocation.method() == 5 || invocation.method() == 6)) {
                 characterRequest(output, outgoing, invocation, clientOid, log, characters, subscribed, authRevision,world,receivers);
                 return;
             }

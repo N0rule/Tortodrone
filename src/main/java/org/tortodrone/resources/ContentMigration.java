@@ -21,7 +21,7 @@ public final class ContentMigration {
         Path lockFile=root.resolve("data/server.lock");ContentFiles.safe(lockFile);
         try(var channel=Files.exists(lockFile,LinkOption.NOFOLLOW_LINKS)?FileChannel.open(lockFile,StandardOpenOption.WRITE):null;FileLock lock=acquire(channel)) {
             if(Files.exists(root.resolve("content/maps")))throw new IOException("Source already has unified content; mixed layouts require manual conflict review");
-            var settings=ServerSettings.read(ServerSettings.defaultPath(root));var content=PackContent.load(root,settings);
+            var settings=ServerSettings.read(ServerSettings.defaultPath(root));var content=MigrationPackLoader.load(root,settings);
             // All enabled resources are converted, including Town and pet graphs. Disabled custom
             // packs are explicitly reported so the candidate cannot silently discard them.
             Files.createDirectories(target.getParent());Path staging=Files.createTempDirectory(target.getParent(),".content-migration-");

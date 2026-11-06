@@ -29,10 +29,8 @@ public final class SessionCodec {
     public static final int CONFIG_OID = 2;
     public static final int INVOCATION_OID = 3;
     public static final int EXCHANGE_OID = 4, EXCHANGE_SERVICE = 1;
-    public static final int MISSION_OID = 5, MISSION_SERVICE = 16;
+    public static final int MISSION_OID = 5;
     public static final int LOVE_TEST_OID = 6;
-    /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
-    public static final int ADMIN_SERVICE = 13;
     /** Handles needed by current login observers; operations remain explicitly limited. */
     public static final java.util.List<String> SERVICES = java.util.List.of(
         "com.threerings.projectx.data.KnightMarshaller",
@@ -58,6 +56,31 @@ public final class SessionCodec {
         // suggestions through these two handles.
         "com.threerings.projectx.data.EventLogMarshaller",
         "com.threerings.projectx.love.data.LoveMarshaller");
+    public static final int KNIGHT_SERVICE = serviceId("com.threerings.projectx.data.KnightMarshaller");
+    public static final int CHAT_SERVICE = serviceId("com.threerings.crowd.chat.data.ChatMarshaller");
+    public static final int SCENE_SERVICE = serviceId("com.threerings.whirled.data.SceneMarshaller");
+    public static final int ZONE_SERVICE = serviceId("com.threerings.whirled.zone.data.ZoneMarshaller");
+    public static final int ITEM_SERVICE = serviceId("com.threerings.projectx.item.data.ItemMarshaller");
+    public static final int UPLINK_SERVICE = serviceId("com.threerings.projectx.uplink.data.UplinkMarshaller");
+    public static final int FEED_SERVICE = serviceId("com.threerings.projectx.social.data.FeedMarshaller");
+    public static final int SOCIAL_SERVICE = serviceId("com.threerings.projectx.social.data.SocialMarshaller");
+    /** Stock admin service; the client's F3 dashboard tools resolve it by class from the bootstrap. */
+    public static final int ADMIN_SERVICE = serviceId("com.threerings.projectx.admin.data.ProjectXAdminMarshaller");
+    public static final int BATTLE_SPRITE_SERVICE = serviceId("com.threerings.projectx.sprites.data.BattleSpriteMarshaller");
+    public static final int AUCTION_SERVICE = serviceId("com.threerings.projectx.auction.data.AuctionMarshaller");
+    public static final int MISSION_SERVICE = serviceId("com.threerings.projectx.mission.data.MissionMarshaller");
+    // The supply depot's purchase tab requires the billing service at window
+    // construction; the stock exchange window throws and wedges without it.
+    public static final int BILLING_SERVICE = serviceId("com.threerings.projectx.billing.data.BillingMarshaller");
+    // Current build: the social feed reports view events and resolves party
+    // suggestions through this handle.
+    public static final int EVENT_LOG_SERVICE = serviceId("com.threerings.projectx.data.EventLogMarshaller");
+    public static final int LOVE_SERVICE = serviceId("com.threerings.projectx.love.data.LoveMarshaller");
+    private static int serviceId(String className) {
+        int index = SERVICES.indexOf(className);
+        if (index < 0) throw new IllegalStateException("Missing bootstrap service: " + className);
+        return index + 1;
+    }
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -728,8 +751,6 @@ public final class SessionCodec {
     public static final int CRAFT_SERVICE=22, UNBIND_SERVICE=23, ACCESSORY_SERVICE=24, VARIANT_SERVICE=25;
     /** The stock party panel resolves this handle from LevelPartyObject to toggle open/private. */
     public static final int LEVEL_PARTY_SERVICE=26;
-    /** The announced BillingMarshaller slot; the depot purchase tab resolves it at window build. */
-    public static final int BILLING_SERVICE=17, EVENT_LOG_SERVICE=18, LOVE_SERVICE=19;
     public byte[] townDialog(int playerOid,int sceneOid,org.tortodrone.town.TownCatalog.Station station,ActorState source,long created,int service)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
             attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
