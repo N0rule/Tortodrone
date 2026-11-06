@@ -337,7 +337,9 @@ final class WorldSession implements AutoCloseable {
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid mission listener");
         boolean valid=switch(method){
             case 1->args.size()==3&&args.getFirst() instanceof String&&args.get(1) instanceof long[];
-            case 2,7->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
+            case 2->args.size()==6&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean&&args.get(4) instanceof Boolean;
+            // Current build dropped the third boolean from the preview request.
+            case 7->args.size()==5&&args.getFirst() instanceof String&&args.get(1) instanceof SessionDecoder.EnumValue band&&band.type().equals("com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty")&&args.get(2) instanceof Boolean&&args.get(3) instanceof Boolean;
             case 3,9->args.size()==2&&args.getFirst() instanceof String;
             default->false;
         };
@@ -415,41 +417,72 @@ final class WorldSession implements AutoCloseable {
         // The friend service shares service 12 with scene chat. Scene chat addresses the scene
         // object (not the global invocation object), so anything without the global oid is not a
         // friend request and must fall through to the chat dispatcher instead of being rejected.
-        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=12||!Set.of(1,2,3,4,6).contains(method))return false;
+        // Current SocialMarshaller: 1 request, 2 party suggestions, 3 join friend, 4 join secret,
+        // 6 looking-for-group, 8 unfriend. Methods 5 and 7 are not served yet.
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=12||!Set.of(1,2,3,4,6,8).contains(method))return false;
         var args=request.arguments();
+        boolean result=method==2;
         if(args.isEmpty()||!(args.getLast() instanceof SessionDecoder.Listener listener)
-                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller"))throw new SessionDecoder.Rejected("Invalid friend-list listener");
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$"+(result?"ResultMarshaller":"ConfirmMarshaller")))throw new SessionDecoder.Rejected("Invalid friend-list listener");
         boolean valid=switch(method){
             case 1->args.size()==4&&args.get(0) instanceof String&&args.get(1) instanceof String&&args.get(2) instanceof String;
-            case 2,6->args.size()==2&&args.get(0) instanceof String;
-            // joinOrSpectate: the secret is PlayerObject.ML(), spectate is carried but unobserved.
-            case 3->args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Boolean;
-            // setLookingForGroup: the client sends the inverted toggle, the saved difficulty and
-            // the saved party_with_any preference. Only the toggle has player-visible behavior.
-            case 4->args.size()==4&&args.get(0) instanceof Boolean
-                &&(args.get(1)==null||args.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(DIFFICULTY))
-                &&args.get(2) instanceof Boolean;
+            case 2->args.size()==3&&args.get(0) instanceof Integer&&args.get(1) instanceof List<?> names
+                &&names.size()<=256;
+            case 3,8->args.size()==2&&args.get(0) instanceof String;
+            // joinOrSpectate: the secret is PlayerObject.Nq(), spectate is carried but unobserved.
+            case 4->args.size()==3&&args.get(0) instanceof String&&args.get(1) instanceof Boolean;
+            // setLookingForGroup: current build sends only the inverted toggle and difficulty.
+            case 6->args.size()==3&&args.get(0) instanceof Boolean
+                &&(args.get(1)==null||args.get(1) instanceof SessionDecoder.EnumValue e&&e.type().equals(DIFFICULTY));
             default->false;
         };
         if(!valid)throw new SessionDecoder.Rejected("Invalid friend-list arguments");
         try {
+            if(result){output.send(()->codec.invocationResult(oid,listener.requestId(),List.of()));return true;}
             switch(method){
-                case 2->joinFriend((String)args.get(0));
-                case 3->joinBySecret((String)args.get(0),(Boolean)args.get(1));
-                case 4->setLookingForGroup((Boolean)args.get(0),(SessionDecoder.EnumValue)args.get(1),(Boolean)args.get(2));
+                case 3->joinFriend((String)args.get(0));
+                case 4->joinBySecret((String)args.get(0),(Boolean)args.get(1));
+                case 6->setLookingForGroup((Boolean)args.get(0),(SessionDecoder.EnumValue)args.get(1));
+                case 8->{synchronized(this){
+                    requireFriendReady();var friends=characters.friends();friends.remove(characters.accountId(),knight.id(),authRevision,(String)args.get(0));
+                    profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));
+                }}
                 default->{synchronized(this){
                     requireFriendReady();var friends=characters.friends();String name=(String)args.get(0);
-                    if(method==1){if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));}
-                    else{friends.remove(characters.accountId(),knight.id(),authRevision,name);profile=characters.worldProfile(knight.name(),authRevision,profile);refreshFriends(null,friends.snapshot(),friendPresence(characters.worldStorageFile()));}
+                    if(!chatRate.allow(System.nanoTime()))throw new IOException("Please slow down before sending another friend request");
+                    friends.request(characters.accountId(),knight.id(),authRevision,name,(String)args.get(1),(String)args.get(2));
                 }}
             }
             output.send(()->codec.invocationConfirmed(oid,listener.requestId()));
         }catch(CharacterStore.Refused|IOException refused){output.send(()->codec.invocationFailure(oid,listener.requestId(),refused.getMessage()));}
         return true;
     }
+    /** Current FeedMarshaller method one; no feed is stored yet, so a bounded empty list is honest. */
+    boolean feedInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=11||request.method()!=1)return false;
+        var args=request.arguments();
+        if(args.size()!=3||!(args.get(0) instanceof Boolean)||!(args.get(1) instanceof Long)
+                ||!(args.getLast() instanceof SessionDecoder.Listener listener)
+                ||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ResultMarshaller"))throw new SessionDecoder.Rejected("Invalid feed request");
+        output.send(()->codec.invocationResult(oid,listener.requestId(),List.of()));
+        return true;
+    }
+    /** Current EventLogMarshaller methods; view telemetry has no gameplay effect. */
+    boolean eventLogInvocation(SessionDecoder.Invocation request)throws IOException {
+        if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.EVENT_LOG_SERVICE)return false;
+        int method=request.method();var args=request.arguments();
+        if(method==1){
+            if(args.size()!=3||!(args.get(0) instanceof SessionDecoder.EnumValue event)
+                    ||!event.type().equals("com.threerings.projectx.client.EventLogService$EventHubEntry")
+                    ||!(args.get(1) instanceof Integer)||!(args.get(2) instanceof String))throw new SessionDecoder.Rejected("Invalid event log entry");
+            return true;
+        }
+        if(method==2){if(!args.isEmpty())throw new SessionDecoder.Rejected("Invalid event log request");return true;}
+        return false;
+    }
     private static final String DIFFICULTY="com.threerings.projectx.dungeon.data.DungeonCodes$Difficulty";
     private static String friendUnjoinable(String name){return "%social:m.friend_unjoinable|~"+name;}
-    /** Native method 2: relationship-authorized travel, rechecked after the peer is captured. */
+    /** Native method 3 in the current build: relationship-authorized travel, rechecked after the peer is captured. */
     private void joinFriend(String name)throws IOException {
         int target;
         synchronized(this){requireFriendReady();target=friendNamed(name);}
@@ -522,13 +555,14 @@ final class WorldSession implements AutoCloseable {
         }
     }
     /** Native method 4: publish the party-finder flag; matchmaking itself is not implemented. */
-    private void setLookingForGroup(boolean enabled,SessionDecoder.EnumValue difficulty,boolean anyLanguage)throws IOException {
+    private void setLookingForGroup(boolean enabled,SessionDecoder.EnumValue difficulty)throws IOException {
         synchronized(this){
             if(closed||!selected())throw new IOException("Select a knight first");
             try{characters.worldProfile(knight.name(),authRevision,profile);}catch(CharacterStore.Refused refused){throw new IOException("Knight changed; reconnect",refused);}
             if((profile.progress().progressFlags()&4)==0)throw new IOException("m.internal_error");
             lookingForGroupDifficulty=enabled&&difficulty!=null?difficulty.ordinal():-1;
-            lookingForGroupAnyLanguage=enabled&&anyLanguage;
+            // The current marshaller no longer sends the old party_with_any preference.
+            lookingForGroupAnyLanguage=false;
             lookingForGroup=enabled;
             if(log.debugEnabled())log.debug("Party finder "+(enabled?"enabled":"disabled")+"; difficulty="+lookingForGroupDifficulty+"; anyLanguage="+lookingForGroupAnyLanguage);
             output.send(()->codec.lookingForGroup(oid,enabled));
@@ -1470,7 +1504,8 @@ final class WorldSession implements AutoCloseable {
     }
     /** Cross-session tools deliberately acquire only one session monitor at a time. */
     boolean adminPeople(SessionDecoder.Invocation request)throws IOException {
-        int method=request.method();if(!Set.of(13,21,24,27,28,30,50).contains(method))return false;
+        // Current build inserted a new tool at 48, moving the old bring-to-me request from 50 to 51.
+        int method=request.method();if(!Set.of(13,21,24,27,28,30,51).contains(method))return false;
         var args=request.arguments();
         if(request.oid()!=SessionCodec.INVOCATION_OID||request.service()!=SessionCodec.ADMIN_SERVICE||args.size()!=(method==24?3:2)
                 ||!(args.getLast() instanceof SessionDecoder.Listener listener)||!listener.type().equals("com.threerings.presents.data.InvocationMarshaller$ConfirmMarshaller")

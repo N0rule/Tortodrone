@@ -188,6 +188,8 @@ final class ClientSession {
             if(world.interiorPartyInvocation(invocation))return;
             if(world.exchangeInvocation(invocation))return;
             if(world.friendInvocation(invocation))return;
+            if(world.feedInvocation(invocation))return;
+            if(world.eventLogInvocation(invocation))return;
             if(world.auctionInvocation(invocation))return;
             if(world.townInvocation(invocation)){
                 if(world.takeRenameDisconnect()){world.close();output.disconnect();}

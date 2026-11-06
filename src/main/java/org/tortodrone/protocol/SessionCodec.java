@@ -53,7 +53,11 @@ public final class SessionCodec {
         "com.threerings.projectx.mission.data.MissionMarshaller",
         // The supply depot's purchase tab requires the billing service at window
         // construction; the stock exchange window throws and wedges without it.
-        "com.threerings.projectx.billing.data.BillingMarshaller");
+        "com.threerings.projectx.billing.data.BillingMarshaller",
+        // Current build: the social feed reports view events and resolves party
+        // suggestions through these two handles.
+        "com.threerings.projectx.data.EventLogMarshaller",
+        "com.threerings.projectx.love.data.LoveMarshaller");
     public static final int MAX_DOWNSTREAM_FRAME = 1024 * 1024;
     public static final int TCP_MESSAGES_PER_SECOND = 100;
     private static final String PREFIX = "com.threerings.presents.net.";
@@ -369,6 +373,11 @@ public final class SessionCodec {
             type(out, "com.threerings.presents.dobj.InvocationResponseEvent"); out.writeInt(clientOid);
             out.writeShort(requestId); out.writeByte(1); out.writeBoolean(false);
         });
+    }
+
+    /** ResultMarshaller callback for read-only list requests (feed, party suggestions). */
+    public byte[] invocationResult(int clientOid,short requestId,Object result)throws IOException {
+        return frame(out->{eventHeader(out,"InvocationResponseEvent",clientOid);out.writeShort(requestId);out.writeByte(1);out.writeBoolean(true);out.writeInt(1);value(out,result);});
     }
 
     /** TellListener method one carries idle duration and an optional away message. */
@@ -720,7 +729,7 @@ public final class SessionCodec {
     /** The stock party panel resolves this handle from LevelPartyObject to toggle open/private. */
     public static final int LEVEL_PARTY_SERVICE=26;
     /** The announced BillingMarshaller slot; the depot purchase tab resolves it at window build. */
-    public static final int BILLING_SERVICE=SERVICES.size();
+    public static final int BILLING_SERVICE=17, EVENT_LOG_SERVICE=18, LOVE_SERVICE=19;
     public byte[] townDialog(int playerOid,int sceneOid,org.tortodrone.town.TownCatalog.Station station,ActorState source,long created,int service)throws IOException {
         return frame(out->{eventHeader(out,"CompoundEvent",playerOid);type(out,"com.threerings.util.StreamableArrayList");out.writeInt(2);
             attribute(out,playerOid,"sceneDialogCreated",o->value(o,created));
