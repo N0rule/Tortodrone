@@ -20,6 +20,11 @@ public final class TestClient {
 
     @FunctionalInterface public interface Session { void run(Socket peer, TestWire wire, int oid) throws Exception; }
 
+    /** Stock credential fields; a Steam client flag alone is still a normal login. */
+    public record LoginFlags(boolean steamClient, String session, boolean sega, int site, String invite) {
+        public boolean normalLogin() { return session == null && !sega && site == 0 && invite == null; }
+    }
+
     public static int authenticate(Socket peer, PublicKey publicKey, boolean valid, Session session) throws Exception {
         return authenticate(peer, publicKey, "tortodrone", valid ? "tortodrone" : "wrong-synthetic-password", valid, session);
     }
@@ -34,6 +39,11 @@ public final class TestClient {
     }
     public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
             String expectedResult, int timeoutMillis, Session session) throws Exception {
+        return authenticate(peer, publicKey, username, password, expectedResult, timeoutMillis,
+            new LoginFlags(false, null, false, 0, null), session);
+    }
+    public static int authenticate(Socket peer, PublicKey publicKey, String username, String password,
+            String expectedResult, int timeoutMillis, LoginFlags flags, Session session) throws Exception {
         boolean valid="success".equals(expectedResult);
         peer.setSoTimeout(timeoutMillis);
         byte[] plain = new byte[20];
@@ -56,9 +66,9 @@ public final class TestClient {
         secure.readShort(); secure.readUTF(); secure.readInt(); secure.readBoolean();
         byte[] shared = HexFormat.of().parseHex(secure.readUTF());
         for (int i = 0; i < 16; i++) shared[i] ^= plain[i];
-        byte[] credentials = credentials(username, password);
+        byte[] credentials = credentials(username, password, flags);
         try (var decoded = HandshakeCodec.credentials(credentials)) {
-            check(decoded.normalLogin() && decoded.username().equals(username), "normal credential envelope");
+            check(decoded.normalLogin() == flags.normalLogin() && decoded.username().equals(username), "credential envelope");
         }
         // Unknown fields must not be silently ignored in a credential envelope.
         byte[] trailing = Arrays.copyOf(credentials, credentials.length + 1);
@@ -199,17 +209,20 @@ public final class TestClient {
         check(pong.readLong() > 0 && pong.readInt() >= 0, "pong timestamp"); TestWire.end(pong);
     }
 
-    private static byte[] credentials(String username, String password) throws Exception {
+    private static byte[] credentials(String username, String password, LoginFlags flags) throws Exception {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         DataOutputStream out = new DataOutputStream(bytes);
         out.writeShort(-1); out.writeUTF("com.threerings.projectx.data.ProjectXCredentials");
         out.writeShort(-2); out.writeUTF("com.threerings.util.Name"); string(out, username);
         string(out, passwordHash(password));
         string(out, "private-test-ident"); string(out, "en");
-        out.writeBoolean(false); // session
+        out.writeBoolean(flags.session() != null);
+        if (flags.session() != null) out.writeUTF(flags.session());
         out.writeBoolean(false); // ticket
-        out.writeBoolean(false); out.writeBoolean(false); out.writeInt(0); // platform flags and site
-        out.writeBoolean(false); string(out, ""); // invite and region
+        out.writeBoolean(flags.sega()); out.writeBoolean(flags.steamClient()); out.writeInt(flags.site());
+        out.writeBoolean(flags.invite() != null);
+        if (flags.invite() != null) out.writeUTF(flags.invite());
+        string(out, ""); // region
         return bytes.toByteArray();
     }
 

@@ -79,16 +79,20 @@ public final class SecureHandshake {
             aes.init(Cipher.DECRYPT_MODE, new SecretKeySpec(secret, "AES"), new IvParameterSpec(
                 new byte[] {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8}));
             byte[] credentials = aes.doFinal(auth.encryptedCredentials());
-            AccountStore.Account account;
-            String language=null,region=null;
-            String loginResult="m.invalid_password";
+            AccountStore.Account account = null;
+            String language = null, region = null;
+            String loginResult = "m.invalid_password";
+            boolean normalLogin = false;
+            String attemptedUser = null;
             try (var decoded = HandshakeCodec.credentials(credentials)) {
-                account=null;
-                if(decoded.normalLogin()) {
-                    language=decoded.language();region=decoded.region();
-                    var result=accounts.login(decoded.username(),decoded.passwordHash());
-                    account=result.account();
-                    loginResult=account!=null ? "success" : result.failure()==AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
+                normalLogin = decoded.normalLogin();
+                attemptedUser = decoded.username();
+                if (normalLogin) {
+                    language = decoded.language();
+                    region = decoded.region();
+                    var result = accounts.login(decoded.username(), decoded.passwordHash());
+                    account = result.account();
+                    loginResult = account != null ? "success" : result.failure() == AccountStore.LoginFailure.NO_SUCH_USER ? "m.no_such_user" : "m.invalid_password";
                 }
             } finally {
                 Arrays.fill(credentials, (byte) 0);
@@ -98,11 +102,11 @@ public final class SecureHandshake {
                 accepted ? UUID.randomUUID().toString() : null, accepted ? account.username() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.debug("AuthResponse sent; result=" + (accepted ? "success"
-                : "rejected")
+            log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected")
                 + "; frame=" + authResponse.length + " bytes");
             if (!accepted) {
-                log.warn("Normal login rejected; reason=invalid credentials or unsupported login");
+                log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
+                    + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
                 return;
             }
             log.authenticated(account.id(), account.username());

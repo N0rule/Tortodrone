@@ -198,6 +198,7 @@ val testUnit = tasks.register<JavaExec>("testUnit") {
 val serverPath = publicOutput.file("tortodrone.jar").asFile.absolutePath
 val integrationPrograms = listOf(
     standalone("integrationServer", "org.tortodrone.integration.ServerIntegrationTest", listOf(serverPath)),
+    standalone("integrationAuthentication", "org.tortodrone.integration.AuthenticationIntegrationTest", listOf(serverPath)),
     standalone("integrationWebUi", "org.tortodrone.integration.WebUiSetupIntegrationTest", listOf(serverPath)),
     standalone("integrationConsole", "org.tortodrone.integration.ConsoleIntegrationTest", listOf(serverPath)),
     standalone("integrationMaps", "org.tortodrone.integration.MapPreparationIntegrationTest").apply { configure {

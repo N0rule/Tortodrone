@@ -14,7 +14,7 @@
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-PolyForm%20Noncommercial%201.0.0-blue?style=flat-square"></a>
 </p>
 
-Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a persistent world for the unmodified official client, with authoritative movement and combat plus both console and browser-based administration. Accounts use normal usernames and passwords; Steam and guest login are not supported. Tortodrone is not affiliated with or endorsed by the owners of Spiral Knights.
+Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a persistent world for the unmodified official client, with authoritative movement and combat plus both console and browser-based administration. Accounts use normal usernames and passwords, including when connecting from a Steam-installed client. Steam account/ticket authentication and guest login are not supported. Tortodrone is not affiliated with or endorsed by the owners of Spiral Knights.
 
 > [!IMPORTANT]
 > **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, and many town and player systems work. The full opening route to Haven, general missions, guilds, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
@@ -172,7 +172,7 @@ game.publicKey=<complete contents of data/keys/public.txt>
 - Never share the `data/keys/` directory. It contains the matching private key.
 - Restart the client after changing launcher settings.
 
-Log in with the account created in Step 4. A new knight enters Crash Site automatically. An existing completed knight returns to the native Ready Room, where **Return to Game** uses its saved destination.
+Log in with the **Tortodrone username and password** created in Step 4, even if your client is installed through Steam or has the Steam API initialized. Your Steam or official-server account does not automatically become a Tortodrone account; Steam tickets and saved session credentials are not supported. A new knight enters Crash Site automatically. An existing completed knight returns to the native Ready Room, where **Return to Game** uses its saved destination.
 
 ### Step 6: Open the WebUI (optional)
 
@@ -348,7 +348,7 @@ Imported definitions and passing serialization tests do not establish full gamep
 | Client cannot connect | Confirm the server is running, the launcher points at the correct server address and port, and TCP `47624` is allowed through the firewall. |
 | Secure exchange rejected | The launcher's public key must be the exact contents of `data/keys/public.txt`, including the `#` separator. |
 | Private client closes immediately | Check `private-client.log` in the Spiral Knights folder; it records launcher and client startup errors. |
-| Login refused | Create the account in the server console or WebUI, and verify its password. Game accounts and WebUI accounts are separate. |
+| Login refused | Use a Tortodrone game account created in the server console or WebUI and verify its password. Steam-installed clients work with normal username/password login, not Steam account/ticket or saved-session authentication. Game accounts and WebUI accounts are separate. |
 
 More diagnostic guidance is in [Operations](docs/operations.md#diagnosis). Logs are written to `data/logs/latest.log`; set `log-mode: debug` while stopped for more detail.
 

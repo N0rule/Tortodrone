@@ -96,13 +96,13 @@ public final class HandshakeCodec {
         // Only normal username/password authentication is supported.
         require(in.readUnsignedByte() == 0, "Platform ticket not supported");
         boolean sega = in.readBoolean();
-        boolean steam = in.readBoolean();
+        in.readBoolean(); // steamClient describes the client environment, not an authentication method
         int site = in.readInt();
         String invite = nullableString(in);
         String region=nullableString(in);
         require(in.available() == 0, "Unexpected credential fields");
         return new Credentials(username, passwordHash.toCharArray(),
-            session == null && !sega && !steam && site == 0 && invite == null,language,region);
+            session == null && !sega && site == 0 && invite == null,language,region);
     }
 
     public String nextMessageType(byte[] body) throws IOException {
