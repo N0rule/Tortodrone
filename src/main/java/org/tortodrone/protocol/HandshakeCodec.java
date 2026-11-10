@@ -102,7 +102,7 @@ public final class HandshakeCodec {
         String region=nullableString(in);
         require(in.available() == 0, "Unexpected credential fields");
         return new Credentials(username, passwordHash.toCharArray(),
-            session == null && !sega && !steam && site == 0 && invite == null,language,region);
+            session == null && !sega && site == 0 && invite == null,language,region);
     }
 
     public String nextMessageType(byte[] body) throws IOException {

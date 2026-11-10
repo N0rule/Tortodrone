@@ -13,8 +13,11 @@ public final class NormalCredentialsTest {
         check(!decoded.toString().contains("Alice") && !decoded.toString().contains("012345"), "credential diagnostics are redacted");
         decoded.close(); check(Arrays.equals(secret, new char[32]), "decoded transform cleared");
         for (byte[] unsupported : new byte[][] {payload("session", false, false, 0, null), payload(null, true, false, 0, null),
-                payload(null, false, true, 0, null), payload(null, false, false, 1, null), payload(null, false, false, 0, "invite")}) {
+                payload(null, false, false, 1, null), payload(null, false, false, 0, "invite")}) {
             try (var credentials = HandshakeCodec.credentials(unsupported)) { check(!credentials.normalLogin(), "session/platform credential not authorized"); }
+        }
+        try (var steamCreds = HandshakeCodec.credentials(payload(null, false, true, 0, null))) {
+            check(steamCreds.normalLogin(), "steam client with username/password is accepted");
         }
         byte[] normal = payload(null, false, false, 0, null);
         rejected(Arrays.copyOf(normal, normal.length + 1));
