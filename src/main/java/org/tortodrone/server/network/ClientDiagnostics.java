@@ -36,7 +36,8 @@ final class ClientDiagnostics {
             +"; desktop="+text((String)args.get(5))+"; window="+text((String)args.get(6))+"; fullscreen="+args.get(7)+"; ui-scale="+scale
             +"; gpu=unavailable; ram=unavailable");
     }
-    private static String text(String value){
+    /** Bounded, quoted untrusted text for both pre-authentication and joined diagnostics. */
+    static String text(String value){
         if(value==null||value.isBlank()||value.equals("???"))return "unknown";
         var out=new StringBuilder("\"");int length=Math.min(value.length(),256);
         for(int i=0;i<length;i++){

@@ -102,9 +102,11 @@ public final class SecureHandshake {
                 accepted ? UUID.randomUUID().toString() : null, accepted ? account.username() : null);
             socket.getOutputStream().write(authResponse);
             socket.getOutputStream().flush();
-            log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected") + "; frame=" + authResponse.length + " bytes");
+            log.debug("AuthResponse sent; result=" + (accepted ? "success" : "rejected")
+                + "; frame=" + authResponse.length + " bytes");
             if (!accepted) {
-                log.warn("Normal login rejected; account=" + attemptedUser + "; reason=" + loginResult + "; normalLogin=" + normalLogin);
+                log.warn("Normal login rejected; account=" + ClientDiagnostics.text(attemptedUser)
+                    + "; reason=" + (normalLogin ? loginResult : "unsupported_login") + "; normalLogin=" + normalLogin);
                 return;
             }
             log.authenticated(account.id(), account.username());
