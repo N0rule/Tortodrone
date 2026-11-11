@@ -7,6 +7,7 @@ import java.security.MessageDigest;
 import java.util.*;
 import javax.imageio.ImageIO;
 import com.threerings.config.ConfigManager;
+import com.threerings.config.ManagedConfig;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
 import com.threerings.opengl.gui.config.IconConfig;
@@ -24,8 +25,9 @@ public final class WebUiAssetsExport {
         Path game=Path.of(args[0]).toRealPath();out=Path.of(args[1]).toAbsolutePath().normalize();
         Path ancestor=out;while(!Files.exists(ancestor))ancestor=ancestor.getParent();
         if(Files.exists(out)||ancestor.toRealPath().startsWith(game))throw new IOException("Use a fresh output outside the client installation");
+        // Reflection avoids the stock JAR's com.threerings.b class/package name collision.
         Class<?> resourceType=Class.forName("com.threerings.b.f");
-        var resource=resourceType.getConstructor(String.class).newInstance("rsrc/");resourceType.getMethod("ga",String.class).invoke(resource,game.resolve("rsrc").toString());
+        var resource=resourceType.getConstructor(String.class).newInstance("rsrc/");resourceType.getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(resourceType,com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
         colors=(com.threerings.media.image.ColorPository)com.threerings.media.image.ColorPository.class.getMethod("a",resourceType).invoke(null,resource);
         var ctx=(com.threerings.opengl.util.d)Proxy.newProxyInstance(WebUiAssetsExport.class.getClassLoader(),new Class<?>[]{com.threerings.opengl.util.d.class},(proxy,method,values)->switch(method.getName()){
@@ -39,16 +41,16 @@ public final class WebUiAssetsExport {
         var socketColors=((com.threerings.opengl.gui.config.BackgroundConfig.ColorizedImage)socketStyle.background).colorizations;
         Files.createDirectories(out.resolve("icons"));
         int missing=0;
-        for(var config:manager.bd(ItemConfig.class).kK()) {
+        for(var config:configurations(manager,ItemConfig.class)) {
             try {var item=config.w(manager);if(item!=null&&item.icon!=null&&!item.icon.file.isBlank())items.put(config.getName(),write(item.icon));else missing++;}
             catch(RuntimeException|IOException unavailable){missing++;}
         }
-        for(var config:manager.bd(BattleSpriteConfig.class).kK()) {
+        for(var config:configurations(manager,BattleSpriteConfig.class)) {
             for(var entry:Map.of("1",config.icon1,"2",config.icon2,"3",config.icon3).entrySet()) {
                 if(entry.getValue()!=null&&!entry.getValue().file.isBlank())try{sprites.put(config.getName()+":"+entry.getKey(),write(entry.getValue()));}catch(RuntimeException|IOException unavailable){missing++;}
             }
         }
-        for(var config:manager.bd(BattleSpriteConfig.class).kK())for(int i=0;i<config.skills.length;i++) {
+        for(var config:configurations(manager,BattleSpriteConfig.class))for(int i=0;i<config.skills.length;i++) {
             var icon=config.skills[i].name.icon;
             if(icon!=null&&!icon.file.isBlank())sprites.put(config.getName()+":skill:"+i,write(icon));
         }
@@ -68,6 +70,12 @@ public final class WebUiAssetsExport {
         var manifest=new TreeMap<String,Object>();manifest.put("items",items);manifest.put("ui",ui);manifest.put("sprites",sprites);manifest.put("symbols",symbols);manifest.put("bytes",bytes);manifest.put("source","Resolved installed client icons; PNG, maximum 96 pixels; content hash deduplicated");manifest.put("unavailable",missing);
         Files.writeString(out.resolve("manifest.json"),Json.stringify(manifest),StandardOpenOption.CREATE_NEW);
         System.out.println("Prepared "+items.size()+" exact item mappings, "+sprites.size()+" Sprite mappings and "+ui.size()+" UI assets; "+bytes+" image bytes; "+missing+" unavailable icons use fallback");
+    }
+    static <T extends ManagedConfig> Iterable<T> configurations(ConfigManager manager,Class<T> type)throws IOException {
+        // Current stock API: bd returns an array of groups; be returns the exact group.
+        var group=manager.be(type);
+        if(group==null)throw new IOException("Client artwork configuration group is missing: "+type.getName());
+        return group.kR();
     }
     private static String write(IconConfig.ColorizedImage icon)throws IOException {
         if(icon.file==null||icon.file.isBlank())throw new IOException("Missing image path");

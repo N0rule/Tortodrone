@@ -109,7 +109,18 @@ export 5,035 unique images (9,341 item mappings, 120 Sprite mappings, 35 UI asse
 and 28 symbols; seven unavailable item icons keep fallbacks). The complete pack
 passed `assets-test.mjs` and was restored/served through a disposable packaged
 server, including PNG hashes and MIME checks. No game window was launched, and
-actual Windows extraction remains unverified.
+actual Windows extraction was not verified in that acceptance.
+
+Version 0.40.10 Windows headless acceptance used the installed stock client's
+current `be(Class)` / `kR()` configuration API and `gf(String)` resource-directory
+setter to export 9,442 item mappings, 120 Sprite mappings and 35 UI assets; seven
+unavailable item icons retained fallbacks. The generated pack passed hash/symbol
+validation and packaged cache restoration in a disposable deployment. No game
+window was launched and the installed client was read-only. The optional
+`scripts/compat/WebUiAssetsCompatibility.java` regression compiles alongside
+`WebUiAssetsExport.java` against the stock client classpath and built server JAR;
+it checks the resource setter and synthetic typed, empty and missing groups
+without installed resource loading or real preferences.
 
 `./gradlew testUnit -PunitTests=WebIdentityStoreTest,WebUiTest,WebAdminServiceTest,ServerSettingsTest,MonitoringTest,CompanionInspectionTest` exercises disposable HTTP, credential and domain fixtures. `./gradlew integrationWebUi integrationConsole` verifies packaged first-run setup, WebUI identity management, console recovery while the listener is stopped and ordinary local administration. For browser acceptance, use a disposable deployment with explicitly configured direct HTTP or the same-host TLS proxy described in [Operations](operations.md#secure-webui-setup), never live player data. Frontend sources live in `src/webui/`; `buildWebui` packages them beside the JAR, including custom `deploymentOutput`.
 
