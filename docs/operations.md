@@ -194,8 +194,12 @@ configuration. Depot defaults are bundled inside the JAR; live offers and
 promotions are edited in the WebUI's Supply Depot page. Offline build preparation
 updates recognized unchanged defaults. A conflicting customized content file
 stops preparation before any planned content replacements, prints the conflicting
-paths and requires a separate validated candidate. It does not create
-`content-updates/` or `.proposed` files. Old review folders are not runtime inputs
+paths and requires a separate validated candidate. The generated
+`_internal/default-source.properties` is updater metadata, not a local
+gameplay customization: it refreshes from the validated source manifest under
+the same deployment lock, only after content conflict checks pass.
+Preparation does not create `content-updates/` or `.proposed` files.
+Old review folders are not runtime inputs
 and are not deleted automatically. This safeguard concerns Tortodrone updates,
 not client updates; existing supported content does not need reimporting merely
 because the client added new content.

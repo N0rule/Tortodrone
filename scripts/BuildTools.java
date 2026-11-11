@@ -47,6 +47,7 @@ public final class BuildTools {
     private record Removal(Path target,String digest) { }
     /** Map provenance manifest checked in beside the packs it pins. */
     private static final String MAP_MANIFEST = "scene-source.properties";
+    private static final Path DEFAULT_MANIFEST = Path.of("_internal/default-source.properties");
     private static void prepare(Path project, Path output, String command) throws Exception {
         boolean mapsOnly=command.equals("maps");
         Path contentSource=project.resolve("content"),mapSource=contentSource.resolve("maps");
@@ -61,7 +62,7 @@ public final class BuildTools {
             &&java.util.regex.Pattern.compile("(?m)(?:^|[\\r\\n{,])\\s*(?:depot|\"depot\"|'depot')\\s*:").matcher(Files.readString(oldShops)).find())
             throw new IOException("Legacy Depot YAML and existing database require EconomyUpgrade before content replacement; original files retained");
         var copies=new ArrayList<Copy>();var conflicts=new ArrayList<String>();
-        var ownership=sourceOwnership(contentSource,"_internal/default-source.properties");
+        var ownership=sourceOwnership(contentSource,DEFAULT_MANIFEST.toString());
         if(mapsOnly)plan(mapSource,output,copies,null,null,conflicts);
         else {
             plan(contentSource,output,copies,null,ownership,conflicts);
@@ -137,6 +138,12 @@ public final class BuildTools {
                 // through or replaced; keep it exactly as the offline preparation always did.
                 if(!Files.isRegularFile(target,LinkOption.NOFOLLOW_LINKS))continue;
                 if(Files.mismatch(target,file)==-1)continue;
+                // This is generated updater metadata, not editable gameplay content. It cannot
+                // pin its own checksum. Only the validated source manifest grants ownership;
+                // never use the deployed copy to authorize replacing other files.
+                if(ownership!=null&&relative.equals(DEFAULT_MANIFEST)) {
+                    copies.add(new Copy(file,target,true));continue;
+                }
                 // Only files this source published before are upgraded; edited packs keep their bytes.
                 if(sourceOwns(ownership,relative,target))copies.add(new Copy(file,target,true));
                 else if(ownership!=null) {
