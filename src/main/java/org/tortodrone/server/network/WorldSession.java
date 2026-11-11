@@ -1149,6 +1149,10 @@ final class WorldSession implements AutoCloseable {
         log.selected(knight.id(),profile.worldId(),knight.name());
         log.info("Character selected; knight=" + knight.name() + " (#" + profile.worldId() + "); rosterId="+knight.id());
         if(!readyRoom)monitorScene();
+        // Party events belong to the selected session, not its scene subscription.
+        // Ready Room is client-local and never calls entered(); delaying this worker
+        // until then strands invitations and can overflow the queue on world return.
+        delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
         log.debug("Knight/scene initialization completed; duration-ms="+((System.nanoTime()-selectionStarted)/1000000));
     }
 
@@ -1718,7 +1722,6 @@ final class WorldSession implements AutoCloseable {
         for(var candidate:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN))if(scene.map().id()==OpeningComlinks.scene(candidate)&&candidate.eligible(profile.progress(),completedOpening.keySet()))arrivalComlink=candidate;
         if(auctionAfterArrival){auctionAfterArrival=false;try{openAuction();}catch(IOException refused){unavailable(refused.getMessage());}}
         persistence=WorldStatePoller.join(this,characters,profile,authRevision,knight.name());
-        if(delivery==null)delivery=Thread.ofVirtual().name("SceneDelivery-"+oid).start(this::deliverPublications);
     }
 
     private record AlchemyDestination(String key,ScenePortals.Entrance entrance) { }

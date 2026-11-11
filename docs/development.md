@@ -93,6 +93,14 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 **Stock reader/network acceptance ≠ graphical acceptance.** For a change to rendering, attachment composition, animation or transition readiness, one isolated unchanged-client graphical scenario may be necessary; for altered shared-instance behavior, test with two clients. This is **not** a default validation step for unrelated tasks. Use disposable endpoints, public keys, home/prefs/cache/temp/native extraction and test accounts; never patch the production launcher/client. Save and review screenshots or logs where the fixture provides them. Keep the game window focused; platform window-manager and input behaviors can invalidate short action captures.
 
+Ready Room is client-local: it has no server place object, scene subscription or pawn.
+Session party-event delivery must start at knight selection, not `enteredPlace`;
+otherwise invitations can accumulate and disconnect the player on Return to Game.
+`ReadyRoomSessionTest` covers invitation delivery before world entry, more than one
+queue's worth of drained events, return/re-entry, worker cleanup and a live loopback
+connection. `ReadyRoomCompatibility` is the narrow read-only stock-reader check for
+the native move callback and cleared world/channel location; neither test proves visuals.
+
 `CheckCombatRendering` uses a fresh output path, records logs/screenshots and exercises sword/gun/bomb controls and Haven↔Training travel. It does not verify every weapon, moving-target hits, full parties or general dungeon mechanics. Source-client binary/current wire observations matter more than an old 2011 marshaller ID table.
 
 ## WebUI verification
