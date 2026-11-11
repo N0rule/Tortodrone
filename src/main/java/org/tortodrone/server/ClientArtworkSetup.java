@@ -33,7 +33,7 @@ public final class ClientArtworkSetup {
             prepare(deployment, explicit, skip,
                 SteamClientLocator.roots(Path.of(System.getProperty("user.home")), System.getProperty("os.name"), System.getenv()),
                 console == null ? null : () -> console.readLine("Spiral Knights installation folder (blank to skip): "),
-                ClientArtworkSetup::export, info);
+                (game, output) -> export(game, output, info), info);
         } catch (IOException | RuntimeException failure) {
             warn.accept("WebUI artwork unavailable: " + failure.getMessage());
             warn.accept("Continuing with fallback icons. Retry with --client \"/path/to/Spiral Knights\"; game maps are unchanged.");
@@ -90,11 +90,12 @@ public final class ClientArtworkSetup {
             }
         }
         if (deployment.startsWith(game)) throw new IOException("Artwork output must be outside the client installation");
-        info.accept("Preparing WebUI images from " + game + "; the client installation will not be changed.");
+        info.accept("Preparing WebUI images from " + game);
         Path work = Files.createTempDirectory(data, ".client-artwork-");
         try {
             Path output = work.resolve("export");
             exporter.export(game, output);
+            info.accept("WebUI artwork: validating and caching images...");
             if (!ready(output)) throw new IOException("Export did not produce a complete artwork manifest");
             publish(output, cache);
             publish(output, target);
@@ -191,7 +192,7 @@ public final class ClientArtworkSetup {
         Files.createDirectories(path);
     }
 
-    private static void export(Path game, Path output) throws IOException {
+    private static void export(Path game, Path output, Consumer<String> info) throws IOException {
         Path scratch = output.getParent();
         Path source = scratch.resolve("WebUiAssetsExport.java");
         try (var input = ClientArtworkSetup.class.getResourceAsStream("/tools/WebUiAssetsExport.java")) {
@@ -205,11 +206,11 @@ public final class ClientArtworkSetup {
         String suffix = System.getProperty("os.name").toLowerCase(Locale.ROOT).startsWith("windows") ? ".exe" : "";
         Path bin = Path.of(System.getProperty("java.home"), "bin");
         if (!Files.isRegularFile(bin.resolve("javac" + suffix))) throw new IOException("Install JDK 25 (including javac) to prepare artwork");
-        run(List.of(bin.resolve("javac" + suffix).toString(), "-J-XX:ActiveProcessorCount=2", "--release", "25", "-cp", cp, "-d", scratch.toString(), source.toString()), scratch, "compile");
+        run(List.of(bin.resolve("javac" + suffix).toString(), "-J-XX:ActiveProcessorCount=2", "--release", "25", "-cp", cp, "-d", scratch.toString(), source.toString()), scratch, "compile", info, 5000);
         run(List.of(bin.resolve("java" + suffix).toString(), "-XX:ActiveProcessorCount=2", "-Xmx512m", "--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED",
             "-Djava.awt.headless=true", "-Dno_unpack_resources=true", "-Duser.home=" + scratch.resolve("home"),
             "-Djava.util.prefs.userRoot=" + scratch.resolve("prefs"), "-Djava.util.prefs.systemRoot=" + scratch.resolve("system-prefs"),
-            "-Djava.io.tmpdir=" + scratch, "-cp", scratch + File.pathSeparator + cp, "WebUiAssetsExport", game.toString(), output.toString()), scratch, "export");
+            "-Djava.io.tmpdir=" + scratch, "-cp", scratch + File.pathSeparator + cp, "WebUiAssetsExport", game.toString(), output.toString()), scratch, "export", info, 5000);
     }
 
     static String exportClasspath(Path game, Path jar) {
@@ -217,13 +218,21 @@ public final class ClientArtworkSetup {
         return game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + jar;
     }
 
-    private static void run(List<String> command, Path scratch, String step) throws IOException {
+    static void run(List<String> command, Path scratch, String step, Consumer<String> info, long progressMillis) throws IOException {
+        if (progressMillis < 1) throw new IllegalArgumentException("Progress interval must be positive");
+        info.accept("WebUI artwork: " + (step.equals("compile") ? "compiling the image exporter" : "extracting images") + "...");
         Path log = scratch.resolve(step + ".log");
         Process child = new ProcessBuilder(command).directory(scratch.toFile()).redirectErrorStream(true).redirectOutput(log.toFile()).start();
         Thread cleanup = new Thread(child::destroyForcibly, "ArtworkExportCleanup");
         Runtime.getRuntime().addShutdownHook(cleanup);
         try {
-            if (!child.waitFor(240, TimeUnit.SECONDS)) throw new IOException("Artwork " + step + " timed out");
+            long started = System.nanoTime(), deadline = started + TimeUnit.SECONDS.toNanos(240);
+            while (true) {
+                long remaining = deadline - System.nanoTime();
+                if (remaining <= 0) throw new IOException("Artwork " + step + " timed out");
+                if (child.waitFor(Math.min(remaining, TimeUnit.MILLISECONDS.toNanos(progressMillis)), TimeUnit.NANOSECONDS)) break;
+                info.accept("WebUI artwork " + step + " in progress (" + TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - started) + "s elapsed)...");
+            }
             if (child.exitValue() != 0) {
                 String detail = Files.size(log) <= 65_536 ? Files.readString(log) : "Exporter output exceeded diagnostic limit";
                 throw new IOException("Artwork " + step + " failed: " + detail.strip());

@@ -16,6 +16,7 @@ public final class ClientArtworkSetupTest {
     public static void main(String[] args) throws Exception {
         if(args.length==1&&args[0].equals("--wait-child")){System.out.println("ready");Thread.sleep(60_000);return;}
         if(args.length==1&&args[0].equals("--classpath-child")){System.out.println("wildcard ready");return;}
+        if(args.length==1&&args[0].equals("--progress-child")){Thread.sleep(500);return;}
         Path root = Files.createTempDirectory("tortodrone-artwork-test-");
         try {
             discovery(root.resolve("discovery"));
@@ -23,6 +24,7 @@ public final class ClientArtworkSetupTest {
             prompts(root.resolve("prompts"));
             failures(root.resolve("failures"));
             classpath(root.resolve("classpath with spaces"));
+            progress(root.resolve("progress"));
             cancellation();
             options();
             System.out.println("PASS: Steam Linux/Windows roots and additional libraries, wildcard classpath with spaces, prompts, noninteractive/skip, persistent artwork cache, safe publication, failure preservation and startup flags");
@@ -63,7 +65,10 @@ public final class ClientArtworkSetupTest {
             check(input.equals(game), "Exact real client root passed to exporter");
             exports.incrementAndGet(); pack(output, 0xff2288aa);
         };
-        ClientArtworkSetup.prepare(deployment, game, false, List.of(), null, exporter, message -> {});
+        var messages = new ArrayList<String>();
+        ClientArtworkSetup.prepare(deployment, game, false, List.of(), null, exporter, messages::add);
+        check(messages.getFirst().equals("Preparing WebUI images from " + game), "Concise preparation message");
+        check(messages.stream().anyMatch(m -> m.contains("validating and caching")), "Publication phase is visible");
         Path target = deployment.resolve("webui/assets/game"), cache = deployment.resolve("data/client-artwork");
         check(exports.get() == 1 && ClientArtworkSetup.ready(target) && ClientArtworkSetup.ready(cache), "Explicit first export installs and caches");
         check(Files.readString(game.resolve("code/projectx-pcode.jar")).equals("read-only fixture"), "Client input unchanged");
@@ -165,6 +170,16 @@ public final class ClientArtworkSetupTest {
             check(child.exitValue() == 0 && Files.readString(log).contains("wildcard ready"),
                 "Java expands the wildcard with spaces in both directory and JAR names: " + Files.readString(log));
         } finally { ClientArtworkSetup.stop(child); }
+    }
+
+    private static void progress(Path root) throws Exception {
+        Files.createDirectories(root);
+        String executable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
+        var messages = new ArrayList<String>();
+        ClientArtworkSetup.run(List.of(executable, "-XX:ActiveProcessorCount=2", "-cp", System.getProperty("java.class.path"),
+            ClientArtworkSetupTest.class.getName(), "--progress-child"), root, "export", messages::add, 50);
+        check(messages.getFirst().contains("extracting images"), "Extraction phase is visible before child work");
+        check(messages.stream().anyMatch(m -> m.contains("export in progress") && m.contains("elapsed")), "Waiting reports progress without claiming a percentage");
     }
 
     private static void options() throws Exception {
