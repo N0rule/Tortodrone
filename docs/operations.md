@@ -53,6 +53,20 @@ changing the installation or launching its game window. No Python/Node runtime
 is needed. `--skip-client-assets` also avoids the one-time work on server hosts
 without a client. WebUI-disabled hosting does not prepare artwork.
 
+Preparation reports compilation, extraction and validation/cache phases, with an
+elapsed-time update every five seconds while a child process is working. Suitable
+artwork API operations are selected by unique checked signatures and generic
+types, not obfuscated method names. Missing or ambiguous matches stop extraction
+and preserve existing artwork/fallbacks rather than guessing. This tolerates
+harmless method renaming, not arbitrary class, resource, protocol or semantic
+changes; genuine client compatibility changes still require verification.
+
+Artwork discovery is independent of the supported gameplay catalog. Extra client
+item/Sprite icons may appear in the artwork manifest, but cannot add weapons,
+costumes or maps to `content/`, rewrite native item bindings, or change existing
+item identities. New gameplay content requires an explicit reviewed import and
+implementation; updating the installed client does not enable it automatically.
+
 The complete image pack is cached in `data/client-artwork/` and served from
 `webui/assets/game/`. Rebuilds can reset that frontend directory; the next startup
 restores it from the private cache without re-exporting. Keep the cache in your

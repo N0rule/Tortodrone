@@ -6,11 +6,12 @@ import com.threerings.config.ConfigManager;
 import com.threerings.config.ManagedConfig;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
+import org.tortodrone.server.ClientArtworkApi;
 
 /** Optional stock-API regression: owned synthetic configs, no installed resources or preferences. */
 public final class WebUiAssetsCompatibility {
     public static void main(String[] args)throws Exception {
-        check(Class.forName("com.threerings.b.f").getMethod("gf",String.class).getReturnType()==void.class,"current resource-directory setter");
+        ClientArtworkApi.method(Class.forName("com.threerings.b.f"),"resource directory",false,void.class,String.class);
         var manager=new FixtureManager();
         var item=new ItemConfig();item.setName("Artwork fixture item");
         var sprite=new BattleSpriteConfig();sprite.setName("Artwork fixture sprite");

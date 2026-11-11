@@ -7,10 +7,13 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.*;
 import org.tortodrone.support.TestDeployment;
+import org.tortodrone.resources.ContentManager;
+import org.tortodrone.resources.Json;
 import static org.tortodrone.support.TestWire.check;
 
 /** Real packaged startup and HTTP requests; a tiny owned PNG pack, no installed client. */
 public final class ClientArtworkStartupTest {
+    @SuppressWarnings("unchecked")
     public static void main(String[] args) throws Exception {
         Path root = Files.createTempDirectory("tortodrone-artwork-startup-");
         Process process = null;
@@ -18,13 +21,24 @@ public final class ClientArtworkStartupTest {
             Path source = Path.of(ClientArtworkSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI());
             Path jar = root.resolve("tortodrone.jar");
             TestDeployment.copyServer(source, jar);
+            Path config = root.resolve("config/server.yml");
+            Files.writeString(config, "server-ip: 127.0.0.1\nserver-port: 0\nwebui/content_url-port: 0\nwebui-enabled: true\nwebui-public-url: 0.0.0.0\nwebui-tls-mode: http\n");
+            var before = ContentManager.load(root);
+            var identities = new TreeMap<String,String>();
+            for (var item : before.items().entries()) identities.put(item.config(), before.items().referenceId(item));
+            var contentBytes = snapshot(root.resolve("content"));
+            String clientOnly = "Weapon/Client Update Artwork Only";
+            check(before.items().find(clientOnly) == null, "Client-only item not in supported catalog");
             Path cache = root.resolve("data/client-artwork");
             ClientArtworkSetupTest.pack(cache, 0xff334455);
+            var manifest = new TreeMap<String,Object>((Map<String,Object>)Json.parse(Files.readString(cache.resolve("manifest.json"))));
+            var itemIcons = new TreeMap<String,Object>((Map<String,Object>)manifest.get("items"));
+            itemIcons.put(clientOnly, itemIcons.values().iterator().next());
+            manifest.put("items", itemIcons);
+            Files.writeString(cache.resolve("manifest.json"), Json.stringify(manifest));
             Path assets = root.resolve("webui/assets/game");
             delete(assets); Files.createDirectories(assets);
             Files.writeString(assets.resolve("manifest.json"), "{\"items\":{},\"sprites\":{},\"ui\":{}}");
-            Path config = root.resolve("config/server.yml");
-            Files.writeString(config, "server-ip: 127.0.0.1\nserver-port: 0\nwebui/content_url-port: 0\nwebui-enabled: true\nwebui-public-url: 0.0.0.0\nwebui-tls-mode: http\n");
             String javaExecutable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
             process = new ProcessBuilder(javaExecutable, "-XX:ActiveProcessorCount=2", "-Duser.home=" + root.resolve("isolated-home"), "-jar", jar.toString()).redirectErrorStream(true).start();
             var lines = new LinkedBlockingQueue<String>();
@@ -64,7 +78,12 @@ public final class ClientArtworkStartupTest {
             check(process.waitFor(15, TimeUnit.SECONDS) && process.exitValue() == 0, "Normal console commands remain readable after pre-listener setup");
             reader.join(1000);
             check(Files.isRegularFile(cache.resolve("manifest.json")), "Local artwork cache survives shutdown");
-            System.out.println("PASS: packaged startup restores artwork before listeners, serves exact manifest/PNG bytes over HTTP, holds the deployment lease and shuts down through the unchanged console");
+            var after = ContentManager.load(root);
+            check(after.items().find(clientOnly) == null && after.items().entries().equals(before.items().entries()), "Extra client artwork cannot enable or mutate gameplay items/native identities");
+            for (var item : after.items().entries()) check(identities.get(item.config()).equals(after.items().referenceId(item)), "Existing item reference identity preserved");
+            check(after.scenes().scenes().stream().map(s -> s.id()).toList().equals(before.scenes().scenes().stream().map(s -> s.id()).toList()), "Artwork cannot add gameplay maps");
+            check(contentBytes.equals(snapshot(root.resolve("content"))), "Artwork startup never writes gameplay definitions or bindings");
+            System.out.println("PASS: packaged artwork restoration/HTTP/lease/console; client-only artwork leaves gameplay catalog, maps, native identities and content bytes unchanged");
         } finally {
             if (process != null && process.isAlive()) { process.destroyForcibly(); process.waitFor(10, TimeUnit.SECONDS); }
             delete(root);
@@ -76,6 +95,16 @@ public final class ClientArtworkStartupTest {
         connection.setConnectTimeout(5000); connection.setReadTimeout(5000);
         try { check(connection.getResponseCode() == 200, "Artwork HTTP response"); try (var input = connection.getInputStream()) { return input.readAllBytes(); } }
         finally { connection.disconnect(); }
+    }
+
+    private static Map<String,String> snapshot(Path root) throws Exception {
+        var result = new TreeMap<String,String>();
+        var digest = java.security.MessageDigest.getInstance("SHA-256");
+        try (var files = Files.walk(root)) {
+            for (var file : files.filter(Files::isRegularFile).toList())
+                result.put(root.relativize(file).toString(), HexFormat.of().formatHex(digest.digest(Files.readAllBytes(file))));
+        }
+        return result;
     }
 
     private static void delete(Path path) throws IOException {

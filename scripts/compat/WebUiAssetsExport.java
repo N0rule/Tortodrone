@@ -7,12 +7,14 @@ import java.security.MessageDigest;
 import java.util.*;
 import javax.imageio.ImageIO;
 import com.threerings.config.ConfigManager;
+import com.threerings.config.ConfigGroup;
 import com.threerings.config.ManagedConfig;
 import com.threerings.projectx.item.config.ItemConfig;
 import com.threerings.projectx.sprites.config.BattleSpriteConfig;
 import com.threerings.opengl.gui.config.IconConfig;
 import com.threerings.opengl.renderer.config.ColorizationConfig;
 import org.tortodrone.resources.Json;
+import org.tortodrone.server.ClientArtworkApi;
 
 /** Optional offline preparation using the installed client's own resolver and colorizer.
  * Output is proprietary local material: never add it to Git or redistribute without rights. */
@@ -27,9 +29,10 @@ public final class WebUiAssetsExport {
         if(Files.exists(out)||ancestor.toRealPath().startsWith(game))throw new IOException("Use a fresh output outside the client installation");
         // Reflection avoids the stock JAR's com.threerings.b class/package name collision.
         Class<?> resourceType=Class.forName("com.threerings.b.f");
-        var resource=resourceType.getConstructor(String.class).newInstance("rsrc/");resourceType.getMethod("gf",String.class).invoke(resource,game.resolve("rsrc").toString());
+        var resource=resourceType.getConstructor(String.class).newInstance("rsrc/");
+        ClientArtworkApi.invoke(ClientArtworkApi.method(resourceType,"resource directory",false,void.class,String.class),resource,game.resolve("rsrc").toString());
         var manager=(ConfigManager)ConfigManager.class.getConstructor(resourceType,com.threerings.util.R.class,String.class).newInstance(resource,null,"config/");manager.init();
-        colors=(com.threerings.media.image.ColorPository)com.threerings.media.image.ColorPository.class.getMethod("a",resourceType).invoke(null,resource);
+        colors=(com.threerings.media.image.ColorPository)ClientArtworkApi.invoke(ClientArtworkApi.method(com.threerings.media.image.ColorPository.class,"color repository factory",true,com.threerings.media.image.ColorPository.class,resourceType),null,resource);
         var ctx=(com.threerings.opengl.util.d)Proxy.newProxyInstance(WebUiAssetsExport.class.getClassLoader(),new Class<?>[]{com.threerings.opengl.util.d.class},(proxy,method,values)->switch(method.getName()){
             case "getResourceManager"->resource;case "getConfigManager"->manager;case "getColorPository"->colors;case "getImageCache"->images;
             case "getPixelScaleFactor","getWindowScaleFactor"->1f;
@@ -37,12 +40,16 @@ public final class WebUiAssetsExport {
         });
         images=new com.threerings.opengl.util.h(ctx,false);
         // ItemConfig.Level.d uses this stock style to color category masks for empty sockets.
-        var socketStyle=manager.d(com.threerings.opengl.gui.config.StyleConfig.class,"Status/Equip Socket/Backing, Icon").getOriginal(ctx);
+        var style=(com.threerings.opengl.gui.config.StyleConfig)ClientArtworkApi.invoke(ClientArtworkApi.namedConfig(ConfigManager.class,ManagedConfig.class),manager,com.threerings.opengl.gui.config.StyleConfig.class,"Status/Equip Socket/Backing, Icon");
+        if(style==null)throw new IOException("Client artwork socket style is missing");
+        var socketStyle=(com.threerings.opengl.gui.config.StyleConfig.Original)ClientArtworkApi.invoke(ClientArtworkApi.method(com.threerings.opengl.gui.config.StyleConfig.class,"original style",false,com.threerings.opengl.gui.config.StyleConfig.Original.class,com.threerings.opengl.util.d.class),style,ctx);
         var socketColors=((com.threerings.opengl.gui.config.BackgroundConfig.ColorizedImage)socketStyle.background).colorizations;
         Files.createDirectories(out.resolve("icons"));
         int missing=0;
+        // Resolve once, outside per-icon fallback handling: an incompatible API must stop extraction.
+        var originalItem=ClientArtworkApi.method(ItemConfig.class,"original item",false,ItemConfig.Original.class,ConfigManager.class);
         for(var config:configurations(manager,ItemConfig.class)) {
-            try {var item=config.w(manager);if(item!=null&&item.icon!=null&&!item.icon.file.isBlank())items.put(config.getName(),write(item.icon));else missing++;}
+            try {var item=(ItemConfig.Original)ClientArtworkApi.invoke(originalItem,config,manager);if(item!=null&&item.icon!=null&&!item.icon.file.isBlank())items.put(config.getName(),write(item.icon));else missing++;}
             catch(RuntimeException|IOException unavailable){missing++;}
         }
         for(var config:configurations(manager,BattleSpriteConfig.class)) {
@@ -72,10 +79,14 @@ public final class WebUiAssetsExport {
         System.out.println("Prepared "+items.size()+" exact item mappings, "+sprites.size()+" Sprite mappings and "+ui.size()+" UI assets; "+bytes+" image bytes; "+missing+" unavailable icons use fallback");
     }
     static <T extends ManagedConfig> Iterable<T> configurations(ConfigManager manager,Class<T> type)throws IOException {
-        // Current stock API: bd returns an array of groups; be returns the exact group.
-        var group=manager.be(type);
+        var group=ClientArtworkApi.invoke(ClientArtworkApi.groupAccessor(ConfigManager.class,ConfigGroup.class,ManagedConfig.class),manager,type);
         if(group==null)throw new IOException("Client artwork configuration group is missing: "+type.getName());
-        return group.kR();
+        var values=ClientArtworkApi.invoke(ClientArtworkApi.typedValues(ConfigGroup.class,ManagedConfig.class),group);
+        if(!(values instanceof Iterable<?> iterable))throw new IOException("Client artwork configuration iteration is missing: "+type.getName());
+        // Check every value before using it, including an empty group's valid iterable.
+        var checked=new ArrayList<T>();
+        for(var value:iterable){if(!type.isInstance(value))throw new IOException("Wrong client artwork configuration type: "+type.getName());checked.add(type.cast(value));}
+        return checked;
     }
     private static String write(IconConfig.ColorizedImage icon)throws IOException {
         if(icon.file==null||icon.file.isBlank())throw new IOException("Missing image path");
