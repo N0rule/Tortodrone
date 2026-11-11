@@ -2,6 +2,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import java.io.File
+import java.nio.file.Files
 
 plugins {
     java
@@ -280,16 +281,34 @@ tasks.wrapper {
     distributionSha256Sum = "bafc141b619ad6350fd975fc903156dd5c151998cc8b058e8c1044ab5f7b031f"
 }
 
-// Explicit portable packaging includes deliverables only, never runtime databases or keys.
-tasks.register<Zip>("portableZip") {
+// Publish clean defaults, not the operator's deployment (which may contain private
+// configuration, locally extracted artwork, skip decisions or unfinished exports).
+val portableZip = tasks.register<Zip>("portableZip") {
     group = "distribution"
     dependsOn(buildServer)
     archiveFileName.set("Tortodrone-v${project.version}.zip")
     destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-    from(publicOutput) {
-        include("tortodrone.jar", "webui/**", "config/**", "content/**", "plugins/**")
-        exclude("**/*.key", "**/*.pk8", "**/*.pem", "**/*.db*", "**/*.sqlite*")
-    }
-    from("README.md", "VERSION")
+    from(serverJar.flatMap { it.archiveFile })
+    from("src/webui") { into("webui") }
+    from("config") { into("config") }
+    from("content") { into("content") }
+    from("plugins") { into("plugins") }
+    from("README.md", "VERSION", "LICENSE", "NOTICE", "CONTRIBUTING.md")
     from("docs") { into("docs") }
+    from("licenses") { into("licenses") }
+    from("src/main/resources/licenses") { into("licenses") }
+    from("src/main/resources/THIRD-PARTY.md")
+    eachFile {
+        var source: File? = file
+        while (source != null) {
+            if (Files.isSymbolicLink(source.toPath()))
+                throw GradleException("Refusing to package a symbolic link: $path")
+            source = source.parentFile
+        }
+    }
 }
+val integrationPackaging = standalone("integrationPackaging", "org.tortodrone.integration.PackagingIntegrationTest",
+    listOf(portableZip.get().archiveFile.get().asFile.absolutePath)).apply {
+    configure { dependsOn(portableZip) }
+}
+testIntegration.configure { dependsOn(integrationPackaging) }

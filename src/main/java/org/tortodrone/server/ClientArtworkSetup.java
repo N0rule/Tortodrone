@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 import org.tortodrone.resources.Json;
+import org.tortodrone.resources.ContentFiles;
 
 /** Pre-listener local artwork preparation. Installed game files are always read-only. */
 public final class ClientArtworkSetup {
@@ -93,15 +94,18 @@ public final class ClientArtworkSetup {
             if (!ready(output)) throw new IOException("Export did not produce a complete artwork manifest");
             publish(output, target);
             Files.deleteIfExists(skipped);
+            Files.deleteIfExists(data.resolve("client-artwork.skipped"));
             info.accept("WebUI images ready. No map scene data was extracted.");
         } finally { delete(work); }
     }
 
     /** Validate all served paths/hashes, including optimized prebuilt PNG/WebP packs. */
     static boolean ready(Path directory) throws IOException {
+        ContentFiles.safe(directory);
         if (!Files.exists(directory, LinkOption.NOFOLLOW_LINKS)) return false;
         if (Files.isSymbolicLink(directory)) throw new IOException("Symbolic artwork directory refused: " + directory);
         Path manifest = directory.resolve("manifest.json");
+        ContentFiles.safe(manifest);
         if (!Files.isRegularFile(manifest, LinkOption.NOFOLLOW_LINKS)) return false;
         if (Files.size(manifest) > 8_388_608) throw new IOException("Artwork manifest is too large");
         if (!(Json.parseCatalog(Files.readString(manifest)) instanceof Map<?,?> data)) throw new IOException("Invalid artwork manifest");
@@ -122,6 +126,7 @@ public final class ClientArtworkSetup {
         long total = 0;
         for (String name : files) {
             Path path = directory.resolve(name);
+            ContentFiles.safe(path);
             if (!Files.isRegularFile(path, LinkOption.NOFOLLOW_LINKS)) return false;
             if (!path.toRealPath().startsWith(root)) throw new IOException("Artwork file escapes its directory");
             long size = Files.size(path);

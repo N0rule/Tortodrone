@@ -107,6 +107,16 @@ public final class ClientArtworkSetupTest {
         check(messages.stream().anyMatch(m -> m.contains("No interactive terminal")) && exports.get() == 2, "Piped/service startup never consumes console commands or blocks");
         ClientArtworkSetup.prepare(noninteractive, game, true, List.of(), null, exporter, messages::add);
         check(exports.get() == 2, "Skip flag bypasses extraction");
+        Path legacy=Files.createDirectory(root.resolve("legacy-skip"));
+        Files.createDirectories(legacy.resolve("data"));
+        Files.writeString(legacy.resolve("data/client-artwork.skipped"),"Previous operator decision\n");
+        ClientArtworkSetup.prepare(legacy,null,false,List.of(),()->{throw new AssertionError("Legacy skip must be honored");},exporter,messages::add);
+        check(exports.get()==2,"Legacy skip remains effective until explicitly overridden");
+        ClientArtworkSetup.prepare(legacy,game,false,List.of(),null,exporter,messages::add);
+        check(exports.get()==3&&!Files.exists(legacy.resolve("data/client-artwork.skipped")),"Explicit successful retry clears the obsolete skip marker");
+        delete(legacy.resolve("webui/assets/game"));
+        ClientArtworkSetup.prepare(legacy,null,false,List.of(),()->game.toString(),exporter,messages::add);
+        check(exports.get()==4,"Old skip decision cannot suppress preparation again after artwork removal");
     }
 
     private static void failures(Path root) throws Exception {
@@ -140,7 +150,18 @@ public final class ClientArtworkSetupTest {
             try { ClientArtworkSetup.main(new String[]{linkedDeployment.toString(), game.toString()}); throw new AssertionError("Manual preparation followed a data symlink"); }
             catch (IOException expected) { }
             check(!Files.exists(external.resolve("server.lock")), "Manual setup refuses linked data before opening its lease");
-        } catch (UnsupportedOperationException | FileSystemException unavailable) { /* Windows may require developer mode to create a test symlink. */ }
+            Path linkedManifest=Files.createDirectory(root.resolve("linked-manifest"));
+            Files.writeString(external.resolve("manifest.json"),"not JSON; must never be parsed");
+            Files.createSymbolicLink(linkedManifest.resolve("manifest.json"),external.resolve("manifest.json"));
+            try{ClientArtworkSetup.ready(linkedManifest);throw new AssertionError("Linked manifest accepted");}
+            catch(IOException expected){check(expected.getMessage().contains("Symlink"),"Rejects manifest link before parsing its target");}
+            Path parentLink=Files.createSymbolicLink(root.resolve("artwork-parent-link"),source);
+            try{ClientArtworkSetup.ready(parentLink.resolve("absent-pack"));throw new AssertionError("Linked artwork parent accepted");}
+            catch(IOException expected){check(expected.getMessage().contains("Symlink"),"Rejects linked parent even for missing artwork");}
+            System.out.println("PASS: artwork rejects symbolic output paths, manifests and parent directories");
+        } catch (UnsupportedOperationException | FileSystemException unavailable) {
+            System.out.println("SKIP: artwork symbolic-link checks unavailable on this host (" + unavailable.getClass().getSimpleName() + ")");
+        }
         var warnings = new ArrayList<String>();
         ClientArtworkSetup.prepare(deployment, root.resolve("missing-client"), false, message -> {}, warnings::add);
         check(warnings.stream().anyMatch(m -> m.contains("Continuing with fallback")), "Invalid explicit input does not prevent game hosting");

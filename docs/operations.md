@@ -184,6 +184,13 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 
 ## Data safety, updates and release builds
 
+`./gradlew portableZip` packages the executable JAR with clean source-owned
+configuration/content/frontend defaults and required license/attribution files,
+not the existing deployment tree. Local configuration, extracted artwork,
+skip decisions and temporary export directories are not release inputs.
+`./gradlew integrationPackaging` validates the actual portable archive and its
+content snapshot without starting a server or reading an installed client.
+
 1. Stop the server before filesystem-level backup/restore. Copy the **whole `data/` tree**, including the SQLite WAL/SHM and persistent RSA keys. Also back up `config/` and the complete `content/` tree.
 2. On update prepare and validate a separate content candidate; **retain your current `data/`**. The current database schema is 16. Databases on known predecessor schemas 9–15 require the [explicit economy upgrade/export](content.md#upgrading) before replacing legacy Depot YAML. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than altered automatically.
 3. Check `VERSION` and run the focused checks relevant to the release. The GitHub Actions workflow runs **only when a matching `v<VERSION>` tag is pushed**. It builds with Java 25 and publishes **one cross-platform development prerelease ZIP**. Packaging explicitly selects the server JAR, configuration, content, WebUI and plugin placeholder, plus documentation, licenses and attribution notices. It rejects symlinks, runtime data, keys, captures and locally extracted WebUI images; build scratch files and Git bundles are not selected. The workflow does not run regression tests or bundle a JRE/client installation. Nine maps ship with the release, including original Crash Site 398 and initial Rescue Camp 217; new-knight creation needs no separate opening-map import. See [opening setup](content.md#local-crash-site-playtest) and `.github/workflows/release.yml`.
