@@ -35,11 +35,11 @@ public final class TutorialHeatRewardTest {
             check(errors.isEmpty()&&results.size()==2,"concurrent settlement retries resolve through one durable receipt: "+errors);
             var after=characters.worldProfile(knight.name(),1);
             check(after.items().stream().filter(i->i.equippedSlot()!=null&&Set.of(0,1,2,6,7).contains(i.equippedSlot())).allMatch(i->i.heatProgress()==.5f),"25 collected heat uses existing native thresholds and five equipped eligible starters");
-            check(after.revision()==before.revision()+1&&characters.lastTownScene(knight.id(),1)==217,"gear heat and Camp destination commit with one completion revision");
+            check(after.revision()==before.revision()+1&&characters.lastTownScene(knight.id(),1)==1,"gear heat and Haven destination commit with one completion revision");
             characters.completeTutorial(knight.id(),1,before,25,rules);
             check(characters.worldProfile(knight.name(),1).equals(after),"duplicate completion cannot grant heat twice");
             var reopened=new CharacterStore(new Database(home,false),account,"HeatOwner",items);
-            check(reopened.worldProfile(knight.name(),1).equals(after)&&reopened.lastTownScene(knight.id(),1)==217,"gear heat and Camp receipt survive reopening storage");
+            check(reopened.worldProfile(knight.name(),1).equals(after)&&reopened.lastTownScene(knight.id(),1)==1,"gear heat and Haven receipt survive reopening storage");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
         System.out.println("PASS: tutorial floor heat -> native gear thresholds, ownership/auth/revision refusal, transactional rollback, concurrent settlement, duplicate protection and reopen");
     }

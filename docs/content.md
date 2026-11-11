@@ -707,9 +707,11 @@ five-minute extension is explicitly interim and is not enabled here.
 Normal builds and release ZIPs bundle the original Crash Site
 **398/version 2008859103** and initial Rescue Camp **217/version 373**.
 A fresh knight enters Crash Site automatically. Existing knights retain their
-progression. No manual map import is needed for the opening pair.
-The complete later route to Haven remains unfinished; see the
-[supported scope](../README.md#supported-scope).
+progression. On completing Crash Site's original exit and floor report, new
+knights travel directly to **Haven**, skipping the legacy Rescue Camp chain.
+Collected floor heat, completion, Haven access and the saved return location
+commit together; no skipped-mission receipts, rank or fixed rewards are granted.
+Existing Camp checkpoints remain unchanged. No manual map import is needed.
 
 For a source-checkout preflight:
 
@@ -719,7 +721,7 @@ java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 ```
 
 The check must print `PASS: verified opening content`, scene 398 at entrance
-2659 / `(-21, -69.5)`, and Camp 217 at entrance 2017 / `(0.5, -0.5)`.
+2659 / `(-21, -69.5)`, and Haven 1 at its default spawn `(1, -30.5)`.
 It validates content and route prerequisites, not a gameplay playthrough.
 Existing customized maps are preserved; conflicting bundled defaults stop build
 preparation and require a separate validated candidate, not automatic replacement.
@@ -739,9 +741,9 @@ For the manual playthrough, use a disposable test account in your normal server:
 5. After the Giant is removed, wait approximately five seconds for both final
    doors to open. Walk through the passage, use the original final exit, and
    acknowledge the native floor-report prompt if shown. Arrival must be in
-   initial Rescue Camp 217. Do not use a teleport to establish this result.
+   Haven 1. Do not use a GM teleport to establish this result.
 6. Log out and select the same knight again. It should enter the native Ready
-   Room; choose Return to Game and confirm arrival in Camp without restarting
+   Room; choose Return to Game and confirm arrival in Haven without restarting
    the tutorial or granting heat/progression twice. An interrupted, incomplete
    tutorial restarts at its entrance; exact mid-floor resume is not implemented.
 
@@ -751,8 +753,11 @@ in **in-game chat**. This uses the native GM movement handshake and original
 entrance. `/sgo 217` previews Camp independently. Neither shortcut proves normal
 onboarding or completion; use a fresh knight for that acceptance test.
 
-Earlier isolated graphical checks established Crash Site → Camp → reconnect;
-the latest build has not received a new complete graphical acceptance. Giant
+Earlier isolated graphical checks established the old Crash Site → Camp → reconnect;
+they do not establish the new direct-Haven route. The focused real-exit session
+test covers atomic Haven handoff, rollback/retry and reconnect. Current graphical
+and stock-reader harnesses cannot compile against renamed installed-client methods,
+so the direct-Haven route has **not** received graphical acceptance. Giant
 targeting is capture-calibrated, and companion/parity limits remain documented
 as implementation limits. Record the first failure, screenshot/client error if available,
 and server logs under `build/data/logs/`. Avoid repeated graphical runs for

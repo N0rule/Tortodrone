@@ -293,11 +293,27 @@ val portableZip = tasks.register<Zip>("portableZip") {
     from("config") { into("config") }
     from("content") { into("content") }
     from("plugins") { into("plugins") }
-    from("README.md", "VERSION", "LICENSE", "NOTICE", "CONTRIBUTING.md")
-    from("docs") { into("docs") }
-    from("licenses") { into("licenses") }
-    from("src/main/resources/licenses") { into("licenses") }
-    from("src/main/resources/THIRD-PARTY.md")
+    from("VERSION")
+    from("README.md") {
+        filter { line: String -> line.replace("](LICENSE)", "](docs/LICENSE)").replace("href=\"LICENSE\"", "href=\"docs/LICENSE\"")
+            .replace("](NOTICE)", "](docs/NOTICE)").replace("](CONTRIBUTING.md)", "](docs/CONTRIBUTING.md)")
+            .replace("](src/main/resources/THIRD-PARTY.md)", "](docs/THIRD-PARTY.md)") }
+    }
+    from("docs") {
+        into("docs")
+        filesMatching("provenance.md") {
+            filter { line: String -> line.replace("](../LICENSE)", "](LICENSE)").replace("](../NOTICE)", "](NOTICE)")
+                .replace("](../src/main/resources/THIRD-PARTY.md)", "](THIRD-PARTY.md)")
+                .replace("](../src/main/resources/licenses)", "](licenses)") }
+        }
+    }
+    from(listOf("LICENSE", "NOTICE")) { into("docs") }
+    from("CONTRIBUTING.md") {
+        into("docs")
+        filter { line: String -> line.replace("](docs/", "](") }
+    }
+    from("src/main/resources/licenses") { into("docs/licenses") }
+    from("src/main/resources/THIRD-PARTY.md") { into("docs") }
     eachFile {
         var source: File? = file
         while (source != null) {

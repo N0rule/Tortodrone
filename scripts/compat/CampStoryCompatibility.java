@@ -19,7 +19,7 @@ public final class CampStoryCompatibility {
     public static void main(String[] args)throws Exception {
         var content=ContentManager.load(Path.of(args[0]));var scenes=content.createScenes();SceneRegistry.install(scenes);
         var route=scenes.tutorial();check(route!=null,"original 398/217 content required");
-        var map=route.camp();check(map.id()==217&&map.version()==373,"pinned initial Camp revision");
+        var map=scenes.catalog().scene(217);check(map.id()==217&&map.version()==373,"pinned initial Camp revision");
         var binding=map.content().conversations().get("Character/NPC/Rescue Camp/Greta 2");
         check(binding!=null&&binding.nodes().size()==3,"native three-panel Greta graph retained");
         Path home=Files.createTempDirectory("tortodrone-camp-story-");
@@ -29,7 +29,9 @@ public final class CampStoryCompatibility {
             var peer=new CharacterStore(db,2,"CampPeer",content.items());
             var knight=owner.createForOpening(knight("Camp-Knight"),1);var other=peer.createForOpening(knight("Camp-Peer"),1);
             // Checkpoint setup only. Success path below never mutates position or story state.
-            var before=owner.completeTutorial(knight.id(),1,owner.worldProfile(knight.name(),1));
+            var fresh=owner.worldProfile(knight.name(),1);
+            db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+fresh.worldId()+".opening-stage");s.executeUpdate();}return null;});
+            var before=owner.worldProfile(knight.name(),1);
             var untouched=peer.worldProfile(other.name(),1);
             try(var player=new Player(owner,knight.id(),scenes,1001)){
                 player.world.select(knight.name(),RECEIVERS,true);

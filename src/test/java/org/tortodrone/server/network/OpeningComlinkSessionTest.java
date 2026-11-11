@@ -30,7 +30,7 @@ public final class OpeningComlinkSessionTest {
             var foreign=peer.createForOpening(knight("Foreign-Comlink"),1);var untouched=peer.worldProfile(foreign.name(),1);
             for(var mission:List.of(OpeningMission.FIRST_CONTACT,OpeningMission.WELCOME_HAVEN)){
                 var knight=owner.createForOpening(knight(mission==OpeningMission.FIRST_CONTACT?"Comlink-Camp":"Comlink-Haven"),1);
-                var checkpoint=checkpoint(owner,knight,registry,mission);var socket=new RecordingSocket();
+                var checkpoint=checkpoint(db,owner,knight,registry,mission);var socket=new RecordingSocket();
                 try(var interruptedOutput=new SessionOutput(new RecordingSocket());var interrupted=new WorldSession(new RecordingSocket(),owner,interruptedOutput,new SessionCodec(),1201+mission.ordinal(),1,message->{},registry)){
                     interrupted.select(knight.name(),RECEIVERS,true);enter(interrupted,registry,mission);await(()->node(interrupted)!=null);
                     int oid=registry.destination(OpeningComlinks.scene(mission),checkpoint.worldId()).oid();interrupted.conversationInvocation(response(oid,0,90));
@@ -77,8 +77,12 @@ public final class OpeningComlinkSessionTest {
         }finally{SceneRegistry.install(previous);try(var files=Files.walk(home)){for(var file:files.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(file);}}
         System.out.println("PASS: native First Contact B and Welcome to Haven attempts, all captured panels, ownership, eligibility, invalid/duplicate responses, rollback/retry, exact rewards, completion publication and Ready Room reconnect (post-floor checkpoints; synthetic Camp geometry)");
     }
-    private static WorldProfile checkpoint(CharacterStore owner,Knight knight,SceneRegistry registry,OpeningMission target)throws Exception {
-        var profile=owner.completeTutorial(knight.id(),1,owner.worldProfile(knight.name(),1));
+    private static WorldProfile checkpoint(Database db,CharacterStore owner,Knight knight,SceneRegistry registry,OpeningMission target)throws Exception {
+        // Legacy route fixture, not the current Crash Site -> Haven settlement.
+        var profile=owner.worldProfile(knight.name(),1);
+        int world=profile.worldId();
+        db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+world+".opening-stage");s.executeUpdate();}return null;});
+        profile=owner.worldProfile(knight.name(),1);
         profile=owner.knightStory(knight.id(),1,profile,List.of(new KnightMemory("talkedRhendonRC",true)),List.of()).profile();
         for(var mission:OpeningMission.values()){if(mission==target)break;profile=owner.openingMissions(registry.town()).complete(owner.accountId(),knight.id(),1,profile,mission,mission.gate()?"EASY":null).profile();}
         return profile;

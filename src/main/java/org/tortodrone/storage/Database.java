@@ -240,12 +240,12 @@ public final class Database {
             }
             if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
             if(heat>0)TownStore.applyHeat(c,profile,rules,heat);
-            if(profile.progress().crashSiteIncomplete())try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=? AND value=0")){
+            if(profile.progress().crashSiteIncomplete())try(var s=c.prepareStatement("UPDATE metadata SET value=3 WHERE key=? AND value=0")){
                 s.setString(1,"world."+worldId+".opening-stage");if(s.executeUpdate()!=1)throw new IOException("Opening checkpoint changed");
             }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();
-                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.CAMP);s.executeUpdate();
+                s.setString(1,"world."+worldId+".last-town-scene");s.setInt(2,org.tortodrone.world.TutorialRoute.HAVEN);s.executeUpdate();
             }
             try(var s=c.prepareStatement("UPDATE world_characters SET state_revision=state_revision+1 WHERE world_id=? AND account_id=? AND knight_id=? AND state_revision=?")){
                 s.setInt(1,worldId);s.setInt(2,accountId);s.setInt(3,knightId);s.setLong(4,revision);

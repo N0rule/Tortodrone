@@ -2091,8 +2091,8 @@ final class WorldSession implements AutoCloseable {
         if(floorReport==null||!floorReport.ready(stamp)||forcedReceiver==null)return false;
         var route=scene.tutorial();
         if(route==null||!subscribed||!entered||portalMove!=null) return false;
-        var next=destination(route.camp().id());
-        if(next.map()!=route.camp()||!floorReport.valid())return false;
+        var next=destination(route.destination().id());
+        if(next.map()!=route.destination()||!floorReport.valid())return false;
         profile=loadProfile(profile);
         var before=profile;
         profile=characters.completeTutorial(knight.id(),authRevision,profile,membership.health().current()>0?membership.floorHeat():0,scenes.town());

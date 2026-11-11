@@ -15,7 +15,7 @@ public final class ContentManagerTest {
         check(baseline.scenes().scenes().size()==9&&baseline.items().entries().size()==9355,"all verified maps and items retained");
         var opening=baseline.createScenes().tutorial();
         check(opening!=null&&opening.source().id()==398&&opening.source().version()==2008859103
-            &&opening.camp().id()==217&&opening.camp().version()==373,"bundled defaults enable the pinned original opening route without imports");
+            &&opening.destination().id()==1&&opening.entrance().id()==1&&opening.entrance().x()==1&&opening.entrance().y()==-30.5f,"bundled defaults route the verified Crash Site exit directly to Haven's authored spawn");
         check(baseline.weapons().weapons().size()==386&&baseline.weapons().shields().size()==123,"verified combat controls retained");
         check(baseline.scenes().scenes().stream().mapToInt(s->s.portals().triggers().size()).sum()==18,"all directed stock portals retained");
         var training=baseline.scenes().scene(294);var konway=training.content().conversations().get("Character/NPC/Advanced Training Gym/Greeter");

@@ -17,7 +17,7 @@
 Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a persistent world for the unmodified official client, with authoritative movement and combat plus both console and browser-based administration. Accounts use normal usernames and passwords, including when connecting from a Steam-installed client. Steam account/ticket authentication and guest login are not supported. Tortodrone is not affiliated with or endorsed by the owners of Spiral Knights.
 
 > [!IMPORTANT]
-> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, and many town and player systems work. The full opening route to Haven, general missions, guilds, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
+> **Development status:** this is an active development release, not a complete replacement for the official server. Login, the native Ready Room, Haven, supported interiors, and many town and player systems work. New knights complete Crash Site and travel directly to Haven. General missions, guilds, PvP, Arcade play, and some item effects are still unfinished. See [Supported scope](#supported-scope) before inviting players.
 
 **Start here:** [Quick start](#quick-start) · [Connect the client](#step-5-connect-the-game-client) · [Play with others](#playing-with-others) · [Configuration](#configuration) · [Troubleshooting](#troubleshooting)
 
@@ -26,7 +26,7 @@ Tortodrone is an independent Java 25 server for **Spiral Knights**. It hosts a p
 - **Unmodified client** — connect with your own official installation through [KnightLauncherCustom](https://github.com/N0rule/KnightLauncherCustom). No client patches are required.
 - **Portable server** — one JAR plus `config/`, `content/`, `webui/`, and `plugins/`; no external database or runtime services.
 - **Built-in administration** — manage accounts, knights, inventory, economy, and News from the terminal or the WebUI.
-- **Opening content included** — nine bundled maps, including Crash Site 398 and initial Rescue Camp 217. New knights start in Crash Site; no separate import is needed.
+- **Opening content included** — new knights start in Crash Site and travel directly to Haven after completion, without the legacy Rescue Camp missions. Nine maps are bundled; no separate import is needed.
 - **Source-available** — build, inspect, and modify the server under the project license.
 
 ## Requirements
@@ -79,7 +79,7 @@ unzip Tortodrone-v<version>.zip -d tortodrone
 cd tortodrone
 ```
 
-The folder should contain at least:
+The release folder contains:
 
 ```text
 tortodrone.jar
@@ -88,7 +88,12 @@ content/
 webui/
 plugins/
 docs/
+VERSION
+README.md
 ```
+
+License, attribution and dependency notices are kept under `docs/` in release
+archives so the root stays limited to these eight entries.
 
 ### Step 3: Start the server
 
@@ -318,7 +323,7 @@ This validates the pinned scenes, entrances, and route prerequisites. It does **
 | Area | Status |
 | --- | --- |
 | **Accounts and world** | Supported: knight management, native Ready Room, authoritative movement and collision, nine bundled maps. |
-| **Opening route** | Partial: Crash Site 398 → initial Rescue Camp 217 is implemented; use the [manual playtest](docs/content.md#local-crash-site-playtest) for acceptance. The later route to Haven is unfinished; Ancient Generator still needs a full-floor playthrough, and Crossing the Chasm is incomplete. |
+| **Opening route** | Crash Site 398 → Haven directly after the original exit/floor report. Completion, collected heat and Haven return location commit together; no skipped-mission rewards are invented. Use the [manual playtest](docs/content.md#local-crash-site-playtest) for graphical acceptance. Existing legacy Camp checkpoints are preserved; that older mission chain remains incomplete. |
 | **Player systems** | Partial: persistent inventory and currencies, equipment and costumes, weapon combat, heat, and battle sprites. Individual item and action support varies. |
 | **Town and social** | Partial: supported shops and crafting, auctions, Energy Exchange, chat, friends, parties, and eligible friend travel. |
 | **Administration** | Supported: game account management, inventory and economy tools, News, monitoring, and lifecycle controls through the console and WebUI. |

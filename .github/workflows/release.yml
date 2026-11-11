@@ -45,11 +45,11 @@ jobs:
           java-version: '25'
           cache: gradle
 
-      - name: Build without tests
+      - name: Build and verify portable release
         shell: bash
         run: |
           chmod +x ./gradlew
-          ./gradlew --no-daemon build
+          ./gradlew --no-daemon integrationPackaging
 
       - name: Package one portable ZIP
         shell: bash
@@ -57,8 +57,6 @@ jobs:
           set -euo pipefail
           version="$(tr -d '\r\n' < VERSION)"
           package="Tortodrone-v$version"
-          root="$RUNNER_TEMP/$package"
-          mkdir "$root"
           mkdir -p dist
 
           test -s build/tortodrone.jar
@@ -76,57 +74,8 @@ jobs:
           test -d build/config
           test -d build/plugins
 
-          # Package only deployment inputs; never local bundles, logs or scratch.
-          cp build/tortodrone.jar "$root/"
-          for directory in config content plugins webui; do
-            cp -a "build/$directory" "$root/$directory"
-          done
-          cp -a docs "$root/docs"
-          cp -a licenses "$root/licenses"
-          cp -a src/main/resources/licenses/. "$root/licenses/"
-          cp src/main/resources/THIRD-PARTY.md "$root/THIRD-PARTY.md"
-          cp VERSION README.md LICENSE NOTICE CONTRIBUTING.md "$root/"
-
-          if find "$root" -type l -print -quit | grep -q .; then
-            echo "Refusing to publish symlinks in the release." >&2
-            exit 1
-          fi
-
-          java -cp "$root/tortodrone.jar" org.tortodrone.resources.ContentManager "$root"
-
-          # Do not release persistent user data, private keys, or captures.
-          if find "$root" -type f \( \
-            -name '*.db' -o -name '*.db-wal' -o -name '*.db-shm' \
-            -o -name '*.db-journal' -o -name '*.sqlite*' \
-            -o -name '*.key' -o -name '*.pk8' -o -name '*.pem' \
-            -o -path '*/keys/*' -o -name '*.hprof' \
-            -o -name '*.bundle' -o -name '*.log' \
-            -o -name 'private.txt' -o -name '*.pcap*' \
-            -o -name 'tokens.json' \
-          \) -print -quit | grep -q .; then
-            echo "Refusing to publish runtime state, secrets or captures." >&2
-            exit 1
-          fi
-          test ! -d "$root/data"
-          test ! -d "$root/content-updates"
-          if test -d "$root/webui/assets/game/icons"; then
-            echo "Refusing to publish locally extracted client artwork; use the source-owned fallback pack." >&2
-            exit 1
-          fi
-
-          # Python's standard library avoids depending on platform zip utilities.
-          python3 - "$root" "$GITHUB_WORKSPACE/dist/$package.zip" <<'PY'
-          from pathlib import Path
-          from zipfile import ZipFile, ZIP_DEFLATED
-          import sys
-          source, target = map(Path, sys.argv[1:])
-          with ZipFile(target, "x", compression=ZIP_DEFLATED) as archive:
-              for path in sorted(source.rglob("*")):
-                  if path.is_file():
-                      archive.write(path, path.relative_to(source).as_posix())
-          with ZipFile(target) as archive:
-              assert archive.testzip() is None, "Invalid release ZIP"
-          PY
+          # Publish the same clean, layout-checked archive as local portableZip.
+          cp ".build/distributions/$package.zip" "dist/$package.zip"
           sha256sum "dist/$package.zip"
 
       - name: Publish GitHub Release
@@ -135,9 +84,31 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          cat > "$RUNNER_TEMP/release-notes.md" <<'NOTES'
+          ## Run your own Spiral Knights server
+
+          Tortodrone is a Java 25 development server for the unmodified Spiral Knights client. This is not a complete replacement for the official server.
+
+          ### Quick start
+          1. Install a full **JDK 25** and download the **Tortodrone ZIP** below (not GitHub's source-code archives).
+          2. Extract the whole ZIP into a new folder and run `java -jar tortodrone.jar` from that folder.
+          3. Follow `README.md` to create an account and connect through KnightLauncherCustom using your server's public key.
+
+          New knights start in **Crash Site** and travel **directly to Haven** after completing it. The legacy Rescue Camp route is not required. General missions, guilds, PvP and Arcade gameplay remain incomplete; see the supported-scope table in the README.
+
+          ### Included
+          - One server JAR, default configuration, supported content, plugins folder and optional WebUI.
+          - Documentation and required license/attribution notices under `docs/`.
+          - No Java runtime, game client, accounts, private keys or extracted client artwork. With the WebUI enabled, missing artwork can be prepared locally from your installed client.
+
+          ### Updating an existing server
+          Stop the server and back up `data/`, `config/` and customized `content/`. Preserve those files and `webui/assets/game/`; do not overwrite your configuration/content blindly with fresh defaults. Older database schemas may require the explicit offline upgrade described in `docs/operations.md`.
+
+          Licensed under PolyForm Noncommercial 1.0.0. Retain the N0rule/Tortodrone attribution notice; see `docs/LICENSE`, `docs/NOTICE` and `docs/provenance.md`.
+          NOTES
           gh release create "$GITHUB_REF_NAME" \
             "dist/Tortodrone-$GITHUB_REF_NAME.zip" \
             --repo "$GITHUB_REPOSITORY" \
             --verify-tag --generate-notes --prerelease \
-            --notes "Development release under PolyForm Noncommercial 1.0.0; preserve the N0rule/Tortodrone attribution notice. JDK 25 required. Extract the complete ZIP and run java -jar tortodrone.jar. WebUI images are prepared locally from your installed client on first startup. Nine maps are bundled, including Crash Site 398 and initial Rescue Camp 217. New knights enter Crash Site automatically; no separate opening-map import is needed. The complete opening route to Haven remains unfinished. See README.md and docs/content.md before testing." \
+            --notes-file "$RUNNER_TEMP/release-notes.md" \
             --title "Tortodrone $GITHUB_REF_NAME (development)"

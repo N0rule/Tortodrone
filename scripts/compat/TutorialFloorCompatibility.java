@@ -23,10 +23,9 @@ public final class TutorialFloorCompatibility {
         if(args.length!=2)throw new IllegalArgumentException("Usage: TutorialFloorCompatibility GAME DISPOSABLE_DEPLOYMENT_WITH_ORIGINAL_MAPS");
         System.setProperty("com.threerings.io.enumPolicy","ORDINAL");
         var registry=ContentManager.load(Path.of(args[1])).createScenes();SceneRegistry.install(registry);
-        var route=registry.tutorial();check(route!=null,"exact original scene pair and entrance must be available");
+        var route=registry.tutorial();check(route!=null,"verified Crash Site and Haven arrival must be available");
         memoryWire();
-        check(route.source().version()==TutorialRoute.sourceVersion(route.source().layout())&&route.camp().version()==TutorialRoute.campVersion(route.camp().layout())&&route.entrance().id()==2017,"pinned source revisions and native Camp entrance");
-        check(!route.camp().staticCollision().isEmpty(),"Camp collision is retained; rail primitives have a separate stock collision regression");
+        check(route.source().version()==TutorialRoute.sourceVersion(route.source().layout())&&route.destination().id()==1&&route.entrance().x()==1&&route.entrance().y()==-30.5f,"pinned source revision and authored Haven entrance");
         Path home=Files.createTempDirectory("tortodrone-tutorial-floor-oracle-");
         try {
             var db=new Database(home,true);int account=db.create("FloorOwner",new Passwords.Protection(new byte[16],new byte[32]),false);
@@ -46,7 +45,7 @@ public final class TutorialFloorCompatibility {
                 parties.enterTutorial(member);append(wire,codec.partyChanges(openView,parties.view(member)));
                 append(wire,codec.finalFloorReport(parties.view(member).oid()));
                 append(wire,codec.party((short)5,parties.view(member),scene,true));
-                var camp=registry.destination(217,profile.worldId(),member);
+                var camp=registry.destination(1,profile.worldId(),member);
                 append(wire,codec.sceneMove(1555,(short)6,true,camp,registry.catalog()));
                 var reader=new com.threerings.io.v(new ByteArrayInputStream(wire.toByteArray()));reader.qe();reader.qe();
                 var server=(ServerObject)((ObjectResponse<?>)reader.qe()).yk();
@@ -74,9 +73,9 @@ public final class TutorialFloorCompatibility {
                 checkParty(party,true);
                 checkParty((LevelPartyObject)((ObjectResponse<?>)reader.qe()).yk(),true);
                 var move=(InvocationResponseEvent)((EventNotification)reader.qe()).yj();
-                check(Arrays.stream(move.yd()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Camp town scene config");
+                check(Arrays.stream(move.yd()).anyMatch(v->v instanceof com.threerings.projectx.town.data.TownSceneConfig),"native Haven town scene config");
                 var model=Arrays.stream(move.yd()).filter(v->v instanceof com.threerings.tudey.data.TudeySceneModel).map(v->(com.threerings.tudey.data.TudeySceneModel)v).findFirst().orElseThrow();
-                check(model.sceneId==217&&model.version==route.camp().version()&&reader.available()==0,"native Camp callback carries the original scene/version without trailing bytes");
+                check(model.sceneId==1&&model.version==route.destination().version()&&reader.available()==0,"native Haven callback carries the original scene/version without trailing bytes");
                 registry.release(scene,profile.worldId());
             }
             var socket=new RecordingSocket();
@@ -86,12 +85,12 @@ public final class TutorialFloorCompatibility {
                 int party=parties.view(world.partyMemberSnapshot()).oid();
                 check(world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true))),"native reportComplete recognized without listener");
                 world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(false)));
-                check(characters.lastTownScene(knight.id(),1)==0&&characters.worldProfile(knight.name(),1).revision()==profile.revision(),"premature/repeated report cannot settle or save Camp");
+                check(characters.lastTownScene(knight.id(),1)==0&&characters.worldProfile(knight.name(),1).revision()==profile.revision(),"premature/repeated report cannot settle or save Haven");
                 check(!world.interiorPartyInvocation(new SessionDecoder.Invocation(party+1,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(true))),"foreign party cannot report completion");
                 try{world.interiorPartyInvocation(new SessionDecoder.Invocation(party,SessionCodec.LEVEL_PARTY_SERVICE,3,List.of(1)));throw new AssertionError("Wrong native report type accepted");}catch(SessionDecoder.Rejected expected){}
-                move(world,route.camp().zone(),217);
+                move(world,route.destination().zone(),1);
                 var source=registry.destination(398,profile.worldId(),world.partyMemberSnapshot());
-                check(world.ownsScene(source.oid())&&characters.lastTownScene(knight.id(),1)==0,"direct Camp travel cannot substitute for the original exit");
+                check(world.ownsScene(source.oid())&&characters.lastTownScene(knight.id(),1)==0,"direct Haven travel cannot substitute for the original exit");
             }
             check(registry.statuses().stream().noneMatch(s->s.templateId()==398),"disconnect releases private tutorial actors, instance and subscription");
             // Independent persisted-return fixture, not a substitute for gameplay completion.
@@ -99,18 +98,18 @@ public final class TutorialFloorCompatibility {
             var returning=new RecordingSocket();
             try(var output=new SessionOutput(returning);var world=new WorldSession(returning,characters,output,new SessionCodec(),1557,1,m->{},registry)){
                 world.select(knight.name(),Map.of(SceneRegistry.ZONE_RECEIVER,(short)0),true);
-                var camp=registry.destination(217,profile.worldId());check(camp.simulation().playerCount()==0,"Ready Room reconnect does not create a Camp pawn");
-                world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(world,route.camp().zone(),217);
+                var camp=registry.destination(1,profile.worldId());check(camp.simulation().playerCount()==0,"Ready Room reconnect does not create a Haven pawn");
+                world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(world,route.destination().zone(),1);
                 world.subscribe((short)15);world.entered();
                 var own=camp.simulation().snapshot().players().stream().filter(p->p.id()==profile.worldId()).findFirst().orElseThrow();
-                check(world.ownsScene(camp.oid())&&camp.simulation().playerCount()==1&&own.x()==.5f&&own.y()==-.5f,"saved Camp return attaches exactly one pawn at the original entrance transform");
-                check(characters.lastTownScene(knight.id(),1)==217,"Camp entry acknowledges the persisted destination");
+                check(world.ownsScene(camp.oid())&&camp.simulation().playerCount()==1&&own.x()==route.entrance().x()&&own.y()==route.entrance().y(),"saved Haven return attaches exactly one pawn at the authored entrance transform");
+                check(characters.lastTownScene(knight.id(),1)==1,"Haven entry acknowledges the persisted destination");
             }
-            check(registry.destination(217,profile.worldId()).simulation().playerCount()==0,"Camp reconnect fixture leaves no pawn or subscription");
+            check(registry.destination(1,profile.worldId()).simulation().playerCount()==0,"Haven reconnect fixture leaves no pawn or subscription");
             gmPreview(db,registry);
         }finally{try(var paths=Files.walk(home)){for(var path:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(path);}}
-        System.out.println("PASS: original 398/217 route; stock-reader tutorial GateSummary/LevelPartyObject, ordered final-floor report and original Camp callback; production session rejects premature/repeated/foreign/malformed completion and direct Camp travel; separate saved-Camp Ready Room return fixture attaches one pawn and cleans up");
-        System.out.println("NOT VERIFIED: full fresh-knight gameplay, real boss AI/retaliation, successful session handoff after combat, graphical tutorial/Camp rendering");
+        System.out.println("PASS: Crash Site -> Haven route; stock-reader tutorial GateSummary/LevelPartyObject, ordered final-floor report and Haven callback; production session rejects premature/repeated/foreign/malformed completion and direct Haven travel; separate saved-Haven Ready Room return fixture attaches one pawn and cleans up");
+        System.out.println("NOT VERIFIED: full fresh-knight gameplay, real boss AI/retaliation, successful session handoff after combat, graphical tutorial/Haven rendering");
     }
     /** Native /sgo 398 test entry: no position or progression mutation. */
     private static void gmPreview(Database db,SceneRegistry registry)throws Exception {

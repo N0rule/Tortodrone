@@ -31,10 +31,10 @@ public final class OpeningProgressTest {
             String key="world."+before.worldId()+".opening-stage";
             db.write(c->{try(var s=c.createStatement()){s.execute("CREATE TRIGGER reject_checkpoint BEFORE UPDATE ON metadata WHEN NEW.key='"+key+"' BEGIN SELECT RAISE(ABORT,'injected completion failure'); END");}return null;});
             refused(()->store.completeTutorial(fresh.id(),1,before));
-            check(store.worldProfile(fresh.name(),1).equals(before)&&store.lastTownScene(fresh.id(),1)==0,"failed completion cannot publish Camp, receipt or checkpoint");
+            check(store.worldProfile(fresh.name(),1).equals(before)&&store.lastTownScene(fresh.id(),1)==0,"failed completion cannot publish Haven, receipt or checkpoint");
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_checkpoint");}return null;});
             var after=store.completeTutorial(fresh.id(),1,before);
-            check(after.progress().openingStage()==1&&after.progress().tutorialComplete()&&after.progress().progressFlags()==0&&store.lastTownScene(fresh.id(),1)==217,"real tutorial settlement advances only to Camp, without inventing Haven access");
+            check(after.progress().openingStage()==3&&after.progress().tutorialComplete()&&after.progress().progressFlags()==4&&store.lastTownScene(fresh.id(),1)==1,"tutorial settlement commits direct Haven arrival and town access together");
             check(after.items().equals(before.items())&&after.progress().rank()==1&&after.progress().subrank()==1&&after.progress().prestige()==0,"no fixed tutorial reward or rank is invented");
             check(store.completeTutorial(fresh.id(),1,before).equals(after),"replayed settlement grants nothing twice");
             check(store.worldProfile(old.name(),1).equals(original)&&store.lastTownScene(old.id(),1)==2,"new onboarding never resets an existing knight or saved location");
@@ -42,7 +42,7 @@ public final class OpeningProgressTest {
             refused(()->db.saveRoster(1,state.knights(),state.next(),1,state.revision(),old.id()));
             check(store.worldProfile(old.name(),1).equals(original),"existing identity cannot be relabeled as a new opening knight");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
-        System.out.println("PASS: authenticated atomic first-run creation, rollback, grandfathering, durable Crash Site/Camp checkpoints, exact starters and duplicate settlement");
+        System.out.println("PASS: authenticated atomic first-run creation, rollback, grandfathering, durable Crash Site/Haven checkpoints, exact starters and duplicate settlement");
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}
     private interface Operation{void run()throws Exception;}

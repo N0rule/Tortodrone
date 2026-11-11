@@ -20,7 +20,9 @@ public final class OpeningMissionStoreTest {
             var knight=owner.createForOpening(knight("Mission-Knight"),1);var other=peer.createForOpening(knight("Mission-Peer"),1);
             var store=owner.openingMissions(content.town());var incomplete=owner.worldProfile(knight.name(),1);
             refused(()->store.complete(account,knight.id(),1,incomplete,OpeningMission.SECURING_CAMP,null));
-            var camp=owner.completeTutorial(knight.id(),1,incomplete);var peerBefore=peer.worldProfile(other.name(),1);
+            // Explicit legacy Camp checkpoint: new tutorial completions now skip this route.
+            db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+incomplete.worldId()+".opening-stage");s.executeUpdate();}return null;});
+            var camp=owner.worldProfile(knight.name(),1);var peerBefore=peer.worldProfile(other.name(),1);
             for(long auth:new long[]{-1,0,2})refused(()->store.complete(account,knight.id(),auth,camp,OpeningMission.SECURING_CAMP,null));
             refused(()->store.complete(foreign,other.id(),1,camp,OpeningMission.SECURING_CAMP,null));
             refused(()->store.complete(account,knight.id(),1,camp,OpeningMission.ANCIENT_GENERATOR,"EASY"));

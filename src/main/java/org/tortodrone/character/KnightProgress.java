@@ -13,6 +13,6 @@ public record KnightProgress(int rank,int subrank,int prestige,int openingStage)
     public int equipmentFlags(){return (rank>=3?64:0)|(rank>=5?128:0)|(rank>=6?256:0)|(rank>=8?512:0);}
     public boolean crashSiteIncomplete(){return openingStage==0;}
     public boolean tutorialComplete(){return openingStage!=0;}
-    /** Live's town-travel bit is awarded on reaching Haven, not on leaving Crash Site. */
+    /** Haven access; new Crash Site completions arrive there directly (stage 3). */
     public int progressFlags(){return equipmentFlags()|(openingStage<0||openingStage==3?4:0);}
 }

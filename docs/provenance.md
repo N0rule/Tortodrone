@@ -12,7 +12,8 @@ require every hosted service to display an on-screen attribution.
 Third-party software is not relicensed by the Tortodrone notice. See the
 [dependency notices](../src/main/resources/THIRD-PARTY.md) and the packaged
 license texts under [src/main/resources/licenses](../src/main/resources/licenses);
-releases assemble them under `licenses/`.
+releases assemble them under `docs/licenses/`, with Tortodrone's license,
+attribution notice and dependency notices alongside them in `docs/`.
 
 Original Spiral Knights game content, including artwork, audio, text and captured
 scene data, remains the property of its rights holders. The Tortodrone license

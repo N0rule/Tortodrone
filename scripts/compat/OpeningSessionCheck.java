@@ -41,18 +41,17 @@ public final class OpeningSessionCheck {
             }
             // Isolate completed-selection routing; the graphical test supplies real gameplay settlement.
             var completed=owner.completeTutorial(fresh.id(),1,before);
-            check(completed.progress().openingStage()==1,"durable Camp checkpoint is distinct from Haven");
+            check(completed.progress().openingStage()==3&&completed.progress().progressFlags()==4,"durable Haven checkpoint and town access");
             try(var p=new Player(owner,scenes,1005)){
-                p.world.select(fresh.name(),RECEIVERS,true);var camp=scenes.destination(217,before.worldId());
+                p.world.select(fresh.name(),RECEIVERS,true);var camp=scenes.destination(1,before.worldId());
                 check(!p.world.ownsScene(camp.oid()),"completed selection first stages in native Ready Room");
                 p.world.invocation(new SessionDecoder.Invocation(3,1,11,List.of()));move(p.world,camp.map());p.world.subscribe((short)3);p.world.entered();
-                check(p.world.ownsScene(camp.oid())&&camp.simulation().snapshot().players().size()==1,"Return to Last reaches original initial Camp with exactly one pawn");
-                move(p.world,scenes.entry().map());check(p.world.ownsScene(camp.oid()),"a forged Haven zone request cannot skip Camp missions");
+                check(p.world.ownsScene(camp.oid())&&camp.simulation().snapshot().players().size()==1,"Return to Last reaches Haven with exactly one pawn");
             }
             try(var p=new Player(owner,scenes,1006)){
                 p.world.select(old.name(),RECEIVERS,true);check(!p.world.ownsScene(scenes.entry().oid()),"grandfathered knight retains native Ready Room behavior");
             }
-            System.out.println("PASS: original-scene new/interrupted selection, private instances, ownership, no Haven bypass, disconnect cleanup, Camp checkpoint and Ready Room return (session test; gameplay settlement tested separately)");
+            System.out.println("PASS: original-scene new/interrupted selection, private instances, ownership, no Haven bypass, disconnect cleanup, Haven checkpoint and Ready Room return (session test; gameplay settlement tested separately)");
         }finally{try(var paths=Files.walk(home)){for(var p:paths.sorted(Comparator.reverseOrder()).toList())Files.deleteIfExists(p);}}
     }
     private static Knight knight(String name){return new Knight(0,name,"Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0);}

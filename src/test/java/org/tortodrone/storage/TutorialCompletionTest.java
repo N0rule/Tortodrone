@@ -34,7 +34,7 @@ public final class TutorialCompletionTest {
             var after=owner.worldProfile(knight.name(),1);
             check(results.stream().allMatch(p->p.revision()==before.revision()+1)&&after.revision()==before.revision()+1&&!noReceipt(db,prefix),"one receipt and one revision increment for concurrent completions");
             check(after.items().equals(before.items())&&after.crowns()==before.crowns()&&after.energy()==before.energy()&&after.progress().equals(before.progress()),"no invented reward, equipment, rank or prestige changes");
-            check(owner.lastTownScene(knight.id(),1)==217,"receipt commits with the sourced initial Rescue Camp destination");
+            check(owner.lastTownScene(knight.id(),1)==1,"receipt commits with the direct Haven destination");
             owner.lastTownScene(knight.id(),1,2);owner.completeTutorial(knight.id(),1,before);
             check(owner.lastTownScene(knight.id(),1)==2&&owner.worldProfile(knight.name(),1).revision()==after.revision(),"replayed completion cannot overwrite a later town or increment progress again");
             var reopened=new CharacterStore(new Database(home,false),1,"TutorialOwner");

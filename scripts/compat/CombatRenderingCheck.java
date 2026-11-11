@@ -108,13 +108,14 @@ public final class CombatRenderingCheck {
     private CombatRenderingCheck(ProjectXApp app,Path output,boolean peer,boolean trainingOnly){this.app=app;this.output=output;this.peer=peer;this.trainingOnly=trainingOnly;deadline=System.nanoTime()+(peer?480:trainingOnly?420:380)*1_000_000_000L;}
     public static void main(String[] args)throws Exception {
         if(args.length==2&&args[0].equals("--seed-camp")){
-            // A disposable completed-tutorial checkpoint isolates the changed Camp interaction.
+            // Explicit legacy Camp checkpoint; current tutorial completions go to Haven.
             try(var store=new AccountStore(Path.of(args[1]))){
                 store.create("LanPlayer","lan-test-password".toCharArray());
                 char[] password=AccountStore.transform("lan-test-password".toCharArray());
                 try{var characters=store.authenticate("LanPlayer",password).characters();
                     var knight=characters.createForOpening(new Knight(0,"Town-Knight","Gear/Helm/Spiral Sallet (Blue)","Gear/Armor/Spiral Culet (Blue)",null,null,"Blue",1,2,0,0),1);
-                    characters.completeTutorial(knight.id(),1,characters.worldProfile(knight.name(),1));
+                    int world=characters.worldProfile(knight.name(),1).worldId();
+                    new org.tortodrone.storage.Database(Path.of(args[1]),false).write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+world+".opening-stage");s.executeUpdate();}return null;});
                 }finally{Arrays.fill(password,'\0');}
             }return;
         }
@@ -167,7 +168,7 @@ public final class CombatRenderingCheck {
         probe.tutorialEntryOnly=probe.tutorialOnly||Arrays.asList(args).contains("--tutorial-entry-only");
         if(probe.tutorialOnly)probe.tutorialMap=org.tortodrone.resources.ContentManager.load(Path.of(System.getProperty("appdir")).getParent()).scenes().scene(398);
         probe.readyRoomOnly=probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--ready-room-only")||Arrays.asList(args).contains("--opening-return-only");
-        if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn||Arrays.asList(args).contains("--opening-return-only"))probe.readyRoomDestination=217;
+        if(probe.campStory||probe.campStoryReturn||probe.campProgressionReturn)probe.readyRoomDestination=217;
         probe.multiplayerOnly=multiplayerOnly;probe.sharedWorldOnly=sharedWorldOnly;
         probe.hazardsOnly=Arrays.asList(args).contains("--hazards-only");
         probe.boxesOnly=Arrays.asList(args).contains("--boxes-only");
@@ -498,13 +499,13 @@ public final class CombatRenderingCheck {
     private float tutorialLastX,tutorialLastY;
     private static final float[][] TUTORIAL_WALK={{-21,-60},{-1.5f,-69},{-9.5f,-49},{-13,-29},{-26,-21},{-22.5f,-12},{-7.5f,-10},{-4.5f,-4},{-3.5f,7.5f},{-3.5f,16.5f},{8.5f,39.5f},{7.5f,50.5f},{11.5f,57.5f}};
     private void tutorialPlayTick(View view,long now)throws Exception {
-        if(view.sceneId()==217){if(stage!=6){stage=6;started=now;capture("rescue-camp-arrival");}if(now-started>5_000_000_000L){
+        if(view.sceneId()==1){if(stage!=6){stage=6;started=now;capture("haven-arrival");}if(now-started>5_000_000_000L){
             if(!tutorialEnemyAttacks.containsAll(Set.of("Character/NPC/Monster/Slime/Jelly Cube (Intro)","Character/NPC/Monster/Beast/Chromalisk/Chromalisk Whelp (Intro)","Character/NPC/Monster/Construct/Gun Puppy/Gun Puppy (TG)")))throw new AssertionError("Tutorial did not exercise all three sourced enemy families: "+tutorialEnemyAttacks);
             boolean heated=false;for(var item:app.CT().items)if(item instanceof com.threerings.projectx.item.data.LevelItem&&field(item,"_heatProgress").getFloat(item)>0)heated=true;
-            if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Camp");
+            if(tutorialCollectedHeat<=0||!heated)throw new AssertionError("Collected floor heat did not reach native equipment progress at Haven");
             if(!tutorialHelperAttacks.containsAll(Set.of("Bygs","Warden","Wend"))||tutorialHelperDamage.isEmpty())throw new AssertionError("Original helper combat missing: attacks="+tutorialHelperAttacks+" Giant damage="+tutorialHelperDamage);
             if(!tutorialGiantHeads.containsAll(Set.of(0,1))||!tutorialGiantDamage)throw new AssertionError("Giant retaliation missing: native heads="+tutorialGiantHeads+" damage="+tutorialGiantDamage);
-            capture("rescue-camp-settled");finishImages();passed=done=true;System.out.println(freshOpening?"PASS: native fresh-account knight creation -> automatic private Crash Site -> real movement/conversations/combat/helpers/Giant -> original doors/portal -> Camp and native heat settlement; reconnect checked by parent scenario":"PASS: stock graphical GM preview -> native combat/helpers/calibrated Giant -> original doors/portal -> Camp and heat; fresh creation/reconnect are separate scenarios");app.shutdown();}return;}
+            capture("haven-settled");finishImages();passed=done=true;System.out.println(freshOpening?"PASS: native fresh-account knight creation -> automatic private Crash Site -> real movement/conversations/combat/helpers/Giant -> original doors/portal -> Haven and native heat settlement; reconnect checked by parent scenario":"PASS: stock graphical GM preview -> native combat/helpers/calibrated Giant -> original doors/portal -> Haven and heat; fresh creation/reconnect are separate scenarios");app.shutdown();}return;}
         if(view.sceneId()!=398)return;
         var own=authoritative.get(app.CT().pawnId);if(own==null)return;
         if(app.GQ().CW() instanceof com.threerings.projectx.dungeon.data.LevelPartyObject party){

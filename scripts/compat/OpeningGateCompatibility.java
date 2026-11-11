@@ -122,7 +122,10 @@ public final class OpeningGateCompatibility {
         }
     }
     static WorldProfile checkpoint(CharacterStore store,Knight knight,SceneRegistry registry)throws Exception {
-        var p=store.completeTutorial(knight.id(),1,store.worldProfile(knight.name(),1),0,registry.town());
+        // Explicit legacy Camp checkpoint, independent of current onboarding.
+        var initial=store.worldProfile(knight.name(),1);var db=(Database)field(store,"database");
+        db.write(c->{try(var s=c.prepareStatement("UPDATE metadata SET value=1 WHERE key=?")){s.setString(1,"world."+initial.worldId()+".opening-stage");s.executeUpdate();}return null;});
+        var p=store.worldProfile(knight.name(),1);
         p=store.knightStory(knight.id(),1,p,List.of(new KnightMemory("talkedRhendonRC",true)),List.of()).profile();
         return store.openingMissions(registry.town()).complete(store.accountId(),knight.id(),1,p,OpeningMission.SECURING_CAMP,null).profile();
     }
