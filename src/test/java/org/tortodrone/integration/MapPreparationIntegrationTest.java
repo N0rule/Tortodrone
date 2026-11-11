@@ -17,6 +17,7 @@ public final class MapPreparationIntegrationTest {
             check(Files.exists(output.resolve("maps/advanced_training/npcs/konway.yml"))&&Files.exists(output.getParent().resolve("config/server.yml"))&&Files.exists(output.getParent().resolve("plugins/README.md")),"deployment mirrors unified source layout");
             check(!Files.exists(output.resolve("packs"))&&!Files.exists(output.getParent().resolve("data")),"preparation creates no packs or player data");
             ContentManager.load(output.getParent());
+            previousItemBindings(output);
             Path npc=output.resolve("maps/advanced_training/npcs/konway.yml");Files.writeString(npc,Files.readString(npc)+"# owner edit\n");byte[] edited=Files.readAllBytes(npc);run("content",output,true);check(Arrays.equals(edited,Files.readAllBytes(npc)),"administrator edits survive repeated preparation");check(Files.exists(output.getParent().resolve("content-updates/maps/advanced_training/npcs/konway.yml.proposed"))&&Files.readString(output.getParent().resolve("content-updates/review.txt")).contains("NOT a semantic merge"),"customized files receive reviewable upstream proposals and report");
             Path missing=output.resolve("items/misc.yml");Files.delete(missing);Path lockFile=output.getParent().resolve("data/server.lock");Files.createDirectories(lockFile.getParent());Files.writeString(lockFile,"");
             try(var channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);var lock=channel.lock()){run("content",output,false);check(!Files.exists(missing),"held deployment lock blocks all planned copies");}
@@ -32,5 +33,36 @@ public final class MapPreparationIntegrationTest {
     private static void run(String command,Path output,boolean success)throws Exception {
         var process=new ProcessBuilder(Path.of(System.getProperty("java.home"),"bin/java").toString(),"-cp",System.getProperty("java.class.path"),"BuildTools",command,output.toString()).redirectErrorStream(true).start();
         String result=new String(process.getInputStream().readAllBytes());check(process.waitFor()==(success?0:1),"preparation outcome: "+result);
+    }
+    private static void previousItemBindings(Path output)throws Exception {
+        var ownership=new Properties();
+        try(var input=Files.newInputStream(Path.of("content/_internal/default-source.properties"))){ownership.load(input);}
+        for(var entry:Map.of(
+            "_internal/item-bindings.json","3c32e999f4d12ddb1d4bcb0441c7de8a1ef0acbf027eb8619873f0370692fd62",
+            "_internal/provenance/catalog-baseline.json","660605bc9acd03687e0cba17bf0974136e52093f599cd3c09bddb0d1ac0707b7",
+            "_internal/town-definitions.json","e948ba4d66dd3914912ddd3a517062b280dd42070fe2b6f8aef668e5531cbfe6",
+            "items/misc.yml","11326cba90c476dbb8b17812f60afe5b8be2c67bd29e5aafd473bf318604c45a",
+            "town/recipes.yml","11c508ef49d7055fbd6e750a124ec18449c08693a97ced903dd31c9a55ab7240").entrySet())
+            check(Arrays.asList(ownership.getProperty("owned."+entry.getKey(),"").split(",")).contains(entry.getValue()),"pre-slicer default checksum retained: "+entry.getKey());
+        Path file=output.resolve("_internal/item-bindings.json");
+        String previous=Files.readString(file);
+        // Retain the published field order; a JSON reserialization changes its checksum.
+        for(String id:List.of("botulent_slicer","botulent_slicer_recipe","toxic_slicer","toxic_slicer_recipe","queasinart","queasinart_recipe","ice_axe_tech_azure")) {
+            String removed=previous.replaceFirst("\""+id+"\":\\{[^{}]*\\},","");
+            check(!removed.equals(previous),"new binding exists: "+id);previous=removed;
+        }
+        String digest=HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(previous.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        check(digest.equals("3c32e999f4d12ddb1d4bcb0441c7de8a1ef0acbf027eb8619873f0370692fd62"),"fixture exactly reconstructs the published pre-slicer bindings");
+        Files.writeString(file,previous);
+        try {ContentManager.load(output.getParent());throw new AssertionError("Mixed old bindings and new YAML accepted");}
+        catch(IOException expected){check(expected.getMessage().contains("botulent_slicer: unknown item ID"),"reproduces reported startup failure");}
+        run("content",output,true);
+        check(Files.mismatch(file,Path.of("content/_internal/item-bindings.json"))==-1,"unchanged previous defaults upgrade automatically");
+        check(ContentManager.load(output.getParent()).items().inspect("botulent_slicer")!=null,"upgraded content compiles with new weapons");
+        Files.writeString(file,previous+" ");byte[] edited=Files.readAllBytes(file);
+        run("content",output,true);
+        check(Arrays.equals(edited,Files.readAllBytes(file)),"customized old bindings are never overwritten");
+        check(Files.exists(output.getParent().resolve("content-updates/_internal/item-bindings.json.proposed")),"customized binding update is proposed for review");
+        Files.copy(Path.of("content/_internal/item-bindings.json"),file,StandardCopyOption.REPLACE_EXISTING);
     }
 }

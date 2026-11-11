@@ -172,6 +172,8 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 
 The server does not download missing content at startup. Ship complete unified content and configuration. Depot defaults are bundled inside the JAR; live offers and promotions are edited in the WebUI's Supply Depot page. Customized files receive review proposals under content-updates/, never an automatic semantic merge.
 
+If startup reports `botulent_slicer: unknown item ID`, the deployment may contain pre-slicer native bindings alongside newer weapon YAML. Version 0.40.9 restores the known-default checksum history: with the server stopped, rebuild using `./gradlew build` (`.\gradlew.bat build` on Windows) to update unchanged defaults together. Customized files still require review under `content-updates/`; do not remove the unknown-item guard or invent native bindings in YAML. Validate a reviewed candidate with `java -cp tortodrone.jar org.tortodrone.resources.ContentManager /path/to/candidate` before starting it. Keep `data/` and local configuration intact.
+
 ## Diagnosis
 
 Set `log-mode=debug` while stopped to inspect resource paths, protocol/scene checks and startup warnings. Logs deliberately do not contain passwords/private keys but can contain usernames, IPs, paths and item references; treat them as private.

@@ -11,19 +11,21 @@ import javax.imageio.ImageIO;
 import org.tortodrone.resources.Json;
 import static org.tortodrone.support.TestWire.check;
 
-/** All inputs/outputs are disposable; no installed game or subprocess is needed. */
+/** All inputs/outputs and child processes are disposable; no installed game is needed. */
 public final class ClientArtworkSetupTest {
     public static void main(String[] args) throws Exception {
         if(args.length==1&&args[0].equals("--wait-child")){System.out.println("ready");Thread.sleep(60_000);return;}
+        if(args.length==1&&args[0].equals("--classpath-child")){System.out.println("wildcard ready");return;}
         Path root = Files.createTempDirectory("tortodrone-artwork-test-");
         try {
             discovery(root.resolve("discovery"));
             lifecycle(root.resolve("lifecycle"));
             prompts(root.resolve("prompts"));
             failures(root.resolve("failures"));
+            classpath(root.resolve("classpath with spaces"));
             cancellation();
             options();
-            System.out.println("PASS: Steam Linux/Windows roots and additional libraries, prompts, noninteractive/skip, persistent artwork cache, safe publication, failure preservation and startup flags");
+            System.out.println("PASS: Steam Linux/Windows roots and additional libraries, wildcard classpath with spaces, prompts, noninteractive/skip, persistent artwork cache, safe publication, failure preservation and startup flags");
         } finally { delete(root); }
     }
 
@@ -138,6 +140,31 @@ public final class ClientArtworkSetupTest {
         var warnings = new ArrayList<String>();
         ClientArtworkSetup.prepare(deployment, root.resolve("missing-client"), false, message -> {}, warnings::add);
         check(warnings.stream().anyMatch(m -> m.contains("Continuing with fallback")), "Invalid explicit input does not prevent game hosting");
+    }
+
+    private static void classpath(Path root) throws Exception {
+        Path code = Files.createDirectories(root.resolve("installed client/code"));
+        // Only the wildcard can find this class; projectx-pcode.jar is deliberately empty.
+        try (var jar = new java.util.jar.JarOutputStream(Files.newOutputStream(code.resolve("projectx-pcode.jar")))) { }
+        String resource = ClientArtworkSetupTest.class.getName().replace('.', '/') + ".class";
+        try (var jar = new java.util.jar.JarOutputStream(Files.newOutputStream(code.resolve("extra dependency.jar")));
+             var input = ClientArtworkSetupTest.class.getResourceAsStream("/" + resource)) {
+            jar.putNextEntry(new java.util.jar.JarEntry(resource)); input.transferTo(jar); jar.closeEntry();
+        }
+        Path server = Path.of(ClientArtworkSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        String cp = ClientArtworkSetup.exportClasspath(code.getParent(), server);
+        check(Arrays.asList(cp.split(java.util.regex.Pattern.quote(java.io.File.pathSeparator)))
+            .equals(List.of(code.resolve("projectx-pcode.jar").toString(), code + java.io.File.separator + "*", server.toString())),
+            "Classpath keeps the primary client JAR first and the wildcard outside Path parsing");
+        Path log = root.resolve("child.log");
+        String executable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
+        Process child = new ProcessBuilder(executable, "-XX:ActiveProcessorCount=2", "-cp", cp,
+            ClientArtworkSetupTest.class.getName(), "--classpath-child").redirectErrorStream(true).redirectOutput(log.toFile()).start();
+        try {
+            check(child.waitFor(10, java.util.concurrent.TimeUnit.SECONDS), "Wildcard classpath child finishes");
+            check(child.exitValue() == 0 && Files.readString(log).contains("wildcard ready"),
+                "Java expands the wildcard with spaces in both directory and JAR names: " + Files.readString(log));
+        } finally { ClientArtworkSetup.stop(child); }
     }
 
     private static void options() throws Exception {

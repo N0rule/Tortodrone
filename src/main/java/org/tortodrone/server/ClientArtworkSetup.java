@@ -201,7 +201,7 @@ public final class ClientArtworkSetup {
         Path jar;
         try { jar = Path.of(ClientArtworkSetup.class.getProtectionDomain().getCodeSource().getLocation().toURI()); }
         catch (java.net.URISyntaxException invalid) { throw new IOException(invalid); }
-        String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + jar;
+        String cp = exportClasspath(game, jar);
         String suffix = System.getProperty("os.name").toLowerCase(Locale.ROOT).startsWith("windows") ? ".exe" : "";
         Path bin = Path.of(System.getProperty("java.home"), "bin");
         if (!Files.isRegularFile(bin.resolve("javac" + suffix))) throw new IOException("Install JDK 25 (including javac) to prepare artwork");
@@ -210,6 +210,11 @@ public final class ClientArtworkSetup {
             "-Djava.awt.headless=true", "-Dno_unpack_resources=true", "-Duser.home=" + scratch.resolve("home"),
             "-Djava.util.prefs.userRoot=" + scratch.resolve("prefs"), "-Djava.util.prefs.systemRoot=" + scratch.resolve("system-prefs"),
             "-Djava.io.tmpdir=" + scratch, "-cp", scratch + File.pathSeparator + cp, "WebUiAssetsExport", game.toString(), output.toString()), scratch, "export");
+    }
+
+    static String exportClasspath(Path game, Path jar) {
+        // '*' belongs to the Java launcher, not Path (Windows rejects wildcard paths).
+        return game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + jar;
     }
 
     private static void run(List<String> command, Path scratch, String step) throws IOException {

@@ -84,7 +84,7 @@ public final class CheckCombatRendering {
             Files.copy(game.resolve("full.dat"), app.resolve("full.dat"));
 
             String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator +
-                game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
+                game.resolve("code") + File.separator + "*" + File.pathSeparator + scratch.resolve("tortodrone.jar");
             Path source = project.resolve("scripts/compat/CombatRenderingCheck.java");
             if (!Files.isRegularFile(source)) throw new IOException("Missing child probe: " + source);
             run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(), source.toString()),
@@ -177,7 +177,7 @@ public final class CheckCombatRendering {
             "-Djava.util.prefs.systemRoot=" + sandbox.resolve("home/system-prefs"),
             "-Djava.io.tmpdir=" + sandbox.resolve("tmp"), "-Dappdir=" + app,
             "-cp", sandbox + File.pathSeparator + game.resolve("code/projectx-pcode.jar") +
-                File.pathSeparator + game.resolve("code/*") + File.pathSeparator + sandbox.resolve("tortodrone.jar")));
+                File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + sandbox.resolve("tortodrone.jar")));
     }
 
     private static void requireMaps(Path maps) throws IOException {

@@ -33,7 +33,7 @@ public final class CheckClientWorld {
             copyTree(project.resolve("build/config"),scratch.resolve("config"));Files.deleteIfExists(scratch.resolve("config/server.yml"));
             Files.createDirectories(scratch.resolve("home/prefs"));
             Files.createDirectories(scratch.resolve("data"));
-            String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*") + File.pathSeparator + scratch.resolve("tortodrone.jar");
+            String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*" + File.pathSeparator + scratch.resolve("tortodrone.jar");
             run(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString(),
                 project.resolve("scripts/compat/WorldConnectionCheck.java").toString(), project.resolve("scripts/compat/WorldCompatibility.java").toString(),
                 project.resolve("scripts/compat/AccountConnectionCheck.java").toString(),

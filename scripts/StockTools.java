@@ -290,7 +290,7 @@ public final class StockTools {
         if(sources.isEmpty())sources.add(project.resolve("scripts/compat/" + fixture + ".java"));
         Path scratch = Files.createTempDirectory("tortodrone-stock-tool-");
         try {
-            String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code/*")
+            String cp = game.resolve("code/projectx-pcode.jar") + File.pathSeparator + game.resolve("code") + File.separator + "*"
                 + File.pathSeparator + Path.of(System.getProperty("tortodrone.deployment",project.resolve("build").toString())).resolve("tortodrone.jar");
             var compile=new ArrayList<>(List.of(executable("javac"), "--release", "25", "-cp", cp, "-d", scratch.toString()));
             for(Path source:sources)compile.add(source.toString());
