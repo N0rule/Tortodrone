@@ -16,7 +16,7 @@ public final class ClientArtworkSetupTest {
     public static void main(String[] args) throws Exception {
         if(args.length==1&&args[0].equals("--wait-child")){System.out.println("ready");Thread.sleep(60_000);return;}
         if(args.length==1&&args[0].equals("--classpath-child")){System.out.println("wildcard ready");return;}
-        if(args.length==1&&args[0].equals("--progress-child")){Thread.sleep(500);return;}
+        if(args.length==2&&args[0].equals("--progress-child")){for(String value:List.of("0","10","9","50","101","100")){Files.writeString(Path.of(args[1]),value);Thread.sleep(250);}return;}
         Path root = Files.createTempDirectory("tortodrone-artwork-test-");
         try {
             discovery(root.resolve("discovery"));
@@ -27,7 +27,7 @@ public final class ClientArtworkSetupTest {
             progress(root.resolve("progress"));
             cancellation();
             options();
-            System.out.println("PASS: Steam Linux/Windows roots and additional libraries, wildcard classpath with spaces, prompts, noninteractive/skip, persistent artwork cache, safe publication, failure preservation and startup flags");
+            System.out.println("PASS: artwork discovery, one persistent pack, re-extraction, progress, prompts/skips, safe publication and child cleanup");
         } finally { delete(root); }
     }
 
@@ -68,17 +68,16 @@ public final class ClientArtworkSetupTest {
         var messages = new ArrayList<String>();
         ClientArtworkSetup.prepare(deployment, game, false, List.of(), null, exporter, messages::add);
         check(messages.getFirst().equals("Preparing WebUI images from " + game), "Concise preparation message");
-        check(messages.stream().anyMatch(m -> m.contains("validating and caching")), "Publication phase is visible");
+        check(messages.stream().anyMatch(m -> m.contains("validating images")), "Publication phase is visible");
         Path target = deployment.resolve("webui/assets/game"), cache = deployment.resolve("data/client-artwork");
-        check(exports.get() == 1 && ClientArtworkSetup.ready(target) && ClientArtworkSetup.ready(cache), "Explicit first export installs and caches");
+        check(exports.get() == 1 && ClientArtworkSetup.ready(target) && !Files.exists(cache), "Only one permanent artwork pack");
         check(Files.readString(game.resolve("code/projectx-pcode.jar")).equals("read-only fixture"), "Client input unchanged");
+        ClientArtworkSetup.prepare(deployment, null, false, List.of(), () -> { throw new AssertionError("Existing art must not prompt"); }, exporter, message -> {});
+        check(exports.get() == 1, "Existing art reused without extraction");
         delete(target); Files.createDirectories(target);
         Files.writeString(target.resolve("manifest.json"), "{\"items\":{},\"ui\":{},\"sprites\":{}}");
-        ClientArtworkSetup.prepare(deployment, null, false, List.of(), () -> { throw new AssertionError("Cache must not prompt"); }, exporter, message -> {});
-        check(exports.get() == 1 && ClientArtworkSetup.ready(target), "Build-reset artwork restores without installed client or export");
-        delete(cache);
-        ClientArtworkSetup.prepare(deployment, null, false, List.of(), null, exporter, message -> {});
-        check(exports.get() == 1 && ClientArtworkSetup.ready(cache), "Prebuilt valid artwork seeds durable cache");
+        ClientArtworkSetup.prepare(deployment, game, false, List.of(), null, exporter, message -> {});
+        check(exports.get() == 2 && ClientArtworkSetup.ready(target) && !Files.exists(cache), "Deleted artwork can be re-extracted from client");
         Path locked = deployment.resolve("data/server.lock");
         try (var channel = FileChannel.open(locked, StandardOpenOption.CREATE, StandardOpenOption.WRITE); var lock = channel.lock()) {
             try { ClientArtworkSetup.main(new String[]{deployment.toString(), game.toString()}); throw new AssertionError("Running deployment lock ignored"); }
@@ -98,11 +97,11 @@ public final class ClientArtworkSetupTest {
         check(prompts.isEmpty() && exports.get() == 1 && messages.stream().anyMatch(m -> m.contains("Try again")), "Invalid prompt retries, quoted path accepted");
         Path skipped = Files.createDirectory(root.resolve("skipped"));
         ClientArtworkSetup.prepare(skipped, null, false, List.of(), () -> "", exporter, messages::add);
-        check(Files.isRegularFile(skipped.resolve("data/client-artwork.skipped")), "Explicit skip persists");
+        check(Files.isRegularFile(skipped.resolve("webui/client-artwork.skipped")), "Explicit skip persists under webui");
         ClientArtworkSetup.prepare(skipped, null, false, List.of(), () -> { throw new AssertionError("Skipped setup prompted again"); }, exporter, messages::add);
         check(exports.get() == 1, "Persisted skip does not export");
         ClientArtworkSetup.prepare(skipped, game, false, List.of(), null, exporter, messages::add);
-        check(exports.get() == 2 && !Files.exists(skipped.resolve("data/client-artwork.skipped")), "Explicit client overrides skipped first setup");
+        check(exports.get() == 2 && !Files.exists(skipped.resolve("webui/client-artwork.skipped")), "Explicit client overrides skipped first setup");
         Path noninteractive = Files.createDirectory(root.resolve("noninteractive"));
         ClientArtworkSetup.prepare(noninteractive, null, false, List.of(), null, exporter, messages::add);
         check(messages.stream().anyMatch(m -> m.contains("No interactive terminal")) && exports.get() == 2, "Piped/service startup never consumes console commands or blocks");
@@ -122,7 +121,7 @@ public final class ClientArtworkSetupTest {
             throw new AssertionError("Exporter failure ignored");
         } catch (IOException expected) { check(expected.getMessage().contains("deliberate"), "Original failure retained"); }
         check(Files.readString(current.resolve("manifest.json")).equals(before) && ClientArtworkSetup.ready(current), "Failed export preserves previous pack");
-        try (var entries = Files.list(deployment.resolve("data"))) { check(entries.noneMatch(p -> p.getFileName().toString().startsWith(".client-artwork-")), "Failed scratch removed"); }
+        try (var entries = Files.list(deployment.resolve("webui"))) { check(entries.noneMatch(p -> p.getFileName().toString().startsWith(".client-artwork-")), "Failed scratch removed"); }
         Path source = root.resolve("source"); pack(source, 0xff334455);
         Files.writeString(current.resolve("owner-file.txt"), "preserve");
         try { ClientArtworkSetup.publish(source, current); throw new AssertionError("Unknown destination overwritten"); }
@@ -176,10 +175,19 @@ public final class ClientArtworkSetupTest {
         Files.createDirectories(root);
         String executable = Path.of(System.getProperty("java.home"), "bin", System.getProperty("os.name").startsWith("Windows") ? "java.exe" : "java").toString();
         var messages = new ArrayList<String>();
+        var percentages = new ArrayList<Integer>();
         ClientArtworkSetup.run(List.of(executable, "-XX:ActiveProcessorCount=2", "-cp", System.getProperty("java.class.path"),
-            ClientArtworkSetupTest.class.getName(), "--progress-child"), root, "export", messages::add, 50);
+            ClientArtworkSetupTest.class.getName(), "--progress-child", root.resolve("artwork.progress").toString()), root, "export", messages::add, percentages::add);
         check(messages.getFirst().contains("extracting images"), "Extraction phase is visible before child work");
-        check(messages.stream().anyMatch(m -> m.contains("export in progress") && m.contains("elapsed")), "Waiting reports progress without claiming a percentage");
+        check(percentages.equals(List.of(0,10,50,100)) && messages.size() == 1, "Measured progress is monotonic, bounded and has no heartbeat spam");
+        var text = new java.io.StringWriter();
+        try (var display = new ArtworkProgress(messages::add, new java.io.PrintWriter(text))) {
+            for(int i=0;i<=100;i++)display.accept(i);
+        }
+        check(text.toString().contains("10% extracted") && text.toString().chars().filter(c -> c == '\n').count() == 1, "Interactive progress updates one line");
+        messages.clear();
+        try(var display = new ArtworkProgress(messages::add, null)){for(int i=0;i<=100;i++)display.accept(i);}
+        check(messages.size()==11 && messages.getLast().contains("100%"), "Redirected logs have only ten-percent milestones");
     }
 
     private static void options() throws Exception {

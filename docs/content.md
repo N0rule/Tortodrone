@@ -721,8 +721,8 @@ java -cp build/tortodrone.jar scripts/CheckOpeningDeployment.java build
 The check must print `PASS: verified opening content`, scene 398 at entrance
 2659 / `(-21, -69.5)`, and Camp 217 at entrance 2017 / `(0.5, -0.5)`.
 It validates content and route prerequisites, not a gameplay playthrough.
-Existing customized maps are preserved by the build; review proposed updates
-under `content-updates/` if a local revision differs from the bundled defaults.
+Existing customized maps are preserved; conflicting bundled defaults stop build
+preparation and require a separate validated candidate, not automatic replacement.
 
 For the manual playthrough, use a disposable test account in your normal server:
 
@@ -825,11 +825,10 @@ reset the database or regenerate keys.
    WAL/SHM with the candidate; retain those old files together in the stopped backup.
 
 Build preparation replaces only recognized unmodified defaults and fills missing
-files. Customized files receive upstream `.proposed` files plus `review.txt` under
-**`content-updates/` beside content**, outside runtime inputs. These are review
-candidates, not a semantic merge. Known unchanged renamed defaults may retire;
-customized removed/renamed paths produce `conflicts.txt` and stop preparation
-before runtime content changes. Prepare a fresh candidate and transfer the edits
+files. Conflicting customized content stops preparation before planned content
+changes and reports the paths in the build output; no `content-updates/` folder
+or `.proposed` files are generated. Known unchanged renamed defaults may retire;
+customized removed/renamed paths also stop preparation. Prepare a fresh candidate and transfer the edits
 manually. Validate the whole candidate, including native resources/descriptors,
 before installation. Runtime `data/` is never copied as default content or packaged.
 

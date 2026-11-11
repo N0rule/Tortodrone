@@ -18,13 +18,16 @@ public final class MapPreparationIntegrationTest {
             check(!Files.exists(output.resolve("packs"))&&!Files.exists(output.getParent().resolve("data")),"preparation creates no packs or player data");
             ContentManager.load(output.getParent());
             previousItemBindings(output);
-            Path npc=output.resolve("maps/advanced_training/npcs/konway.yml");Files.writeString(npc,Files.readString(npc)+"# owner edit\n");byte[] edited=Files.readAllBytes(npc);run("content",output,true);check(Arrays.equals(edited,Files.readAllBytes(npc)),"administrator edits survive repeated preparation");check(Files.exists(output.getParent().resolve("content-updates/maps/advanced_training/npcs/konway.yml.proposed"))&&Files.readString(output.getParent().resolve("content-updates/review.txt")).contains("NOT a semantic merge"),"customized files receive reviewable upstream proposals and report");
+            Path npc=output.resolve("maps/advanced_training/npcs/konway.yml");String original=Files.readString(npc);Files.writeString(npc,original+"# owner edit\n");byte[] edited=Files.readAllBytes(npc);
+            Path withheld=output.resolve("items/misc.yml");Files.delete(withheld);
+            run("content",output,false);check(Arrays.equals(edited,Files.readAllBytes(npc))&&!Files.exists(withheld),"customized conflict refuses every planned copy");
+            check(!Files.exists(output.getParent().resolve("content-updates")),"no proposal directory is needed or created");Files.writeString(npc,original);run("content",output,true);
             Path missing=output.resolve("items/misc.yml");Files.delete(missing);Path lockFile=output.getParent().resolve("data/server.lock");Files.createDirectories(lockFile.getParent());Files.writeString(lockFile,"");
             try(var channel=FileChannel.open(lockFile,StandardOpenOption.WRITE);var lock=channel.lock()){run("content",output,false);check(!Files.exists(missing),"held deployment lock blocks all planned copies");}
             run("content",output,true);
             Path legacyDepot=home.resolve("legacy-depot/content");Files.createDirectories(legacyDepot.resolve("town"));Files.createDirectories(legacyDepot.getParent().resolve("data"));Files.writeString(legacyDepot.getParent().resolve("data/tortodrone.db"),"fixture marker, never opened");Files.writeString(legacyDepot.resolve("town/shops.yml"),"catalogs: []\ndepot: []\n");run("content",legacyDepot,false);check(Files.readString(legacyDepot.resolve("town/shops.yml")).contains("depot:"),"preparation cannot erase the legacy catalog before explicit migration");
             Path retired=output.resolve("maps/haven/npcs/town21.yml");Files.copy(output.resolve("maps/haven/npcs/plinkop.yml"),retired);run("content",output,true);check(!Files.exists(retired),"known unchanged renamed NPC defaults retire without duplicate bindings");
-            Files.copy(output.resolve("maps/haven/npcs/plinkop.yml"),retired);Files.writeString(retired,Files.readString(retired)+"# customized retired NPC\n");byte[] retiredEdit=Files.readAllBytes(retired);run("content",output,false);check(Arrays.equals(retiredEdit,Files.readAllBytes(retired))&&Files.exists(output.getParent().resolve("content-updates/conflicts.txt")),"customized renamed NPC generates conflict report without replacement");Files.delete(retired);
+            Files.copy(output.resolve("maps/haven/npcs/plinkop.yml"),retired);Files.writeString(retired,Files.readString(retired)+"# customized retired NPC\n");byte[] retiredEdit=Files.readAllBytes(retired);run("content",output,false);check(Arrays.equals(retiredEdit,Files.readAllBytes(retired))&&!Files.exists(output.getParent().resolve("content-updates")),"customized renamed NPC refuses replacement without review files");Files.delete(retired);
             Path old=home.resolve("old/content");Files.createDirectories(old.resolve("packs/vanilla"));run("content",old,false);check(!Files.exists(old.resolve("maps")),"legacy deployment needs explicit migration");
             Path maps=home.resolve("maps-only");run("maps",maps,true);check(Files.exists(maps.resolve("haven/map.yml"))&&!Files.exists(maps.resolve("items")),"maps-only preparation copies map-local content");
             System.out.println("PASS: offline unified deployment, configuration/plugins, owner edits, lock refusal, legacy upgrade refusal and maps-only output");
@@ -60,9 +63,9 @@ public final class MapPreparationIntegrationTest {
         check(Files.mismatch(file,Path.of("content/_internal/item-bindings.json"))==-1,"unchanged previous defaults upgrade automatically");
         check(ContentManager.load(output.getParent()).items().inspect("botulent_slicer")!=null,"upgraded content compiles with new weapons");
         Files.writeString(file,previous+" ");byte[] edited=Files.readAllBytes(file);
-        run("content",output,true);
+        run("content",output,false);
         check(Arrays.equals(edited,Files.readAllBytes(file)),"customized old bindings are never overwritten");
-        check(Files.exists(output.getParent().resolve("content-updates/_internal/item-bindings.json.proposed")),"customized binding update is proposed for review");
+        check(!Files.exists(output.getParent().resolve("content-updates")),"customized binding conflicts create no proposals");
         Files.copy(Path.of("content/_internal/item-bindings.json"),file,StandardCopyOption.REPLACE_EXISTING);
     }
 }

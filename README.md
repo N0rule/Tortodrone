@@ -243,7 +243,7 @@ Unrecognized settings are refused rather than silently ignored. See [Operations]
 
 ## Data, backups, and updates
 
-All runtime state lives in **`data/` beside the JAR**, regardless of the working directory:
+Private runtime state lives in **`data/` beside the JAR**, regardless of the working directory:
 
 | Path | Contents |
 | --- | --- |
@@ -251,7 +251,7 @@ All runtime state lives in **`data/` beside the JAR**, regardless of the working
 | `data/webui.sqlite` | WebUI identities and audit records. |
 | `data/keys/` | The server key pair. Preserve it across updates. |
 | `data/logs/` | Rotated server logs. |
-| `data/client-artwork/` | Cached WebUI artwork prepared from your client. |
+| `webui/assets/game/` | Regenerable WebUI artwork; preserved across frontend rebuilds, with no duplicate cache. |
 
 To back up or move a deployment, stop the server and copy the **whole `data/` tree**, plus `config/` and any customized `content/`. Keep SQLite WAL/SHM files with the database.
 
@@ -259,7 +259,7 @@ To update:
 
 1. Stop the server and back up `data/`, `config/`, and `content/`.
 2. Replace the program files with the new release, but **keep your existing `data/`, `config/`, and customized `content/`**.
-3. Review any proposed content changes under `content-updates/` before accepting them.
+3. If the build reports customized content conflicts, prepare and validate a separate candidate; no `content-updates/` proposals are generated. Keep existing `webui/assets/game/` to avoid re-extraction.
 4. Start the new version and verify login and the WebUI.
 
 > [!CAUTION]
@@ -339,7 +339,7 @@ Imported definitions and passing serialization tests do not establish full gamep
 | Startup rejects settings or the database schema | Restore the previous working configuration or backup. Do not hand-edit saved state to force startup. |
 | WebUI does not load | Check `webui-enabled: true` and open `http://localhost:8080/admin/` on the server computer. |
 | WebUI setup code is missing | The code is printed in the server console after startup. Restarting the process generates a new code. |
-| Changed map content is not appearing | Validate and restart the server, then review `content-updates/` for conflicts. See [Content](docs/content.md). |
+| Changed map content is not appearing | Validate and restart the server; resolve reported customized build conflicts in a separate candidate. See [Content](docs/content.md). |
 
 ### Client connection
 

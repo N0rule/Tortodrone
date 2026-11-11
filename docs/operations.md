@@ -53,8 +53,10 @@ changing the installation or launching its game window. No Python/Node runtime
 is needed. `--skip-client-assets` also avoids the one-time work on server hosts
 without a client. WebUI-disabled hosting does not prepare artwork.
 
-Preparation reports compilation, extraction and validation/cache phases, with an
-elapsed-time update every five seconds while a child process is working. Suitable
+Preparation reports compilation, extraction and validation phases. Extraction
+shows a measured percentage of completed item/Sprite/UI jobs on one updating
+terminal line (ten-percent milestones in redirected logs); this is work progress,
+not an estimate of remaining time. Suitable
 artwork API operations are selected by unique checked signatures and generic
 types, not obfuscated method names. Missing or ambiguous matches stop extraction
 and preserve existing artwork/fallbacks rather than guessing. This tolerates
@@ -67,10 +69,12 @@ costumes or maps to `content/`, rewrite native item bindings, or change existing
 item identities. New gameplay content requires an explicit reviewed import and
 implementation; updating the installed client does not enable it automatically.
 
-The complete image pack is cached in `data/client-artwork/` and served from
-`webui/assets/game/`. Rebuilds can reset that frontend directory; the next startup
-restores it from the private cache without re-exporting. Keep the cache in your
-normal `data/` backup. Generated artwork is original game content, not covered by
+The only persistent image pack is `webui/assets/game/`. Frontend rebuilds preserve
+it; existing valid artwork is reused without extraction. If deleted, it can be
+exported again from the client. There is no separate artwork cache in `data/`.
+Old `data/client-artwork/` copies are no longer used or maintained; an operator
+may remove that old generated directory while stopped after checking the served
+pack. Existing files are not deleted automatically. Generated artwork is original game content, not covered by
 the Tortodrone license; do not commit it or add it to public releases without
 redistribution rights. Map `.dat` files are not client resources and are not
 supplied by this step; see [opening map setup](content.md#local-crash-site-playtest).
@@ -184,9 +188,19 @@ A saved GM can use the original client's F3 dashboard **ItemCreator** (other too
 2. On update prepare and validate a separate content candidate; **retain your current `data/`**. The current database schema is 16. Databases on known predecessor schemas 9–15 require the [explicit economy upgrade/export](content.md#upgrading) before replacing legacy Depot YAML. Never discard unknown schema state or generate replacement keys to repair a failed login. Unsupported database schemas are refused rather than altered automatically.
 3. Check `VERSION` and run the focused checks relevant to the release. The GitHub Actions workflow runs **only when a matching `v<VERSION>` tag is pushed**. It builds with Java 25 and publishes **one cross-platform development prerelease ZIP**. Packaging explicitly selects the server JAR, configuration, content, WebUI and plugin placeholder, plus documentation, licenses and attribution notices. It rejects symlinks, runtime data, keys, captures and locally extracted WebUI images; build scratch files and Git bundles are not selected. The workflow does not run regression tests or bundle a JRE/client installation. Nine maps ship with the release, including original Crash Site 398 and initial Rescue Camp 217; new-knight creation needs no separate opening-map import. See [opening setup](content.md#local-crash-site-playtest) and `.github/workflows/release.yml`.
 
-The server does not download missing content at startup. Ship complete unified content and configuration. Depot defaults are bundled inside the JAR; live offers and promotions are edited in the WebUI's Supply Depot page. Customized files receive review proposals under content-updates/, never an automatic semantic merge.
+The server does not download missing content at startup or import additions after
+a game-client update. Releases include the supported unified content and
+configuration. Depot defaults are bundled inside the JAR; live offers and
+promotions are edited in the WebUI's Supply Depot page. Offline build preparation
+updates recognized unchanged defaults. A conflicting customized content file
+stops preparation before any planned content replacements, prints the conflicting
+paths and requires a separate validated candidate. It does not create
+`content-updates/` or `.proposed` files. Old review folders are not runtime inputs
+and are not deleted automatically. This safeguard concerns Tortodrone updates,
+not client updates; existing supported content does not need reimporting merely
+because the client added new content.
 
-If startup reports `botulent_slicer: unknown item ID`, the deployment may contain pre-slicer native bindings alongside newer weapon YAML. Version 0.40.9 restores the known-default checksum history: with the server stopped, rebuild using `./gradlew build` (`.\gradlew.bat build` on Windows) to update unchanged defaults together. Customized files still require review under `content-updates/`; do not remove the unknown-item guard or invent native bindings in YAML. Validate a reviewed candidate with `java -cp tortodrone.jar org.tortodrone.resources.ContentManager /path/to/candidate` before starting it. Keep `data/` and local configuration intact.
+If startup reports `botulent_slicer: unknown item ID`, the deployment may contain pre-slicer native bindings alongside newer weapon YAML. Version 0.40.9 restores the known-default checksum history: with the server stopped, rebuild using `./gradlew build` (`.\gradlew.bat build` on Windows) to update unchanged defaults together. Customized conflicts require a separate candidate; do not remove the unknown-item guard or invent native bindings in YAML. Validate a reviewed candidate with `java -cp tortodrone.jar org.tortodrone.resources.ContentManager /path/to/candidate` before starting it. Keep `data/` and local configuration intact.
 
 ## Diagnosis
 
@@ -202,7 +216,7 @@ When the unchanged client sends its existing hardware report, one `Client hardwa
 | Secure exchange rejected | Client has the exact deployed `public.txt` value |
 | Login refused | Account exists; verify/reset through local manager |
 | Knight/world load refused | Unified content validation and native scene bindings; see [Content](content.md) |
-| Changed maps not appearing | Validate static content, then stop/restart; review content-updates conflicts |
+| Changed maps not appearing | Validate static content, then stop/restart; resolve reported build conflicts in a separate candidate |
 | Startup rejects settings/schema | Restore supported settings or backup; do not hand-edit saved state to force startup |
 | Client renders or responds incorrectly | Run isolated stock-client compatibility/graphical checks; see [Development](development.md) |
 

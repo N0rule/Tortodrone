@@ -60,17 +60,17 @@ public final class BuildTools {
             &&Files.isRegularFile(oldShops,LinkOption.NOFOLLOW_LINKS)&&Files.size(oldShops)<32_000_000
             &&java.util.regex.Pattern.compile("(?m)(?:^|[\\r\\n{,])\\s*(?:depot|\"depot\"|'depot')\\s*:").matcher(Files.readString(oldShops)).find())
             throw new IOException("Legacy Depot YAML and existing database require EconomyUpgrade before content replacement; original files retained");
-        var copies=new ArrayList<Copy>();
+        var copies=new ArrayList<Copy>();var conflicts=new ArrayList<String>();
         var ownership=sourceOwnership(contentSource,"_internal/default-source.properties");
-        if(mapsOnly)plan(mapSource,output,copies,null,null);
+        if(mapsOnly)plan(mapSource,output,copies,null,null,conflicts);
         else {
-            plan(contentSource,output,copies,null,ownership);
+            plan(contentSource,output,copies,null,ownership,conflicts);
             if(output.endsWith(Path.of("content"))) {
                 plan(project.resolve("config"),deploymentRoot.resolve("config"),copies,null,null);
                 plan(project.resolve("plugins"),deploymentRoot.resolve("plugins"),copies,null,null);
             }
         }
-        var removals=new ArrayList<Removal>();var conflicts=new ArrayList<String>();
+        var removals=new ArrayList<Removal>();
         if(!mapsOnly&&ownership!=null)for(String key:new java.util.TreeSet<>(ownership.stringPropertyNames()))if(key.startsWith("owned.")) {
             Path relative=Path.of(key.substring(6)),old=output.resolve(relative);
             if(Files.notExists(contentSource.resolve(relative))&&Files.isRegularFile(old,LinkOption.NOFOLLOW_LINKS)) {
@@ -79,11 +79,8 @@ public final class BuildTools {
             }
         }
         if(!conflicts.isEmpty()) {
-            Path reports=deploymentRoot.resolve("content-updates");
-            for(Path parent=reports;parent!=null;parent=parent.getParent())if(Files.isSymbolicLink(parent))throw new IOException("Unsafe review directory");
-            Files.createDirectories(reports);Path report=reports.resolve("conflicts.txt");if(Files.isSymbolicLink(report))throw new IOException("Unsafe conflict report");
-            Files.writeString(report,String.join("\n",conflicts)+"\nNo runtime content was changed. Prepare a fresh deploymentOutput candidate, apply your edits to the renamed definitions, validate, then install while stopped.\n");
-            throw new IOException("Content rename/removal conflicts require review: "+report+"; original files retained");
+            throw new IOException("Customized content conflicts with bundled defaults:\n"+String.join("\n",conflicts)
+                +"\nNo runtime content was changed. Build a fresh -PdeploymentOutput candidate, transfer your customizations, validate and install while stopped.");
         }
         // Refuse all planned content changes while the target deployment is locked.
         Path lockFile=deploymentRoot.resolve("data/server.lock");
@@ -105,12 +102,6 @@ public final class BuildTools {
             }
             for(var removal:removals)Files.delete(removal.target);
         }
-        var proposals=copies.stream().filter(copy->copy.target.toString().endsWith(".proposed")).toList();
-        if(!proposals.isEmpty()) {
-            Path report=deploymentRoot.resolve("content-updates/review.txt");
-            if(Files.isSymbolicLink(report))throw new IOException("Unsafe content review report");
-            Files.writeString(report,"Customized files were preserved. These are proposed upstream defaults, NOT a semantic merge. Compare each proposal with your current file, retain your edits and validate a separate candidate. Native resources must be reviewed together with their descriptors.\n"+String.join("\n",proposals.stream().map(copy->copy.target.toString()).toList())+"\n");
-        }
         System.out.println("Prepared "+(mapsOnly?"maps":"content")+": " + (mapsOnly?mapSource:contentSource) + " -> " + output);
     }
     static Path inferDeploymentRoot(Path output) {
@@ -125,9 +116,9 @@ public final class BuildTools {
         return normalized.getParent();
     }
     private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership) throws Exception {
-        plan(source,output,copies,skip,ownership,null);
+        plan(source,output,copies,skip,ownership,new ArrayList<>());
     }
-    private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership,String onlyFile) throws Exception {
+    private static void plan(Path source,Path output,List<Copy> copies,Path skip,Properties ownership,List<String> conflicts) throws Exception {
         if(Files.notExists(source,LinkOption.NOFOLLOW_LINKS)) {
             System.out.println("Optional default source is absent: " + source + "; continuing without it");return;
         }
@@ -136,7 +127,6 @@ public final class BuildTools {
             for(Path file:paths.sorted().toList()) {
                 Path relative=source.relativize(file);
                 if(skip!=null&&relative.startsWith(skip))continue;
-                if(onlyFile!=null&&!relative.equals(Path.of(onlyFile)))continue;
                 if(Files.isSymbolicLink(file))throw new IOException("Default source contains a symlink: " + file);
                 if(!Files.isRegularFile(file))continue;
                 Path target=output.resolve(relative);
@@ -150,11 +140,7 @@ public final class BuildTools {
                 // Only files this source published before are upgraded; edited packs keep their bytes.
                 if(sourceOwns(ownership,relative,target))copies.add(new Copy(file,target,true));
                 else if(ownership!=null) {
-                    Path proposal=inferDeploymentRoot(output).resolve("content-updates").resolve(relative.toString()+".proposed");
-                    if(Files.isSymbolicLink(proposal))throw new IOException("Unsafe content proposal path: "+proposal);
-                    for(Path parent=proposal.getParent();parent!=null;parent=parent.getParent())if(Files.isSymbolicLink(parent))throw new IOException("Unsafe content proposal directory: "+parent);
-                    if(!Files.isRegularFile(proposal,LinkOption.NOFOLLOW_LINKS)||Files.mismatch(file,proposal)!=-1)copies.add(new Copy(file,proposal,true));
-                    System.out.println("Preserved customized "+target+"; review proposed upstream "+proposal+" (current sha256="+fileDigest(target)+", upstream="+fileDigest(file)+")");
+                    conflicts.add(target.toString());
                 }
             }
         }

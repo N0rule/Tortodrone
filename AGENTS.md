@@ -6,8 +6,8 @@ only.
 
 ## Current shape
 - One executable `tortodrone.jar` beside `config/`, `content/`, `webui/` and
-  `plugins/`. `data/` holds private runtime state (SQLite, keys, logs and the
-  client-artwork cache) and sits beside the JAR.
+  `plugins/`. `data/` holds private runtime state (SQLite, keys and logs) and sits
+  beside the JAR. Regenerable artwork lives only in `webui/assets/game/`.
 - Hosting is headless. `--gui` is rejected; use the server terminal and the
   optional WebUI under `/admin/`. There is no separate admin JAR or desktop
   server UI.

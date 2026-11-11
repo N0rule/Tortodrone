@@ -99,8 +99,8 @@ java scripts/StockTools.java previews "/path/to/Spiral Knights"
 
 For client-artwork startup changes, run
 `./gradlew testUnit -PunitTests=ClientArtworkSetupTest,ClientArtworkStartupTest,MonitoringTest,WebUiTest`.
-These cover Steam discovery, path prompts/skips, cache restoration, unsafe paths,
-cancelled child cleanup, packaged pre-listener publication and real HTTP serving
+These cover Steam discovery, path prompts/skips, single-pack reuse, unsafe paths,
+measured progress, cancelled child cleanup, disabled-WebUI extraction bypass and real HTTP serving
 using owned synthetic PNG fixtures. Windows paths/discovery are exercised on the
 test host; that is not a Windows execution test.
 
