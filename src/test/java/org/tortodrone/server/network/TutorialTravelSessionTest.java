@@ -49,7 +49,8 @@ public final class TutorialTravelSessionTest {
                 }
                 var after=characters.worldProfile(knight.name(),1);
                 check(after.progress().openingStage()==3&&after.progress().progressFlags()==4&&characters.lastTownScene(knight.id(),1)==1,"direct Haven checkpoint and town access committed");
-                check(after.items().equals(before.items())&&after.progress().rank()==1&&after.progress().prestige()==0,"skipped Camp missions grant no fabricated rewards or rank");
+                check(after.items().equals(before.items())&&after.progress().rankPair().equals("2-1")&&after.progress().prestige()==0
+                    &&after.town().mail().stream().filter(m->m.subject().equals("%uplink:s.skipped_rescue_camp")).count()==1,"skipped Camp missions grant no receipts or prestige; arrival is 2-1 with one orientation letter");
                 move(world,route.destination());world.subscribe((short)4);world.entered();
                 var haven=registry.destination(1,before.worldId());
                 var pawn=haven.simulation().snapshot().players().stream().filter(p->p.id()==before.worldId()).findFirst().orElseThrow();

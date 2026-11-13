@@ -2119,6 +2119,9 @@ final class WorldSession implements AutoCloseable {
         floorReport.finish();floorReport=null;
         var settled=profile;
         if(!before.items().equals(settled.items()))output.send(()->codec.itemChanges(oid,knight,before,settled));
+        // The settlement's 2-1 arrival rank and orientation letter are already durable.
+        if(!before.progress().equals(settled.progress()))output.send(()->codec.knightProgress(oid,settled));
+        if(!before.town().equals(settled.town()))output.send(()->codec.townState(oid,settled));
         closeConversation();closeTownDialog();
         portalMove=new PortalMove(next,route.entrance());departedSceneOid=scene.oid();
         partyState();leaveChat();subscribed=entered=false;sceneGeneration++;membership.pause();

@@ -218,8 +218,13 @@ public final class Database {
             return null;
         });
     }
-    /** Server-owned Crash Site settlement. Collected heat, receipt and safe return commit
-     * together, once. No fixed completion reward or rank is invented. */
+    /** SystemSender.ORIENTATION ("Spiral HQ") in the stock uplink enum. */
+    public static final int ORIENTATION_SENDER=6;
+    /** The 2026-11-05 new-player route: knights skip Rescue Camp and arrive in Haven at 2-1. */
+    public static final int ARRIVAL_RANK=2,ARRIVAL_SUBRANK=1;
+    public static final String SKIPPED_CAMP_ATTACHMENT="Weapon/Bomb/Proto Bomb";
+    /** Server-owned Crash Site settlement. Collected heat, receipt, safe return, the 2-1 arrival
+     * rank and the stock "skipped rescue camp" orientation letter commit together, once. */
     public WorldProfile completeTutorial(int accountId,int knightId,long authRevision,int worldId,long revision)throws IOException {
         return completeTutorial(accountId,knightId,authRevision,worldId,revision,0,null);
     }
@@ -240,8 +245,20 @@ public final class Database {
             }
             if(profile.revision()!=revision)throw new IOException("Knight changed before tutorial settlement");
             if(heat>0)TownStore.applyHeat(c,profile,rules,heat);
-            if(profile.progress().crashSiteIncomplete())try(var s=c.prepareStatement("UPDATE metadata SET value=3 WHERE key=? AND value=0")){
-                s.setString(1,"world."+worldId+".opening-stage");if(s.executeUpdate()!=1)throw new IOException("Opening checkpoint changed");
+            if(profile.progress().crashSiteIncomplete()){
+                try(var s=c.prepareStatement("UPDATE metadata SET value=3 WHERE key=? AND value=0")){
+                    s.setString(1,"world."+worldId+".opening-stage");if(s.executeUpdate()!=1)throw new IOException("Opening checkpoint changed");
+                }
+                var progress=profile.progress();
+                if(progress.rank()<ARRIVAL_RANK||progress.rank()==ARRIVAL_RANK&&progress.subrank()<ARRIVAL_SUBRANK)
+                    try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
+                        s.setString(1,WorldProfiles.progressKey(worldId,"rank"));s.setInt(2,ARRIVAL_RANK*10+ARRIVAL_SUBRANK);s.executeUpdate();
+                    }
+                String knight;try(var s=c.prepareStatement("SELECT name FROM knights WHERE account_id=? AND id=?")){
+                    s.setInt(1,accountId);s.setInt(2,knightId);try(var r=s.executeQuery()){if(!r.next())throw new IOException("Tutorial knight missing");knight=r.getString(1);}
+                }
+                var bomb=new org.tortodrone.character.WorldProfile.Item(0,org.tortodrone.character.WorldProfile.Slot.BOMB,SKIPPED_CAMP_ATTACHMENT,null,0,null,false,true,false,1,false,0,0,List.of(),List.of(),false);
+                AuctionHouse.systemMail(c,worldId,ORIENTATION_SENDER,"s.skipped_rescue_camp",AuctionHouse.composeMessage("m.skipped_rescue_camp","~"+knight),List.of(bomb));
             }
             try(var s=c.prepareStatement("INSERT INTO metadata(key,value) VALUES(?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")){
                 s.setString(1,receipt);s.setInt(2,1);s.executeUpdate();

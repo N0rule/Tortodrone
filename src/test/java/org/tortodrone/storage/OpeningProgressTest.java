@@ -35,7 +35,7 @@ public final class OpeningProgressTest {
             db.write(c->{try(var s=c.createStatement()){s.execute("DROP TRIGGER reject_checkpoint");}return null;});
             var after=store.completeTutorial(fresh.id(),1,before);
             check(after.progress().openingStage()==3&&after.progress().tutorialComplete()&&after.progress().progressFlags()==4&&store.lastTownScene(fresh.id(),1)==1,"tutorial settlement commits direct Haven arrival and town access together");
-            check(after.items().equals(before.items())&&after.progress().rank()==1&&after.progress().subrank()==1&&after.progress().prestige()==0,"no fixed tutorial reward or rank is invented");
+            check(after.items().equals(before.items())&&after.progress().rankPair().equals("2-1")&&after.progress().prestige()==0,"official 2-1 arrival rank without invented prestige or arsenal items");
             check(store.completeTutorial(fresh.id(),1,before).equals(after),"replayed settlement grants nothing twice");
             check(store.worldProfile(old.name(),1).equals(original)&&store.lastTownScene(old.id(),1)==2,"new onboarding never resets an existing knight or saved location");
             var state=db.rosterState(1);

@@ -156,6 +156,16 @@ public final class AuctionHouse {
         return database.read(c->{var result=new ArrayList<Delivery>();try(var s=c.prepareStatement("SELECT id,world_id,crowns,item IS NOT NULL,claimed FROM town_mail WHERE auction=? ORDER BY id")){s.setLong(1,auction);try(var r=s.executeQuery()){while(r.next())result.add(new Delivery(r.getLong(1),r.getInt(2),r.getInt(3),r.getBoolean(4),r.getBoolean(5)));}}return List.copyOf(result);});
     }
     private String display(WorldProfile.Item item){var definition=items.find(item.config());return definition==null?"~"+item.config().substring(item.config().lastIndexOf('/')+1):"%item:"+definition.nameKey();}
+    /** One SYSTEM-type uplink letter from a native SystemSender, inside the caller's transaction;
+     * the caller owns the knight's single revision increment. */
+    static void systemMail(Connection c,int world,int senderOrdinal,String subject,String body,List<WorldProfile.Item> items)throws SQLException,IOException{
+        if(senderOrdinal<1)throw new IOException("Invalid system sender");
+        try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,attachments,sender,mail_type) VALUES(?,?,?,?,?,?,3)")){
+            s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%uplink:"+subject);s.setString(4,"%uplink:"+body);
+            s.setString(5,items.isEmpty()?null:encodeItems(items));s.setInt(6,-senderOrdinal);s.executeUpdate();
+        }
+    }
+    static String composeMessage(String key,String... args){return compose(key,args);}
     private static String compose(String key,String... args){var result=new StringBuilder(key);for(String arg:args)result.append('|').append(arg.replace("\\","\\\\").replace("|","\\!"));return result.toString();}
     private static void mail(Connection c,long auction,int world,String subject,String body,int crowns,WorldProfile.Item item)throws SQLException,IOException{
         try(var s=c.prepareStatement("INSERT INTO town_mail(world_id,sent,subject,body,crowns,item,auction) VALUES(?,?,?,?,?,?,?)")){s.setInt(1,world);s.setLong(2,System.currentTimeMillis());s.setString(3,"%uplink:"+subject);s.setString(4,"%uplink:"+body);s.setInt(5,crowns);s.setString(6,item==null?null:encode(item));s.setLong(7,auction);s.executeUpdate();}TownStore.touch(c,world);

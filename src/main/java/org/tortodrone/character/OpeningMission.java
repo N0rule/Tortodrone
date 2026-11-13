@@ -21,7 +21,9 @@ public enum OpeningMission {
     OpeningMission(String id,String config,int rank,int subrank,int prestige,int stage,int nextStage,List<Reward> rewards){this.id=id;this.config=config;this.rank=rank;this.subrank=subrank;this.prestige=prestige;this.stage=stage;this.nextStage=nextStage;this.rewards=List.copyOf(rewards);}
     public String id(){return id;}public String config(){return config;}public int rank(){return rank;}public int subrank(){return subrank;}public int prestige(){return prestige;}public int stage(){return stage;}public int nextStage(){return nextStage;}public List<Reward> rewards(){return rewards;}
     public boolean gate(){return this==ANCIENT_GENERATOR||this==CROSSING_CHASM;}
-    public OpeningMission prerequisite(){return ordinal()==0?null:values()[ordinal()-1];}
+    /** Since the 2026-11-05 new-player route, knights reach Haven at 2-1 straight from Crash Site,
+     * so Welcome to Haven needs only its rank and Haven stage, not a Crossing the Chasm receipt. */
+    public OpeningMission prerequisite(){return ordinal()==0||this==WELCOME_HAVEN?null:values()[ordinal()-1];}
     public int nextRank(){return this==CROSSING_CHASM?2:rank;}
     public int nextSubrank(){return this==WELCOME_HAVEN||this==CROSSING_CHASM?1:subrank+1;}
     public static OpeningMission byId(String id){return Arrays.stream(values()).filter(m->m.id.equals(id)).findFirst().orElse(null);}
