@@ -713,6 +713,16 @@ Collected floor heat, completion, Haven access and the saved return location
 commit together; no skipped-mission receipts, rank or fixed rewards are granted.
 Existing Camp checkpoints remain unchanged. No manual map import is needed.
 
+Inside Crash Site, monsters use their native depth-0 defense and health (Proto
+hits land 10/10/13 with the sword and 6 with the gun) and flinch only on major
+hits or during interruptable attacks. After the free emergency revive is spent,
+a dead knight heals in place after 4 s, as the original tutorial party did,
+because the floor cannot be left early. The Ironwood Giant pays its authored
+Shutdown spawns (17 crowns, credited immediately, and 110 floor heat). Crowns are
+paid as single-claimant pickups only because the tutorial instance is private.
+Size-scaled "Tutorial" loot rolls, shrub loot and Health (Tutorial) treasure
+hearts are not implemented yet.
+
 For a source-checkout preflight:
 
 ```sh

@@ -960,6 +960,11 @@ public final class SceneContentExport {
             addOptionalNumber(out, prefix + "state-time", field(original, "stateTime"));
             addOptionalNumber(out, prefix + "delay", field(original, "delay"));
         }
+        // Native SwitchLogic steps "next"/"prev" over stateActions with wrap; a Help Bubble's
+        // balloon shows only in state 0, so scripted "next" signals hide it.
+        if (isKind(original, "Switch") && reference.getName().startsWith("Dynamic/Help Bubble/")
+            && field(original, "stateActions") instanceof Object[] states && states.length > 0)
+            out.put(prefix + "switch-states", Integer.toString(states.length));
         if (isKind(original, "DumbSwitch")) {
             // Native DumbSwitch: handlers[0] is the Startup handler; the authored "Startup
             // State" choice rewrites its Signal (a state number, or "next"), which the native
